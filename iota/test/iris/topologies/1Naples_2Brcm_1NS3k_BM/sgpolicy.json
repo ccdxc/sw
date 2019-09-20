@@ -4,7 +4,7 @@
   "object-key" : "meta.tenant/meta.namespace/meta.name",
     "objects": [
     {
-      "kind": "SGPolicy",
+      "kind": "NetworkSecurityPolicy",
       "meta": {
         "name": "allow-all-kg1",
         "tenant": "default",

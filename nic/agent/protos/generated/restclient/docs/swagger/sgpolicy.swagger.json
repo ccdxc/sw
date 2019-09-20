@@ -18,7 +18,7 @@
   "paths": {
     "/api/security/policies/": {
       "get": {
-        "summary": "List all SGPolicy Objects",
+        "summary": "List all NetworkSecurityPolicy Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -26,17 +26,17 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/netprotoSGPolicy"
+                "$ref": "#/definitions/netprotoNetworkSecurityPolicy"
               }
             }
           }
         },
         "tags": [
-          "SGPolicy"
+          "NetworkSecurityPolicy"
         ]
       },
       "post": {
-        "summary": "Creates a SGPolicy Object",
+        "summary": "Creates a NetworkSecurityPolicy Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -58,18 +58,18 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoSGPolicy"
+              "$ref": "#/definitions/netprotoNetworkSecurityPolicy"
             }
           }
         ],
         "tags": [
-          "SGPolicy"
+          "NetworkSecurityPolicy"
         ]
       }
     },
     "/api/security/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
-        "summary": "Deletes a SGPolicy Object",
+        "summary": "Deletes a NetworkSecurityPolicy Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -104,7 +104,7 @@
           }
         ],
         "tags": [
-          "SGPolicy"
+          "NetworkSecurityPolicy"
         ]
       }
     }
@@ -481,6 +481,89 @@
       },
       "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
     },
+    "netprotoNetworkSecurityPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoNetworkSecurityPolicySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoNetworkSecurityPolicyStatus"
+        }
+      },
+      "title": "NetworkSecurityPolicy object"
+    },
+    "netprotoNetworkSecurityPolicyEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "sg-policy": {
+          "$ref": "#/definitions/netprotoNetworkSecurityPolicy"
+        }
+      },
+      "title": "sg policy watch event"
+    },
+    "netprotoNetworkSecurityPolicyList": {
+      "type": "object",
+      "properties": {
+        "NetworkSecurityPolicys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNetworkSecurityPolicy"
+          }
+        }
+      }
+    },
+    "netprotoNetworkSecurityPolicySpec": {
+      "type": "object",
+      "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current SG Policy belongs to"
+        },
+        "attach-group": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "list of security groups on which the policy is applied."
+        },
+        "attach-tenant": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "specifies if the set of rules need to be attached globally to all the vrfs within a tenant"
+        },
+        "policy-rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoPolicyRule"
+          },
+          "title": "list of rules"
+        }
+      },
+      "title": "NetworkSecurityPolicySpec captures all the security policy configuration"
+    },
+    "netprotoNetworkSecurityPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "title": "NetworkSecurityPolicyStatus captures the sg policy status"
+    },
     "netprotoPolicyRule": {
       "type": "object",
       "required": [
@@ -516,89 +599,6 @@
           "title": "Optional AppName to fetch additional ALG configurations. ICMP Code is inferred from its corresponding App definition.\nA single rule can have the match parameters through the selectors or its corresponding App object"
         }
       }
-    },
-    "netprotoSGPolicy": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoSGPolicySpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoSGPolicyStatus"
-        }
-      },
-      "title": "SGPolicy object"
-    },
-    "netprotoSGPolicyEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "sg-policy": {
-          "$ref": "#/definitions/netprotoSGPolicy"
-        }
-      },
-      "title": "sg policy watch event"
-    },
-    "netprotoSGPolicyList": {
-      "type": "object",
-      "properties": {
-        "SGPolicys": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoSGPolicy"
-          }
-        }
-      }
-    },
-    "netprotoSGPolicySpec": {
-      "type": "object",
-      "properties": {
-        "vrf-name": {
-          "type": "string",
-          "title": "VrfName specifies the name of the VRF that the current SG Policy belongs to"
-        },
-        "attach-group": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "list of security groups on which the policy is applied."
-        },
-        "attach-tenant": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "specifies if the set of rules need to be attached globally to all the vrfs within a tenant"
-        },
-        "policy-rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoPolicyRule"
-          },
-          "title": "list of rules"
-        }
-      },
-      "title": "SGPolicySpec captures all the security policy configuration"
-    },
-    "netprotoSGPolicyStatus": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        }
-      },
-      "title": "SGPolicyStatus captures the sg policy status"
     }
   }
 }

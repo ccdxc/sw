@@ -57,12 +57,12 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify agent state has the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindSGPolicy(policyMeta)
+			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
 			if err != nil {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// delete the sg policy
@@ -72,7 +72,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify rules are gone from agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindSGPolicy(policyMeta)
+			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
 			if err == nil {
 				return false, nil
 			}
@@ -86,7 +86,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify sg is removed from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListSGPolicy()) == 0, nil
+			return len(ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
 		}, "Sg still found on agent", "10ms", it.pollTimeout())
 	}
 }

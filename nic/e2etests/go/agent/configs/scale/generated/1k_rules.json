@@ -1,6 +1,6 @@
 [
   {
-    "kind": "SGPolicy",
+    "kind": "NetworkSecurityPolicy",
     "meta": {
       "name": "global-fw-rules",
       "tenant": "default",

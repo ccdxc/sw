@@ -2548,11 +2548,11 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Request with all any's, should return first match
 			"Any request with specific SGP",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				App:           "any",
-				FromIPAddress: "any",
-				ToIPAddress:   "any",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				App:                   "any",
+				FromIPAddress:         "any",
+				ToIPAddress:           "any",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -2584,15 +2584,15 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 		},
 		{
-			// Match on specific SGPolicy
+			// Match on specific NetworkSecurityPolicy
 			"Exact match on IP, APP and SGP",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				Protocol:      "tcp",
-				Port:          "443",
-				FromIPAddress: "37.232.218.135",
-				ToIPAddress:   "37.232.218.136",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "tcp",
+				Port:                  "443",
+				FromIPAddress:         "37.232.218.135",
+				ToIPAddress:           "37.232.218.136",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -2796,12 +2796,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Match on SGs #2
 			"Match on SGs #2",
 			search.PolicySearchRequest{
-				Tenant:            "default",
-				Protocol:          "udp",
-				Port:              "53",
-				FromSecurityGroup: "test-servers",
-				ToSecurityGroup:   "dns-servers",
-				SGPolicy:          "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "udp",
+				Port:                  "53",
+				FromSecurityGroup:     "test-servers",
+				ToSecurityGroup:       "dns-servers",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -3014,12 +3014,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Scale profile, Any match, should match first rule
 			"Scale test with match on any IP",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				Protocol:      "tcp",
-				Port:          "1",
-				FromIPAddress: "any",
-				ToIPAddress:   "any",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "tcp",
+				Port:                  "1",
+				FromIPAddress:         "any",
+				ToIPAddress:           "any",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -3048,12 +3048,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Scale profile, match on 29000th rule
 			"Scale test with match on 29000th Rule",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				Protocol:      "tcp",
-				Port:          "29001",
-				FromIPAddress: "10.0.113.72",
-				ToIPAddress:   "any",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "tcp",
+				Port:                  "29001",
+				FromIPAddress:         "10.0.113.72",
+				ToIPAddress:           "any",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -3082,12 +3082,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Scale profile, match on 29999th rule
 			"Scale test with match on 29999th Rule",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				Protocol:      "udp",
-				Port:          "30000",
-				FromIPAddress: "10.0.117.47",
-				ToIPAddress:   "20.0.117.47",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "udp",
+				Port:                  "30000",
+				FromIPAddress:         "10.0.117.47",
+				ToIPAddress:           "20.0.117.47",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
@@ -3116,12 +3116,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			// Scale profile, MISS
 			"Scale test MISS with 70k Rule",
 			search.PolicySearchRequest{
-				Tenant:        "default",
-				Protocol:      "udp",
-				Port:          "80000",
-				FromIPAddress: "10.1.17.111",
-				ToIPAddress:   "20.1.17.111",
-				SGPolicy:      "sgp-aggregate",
+				Tenant:                "default",
+				Protocol:              "udp",
+				Port:                  "80000",
+				FromIPAddress:         "10.1.17.111",
+				ToIPAddress:           "20.1.17.111",
+				NetworkSecurityPolicy: "sgp-aggregate",
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MISS.String(),

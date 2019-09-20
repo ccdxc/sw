@@ -23,15 +23,15 @@ var _ = Describe("fwlog tests", func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore thes error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Commit()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Commit()).ShouldNot(HaveOccurred())
 
 		// verify policy was propagated correctly
 		Eventually(func() error {
-			return ts.model.Action().VerifyPolicyStatus(ts.model.DefaultSGPolicy())
+			return ts.model.Action().VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
 	})
 
@@ -41,18 +41,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
-			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
+			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -71,18 +71,18 @@ var _ = Describe("fwlog tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
-			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "PERMIT")
+			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -102,18 +102,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 			// allow policy
-			policy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "PERMIT")
+			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
@@ -133,18 +133,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
 			// deny policy
-			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "DENY")
+			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "DENY")
 			denyPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -165,18 +165,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
 			// deny policy
-			debyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
+			debyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
 			debyPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -197,16 +197,16 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			// deny policy
-			debyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "DENY")
+			debyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "DENY")
 			debyPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -229,18 +229,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
 			// reject policy
-			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "icmp", "REJECT")
+			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "REJECT")
 			denyPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -259,18 +259,18 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
 
 			// deny policy
-			denyPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "REJECT")
+			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "REJECT")
 			denyPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -291,16 +291,16 @@ var _ = Describe("fwlog tests", func() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			Expect(ts.model.DefaultSGPolicy().Delete()).Should(Succeed())
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			// reject policy
-			rejectPolicy := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "REJECT")
+			rejectPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "REJECT")
 			rejectPolicy.AddRule("any", "any", "", "PERMIT")
 			Expect(rejectPolicy.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("test-policy"))
+				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()

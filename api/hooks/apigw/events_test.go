@@ -179,7 +179,7 @@ func TestEventsUserContextHook(t *testing.T) {
 		login.NewPermission(
 			"testTenant",
 			string(apiclient.GroupSecurity),
-			string(security.KindSGPolicy),
+			string(security.KindNetworkSecurityPolicy),
 			authz.ResourceNamespaceAll,
 			"",
 			auth.Permission_AllActions.String()))
@@ -214,7 +214,7 @@ func TestEventsUserContextHook(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -243,7 +243,7 @@ func TestEventsUserContextHook(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),

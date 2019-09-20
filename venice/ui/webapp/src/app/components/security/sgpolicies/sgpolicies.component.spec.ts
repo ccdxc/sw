@@ -16,7 +16,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { BehaviorSubject } from 'rxjs';
-import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
@@ -65,14 +65,14 @@ describe('SgpoliciesComponent', () => {
     fixture = TestBed.createComponent(SgpoliciesComponent);
     component = fixture.componentInstance;
     securityService = TestBed.get(SecurityService);
-    policy1 = new SecuritySGPolicy({
+    policy1 = new SecurityNetworkSecurityPolicy({
       meta: {
         name: 'policy1',
         'mod-time': '2018-08-23T17:35:08.534909931Z',
         'creation-time': '2018-08-23T17:30:08.534909931Z'
       }
     });
-    policy2 = new SecuritySGPolicy({
+    policy2 = new SecurityNetworkSecurityPolicy({
       meta: {
         name: 'policy2',
         'mod-time': '2018-08-23T17:35:08.534909931Z',
@@ -87,7 +87,7 @@ describe('SgpoliciesComponent', () => {
         }
       ]
     });
-    spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+    spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
       sgPolicyObserver
     );
     testingUtility = new TestingUtility(fixture);

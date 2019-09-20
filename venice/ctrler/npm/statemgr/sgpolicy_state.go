@@ -18,10 +18,10 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
-	SGPolicy     *ctkit.SGPolicy                `json:"-"` // embedded security policy object
-	groups       map[string]*SecurityGroupState // list of groups this policy is attached to
-	stateMgr     *Statemgr                      // pointer to state manager
-	NodeVersions map[string]string              // Map for node -> version
+	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy   `json:"-"` // embedded security policy object
+	groups                map[string]*SecurityGroupState // list of groups this policy is attached to
+	stateMgr              *Statemgr                      // pointer to state manager
+	NodeVersions          map[string]string              // Map for node -> version
 }
 
 func versionToInt(v string) int {
@@ -47,10 +47,10 @@ func convertPolicyAction(in string) string {
 
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
 func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
-	sgp.SGPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.SGPolicy.Spec.Rules))
-	for idx, v := range sgp.SGPolicy.Spec.Rules {
+	sgp.NetworkSecurityPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.NetworkSecurityPolicy.Spec.Rules))
+	for idx, v := range sgp.NetworkSecurityPolicy.Spec.Rules {
 		rhash := generateRuleHash(v, sgPolicyKey)
-		sgp.SGPolicy.Status.RuleStatus[idx].RuleHash = fmt.Sprintf("%d", rhash)
+		sgp.NetworkSecurityPolicy.Status.RuleStatus[idx].RuleHash = fmt.Sprintf("%d", rhash)
 		if len(v.Apps) > 0 {
 			for _, app := range v.Apps {
 				a := netproto.PolicyRule{
@@ -119,14 +119,14 @@ func generateRuleHash(r security.SGRule, key string) uint64 {
 	return h.Sum64()
 }
 
-func convertSGPolicy(sgp *SgpolicyState) *netproto.SGPolicy {
+func convertNetworkSecurityPolicy(sgp *SgpolicyState) *netproto.NetworkSecurityPolicy {
 	// build sg message
-	nsg := netproto.SGPolicy{
-		TypeMeta:   sgp.SGPolicy.TypeMeta,
-		ObjectMeta: agentObjectMeta(sgp.SGPolicy.ObjectMeta),
-		Spec: netproto.SGPolicySpec{
-			AttachTenant: sgp.SGPolicy.Spec.AttachTenant,
-			AttachGroup:  sgp.SGPolicy.Spec.AttachGroups,
+	nsg := netproto.NetworkSecurityPolicy{
+		TypeMeta:   sgp.NetworkSecurityPolicy.TypeMeta,
+		ObjectMeta: agentObjectMeta(sgp.NetworkSecurityPolicy.ObjectMeta),
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: sgp.NetworkSecurityPolicy.Spec.AttachTenant,
+			AttachGroup:  sgp.NetworkSecurityPolicy.Spec.AttachGroups,
 			Rules:        convertRules(sgp, sgp.GetKey()),
 		},
 	}
@@ -134,24 +134,24 @@ func convertSGPolicy(sgp *SgpolicyState) *netproto.SGPolicy {
 	return &nsg
 }
 
-// GetKey returns the key of SGPolicy
+// GetKey returns the key of NetworkSecurityPolicy
 func (sgp *SgpolicyState) GetKey() string {
-	return sgp.SGPolicy.GetKey()
+	return sgp.NetworkSecurityPolicy.GetKey()
 }
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
 
-	sgp.SGPolicy.Lock()
-	defer sgp.SGPolicy.Unlock()
+	sgp.NetworkSecurityPolicy.Lock()
+	defer sgp.NetworkSecurityPolicy.Unlock()
 
-	prop := &sgp.SGPolicy.Status.PropagationStatus
-	newProp := sgp.stateMgr.updatePropogationStatus(sgp.SGPolicy.GenerationID, prop, sgp.NodeVersions)
+	prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
+	newProp := sgp.stateMgr.updatePropogationStatus(sgp.NetworkSecurityPolicy.GenerationID, prop, sgp.NodeVersions)
 
 	//Do write only if changed
 	if sgp.stateMgr.propgatationStatusDifferent(prop, newProp) {
-		sgp.SGPolicy.Status.PropagationStatus = *newProp
-		return sgp.SGPolicy.Write()
+		sgp.NetworkSecurityPolicy.Status.PropagationStatus = *newProp
+		return sgp.NetworkSecurityPolicy.Write()
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (sgp *SgpolicyState) Delete() error {
 	for _, sg := range sgp.groups {
 		err := sg.DeletePolicy(sgp)
 		if err != nil {
-			log.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.SGPolicy.Name, sg.SecurityGroup.Name, err)
+			log.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sg.SecurityGroup.Name, err)
 		}
 	}
 
@@ -173,8 +173,8 @@ func (sgp *SgpolicyState) Delete() error {
 // updateAttachedSgs update all attached sgs
 func (sgp *SgpolicyState) updateAttachedSgs() error {
 	// make sure the attached security group exists
-	for _, sgname := range sgp.SGPolicy.Spec.AttachGroups {
-		sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.SGPolicy.Tenant, sgname)
+	for _, sgname := range sgp.NetworkSecurityPolicy.Spec.AttachGroups {
+		sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.NetworkSecurityPolicy.Tenant, sgname)
 		if err != nil {
 			log.Errorf("Could not find the security group %s. Err: %v", sgname, err)
 			return err
@@ -183,7 +183,7 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 		// add the policy to sg
 		err = sgs.AddPolicy(sgp)
 		if err != nil {
-			log.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.SGPolicy.Name, sgname, err)
+			log.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sgname, err)
 			return err
 		}
 
@@ -196,16 +196,16 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 
 // updateAttachedApps walks all referred apps and links them
 func (sgp *SgpolicyState) updateAttachedApps() error {
-	for _, rule := range sgp.SGPolicy.Spec.Rules {
+	for _, rule := range sgp.NetworkSecurityPolicy.Spec.Rules {
 		if len(rule.Apps) != 0 {
 			for _, appName := range rule.Apps {
-				app, err := sgp.stateMgr.FindApp(sgp.SGPolicy.Tenant, appName)
+				app, err := sgp.stateMgr.FindApp(sgp.NetworkSecurityPolicy.Tenant, appName)
 				if err != nil {
-					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.SGPolicy.Name, rule)
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.NetworkSecurityPolicy.Name, rule)
 					return err
 				}
 
-				app.attachPolicy(sgp.SGPolicy.Name)
+				app.attachPolicy(sgp.NetworkSecurityPolicy.Name)
 			}
 		}
 	}
@@ -215,14 +215,14 @@ func (sgp *SgpolicyState) updateAttachedApps() error {
 
 // detachFromApps detaches the poliy from apps
 func (sgp *SgpolicyState) detachFromApps() error {
-	for _, rule := range sgp.SGPolicy.Spec.Rules {
+	for _, rule := range sgp.NetworkSecurityPolicy.Spec.Rules {
 		if len(rule.Apps) != 0 {
 			for _, appName := range rule.Apps {
-				app, err := sgp.stateMgr.FindApp(sgp.SGPolicy.Tenant, appName)
+				app, err := sgp.stateMgr.FindApp(sgp.NetworkSecurityPolicy.Tenant, appName)
 				if err != nil {
-					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.SGPolicy.Name, rule)
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.NetworkSecurityPolicy.Name, rule)
 				} else {
-					app.detachPolicy(sgp.SGPolicy.Name)
+					app.detachPolicy(sgp.NetworkSecurityPolicy.Name)
 				}
 			}
 		}
@@ -234,8 +234,8 @@ func (sgp *SgpolicyState) detachFromApps() error {
 // SgpolicyStateFromObj converts from memdb object to sgpolicy state
 func SgpolicyStateFromObj(obj runtime.Object) (*SgpolicyState, error) {
 	switch obj.(type) {
-	case *ctkit.SGPolicy:
-		sgpobj := obj.(*ctkit.SGPolicy)
+	case *ctkit.NetworkSecurityPolicy:
+		sgpobj := obj.(*ctkit.NetworkSecurityPolicy)
 		switch sgpobj.HandlerCtx.(type) {
 		case *SgpolicyState:
 			sgps := sgpobj.HandlerCtx.(*SgpolicyState)
@@ -249,49 +249,49 @@ func SgpolicyStateFromObj(obj runtime.Object) (*SgpolicyState, error) {
 }
 
 // NewSgpolicyState creates a new security policy state object
-func NewSgpolicyState(sgp *ctkit.SGPolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
+func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
 	// create sg state object
 	sgps := SgpolicyState{
-		SGPolicy:     sgp,
-		groups:       make(map[string]*SecurityGroupState),
-		stateMgr:     stateMgr,
-		NodeVersions: make(map[string]string),
+		NetworkSecurityPolicy: sgp,
+		groups:                make(map[string]*SecurityGroupState),
+		stateMgr:              stateMgr,
+		NodeVersions:          make(map[string]string),
 	}
 	sgp.HandlerCtx = &sgps
 
 	return &sgps, nil
 }
 
-// OnSGPolicyCreateReq gets called when agent sends create request
-func (sm *Statemgr) OnSGPolicyCreateReq(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnNetworkSecurityPolicyCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnNetworkSecurityPolicyCreateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
 }
 
-// OnSGPolicyUpdateReq gets called when agent sends update request
-func (sm *Statemgr) OnSGPolicyUpdateReq(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnNetworkSecurityPolicyUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnNetworkSecurityPolicyUpdateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
 }
 
-// OnSGPolicyDeleteReq gets called when agent sends delete request
-func (sm *Statemgr) OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnNetworkSecurityPolicyDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnNetworkSecurityPolicyDeleteReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
 }
 
-// OnSGPolicyOperUpdate gets called when policy updates arrive from agents
-func (sm *Statemgr) OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnNetworkSecurityPolicyOperUpdate gets called when policy updates arrive from agents
+func (sm *Statemgr) OnNetworkSecurityPolicyOperUpdate(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	sm.UpdateSgpolicyStatus(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
 	return nil
 }
 
-// OnSGPolicyOperDelete gets called when policy delete arrives from agent
-func (sm *Statemgr) OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error {
+// OnNetworkSecurityPolicyOperDelete gets called when policy delete arrives from agent
+func (sm *Statemgr) OnNetworkSecurityPolicyOperDelete(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
 }
 
 // FindSgpolicy finds sg policy by name
 func (sm *Statemgr) FindSgpolicy(tenant, name string) (*SgpolicyState, error) {
 	// find the object
-	obj, err := sm.FindObject("SGPolicy", tenant, "default", name)
+	obj, err := sm.FindObject("NetworkSecurityPolicy", tenant, "default", name)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func (sm *Statemgr) FindSgpolicy(tenant, name string) (*SgpolicyState, error) {
 
 // ListSgpolicies lists all sg policies
 func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
-	objs := sm.ListObjects("SGPolicy")
+	objs := sm.ListObjects("NetworkSecurityPolicy")
 
 	var sgs []*SgpolicyState
 	for _, obj := range objs {
@@ -316,8 +316,8 @@ func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
 	return sgs, nil
 }
 
-// OnSGPolicyCreate creates a sg policy
-func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
+// OnNetworkSecurityPolicyCreate creates a sg policy
+func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPolicy) error {
 	// create new sg state
 	sgps, err := NewSgpolicyState(sgp, sm)
 	if err != nil {
@@ -328,7 +328,7 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 	// in case of errors, write status back
 	defer func() {
 		if err != nil {
-			sgp.SGPolicy.Status.PropagationStatus.Status = fmt.Sprintf("SGPolicy error: %s", err.Error())
+			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy error: %s", err.Error())
 		}
 	}()
 
@@ -340,7 +340,7 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 	}
 
 	// store it in local DB
-	err = sm.mbus.AddObject(convertSGPolicy(sgps))
+	err = sm.mbus.AddObject(convertNetworkSecurityPolicy(sgps))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -358,8 +358,8 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 	return nil
 }
 
-// OnSGPolicyUpdate updates a sg policy
-func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolicy) error {
+// OnNetworkSecurityPolicyUpdate updates a sg policy
+func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPolicy, nsgp *security.NetworkSecurityPolicy) error {
 	log.Infof("Got sgpolicy update for %#v, %d rules. have %d rules", nsgp.ObjectMeta, len(nsgp.Spec.Rules), len(sgp.Spec.Rules))
 
 	// see if anything changed
@@ -381,7 +381,7 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 	// in case of errors, write status back
 	defer func() {
 		if err != nil {
-			sgp.SGPolicy.Status.PropagationStatus.Status = fmt.Sprintf("SGPolicy error: %s", err.Error())
+			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy error: %s", err.Error())
 		}
 	}()
 
@@ -393,7 +393,7 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 	}
 
 	// store it in local DB
-	err = sm.mbus.UpdateObject(convertSGPolicy(sgps))
+	err = sm.mbus.UpdateObject(convertNetworkSecurityPolicy(sgps))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -412,8 +412,8 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolic
 	return nil
 }
 
-// OnSGPolicyDelete deletes a sg policy
-func (sm *Statemgr) OnSGPolicyDelete(sgpo *ctkit.SGPolicy) error {
+// OnNetworkSecurityPolicyDelete deletes a sg policy
+func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPolicy) error {
 	// see if we already have it
 	sgp, err := sm.FindSgpolicy(sgpo.Tenant, sgpo.Name)
 	if err != nil {
@@ -424,7 +424,7 @@ func (sm *Statemgr) OnSGPolicyDelete(sgpo *ctkit.SGPolicy) error {
 	// cleanup sg state
 	err = sgp.Delete()
 	if err != nil {
-		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sgp.SGPolicy.ObjectMeta, err)
+		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sgp.NetworkSecurityPolicy.ObjectMeta, err)
 		return err
 	}
 
@@ -435,7 +435,7 @@ func (sm *Statemgr) OnSGPolicyDelete(sgpo *ctkit.SGPolicy) error {
 	}
 
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertSGPolicy(sgp))
+	return sm.mbus.DeleteObject(convertNetworkSecurityPolicy(sgp))
 }
 
 // UpdateSgpolicyStatus updates the status of an sg policy
@@ -455,8 +455,8 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	}
 
 	// lock policy for concurrent modifications
-	policy.SGPolicy.Lock()
-	defer policy.SGPolicy.Unlock()
+	policy.NetworkSecurityPolicy.Lock()
+	defer policy.NetworkSecurityPolicy.Unlock()
 
 	if policy.NodeVersions == nil {
 		policy.NodeVersions = make(map[string]string)

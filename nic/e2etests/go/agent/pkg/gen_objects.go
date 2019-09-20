@@ -126,7 +126,7 @@ func (c *Config) generateObjs(manifestFile string, sdevices []StationDevice, vla
 				return err
 			}
 			c.Objects[i] = *genObj
-		case "SGPolicy":
+		case "NetworkSecurityPolicy":
 			genObj, err := c.generateSGPolicies(&o, manifestFile)
 			if err != nil {
 				return err

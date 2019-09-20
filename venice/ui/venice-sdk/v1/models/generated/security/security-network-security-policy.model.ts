@@ -8,27 +8,27 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { SecuritySGPolicySpec, ISecuritySGPolicySpec } from './security-sg-policy-spec.model';
-import { SecuritySGPolicyStatus, ISecuritySGPolicyStatus } from './security-sg-policy-status.model';
+import { SecurityNetworkSecurityPolicySpec, ISecurityNetworkSecurityPolicySpec } from './security-network-security-policy-spec.model';
+import { SecurityNetworkSecurityPolicyStatus, ISecurityNetworkSecurityPolicyStatus } from './security-network-security-policy-status.model';
 
-export interface ISecuritySGPolicy {
+export interface ISecurityNetworkSecurityPolicy {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: ISecuritySGPolicySpec;
-    'status'?: ISecuritySGPolicyStatus;
+    'spec'?: ISecurityNetworkSecurityPolicySpec;
+    'status'?: ISecurityNetworkSecurityPolicyStatus;
 }
 
 
-export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
+export class SecurityNetworkSecurityPolicy extends BaseModel implements ISecurityNetworkSecurityPolicy {
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    /** Spec contains the configuration of the sgpolicy. */
-    'spec': SecuritySGPolicySpec = null;
-    /** Status contains the current state of the sgpolicy. */
-    'status': SecuritySGPolicyStatus = null;
-    public static propInfo: { [prop in keyof ISecuritySGPolicy]: PropInfoItem } = {
+    /** Spec contains the configuration of the Network Security Policy. */
+    'spec': SecurityNetworkSecurityPolicySpec = null;
+    /** Status contains the current state of the Network Security Policy. */
+    'status': SecurityNetworkSecurityPolicyStatus = null;
+    public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicy]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'
@@ -42,31 +42,31 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the sgpolicy.',
+            description:  'Spec contains the configuration of the Network Security Policy.',
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the sgpolicy.',
+            description:  'Status contains the current state of the Network Security Policy.',
             required: false,
             type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySGPolicy.propInfo[propName];
+        return SecurityNetworkSecurityPolicy.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecuritySGPolicy.propInfo;
+        return SecurityNetworkSecurityPolicy.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySGPolicy.propInfo[prop] != null &&
-                        SecuritySGPolicy.propInfo[prop].default != null);
+        return (SecurityNetworkSecurityPolicy.propInfo[prop] != null &&
+                        SecurityNetworkSecurityPolicy.propInfo[prop].default != null);
     }
 
     /**
@@ -76,8 +76,8 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new SecuritySGPolicySpec();
-        this['status'] = new SecuritySGPolicyStatus();
+        this['spec'] = new SecurityNetworkSecurityPolicySpec();
+        this['status'] = new SecurityNetworkSecurityPolicyStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -89,15 +89,15 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (fillDefaults && SecuritySGPolicy.hasDefaultValue('kind')) {
-            this['kind'] = SecuritySGPolicy.propInfo['kind'].default;
+        } else if (fillDefaults && SecurityNetworkSecurityPolicy.hasDefaultValue('kind')) {
+            this['kind'] = SecurityNetworkSecurityPolicy.propInfo['kind'].default;
         } else {
             this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (fillDefaults && SecuritySGPolicy.hasDefaultValue('api-version')) {
-            this['api-version'] = SecuritySGPolicy.propInfo['api-version'].default;
+        } else if (fillDefaults && SecurityNetworkSecurityPolicy.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityNetworkSecurityPolicy.propInfo['api-version'].default;
         } else {
             this['api-version'] = null
         }
@@ -123,11 +123,11 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), SecuritySGPolicy.propInfo['kind']),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), SecuritySGPolicy.propInfo['api-version']),
-                'meta': CustomFormGroup(this['meta'].$formGroup, SecuritySGPolicy.propInfo['meta'].required),
-                'spec': CustomFormGroup(this['spec'].$formGroup, SecuritySGPolicy.propInfo['spec'].required),
-                'status': CustomFormGroup(this['status'].$formGroup, SecuritySGPolicy.propInfo['status'].required),
+                'kind': CustomFormControl(new FormControl(this['kind']), SecurityNetworkSecurityPolicy.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), SecurityNetworkSecurityPolicy.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, SecurityNetworkSecurityPolicy.propInfo['meta'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, SecurityNetworkSecurityPolicy.propInfo['spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, SecurityNetworkSecurityPolicy.propInfo['status'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {

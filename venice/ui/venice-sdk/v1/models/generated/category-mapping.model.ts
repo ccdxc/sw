@@ -31,7 +31,7 @@ import { ObjstoreObject } from './objstore';
 import { RolloutRollout } from './rollout';
 import { RolloutRolloutAction } from './rollout';
 import { SecuritySecurityGroup } from './security';
-import { SecuritySGPolicy } from './security';
+import { SecurityNetworkSecurityPolicy } from './security';
 import { SecurityApp } from './security';
 import { SecurityFirewallProfile } from './security';
 import { SecurityCertificate } from './security';
@@ -231,8 +231,8 @@ export const CategoryMapping: CatMap  = {
       scopes: [ 'tenant', ] ,
       actions:  [] ,
     },
-    "SGPolicy" : {
-      instance: new SecuritySGPolicy(),
+    "NetworkSecurityPolicy" : {
+      instance: new SecurityNetworkSecurityPolicy(),
       scopes: [ 'tenant', ] ,
       actions:  [] ,
     },

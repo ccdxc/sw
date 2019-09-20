@@ -15,40 +15,40 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func TestSGPolicyList(t *testing.T) {
+func TestNetworkSecurityPolicyList(t *testing.T) {
 	t.Parallel()
 	var ok bool
-	var sgpolicyList []*netproto.SGPolicy
+	var networksecuritypolicyList []*netproto.NetworkSecurityPolicy
 
-	err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &sgpolicyList)
+	err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &networksecuritypolicyList)
 
-	AssertOk(t, err, "Error getting sgpolicys from the REST Server")
-	for _, o := range sgpolicyList {
-		if o.Name == "preCreatedSGPolicy" {
+	AssertOk(t, err, "Error getting networksecuritypolicys from the REST Server")
+	for _, o := range networksecuritypolicyList {
+		if o.Name == "preCreatedNetworkSecurityPolicy" {
 			ok = true
 			break
 		}
 	}
 	if !ok {
-		t.Errorf("Could not find preCreatedSGPolicy in Response: %v", sgpolicyList)
+		t.Errorf("Could not find preCreatedNetworkSecurityPolicy in Response: %v", networksecuritypolicyList)
 	}
 
 }
 
-func TestSGPolicyPost(t *testing.T) {
+func TestNetworkSecurityPolicyPost(t *testing.T) {
 	t.Parallel()
 	var resp Response
 	var ok bool
-	var sgpolicyList []*netproto.SGPolicy
+	var networksecuritypolicyList []*netproto.NetworkSecurityPolicy
 
-	postData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	postData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testPostSGPolicy",
+			Name:      "testPostNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			VrfName:      "default",
 			AttachGroup:  []string{"preCreatedSecurityGroup"},
 			AttachTenant: false,
@@ -72,36 +72,36 @@ func TestSGPolicyPost(t *testing.T) {
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &postData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &sgpolicyList)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &networksecuritypolicyList)
 
-	AssertOk(t, err, "Error posting sgpolicy to REST Server")
-	AssertOk(t, getErr, "Error getting sgpolicys from the REST Server")
-	for _, o := range sgpolicyList {
-		if o.Name == "testPostSGPolicy" {
+	AssertOk(t, err, "Error posting networksecuritypolicy to REST Server")
+	AssertOk(t, getErr, "Error getting networksecuritypolicys from the REST Server")
+	for _, o := range networksecuritypolicyList {
+		if o.Name == "testPostNetworkSecurityPolicy" {
 			ok = true
 			break
 		}
 	}
 	if !ok {
-		t.Errorf("Could not find testPostSGPolicy in Response: %v", sgpolicyList)
+		t.Errorf("Could not find testPostNetworkSecurityPolicy in Response: %v", networksecuritypolicyList)
 	}
 
 }
 
-func TestSGPolicyDelete(t *testing.T) {
+func TestNetworkSecurityPolicyDelete(t *testing.T) {
 	t.Parallel()
 	var resp Response
 	var found bool
-	var sgpolicyList []*netproto.SGPolicy
+	var networksecuritypolicyList []*netproto.NetworkSecurityPolicy
 
-	deleteData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	deleteData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testDeleteSGPolicy",
+			Name:      "testDeleteNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			VrfName:      "default",
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
@@ -133,31 +133,31 @@ func TestSGPolicyDelete(t *testing.T) {
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &deleteData, &resp)
-	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/testDeleteSGPolicy", &deleteData, &resp)
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &sgpolicyList)
+	err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/testDeleteNetworkSecurityPolicy", &deleteData, &resp)
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &networksecuritypolicyList)
 
-	AssertOk(t, postErr, "Error posting sgpolicy to REST Server")
-	AssertOk(t, err, "Error deleting sgpolicy from REST Server")
-	AssertOk(t, getErr, "Error getting sgpolicys from the REST Server")
-	for _, o := range sgpolicyList {
-		if o.Name == "testDeleteSGPolicy" {
+	AssertOk(t, postErr, "Error posting networksecuritypolicy to REST Server")
+	AssertOk(t, err, "Error deleting networksecuritypolicy from REST Server")
+	AssertOk(t, getErr, "Error getting networksecuritypolicys from the REST Server")
+	for _, o := range networksecuritypolicyList {
+		if o.Name == "testDeleteNetworkSecurityPolicy" {
 			found = true
 			break
 		}
 	}
 	if found {
-		t.Errorf("Found testDeleteSGPolicy in Response after deleting: %v", sgpolicyList)
+		t.Errorf("Found testDeleteNetworkSecurityPolicy in Response after deleting: %v", networksecuritypolicyList)
 	}
 
 }
 
-func TestSGPolicyUpdate(t *testing.T) {
+func TestNetworkSecurityPolicyUpdate(t *testing.T) {
 	t.Parallel()
 	var resp Response
-	var sgpolicyList []*netproto.SGPolicy
+	var networksecuritypolicyList []*netproto.NetworkSecurityPolicy
 
-	var actualSGPolicySpec netproto.SGPolicySpec
-	updatedSGPolicySpec := netproto.SGPolicySpec{
+	var actualNetworkSecurityPolicySpec netproto.NetworkSecurityPolicySpec
+	updatedNetworkSecurityPolicySpec := netproto.NetworkSecurityPolicySpec{
 		VrfName:     "default",
 		AttachGroup: []string{"preCreatedSecurityGroup"},
 		Rules: []netproto.PolicyRule{
@@ -166,39 +166,39 @@ func TestSGPolicyUpdate(t *testing.T) {
 			},
 		},
 	}
-	putData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	putData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
-			Name:      "preCreatedSGPolicy",
+			Name:      "preCreatedNetworkSecurityPolicy",
 			Namespace: "default",
 		},
-		Spec: updatedSGPolicySpec,
+		Spec: updatedNetworkSecurityPolicySpec,
 	}
-	err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/preCreatedSGPolicy", &putData, &resp)
-	AssertOk(t, err, "Error updating sgpolicy to REST Server")
+	err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/preCreatedNetworkSecurityPolicy", &putData, &resp)
+	AssertOk(t, err, "Error updating networksecuritypolicy to REST Server")
 
-	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &sgpolicyList)
-	AssertOk(t, getErr, "Error getting sgpolicys from the REST Server")
-	for _, o := range sgpolicyList {
-		if o.Name == "preCreatedSGPolicy" {
-			actualSGPolicySpec = o.Spec
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &networksecuritypolicyList)
+	AssertOk(t, getErr, "Error getting networksecuritypolicys from the REST Server")
+	for _, o := range networksecuritypolicyList {
+		if o.Name == "preCreatedNetworkSecurityPolicy" {
+			actualNetworkSecurityPolicySpec = o.Spec
 			break
 		}
 	}
 	// Rule hashes are expected to change during update, so mask rule-id hashes here
-	for idx := range actualSGPolicySpec.Rules {
-		actualSGPolicySpec.Rules[idx].ID = 0
+	for idx := range actualNetworkSecurityPolicySpec.Rules {
+		actualNetworkSecurityPolicySpec.Rules[idx].ID = 0
 	}
-	AssertEquals(t, updatedSGPolicySpec, actualSGPolicySpec, "Could not validate updated spec.")
+	AssertEquals(t, updatedNetworkSecurityPolicySpec, actualNetworkSecurityPolicySpec, "Could not validate updated spec.")
 
 }
 
-func TestSGPolicyCreateErr(t *testing.T) {
+func TestNetworkSecurityPolicyCreateErr(t *testing.T) {
 	t.Parallel()
 	var resp Response
-	badPostData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	badPostData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "",
 		},
@@ -209,11 +209,11 @@ func TestSGPolicyCreateErr(t *testing.T) {
 	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }
 
-func TestSGPolicyDeleteErr(t *testing.T) {
+func TestNetworkSecurityPolicyDeleteErr(t *testing.T) {
 	t.Parallel()
 	var resp Response
-	badDelData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	badDelData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{Tenant: "default",
 			Namespace: "default",
 			Name:      "badObject"},
@@ -224,11 +224,11 @@ func TestSGPolicyDeleteErr(t *testing.T) {
 	Assert(t, err != nil, "Expected test to error out with 500. It passed instead")
 }
 
-func TestSGPolicyUpdateErr(t *testing.T) {
+func TestNetworkSecurityPolicyUpdateErr(t *testing.T) {
 	t.Parallel()
 	var resp Response
-	badDelData := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	badDelData := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{Tenant: "default",
 			Namespace: "default",
 			Name:      "badObject"},

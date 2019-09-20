@@ -17,18 +17,18 @@ var _ = Describe("rulestats tests", func() {
 		}).Should(Succeed())
 
 		// delete the default allow policy
-		Expect(ts.model.DefaultSGPolicy().Delete()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 
 	Context("Verify rulestats on traffic ", func() {
@@ -36,7 +36,7 @@ var _ = Describe("rulestats tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
-			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
 			Expect(spc.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
@@ -69,7 +69,7 @@ var _ = Describe("rulestats tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
-			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
 			Expect(spc.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly
@@ -102,7 +102,7 @@ var _ = Describe("rulestats tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}
-			spc := ts.model.NewSGPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
 			Expect(spc.Commit()).ShouldNot(HaveOccurred())
 
 			// verify policy was propagated correctly

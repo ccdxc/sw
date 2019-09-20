@@ -17,7 +17,7 @@ export interface ISearchPolicySearchResponse {
 
 export class SearchPolicySearchResponse extends BaseModel implements ISearchPolicySearchResponse {
     'status': SearchPolicySearchResponse_status = null;
-    /** Result is Map of <SGPolicy object name, PolicyMatch Entry>. */
+    /** Result is Map of <NetworkSecurityPolicy object name, PolicyMatch Entry>. */
     'results': object = null;
     public static propInfo: { [prop in keyof ISearchPolicySearchResponse]: PropInfoItem } = {
         'status': {
@@ -27,7 +27,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
             type: 'string'
         },
         'results': {
-            description:  'Result is Map of &lt;SGPolicy object name, PolicyMatch Entry&gt;.',
+            description:  'Result is Map of &lt;NetworkSecurityPolicy object name, PolicyMatch Entry&gt;.',
             required: false,
             type: 'object'
         },

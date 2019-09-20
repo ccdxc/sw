@@ -19,11 +19,11 @@ var _ = Describe("firewall tests", func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 
 	Context("Basic firewall tests", func() {
@@ -33,7 +33,7 @@ var _ = Describe("firewall tests", func() {
 			}
 
 			// ping all workload pairs in same subnet
-			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "tcp")
+			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
@@ -41,7 +41,7 @@ var _ = Describe("firewall tests", func() {
 
 		It("Should not establish TCP session between any workload with deny policy", func() {
 			// change the default policy to deny all
-			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultSGPolicy(), "tcp")
+			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			// randomly pick one workload and verify ping fails between them
 			Eventually(func() error {
 				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)

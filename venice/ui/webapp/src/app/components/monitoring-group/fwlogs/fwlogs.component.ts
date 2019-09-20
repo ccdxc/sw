@@ -17,7 +17,7 @@ import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit'
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { SecurityService } from '@app/services/generated/security.service';
-import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { PolicyRuleTuple } from './';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { TimeRange } from '@app/components/shared/timerange/utility';
@@ -64,8 +64,8 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   ruleMap = new Map<string, PolicyRuleTuple>();
 
   // Holds all policy objects
-  sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
-  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
+  sgPolicies: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
+  sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
 
   lastUpdateTime: string = '';
 
@@ -102,7 +102,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: true, width: 7 },
     { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: true},
     { field: 'session-state', header: 'Session Action', class: 'fwlogs-column', sortable: true},
-    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitysgpolicy_read' },
+    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitynetworksecuritypolicy_read' },
   ];
 
   searchSubscription: Subscription;
@@ -305,9 +305,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   getSGPolicies() {
-    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    const subscription = this.securityService.WatchSGPolicy().subscribe(
+    const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
         for (const policy of this.sgPolicies) {

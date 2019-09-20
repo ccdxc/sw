@@ -7,18 +7,18 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { SecuritySGPolicy, ISecuritySGPolicy } from './security-sg-policy.model';
+import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy } from './security-network-security-policy.model';
 
-export interface ISecurityAutoMsgSGPolicyWatchHelperWatchEvent {
+export interface ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent {
     'type'?: string;
-    'object'?: ISecuritySGPolicy;
+    'object'?: ISecurityNetworkSecurityPolicy;
 }
 
 
-export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgSGPolicyWatchHelperWatchEvent {
+export class SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent {
     'type': string = null;
-    'object': SecuritySGPolicy = null;
-    public static propInfo: { [prop in keyof ISecurityAutoMsgSGPolicyWatchHelperWatchEvent]: PropInfoItem } = {
+    'object': SecurityNetworkSecurityPolicy = null;
+    public static propInfo: { [prop in keyof ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'
@@ -30,19 +30,19 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo[propName];
+        return SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo;
+        return SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
-                        SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo[prop].default != null);
+        return (SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo[prop].default != null);
     }
 
     /**
@@ -51,7 +51,7 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['object'] = new SecuritySGPolicy();
+        this['object'] = new SecurityNetworkSecurityPolicy();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -63,8 +63,8 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
     setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (fillDefaults && SecurityAutoMsgSGPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
-            this['type'] = SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo['type'].default;
+        } else if (fillDefaults && SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo['type'].default;
         } else {
             this['type'] = null
         }
@@ -80,8 +80,8 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo['type']),
-                'object': CustomFormGroup(this['object'].$formGroup, SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo['object'].required),
+                'type': CustomFormControl(new FormControl(this['type']), SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo['type']),
+                'object': CustomFormGroup(this['object'].$formGroup, SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.propInfo['object'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('object') as FormGroup).controls).forEach(field => {

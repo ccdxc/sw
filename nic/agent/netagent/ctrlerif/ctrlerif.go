@@ -120,7 +120,7 @@ func (client *NpmClient) runWatchLoop(ctx context.Context) {
 		go nimbusClient.WatchNetworks(client.watchCtx, client.agent)
 		go nimbusClient.WatchEndpoints(client.watchCtx, client.agent)
 		go nimbusClient.WatchSecurityGroups(client.watchCtx, client.agent)
-		go nimbusClient.WatchSGPolicys(client.watchCtx, client.agent)
+		go nimbusClient.WatchNetworkSecurityPolicys(client.watchCtx, client.agent)
 		go nimbusClient.WatchSecurityProfiles(client.watchCtx, client.agent)
 		go nimbusClient.WatchApps(client.watchCtx, client.agent)
 

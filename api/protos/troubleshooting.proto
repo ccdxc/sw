@@ -24,7 +24,7 @@ import "mirror.proto";
 message TsPolicy {
     // Policy and associated rules that affect the flow
     // Parent policy
-    api.ObjectRef               Sgpolicy    = 1 [(gogoproto.jsontag) = "sg-policy,omitempty"];
+    api.ObjectRef               Sgpolicy    = 1 [(gogoproto.jsontag) = "network-security-policy,omitempty"];
     // InRules affecting TsFlow
     repeated security.SGRule    InRules     = 2 [(gogoproto.jsontag) = "in-rules,omitempty"];
     // OutRules affecting TsFlow

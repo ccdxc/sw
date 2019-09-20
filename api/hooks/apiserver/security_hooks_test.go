@@ -21,7 +21,7 @@ import (
 )
 
 // #################### Happy Path Tests ####################
-func TestSGPolicyCreateAtTenant(t *testing.T) {
+func TestNetworkSecurityPolicyCreateAtTenant(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -46,24 +46,24 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
-func TestSGPolicyCreateWithPreCommitHook(t *testing.T) {
+func TestNetworkSecurityPolicyCreateWithPreCommitHook(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -88,14 +88,14 @@ func TestSGPolicyCreateWithPreCommitHook(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -110,11 +110,11 @@ func TestSGPolicyCreateWithPreCommitHook(t *testing.T) {
 	kvs, err := store.New(storecfg)
 	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
 
-	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "Single SGPolicy create must succeed")
+	_, _, err = s.enforceMaxNetworkSecurityPolicyPreCommitHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, sgp)
+	AssertOk(t, err, "Single NetworkSecurityPolicy create must succeed")
 }
 
-func TestMaxSGPolicyEnforcement(t *testing.T) {
+func TestMaxNetworkSecurityPolicyEnforcement(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -140,27 +140,27 @@ func TestMaxSGPolicyEnforcement(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	sgp1 := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp1 := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -175,13 +175,13 @@ func TestMaxSGPolicyEnforcement(t *testing.T) {
 	err = kv.Create(ctx, key, &sgp)
 	AssertOk(t, err, "Error creating object in KVStore")
 
-	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
-	Assert(t, err != nil, "SGPolicy creates exceeding max allowed must fail", err)
+	_, _, err = s.enforceMaxNetworkSecurityPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
+	Assert(t, err != nil, "NetworkSecurityPolicy creates exceeding max allowed must fail", err)
 	err = kv.Delete(ctx, key, nil)
 	AssertOk(t, err, "Error deleting object in KVStore")
 }
 
-func TestMaxSGPolicyEnforcementForSameName(t *testing.T) {
+func TestMaxNetworkSecurityPolicyEnforcementForSameName(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -207,27 +207,27 @@ func TestMaxSGPolicyEnforcementForSameName(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	sgp1 := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp1 := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -242,8 +242,8 @@ func TestMaxSGPolicyEnforcementForSameName(t *testing.T) {
 	err = kv.Create(ctx, key, &sgp)
 	AssertOk(t, err, "Error creating object in KVStore")
 
-	_, _, err = s.enforceMaxSGPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
-	AssertOk(t, err, "SGPolicy creates with same name must not fail")
+	_, _, err = s.enforceMaxNetworkSecurityPolicyPreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
+	AssertOk(t, err, "NetworkSecurityPolicy creates with same name must not fail")
 	err = kv.Delete(ctx, key, nil)
 	AssertOk(t, err, "Error deleting object in KVStore")
 }
@@ -277,27 +277,27 @@ func TestMaxSGRuleEnforcementOnCreate(t *testing.T) {
 		rules = append(rules, rule)
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	sgp1 := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp1 := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -313,7 +313,7 @@ func TestMaxSGRuleEnforcementOnCreate(t *testing.T) {
 	AssertOk(t, err, "Error creating object in KVStore")
 
 	_, _, err = s.enforceMaxSGRulePreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.CreateOper, false, sgp1)
-	Assert(t, err != nil, "SGPolicy creates exceeding max allowed rules must fail", err)
+	Assert(t, err != nil, "NetworkSecurityPolicy creates exceeding max allowed rules must fail", err)
 	err = kv.Delete(ctx, key, nil)
 	AssertOk(t, err, "Error deleting object in KVStore")
 }
@@ -347,27 +347,27 @@ func TestMaxSGRuleEnforcementOnUpdate(t *testing.T) {
 		rules = append(rules, rule)
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicyUpdate",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	sgp1 := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp1 := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicyUpdate1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -383,12 +383,12 @@ func TestMaxSGRuleEnforcementOnUpdate(t *testing.T) {
 	AssertOk(t, err, "Error creating object in KVStore")
 
 	_, _, err = s.enforceMaxSGRulePreCommitHook(context.Background(), kv, kv.NewTxn(), "", apiintf.UpdateOper, false, sgp1)
-	Assert(t, err != nil, "SGPolicy creates exceeding max allowed rules must fail", err)
+	Assert(t, err != nil, "NetworkSecurityPolicy creates exceeding max allowed rules must fail", err)
 	err = kv.Delete(ctx, key, nil)
 	AssertOk(t, err, "Error deleting object in KVStore")
 }
 
-func TestSGPolicyCreateAtSGs(t *testing.T) {
+func TestNetworkSecurityPolicyCreateAtSGs(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -430,20 +430,20 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 			ToIPAddresses: []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachGroups: []string{"dummySG"},
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
@@ -473,24 +473,24 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachGroups: []string{"dummySG"},
 			Rules:        rulesWithFrom,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "SG Policy attaching to the sgs with From Addresses must pass. Error: %v", errs)
 }
 
-func TestSGPolicyV4SrcAnyDst(t *testing.T) {
+func TestNetworkSecurityPolicyV4SrcAnyDst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -515,24 +515,24 @@ func TestSGPolicyV4SrcAnyDst(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
-func TestSGPolicyV4DstAnySrc(t *testing.T) {
+func TestNetworkSecurityPolicyV4DstAnySrc(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -557,24 +557,24 @@ func TestSGPolicyV4DstAnySrc(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
-func TestSGPolicyV6SrcAnyDst(t *testing.T) {
+func TestNetworkSecurityPolicyV6SrcAnyDst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -599,24 +599,24 @@ func TestSGPolicyV6SrcAnyDst(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
-func TestSGPolicyV6DstAnySrc(t *testing.T) {
+func TestNetworkSecurityPolicyV6DstAnySrc(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -641,25 +641,25 @@ func TestSGPolicyV6DstAnySrc(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
 // #################### Corner Case Tests ####################
-func TestBadSGPolicyV4V6EndIPSrcMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4V6EndIPSrcMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -685,24 +685,24 @@ func TestBadSGPolicyV4V6EndIPSrcMixed(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4V6StartIPSrcMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4V6StartIPSrcMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -728,24 +728,24 @@ func TestBadSGPolicyV4V6StartIPSrcMixed(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4V6EndIPDstMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4V6EndIPDstMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -771,24 +771,24 @@ func TestBadSGPolicyV4V6EndIPDstMixed(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2-1001:1::1"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4V6StartIPDstMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4V6StartIPDstMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -814,24 +814,24 @@ func TestBadSGPolicyV4V6StartIPDstMixed(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "1001:1::1-172.0.0.2"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4CIDRV6EndIPSrcMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4CIDRV6EndIPSrcMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -857,24 +857,24 @@ func TestBadSGPolicyV4CIDRV6EndIPSrcMixed(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4CIDRV6StartIPSrcMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4CIDRV6StartIPSrcMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -900,24 +900,24 @@ func TestBadSGPolicyV4CIDRV6StartIPSrcMixed(t *testing.T) {
 			ToIPAddresses:   []string{"any"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4CIDRV6EndIPDstMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4CIDRV6EndIPDstMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -943,24 +943,24 @@ func TestBadSGPolicyV4CIDRV6EndIPDstMixed(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2/16-1001:1::1"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4CIDRV6StartIPDstMixed(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4CIDRV6StartIPDstMixed(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -986,24 +986,24 @@ func TestBadSGPolicyV4CIDRV6StartIPDstMixed(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "1001:1::1-172.0.0.2/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4SrcV6Dst(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4SrcV6Dst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1028,24 +1028,24 @@ func TestBadSGPolicyV4SrcV6Dst(t *testing.T) {
 			ToIPAddresses:   []string{"1001:1::1"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4CIDRSrcV6Dst(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4CIDRSrcV6Dst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1070,24 +1070,24 @@ func TestBadSGPolicyV4CIDRSrcV6Dst(t *testing.T) {
 			ToIPAddresses:   []string{"1001:1::1"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV4RangeSrcV6Dst(t *testing.T) {
+func TestBadNetworkSecurityPolicyV4RangeSrcV6Dst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1112,24 +1112,24 @@ func TestBadSGPolicyV4RangeSrcV6Dst(t *testing.T) {
 			ToIPAddresses:   []string{"1001:1::1"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV6SrcV4Dst(t *testing.T) {
+func TestBadNetworkSecurityPolicyV6SrcV4Dst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1154,24 +1154,24 @@ func TestBadSGPolicyV6SrcV4Dst(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV6SrcV4DstCIDR(t *testing.T) {
+func TestBadNetworkSecurityPolicyV6SrcV4DstCIDR(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1196,24 +1196,24 @@ func TestBadSGPolicyV6SrcV4DstCIDR(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
-func TestBadSGPolicyV6SrcV4DstRange(t *testing.T) {
+func TestBadNetworkSecurityPolicyV6SrcV4DstRange(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
@@ -1238,20 +1238,20 @@ func TestBadSGPolicyV6SrcV4DstRange(t *testing.T) {
 			ToIPAddresses:   []string{"172.0.0.1", "10.0.0.1-10.0.0.10"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "mixed v4 and v6 addresses must fail. Error: %v", errs)
 }
 
@@ -1280,21 +1280,21 @@ func TestBothAttachmentPoints(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			AttachGroups: []string{"dummySG"},
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying both tenant and sg level must fail")
 }
 
@@ -1322,20 +1322,20 @@ func TestEmptyPortsInRules(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying empty ports must fail")
 }
 
@@ -1359,20 +1359,20 @@ func TestAnyProtoInRules(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "sg policy create with any protocol should suceed")
 }
 func TestEmptyProtoPorts(t *testing.T) {
@@ -1390,20 +1390,20 @@ func TestEmptyProtoPorts(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying empty ports must fail")
 }
 
@@ -1431,20 +1431,20 @@ func TestEmptyFromIPAddresses(t *testing.T) {
 			},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
 	fmt.Println(errs)
 }
@@ -1473,20 +1473,20 @@ func TestEmptyToIPAddresses(t *testing.T) {
 			},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
 	fmt.Println(errs)
 }
@@ -1514,20 +1514,20 @@ func TestEmptyFromAndToIPAddresses(t *testing.T) {
 			},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
 }
 
@@ -1556,19 +1556,19 @@ func TestMissingAttachmentPoint(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			Rules: rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates with missing attachment points")
 }
 
@@ -1601,20 +1601,20 @@ func TestInvalidAppProto(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates with invalid app proto fail")
 }
 
@@ -1640,20 +1640,20 @@ func TestAppProtoBoth(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	err := s.validateSGPolicy(sgp, "v1", false, false)
+	err := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, err != nil, "sg policy created with both app and proto")
 }
 
@@ -1686,30 +1686,30 @@ func TestProtocolNumbers(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "sg policy creates with protocol number should suceed")
 
 	// invalid protocol number
 	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "256"
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
 
 	// invalid protocol number
 	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "-1"
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
 }
 
@@ -1742,20 +1742,20 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "sg policy creates with non integer parsable port must fail")
 }
 
@@ -1869,36 +1869,36 @@ func TestRulePortRanges(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        simplePortRange,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "app range config failed")
 
 	sgp.Spec.Rules = rulesIncorrectPortFormat
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app incorrect port range must fail")
 
 	sgp.Spec.Rules = rulesIncorrectPortRangeFormat
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app incorrect port range format must fail")
 
 	sgp.Spec.Rules = rulesIncorrectPortValFormat
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app incorrect port value format must fail")
 
 	sgp.Spec.Rules = rulesInvalidPortRange
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app invalid port range must fail")
 }
 
@@ -1953,25 +1953,25 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rulesBelowRange,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app ports outside 0 - 64K must fail")
 
 	sgp.Spec.Rules = rulesAboveRange
 
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "app ports outside 0 - 64K must fail")
 }
 
@@ -2030,28 +2030,28 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 			Action: "PERMIT",
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rulesMissingTo,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing To Addresses must fail. Error: %v", errs)
 
 	sgp.Spec.Rules = rulesMissingFrom
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing From Addresses must fail. Error: %v", errs)
 
 	sgp.Spec.Rules = rulesMissingBoth
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing To and From Addresses must fail. Error: %v", errs)
 }
 
@@ -2080,20 +2080,20 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid IP Address Octet must fail.  Error: %v", errs)
 
 }
@@ -2123,20 +2123,20 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid CIDR block must fail.  Error: %v", errs)
 }
 
@@ -2182,24 +2182,24 @@ func TestInvalidIPAddressRange(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rulesInvalidRange,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid IP Range must fail.  Error: %v", errs)
 
 	sgp.Spec.Rules = rulesInvalidRangeMultipleSep
-	errs = s.validateSGPolicy(sgp, "v1", false, false)
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid IP Range must fail.  Error: %v", errs)
 }
 
@@ -2228,20 +2228,20 @@ func TestInvalidKeyword(t *testing.T) {
 			ToIPAddresses:   []string{"foo"},
 		},
 	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy rules having non any keywords must fail.  Error: %v", errs)
 }
 
@@ -2270,20 +2270,20 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachGroups: []string{"dummySG"},
 			Rules:        rulesWithFrom,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy attaching to the sgs with invalid IP addresses must fail. Error: %v", errs)
 }
 
@@ -2312,20 +2312,20 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rulesWithFrom,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid app proto/port formats should fail. Error: %v", errs)
 }
 
@@ -2354,20 +2354,20 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 		},
 	}
 
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rulesWithFrom,
 		},
 	}
 
-	errs := s.validateSGPolicy(sgp, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "SG Policy with invalid app proto/port formats should fail. Error: %v", errs)
 }
 
@@ -2389,7 +2389,7 @@ func TestInvalidObjType(t *testing.T) {
 		Spec: security.AppSpec{},
 	}
 
-	errs := s.validateSGPolicy(app, "v1", false, false)
+	errs := s.validateNetworkSecurityPolicy(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "Invalid object casts must fail.  Error: %v", errs)
 }
 

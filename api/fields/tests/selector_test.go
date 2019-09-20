@@ -172,7 +172,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "security.SGPolicy",
+			kind:       "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules.apps in (mongo,redis)",
 			expSuccess: true,
 			selector: Selector{
@@ -285,17 +285,17 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: false,
 		},
 		{
-			kind:       "security.SGPolicy",
+			kind:       "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules[*].apps in (mongo,redis)", // Slices cant be indexed
 			expSuccess: false,
 		},
 		{
-			kind:       "security.SGPolicy",
+			kind:       "security.NetworkSecurityPolicy",
 			selStr:     "spec.inrules.apps in (mongo,redis)", // Non-existent field
 			expSuccess: false,
 		},
 		{
-			kind:       "security.SGPolicy",
+			kind:       "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules in (mongo,redis)", // Non-leaf field
 			expSuccess: false,
 		},

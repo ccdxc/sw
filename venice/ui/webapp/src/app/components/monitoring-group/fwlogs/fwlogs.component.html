@@ -66,7 +66,7 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div *roleGuard="'securitysgpolicy_read'" class="global-column-action-icon-container"
+  <div *roleGuard="'securitynetworksecuritypolicy_read'" class="global-column-action-icon-container"
        fxLayout="row" fxLayoutGap="5px">
     <mat-icon svgIcon="security-policy" class="global-table-action-svg-icon"
               (mouseenter)="ruleDetailsOverlay.toggle($event); handleHover(rowData);"

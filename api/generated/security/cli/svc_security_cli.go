@@ -106,7 +106,7 @@ func restPutSecurityGroup(hostname, token string, obj interface{}) error {
 
 }
 
-func restGetSGPolicy(hostname, tenant, token string, obj interface{}) error {
+func restGetNetworkSecurityPolicy(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -115,17 +115,17 @@ func restGetSGPolicy(hostname, tenant, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*security.SGPolicy); ok {
-		nv, err := restcl.SecurityV1().SGPolicy().Get(loginCtx, &v.ObjectMeta)
+	if v, ok := obj.(*security.NetworkSecurityPolicy); ok {
+		nv, err := restcl.SecurityV1().NetworkSecurityPolicy().Get(loginCtx, &v.ObjectMeta)
 		if err != nil {
 			return err
 		}
 		*v = *nv
 	}
 
-	if v, ok := obj.(*security.SGPolicyList); ok {
+	if v, ok := obj.(*security.NetworkSecurityPolicyList); ok {
 		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.SecurityV1().SGPolicy().List(loginCtx, &opts)
+		nv, err := restcl.SecurityV1().NetworkSecurityPolicy().List(loginCtx, &opts)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func restGetSGPolicy(hostname, tenant, token string, obj interface{}) error {
 
 }
 
-func restDeleteSGPolicy(hostname, token string, obj interface{}) error {
+func restDeleteNetworkSecurityPolicy(hostname, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -144,8 +144,8 @@ func restDeleteSGPolicy(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*security.SGPolicy); ok {
-		nv, err := restcl.SecurityV1().SGPolicy().Delete(loginCtx, &v.ObjectMeta)
+	if v, ok := obj.(*security.NetworkSecurityPolicy); ok {
+		nv, err := restcl.SecurityV1().NetworkSecurityPolicy().Delete(loginCtx, &v.ObjectMeta)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func restDeleteSGPolicy(hostname, token string, obj interface{}) error {
 
 }
 
-func restPostSGPolicy(hostname, token string, obj interface{}) error {
+func restPostNetworkSecurityPolicy(hostname, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -164,8 +164,8 @@ func restPostSGPolicy(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*security.SGPolicy); ok {
-		nv, err := restcl.SecurityV1().SGPolicy().Create(loginCtx, v)
+	if v, ok := obj.(*security.NetworkSecurityPolicy); ok {
+		nv, err := restcl.SecurityV1().NetworkSecurityPolicy().Create(loginCtx, v)
 		if err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func restPostSGPolicy(hostname, token string, obj interface{}) error {
 
 }
 
-func restPutSGPolicy(hostname, token string, obj interface{}) error {
+func restPutNetworkSecurityPolicy(hostname, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -184,8 +184,8 @@ func restPutSGPolicy(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*security.SGPolicy); ok {
-		nv, err := restcl.SecurityV1().SGPolicy().Update(loginCtx, v)
+	if v, ok := obj.(*security.NetworkSecurityPolicy); ok {
+		nv, err := restcl.SecurityV1().NetworkSecurityPolicy().Update(loginCtx, v)
 		if err != nil {
 			return err
 		}
@@ -384,10 +384,10 @@ func init() {
 	cl.AddRestPutFunc("security.SecurityGroup", "v1", restPutSecurityGroup)
 	cl.AddRestGetFunc("security.SecurityGroup", "v1", restGetSecurityGroup)
 
-	cl.AddRestPostFunc("security.SGPolicy", "v1", restPostSGPolicy)
-	cl.AddRestDeleteFunc("security.SGPolicy", "v1", restDeleteSGPolicy)
-	cl.AddRestPutFunc("security.SGPolicy", "v1", restPutSGPolicy)
-	cl.AddRestGetFunc("security.SGPolicy", "v1", restGetSGPolicy)
+	cl.AddRestPostFunc("security.NetworkSecurityPolicy", "v1", restPostNetworkSecurityPolicy)
+	cl.AddRestDeleteFunc("security.NetworkSecurityPolicy", "v1", restDeleteNetworkSecurityPolicy)
+	cl.AddRestPutFunc("security.NetworkSecurityPolicy", "v1", restPutNetworkSecurityPolicy)
+	cl.AddRestGetFunc("security.NetworkSecurityPolicy", "v1", restGetNetworkSecurityPolicy)
 
 	cl.AddRestPostFunc("security.App", "v1", restPostApp)
 	cl.AddRestDeleteFunc("security.App", "v1", restDeleteApp)

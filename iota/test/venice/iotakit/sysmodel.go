@@ -37,7 +37,7 @@ type SysModel struct {
 	naples            map[string]*Naples        // Naples instances
 	workloads         map[string]*Workload      // workloads
 	subnets           []*Network                // subnets
-	sgpolicies        map[string]*SGPolicy      // security policies
+	sgpolicies        map[string]*NetworkSecurityPolicy      // security policies
 	msessions         map[string]*MirrorSession // mirror sessions
 	veniceNodes       map[string]*VeniceNode    // Venice nodes
 	fakeHosts         map[string]*Host          // simulated hosts
@@ -45,8 +45,8 @@ type SysModel struct {
 	fakeWorkloads     map[string]*Workload      // simulated workloads
 	fakeSubnets       map[string]*Network       // simulated subnets
 	fakeApps          map[string]*App           // simulated apps
-	fakeSGPolicies    map[string]*SGPolicy      // simulated security policies
-	defaultSgPolicies []*SGPolicyCollection     //default sg policy pushed
+	fakeSGPolicies    map[string]*NetworkSecurityPolicy      // simulated security policies
+	defaultSgPolicies []*NetworkSecurityPolicyCollection     //default sg policy pushed
 
 	tb *TestBed // testbed
 
@@ -62,14 +62,14 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 		naples:         make(map[string]*Naples),
 		veniceNodes:    make(map[string]*VeniceNode),
 		workloads:      make(map[string]*Workload),
-		sgpolicies:     make(map[string]*SGPolicy),
+		sgpolicies:     make(map[string]*NetworkSecurityPolicy),
 		msessions:      make(map[string]*MirrorSession),
 		fakeHosts:      make(map[string]*Host),
 		fakeNaples:     make(map[string]*Naples),
 		fakeWorkloads:  make(map[string]*Workload),
 		fakeSubnets:    make(map[string]*Network),
 		fakeApps:       make(map[string]*App),
-		fakeSGPolicies: make(map[string]*SGPolicy),
+		fakeSGPolicies: make(map[string]*NetworkSecurityPolicy),
 		allocatedMac:   make(map[string]bool),
 	}
 
@@ -113,7 +113,7 @@ func (sm *SysModel) CleanupAllConfig() error {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceSGPolicies, err := sm.tb.ListSGPolicy()
+	veniceSGPolicies, err := sm.tb.ListNetworkSecurityPolicy()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
@@ -139,7 +139,7 @@ func (sm *SysModel) CleanupAllConfig() error {
 
 	// delete venice objects
 	for _, obj := range veniceSGPolicies {
-		if err := sm.tb.DeleteSGPolicy(obj); err != nil {
+		if err := sm.tb.DeleteNetworkSecurityPolicy(obj); err != nil {
 			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
 			log.Errorf("%s", err)
 			return err
@@ -368,7 +368,7 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	}
 
 	// start with default allow policy
-	err = sm.DefaultSGPolicy().Restore()
+	err = sm.DefaultNetworkSecurityPolicy().Restore()
 	if err != nil {
 		log.Errorf("Error creating default policy. Err: %v", err)
 		return err
@@ -386,19 +386,19 @@ func timeTrack(start time.Time, name string) {
 // TBD: we can enhance this to take the scale parameters fromt he user
 func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	cfg := cfgen.DefaultCfgenParams
-	cfg.SGPolicyParams.NumPolicies = 1
+	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
 
 	if scale {
-		cfg.SGPolicyParams.NumRulesPerPolicy = 50000
+		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 50000
 		cfg.WorkloadParams.WorkloadsPerHost = 100
 		cfg.AppParams.NumApps = 5000
 	} else {
-		cfg.SGPolicyParams.NumRulesPerPolicy = 5
+		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 5
 		cfg.WorkloadParams.WorkloadsPerHost = 50
 		cfg.AppParams.NumApps = 4
 	}
 	// TBD - override default-policy
-	// cfg.SGPolicyParams.SGPolicyTemplate.ObjectMeta.Name = "default-policy"
+	// cfg.NetworkSecurityPolicyParams.NetworkSecurityPolicyTemplate.ObjectMeta.Name = "default-policy"
 
 	smartnics := []*cluster.DistributedServiceCard{}
 	realHostNames := make(map[string]bool)
@@ -537,8 +537,8 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		createSgPolicy := func() error {
 			defer timeTrack(time.Now(), "Create Sg Policy")
 
-			sm.fakeSGPolicies[o.ObjectMeta.Name] = &SGPolicy{venicePolicy: o}
-			if err := sm.tb.CreateSGPolicy(o); err != nil {
+			sm.fakeSGPolicies[o.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: o}
+			if err := sm.tb.CreateNetworkSecurityPolicy(o); err != nil {
 				return fmt.Errorf("error creating sgpolicy: %s", err)
 			}
 
@@ -555,7 +555,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 			iter := 1
 			for ; iter <= 2000 && ctx.Err() == nil; iter++ {
 				time.Sleep(time.Second * time.Duration(iter))
-				retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta)
+				retSgp, err := sm.tb.GetNetworkSecurityPolicy(&o.ObjectMeta)
 				if err != nil {
 					return fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
 				} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
@@ -577,7 +577,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	//Append default Sg polcies
 	for _, sgPolicy := range sm.fakeSGPolicies {
 		sgPolicy.sm = sm
-		sm.defaultSgPolicies = append(sm.defaultSgPolicies, sm.NewVeniceSGPolicy(sgPolicy))
+		sm.defaultSgPolicies = append(sm.defaultSgPolicies, sm.NewVeniceNetworkSecurityPolicy(sgPolicy))
 	}
 
 	return nil

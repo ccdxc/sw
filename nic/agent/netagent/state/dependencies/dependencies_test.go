@@ -359,12 +359,12 @@ func TestStateDependencies_ResolveTypeSelfLink(t *testing.T) {
 	AssertEquals(t, "/api/ipsec/policies/testTenant/testNS/testIPSecPolicy", selfLink, "failed to compose key for ipsecpolicy object")
 
 	// resolve sgpolicy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "sgpolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "testTenant",
 			Namespace: "testNS",
-			Name:      "testSGPolicy"},
+			Name:      "testNetworkSecurityPolicy"},
 	}
 	tMeta, oMeta, err = s.resolveObjectType(&sgPolicy)
 	AssertOk(t, err, "failed to resolve sgpolicy object type")
@@ -374,8 +374,8 @@ func TestStateDependencies_ResolveTypeSelfLink(t *testing.T) {
 	meta = s.composeMetaFromKey(key)
 	Assert(t, meta != nil, "regenerating meta from object key failed")
 	AssertOk(t, err, "failed to compose self link for sgpolicy")
-	AssertEquals(t, "sgpolicy|testTenant|testNS|testSGPolicy", key, "failed to compose key for sgpolicy object")
-	AssertEquals(t, "/api/security/policies/testTenant/testNS/testSGPolicy", selfLink, "failed to compose key for sgpolicy object")
+	AssertEquals(t, "networksecuritypolicy|testTenant|testNS|testNetworkSecurityPolicy", key, "failed to compose key for networksecuritypolicy object")
+	AssertEquals(t, "/api/security/policies/testTenant/testNS/testNetworkSecurityPolicy", selfLink, "failed to compose key for sgpolicy object")
 
 	// resolve tunnel
 	tun := netproto.Tunnel{

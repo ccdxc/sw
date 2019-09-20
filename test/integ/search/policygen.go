@@ -198,11 +198,11 @@ func recordEvents(proxyURL, eventsDir string, eventCount int64, logger log.Logge
 	}
 }
 
-func createSGPolicy(tenant, namespace, name string, rules []security.SGRule) *security.SGPolicy {
-	// SGPolicy object
-	sgp := security.SGPolicy{
+func createNetworkSecurityPolicy(tenant, namespace, name string, rules []security.SGRule) *security.NetworkSecurityPolicy {
+	// NetworkSecurityPolicy object
+	sgp := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind:       "SGPolicy",
+			Kind:       "NetworkSecurityPolicy",
 			APIVersion: "v1",
 		},
 		ObjectMeta: api.ObjectMeta{
@@ -210,7 +210,7 @@ func createSGPolicy(tenant, namespace, name string, rules []security.SGRule) *se
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -282,7 +282,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			log.Errorf("Failed to create Security-Group object: %s err: %v", sg.Name, err)
 		}
 	}
-	// Create SGPolicy object-1
+	// Create NetworkSecurityPolicy object-1
 	rules1 := []security.SGRule{
 		// 0
 		{
@@ -358,7 +358,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 	}
 
-	// Create SGPolicy object-2
+	// Create NetworkSecurityPolicy object-2
 	rules2 := []security.SGRule{
 		// 0
 		{
@@ -383,7 +383,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 	}
 
-	// Create SGPolicy object-3 with 30000 rules
+	// Create NetworkSecurityPolicy object-3 with 30000 rules
 	proto := []string{"tcp", "udp"}
 	actions := []string{security.SGRule_PERMIT.String(), security.SGRule_DENY.String()}
 	rules3 := make([]security.SGRule, 30000)
@@ -401,10 +401,10 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	aggregateRules = append(aggregateRules, rules2...)
 	aggregateRules = append(aggregateRules, rules3...)
 
-	sgp1 := createSGPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-aggregate", aggregateRules)
+	sgp1 := createNetworkSecurityPolicy(globals.DefaultTenant, globals.DefaultNamespace, "sgp-aggregate", aggregateRules)
 	log.Infof("\nCreating SGP policy name: %s", sgp1.Name)
-	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp1); err != nil {
-		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp1.Name, err)
+	if _, err := apiClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, sgp1); err != nil {
+		log.Errorf("Failed to create NetworkSecurityPolicy object: %s err: %v", sgp1.Name, err)
 	}
 }
 

@@ -12,21 +12,21 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// SGPolicy represents security policy
-type SGPolicy struct {
-	venicePolicy *security.SGPolicy
+// NetworkSecurityPolicy represents security policy
+type NetworkSecurityPolicy struct {
+	venicePolicy *security.NetworkSecurityPolicy
 	sm           *SysModel // pointer back to the model
 }
 
-// SGPolicyCollection is list of policies
-type SGPolicyCollection struct {
+// NetworkSecurityPolicyCollection is list of policies
+type NetworkSecurityPolicyCollection struct {
 	err      error
-	policies []*SGPolicy
+	policies []*NetworkSecurityPolicy
 }
 
 type sgRuleCtx struct {
 	rule   *security.SGRule
-	policy *SGPolicy
+	policy *NetworkSecurityPolicy
 }
 
 // SGRuleCollection is list of rules
@@ -41,19 +41,19 @@ type App struct {
 	sm        *SysModel // pointer back to the model
 }
 
-// NewSGPolicy creates a new SG policy
-func (sm *SysModel) NewSGPolicy(name string) *SGPolicyCollection {
-	return &SGPolicyCollection{
-		policies: []*SGPolicy{
+// NewNetworkSecurityPolicy creates a new SG policy
+func (sm *SysModel) NewNetworkSecurityPolicy(name string) *NetworkSecurityPolicyCollection {
+	return &NetworkSecurityPolicyCollection{
+		policies: []*NetworkSecurityPolicy{
 			{
-				venicePolicy: &security.SGPolicy{
-					TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+				venicePolicy: &security.NetworkSecurityPolicy{
+					TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 					ObjectMeta: api.ObjectMeta{
 						Tenant:    "default",
 						Namespace: "default",
 						Name:      name,
 					},
-					Spec: security.SGPolicySpec{
+					Spec: security.NetworkSecurityPolicySpec{
 						AttachTenant: true,
 					},
 				},
@@ -63,32 +63,32 @@ func (sm *SysModel) NewSGPolicy(name string) *SGPolicyCollection {
 	}
 }
 
-// NewVeniceSGPolicy creates a new SG policy
-func (sm *SysModel) NewVeniceSGPolicy(policy *SGPolicy) *SGPolicyCollection {
-	return &SGPolicyCollection{
-		policies: []*SGPolicy{
+// NewVeniceNetworkSecurityPolicy creates a new SG policy
+func (sm *SysModel) NewVeniceNetworkSecurityPolicy(policy *NetworkSecurityPolicy) *NetworkSecurityPolicyCollection {
+	return &NetworkSecurityPolicyCollection{
+		policies: []*NetworkSecurityPolicy{
 			policy,
 		},
 	}
 }
 
-// SGPolicy finds an SG policy by name
-func (sm *SysModel) SGPolicy(name string) *SGPolicyCollection {
+// NetworkSecurityPolicy finds an SG policy by name
+func (sm *SysModel) NetworkSecurityPolicy(name string) *NetworkSecurityPolicyCollection {
 	pol, ok := sm.sgpolicies[name]
 	if !ok {
-		return &SGPolicyCollection{
+		return &NetworkSecurityPolicyCollection{
 			err: fmt.Errorf("No policy found for %v", name),
 		}
 	}
 
-	return &SGPolicyCollection{
-		policies: []*SGPolicy{pol},
+	return &NetworkSecurityPolicyCollection{
+		policies: []*NetworkSecurityPolicy{pol},
 	}
 }
 
 // SGPolicies returns all SGPolicies in the model
-func (sm *SysModel) SGPolicies() *SGPolicyCollection {
-	spc := SGPolicyCollection{}
+func (sm *SysModel) SGPolicies() *NetworkSecurityPolicyCollection {
+	spc := NetworkSecurityPolicyCollection{}
 	for _, pol := range sm.sgpolicies {
 		spc.policies = append(spc.policies, pol)
 	}
@@ -96,25 +96,25 @@ func (sm *SysModel) SGPolicies() *SGPolicyCollection {
 	return &spc
 }
 
-// DefaultSGPolicy resturns default-policy that prevails across tests cases in the system
-func (sm *SysModel) DefaultSGPolicy() *SGPolicyCollection {
+// DefaultNetworkSecurityPolicy resturns default-policy that prevails across tests cases in the system
+func (sm *SysModel) DefaultNetworkSecurityPolicy() *NetworkSecurityPolicyCollection {
 	return sm.defaultSgPolicies[0]
 }
 
 // Restore is a very context specific function, which restores permit any any policy
-func (spc *SGPolicyCollection) Restore() error {
+func (spc *NetworkSecurityPolicyCollection) Restore() error {
 	return spc.AddRule("any", "any", "any", "PERMIT").Commit()
 }
 
 // Status returns venice status of the policy
-func (spc *SGPolicyCollection) Status() ([]*security.SGPolicyStatus, error) {
+func (spc *NetworkSecurityPolicyCollection) Status() ([]*security.NetworkSecurityPolicyStatus, error) {
 	if spc.err != nil {
 		return nil, spc.err
 	}
 
-	var vsts []*security.SGPolicyStatus
+	var vsts []*security.NetworkSecurityPolicyStatus
 	for _, pol := range spc.policies {
-		sgp, err := pol.sm.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)
+		sgp, err := pol.sm.tb.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func (spc *SGPolicyCollection) Status() ([]*security.SGPolicyStatus, error) {
 }
 
 // AddRule adds a rule to the policy
-func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPolicyCollection {
+func (spc *NetworkSecurityPolicyCollection) AddRule(fromIP, toIP, port, action string) *NetworkSecurityPolicyCollection {
 	if spc.err != nil {
 		return spc
 	}
@@ -212,12 +212,12 @@ func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPol
 }
 
 // AddRulesForWorkloadPairs adds rule for each workload pair into the policies
-func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port, action string) *SGPolicyCollection {
+func (spc *NetworkSecurityPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port, action string) *NetworkSecurityPolicyCollection {
 	if spc.err != nil {
 		return spc
 	}
 	if wpc.err != nil {
-		return &SGPolicyCollection{err: wpc.err}
+		return &NetworkSecurityPolicyCollection{err: wpc.err}
 	}
 
 	// walk each workload pair
@@ -234,12 +234,12 @@ func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollect
 }
 
 // AddAlgRulesForWorkloadPairs adds ALG rule for each workload pair
-func (spc *SGPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *WorkloadPairCollection, alg, action string) *SGPolicyCollection {
+func (spc *NetworkSecurityPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *WorkloadPairCollection, alg, action string) *NetworkSecurityPolicyCollection {
 	if spc.err != nil {
 		return spc
 	}
 	if wpc.err != nil {
-		return &SGPolicyCollection{err: wpc.err}
+		return &NetworkSecurityPolicyCollection{err: wpc.err}
 	}
 
 	// walk each workload pair
@@ -263,7 +263,7 @@ func (spc *SGPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *WorkloadPairColl
 }
 
 // AddRuleForWorkloadCombo adds rule combinations
-func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollection, fromIP, toIP, proto, port, action string) *SGPolicyCollection {
+func (spc *NetworkSecurityPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollection, fromIP, toIP, proto, port, action string) *NetworkSecurityPolicyCollection {
 	for _, wpair := range wpc.pairs {
 		firstIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
 		secondIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
@@ -336,7 +336,7 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 }
 
 // DeleteAllRules deletes all rules in the policy
-func (spc *SGPolicyCollection) DeleteAllRules() *SGPolicyCollection {
+func (spc *NetworkSecurityPolicyCollection) DeleteAllRules() *NetworkSecurityPolicyCollection {
 	if spc.err != nil {
 		return spc
 	}
@@ -349,15 +349,15 @@ func (spc *SGPolicyCollection) DeleteAllRules() *SGPolicyCollection {
 }
 
 // Commit writes the policy to venice
-func (spc *SGPolicyCollection) Commit() error {
+func (spc *NetworkSecurityPolicyCollection) Commit() error {
 	if spc.err != nil {
 		return spc.err
 	}
 	for _, pol := range spc.policies {
-		err := pol.sm.tb.CreateSGPolicy(pol.venicePolicy)
+		err := pol.sm.tb.CreateNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			// try updating it
-			err = pol.sm.tb.UpdateSGPolicy(pol.venicePolicy)
+			err = pol.sm.tb.UpdateNetworkSecurityPolicy(pol.venicePolicy)
 			if err != nil {
 				spc.err = err
 				return err
@@ -373,14 +373,14 @@ func (spc *SGPolicyCollection) Commit() error {
 }
 
 // Delete deletes all policies in the collection
-func (spc *SGPolicyCollection) Delete() error {
+func (spc *NetworkSecurityPolicyCollection) Delete() error {
 	if spc.err != nil {
 		return spc.err
 	}
 
 	// walk all policies and delete them
 	for _, pol := range spc.policies {
-		err := pol.sm.tb.DeleteSGPolicy(pol.venicePolicy)
+		err := pol.sm.tb.DeleteNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			return err
 		}
@@ -391,7 +391,7 @@ func (spc *SGPolicyCollection) Delete() error {
 }
 
 // Rules returns a list of all rule in policy collection
-func (spc *SGPolicyCollection) Rules() *SGRuleCollection {
+func (spc *NetworkSecurityPolicyCollection) Rules() *SGRuleCollection {
 	if spc.err != nil {
 		return &SGRuleCollection{
 			err: spc.err,
@@ -452,13 +452,13 @@ func (rc *SGRuleCollection) Commit() error {
 	}
 
 	// build a policy map from rules
-	policyMap := make(map[string]*SGPolicy)
+	policyMap := make(map[string]*NetworkSecurityPolicy)
 	for _, rctx := range rc.rules {
 		policyMap[rctx.policy.venicePolicy.Name] = rctx.policy
 	}
 
 	for _, pol := range policyMap {
-		err := pol.sm.tb.UpdateSGPolicy(pol.venicePolicy)
+		err := pol.sm.tb.UpdateNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			return err
 		}

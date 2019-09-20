@@ -8,7 +8,7 @@ import iota.harness.api as api
 
 sgpolicy_template = { "sgpolicies" : [
     {
-    "kind"                  : "SGPolicy",
+    "kind"                  : "NetworkSecurityPolicy",
 
     "meta": {
         "name"              : "default-policy",

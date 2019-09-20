@@ -53,36 +53,36 @@ type eSecurityV1Endpoints struct {
 	fnAutoAddApp                        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCertificate                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddFirewallProfile            func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddSGPolicy                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddNetworkSecurityPolicy      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddSecurityGroup              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddTrafficEncryptionPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteApp                     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteCertificate             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteFirewallProfile         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteSGPolicy                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteNetworkSecurityPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteSecurityGroup           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTrafficEncryptionPolicy func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetApp                        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetCertificate                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetFirewallProfile            func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetSGPolicy                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNetworkSecurityPolicy      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetSecurityGroup              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTrafficEncryptionPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListApp                       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCertificate               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListFirewallProfile           func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListSGPolicy                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListNetworkSecurityPolicy     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListSecurityGroup             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListTrafficEncryptionPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateApp                     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateCertificate             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateFirewallProfile         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateSGPolicy                func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNetworkSecurityPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateSecurityGroup           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateTrafficEncryptionPolicy func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchSecurityGroup           func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchSGPolicy                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchNetworkSecurityPolicy   func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchApp                     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchFirewallProfile         func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchCertificate             func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -128,7 +128,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.AutoMsgAppWatchHelper":                     apisrvpkg.NewMessage("security.AutoMsgAppWatchHelper"),
 		"security.AutoMsgCertificateWatchHelper":             apisrvpkg.NewMessage("security.AutoMsgCertificateWatchHelper"),
 		"security.AutoMsgFirewallProfileWatchHelper":         apisrvpkg.NewMessage("security.AutoMsgFirewallProfileWatchHelper"),
-		"security.AutoMsgSGPolicyWatchHelper":                apisrvpkg.NewMessage("security.AutoMsgSGPolicyWatchHelper"),
+		"security.AutoMsgNetworkSecurityPolicyWatchHelper":   apisrvpkg.NewMessage("security.AutoMsgNetworkSecurityPolicyWatchHelper"),
 		"security.AutoMsgSecurityGroupWatchHelper":           apisrvpkg.NewMessage("security.AutoMsgSecurityGroupWatchHelper"),
 		"security.AutoMsgTrafficEncryptionPolicyWatchHelper": apisrvpkg.NewMessage("security.AutoMsgTrafficEncryptionPolicyWatchHelper"),
 		"security.CertificateList": apisrvpkg.NewMessage("security.CertificateList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -195,11 +195,11 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := i.(security.FirewallProfileList)
 			return &r
 		}),
-		"security.SGPolicyList": apisrvpkg.NewMessage("security.SGPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+		"security.NetworkSecurityPolicyList": apisrvpkg.NewMessage("security.NetworkSecurityPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
-			into := security.SGPolicyList{}
-			into.Kind = "SGPolicyList"
-			r := security.SGPolicy{}
+			into := security.NetworkSecurityPolicyList{}
+			into.Kind = "NetworkSecurityPolicyList"
+			r := security.NetworkSecurityPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 
@@ -209,7 +209,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				}
 			}
 
-			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SGPolicy")
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.NetworkSecurityPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
@@ -217,14 +217,14 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(security.SGPolicyList)
+			r := i.(security.NetworkSecurityPolicyList)
 			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
-			r := i.(security.SGPolicyList)
+			r := i.(security.NetworkSecurityPolicyList)
 			return &r
 		}),
 		"security.SecurityGroupList": apisrvpkg.NewMessage("security.SecurityGroupList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -330,13 +330,13 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
-		s.endpointsSecurityV1.fnAutoAddSGPolicy = srv.AddMethod("AutoAddSGPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoAddSGPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.SGPolicy)
+		s.endpointsSecurityV1.fnAutoAddNetworkSecurityPolicy = srv.AddMethod("AutoAddNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["security.NetworkSecurityPolicy"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoAddNetworkSecurityPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(security.NetworkSecurityPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSecurityGroup = srv.AddMethod("AutoAddSecurityGroup",
@@ -372,13 +372,13 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
-		s.endpointsSecurityV1.fnAutoDeleteSGPolicy = srv.AddMethod("AutoDeleteSGPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoDeleteSGPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.SGPolicy)
+		s.endpointsSecurityV1.fnAutoDeleteNetworkSecurityPolicy = srv.AddMethod("AutoDeleteNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["security.NetworkSecurityPolicy"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoDeleteNetworkSecurityPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(security.NetworkSecurityPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
@@ -418,13 +418,13 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsSecurityV1.fnAutoGetSGPolicy = srv.AddMethod("AutoGetSGPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoGetSGPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.SGPolicy)
+		s.endpointsSecurityV1.fnAutoGetNetworkSecurityPolicy = srv.AddMethod("AutoGetNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["security.NetworkSecurityPolicy"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoGetNetworkSecurityPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(security.NetworkSecurityPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSecurityGroup = srv.AddMethod("AutoGetSecurityGroup",
@@ -464,13 +464,13 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsSecurityV1.fnAutoListSGPolicy = srv.AddMethod("AutoListSGPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.SGPolicyList"], "security", "AutoListSGPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+		s.endpointsSecurityV1.fnAutoListNetworkSecurityPolicy = srv.AddMethod("AutoListNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.NetworkSecurityPolicyList"], "security", "AutoListNetworkSecurityPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSecurityGroup = srv.AddMethod("AutoListSecurityGroup",
@@ -510,13 +510,13 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsSecurityV1.fnAutoUpdateSGPolicy = srv.AddMethod("AutoUpdateSGPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoUpdateSGPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.SGPolicy)
+		s.endpointsSecurityV1.fnAutoUpdateNetworkSecurityPolicy = srv.AddMethod("AutoUpdateNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["security.NetworkSecurityPolicy"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoUpdateNetworkSecurityPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(security.NetworkSecurityPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",
@@ -535,7 +535,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoWatchSecurityGroup = pkgMessages["security.SecurityGroup"].WatchFromKv
 
-		s.endpointsSecurityV1.fnAutoWatchSGPolicy = pkgMessages["security.SGPolicy"].WatchFromKv
+		s.endpointsSecurityV1.fnAutoWatchNetworkSecurityPolicy = pkgMessages["security.NetworkSecurityPolicy"].WatchFromKv
 
 		s.endpointsSecurityV1.fnAutoWatchApp = pkgMessages["security.App"].WatchFromKv
 
@@ -552,7 +552,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		endpoints := security.MakeSecurityV1ServerEndpoints(s.endpointsSecurityV1, logger)
 		server := security.MakeGRPCServerSecurityV1(ctx, endpoints, logger)
 		security.RegisterSecurityV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"SecurityGroup", "SGPolicy", "App", "FirewallProfile", "Certificate", "TrafficEncryptionPolicy"}
+		svcObjs := []string{"SecurityGroup", "NetworkSecurityPolicy", "App", "FirewallProfile", "Certificate", "TrafficEncryptionPolicy"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("security", "SecurityV1", svcObjs)
 	}
 }
@@ -679,13 +679,13 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			}
 		})
 
-		pkgMessages["security.SGPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := security.SGPolicy{}
+		pkgMessages["security.NetworkSecurityPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := security.NetworkSecurityPolicy{}
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
-			wstream := stream.(security.SecurityV1_AutoWatchSGPolicyServer)
+			wstream := stream.(security.SecurityV1_AutoWatchNetworkSecurityPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
 			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
@@ -694,11 +694,11 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			nctx = apiutils.SetVar(nctx, "ObjKind", "security.SGPolicy")
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.SGPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.NetworkSecurityPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.NetworkSecurityPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.SGPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "security.NetworkSecurityPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -706,25 +706,25 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				<-timer.C
 			}
 			running := false
-			events := &security.AutoMsgSGPolicyWatchHelper{}
+			events := &security.AutoMsgNetworkSecurityPolicyWatchHelper{}
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.SGPolicy")
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "security.NetworkSecurityPolicy")
 					return err
 				}
-				events = &security.AutoMsgSGPolicyWatchHelper{}
+				events = &security.AutoMsgNetworkSecurityPolicyWatchHelper{}
 				return nil
 			}
-			defer l.InfoLog("msg", "exiting watcher", "service", "security.SGPolicy")
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.NetworkSecurityPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.SGPolicy")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.NetworkSecurityPolicy")
 						return nil
 					}
-					evin, ok := ev.Object.(*security.SGPolicy)
+					evin, ok := ev.Object.(*security.NetworkSecurityPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -737,21 +737,21 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if err != nil {
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
-					in := cin.(*security.SGPolicy)
+					in := cin.(*security.NetworkSecurityPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
-					strEvent := &security.AutoMsgSGPolicyWatchHelper_WatchEvent{
+					strEvent := &security.AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "received SGPolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received NetworkSecurityPolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "SGPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.SGPolicy")
+							l.ErrorLog("msg", "Failed to transform message", "type", "NetworkSecurityPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.NetworkSecurityPolicy")
 							break
 						}
-						strEvent.Object = i.(*security.SGPolicy)
+						strEvent.Object = i.(*security.NetworkSecurityPolicy)
 					}
 					events.Events = append(events.Events, strEvent)
 					if !running {
@@ -773,7 +773,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.SGPolicy")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.NetworkSecurityPolicy")
 					return wstream.Context().Err()
 				}
 			}
@@ -1222,12 +1222,12 @@ func (e *eSecurityV1Endpoints) AutoAddFirewallProfile(ctx context.Context, t sec
 	return security.FirewallProfile{}, err
 
 }
-func (e *eSecurityV1Endpoints) AutoAddSGPolicy(ctx context.Context, t security.SGPolicy) (security.SGPolicy, error) {
-	r, err := e.fnAutoAddSGPolicy(ctx, t)
+func (e *eSecurityV1Endpoints) AutoAddNetworkSecurityPolicy(ctx context.Context, t security.NetworkSecurityPolicy) (security.NetworkSecurityPolicy, error) {
+	r, err := e.fnAutoAddNetworkSecurityPolicy(ctx, t)
 	if err == nil {
-		return r.(security.SGPolicy), err
+		return r.(security.NetworkSecurityPolicy), err
 	}
-	return security.SGPolicy{}, err
+	return security.NetworkSecurityPolicy{}, err
 
 }
 func (e *eSecurityV1Endpoints) AutoAddSecurityGroup(ctx context.Context, t security.SecurityGroup) (security.SecurityGroup, error) {
@@ -1270,12 +1270,12 @@ func (e *eSecurityV1Endpoints) AutoDeleteFirewallProfile(ctx context.Context, t 
 	return security.FirewallProfile{}, err
 
 }
-func (e *eSecurityV1Endpoints) AutoDeleteSGPolicy(ctx context.Context, t security.SGPolicy) (security.SGPolicy, error) {
-	r, err := e.fnAutoDeleteSGPolicy(ctx, t)
+func (e *eSecurityV1Endpoints) AutoDeleteNetworkSecurityPolicy(ctx context.Context, t security.NetworkSecurityPolicy) (security.NetworkSecurityPolicy, error) {
+	r, err := e.fnAutoDeleteNetworkSecurityPolicy(ctx, t)
 	if err == nil {
-		return r.(security.SGPolicy), err
+		return r.(security.NetworkSecurityPolicy), err
 	}
-	return security.SGPolicy{}, err
+	return security.NetworkSecurityPolicy{}, err
 
 }
 func (e *eSecurityV1Endpoints) AutoDeleteSecurityGroup(ctx context.Context, t security.SecurityGroup) (security.SecurityGroup, error) {
@@ -1318,12 +1318,12 @@ func (e *eSecurityV1Endpoints) AutoGetFirewallProfile(ctx context.Context, t sec
 	return security.FirewallProfile{}, err
 
 }
-func (e *eSecurityV1Endpoints) AutoGetSGPolicy(ctx context.Context, t security.SGPolicy) (security.SGPolicy, error) {
-	r, err := e.fnAutoGetSGPolicy(ctx, t)
+func (e *eSecurityV1Endpoints) AutoGetNetworkSecurityPolicy(ctx context.Context, t security.NetworkSecurityPolicy) (security.NetworkSecurityPolicy, error) {
+	r, err := e.fnAutoGetNetworkSecurityPolicy(ctx, t)
 	if err == nil {
-		return r.(security.SGPolicy), err
+		return r.(security.NetworkSecurityPolicy), err
 	}
-	return security.SGPolicy{}, err
+	return security.NetworkSecurityPolicy{}, err
 
 }
 func (e *eSecurityV1Endpoints) AutoGetSecurityGroup(ctx context.Context, t security.SecurityGroup) (security.SecurityGroup, error) {
@@ -1366,12 +1366,12 @@ func (e *eSecurityV1Endpoints) AutoListFirewallProfile(ctx context.Context, t ap
 	return security.FirewallProfileList{}, err
 
 }
-func (e *eSecurityV1Endpoints) AutoListSGPolicy(ctx context.Context, t api.ListWatchOptions) (security.SGPolicyList, error) {
-	r, err := e.fnAutoListSGPolicy(ctx, t)
+func (e *eSecurityV1Endpoints) AutoListNetworkSecurityPolicy(ctx context.Context, t api.ListWatchOptions) (security.NetworkSecurityPolicyList, error) {
+	r, err := e.fnAutoListNetworkSecurityPolicy(ctx, t)
 	if err == nil {
-		return r.(security.SGPolicyList), err
+		return r.(security.NetworkSecurityPolicyList), err
 	}
-	return security.SGPolicyList{}, err
+	return security.NetworkSecurityPolicyList{}, err
 
 }
 func (e *eSecurityV1Endpoints) AutoListSecurityGroup(ctx context.Context, t api.ListWatchOptions) (security.SecurityGroupList, error) {
@@ -1414,12 +1414,12 @@ func (e *eSecurityV1Endpoints) AutoUpdateFirewallProfile(ctx context.Context, t 
 	return security.FirewallProfile{}, err
 
 }
-func (e *eSecurityV1Endpoints) AutoUpdateSGPolicy(ctx context.Context, t security.SGPolicy) (security.SGPolicy, error) {
-	r, err := e.fnAutoUpdateSGPolicy(ctx, t)
+func (e *eSecurityV1Endpoints) AutoUpdateNetworkSecurityPolicy(ctx context.Context, t security.NetworkSecurityPolicy) (security.NetworkSecurityPolicy, error) {
+	r, err := e.fnAutoUpdateNetworkSecurityPolicy(ctx, t)
 	if err == nil {
-		return r.(security.SGPolicy), err
+		return r.(security.NetworkSecurityPolicy), err
 	}
-	return security.SGPolicy{}, err
+	return security.NetworkSecurityPolicy{}, err
 
 }
 func (e *eSecurityV1Endpoints) AutoUpdateSecurityGroup(ctx context.Context, t security.SecurityGroup) (security.SecurityGroup, error) {
@@ -1442,8 +1442,8 @@ func (e *eSecurityV1Endpoints) AutoUpdateTrafficEncryptionPolicy(ctx context.Con
 func (e *eSecurityV1Endpoints) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchSecurityGroupServer) error {
 	return e.fnAutoWatchSecurityGroup(in, stream, "security")
 }
-func (e *eSecurityV1Endpoints) AutoWatchSGPolicy(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchSGPolicyServer) error {
-	return e.fnAutoWatchSGPolicy(in, stream, "security")
+func (e *eSecurityV1Endpoints) AutoWatchNetworkSecurityPolicy(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchNetworkSecurityPolicyServer) error {
+	return e.fnAutoWatchNetworkSecurityPolicy(in, stream, "security")
 }
 func (e *eSecurityV1Endpoints) AutoWatchApp(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchAppServer) error {
 	return e.fnAutoWatchApp(in, stream, "security")

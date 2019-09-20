@@ -108,7 +108,7 @@ def update_field(field, val):
 
 def update_sgpolicy(src, dst, proto, dport, action="DENY"):
     #Query will get the reference of objects on store
-    store_policy_objects = netagent_cfg_api.QueryConfigs(kind='SGPolicy')
+    store_policy_objects = netagent_cfg_api.QueryConfigs(kind='NetworkSecurityPolicy')
     if len(store_policy_objects) == 0:
         api.Logger.error("No security profile objects in store")
         return api.types.status.FAILURE

@@ -8,22 +8,22 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
-import { SecuritySGPolicy, ISecuritySGPolicy } from './security-sg-policy.model';
+import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy } from './security-network-security-policy.model';
 
-export interface ISecuritySGPolicyList {
+export interface ISecurityNetworkSecurityPolicyList {
     'kind'?: string;
     'api-version'?: string;
     'list-meta'?: IApiListMeta;
-    'items'?: Array<ISecuritySGPolicy>;
+    'items'?: Array<ISecurityNetworkSecurityPolicy>;
 }
 
 
-export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicyList {
+export class SecurityNetworkSecurityPolicyList extends BaseModel implements ISecurityNetworkSecurityPolicyList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    'items': Array<SecuritySGPolicy> = null;
-    public static propInfo: { [prop in keyof ISecuritySGPolicyList]: PropInfoItem } = {
+    'items': Array<SecurityNetworkSecurityPolicy> = null;
+    public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicyList]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'
@@ -43,19 +43,19 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySGPolicyList.propInfo[propName];
+        return SecurityNetworkSecurityPolicyList.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecuritySGPolicyList.propInfo;
+        return SecurityNetworkSecurityPolicyList.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySGPolicyList.propInfo[prop] != null &&
-                        SecuritySGPolicyList.propInfo[prop].default != null);
+        return (SecurityNetworkSecurityPolicyList.propInfo[prop] != null &&
+                        SecurityNetworkSecurityPolicyList.propInfo[prop].default != null);
     }
 
     /**
@@ -65,7 +65,7 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['list-meta'] = new ApiListMeta();
-        this['items'] = new Array<SecuritySGPolicy>();
+        this['items'] = new Array<SecurityNetworkSecurityPolicy>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -77,15 +77,15 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (fillDefaults && SecuritySGPolicyList.hasDefaultValue('kind')) {
-            this['kind'] = SecuritySGPolicyList.propInfo['kind'].default;
+        } else if (fillDefaults && SecurityNetworkSecurityPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = SecurityNetworkSecurityPolicyList.propInfo['kind'].default;
         } else {
             this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (fillDefaults && SecuritySGPolicyList.hasDefaultValue('api-version')) {
-            this['api-version'] = SecuritySGPolicyList.propInfo['api-version'].default;
+        } else if (fillDefaults && SecurityNetworkSecurityPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityNetworkSecurityPolicyList.propInfo['api-version'].default;
         } else {
             this['api-version'] = null
         }
@@ -95,7 +95,7 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
             this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
-            this.fillModelArray<SecuritySGPolicy>(this, 'items', values['items'], SecuritySGPolicy);
+            this.fillModelArray<SecurityNetworkSecurityPolicy>(this, 'items', values['items'], SecurityNetworkSecurityPolicy);
         } else {
             this['items'] = [];
         }
@@ -106,13 +106,13 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), SecuritySGPolicyList.propInfo['kind']),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), SecuritySGPolicyList.propInfo['api-version']),
-                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, SecuritySGPolicyList.propInfo['list-meta'].required),
+                'kind': CustomFormControl(new FormControl(this['kind']), SecurityNetworkSecurityPolicyList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), SecurityNetworkSecurityPolicyList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, SecurityNetworkSecurityPolicyList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecuritySGPolicy>('items', this['items'], SecuritySGPolicy);
+            this.fillFormArray<SecurityNetworkSecurityPolicy>('items', this['items'], SecurityNetworkSecurityPolicy);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('list-meta').get(field);
@@ -136,7 +136,7 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this['list-meta'].setFormGroupValuesToBeModelValues();
-            this.fillModelArray<SecuritySGPolicy>(this, 'items', this['items'], SecuritySGPolicy);
+            this.fillModelArray<SecurityNetworkSecurityPolicy>(this, 'items', this['items'], SecurityNetworkSecurityPolicy);
         }
     }
 }

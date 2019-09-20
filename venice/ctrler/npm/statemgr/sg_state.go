@@ -88,14 +88,14 @@ func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 // AddPolicy adds a policcy to sg
 func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 	// if policy exists, dont try to add it
-	_, ok := sg.policies[sgp.SGPolicy.Name]
+	_, ok := sg.policies[sgp.NetworkSecurityPolicy.Name]
 	if ok {
 		return nil
 	}
 
 	// add to db
-	sg.policies[sgp.SGPolicy.Name] = sgp
-	sg.SecurityGroup.Status.Policies = append(sg.SecurityGroup.Status.Policies, sgp.SGPolicy.Name)
+	sg.policies[sgp.NetworkSecurityPolicy.Name] = sgp
+	sg.SecurityGroup.Status.Policies = append(sg.SecurityGroup.Status.Policies, sgp.NetworkSecurityPolicy.Name)
 
 	// trigger an update
 	sg.SecurityGroup.Write()
@@ -105,9 +105,9 @@ func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 // DeletePolicy deletes a policcy from sg
 func (sg *SecurityGroupState) DeletePolicy(sgp *SgpolicyState) error {
 	// delete from db
-	delete(sg.policies, sgp.SGPolicy.Name)
+	delete(sg.policies, sgp.NetworkSecurityPolicy.Name)
 	for i, pname := range sg.SecurityGroup.Status.Policies {
-		if pname == sgp.SGPolicy.Name {
+		if pname == sgp.NetworkSecurityPolicy.Name {
 			sg.SecurityGroup.Status.Policies = append(sg.SecurityGroup.Status.Policies[:i], sg.SecurityGroup.Status.Policies[i+1:]...)
 		}
 	}

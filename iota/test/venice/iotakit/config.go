@@ -523,8 +523,8 @@ func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 	return err
 }
 
-// CreateSGPolicy creates SG policy
-func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
+// CreateNetworkSecurityPolicy creates SG policy
+func (tb *TestBed) CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
@@ -535,11 +535,11 @@ func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
 	}
 
 	for _, restcl := range restcls {
-		_, err = restcl.SecurityV1().SGPolicy().Create(ctx, sgp)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Create(ctx, sgp)
 		if err == nil {
 			break
 		} else if strings.Contains(err.Error(), "already exists") {
-			_, err = restcl.SecurityV1().SGPolicy().Update(ctx, sgp)
+			_, err = restcl.SecurityV1().NetworkSecurityPolicy().Update(ctx, sgp)
 			if err == nil {
 				break
 			}
@@ -549,8 +549,8 @@ func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
 	return err
 }
 
-// UpdateSGPolicy updates an SG policy
-func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
+// UpdateNetworkSecurityPolicy updates an SG policy
+func (tb *TestBed) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
@@ -561,7 +561,7 @@ func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
 	}
 
 	for _, restcl := range restcls {
-		_, err = restcl.SecurityV1().SGPolicy().Update(ctx, sgp)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Update(ctx, sgp)
 		if err == nil {
 			break
 		}
@@ -569,8 +569,8 @@ func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
 	return err
 }
 
-// GetSGPolicy gets SGPolicy from venice cluster
-func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, err error) {
+// GetNetworkSecurityPolicy gets NetworkSecurityPolicy from venice cluster
+func (tb *TestBed) GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security.NetworkSecurityPolicy, err error) {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
@@ -581,7 +581,7 @@ func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, er
 	}
 
 	for _, restcl := range restcls {
-		sgp, err = restcl.SecurityV1().SGPolicy().Get(ctx, meta)
+		sgp, err = restcl.SecurityV1().NetworkSecurityPolicy().Get(ctx, meta)
 		if err == nil {
 			break
 		}
@@ -590,8 +590,8 @@ func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, er
 	return sgp, err
 }
 
-// ListSGPolicy gets all SGPolicies from venice cluster
-func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
+// ListNetworkSecurityPolicy gets all SGPolicies from venice cluster
+func (tb *TestBed) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurityPolicy, err error) {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
@@ -604,7 +604,7 @@ func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
 	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
 
 	for _, restcl := range restcls {
-		objs, err = restcl.SecurityV1().SGPolicy().List(ctx, &opts)
+		objs, err = restcl.SecurityV1().NetworkSecurityPolicy().List(ctx, &opts)
 		if err == nil {
 			break
 		}
@@ -613,8 +613,8 @@ func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
 	return objs, err
 }
 
-// DeleteSGPolicy deletes SG policy
-func (tb *TestBed) DeleteSGPolicy(sgp *security.SGPolicy) error {
+// DeleteNetworkSecurityPolicy deletes SG policy
+func (tb *TestBed) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
 	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
@@ -625,7 +625,7 @@ func (tb *TestBed) DeleteSGPolicy(sgp *security.SGPolicy) error {
 	}
 
 	for _, restcl := range restcls {
-		_, err = restcl.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 		if err == nil {
 			break
 		}

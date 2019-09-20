@@ -5,7 +5,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
-import { SecuritySGPolicy, ISecuritySGPolicy, IApiStatus } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus } from '@sdk/v1/models/generated/security';
 import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { TableCol } from '@app/components/shared/tableviewedit';
@@ -17,15 +17,15 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   styleUrls: ['./sgpolicies.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy, SecuritySGPolicy> implements OnInit, OnDestroy {
+export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy> implements OnInit, OnDestroy {
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean  = true;
-  dataObjects: ReadonlyArray<SecuritySGPolicy> = [];
+  dataObjects: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
   exportFilename: string = 'Venice-sgpolicies';
 
 
   // Holds all policy objects
-  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
+  sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
 
   // All columns are set as not sortable as it isn't currently supported
   cols: TableCol[] = [
@@ -64,7 +64,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitysgpolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createSGPolicy)) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createNetworkSecurityPolicy)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD POLICY',
@@ -79,9 +79,9 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy
   }
 
   getSGPolicies() {
-    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy);
     this.dataObjects = this.sgPoliciesEventUtility.array;
-    const subscription = this.securityService.WatchSGPolicy().subscribe(
+    const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
       },
@@ -100,15 +100,15 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecuritySGPolicy
     }
   }
 
-  deleteRecord(object: SecuritySGPolicy): Observable<{ body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number }> {
-    return this.securityService.DeleteSGPolicy(object.meta.name);
+  deleteRecord(object: SecurityNetworkSecurityPolicy): Observable<{ body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number }> {
+    return this.securityService.DeleteNetworkSecurityPolicy(object.meta.name);
   }
 
-  generateDeleteConfirmMsg(object: ISecuritySGPolicy) {
+  generateDeleteConfirmMsg(object: ISecurityNetworkSecurityPolicy) {
     return 'Are you sure you want to delete SG Policy ' + object.meta.name;
   }
 
-  generateDeleteSuccessMsg(object: ISecuritySGPolicy) {
+  generateDeleteSuccessMsg(object: ISecurityNetworkSecurityPolicy) {
     return 'Deleted SG Policy ' + object.meta.name;
   }
 }

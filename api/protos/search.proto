@@ -392,9 +392,9 @@ message PolicySearchRequest {
                                      (venice.default) = "default",
                                      (gogoproto.jsontag) = "namespace,omitempty"];
 
-    // SGPolicy name is optional. If provided policy-search will
+    // NetworkSecurityPolicy name is optional. If provided policy-search will
     // be limited to the specified SGpolicy object name.
-    string SGPolicy             = 3 [(gogoproto.nullable) = true,
+    string NetworkSecurityPolicy             = 3 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "sg-policy,omitempty"];
 
     // App specification,  predefined apps and alg config
@@ -429,7 +429,7 @@ message PolicySearchRequest {
 }
 
 // PolicyMatchEntry contains the matching SGrule and Index
-// within the SGPolicy ruleset.
+// within the NetworkSecurityPolicy ruleset.
 message PolicyMatchEntry {
 
     // Matching SGRule
@@ -459,7 +459,7 @@ message PolicySearchResponse {
     string Status                           = 1 [(venice.check) = "StrEnum(PolicySearchResponse.MatchStatus)",
                                                  (gogoproto.jsontag) = "status,omitempty"];
 
-    // Result is Map of <SGPolicy object name, PolicyMatch Entry>. 
+    // Result is Map of <NetworkSecurityPolicy object name, PolicyMatch Entry>. 
     map <string, PolicyMatchEntries> Results = 2 [(gogoproto.nullable) = true,
                                                 (gogoproto.jsontag) = "results,omitempty"];
 }

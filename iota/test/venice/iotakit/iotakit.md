@@ -72,17 +72,17 @@ Hosts returns list of all hosts in the system
 
 Networks returns a list of subnets
 
-#### func (*SysModel) NewSGPolicy
+#### func (*SysModel) NewNetworkSecurityPolicy
 
-    func (sm *SysModel) NewSGPolicy(name string) *SGPolicyCollection
+    func (sm *SysModel) NewNetworkSecurityPolicy(name string) *NetworkSecurityPolicyCollection
 
-NewSGPolicy creates a new SG policy
+NewNetworkSecurityPolicy creates a new SG policy
 
-#### func (*SysModel) SGPolicy
+#### func (*SysModel) NetworkSecurityPolicy
 
-    func (sm *SysModel) SGPolicy(name string) *SGPolicyCollection
+    func (sm *SysModel) NetworkSecurityPolicy(name string) *NetworkSecurityPolicyCollection
 
-SGPolicy finds an SG policy by name
+NetworkSecurityPolicy finds an SG policy by name
 
 #### func (*SysModel) SetupDefaultConfig
 
@@ -205,7 +205,7 @@ VerifyClusterStatus verifies venice cluster status
 
 #### func (*ActionCtx) VerifyPolicyStatus
 
-    func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error
+    func (act *ActionCtx) VerifyPolicyStatus(spc *NetworkSecurityPolicyCollection) error
 
 VerifyPolicyStatus verifies SG policy status
 
@@ -265,41 +265,41 @@ NetworkCollection is a list of subnets
 Any returns any one of the subnets in random
 
 
-#### type SGPolicyCollection
+#### type NetworkSecurityPolicyCollection
 
-    type SGPolicyCollection struct {
+    type NetworkSecurityPolicyCollection struct {
     }
 
 
-SGPolicyCollection is list of policies
+NetworkSecurityPolicyCollection is list of policies
 
-#### func (*SGPolicyCollection) AddRule
+#### func (*NetworkSecurityPolicyCollection) AddRule
 
-    func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPolicyCollection
+    func (spc *NetworkSecurityPolicyCollection) AddRule(fromIP, toIP, port, action string) *NetworkSecurityPolicyCollection
 
 AddRule adds a rule to the policy
 
-#### func (*SGPolicyCollection) AddRulesForWorkloadPairs
+#### func (*NetworkSecurityPolicyCollection) AddRulesForWorkloadPairs
 
-    func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port, action string) *SGPolicyCollection
+    func (spc *NetworkSecurityPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port, action string) *NetworkSecurityPolicyCollection
 
 AddRulesForWorkloadPairs adds rule for each workload pair into the policies
 
-#### func (*SGPolicyCollection) Commit
+#### func (*NetworkSecurityPolicyCollection) Commit
 
-    func (spc *SGPolicyCollection) Commit() error
+    func (spc *NetworkSecurityPolicyCollection) Commit() error
 
 Commit writes the policy to venice
 
-#### func (*SGPolicyCollection) Delete
+#### func (*NetworkSecurityPolicyCollection) Delete
 
-    func (spc *SGPolicyCollection) Delete() error
+    func (spc *NetworkSecurityPolicyCollection) Delete() error
 
 Delete deletes all policies in the collection
 
-#### func (*SGPolicyCollection) Rules
+#### func (*NetworkSecurityPolicyCollection) Rules
 
-    func (spc *SGPolicyCollection) Rules() *SGRuleCollection
+    func (spc *NetworkSecurityPolicyCollection) Rules() *SGRuleCollection
 
 Rules returns a list of all rule in policy collection
 
@@ -550,11 +550,11 @@ CreateFirewallProfile creates firewall profile
 
 CreateHost creates host object in venice
 
-#### func (*TestBed) CreateSGPolicy
+#### func (*TestBed) CreateNetworkSecurityPolicy
 
-    func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error
+    func (tb *TestBed) CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
-CreateSGPolicy creates SG policy
+CreateNetworkSecurityPolicy creates SG policy
 
 #### func (*TestBed) CreateWorkload
 
@@ -562,11 +562,11 @@ CreateSGPolicy creates SG policy
 
 CreateWorkload creates workload
 
-#### func (*TestBed) DeleteSGPolicy
+#### func (*TestBed) DeleteNetworkSecurityPolicy
 
-    func (tb *TestBed) DeleteSGPolicy(sgp *security.SGPolicy) error
+    func (tb *TestBed) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
-DeleteSGPolicy deletes SG policy
+DeleteNetworkSecurityPolicy deletes SG policy
 
 #### func (*TestBed) DeleteWorkload
 
@@ -586,11 +586,11 @@ GetCluster gets the venice cluster object
 
 GetEndpoint returns the endpoint
 
-#### func (*TestBed) GetSGPolicy
+#### func (*TestBed) GetNetworkSecurityPolicy
 
-    func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, err error)
+    func (tb *TestBed) GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security.NetworkSecurityPolicy, err error)
 
-GetSGPolicy gets SGPolicy from venice cluster
+GetNetworkSecurityPolicy gets NetworkSecurityPolicy from venice cluster
 
 #### func (*TestBed) GetSmartNIC
 
@@ -671,11 +671,11 @@ SetupConfig sets up the venice cluster and basic config (like auth etc)
 
 SetupVeniceNodes sets up some test tools on venice nodes
 
-#### func (*TestBed) UpdateSGPolicy
+#### func (*TestBed) UpdateNetworkSecurityPolicy
 
-    func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error
+    func (tb *TestBed) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
-UpdateSGPolicy updates an SG policy
+UpdateNetworkSecurityPolicy updates an SG policy
 
 #### func (*TestBed) VeniceLoggedInCtx
 

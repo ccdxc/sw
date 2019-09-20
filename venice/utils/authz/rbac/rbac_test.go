@@ -203,7 +203,7 @@ func getPermissionDataForBenchmarking(numOfTenants, numOfUsersPerRole int) (role
 				NewPermission(tenant, string(apiclient.GroupNetwork), string(network.KindLbPolicy), ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 			NewRole("SecurityAdmin", tenant,
 				NewPermission(tenant, string(apiclient.GroupSecurity), string(security.KindSecurityGroup), ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
-				NewPermission(tenant, string(apiclient.GroupSecurity), string(security.KindSGPolicy), ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+				NewPermission(tenant, string(apiclient.GroupSecurity), string(security.KindNetworkSecurityPolicy), ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 				NewPermission(tenant, string(apiclient.GroupSecurity), string(security.KindApp), ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 				NewPermission(tenant, string(apiclient.GroupSecurity), string(security.KindTrafficEncryptionPolicy), ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 			NewRole("TenantAdmin", tenant,

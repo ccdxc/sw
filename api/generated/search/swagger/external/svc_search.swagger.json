@@ -45,7 +45,7 @@
           },
           {
             "name": "sg-policy",
-            "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name.",
+            "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -791,7 +791,7 @@
           "title": "Index of the matching SG rule"
         }
       },
-      "description": "PolicyMatchEntry contains the matching SGrule and Index\nwithin the SGPolicy ruleset."
+      "description": "PolicyMatchEntry contains the matching SGrule and Index\nwithin the NetworkSecurityPolicy ruleset."
     },
     "searchPolicySearchRequest": {
       "type": "object",
@@ -808,7 +808,7 @@
         },
         "sg-policy": {
           "type": "string",
-          "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
+          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
         },
         "app": {
           "type": "string",
@@ -856,7 +856,7 @@
         },
         "sg-policy": {
           "type": "string",
-          "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
+          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
         },
         "app": {
           "type": "string",
@@ -909,7 +909,7 @@
           "additionalProperties": {
             "$ref": "#/definitions/searchPolicyMatchEntries"
           },
-          "description": "Result is Map of \u003cSGPolicy object name, PolicyMatch Entry\u003e."
+          "description": "Result is Map of \u003cNetworkSecurityPolicy object name, PolicyMatch Entry\u003e."
         }
       },
       "title": "PolicySearchResponse is response to the security/firewall policy search request"

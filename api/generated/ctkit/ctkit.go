@@ -97,7 +97,7 @@ type Controller interface {
 	Rollout() RolloutAPI                                 // return Rollout API interface
 	RolloutAction() RolloutActionAPI                     // return RolloutAction API interface
 	SecurityGroup() SecurityGroupAPI                     // return SecurityGroup API interface
-	SGPolicy() SGPolicyAPI                               // return SGPolicy API interface
+	NetworkSecurityPolicy() NetworkSecurityPolicyAPI     // return NetworkSecurityPolicy API interface
 	App() AppAPI                                         // return App API interface
 	FirewallProfile() FirewallProfileAPI                 // return FirewallProfile API interface
 	Certificate() CertificateAPI                         // return Certificate API interface

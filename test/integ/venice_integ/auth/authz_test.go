@@ -431,8 +431,8 @@ func TestAPIGroupAuthorization(t *testing.T) {
 		_, err := tinfo.restcl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{})
 		return err == nil, err
 	}, "expected Cluster object retrieval to succeed")
-	_, err = tinfo.restcl.SecurityV1().SGPolicy().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
-	Assert(t, err != nil, "authorization error expected while listing SGPolicy")
+	_, err = tinfo.restcl.SecurityV1().NetworkSecurityPolicy().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	Assert(t, err != nil, "authorization error expected while listing NetworkSecurityPolicy")
 }
 
 func TestGetVersionInfo(t *testing.T) {

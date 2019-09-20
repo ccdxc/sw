@@ -38,8 +38,8 @@ type fakeAgent struct {
 	sgUpdated map[string]*netproto.SecurityGroup
 	sgDeleted map[string]bool
 
-	sgpAdded   map[string]*netproto.SGPolicy
-	sgpUpdated map[string]*netproto.SGPolicy
+	sgpAdded   map[string]*netproto.NetworkSecurityPolicy
+	sgpUpdated map[string]*netproto.NetworkSecurityPolicy
 	sgpDeleted map[string]bool
 
 	secpAdded   map[string]*netproto.SecurityProfile
@@ -63,8 +63,8 @@ func createFakeAgent(name string) *fakeAgent {
 		sgAdded:     make(map[string]*netproto.SecurityGroup),
 		sgUpdated:   make(map[string]*netproto.SecurityGroup),
 		sgDeleted:   make(map[string]bool),
-		sgpAdded:    make(map[string]*netproto.SGPolicy),
-		sgpUpdated:  make(map[string]*netproto.SGPolicy),
+		sgpAdded:    make(map[string]*netproto.NetworkSecurityPolicy),
+		sgpUpdated:  make(map[string]*netproto.NetworkSecurityPolicy),
 		sgpDeleted:  make(map[string]bool),
 		secpAdded:   make(map[string]*netproto.SecurityProfile),
 		secpUpdated: make(map[string]*netproto.SecurityProfile),
@@ -493,27 +493,27 @@ func (ag *fakeAgent) DeleteIPSecSADecrypt(tn, namespace, name string) error {
 	return nil
 }
 
-// CreateSGPolicy creates a security group policy
-func (ag *fakeAgent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
+// CreateNetworkSecurityPolicy creates a security group policy
+func (ag *fakeAgent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.sgpAdded[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
 
-// FindSGPolicy finds a security group policy
-func (ag *fakeAgent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) {
+// FindNetworkSecurityPolicy finds a security group policy
+func (ag *fakeAgent) FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
 	sgp, ok := ag.sgpAdded[objectKey(meta)]
 	if ok {
 		return sgp, nil
 	}
 
-	return nil, fmt.Errorf("SGPolicy not found")
+	return nil, fmt.Errorf("NetworkSecurityPolicy not found")
 }
 
-// ListSGPolicy lists a security group policy
-func (ag *fakeAgent) ListSGPolicy() []*netproto.SGPolicy {
-	var sgplist []*netproto.SGPolicy
+// ListNetworkSecurityPolicy lists a security group policy
+func (ag *fakeAgent) ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy {
+	var sgplist []*netproto.NetworkSecurityPolicy
 
 	// walk all sgs
 	for _, sgp := range ag.sgpAdded {
@@ -523,16 +523,16 @@ func (ag *fakeAgent) ListSGPolicy() []*netproto.SGPolicy {
 	return sgplist
 }
 
-// UpdateSGPolicy updates a security group policy
-func (ag *fakeAgent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
+// UpdateNetworkSecurityPolicy updates a security group policy
+func (ag *fakeAgent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.sgpUpdated[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
 
-// DeleteSGPolicy deletes a security group policy
-func (ag *fakeAgent) DeleteSGPolicy(tn, namespace, name string) error {
+// DeleteNetworkSecurityPolicy deletes a security group policy
+func (ag *fakeAgent) DeleteNetworkSecurityPolicy(tn, namespace, name string) error {
 	ag.Lock()
 	defer ag.Unlock()
 	meta := api.ObjectMeta{
@@ -765,8 +765,8 @@ type fakeRPCServer struct {
 	netdp       map[string]*netproto.Network
 	epdb        map[string]*netproto.Endpoint
 	sgdb        map[string]*netproto.SecurityGroup
-	sgpdb       map[string]*netproto.SGPolicy
-	sgpUpdatedb map[string]*netproto.SGPolicy
+	sgpdb       map[string]*netproto.NetworkSecurityPolicy
+	sgpUpdatedb map[string]*netproto.NetworkSecurityPolicy
 	secpdb      map[string]*netproto.SecurityProfile
 	appdb       map[string]*netproto.App
 }
@@ -784,8 +784,8 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 		netdp:       make(map[string]*netproto.Network),
 		epdb:        make(map[string]*netproto.Endpoint),
 		sgdb:        make(map[string]*netproto.SecurityGroup),
-		sgpdb:       make(map[string]*netproto.SGPolicy),
-		sgpUpdatedb: make(map[string]*netproto.SGPolicy),
+		sgpdb:       make(map[string]*netproto.NetworkSecurityPolicy),
+		sgpUpdatedb: make(map[string]*netproto.NetworkSecurityPolicy),
 		secpdb:      make(map[string]*netproto.SecurityProfile),
 		appdb:       make(map[string]*netproto.App),
 	}
@@ -794,7 +794,7 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	netproto.RegisterNetworkApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityGroupApiServer(grpcServer.GrpcServer, &srv)
-	netproto.RegisterSGPolicyApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterNetworkSecurityPolicyApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityProfileApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterAppApiServer(grpcServer.GrpcServer, &srv)
 	grpcServer.Start()
@@ -966,28 +966,28 @@ func (srv *fakeRPCServer) UpdateSecurityGroup(ctx context.Context, obj *netproto
 	return obj, nil
 }
 
-func (srv *fakeRPCServer) GetSGPolicy(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SGPolicy, error) {
+func (srv *fakeRPCServer) GetNetworkSecurityPolicy(ctx context.Context, ometa *api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*netproto.SGPolicyList, error) {
-	return &netproto.SGPolicyList{}, nil
+func (srv *fakeRPCServer) ListNetworkSecurityPolicys(context.Context, *api.ObjectMeta) (*netproto.NetworkSecurityPolicyList, error) {
+	return &netproto.NetworkSecurityPolicyList{}, nil
 }
 
-func (srv *fakeRPCServer) UpdateSGPolicy(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+func (srv *fakeRPCServer) UpdateNetworkSecurityPolicy(ctx context.Context, sgp *netproto.NetworkSecurityPolicy) (*netproto.NetworkSecurityPolicy, error) {
 	srv.Lock()
 	defer srv.Unlock()
 	srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)] = sgp
 	return sgp, nil
 }
 
-func (srv *fakeRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.SGPolicyApi_WatchSGPolicysServer) error {
+func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApi_WatchNetworkSecurityPolicysServer) error {
 	// walk local db and send stream resp
 	for _, sgp := range srv.sgpdb {
 		// watch event
-		watchEvt := netproto.SGPolicyEvent{
-			EventType: api.EventType_CreateEvent,
-			SGPolicy:  *sgp,
+		watchEvt := netproto.NetworkSecurityPolicyEvent{
+			EventType:             api.EventType_CreateEvent,
+			NetworkSecurityPolicy: *sgp,
 		}
 
 		// send create event
@@ -1017,19 +1017,19 @@ func (srv *fakeRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.SG
 	return nil
 }
 
-func (srv *fakeRPCServer) SGPolicyOperUpdate(stream netproto.SGPolicyApi_SGPolicyOperUpdateServer) error {
+func (srv *fakeRPCServer) NetworkSecurityPolicyOperUpdate(stream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateServer) error {
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("SGPolicyOperUpdate stream ended. closing..")
+			log.Errorf("NetworkSecurityPolicyOperUpdate stream ended. closing..")
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from SGPolicyOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from NetworkSecurityPolicyOperUpdate stream. Err: %v", err)
 			return err
 		}
 
 		srv.Lock()
-		srv.sgpUpdatedb[objectKey(oper.SGPolicy.ObjectMeta)] = &oper.SGPolicy
+		srv.sgpUpdatedb[objectKey(oper.NetworkSecurityPolicy.ObjectMeta)] = &oper.NetworkSecurityPolicy
 		srv.Unlock()
 	}
 }
@@ -1438,13 +1438,13 @@ func TestSecurityPolicyWatch(t *testing.T) {
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
 
 	// create an sg
-	sgp := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testsgp",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachGroup: make([]string, 0),
 			Rules:       make([]netproto.PolicyRule, 0),
 		},

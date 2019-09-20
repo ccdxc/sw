@@ -175,7 +175,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.IPSecSAEncryptDB = make(map[string]*netproto.IPSecSAEncrypt)
 	na.IPSecSADecryptDB = make(map[string]*netproto.IPSecSADecrypt)
 	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
-	na.SGPolicyDB = make(map[string]*netproto.SGPolicy)
+	na.NetworkSecurityPolicyDB = make(map[string]*netproto.NetworkSecurityPolicy)
 	na.TunnelDB = make(map[string]*netproto.Tunnel)
 	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.PortDB = make(map[string]*netproto.Port)
@@ -198,8 +198,8 @@ func (na *Nagent) PurgeConfigs() error {
 		}
 	}
 
-	for _, sgp := range na.ListSGPolicy() {
-		if err := na.DeleteSGPolicy(sgp.Tenant, sgp.Namespace, sgp.Name); err != nil {
+	for _, sgp := range na.ListNetworkSecurityPolicy() {
+		if err := na.DeleteNetworkSecurityPolicy(sgp.Tenant, sgp.Namespace, sgp.Name); err != nil {
 			log.Errorf("Failed to delete the SG Policy. Err: %v", err)
 		}
 	}
@@ -294,19 +294,19 @@ func (na *Nagent) ReplayConfigs() error {
 		}
 	}
 
-	// Replay SGPolicy Object
-	policies, err := na.Store.RawList("SGPolicy")
+	// Replay NetworkSecurityPolicy Object
+	policies, err := na.Store.RawList("NetworkSecurityPolicy")
 	if err == nil {
 		for _, o := range policies {
-			log.Info("Replaying persisted SGPolicy objects")
+			log.Info("Replaying persisted NetworkSecurityPolicy objects")
 
-			var sgp netproto.SGPolicy
+			var sgp netproto.NetworkSecurityPolicy
 			err := sgp.Unmarshal(o)
 			if err != nil {
-				log.Errorf("Failed to unmarshal object to SGPolicy. Err: %v", err)
+				log.Errorf("Failed to unmarshal object to NetworkSecurityPolicy. Err: %v", err)
 			}
-			if err := na.CreateSGPolicy(&sgp); err != nil {
-				log.Errorf("Failed to recreate SGPolicy: %v. Err: %v", sgp.GetKey(), err)
+			if err := na.CreateNetworkSecurityPolicy(&sgp); err != nil {
+				log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
 			}
 		}
 	}

@@ -55,13 +55,88 @@ var _ validators.DummyVar
 var validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
-func (m *SGPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "sgpolicies/", m.Tenant, "/", m.Name)
+func (m *NetworkSecurityPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "networksecuritypolicies/", m.Tenant, "/", m.Name)
 }
 
-func (m *SGPolicy) MakeURI(cat, ver, prefix string) string {
+func (m *NetworkSecurityPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/sgpolicies/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name)
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *NetworkSecurityPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkSecurityPolicy
+	var ok bool
+	if into == nil {
+		out = &NetworkSecurityPolicy{}
+	} else {
+		out, ok = into.(*NetworkSecurityPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*NetworkSecurityPolicy))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NetworkSecurityPolicy) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "NetworkSecurityPolicy"
+	ret = m.Tenant != "default" || m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *NetworkSecurityPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkSecurityPolicySpec
+	var ok bool
+	if into == nil {
+		out = &NetworkSecurityPolicySpec{}
+	} else {
+		out, ok = into.(*NetworkSecurityPolicySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*NetworkSecurityPolicySpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NetworkSecurityPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Rules {
+		i := m.Rules[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *NetworkSecurityPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkSecurityPolicyStatus
+	var ok bool
+	if into == nil {
+		out = &NetworkSecurityPolicyStatus{}
+	} else {
+		out, ok = into.(*NetworkSecurityPolicyStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*NetworkSecurityPolicyStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NetworkSecurityPolicyStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -103,81 +178,6 @@ func (m *ProtoPort) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ProtoPort) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SGPolicy) Clone(into interface{}) (interface{}, error) {
-	var out *SGPolicy
-	var ok bool
-	if into == nil {
-		out = &SGPolicy{}
-	} else {
-		out, ok = into.(*SGPolicy)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SGPolicy))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SGPolicy) Defaults(ver string) bool {
-	var ret bool
-	m.Kind = "SGPolicy"
-	ret = m.Tenant != "default" || m.Namespace != "default"
-	if ret {
-		m.Tenant, m.Namespace = "default", "default"
-	}
-	ret = m.Spec.Defaults(ver) || ret
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SGPolicySpec) Clone(into interface{}) (interface{}, error) {
-	var out *SGPolicySpec
-	var ok bool
-	if into == nil {
-		out = &SGPolicySpec{}
-	} else {
-		out, ok = into.(*SGPolicySpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SGPolicySpec))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SGPolicySpec) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Rules {
-		i := m.Rules[k]
-		ret = i.Defaults(ver) || ret
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SGPolicyStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SGPolicyStatus
-	var ok bool
-	if into == nil {
-		out = &SGPolicyStatus{}
-	} else {
-		out, ok = into.(*SGPolicyStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*SGPolicyStatus))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SGPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -231,33 +231,7 @@ func (m *SGRuleStatus) Defaults(ver string) bool {
 
 // Validators and Requirements
 
-func (m *PropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *PropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *PropagationStatus) Normalize() {
-
-}
-
-func (m *ProtoPort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *ProtoPort) Normalize() {
-
-}
-
-func (m *SGPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *NetworkSecurityPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
 
@@ -294,11 +268,11 @@ func (m *SGPolicy) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *NetworkSecurityPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
-		ret = append(ret, errors.New("Only Namespace default is allowed for SGPolicy"))
+		ret = append(ret, errors.New("Only Namespace default is allowed for NetworkSecurityPolicy"))
 	}
 
 	{
@@ -337,7 +311,7 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 	return ret
 }
 
-func (m *SGPolicy) Normalize() {
+func (m *NetworkSecurityPolicy) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
@@ -345,7 +319,7 @@ func (m *SGPolicy) Normalize() {
 
 }
 
-func (m *SGPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *NetworkSecurityPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
 		dlmtr := "."
@@ -384,7 +358,7 @@ func (m *SGPolicySpec) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *NetworkSecurityPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Rules {
 		dlmtr := "."
@@ -399,7 +373,7 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 	return ret
 }
 
-func (m *SGPolicySpec) Normalize() {
+func (m *NetworkSecurityPolicySpec) Normalize() {
 
 	for k, v := range m.Rules {
 		v.Normalize()
@@ -409,16 +383,42 @@ func (m *SGPolicySpec) Normalize() {
 
 }
 
-func (m *SGPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *NetworkSecurityPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *NetworkSecurityPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *SGPolicyStatus) Normalize() {
+func (m *NetworkSecurityPolicyStatus) Normalize() {
+
+}
+
+func (m *PropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *PropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PropagationStatus) Normalize() {
+
+}
+
+func (m *ProtoPort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *ProtoPort) Normalize() {
 
 }
 
@@ -534,7 +534,7 @@ func (m *SGRuleStatus) Normalize() {
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
-		&SGPolicy{},
+		&NetworkSecurityPolicy{},
 	)
 
 	validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}) error)

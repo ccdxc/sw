@@ -9,21 +9,21 @@ import (
 )
 
 //--------------------- Happy Path Tests ---------------------//
-func TestSGPolicyCreateDelete(t *testing.T) {
+func TestNetworkSecurityPolicyCreateDelete(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -66,35 +66,35 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
-	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy was not found in DB")
-	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
 
-	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
 	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify duplicate tenant creations succeed
-	err = ag.CreateSGPolicy(&sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating duplicate sg policy")
 
 	// verify list api works.
-	sgpList := ag.ListSGPolicy()
+	sgpList := ag.ListNetworkSecurityPolicy()
 	Assert(t, len(sgpList) == 1, "Incorrect number of sg policies")
 
 	// delete the sg policy and verify its gone from db
-	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
 	AssertOk(t, err, "Error deleting sg policy")
-	_, err = ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	_, err = ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	Assert(t, err != nil, "SG Policy was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
 	Assert(t, err != nil, "deleting non-existing sg policy succeeded", ag)
 }
 
-func TestSGPolicyUpdate(t *testing.T) {
+func TestNetworkSecurityPolicyUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -122,14 +122,14 @@ func TestSGPolicyUpdate(t *testing.T) {
 	AssertOk(t, err, "Failed to create dns app")
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -147,13 +147,13 @@ func TestSGPolicyUpdate(t *testing.T) {
 	}
 
 	// create sg policy
-	err = ag.CreateSGPolicy(&sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
-	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG policy was not found in DB")
-	Assert(t, sgp.Name == "testSGPolicy", "Nat Pool names did not match", sgp)
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "Nat Pool names did not match", sgp)
 
-	sgpSpec := netproto.SGPolicySpec{
+	sgpSpec := netproto.NetworkSecurityPolicySpec{
 		AttachGroup: []string{"preCreatedSecurityGroup"},
 		Rules: []netproto.PolicyRule{
 			{
@@ -164,17 +164,17 @@ func TestSGPolicyUpdate(t *testing.T) {
 
 	sgPolicy.Spec = sgpSpec
 
-	err = ag.UpdateSGPolicy(&sgPolicy)
+	err = ag.UpdateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error updating sg policy")
 
-	updSGPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	updNetworkSecurityPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachGroup:  []string{"preCreatedSecurityGroup"},
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
@@ -191,12 +191,12 @@ func TestSGPolicyUpdate(t *testing.T) {
 			},
 		},
 	}
-	err = ag.UpdateSGPolicy(&updSGPolicy)
+	err = ag.UpdateNetworkSecurityPolicy(&updNetworkSecurityPolicy)
 	AssertOk(t, err, "Error updating sg policy")
 
 }
 
-func TestSGPolicyALGMatchMSRPC(t *testing.T) {
+func TestNetworkSecurityPolicyALGMatchMSRPC(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -236,14 +236,14 @@ func TestSGPolicyALGMatchMSRPC(t *testing.T) {
 	AssertOk(t, err, "App creates must succeed")
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -260,15 +260,15 @@ func TestSGPolicyALGMatchMSRPC(t *testing.T) {
 	}
 
 	// create sg policy
-	err = ag.CreateSGPolicy(&sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
-	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy was not found in DB")
-	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
 
 }
 
-func TestSGPolicyALGMatchICMP(t *testing.T) {
+func TestNetworkSecurityPolicyALGMatchICMP(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -295,14 +295,14 @@ func TestSGPolicyALGMatchICMP(t *testing.T) {
 	AssertOk(t, err, "App creates must succeed")
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -319,29 +319,29 @@ func TestSGPolicyALGMatchICMP(t *testing.T) {
 	}
 
 	// create sg policy
-	err = ag.CreateSGPolicy(&sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
-	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy was not found in DB")
-	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
 
 }
 
-func TestSGPolicyMatchAllSrc(t *testing.T) {
+func TestNetworkSecurityPolicyMatchAllSrc(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -365,25 +365,25 @@ func TestSGPolicyMatchAllSrc(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "sg policy creation matching on all source failed")
 }
 
-func TestSGPolicyMatchAllDst(t *testing.T) {
+func TestNetworkSecurityPolicyMatchAllDst(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -407,25 +407,25 @@ func TestSGPolicyMatchAllDst(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "sg policy matching on all dest failed")
 }
 
-func TestSGPolicyMatchAll(t *testing.T) {
+func TestNetworkSecurityPolicyMatchAll(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "mordor",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -436,25 +436,25 @@ func TestSGPolicyMatchAll(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "sg policy matching on all failed")
 }
 
-func TestSGPolicyICMPProtoMatch(t *testing.T) {
+func TestNetworkSecurityPolicyICMPProtoMatch(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -476,31 +476,31 @@ func TestSGPolicyICMPProtoMatch(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
-	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy was not found in DB")
-	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
 
 }
 
 //--------------------- Corner Case Tests ---------------------//
 
-func TestInvalidSGPolicyICMPPortMatch(t *testing.T) {
+func TestInvalidNetworkSecurityPolicyICMPPortMatch(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -523,25 +523,25 @@ func TestInvalidSGPolicyICMPPortMatch(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
-	Assert(t, err != nil, "SGPolicy with ICMP protocol with a port must fail")
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	Assert(t, err != nil, "NetworkSecurityPolicy with ICMP protocol with a port must fail")
 }
 
-func TestSGPolicyOnMatchAllSrc(t *testing.T) {
+func TestNetworkSecurityPolicyOnMatchAllSrc(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -555,25 +555,25 @@ func TestSGPolicyOnMatchAllSrc(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "SG Policy creation with empty src should match all and pass validation")
 }
 
-func TestSGPolicyOnMatchAllDst(t *testing.T) {
+func TestNetworkSecurityPolicyOnMatchAllDst(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -601,25 +601,25 @@ func TestSGPolicyOnMatchAllDst(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "SG Policy creation with empty dst should match all and pass validation")
 }
 
-func TestSGPolicyOnMatchAll(t *testing.T) {
+func TestNetworkSecurityPolicyOnMatchAll(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -630,11 +630,11 @@ func TestSGPolicyOnMatchAll(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "SG Policy creation with empty src and dst should match all and pass validation")
 }
 
-func TestSGPolicyUpdateOnNonExistentSGPolicy(t *testing.T) {
+func TestNetworkSecurityPolicyUpdateOnNonExistentNetworkSecurityPolicy(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -657,14 +657,14 @@ func TestSGPolicyUpdateOnNonExistentSGPolicy(t *testing.T) {
 	err := ag.CreateNatPool(&np)
 	AssertOk(t, err, "Error creating nat pool")
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachGroup:  []string{"preCreatedSecurityGroup"},
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
@@ -688,25 +688,25 @@ func TestSGPolicyUpdateOnNonExistentSGPolicy(t *testing.T) {
 	}
 
 	// create sg policy
-	err = ag.UpdateSGPolicy(&sgPolicy)
+	err = ag.UpdateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "Nat policy updates on non existing nat policies fail")
 }
 
-func TestSGPolicyOnNonExistentSG(t *testing.T) {
+func TestNetworkSecurityPolicyOnNonExistentSG(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachGroup:  []string{"nonExistentSG"},
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
@@ -727,25 +727,25 @@ func TestSGPolicyOnNonExistentSG(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "SG Policy creation with non existent security group attachment point should fail.")
 }
 
-func TestSGPolicyOnNonAttachmentPoints(t *testing.T) {
+func TestNetworkSecurityPolicyOnNonAttachmentPoints(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			Rules: []netproto.PolicyRule{
 				{
 					Action: "PERMIT",
@@ -764,25 +764,25 @@ func TestSGPolicyOnNonAttachmentPoints(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "SG Policy creation with non existent attachment points.")
 }
 
-func TestSGPolicyMatchAllPorts(t *testing.T) {
+func TestNetworkSecurityPolicyMatchAllPorts(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -796,25 +796,25 @@ func TestSGPolicyMatchAllPorts(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "Policies with empty port configs should not fail")
 }
 
-func TestSGPolicyBadPortRange(t *testing.T) {
+func TestNetworkSecurityPolicyBadPortRange(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -834,25 +834,25 @@ func TestSGPolicyBadPortRange(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "Policies with bad l4port config should fail")
 }
 
-func TestSGPolicyOutsidePortRange(t *testing.T) {
+func TestNetworkSecurityPolicyOutsidePortRange(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -872,11 +872,11 @@ func TestSGPolicyOutsidePortRange(t *testing.T) {
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "Policies with ports > 64K should fail")
 }
 
-func TestInvalidSGPolicyWithAppAndProtoPort(t *testing.T) {
+func TestInvalidNetworkSecurityPolicyWithAppAndProtoPort(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -903,14 +903,14 @@ func TestInvalidSGPolicyWithAppAndProtoPort(t *testing.T) {
 	AssertOk(t, err, "App creates must succeed")
 
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -932,8 +932,8 @@ func TestInvalidSGPolicyWithAppAndProtoPort(t *testing.T) {
 	}
 
 	// create sg policy
-	err = ag.CreateSGPolicy(&sgPolicy)
-	Assert(t, err != nil, "SGPolicy referring to both ALG and match criteria in the same rule must fail")
+	err = ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	Assert(t, err != nil, "NetworkSecurityPolicy referring to both ALG and match criteria in the same rule must fail")
 }
 
 func TestConsistentRuleHashes(t *testing.T) {
@@ -942,14 +942,14 @@ func TestConsistentRuleHashes(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -980,23 +980,23 @@ func TestConsistentRuleHashes(t *testing.T) {
 		},
 	}
 
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
 	AssertOk(t, err, "SgPolicy Create failed")
-	actualSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	actualNetworkSecurityPolicy, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy not found")
 
-	rule1HashOnCreate := actualSGPolicy.Spec.Rules[0].ID
-	rule2HashOnCreate := actualSGPolicy.Spec.Rules[1].ID
+	rule1HashOnCreate := actualNetworkSecurityPolicy.Spec.Rules[0].ID
+	rule2HashOnCreate := actualNetworkSecurityPolicy.Spec.Rules[1].ID
 
 	// Update SG Policy, with updates going only to rule 2
-	updSGPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	updNetworkSecurityPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -1027,13 +1027,13 @@ func TestConsistentRuleHashes(t *testing.T) {
 		},
 	}
 
-	err = ag.UpdateSGPolicy(&updSGPolicy)
+	err = ag.UpdateNetworkSecurityPolicy(&updNetworkSecurityPolicy)
 	AssertOk(t, err, "SgPolicy Update failed")
-	updatedSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	updatedNetworkSecurityPolicy, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG Policy not found")
 
-	rule1HashOnUpdate := updatedSGPolicy.Spec.Rules[0].ID
-	rule2HashOnUpdate := updatedSGPolicy.Spec.Rules[1].ID
+	rule1HashOnUpdate := updatedNetworkSecurityPolicy.Spec.Rules[0].ID
+	rule2HashOnUpdate := updatedNetworkSecurityPolicy.Spec.Rules[1].ID
 
 	// Ensure rule 1 hash on create and on update are the same
 	Assert(t, rule1HashOnCreate == rule1HashOnUpdate, "Hashes got changed on a rule that was not updated")

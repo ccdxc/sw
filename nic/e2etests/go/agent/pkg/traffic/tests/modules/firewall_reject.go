@@ -12,7 +12,7 @@ import (
 )
 
 type FirewallReject struct {
-	sgPolicies *netproto.SGPolicy // For now just store everything.
+	sgPolicies *netproto.NetworkSecurityPolicy // For now just store everything.
 
 }
 

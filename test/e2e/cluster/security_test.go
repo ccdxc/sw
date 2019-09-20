@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	apierrors "github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/venice/utils/log"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -46,8 +49,8 @@ func (stg *securityTestGroup) teardownTest() {
 }
 
 // getSGPolicies() returns the list of SG Policies as read from the agent REST interface
-func (stg *securityTestGroup) getSGPolicies(agent string) ([]security.SGPolicy, error) {
-	var sgplist []security.SGPolicy
+func (stg *securityTestGroup) getSGPolicies(agent string) ([]security.NetworkSecurityPolicy, error) {
+	var sgplist []security.NetworkSecurityPolicy
 	status, err := stg.authAgentClient.Req("GET", "https://"+agent+":"+globals.AgentProxyPort+"/api/security/policies/", nil, &sgplist)
 	if err != nil || status != http.StatusOK {
 		return nil, fmt.Errorf("Error getting SG Policies list: %v", err)
@@ -56,8 +59,8 @@ func (stg *securityTestGroup) getSGPolicies(agent string) ([]security.SGPolicy, 
 }
 
 // getSecurityGroups() returns the list of security groups as read from the agent REST interface
-func (stg *securityTestGroup) getSecurityGroups(agent string) ([]security.SGPolicy, error) {
-	var sgplist []security.SGPolicy
+func (stg *securityTestGroup) getSecurityGroups(agent string) ([]security.NetworkSecurityPolicy, error) {
+	var sgplist []security.NetworkSecurityPolicy
 	status, err := stg.authAgentClient.Req("GET", "https://"+agent+":"+globals.AgentProxyPort+"/api/sgs/", nil, &sgplist)
 	if err != nil || status != http.StatusOK {
 		return nil, fmt.Errorf("Error getting SG Policies list: %v", err)
@@ -68,14 +71,14 @@ func (stg *securityTestGroup) getSecurityGroups(agent string) ([]security.SGPoli
 // testSgCreateDelete tests security group create delete
 func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	// sg policy params
-	sg := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sg := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "policy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -94,11 +97,13 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}
 
 	// create sg policy
-	resp, err := stg.suite.restSvc.SecurityV1().SGPolicy().Create(stg.suite.loggedInCtx, &sg)
+	resp, err := stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Create(stg.suite.loggedInCtx, &sg)
+	apiErr := apierrors.FromError(err)
+	log.Errorf("%v", apiErr)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify we can read the policy back
-	rsg, err := stg.suite.restSvc.SecurityV1().SGPolicy().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
+	rsg, err := stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(rsg.Spec).Should(Equal(resp.Spec))
 
@@ -119,7 +124,7 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}, 30, 1).Should(BeTrue(), "Failed to get sg policies on netagent")
 
 	// delete the sg policy
-	_, err = stg.suite.restSvc.SecurityV1().SGPolicy().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
+	_, err = stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify policy is gone from the agents

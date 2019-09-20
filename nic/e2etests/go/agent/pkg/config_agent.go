@@ -31,7 +31,7 @@ type AgentConfig struct {
 	Vrfs               []netproto.Vrf
 	Networks           []netproto.Network
 	Endpoints          []netproto.Endpoint
-	SgPolicies         []netproto.SGPolicy
+	SgPolicies         []netproto.NetworkSecurityPolicy
 	IPSecSAEncryption  []netproto.IPSecSAEncrypt
 	IPSecSADecryption  []netproto.IPSecSADecrypt
 	IPSecPolicies      []netproto.IPSecPolicy
@@ -75,7 +75,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 		"Namespace":        &agentCfg.Namespaces,
 		"Network":          &agentCfg.Networks,
 		"Endpoint":         &agentCfg.Endpoints,
-		"SGPolicy":         &agentCfg.SgPolicies,
+		"NetworkSecurityPolicy":         &agentCfg.SgPolicies,
 		"MirrorSession":    &agentCfg.MirrorSessions,
 		"IPSecSAEncrypt":   &agentCfg.IPSecSAEncryption,
 		"IPSecSADecrypt":   &agentCfg.IPSecSADecryption,

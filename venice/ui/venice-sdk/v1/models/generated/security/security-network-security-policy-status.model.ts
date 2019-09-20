@@ -10,16 +10,16 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 import { SecurityPropagationStatus, ISecurityPropagationStatus } from './security-propagation-status.model';
 import { SecuritySGRuleStatus, ISecuritySGRuleStatus } from './security-sg-rule-status.model';
 
-export interface ISecuritySGPolicyStatus {
+export interface ISecurityNetworkSecurityPolicyStatus {
     'propagation-status'?: ISecurityPropagationStatus;
     'rule-status'?: Array<ISecuritySGRuleStatus>;
 }
 
 
-export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
+export class SecurityNetworkSecurityPolicyStatus extends BaseModel implements ISecurityNetworkSecurityPolicyStatus {
     'propagation-status': SecurityPropagationStatus = null;
     'rule-status': Array<SecuritySGRuleStatus> = null;
-    public static propInfo: { [prop in keyof ISecuritySGPolicyStatus]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicyStatus]: PropInfoItem } = {
         'propagation-status': {
             required: false,
             type: 'object'
@@ -31,19 +31,19 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySGPolicyStatus.propInfo[propName];
+        return SecurityNetworkSecurityPolicyStatus.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecuritySGPolicyStatus.propInfo;
+        return SecurityNetworkSecurityPolicyStatus.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySGPolicyStatus.propInfo[prop] != null &&
-                        SecuritySGPolicyStatus.propInfo[prop].default != null);
+        return (SecurityNetworkSecurityPolicyStatus.propInfo[prop] != null &&
+                        SecurityNetworkSecurityPolicyStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -80,7 +80,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, SecuritySGPolicyStatus.propInfo['propagation-status'].required),
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, SecurityNetworkSecurityPolicyStatus.propInfo['propagation-status'].required),
                 'rule-status': new FormArray([]),
             });
             // generate FormArray control elements

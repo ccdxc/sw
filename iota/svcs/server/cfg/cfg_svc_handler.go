@@ -27,7 +27,7 @@ type ConfigService struct {
 	NaplesHosts []*iota.NaplesHost
 	Workloads   []*workload.Workload
 	Hosts       []*cluster.Host
-	SGPolicies  []*security.SGPolicy
+	SGPolicies  []*security.NetworkSecurityPolicy
 	Apps        []*security.App
 }
 
@@ -279,7 +279,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)
 	workloadURL := fmt.Sprintf("%s/configs/workload/v1/workloads", c.CfgState.Endpoints[0])
 	hostURL := fmt.Sprintf("%s/configs/cluster/v1/hosts", c.CfgState.Endpoints[0])
-	sgPolicyURL := fmt.Sprintf("%s/configs/security/v1/sgpolicies", c.CfgState.Endpoints[0])
+	sgPolicyURL := fmt.Sprintf("%s/configs/security/v1/networksecuritypolicies", c.CfgState.Endpoints[0])
 	appURL := fmt.Sprintf("%s/configs/security/v1/apps", c.CfgState.Endpoints[0])
 	for _, cfg := range req.Configs {
 		var object interface{}
@@ -324,7 +324,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				return req, nil
 			}
 		case "sgpolicy":
-			var sgPolicyObj security.SGPolicy
+			var sgPolicyObj security.NetworkSecurityPolicy
 			err := json.Unmarshal(jsonBytes, &sgPolicyObj)
 			if err != nil {
 				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
@@ -385,7 +385,7 @@ func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMs
 func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	var iotaCfgObjects []*iota.ConfigObject
 	var workloads []*workload.Workload
-	var sgPolicies []*security.SGPolicy
+	var sgPolicies []*security.NetworkSecurityPolicy
 	var apps []*security.App
 	var hosts []*cluster.Host
 	var macAddresses []string
@@ -447,14 +447,14 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		}
 	}
 	// ToDO add more SG Policies here.
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "all-allow-policy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{

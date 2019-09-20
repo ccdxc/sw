@@ -18,21 +18,21 @@ import (
 	"google.golang.org/grpc/connectivity"
 )
 
-type SGPolicyReactor interface {
-	CreateSGPolicy(sgpolicyObj *netproto.SGPolicy) error          // creates an SGPolicy
-	FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) // finds an SGPolicy
-	ListSGPolicy() []*netproto.SGPolicy                           // lists all SGPolicys
-	UpdateSGPolicy(sgpolicyObj *netproto.SGPolicy) error          // updates an SGPolicy
-	DeleteSGPolicy(sgpolicyObj, ns, name string) error            // deletes an SGPolicy
+type NetworkSecurityPolicyReactor interface {
+	CreateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // creates an NetworkSecurityPolicy
+	FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error)     // finds an NetworkSecurityPolicy
+	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
+	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
+	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
 
-// WatchSGPolicys runs SGPolicy watcher loop
-func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicyReactor) {
+// WatchNetworkSecurityPolicys runs NetworkSecurityPolicy watcher loop
+func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, reactor NetworkSecurityPolicyReactor) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
-	client.debugStats.AddInt("ActiveSGPolicyWatch", 1)
+	client.debugStats.AddInt("ActiveNetworkSecurityPolicyWatch", 1)
 
 	// make sure rpc client is good
 	if client.rpcClient == nil || client.rpcClient.ClientConn == nil || client.rpcClient.ClientConn.GetState() != connectivity.Ready {
@@ -41,69 +41,69 @@ func (client *NimbusClient) WatchSGPolicys(ctx context.Context, reactor SGPolicy
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "SGPolicy")
-	sgpolicyRPCClient := netproto.NewSGPolicyApiClient(client.rpcClient.ClientConn)
-	stream, err := sgpolicyRPCClient.WatchSGPolicys(ctx, &ometa)
+	ometa := reactor.GetWatchOptions(ctx, "NetworkSecurityPolicy")
+	networksecuritypolicyRPCClient := netproto.NewNetworkSecurityPolicyApiClient(client.rpcClient.ClientConn)
+	stream, err := networksecuritypolicyRPCClient.WatchNetworkSecurityPolicys(ctx, &ometa)
 	if err != nil {
-		log.Errorf("Error watching SGPolicy. Err: %v", err)
+		log.Errorf("Error watching NetworkSecurityPolicy. Err: %v", err)
 		return
 	}
 
 	// start oper update stream
-	ostream, err := sgpolicyRPCClient.SGPolicyOperUpdate(ctx)
+	ostream, err := networksecuritypolicyRPCClient.NetworkSecurityPolicyOperUpdate(ctx)
 	if err != nil {
-		log.Errorf("Error starting SGPolicy oper updates. Err: %v", err)
+		log.Errorf("Error starting NetworkSecurityPolicy oper updates. Err: %v", err)
 		return
 	}
 
 	// get a list of objects
-	objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &ometa)
+	objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
 	if err != nil {
-		log.Errorf("Error getting SGPolicy list. Err: %v", err)
+		log.Errorf("Error getting NetworkSecurityPolicy list. Err: %v", err)
 		return
 	}
 
 	// perform a diff of the states
-	client.diffSGPolicys(objList, reactor, ostream)
+	client.diffNetworkSecurityPolicys(objList, reactor, ostream)
 
 	// start grpc stream recv
-	recvCh := make(chan *netproto.SGPolicyEvent, evChanLength)
-	go client.watchSGPolicyRecvLoop(stream, recvCh)
+	recvCh := make(chan *netproto.NetworkSecurityPolicyEvent, evChanLength)
+	go client.watchNetworkSecurityPolicyRecvLoop(stream, recvCh)
 
 	// loop till the end
 	for {
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
-				log.Warnf("SGPolicy Watch channel closed. Exisint SGPolicyWatch")
+				log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
 				return
 			}
-			client.debugStats.AddInt("SGPolicyWatchEvents", 1)
+			client.debugStats.AddInt("NetworkSecurityPolicyWatchEvents", 1)
 
-			log.Infof("Ctrlerif: agent %s got SGPolicy watch event: Type: {%+v} SGPolicy:{%+v}", client.clientName, evt.EventType, evt.SGPolicy.ObjectMeta)
+			log.Infof("Ctrlerif: agent %s got NetworkSecurityPolicy watch event: Type: {%+v} NetworkSecurityPolicy:{%+v}", client.clientName, evt.EventType, evt.NetworkSecurityPolicy.ObjectMeta)
 
-			client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-			go client.processSGPolicyEvent(*evt, reactor, ostream)
+			client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+			go client.processNetworkSecurityPolicyEvent(*evt, reactor, ostream)
 			//Give it some time to increment waitgrp
 			time.Sleep(100 * time.Millisecond)
 		// periodic resync
 		case <-time.After(resyncInterval):
 			// get a list of objects
-			objList, err := sgpolicyRPCClient.ListSGPolicys(ctx, &ometa)
+			objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
 			if err != nil {
-				log.Errorf("Error getting SGPolicy list. Err: %v", err)
+				log.Errorf("Error getting NetworkSecurityPolicy list. Err: %v", err)
 				return
 			}
-			client.debugStats.AddInt("SGPolicyWatchResyncs", 1)
+			client.debugStats.AddInt("NetworkSecurityPolicyWatchResyncs", 1)
 
 			// perform a diff of the states
-			client.diffSGPolicys(objList, reactor, ostream)
+			client.diffNetworkSecurityPolicys(objList, reactor, ostream)
 		}
 	}
 }
 
-// watchSGPolicyRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchSGPolicyRecvLoop(stream netproto.SGPolicyApi_WatchSGPolicysClient, recvch chan<- *netproto.SGPolicyEvent) {
+// watchNetworkSecurityPolicyRecvLoop receives from stream and write it to a channel
+func (client *NimbusClient) watchNetworkSecurityPolicyRecvLoop(stream netproto.NetworkSecurityPolicyApi_WatchNetworkSecurityPolicysClient, recvch chan<- *netproto.NetworkSecurityPolicyEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -113,7 +113,7 @@ func (client *NimbusClient) watchSGPolicyRecvLoop(stream netproto.SGPolicyApi_Wa
 		// receive from stream
 		evt, err := stream.Recv()
 		if err != nil {
-			log.Errorf("Error receiving from watch channel. Exiting SGPolicy watch. Err: %v", err)
+			log.Errorf("Error receiving from watch channel. Exiting NetworkSecurityPolicy watch. Err: %v", err)
 			return
 		}
 
@@ -121,30 +121,30 @@ func (client *NimbusClient) watchSGPolicyRecvLoop(stream netproto.SGPolicyApi_Wa
 	}
 }
 
-// diffSGPolicy diffs local state with controller state
+// diffNetworkSecurityPolicy diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reactor SGPolicyReactor, ostream netproto.SGPolicyApi_SGPolicyOperUpdateClient) {
+func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.NetworkSecurityPolicyList, reactor NetworkSecurityPolicyReactor, ostream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient) {
 	// build a map of objects
-	objmap := make(map[string]*netproto.SGPolicy)
-	for _, obj := range objList.SGPolicys {
+	objmap := make(map[string]*netproto.NetworkSecurityPolicy)
+	for _, obj := range objList.NetworkSecurityPolicys {
 		key := obj.ObjectMeta.GetKey()
 		objmap[key] = obj
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListSGPolicy()
+	localObjs := reactor.ListNetworkSecurityPolicy()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
 			if _, ok := objmap[key]; !ok {
-				evt := netproto.SGPolicyEvent{
-					EventType: api.EventType_DeleteEvent,
-					SGPolicy:  *lobj,
+				evt := netproto.NetworkSecurityPolicyEvent{
+					EventType:             api.EventType_DeleteEvent,
+					NetworkSecurityPolicy: *lobj,
 				}
-				log.Infof("diffSGPolicys(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-				client.processSGPolicyEvent(evt, reactor, ostream)
+				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+				client.processNetworkSecurityPolicyEvent(evt, reactor, ostream)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -152,28 +152,28 @@ func (client *NimbusClient) diffSGPolicys(objList *netproto.SGPolicyList, reacto
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.SGPolicys {
-		evt := netproto.SGPolicyEvent{
-			EventType: api.EventType_CreateEvent,
-			SGPolicy:  *obj,
+	for _, obj := range objList.NetworkSecurityPolicys {
+		evt := netproto.NetworkSecurityPolicyEvent{
+			EventType:             api.EventType_CreateEvent,
+			NetworkSecurityPolicy: *obj,
 		}
-		client.lockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
-		client.processSGPolicyEvent(evt, reactor, ostream)
+		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+		client.processNetworkSecurityPolicyEvent(evt, reactor, ostream)
 	}
 }
 
-// processSGPolicyEvent handles SGPolicy event
-func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, reactor SGPolicyReactor, ostream netproto.SGPolicyApi_SGPolicyOperUpdateClient) {
+// processNetworkSecurityPolicyEvent handles NetworkSecurityPolicy event
+func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.NetworkSecurityPolicyEvent, reactor NetworkSecurityPolicyReactor, ostream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
 
 	// add venice label to the object
-	evt.SGPolicy.ObjectMeta.Labels = make(map[string]string)
-	evt.SGPolicy.ObjectMeta.Labels["CreatedBy"] = "Venice"
+	evt.NetworkSecurityPolicy.ObjectMeta.Labels = make(map[string]string)
+	evt.NetworkSecurityPolicy.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
 	// unlock the object once we are done
-	defer client.unlockObject(evt.SGPolicy.GetObjectKind(), evt.SGPolicy.ObjectMeta)
+	defer client.unlockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
 
 	// retry till successful
 	for iter := 0; iter < maxOpretry; iter++ {
@@ -181,60 +181,60 @@ func (client *NimbusClient) processSGPolicyEvent(evt netproto.SGPolicyEvent, rea
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.FindSGPolicy(evt.SGPolicy.ObjectMeta)
+			_, err = reactor.FindNetworkSecurityPolicy(evt.NetworkSecurityPolicy.ObjectMeta)
 			if err != nil {
-				// create the SGPolicy
-				err = reactor.CreateSGPolicy(&evt.SGPolicy)
+				// create the NetworkSecurityPolicy
+				err = reactor.CreateNetworkSecurityPolicy(&evt.NetworkSecurityPolicy)
 				if err != nil {
-					log.Errorf("Error creating the SGPolicy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
-					client.debugStats.AddInt("CreateSGPolicyError", 1)
+					log.Errorf("Error creating the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.ObjectMeta, err)
+					client.debugStats.AddInt("CreateNetworkSecurityPolicyError", 1)
 				} else {
-					client.debugStats.AddInt("CreateSGPolicy", 1)
+					client.debugStats.AddInt("CreateNetworkSecurityPolicy", 1)
 				}
 			} else {
-				// update the SGPolicy
-				err = reactor.UpdateSGPolicy(&evt.SGPolicy)
+				// update the NetworkSecurityPolicy
+				err = reactor.UpdateNetworkSecurityPolicy(&evt.NetworkSecurityPolicy)
 				if err != nil {
-					log.Errorf("Error updating the SGPolicy {%+v}. Err: %v", evt.SGPolicy.GetKey(), err)
-					client.debugStats.AddInt("UpdateSGPolicyError", 1)
+					log.Errorf("Error updating the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.GetKey(), err)
+					client.debugStats.AddInt("UpdateNetworkSecurityPolicyError", 1)
 				} else {
-					client.debugStats.AddInt("UpdateSGPolicy", 1)
+					client.debugStats.AddInt("UpdateNetworkSecurityPolicy", 1)
 				}
 			}
 
 		case api.EventType_DeleteEvent:
 			// delete the object
-			err = reactor.DeleteSGPolicy(evt.SGPolicy.Tenant, evt.SGPolicy.Namespace, evt.SGPolicy.Name)
+			err = reactor.DeleteNetworkSecurityPolicy(evt.NetworkSecurityPolicy.Tenant, evt.NetworkSecurityPolicy.Namespace, evt.NetworkSecurityPolicy.Name)
 			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("SGPolicy {%+v} not found", evt.SGPolicy.ObjectMeta)
+				log.Debugf("NetworkSecurityPolicy {%+v} not found", evt.NetworkSecurityPolicy.ObjectMeta)
 				err = nil
 			}
 			if err != nil {
-				log.Errorf("Error deleting the SGPolicy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
-				client.debugStats.AddInt("DeleteSGPolicyError", 1)
+				log.Errorf("Error deleting the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.ObjectMeta, err)
+				client.debugStats.AddInt("DeleteNetworkSecurityPolicyError", 1)
 			} else {
-				client.debugStats.AddInt("DeleteSGPolicy", 1)
+				client.debugStats.AddInt("DeleteNetworkSecurityPolicy", 1)
 			}
 		}
 
 		// send oper status and return if there is no error
 		if err == nil {
-			robj := netproto.SGPolicyEvent{
+			robj := netproto.NetworkSecurityPolicyEvent{
 				EventType: evt.EventType,
-				SGPolicy: netproto.SGPolicy{
-					TypeMeta:   evt.SGPolicy.TypeMeta,
-					ObjectMeta: evt.SGPolicy.ObjectMeta,
-					Status:     evt.SGPolicy.Status,
+				NetworkSecurityPolicy: netproto.NetworkSecurityPolicy{
+					TypeMeta:   evt.NetworkSecurityPolicy.TypeMeta,
+					ObjectMeta: evt.NetworkSecurityPolicy.ObjectMeta,
+					Status:     evt.NetworkSecurityPolicy.Status,
 				},
 			}
 
 			// send oper status
 			err := ostream.Send(&robj)
 			if err != nil {
-				log.Errorf("failed to send SGPolicy oper Status, %s", err)
-				client.debugStats.AddInt("SGPolicyOperSendError", 1)
+				log.Errorf("failed to send NetworkSecurityPolicy oper Status, %s", err)
+				client.debugStats.AddInt("NetworkSecurityPolicyOperSendError", 1)
 			} else {
-				client.debugStats.AddInt("SGPolicyOperSent", 1)
+				client.debugStats.AddInt("NetworkSecurityPolicyOperSent", 1)
 			}
 
 			return

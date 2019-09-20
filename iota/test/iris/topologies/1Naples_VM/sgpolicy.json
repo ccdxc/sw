@@ -1,7 +1,7 @@
 {
     "sgpolicies": [
     {
-      "kind": "SGPolicy",
+      "kind": "NetworkSecurityPolicy",
       "meta": {
         "name": "allow-all",
         "tenant": "default",

@@ -54,15 +54,15 @@ var (
 		},
 	}
 
-	sgPolicies = []*netproto.SGPolicy{
+	sgPolicies = []*netproto.NetworkSecurityPolicy{
 		{
-			TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      "testSGPolicy",
+				Name:      "testNetworkSecurityPolicy",
 			},
-			Spec: netproto.SGPolicySpec{
+			Spec: netproto.NetworkSecurityPolicySpec{
 				AttachTenant: true,
 				Rules: []netproto.PolicyRule{
 					{
@@ -266,14 +266,14 @@ func TestNetAgentConfigPersistence(t *testing.T) {
 		},
 	}
 
-	sgPolicy := &netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := &netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -317,7 +317,7 @@ func TestNetAgentConfigPersistence(t *testing.T) {
 	err = ag.CreateApp(&ftp)
 	AssertOk(t, err, "Failed to create app")
 
-	err = ag.CreateSGPolicy(sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(sgPolicy)
 	AssertOk(t, err, "Failed to create sg policy")
 
 	err = ag.CreateTunnel(&tun)
@@ -336,7 +336,7 @@ func TestNetAgentConfigPersistence(t *testing.T) {
 	_, err = ag.FindApp(ftp.ObjectMeta)
 	AssertOk(t, err, "Failed to find ftp app")
 
-	_, err = ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	_, err = ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find sg policy")
 
 	tunnel, err := ag.FindTunnel(tun.ObjectMeta)
@@ -366,7 +366,7 @@ func TestNetAgentConfigPersistence(t *testing.T) {
 	_, err = newAgent.FindApp(ftp.ObjectMeta)
 	AssertOk(t, err, "Failed to find app")
 
-	_, err = newAgent.FindSGPolicy(sgPolicy.ObjectMeta)
+	_, err = newAgent.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find sg policy")
 
 	tunnel, err = ag.FindTunnel(tun.ObjectMeta)
@@ -406,7 +406,7 @@ func TestNaplesPurgeConfigs(t *testing.T) {
 
 	// Create SG Policy
 	for _, s := range sgPolicies {
-		err := ag.CreateSGPolicy(s)
+		err := ag.CreateNetworkSecurityPolicy(s)
 		AssertOk(t, err, "Failed to create SG Policy")
 	}
 
@@ -416,7 +416,7 @@ func TestNaplesPurgeConfigs(t *testing.T) {
 	curApps := ag.ListApp()
 	AssertEquals(t, 0, len(curApps), "Purge config must delete all netagent apps")
 
-	curSGPolicies := ag.ListSGPolicy()
+	curSGPolicies := ag.ListNetworkSecurityPolicy()
 	AssertEquals(t, 0, len(curSGPolicies), "Purge config must delete all netagent sg policies")
 
 	curEPs := ag.ListEndpoint()

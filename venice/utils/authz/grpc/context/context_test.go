@@ -102,7 +102,7 @@ func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 		login.NewPermission(
 			"testTenant",
 			string(apiclient.GroupSecurity),
-			string(security.KindSGPolicy),
+			string(security.KindNetworkSecurityPolicy),
 			authz.ResourceNamespaceAll,
 			"",
 			auth.Permission_AllActions.String()),
@@ -172,7 +172,7 @@ func TestNewIncomingContextWithUserPerms(t *testing.T) {
 		login.NewPermission(
 			"testTenant",
 			string(apiclient.GroupSecurity),
-			string(security.KindSGPolicy),
+			string(security.KindNetworkSecurityPolicy),
 			authz.ResourceNamespaceAll,
 			"",
 			auth.Permission_AllActions.String()),
@@ -232,7 +232,7 @@ func TestPopulateMetadataWithUserPerms(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -253,7 +253,7 @@ func TestPopulateMetadataWithUserPerms(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -286,7 +286,7 @@ func TestPopulateMetadataWithUserPerms(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -319,7 +319,7 @@ func TestPopulateMetadataWithUserPerms(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -381,7 +381,7 @@ func TestPermsFromContext(t *testing.T) {
 				login.NewPermission(
 					"testTenant",
 					string(apiclient.GroupSecurity),
-					string(security.KindSGPolicy),
+					string(security.KindNetworkSecurityPolicy),
 					authz.ResourceNamespaceAll,
 					"",
 					auth.Permission_AllActions.String()),
@@ -442,7 +442,7 @@ func BenchmarkNewOutgoingContextWithUserPerms(b *testing.B) {
 			login.NewPermission(
 				"testTenant",
 				string(apiclient.GroupSecurity),
-				string(security.KindSGPolicy),
+				string(security.KindNetworkSecurityPolicy),
 				authz.ResourceNamespaceAll,
 				"",
 				auth.Permission_AllActions.String()),

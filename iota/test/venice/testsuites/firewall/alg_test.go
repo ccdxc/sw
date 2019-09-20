@@ -15,17 +15,17 @@ var _ = Describe("firewall ALG tests", func() {
 		}).Should(Succeed())
 
 		// delete the default allow policy
-		Expect(ts.model.DefaultSGPolicy().Delete()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 	Context("ALG tests", func() {
 		It("Should be able to FTP get with FTP ALG policy", func() {
@@ -36,7 +36,7 @@ var _ = Describe("firewall ALG tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 
 			// configure policy without ALG
-			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/21", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/21", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify FTP get fails
@@ -46,7 +46,7 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// configure policy with ALG
 			Expect(spc.Delete()).Should(Succeed())
-			spc = ts.model.NewSGPolicy("test-policy").AddAlgRulesForWorkloadPairs(workloadPairs, "ftp-alg", "PERMIT")
+			spc = ts.model.NewNetworkSecurityPolicy("test-policy").AddAlgRulesForWorkloadPairs(workloadPairs, "ftp-alg", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify FTP get succeeds now
@@ -69,7 +69,7 @@ var _ = Describe("firewall ALG tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 
 			// configure policy without ALG
-			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/21", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/21", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify FTP get fails
@@ -100,7 +100,7 @@ var _ = Describe("firewall ALG tests", func() {
 			}).Should(Succeed())
 
 			// configure policy with ICMP ALG
-			spc := ts.model.NewSGPolicy("test-policy").AddAlgRulesForWorkloadPairs(workloadPairs, "icmp-echo-resp", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddAlgRulesForWorkloadPairs(workloadPairs, "icmp-echo-resp", "PERMIT")
 			spc = spc.AddAlgRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp-echo-req", "PERMIT")
 
 			Expect(spc.Commit()).Should(Succeed())

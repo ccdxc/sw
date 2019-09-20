@@ -15,40 +15,16 @@ import (
 
 var typesMapSgpolicy = map[string]*api.Struct{
 
-	"security.PropagationStatus": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PropagationStatus{}) },
-		Fields: map[string]api.Field{
-			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{ID: "generation-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Updated": api.Field{Name: "Updated", CLITag: api.CLIInfo{ID: "updated", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "updated", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
-
-			"Pending": api.Field{Name: "Pending", CLITag: api.CLIInfo{ID: "pending", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
-
-			"MinVersion": api.Field{Name: "MinVersion", CLITag: api.CLIInfo{ID: "min-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"PendingNaples": api.Field{Name: "PendingNaples", CLITag: api.CLIInfo{ID: "pending-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending-dscs", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"security.ProtoPort": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ProtoPort{}) },
-		Fields: map[string]api.Field{
-			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{ID: "protocol", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{ID: "ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"security.SGPolicy": &api.Struct{
-		Kind: "SGPolicy", APIGroup: "security", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicy{}) },
+	"security.NetworkSecurityPolicy": &api.Struct{
+		Kind: "NetworkSecurityPolicy", APIGroup: "security", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSecurityPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
 			"ObjectMeta": api.Field{Name: "ObjectMeta", CLITag: api.CLIInfo{ID: "meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{ID: "spec", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicySpec"},
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{ID: "spec", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.NetworkSecurityPolicySpec"},
 
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicyStatus"},
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.NetworkSecurityPolicyStatus"},
 
 			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
@@ -104,8 +80,8 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"security.SGPolicySpec": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicySpec{}) },
+	"security.NetworkSecurityPolicySpec": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSecurityPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"AttachGroups": api.Field{Name: "AttachGroups", CLITag: api.CLIInfo{ID: "attach-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-groups", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -114,12 +90,36 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"Rules": api.Field{Name: "Rules", CLITag: api.CLIInfo{ID: "rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rules", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRule"},
 		},
 	},
-	"security.SGPolicyStatus": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
+	"security.NetworkSecurityPolicyStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSecurityPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.PropagationStatus"},
 
 			"RuleStatus": api.Field{Name: "RuleStatus", CLITag: api.CLIInfo{ID: "rule-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-status", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRuleStatus"},
+		},
+	},
+	"security.PropagationStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PropagationStatus{}) },
+		Fields: map[string]api.Field{
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{ID: "generation-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Updated": api.Field{Name: "Updated", CLITag: api.CLIInfo{ID: "updated", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "updated", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Pending": api.Field{Name: "Pending", CLITag: api.CLIInfo{ID: "pending", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"MinVersion": api.Field{Name: "MinVersion", CLITag: api.CLIInfo{ID: "min-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PendingNaples": api.Field{Name: "PendingNaples", CLITag: api.CLIInfo{ID: "pending-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending-dscs", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"security.ProtoPort": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ProtoPort{}) },
+		Fields: map[string]api.Field{
+			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{ID: "protocol", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{ID: "ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.SGRule": &api.Struct{

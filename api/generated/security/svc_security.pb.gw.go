@@ -113,8 +113,8 @@ func request_SecurityV1_AutoAddApp_1(ctx context.Context, marshaler runtime.Mars
 
 }
 
-func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoAddNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -158,13 +158,13 @@ func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	msg, err := client.AutoAddSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoAddNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
 
-func request_SecurityV1_AutoAddSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoAddNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -187,7 +187,7 @@ func request_SecurityV1_AutoAddSGPolicy_1(ctx context.Context, marshaler runtime
 		protoReq.Defaults(ver)
 	}
 
-	msg, err := client.AutoAddSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoAddNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -399,11 +399,11 @@ func request_SecurityV1_AutoDeleteApp_1(ctx context.Context, marshaler runtime.M
 }
 
 var (
-	filter_SecurityV1_AutoDeleteSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SecurityV1_AutoDeleteNetworkSecurityPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SecurityV1_AutoDeleteSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoDeleteNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -458,21 +458,21 @@ func request_SecurityV1_AutoDeleteSGPolicy_0(ctx context.Context, marshaler runt
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSGPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteNetworkSecurityPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoDeleteNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
 
 var (
-	filter_SecurityV1_AutoDeleteSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoDeleteNetworkSecurityPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SecurityV1_AutoDeleteSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoDeleteNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -516,11 +516,11 @@ func request_SecurityV1_AutoDeleteSGPolicy_1(ctx context.Context, marshaler runt
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSGPolicy_1); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteNetworkSecurityPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoDeleteSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoDeleteNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -907,11 +907,11 @@ func request_SecurityV1_AutoGetFirewallProfile_1(ctx context.Context, marshaler 
 }
 
 var (
-	filter_SecurityV1_AutoGetSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SecurityV1_AutoGetNetworkSecurityPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SecurityV1_AutoGetSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoGetNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -966,21 +966,21 @@ func request_SecurityV1_AutoGetSGPolicy_0(ctx context.Context, marshaler runtime
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSGPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetNetworkSecurityPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoGetNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
 
 var (
-	filter_SecurityV1_AutoGetSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoGetNetworkSecurityPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SecurityV1_AutoGetSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoGetNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -1024,11 +1024,11 @@ func request_SecurityV1_AutoGetSGPolicy_1(ctx context.Context, marshaler runtime
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSGPolicy_1); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetNetworkSecurityPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoGetSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoGetNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -1351,10 +1351,10 @@ func request_SecurityV1_AutoListFirewallProfile_1(ctx context.Context, marshaler
 }
 
 var (
-	filter_SecurityV1_AutoListSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoListNetworkSecurityPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SecurityV1_AutoListSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SecurityV1_AutoListNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
@@ -1399,20 +1399,20 @@ func request_SecurityV1_AutoListSGPolicy_0(ctx context.Context, marshaler runtim
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSGPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListNetworkSecurityPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoListNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
 
 var (
-	filter_SecurityV1_AutoListSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SecurityV1_AutoListNetworkSecurityPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_SecurityV1_AutoListSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SecurityV1_AutoListNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
@@ -1436,11 +1436,11 @@ func request_SecurityV1_AutoListSGPolicy_1(ctx context.Context, marshaler runtim
 		protoReq.Defaults(ver)
 	}
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSGPolicy_1); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListNetworkSecurityPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.AutoListSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoListNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -1762,8 +1762,8 @@ func request_SecurityV1_AutoUpdateFirewallProfile_1(ctx context.Context, marshal
 
 }
 
-func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoUpdateNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -1818,13 +1818,13 @@ func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runt
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	msg, err := client.AutoUpdateSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoUpdateNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
 
-func request_SecurityV1_AutoUpdateSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &SGPolicy{}
+func request_SecurityV1_AutoUpdateNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &NetworkSecurityPolicy{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -1868,7 +1868,7 @@ func request_SecurityV1_AutoUpdateSGPolicy_1(ctx context.Context, marshaler runt
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	msg, err := client.AutoUpdateSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	msg, err := client.AutoUpdateNetworkSecurityPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -2207,10 +2207,10 @@ func request_SecurityV1_AutoWatchFirewallProfile_1(ctx context.Context, marshale
 }
 
 var (
-	filter_SecurityV1_AutoWatchSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoWatchNetworkSecurityPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchSGPolicyClient, runtime.ServerMetadata, error) {
+func request_SecurityV1_AutoWatchNetworkSecurityPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchNetworkSecurityPolicyClient, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
@@ -2255,11 +2255,11 @@ func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runti
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSGPolicy_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchNetworkSecurityPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	stream, err := client.AutoWatchSGPolicy(ctx, protoReq)
+	stream, err := client.AutoWatchNetworkSecurityPolicy(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -2273,10 +2273,10 @@ func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runti
 }
 
 var (
-	filter_SecurityV1_AutoWatchSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SecurityV1_AutoWatchNetworkSecurityPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_SecurityV1_AutoWatchSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchSGPolicyClient, runtime.ServerMetadata, error) {
+func request_SecurityV1_AutoWatchNetworkSecurityPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchNetworkSecurityPolicyClient, runtime.ServerMetadata, error) {
 	protoReq := &api.ListWatchOptions{}
 	var smetadata runtime.ServerMetadata
 
@@ -2300,11 +2300,11 @@ func request_SecurityV1_AutoWatchSGPolicy_1(ctx context.Context, marshaler runti
 		protoReq.Defaults(ver)
 	}
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSGPolicy_1); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchNetworkSecurityPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	stream, err := client.AutoWatchSGPolicy(ctx, protoReq)
+	stream, err := client.AutoWatchNetworkSecurityPolicy(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -2520,7 +2520,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("POST", pattern_SecurityV1_AutoAddSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SecurityV1_AutoAddNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2537,18 +2537,18 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoAddSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoAddNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoAddSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoAddNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_SecurityV1_AutoAddSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SecurityV1_AutoAddNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2565,14 +2565,14 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoAddSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoAddNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoAddSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoAddNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2688,7 +2688,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2705,18 +2705,18 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoDeleteSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoDeleteNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoDeleteSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoDeleteNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2733,14 +2733,14 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoDeleteSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoDeleteNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoDeleteSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoDeleteNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2912,7 +2912,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoGetSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoGetNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2929,18 +2929,18 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoGetSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoGetNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoGetSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoGetNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoGetSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoGetNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2957,14 +2957,14 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoGetSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoGetNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoGetSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoGetNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3136,7 +3136,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoListSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoListNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3153,18 +3153,18 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoListSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoListNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoListSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoListNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoListSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoListNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3181,14 +3181,14 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoListSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoListNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoListSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoListNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3360,7 +3360,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3377,18 +3377,18 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoUpdateSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoUpdateNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoUpdateSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoUpdateNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3405,14 +3405,14 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityV1_AutoUpdateSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoUpdateNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityV1_AutoUpdateSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityV1_AutoUpdateNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3692,7 +3692,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoWatchSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchNetworkSecurityPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3717,7 +3717,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
 			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
 		}
-		resp, md, err := request_SecurityV1_AutoWatchSGPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoWatchNetworkSecurityPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
@@ -3741,13 +3741,13 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 			if bs.(bool) {
 				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			} else {
-				forward_SecurityV1_AutoWatchSGPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+				forward_SecurityV1_AutoWatchNetworkSecurityPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			}
 		}
 
 	})
 
-	mux.Handle("GET", pattern_SecurityV1_AutoWatchSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchNetworkSecurityPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3772,7 +3772,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
 			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
 		}
-		resp, md, err := request_SecurityV1_AutoWatchSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityV1_AutoWatchNetworkSecurityPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
@@ -3796,7 +3796,7 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 			if bs.(bool) {
 				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			} else {
-				forward_SecurityV1_AutoWatchSGPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+				forward_SecurityV1_AutoWatchNetworkSecurityPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			}
 		}
 
@@ -3920,9 +3920,9 @@ var (
 
 	pattern_SecurityV1_AutoAddApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
 
-	pattern_SecurityV1_AutoAddSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
+	pattern_SecurityV1_AutoAddNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "networksecuritypolicies"}, ""))
 
-	pattern_SecurityV1_AutoAddSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"sgpolicies"}, ""))
+	pattern_SecurityV1_AutoAddNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networksecuritypolicies"}, ""))
 
 	pattern_SecurityV1_AutoAddSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
 
@@ -3932,9 +3932,9 @@ var (
 
 	pattern_SecurityV1_AutoDeleteApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoDeleteSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoDeleteNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networksecuritypolicies", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoDeleteSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoDeleteNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networksecuritypolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -3948,9 +3948,9 @@ var (
 
 	pattern_SecurityV1_AutoGetFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"firewallprofiles", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoGetSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoGetNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networksecuritypolicies", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoGetSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoGetNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networksecuritypolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -3964,9 +3964,9 @@ var (
 
 	pattern_SecurityV1_AutoListFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"firewallprofiles"}, ""))
 
-	pattern_SecurityV1_AutoListSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
+	pattern_SecurityV1_AutoListNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "networksecuritypolicies"}, ""))
 
-	pattern_SecurityV1_AutoListSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"sgpolicies"}, ""))
+	pattern_SecurityV1_AutoListNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networksecuritypolicies"}, ""))
 
 	pattern_SecurityV1_AutoListSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
 
@@ -3980,9 +3980,9 @@ var (
 
 	pattern_SecurityV1_AutoUpdateFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"firewallprofiles", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoUpdateSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoUpdateNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networksecuritypolicies", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoUpdateSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
+	pattern_SecurityV1_AutoUpdateNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networksecuritypolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -3996,9 +3996,9 @@ var (
 
 	pattern_SecurityV1_AutoWatchFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "firewallprofiles"}, ""))
 
-	pattern_SecurityV1_AutoWatchSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "sgpolicies"}, ""))
+	pattern_SecurityV1_AutoWatchNetworkSecurityPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "networksecuritypolicies"}, ""))
 
-	pattern_SecurityV1_AutoWatchSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "sgpolicies"}, ""))
+	pattern_SecurityV1_AutoWatchNetworkSecurityPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "networksecuritypolicies"}, ""))
 
 	pattern_SecurityV1_AutoWatchSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "security-groups"}, ""))
 
@@ -4010,9 +4010,9 @@ var (
 
 	forward_SecurityV1_AutoAddApp_1 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoAddSGPolicy_0 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoAddNetworkSecurityPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoAddSGPolicy_1 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoAddNetworkSecurityPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoAddSecurityGroup_0 = runtime.ForwardResponseMessage
 
@@ -4022,9 +4022,9 @@ var (
 
 	forward_SecurityV1_AutoDeleteApp_1 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoDeleteSGPolicy_0 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoDeleteNetworkSecurityPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoDeleteSGPolicy_1 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoDeleteNetworkSecurityPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteSecurityGroup_0 = runtime.ForwardResponseMessage
 
@@ -4038,9 +4038,9 @@ var (
 
 	forward_SecurityV1_AutoGetFirewallProfile_1 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoGetSGPolicy_0 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoGetNetworkSecurityPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoGetSGPolicy_1 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoGetNetworkSecurityPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetSecurityGroup_0 = runtime.ForwardResponseMessage
 
@@ -4054,9 +4054,9 @@ var (
 
 	forward_SecurityV1_AutoListFirewallProfile_1 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoListSGPolicy_0 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoListNetworkSecurityPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoListSGPolicy_1 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoListNetworkSecurityPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoListSecurityGroup_0 = runtime.ForwardResponseMessage
 
@@ -4070,9 +4070,9 @@ var (
 
 	forward_SecurityV1_AutoUpdateFirewallProfile_1 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoUpdateSGPolicy_0 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoUpdateNetworkSecurityPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityV1_AutoUpdateSGPolicy_1 = runtime.ForwardResponseMessage
+	forward_SecurityV1_AutoUpdateNetworkSecurityPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateSecurityGroup_0 = runtime.ForwardResponseMessage
 
@@ -4086,9 +4086,9 @@ var (
 
 	forward_SecurityV1_AutoWatchFirewallProfile_1 = runtime.ForwardResponseStream
 
-	forward_SecurityV1_AutoWatchSGPolicy_0 = runtime.ForwardResponseStream
+	forward_SecurityV1_AutoWatchNetworkSecurityPolicy_0 = runtime.ForwardResponseStream
 
-	forward_SecurityV1_AutoWatchSGPolicy_1 = runtime.ForwardResponseStream
+	forward_SecurityV1_AutoWatchNetworkSecurityPolicy_1 = runtime.ForwardResponseStream
 
 	forward_SecurityV1_AutoWatchSecurityGroup_0 = runtime.ForwardResponseStream
 

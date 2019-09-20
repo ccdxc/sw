@@ -91,15 +91,15 @@ func testAppSGPolLoop(instance string, count int) {
 		},
 	}
 
-	sgpol := security.SGPolicy{
+	sgpol := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind: "SGPolicy",
+			Kind: "NetworkSecurityPolicy",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:   "testpol1",
 			Tenant: globals.DefaultTenant,
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 
 			Rules: []security.SGRule{
@@ -116,7 +116,7 @@ func testAppSGPolLoop(instance string, count int) {
 	restcl.SecurityV1().App().Delete(ctx, &app2.ObjectMeta)
 	restcl.SecurityV1().App().Delete(ctx, &app3.ObjectMeta)
 
-	restcl.SecurityV1().SGPolicy().Delete(ctx, &sgpol.ObjectMeta)
+	restcl.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgpol.ObjectMeta)
 
 	// Enter loop
 	for i := 0; i < count; i++ {
@@ -135,12 +135,12 @@ func testAppSGPolLoop(instance string, count int) {
 			fmt.Printf("failed to create App3 [%d] (%s)\n", i, err)
 			return
 		}
-		_, err = restcl.SecurityV1().SGPolicy().Create(ctx, &sgpol)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgpol)
 		if err != nil {
 			fmt.Printf("failed to create SGPol [%d] (%s)\n", i, err)
 			return
 		}
-		_, err = restcl.SecurityV1().SGPolicy().Delete(ctx, &sgpol.ObjectMeta)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgpol.ObjectMeta)
 		if err != nil {
 			fmt.Printf("failed to Delete SGPol [%d] (%s)\n", i, err)
 			return
@@ -389,7 +389,7 @@ func main() {
 			fmt.Printf("open file failed: %s\n", err)
 			return
 		}
-		sgp := &security.SGPolicy{}
+		sgp := &security.NetworkSecurityPolicy{}
 		err = json.Unmarshal(jsonFile, sgp)
 		if err != nil {
 			fmt.Printf("failed to parse security policy (%s)", err)
@@ -398,7 +398,7 @@ func main() {
 		fmt.Printf("Number of rule in security policy is %d\n", len(sgp.Spec.Rules))
 
 		start := time.Now()
-		_, err = restcl.SecurityV1().SGPolicy().Create(ctx, sgp)
+		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Create(ctx, sgp)
 		if err != nil {
 			fmt.Printf("failed to create securing policy (%s)", err)
 			return

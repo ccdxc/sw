@@ -340,7 +340,7 @@ func (idr *Indexer) startWriter(id int) {
 
 			// Update Policy cache for SGpolicy objects
 			switch kind {
-			case "SGPolicy":
+			case "NetworkSecurityPolicy":
 				idr.logger.Infof("Policy cache update: %s/%s/%s evType: %v",
 					ometa.Tenant,
 					ometa.Namespace,

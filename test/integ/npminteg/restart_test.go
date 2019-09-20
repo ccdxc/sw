@@ -237,7 +237,7 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	}
 }
 
-func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
+func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	const numApps = 10
 	// if not present create the default tenant
 	it.CreateTenant("default")
@@ -275,15 +275,15 @@ func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
 	}
 
 	// create a policy using this alg
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:       "default",
 			Namespace:    "default",
 			Name:         "test-sgpolicy",
 			GenerationID: "1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -298,23 +298,23 @@ func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -349,7 +349,7 @@ func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindSgpolicy("default", "test-sgpolicy")
 		return (nerr == nil), nil
-	}, "SGPolicy not found on NPM", "10ms", it.pollTimeout())
+	}, "NetworkSecurityPolicy not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agents are all connected back
 	for _, ag := range it.agents {
@@ -361,12 +361,12 @@ func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
 	// verify agents have the sgpolicy too
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// delete the policy
@@ -377,9 +377,9 @@ func (it *integTestSuite) TestNpmRestartWithSGPolicy(c *C) {
 	// verify policy is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindSGPolicy(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "test-sgpolicy"})
+			_, nerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "test-sgpolicy"})
 			return (nerr != nil), nil
-		}, "SGPolicy still found on agent", "100ms", it.pollTimeout())
+		}, "NetworkSecurityPolicy still found on agent", "100ms", it.pollTimeout())
 	}
 }
 

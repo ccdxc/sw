@@ -18,17 +18,17 @@ var _ = Describe("firewall whitelist tests", func() {
 		}).Should(Succeed())
 
 		// delete the default allow policy
-		Expect(ts.model.DefaultSGPolicy().Delete()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 	Context("basic whitelist tests", func() {
 		It("Should not ping between any workload without permit rules", func() {
@@ -45,7 +45,7 @@ var _ = Describe("firewall whitelist tests", func() {
 
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify policy was propagated correctly
@@ -75,7 +75,7 @@ var _ = Describe("firewall whitelist tests", func() {
 			}
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "udp/8000", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "udp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify policy was propagated correctly
@@ -102,7 +102,7 @@ var _ = Describe("firewall whitelist tests", func() {
 		It("Ping should work with specific permit rules", func() {
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
 			spc.AddRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
@@ -132,7 +132,7 @@ var _ = Describe("firewall whitelist tests", func() {
 
 			// run multiple iterations, each time updating the policy with different number of rules
 			for iter := 0; iter < numIter; iter++ {
-				spc := ts.model.NewSGPolicy("test-policy")
+				spc := ts.model.NewNetworkSecurityPolicy("test-policy")
 				for i := startPort; i <= boundaryPort; i++ {
 					spc = spc.AddRulesForWorkloadPairs(workloadPairs, fmt.Sprintf("tcp/%d", i), "PERMIT")
 				}

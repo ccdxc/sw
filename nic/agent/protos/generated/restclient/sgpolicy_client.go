@@ -11,17 +11,17 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
-// SGPolicyList lists all SGPolicy objects
-func (cl *AgentClient) SGPolicyList() ([]netproto.SGPolicy, error) {
-	var sgpolicyList []netproto.SGPolicy
+// NetworkSecurityPolicyList lists all NetworkSecurityPolicy objects
+func (cl *AgentClient) NetworkSecurityPolicyList() ([]netproto.NetworkSecurityPolicy, error) {
+	var networksecuritypolicyList []netproto.NetworkSecurityPolicy
 
-	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &sgpolicyList)
+	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &networksecuritypolicyList)
 
-	return sgpolicyList, err
+	return networksecuritypolicyList, err
 }
 
-// SGPolicyPost creates SGPolicy object
-func (cl *AgentClient) SGPolicyCreate(postData netproto.SGPolicy) error {
+// NetworkSecurityPolicyPost creates NetworkSecurityPolicy object
+func (cl *AgentClient) NetworkSecurityPolicyCreate(postData netproto.NetworkSecurityPolicy) error {
 	var resp Response
 
 	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/policies/", &postData, &resp)
@@ -30,20 +30,20 @@ func (cl *AgentClient) SGPolicyCreate(postData netproto.SGPolicy) error {
 
 }
 
-// SGPolicyDelete deletes SGPolicy object
-func (cl *AgentClient) SGPolicyDelete(deleteData netproto.SGPolicy) error {
+// NetworkSecurityPolicyDelete deletes NetworkSecurityPolicy object
+func (cl *AgentClient) NetworkSecurityPolicyDelete(deleteData netproto.NetworkSecurityPolicy) error {
 	var resp Response
 
-	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/testDeleteSGPolicy", &deleteData, &resp)
+	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/testDeleteNetworkSecurityPolicy", &deleteData, &resp)
 
 	return err
 }
 
-// SGPolicyPut updates SGPolicy object
-func (cl *AgentClient) SGPolicyUpdate(putData netproto.SGPolicy) error {
+// NetworkSecurityPolicyPut updates NetworkSecurityPolicy object
+func (cl *AgentClient) NetworkSecurityPolicyUpdate(putData netproto.NetworkSecurityPolicy) error {
 	var resp Response
 
-	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreatedSGPolicy", &putData, &resp)
+	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreatedNetworkSecurityPolicy", &putData, &resp)
 
 	return err
 }

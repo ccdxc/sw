@@ -10,15 +10,15 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 )
 
-func TestSGPolicyGen(t *testing.T) {
-	sgp := &security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+func TestNetworkSecurityPolicyGen(t *testing.T) {
+	sgp := &security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "sgpolicy-{{iter}}",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 		},
 	}
@@ -39,7 +39,7 @@ func TestSGPolicyGen(t *testing.T) {
 			ProtoPorts:      []security.ProtoPort{{Protocol: "{{rand:tcp|udp}}", Ports: "{{iter:5000-50000}}"}},
 		}
 
-		tSgp := sgpIterCtx.transform(sgp).(*security.SGPolicy)
+		tSgp := sgpIterCtx.transform(sgp).(*security.NetworkSecurityPolicy)
 
 		rules := []security.SGRule{}
 		ruleIterCtx := newIterContext()

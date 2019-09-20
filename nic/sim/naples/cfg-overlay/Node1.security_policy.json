@@ -18,7 +18,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"SGPolicy\",\"meta\":{\"name\":\"kg1policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"attach-tenant\":true,\"policy-rules\":[{\"destination\":{\"addresses\":[\"20.30.10.12 - 20.30.10.12\"]},\"action\":\"DENY\"}]}}"
+                    "raw": "{\"kind\":\"NetworkSecurityPolicy\",\"meta\":{\"name\":\"kg1policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"attach-tenant\":true,\"policy-rules\":[{\"destination\":{\"addresses\":[\"20.30.10.12 - 20.30.10.12\"]},\"action\":\"DENY\"}]}}"
                 },
                 "url": {
                     "raw": "{{node2}}/api/security/policies/",

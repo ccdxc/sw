@@ -52,7 +52,7 @@ def Teardown(tc):
     api.Logger.info("Tearing down ...")
     #policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
     #sg_json_obj = utils.ReadJson(policy_json)
-    newObjects = newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    newObjects = newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
     agent_api.PushConfigObjects(newObjects)
 
     return api.types.status.SUCCESS

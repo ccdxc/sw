@@ -14,36 +14,36 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "match.proto";
 
-// ---------------------------- SGPolicy API ----------------------------
-// SGPolicy controller api
-service SGPolicyApi {
+// ---------------------------- NetworkSecurityPolicy API ----------------------------
+// NetworkSecurityPolicy controller api
+service NetworkSecurityPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
-        Object: "SGPolicy",
+        Object: "NetworkSecurityPolicy",
         Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/security/policies"
     };
 
-    rpc GetSGPolicy (api.ObjectMeta) returns (SGPolicy) {};
-    rpc ListSGPolicys (api.ObjectMeta) returns (SGPolicyList) {};
-    rpc WatchSGPolicys (api.ObjectMeta) returns (stream SGPolicyEvent) {};
-    rpc UpdateSGPolicy (SGPolicy) returns (SGPolicy) {};
-    rpc SGPolicyOperUpdate (stream SGPolicyEvent) returns (api.TypeMeta) {};
+    rpc GetNetworkSecurityPolicy (api.ObjectMeta) returns (NetworkSecurityPolicy) {};
+    rpc ListNetworkSecurityPolicys (api.ObjectMeta) returns (NetworkSecurityPolicyList) {};
+    rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEvent) {};
+    rpc UpdateNetworkSecurityPolicy (NetworkSecurityPolicy) returns (NetworkSecurityPolicy) {};
+    rpc NetworkSecurityPolicyOperUpdate (stream NetworkSecurityPolicyEvent) returns (api.TypeMeta) {};
 
 }
 
-// SGPolicy object
-message SGPolicy {
+// NetworkSecurityPolicy object
+message NetworkSecurityPolicy {
     api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    SGPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    SGPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    NetworkSecurityPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NetworkSecurityPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
-// SGPolicySpec captures all the security policy configuration
-message SGPolicySpec {
+// NetworkSecurityPolicySpec captures all the security policy configuration
+message NetworkSecurityPolicySpec {
     // VrfName specifies the name of the VRF that the current SG Policy belongs to
     string VrfName              = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
 
@@ -87,17 +87,17 @@ message PolicyRule {
 }
 
 
-// SGPolicyStatus captures the sg policy status
-message SGPolicyStatus {
-    uint64 SGPolicyID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+// NetworkSecurityPolicyStatus captures the sg policy status
+message NetworkSecurityPolicyStatus {
+    uint64 NetworkSecurityPolicyID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
-message SGPolicyList {
-    repeated SGPolicy SGPolicys  = 1;
+message NetworkSecurityPolicyList {
+    repeated NetworkSecurityPolicy NetworkSecurityPolicys  = 1;
 }
 
 // sg policy watch event
-message SGPolicyEvent {
+message NetworkSecurityPolicyEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    SGPolicy        SGPolicy    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
+    NetworkSecurityPolicy        NetworkSecurityPolicy    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
 }

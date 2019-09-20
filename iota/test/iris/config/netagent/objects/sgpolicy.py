@@ -2,7 +2,7 @@
 
 __json_template = { "sgpolicies" : [
     {
-    "kind"                  : "SGPolicy",
+    "kind"                  : "NetworkSecurityPolicy",
 
     "meta": {
         "name"              : "",

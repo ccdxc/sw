@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { ISecurityAppList,SecurityAppList,IApiStatus,ApiStatus,ISecurityApp,SecurityApp,ISecurityFirewallProfileList,SecurityFirewallProfileList,ISecurityFirewallProfile,SecurityFirewallProfile,ISecuritySecurityGroupList,SecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecuritySGPolicyList,SecuritySGPolicyList,ISecuritySGPolicy,SecuritySGPolicy,ISecurityAutoMsgAppWatchHelper,SecurityAutoMsgAppWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,SecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,SecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,SecurityAutoMsgSGPolicyWatchHelper } from '../../models/generated/security';
+import { ISecurityAppList,SecurityAppList,IApiStatus,ApiStatus,ISecurityApp,SecurityApp,ISecurityFirewallProfileList,SecurityFirewallProfileList,ISecurityFirewallProfile,SecurityFirewallProfile,ISecurityNetworkSecurityPolicyList,SecurityNetworkSecurityPolicyList,ISecurityNetworkSecurityPolicy,SecurityNetworkSecurityPolicy,ISecuritySecurityGroupList,SecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecurityAutoMsgAppWatchHelper,SecurityAutoMsgAppWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,SecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgNetworkSecurityPolicyWatchHelper,SecurityAutoMsgNetworkSecurityPolicyWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,SecurityAutoMsgSecurityGroupWatchHelper } from '../../models/generated/security';
 
 @Injectable()
 export class Securityv1Service extends AbstractService {
@@ -154,6 +154,90 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** List NetworkSecurityPolicy objects */
+  public ListNetworkSecurityPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies';
+    const opts = {
+      eventID: 'ListNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicyList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityNetworkSecurityPolicyList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create NetworkSecurityPolicy object */
+  public AddNetworkSecurityPolicy_1(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies';
+    const opts = {
+      eventID: 'AddNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get NetworkSecurityPolicy object */
+  public GetNetworkSecurityPolicy_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete NetworkSecurityPolicy object */
+  public DeleteNetworkSecurityPolicy_1(O_Name, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update NetworkSecurityPolicy object */
+  public UpdateNetworkSecurityPolicy_1(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List SecurityGroup objects */
   public ListSecurityGroup_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySecurityGroupList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups';
@@ -236,90 +320,6 @@ export class Securityv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** List SGPolicy objects */
-  public ListSGPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySGPolicyList | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies';
-    const opts = {
-      eventID: 'ListSGPolicy_1',
-      objType: 'SecuritySGPolicyList',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecuritySGPolicyList | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Create SGPolicy object */
-  public AddSGPolicy_1(body: ISecuritySGPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies';
-    const opts = {
-      eventID: 'AddSGPolicy_1',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySGPolicy(body))
-    }
-    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Get SGPolicy object */
-  public GetSGPolicy_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'GetSGPolicy_1',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete SGPolicy object */
-  public DeleteSGPolicy_1(O_Name, stagingID: string = ""):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'DeleteSGPolicy_1',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update SGPolicy object */
-  public UpdateSGPolicy_1(O_Name, body: ISecuritySGPolicy, stagingID: string = "", previousVal: ISecuritySGPolicy = null, trimObject: boolean = true):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'UpdateSGPolicy_1',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySGPolicy(body), previousVal)
-    }
-    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List App objects */
@@ -464,6 +464,95 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** List NetworkSecurityPolicy objects */
+  public ListNetworkSecurityPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'ListNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicyList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityNetworkSecurityPolicyList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create NetworkSecurityPolicy object */
+  public AddNetworkSecurityPolicy(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'AddNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get NetworkSecurityPolicy object */
+  public GetNetworkSecurityPolicy(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete NetworkSecurityPolicy object */
+  public DeleteNetworkSecurityPolicy(O_Name, stagingID: string = ""):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update NetworkSecurityPolicy object */
+  public UpdateNetworkSecurityPolicy(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List SecurityGroup objects */
   public ListSecurityGroup(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySecurityGroupList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups';
@@ -553,95 +642,6 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** List SGPolicy objects */
-  public ListSGPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySGPolicyList | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    const opts = {
-      eventID: 'ListSGPolicy',
-      objType: 'SecuritySGPolicyList',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecuritySGPolicyList | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Create SGPolicy object */
-  public AddSGPolicy(body: ISecuritySGPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    const opts = {
-      eventID: 'AddSGPolicy',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySGPolicy(body))
-    }
-    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Get SGPolicy object */
-  public GetSGPolicy(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'GetSGPolicy',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete SGPolicy object */
-  public DeleteSGPolicy(O_Name, stagingID: string = ""):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'DeleteSGPolicy',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update SGPolicy object */
-  public UpdateSGPolicy(O_Name, body: ISecuritySGPolicy, stagingID: string = "", previousVal: ISecuritySGPolicy = null, trimObject: boolean = true):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'UpdateSGPolicy',
-      objType: 'SecuritySGPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySGPolicy(body), previousVal)
-    }
-    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Watch App objects. Supports WebSockets or HTTP long poll */
   public WatchApp_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/apps';
@@ -672,6 +672,21 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch NetworkSecurityPolicy objects. Supports WebSockets or HTTP long poll */
+  public WatchNetworkSecurityPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgNetworkSecurityPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/networksecuritypolicies';
+    const opts = {
+      eventID: 'WatchNetworkSecurityPolicy_1',
+      objType: 'SecurityAutoMsgNetworkSecurityPolicyWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgNetworkSecurityPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */
   public WatchSecurityGroup_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/security-groups';
@@ -685,21 +700,6 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Watch SGPolicy objects. Supports WebSockets or HTTP long poll */
-  public WatchSGPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/sgpolicies';
-    const opts = {
-      eventID: 'WatchSGPolicy_1',
-      objType: 'SecurityAutoMsgSGPolicyWatchHelper',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch App objects. Supports WebSockets or HTTP long poll */
@@ -734,6 +734,22 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch NetworkSecurityPolicy objects. Supports WebSockets or HTTP long poll */
+  public WatchNetworkSecurityPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgNetworkSecurityPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/networksecuritypolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'WatchNetworkSecurityPolicy',
+      objType: 'SecurityAutoMsgNetworkSecurityPolicyWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgNetworkSecurityPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */
   public WatchSecurityGroup(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/security-groups';
@@ -748,22 +764,6 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Watch SGPolicy objects. Supports WebSockets or HTTP long poll */
-  public WatchSGPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/sgpolicies';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    const opts = {
-      eventID: 'WatchSGPolicy',
-      objType: 'SecurityAutoMsgSGPolicyWatchHelper',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

@@ -140,7 +140,7 @@ var typesMapSearch = map[string]*api.Struct{
 
 			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SGPolicy": api.Field{Name: "SGPolicy", CLITag: api.CLIInfo{ID: "sg-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"NetworkSecurityPolicy": api.Field{Name: "NetworkSecurityPolicy", CLITag: api.CLIInfo{ID: "sg-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"App": api.Field{Name: "App", CLITag: api.CLIInfo{ID: "app", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

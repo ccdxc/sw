@@ -87,13 +87,13 @@ func setup() {
 		},
 	}
 	// mock data in cache here
-	obj := security.SGPolicy{TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	obj := security.NetworkSecurityPolicy{TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		}}
@@ -105,7 +105,7 @@ func tearDown() {
 }
 
 func TestCache_SearchPolicy_MISS(t *testing.T) {
-	resp, err := c.SearchPolicy(&search.PolicySearchRequest{FromIPAddress: "10.0.100.1", SGPolicy: "testpolicy", Namespace: "default", Tenant: "default", Protocol: "tcp", Port: "80"})
+	resp, err := c.SearchPolicy(&search.PolicySearchRequest{FromIPAddress: "10.0.100.1", NetworkSecurityPolicy: "testpolicy", Namespace: "default", Tenant: "default", Protocol: "tcp", Port: "80"})
 	AssertOk(t, err, "Search failed")
 	Assert(t, resp.Status == search.PolicySearchResponse_MISS.String(), "Should have no results after search")
 
@@ -154,11 +154,11 @@ func TestCache_SearchPolicy_MultiQuery_MATCH_MULTIPLE(t *testing.T) {
 
 func TestCache_SearchOnlyProtocol(t *testing.T) {
 	resp, err := c.SearchPolicy(&search.PolicySearchRequest{Tenant: "default",
-		Namespace:     "default",
-		SGPolicy:      "testpolicy",
-		Protocol:      "tcp",
-		FromIPAddress: "any",
-		ToIPAddress:   "any"})
+		Namespace:             "default",
+		NetworkSecurityPolicy: "testpolicy",
+		Protocol:              "tcp",
+		FromIPAddress:         "any",
+		ToIPAddress:           "any"})
 	AssertOk(t, err, "Search failed")
 	Assert(t, resp.Status == search.PolicySearchResponse_MATCH.String(), "Should have results after search")
 	Assert(t, len(resp.Results["testpolicy"].Entries) == 4, "Should only have multiple result")
@@ -169,13 +169,13 @@ func TestCache_SearchOnlyProtocol(t *testing.T) {
 
 func TestCache_DeleteObject(t *testing.T) {
 	// mock data in cache here
-	obj := security.SGPolicy{TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	obj := security.NetworkSecurityPolicy{TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 		}}
 	c.DeleteObject(&obj)

@@ -358,13 +358,13 @@ message FirewallRuleSpec {
 }
 
 // ingress policy for the security group
-message SGPolicy {
+message NetworkSecurityPolicy {
   repeated FirewallRuleSpec    in_fw_rules       = 1;    // ingress firewall rules
   repeated FirewallRuleSpec    eg_fw_rules       = 2;    // egress firewall rules
 }
 
 // egress policy for the security group
-//message EgressSGPolicy {
+//message EgressNetworkSecurityPolicy {
  //repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
 //}
 
@@ -378,7 +378,7 @@ message SGPolicy {
 message SecurityGroupPolicySpec {
   // key_or_handle is the security group's unique identifier
   kh.SecurityGroupPolicyKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
-  SGPolicy                        policy_rules   = 2;    // ingress policy
+  NetworkSecurityPolicy                        policy_rules   = 2;    // ingress policy
 }
 
 // SecurityGroupPolicyRequestMsg is batched add or modify security group policy request

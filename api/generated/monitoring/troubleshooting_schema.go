@@ -143,7 +143,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 	"monitoring.TsPolicy": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsPolicy{}) },
 		Fields: map[string]api.Field{
-			"Sgpolicy": api.Field{Name: "Sgpolicy", CLITag: api.CLIInfo{ID: "sg-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
+			"Sgpolicy": api.Field{Name: "Sgpolicy", CLITag: api.CLIInfo{ID: "network-security-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network-security-policy", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
 			"InRules": api.Field{Name: "InRules", CLITag: api.CLIInfo{ID: "in-rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "in-rules", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRule"},
 

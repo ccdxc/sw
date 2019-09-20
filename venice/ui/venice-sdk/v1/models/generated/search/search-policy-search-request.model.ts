@@ -31,7 +31,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     /** Namespace is optional. If provided policy-search will
     be limited to the specified namespace. */
     'namespace': string = null;
-    /** SGPolicy name is optional. If provided policy-search will
+    /** NetworkSecurityPolicy name is optional. If provided policy-search will
     be limited to the specified SGpolicy object name. */
     'sg-policy': string = null;
     'app': string = null;
@@ -55,7 +55,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             type: 'string'
         },
         'sg-policy': {
-            description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.',
+            description:  'NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.',
             required: false,
             type: 'string'
         },

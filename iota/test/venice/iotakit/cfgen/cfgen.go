@@ -50,12 +50,12 @@ type WPair struct {
 	To   *workload.Workload
 }
 
-// SGPolicyParams sg policy params
-type SGPolicyParams struct {
+// NetworkSecurityPolicyParams sg policy params
+type NetworkSecurityPolicyParams struct {
 	NumPolicies        int    // specifies number of policies
 	NumRulesPerPolicy  int    // specifies number of rules per policy
 	DefaultAllowPolicy string // creates default policy to allow all traffic
-	SGPolicyTemplate   *security.SGPolicy
+	NetworkSecurityPolicyTemplate   *security.NetworkSecurityPolicy
 	SGRuleTemplate     *security.SGRule
 }
 
@@ -101,7 +101,7 @@ type CfgItems struct {
 	Networks   []*network.Network   `json:"Networks"`
 	Hosts      []*cluster.Host      `json:"Hosts"`
 	Workloads  []*workload.Workload `json:"Workloads"`
-	SGPolicies []*security.SGPolicy `json:"SGPolicies"`
+	SGPolicies []*security.NetworkSecurityPolicy `json:"SGPolicies"`
 	Apps       []*security.App      `json:"Apps"`
 }
 
@@ -112,7 +112,7 @@ type Cfgen struct {
 	NetworkParams
 	HostParams
 	WorkloadParams
-	SGPolicyParams
+	NetworkSecurityPolicyParams
 	FirewallProfileParams
 	AppParams
 	SecurityGroupsParams
@@ -205,21 +205,21 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 	return workloads
 }
 
-func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
-	sgpolicies := []*security.SGPolicy{}
+func (cfgen *Cfgen) genSGPolicies() []*security.NetworkSecurityPolicy {
+	sgpolicies := []*security.NetworkSecurityPolicy{}
 	//Ignore apps for now
-	//cfgen.SGPolicyParams.SGRuleTemplate.Apps = []string{fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)}
+	//cfgen.NetworkSecurityPolicyParams.SGRuleTemplate.Apps = []string{fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)}
 
-	sgp := cfgen.SGPolicyParams.SGPolicyTemplate
+	sgp := cfgen.NetworkSecurityPolicyParams.NetworkSecurityPolicyTemplate
 
 	sgpCtx := newIterContext()
-	for ii := 0; ii < cfgen.SGPolicyParams.NumPolicies; ii++ {
-		rule := cfgen.SGPolicyParams.SGRuleTemplate
-		tSgp := sgpCtx.transform(sgp).(*security.SGPolicy)
+	for ii := 0; ii < cfgen.NetworkSecurityPolicyParams.NumPolicies; ii++ {
+		rule := cfgen.NetworkSecurityPolicyParams.SGRuleTemplate
+		tSgp := sgpCtx.transform(sgp).(*security.NetworkSecurityPolicy)
 
 		rules := []security.SGRule{}
 		ruleCtx := newIterContext()
-		for jj := 0; jj < cfgen.SGPolicyParams.NumRulesPerPolicy; jj++ {
+		for jj := 0; jj < cfgen.NetworkSecurityPolicyParams.NumRulesPerPolicy; jj++ {
 			tRule := ruleCtx.transform(rule).(*security.SGRule)
 
 			fromIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))

@@ -249,7 +249,7 @@ func TestAppUpdateICMP(t *testing.T) {
 	AssertOk(t, err, "Error updating app")
 
 }
-func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
+func TestAppUpdateLinkedNetworkSecurityPolicyUpdate(t *testing.T) {
 	// create netagent
 	ag, _, dp := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -302,16 +302,16 @@ func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 	AssertOk(t, err, "App not found in DB")
 	Assert(t, p.Name == "dns", "App names did not match", app)
 
-	// create an SGPolicy referring to the App
+	// create an NetworkSecurityPolicy referring to the App
 	// sg policy
-	sgPolicy := &netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := &netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -328,14 +328,14 @@ func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 		},
 	}
 
-	err = ag.CreateSGPolicy(sgPolicy)
+	err = ag.CreateNetworkSecurityPolicy(sgPolicy)
 	AssertOk(t, err, "Failed to create a linked SG Policy")
 
-	actualSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	actualNetworkSecurityPolicy, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find find sg policy")
 
 	// find the sgpolicy in datapath
-	dpsgp, ok := dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualSGPolicy.ObjectMeta.Tenant, actualSGPolicy.ObjectMeta.Name)]
+	dpsgp, ok := dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualNetworkSecurityPolicy.ObjectMeta.Tenant, actualNetworkSecurityPolicy.ObjectMeta.Name)]
 	Assert(t, ok, "Failed to find sgpolicy in datapath")
 	Assert(t, len(dpsgp.Request[0].Rule) == 1, "sgpolicy in datapath is incorrect")
 	Assert(t, dpsgp.Request[0].Rule[0].Action.AppData.Alg == halproto.ALGName_APP_SVC_DNS, "sgpolicy in datapath is incorrect")
@@ -350,14 +350,14 @@ func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
 
 	Assert(t, actualApp.Spec.ALG.DNS.QueryResponseTimeout == updApp.Spec.ALG.DNS.QueryResponseTimeout, "Updated app didn't have expected fields updated")
 
-	updateSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	updateNetworkSecurityPolicy, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "Failed to find find sg policy")
 
 	// Ensure the rule ids have changed
-	Assert(t, updateSGPolicy.Spec.Rules[0].ID == actualSGPolicy.Spec.Rules[0].ID, "Rule IDs must change on an update")
+	Assert(t, updateNetworkSecurityPolicy.Spec.Rules[0].ID == actualNetworkSecurityPolicy.Spec.Rules[0].ID, "Rule IDs must change on an update")
 
 	// find the sgpolicy in datapath
-	dpsgp, ok = dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualSGPolicy.ObjectMeta.Tenant, actualSGPolicy.ObjectMeta.Name)]
+	dpsgp, ok = dp.DB.SgPolicyDB[fmt.Sprintf("%s|%s", actualNetworkSecurityPolicy.ObjectMeta.Tenant, actualNetworkSecurityPolicy.ObjectMeta.Name)]
 	Assert(t, ok, "Failed to find sgpolicy in datapath")
 	Assert(t, len(dpsgp.Request[0].Rule) == 1, "sgpolicy in datapath is incorrect")
 	Assert(t, dpsgp.Request[0].Rule[0].Action.AppData.GetDnsOptionInfo().QueryResponseTimeout == 60, "sgpolicy in datapath is incorrect")

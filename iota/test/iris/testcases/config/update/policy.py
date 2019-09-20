@@ -18,7 +18,7 @@ def __update_policy_actions(policy_objects, action):
 
 def Trigger(tc):
 
-    store_policy_objects = netagent_api.QueryConfigs(kind='SGPolicy')
+    store_policy_objects = netagent_api.QueryConfigs(kind='NetworkSecurityPolicy')
 
     action = str(getattr(tc.args, "action"))
     __update_policy_actions(store_policy_objects, action)

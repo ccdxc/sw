@@ -22,7 +22,7 @@ objects:
   name: scale-app
   count: 7
   rest-endpoint: "/api/apps/"
-- kind: SGPolicy
+- kind: NetworkSecurityPolicy
   name: scale-sg-policy
   count: 1
   rest-endpoint: "/api/security/policies/"

@@ -14,7 +14,7 @@ export enum Features {
   securityGroups = 'securityGroups',
   help = 'help',
   workloadWidgets = 'workloadWidgets',
-  createSGPolicy = 'createSGPolicy',
+  createNetworkSecurityPolicy = 'createNetworkSecurityPolicy',
   createWorkload = 'createWorkload',
   showDebugMetrics = 'showDebugMetrics',
 }
@@ -77,7 +77,7 @@ export class UIConfigsService {
     },
     'security/sgpolicies': {
       requiredPerm: [
-        UIRolePermissions.securitysgpolicy_read,
+        UIRolePermissions.securitynetworksecuritypolicy_read,
       ],
     },
     'security/securityapps': {

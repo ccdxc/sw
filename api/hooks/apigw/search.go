@@ -39,7 +39,7 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 			// scoping the tenant to be user tenant for policy search request; namespace defaults to "default" if not specified (proto definition)
 			obj.Tenant = user.GetTenant()
 		}
-		resource := authz.NewResource(obj.Tenant, string(apiclient.GroupSecurity), string(security.KindSGPolicy), obj.Namespace, obj.SGPolicy)
+		resource := authz.NewResource(obj.Tenant, string(apiclient.GroupSecurity), string(security.KindNetworkSecurityPolicy), obj.Namespace, obj.NetworkSecurityPolicy)
 		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 	case *search.SearchRequest:
 		resource := authz.NewResource(

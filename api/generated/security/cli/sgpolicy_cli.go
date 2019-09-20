@@ -12,8 +12,8 @@ import (
 	"github.com/pensando/sw/venice/cli/gen"
 )
 
-// CreateSGPolicyFlags specifies flags for SGPolicy create operation
-var CreateSGPolicyFlags = []gen.CliFlag{
+// CreateNetworkSecurityPolicyFlags specifies flags for NetworkSecurityPolicy create operation
+var CreateNetworkSecurityPolicyFlags = []gen.CliFlag{
 	{
 		ID:     "action",
 		Type:   "StringSlice",
@@ -86,13 +86,13 @@ var CreateSGPolicyFlags = []gen.CliFlag{
 	},
 }
 
-func removeSGPolicyOper(obj interface{}) error {
-	if v, ok := obj.(*security.SGPolicy); ok {
+func removeNetworkSecurityPolicyOper(obj interface{}) error {
+	if v, ok := obj.(*security.NetworkSecurityPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
 		v.CreationTime = api.Timestamp{}
 		v.ModTime = api.Timestamp{}
-		v.Status = security.SGPolicyStatus{}
+		v.Status = security.NetworkSecurityPolicyStatus{}
 	}
 	return nil
 }
@@ -100,7 +100,7 @@ func removeSGPolicyOper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 
-	cl.AddCliInfo("security.SGPolicy", "create", CreateSGPolicyFlags)
-	cl.AddRemoveObjOperFunc("security.SGPolicy", removeSGPolicyOper)
+	cl.AddCliInfo("security.NetworkSecurityPolicy", "create", CreateNetworkSecurityPolicyFlags)
+	cl.AddRemoveObjOperFunc("security.NetworkSecurityPolicy", removeNetworkSecurityPolicyOper)
 
 }

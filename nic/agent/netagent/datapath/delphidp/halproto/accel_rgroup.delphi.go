@@ -967,7 +967,7 @@ It has these top-level messages:
 	SecurityProfileGetResponseMsg
 	Service
 	FirewallRuleSpec
-	SGPolicy
+	NetworkSecurityPolicy
 	SecurityGroupPolicySpec
 	SecurityGroupPolicyRequestMsg
 	SecurityGroupPolicyStatus

@@ -179,14 +179,14 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	}
 
 	// create an sg policy using the app
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -198,13 +198,13 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			},
 		},
 	}
-	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating sg policy")
 
 	// verify agents have this policy and params are correct
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if cerr != nil {
 				return false, cerr
 			}
@@ -237,14 +237,14 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	}, "App did not have sgpolicy in status", "100ms", it.pollTimeout())
 
 	// verify creating agpolicy with unknown app fails
-	sgpInv := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgpInv := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "invalid-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -256,14 +256,14 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			},
 		},
 	}
-	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgpInv)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgpInv)
 	Assert(c, (err != nil), "sg policy create with unknown-app did not fail")
 
 	// verify agents dont have this policy
 	time.Sleep(time.Millisecond * 100)
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgpInv.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgpInv.ObjectMeta)
 			if cerr == nil {
 				return false, nsgp
 			}
@@ -272,7 +272,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	}, "Invalid Sg policy found in agent", "100ms", it.pollTimeout())
 
 	// delete sg policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error creating sg policy")
 
 	// verify sgpolicy is removed from app
@@ -291,7 +291,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if cerr == nil {
 				return false, nsgp
 			}
@@ -757,14 +757,14 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// create an sg policy using the app
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -787,13 +787,13 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 			},
 		},
 	}
-	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating sg policy")
 
 	// verify all agents have the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (nsgp.Name != sgp.Name) {
 				return false, nsgp
 			}
@@ -804,7 +804,7 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify datapath has the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if cerr != nil {
 				return false, nil
 			}
@@ -825,13 +825,13 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	}, "Sg policy incorrect in datapath", "100ms", it.pollTimeout())
 
 	// delete sg policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error creating sg policy")
 
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if cerr == nil {
 				return false, nsgp
 			}

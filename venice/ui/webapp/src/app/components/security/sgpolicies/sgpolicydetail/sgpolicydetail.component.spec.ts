@@ -374,10 +374,10 @@ describe('SgpolicydetailComponent', () => {
         }
       ]
     });
-    sgPolicyWatchSpy = spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+    sgPolicyWatchSpy = spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
       sgPolicyObserver
     );
-    sgPolicyGetSpy = spyOn(securityService, 'GetSGPolicy').and.returnValue(
+    sgPolicyGetSpy = spyOn(securityService, 'GetNetworkSecurityPolicy').and.returnValue(
       new BehaviorSubject({
         body: sgPolicy1
       })

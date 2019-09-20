@@ -45,14 +45,14 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// sg policy
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachGroups: []string{"procurement"},
 			Rules: []security.SGRule{
 				{
@@ -69,25 +69,25 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	}
 
 	// create sg policy
-	err = stateMgr.ctrler.SGPolicy().Create(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
 	// verify we can find the sg policy
 	sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
 	AssertOk(t, err, "Could not find the sg policy")
-	AssertEquals(t, sgps.SGPolicy.Spec.AttachGroups, sgp.Spec.AttachGroups, "Security policy params did not match")
+	AssertEquals(t, sgps.NetworkSecurityPolicy.Spec.AttachGroups, sgp.Spec.AttachGroups, "Security policy params did not match")
 	Assert(t, (len(sgps.groups) == 1), "Sg was not added to sgpolicy", sgps)
 	Assert(t, sgps.groups["procurement"].SecurityGroup.Name == "procurement", "Sgpolicy is not linked to sg", sgps)
-	Assert(t, len(sgps.SGPolicy.Status.RuleStatus) == len(sgps.SGPolicy.Spec.Rules), "Rule status was not updated")
-	Assert(t, sgps.SGPolicy.Status.RuleStatus[0].RuleHash != "", "Rule hash was not updated")
+	Assert(t, len(sgps.NetworkSecurityPolicy.Status.RuleStatus) == len(sgps.NetworkSecurityPolicy.Spec.Rules), "Rule status was not updated")
+	Assert(t, sgps.NetworkSecurityPolicy.Status.RuleStatus[0].RuleHash != "", "Rule hash was not updated")
 
 	// verify sg has the policy info
 	prsg, err := stateMgr.FindSecurityGroup("default", "procurement")
 	AssertOk(t, err, "Could not find security group")
 	Assert(t, (len(prsg.policies) == 1), "sgpolicy was not added to sg", prsg)
-	Assert(t, (prsg.policies[sgps.SGPolicy.Name].SGPolicy.Name == sgps.SGPolicy.Name), "Sg is not linked to sgpolicy", prsg)
+	Assert(t, (prsg.policies[sgps.NetworkSecurityPolicy.Name].NetworkSecurityPolicy.Name == sgps.NetworkSecurityPolicy.Name), "Sg is not linked to sgpolicy", prsg)
 	Assert(t, (len(prsg.SecurityGroup.Status.Policies) == 1), "Policy not found in sg status", prsg)
-	Assert(t, (prsg.SecurityGroup.Status.Policies[0] == sgps.SGPolicy.Name), "Policy not found in sg status", prsg)
+	Assert(t, (prsg.SecurityGroup.Status.Policies[0] == sgps.NetworkSecurityPolicy.Name), "Policy not found in sg status", prsg)
 
 	// update sg policy
 	newRule := security.SGRule{
@@ -100,18 +100,18 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		Action: security.SGRule_PERMIT.String(),
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
-	err = stateMgr.ctrler.SGPolicy().Update(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Update(&sgp)
 	AssertOk(t, err, "Error updating sgpolicy")
 
 	// verify we can not attach a policy to unknown sg
-	sgp2 := security.SGPolicy{
+	sgp2 := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "sgpolicy2",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachGroups: []string{"unknown"},
 			Rules: []security.SGRule{
 				{
@@ -126,11 +126,11 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 			},
 		},
 	}
-	err = stateMgr.ctrler.SGPolicy().Create(&sgp2)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp2)
 	Assert(t, (err != nil), "Policy creation with unknown attachment succeeded")
 
 	// delete the sg policy
-	err = stateMgr.ctrler.SGPolicy().Delete(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Delete(&sgp)
 	AssertOk(t, err, "Error deleting security policy")
 
 	// verify the sg policy is gone
@@ -143,15 +143,15 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 }
 
 func createPolicy(s *Statemgr, name, version string) error {
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:       "default",
 			Namespace:    "default",
 			Name:         name,
 			GenerationID: version,
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -167,7 +167,7 @@ func createPolicy(s *Statemgr, name, version string) error {
 		},
 	}
 
-	return s.ctrler.SGPolicy().Create(&sgp)
+	return s.ctrler.NetworkSecurityPolicy().Create(&sgp)
 }
 
 func createSmartNic(s *Statemgr, name string) (*cluster.DistributedServiceCard, error) {
@@ -240,7 +240,7 @@ func TestSmartPolicyNodeVersions(t *testing.T) {
 	AssertOk(t, err, "Error finding sg policy")
 
 	// verify propagation status
-	prop := &sgp.SGPolicy.Status.PropagationStatus
+	prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 	AssertEquals(t, (int32)(1), prop.Updated, "Incorrect 'updated' propagation status")
 	AssertEquals(t, (int32)(1), prop.Pending, "Incorrect 'pending' propagation status")
 	AssertEquals(t, "1", prop.GenerationID, "Incorrect 'generation id' propagation status")
@@ -248,7 +248,7 @@ func TestSmartPolicyNodeVersions(t *testing.T) {
 
 }
 
-func TestSGPolicySmartNICEvents(t *testing.T) {
+func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	if err != nil {
@@ -279,14 +279,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 1 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// mark the smartnic as unhealthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_UNKNOWN.String()
@@ -298,14 +298,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 1 || prop.Pending != 0 || prop.GenerationID != "1" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// mark the smartnic as healthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_TRUE.String()
@@ -317,14 +317,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 1 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// send response from new nic
 	stateMgr.UpdateSgpolicyStatus("testSmartnic2", "default", "testPolicy1", "1")
@@ -335,21 +335,21 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 2 || prop.Pending != 0 || prop.GenerationID != "1" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// update the policy
 	sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
 	AssertOk(t, err, "Couldn't find policy")
-	nsgp := sgp.SGPolicy.SGPolicy
+	nsgp := sgp.NetworkSecurityPolicy.NetworkSecurityPolicy
 	nsgp.ObjectMeta.GenerationID = "2"
-	err = stateMgr.ctrler.SGPolicy().Update(&nsgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Update(&nsgp)
 	AssertOk(t, err, "Couldn't update policy")
 	stateMgr.UpdateSgpolicyStatus("testSmartnic1", "default", "testPolicy1", "2")
 	stateMgr.UpdateSgpolicyStatus("testSmartnic2", "default", "testPolicy1", "2")
@@ -360,14 +360,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 2 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// delete smartnic
 	err = stateMgr.ctrler.DistributedServiceCard().Delete(snic2)
@@ -379,14 +379,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 1 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 
 	// delete smartnic
 	err = stateMgr.ctrler.DistributedServiceCard().Delete(snic1)
@@ -398,14 +398,14 @@ func TestSGPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 0 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
 			return false, sgp
 		}
 
 		return true, nil
-	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
 }
 
 func getFwProfileVersionForNode(s *Statemgr, fwprofilename, nodename string) (string, error) {
@@ -569,14 +569,14 @@ func TestAlgPolicy(t *testing.T) {
 	AssertOk(t, err, "Error creating the app")
 
 	// create a policy using this alg
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "testTenant",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -597,7 +597,7 @@ func TestAlgPolicy(t *testing.T) {
 	}
 
 	// create sg policy
-	err = stateMgr.ctrler.SGPolicy().Create(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
 	// verify we can find the app
@@ -610,7 +610,7 @@ func TestAlgPolicy(t *testing.T) {
 	Assert(t, (tmapp.App.Status.AttachedPolicies[0] == "test-sgpolicy"), "Invalid attached policy")
 
 	// delete the policy
-	err = stateMgr.ctrler.SGPolicy().Delete(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Delete(&sgp)
 	AssertOk(t, err, "Error deleting sgpolicy")
 
 	// verify app has no attached policy
@@ -629,7 +629,7 @@ func TestAlgPolicy(t *testing.T) {
 	Assert(t, (err != nil), "App still found after deleting")
 }
 
-func TestSGPolicyMultiApp(t *testing.T) {
+func TestNetworkSecurityPolicyMultiApp(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	if err != nil {
@@ -689,14 +689,14 @@ func TestSGPolicyMultiApp(t *testing.T) {
 	AssertOk(t, err, "Error creating the app")
 
 	// create a policy using this alg
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "testTenant",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -710,11 +710,11 @@ func TestSGPolicyMultiApp(t *testing.T) {
 	}
 
 	// create sg policy
-	err = stateMgr.ctrler.SGPolicy().Create(&sgp)
+	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
 	// find sgp in mbus
-	nsgp, err := stateMgr.mbus.FindSGPolicy(&sgp.ObjectMeta)
+	nsgp, err := stateMgr.mbus.FindNetworkSecurityPolicy(&sgp.ObjectMeta)
 	AssertOk(t, err, "Error finding endpoint in mbus")
 	Assert(t, len(nsgp.Spec.Rules) == 2, "Invalid number of rules in mbus")
 	Assert(t, (nsgp.Spec.Rules[0].ID == nsgp.Spec.Rules[1].ID), "Invalid rule ids in mbus")

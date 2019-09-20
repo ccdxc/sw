@@ -22,27 +22,27 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
-// AddSGPolicyAPIRoutes adds SGPolicy routes
-func (s *RestServer) AddSGPolicyAPIRoutes(r *mux.Router) {
+// AddNetworkSecurityPolicyAPIRoutes adds NetworkSecurityPolicy routes
+func (s *RestServer) AddNetworkSecurityPolicyAPIRoutes(r *mux.Router) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSGPolicyHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listNetworkSecurityPolicyHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postSGPolicyHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postNetworkSecurityPolicyHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.deleteSGPolicyHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.deleteNetworkSecurityPolicyHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.putSGPolicyHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.putNetworkSecurityPolicyHandler))
 
 }
 
-func (s *RestServer) listSGPolicyHandler(r *http.Request) (interface{}, error) {
-	return s.agent.ListSGPolicy(), nil
+func (s *RestServer) listNetworkSecurityPolicyHandler(r *http.Request) (interface{}, error) {
+	return s.agent.ListNetworkSecurityPolicy(), nil
 }
 
-func (s *RestServer) postSGPolicyHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postNetworkSecurityPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
 
-	var o netproto.SGPolicy
+	var o netproto.NetworkSecurityPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *RestServer) postSGPolicyHandler(r *http.Request) (interface{}, error) {
 		Timestamp: *c,
 	}
 
-	err = s.agent.CreateSGPolicy(&o)
+	err = s.agent.CreateNetworkSecurityPolicy(&o)
 
 	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 
@@ -71,13 +71,13 @@ func (s *RestServer) postSGPolicyHandler(r *http.Request) (interface{}, error) {
 	return res, err
 }
 
-func (s *RestServer) deleteSGPolicyHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteNetworkSecurityPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
 
 	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
 	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
 	name, _ := mux.Vars(r)["ObjectMeta.Name"]
-	err := s.agent.DeleteSGPolicy(tenant, namespace, name)
+	err := s.agent.DeleteNetworkSecurityPolicy(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -98,10 +98,10 @@ func (s *RestServer) deleteSGPolicyHandler(r *http.Request) (interface{}, error)
 	return res, err
 }
 
-func (s *RestServer) putSGPolicyHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putNetworkSecurityPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
 
-	var o netproto.SGPolicy
+	var o netproto.NetworkSecurityPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *RestServer) putSGPolicyHandler(r *http.Request) (interface{}, error) {
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
 	}
-	err = s.agent.UpdateSGPolicy(&o)
+	err = s.agent.UpdateNetworkSecurityPolicy(&o)
 
 	res.References = []string{r.RequestURI}
 

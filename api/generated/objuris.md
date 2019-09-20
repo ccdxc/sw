@@ -21,13 +21,13 @@
 | Module | /configs/diagnostics/v1/modules |
 | Network | /configs/network/v1/networks |
 | NetworkInterface | /configs/network/v1/networkinterfaces |
+| NetworkSecurityPolicy | /configs/security/v1/networksecuritypolicies |
 | Node | /configs/cluster/v1/nodes |
 | Object | /configs/v1//{Namespace}/objects |
 | Role | /configs/auth/v1/roles |
 | RoleBinding | /configs/auth/v1/role-bindings |
 | Rollout | /configs/rollout/v1/rollout |
 | RolloutAction | /configs/rollout/v1/rolloutAction |
-| SGPolicy | /configs/security/v1/sgpolicies |
 | SecurityGroup | /configs/security/v1/security-groups |
 | Service | /configs/network/v1/services |
 | StatsPolicy | /configs/monitoring/v1/statsPolicy |

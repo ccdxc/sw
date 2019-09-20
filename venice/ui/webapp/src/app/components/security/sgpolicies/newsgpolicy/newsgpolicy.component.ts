@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation, AfterViewInit } from '@angular/core';
-import { ISecuritySGPolicy, SecuritySGPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
+import { ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -21,7 +21,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
 })
-export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, SecuritySGPolicy> implements OnInit, AfterViewInit {
+export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy> implements OnInit, AfterViewInit {
   // TODO: Add validation
   // TODO: either prevent adding new rule while one is incomplete,
   //       or add indicator that a rule is invalid/incomplete
@@ -39,7 +39,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
     protected securityService: SecurityService,
     protected workloadService: WorkloadService,
   ) {
-    super(_controllerService, uiconfigsService, SecuritySGPolicy);
+    super(_controllerService, uiconfigsService, SecurityNetworkSecurityPolicy);
   }
 
   attachOptions = [
@@ -210,24 +210,24 @@ export class NewsgpolicyComponent extends CreationForm<ISecuritySGPolicy, Securi
     this._controllerService.setToolbarData(currToolbar);
   }
 
-  createObject(object: ISecuritySGPolicy) {
-    return this.securityService.AddSGPolicy(object);
+  createObject(object: ISecurityNetworkSecurityPolicy) {
+    return this.securityService.AddNetworkSecurityPolicy(object);
   }
 
-  updateObject(newObject: ISecuritySGPolicy, oldObject: ISecuritySGPolicy) {
-    return this.securityService.UpdateSGPolicy(oldObject.meta.name, newObject, null, oldObject);
+  updateObject(newObject: ISecurityNetworkSecurityPolicy, oldObject: ISecurityNetworkSecurityPolicy) {
+    return this.securityService.UpdateNetworkSecurityPolicy(oldObject.meta.name, newObject, null, oldObject);
   }
 
-  generateCreateSuccessMsg(object: ISecuritySGPolicy) {
+  generateCreateSuccessMsg(object: ISecurityNetworkSecurityPolicy) {
     return 'Created policy ' + object.meta.name;
   }
 
-  generateUpdateSuccessMsg(object: ISecuritySGPolicy) {
+  generateUpdateSuccessMsg(object: ISecurityNetworkSecurityPolicy) {
     return 'Updated policy ' + object.meta.name;
   }
 
   getObjectValues() {
-    const currValue: ISecuritySGPolicy = this.newObject.getFormGroupValues();
+    const currValue: ISecurityNetworkSecurityPolicy = this.newObject.getFormGroupValues();
     if (this.selectedAttachOption === this.ATTACH_TENANT) {
       currValue.spec['attach-tenant'] = true;
     }

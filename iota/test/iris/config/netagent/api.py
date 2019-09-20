@@ -119,10 +119,10 @@ def DeleteEndpoints():
     return DeleteConfigObjects(cfg_api.QueryConfigs(kind='Endpoint'))
 
 def AddSgPolicies():
-    return PushConfigObjects(cfg_api.QueryConfigs(kind='SGPolicy'))
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='NetworkSecurityPolicy'))
 
 def DeleteSgPolicies():
-    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='SGPolicy'))
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='NetworkSecurityPolicy'))
 
 def AddSecurityProfiles():
     return PushConfigObjects(cfg_api.QueryConfigs(kind='SecurityProfile'))
@@ -197,7 +197,7 @@ def PushBaseConfig(ignore_error = True):
     ret = PushConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
-    objects = QueryConfigs(kind='SGPolicy')
+    objects = QueryConfigs(kind='NetworkSecurityPolicy')
     ret = PushConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
@@ -230,7 +230,7 @@ def DeleteBaseConfig(ignore_error = True):
     ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
-    objects = QueryConfigs(kind='SGPolicy')
+    objects = QueryConfigs(kind='NetworkSecurityPolicy')
     ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
@@ -359,7 +359,7 @@ def __GetAppWorkloadWorkloadPairs(afilter, action, wl_pair_type):
         return None
 
     ping_app_name = apps[0].meta.name
-    store_policy_objects = QueryConfigs(kind='SGPolicy')
+    store_policy_objects = QueryConfigs(kind='NetworkSecurityPolicy')
     if not store_policy_objects:
         api.Logger.error("No store policy objects")
         return None
@@ -380,7 +380,7 @@ def __getWorkloadPairsBy(protocol, port, action, wl_pair_type=WORKLOAD_PAIR_TYPE
     wl_pairs = []
     match_cache = defaultdict(lambda: dict())
 
-    store_policy_objects = QueryConfigs(kind='SGPolicy')
+    store_policy_objects = QueryConfigs(kind='NetworkSecurityPolicy')
     if not store_policy_objects:
         api.Logger.error("No store policy objects")
         return None

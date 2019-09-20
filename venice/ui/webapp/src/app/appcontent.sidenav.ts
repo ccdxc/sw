@@ -75,7 +75,7 @@ export const sideNavMenu: SideNavItem[] = [
       cssClass: 'app-l-side-nav-security',
     },
     roleGuard: {
-      opt: [UIRolePermissions.securitysgpolicy_read, UIRolePermissions.securityapp_read]
+      opt: [UIRolePermissions.securitysecuritygroup_read, UIRolePermissions.securityapp_read]
     },
     children: [
       {
@@ -83,7 +83,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-security-securitypolicy'
         },
-        roleGuard: UIRolePermissions.securitysgpolicy_read,
+        roleGuard: UIRolePermissions.securitysecuritygroup_read,
         link: ['/security', 'sgpolicies']
       },
       {

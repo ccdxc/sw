@@ -502,15 +502,15 @@ func (ct *ctrlerCtx) SecurityGroup() SecurityGroupAPI {
 	return &securitygroupAPI{ct: ct}
 }
 
-// SGPolicy is a wrapper object that implements additional functionality
-type SGPolicy struct {
+// NetworkSecurityPolicy is a wrapper object that implements additional functionality
+type NetworkSecurityPolicy struct {
 	sync.Mutex
-	security.SGPolicy
+	security.NetworkSecurityPolicy
 	HandlerCtx interface{} // additional state handlers can store
 	ctrler     *ctrlerCtx  // reference back to the controller instance
 }
 
-func (obj *SGPolicy) Write() error {
+func (obj *NetworkSecurityPolicy) Write() error {
 	// if there is no API server to connect to, we are done
 	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
 		return nil
@@ -522,13 +522,13 @@ func (obj *SGPolicy) Write() error {
 		return err
 	}
 
-	obj.ctrler.stats.Counter("SGPolicy_Writes").Inc()
+	obj.ctrler.stats.Counter("NetworkSecurityPolicy_Writes").Inc()
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
 		for i := 0; i < maxApisrvWriteRetry; i++ {
-			_, err = apicl.SecurityV1().SGPolicy().UpdateStatus(context.Background(), &obj.SGPolicy)
+			_, err = apicl.SecurityV1().NetworkSecurityPolicy().UpdateStatus(context.Background(), &obj.NetworkSecurityPolicy)
 			if err == nil {
 				break
 			}
@@ -536,25 +536,25 @@ func (obj *SGPolicy) Write() error {
 		}
 	} else {
 		//  create
-		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), &obj.SGPolicy)
+		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &obj.NetworkSecurityPolicy)
 	}
 
 	return nil
 }
 
-// SGPolicyHandler is the event handler for SGPolicy object
-type SGPolicyHandler interface {
-	OnSGPolicyCreate(obj *SGPolicy) error
-	OnSGPolicyUpdate(oldObj *SGPolicy, newObj *security.SGPolicy) error
-	OnSGPolicyDelete(obj *SGPolicy) error
+// NetworkSecurityPolicyHandler is the event handler for NetworkSecurityPolicy object
+type NetworkSecurityPolicyHandler interface {
+	OnNetworkSecurityPolicyCreate(obj *NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyUpdate(oldObj *NetworkSecurityPolicy, newObj *security.NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyDelete(obj *NetworkSecurityPolicy) error
 }
 
-// handleSGPolicyEvent handles SGPolicy events from watcher
-func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
+// handleNetworkSecurityPolicyEvent handles NetworkSecurityPolicy events from watcher
+func (ct *ctrlerCtx) handleNetworkSecurityPolicyEvent(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
-	case *security.SGPolicy:
-		eobj := evt.Object.(*security.SGPolicy)
-		kind := "SGPolicy"
+	case *security.NetworkSecurityPolicy:
+		eobj := evt.Object.(*security.NetworkSecurityPolicy)
+		kind := "NetworkSecurityPolicy"
 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
@@ -563,7 +563,7 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
-		sgpolicyHandler := handler.(SGPolicyHandler)
+		networksecuritypolicyHandler := handler.(NetworkSecurityPolicyHandler)
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Created:
@@ -571,17 +571,17 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Updated:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				obj := &SGPolicy{
-					SGPolicy:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
+				obj := &NetworkSecurityPolicy{
+					NetworkSecurityPolicy: *eobj,
+					HandlerCtx:            nil,
+					ctrler:                ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
-				ct.stats.Counter("SGPolicy_Created_Events").Inc()
+				ct.stats.Counter("NetworkSecurityPolicy_Created_Events").Inc()
 
 				// call the event handler
 				obj.Lock()
-				err = sgpolicyHandler.OnSGPolicyCreate(obj)
+				err = networksecuritypolicyHandler.OnNetworkSecurityPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -589,13 +589,13 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				obj := fobj.(*SGPolicy)
+				obj := fobj.(*NetworkSecurityPolicy)
 
-				ct.stats.Counter("SGPolicy_Updated_Events").Inc()
+				ct.stats.Counter("NetworkSecurityPolicy_Updated_Events").Inc()
 
 				// call the event handler
 				obj.Lock()
-				err = sgpolicyHandler.OnSGPolicyUpdate(obj, eobj)
+				err = networksecuritypolicyHandler.OnNetworkSecurityPolicyUpdate(obj, eobj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -609,13 +609,13 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 				return err
 			}
 
-			obj := fobj.(*SGPolicy)
+			obj := fobj.(*NetworkSecurityPolicy)
 
-			ct.stats.Counter("SGPolicy_Deleted_Events").Inc()
+			ct.stats.Counter("NetworkSecurityPolicy_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
-			err = sgpolicyHandler.OnSGPolicyDelete(obj)
+			err = networksecuritypolicyHandler.OnNetworkSecurityPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
@@ -624,18 +624,18 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SGPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkSecurityPolicy watch channel", tp)
 	}
 
 	return nil
 }
 
-// handleSGPolicyEventParallel handles SGPolicy events from watcher
-func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error {
+// handleNetworkSecurityPolicyEventParallel handles NetworkSecurityPolicy events from watcher
+func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventParallel(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
-	case *security.SGPolicy:
-		eobj := evt.Object.(*security.SGPolicy)
-		kind := "SGPolicy"
+	case *security.NetworkSecurityPolicy:
+		eobj := evt.Object.(*security.NetworkSecurityPolicy)
+		kind := "NetworkSecurityPolicy"
 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
@@ -644,7 +644,7 @@ func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
-		sgpolicyHandler := handler.(SGPolicyHandler)
+		networksecuritypolicyHandler := handler.(NetworkSecurityPolicyHandler)
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Created:
@@ -652,28 +652,28 @@ func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Updated:
 			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*security.SGPolicy)
+				eobj := userCtx.(*security.NetworkSecurityPolicy)
 				fobj, err := ct.findObject(kind, eobj.GetKey())
 				if err != nil {
-					obj := &SGPolicy{
-						SGPolicy:   *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
+					obj := &NetworkSecurityPolicy{
+						NetworkSecurityPolicy: *eobj,
+						HandlerCtx:            nil,
+						ctrler:                ct,
 					}
 					ct.addObject(kind, obj.GetKey(), obj)
-					ct.stats.Counter("SGPolicy_Created_Events").Inc()
+					ct.stats.Counter("NetworkSecurityPolicy_Created_Events").Inc()
 					obj.Lock()
-					err = sgpolicyHandler.OnSGPolicyCreate(obj)
+					err = networksecuritypolicyHandler.OnNetworkSecurityPolicyCreate(obj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.SGPolicy.GetKey())
+						ct.delObject(kind, obj.NetworkSecurityPolicy.GetKey())
 					}
 				} else {
-					obj := fobj.(*SGPolicy)
-					ct.stats.Counter("SGPolicy_Updated_Events").Inc()
+					obj := fobj.(*NetworkSecurityPolicy)
+					ct.stats.Counter("NetworkSecurityPolicy_Updated_Events").Inc()
 					obj.Lock()
-					err = sgpolicyHandler.OnSGPolicyUpdate(obj, eobj)
+					err = networksecuritypolicyHandler.OnNetworkSecurityPolicyUpdate(obj, eobj)
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -681,82 +681,82 @@ func (ct *ctrlerCtx) handleSGPolicyEventParallel(evt *kvstore.WatchEvent) error 
 				}
 				return err
 			}
-			ct.runJob("SGPolicy", eobj, workFunc)
+			ct.runJob("NetworkSecurityPolicy", eobj, workFunc)
 		case kvstore.Deleted:
 			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*security.SGPolicy)
+				eobj := userCtx.(*security.NetworkSecurityPolicy)
 				fobj, err := ct.findObject(kind, eobj.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
 				}
-				obj := fobj.(*SGPolicy)
-				ct.stats.Counter("SGPolicy_Deleted_Events").Inc()
+				obj := fobj.(*NetworkSecurityPolicy)
+				ct.stats.Counter("NetworkSecurityPolicy_Deleted_Events").Inc()
 				obj.Lock()
-				err = sgpolicyHandler.OnSGPolicyDelete(obj)
+				err = networksecuritypolicyHandler.OnNetworkSecurityPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.SGPolicy.GetKey())
+				ct.delObject(kind, obj.NetworkSecurityPolicy.GetKey())
 				return nil
 			}
-			ct.runJob("SGPolicy", eobj, workFunc)
+			ct.runJob("NetworkSecurityPolicy", eobj, workFunc)
 		}
 	default:
-		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SGPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkSecurityPolicy watch channel", tp)
 	}
 
 	return nil
 }
 
-// diffSGPolicy does a diff of SGPolicy objects between local cache and API server
-func (ct *ctrlerCtx) diffSGPolicy(apicl apiclient.Services) {
+// diffNetworkSecurityPolicy does a diff of NetworkSecurityPolicy objects between local cache and API server
+func (ct *ctrlerCtx) diffNetworkSecurityPolicy(apicl apiclient.Services) {
 	opts := api.ListWatchOptions{}
 
 	// get a list of all objects from API server
-	objlist, err := apicl.SecurityV1().SGPolicy().List(context.Background(), &opts)
+	objlist, err := apicl.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &opts)
 	if err != nil {
 		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
-	ct.logger.Infof("diffSGPolicy(): SGPolicyList returned %d objects", len(objlist))
+	ct.logger.Infof("diffNetworkSecurityPolicy(): NetworkSecurityPolicyList returned %d objects", len(objlist))
 
 	// build an object map
-	objmap := make(map[string]*security.SGPolicy)
+	objmap := make(map[string]*security.NetworkSecurityPolicy)
 	for _, obj := range objlist {
 		objmap[obj.GetKey()] = obj
 	}
 
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.SGPolicy().List() {
+	for _, obj := range ct.NetworkSecurityPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
-			ct.logger.Infof("diffSGPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			ct.logger.Infof("diffNetworkSecurityPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
-				Object: &obj.SGPolicy,
+				Object: &obj.NetworkSecurityPolicy,
 			}
-			ct.handleSGPolicyEvent(&evt)
+			ct.handleNetworkSecurityPolicyEvent(&evt)
 		}
 	}
 
 	// trigger create event for all others
 	for _, obj := range objlist {
-		ct.logger.Infof("diffSGPolicy(): Adding object %#v", obj.GetKey())
+		ct.logger.Infof("diffNetworkSecurityPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
 			Object: obj,
 		}
-		ct.handleSGPolicyEvent(&evt)
+		ct.handleNetworkSecurityPolicyEvent(&evt)
 	}
 }
 
-func (ct *ctrlerCtx) runSGPolicyWatcher() {
-	kind := "SGPolicy"
+func (ct *ctrlerCtx) runNetworkSecurityPolicyWatcher() {
+	kind := "NetworkSecurityPolicy"
 
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
@@ -769,12 +769,12 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	opts := api.ListWatchOptions{}
-	logger := ct.logger.WithContext("submodule", "SGPolicyWatcher")
+	logger := ct.logger.WithContext("submodule", "NetworkSecurityPolicyWatcher")
 
 	// create a grpc client
 	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 	if err == nil {
-		ct.diffSGPolicy(apiclt)
+		ct.diffNetworkSecurityPolicy(apiclt)
 	}
 
 	// setup wait group
@@ -783,8 +783,8 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 	// start a goroutine
 	go func() {
 		defer ct.waitGrp.Done()
-		ct.stats.Counter("SGPolicy_Watch").Inc()
-		defer ct.stats.Counter("SGPolicy_Watch").Dec()
+		ct.stats.Counter("NetworkSecurityPolicy_Watch").Inc()
+		defer ct.stats.Counter("NetworkSecurityPolicy_Watch").Dec()
 
 		// loop forever
 		for {
@@ -792,12 +792,12 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 			if err != nil {
 				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
-				ct.stats.Counter("SGPolicy_ApiClientErr").Inc()
+				ct.stats.Counter("NetworkSecurityPolicy_ApiClientErr").Inc()
 			} else {
 				logger.Infof("API client connected {%+v}", apicl)
 
-				// SGPolicy object watcher
-				wt, werr := apicl.SecurityV1().SGPolicy().Watch(ctx, &opts)
+				// NetworkSecurityPolicy object watcher
+				wt, werr := apicl.SecurityV1().NetworkSecurityPolicy().Watch(ctx, &opts)
 				if werr != nil {
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
@@ -811,7 +811,7 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
-				ct.diffSGPolicy(apicl)
+				ct.diffNetworkSecurityPolicy(apicl)
 
 				// handle api server watch events
 			innerLoop:
@@ -821,12 +821,12 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 					case evt, ok := <-wt.EventChan():
 						if !ok {
 							logger.Error("Error receiving from apisrv watcher")
-							ct.stats.Counter("SGPolicy_WatchErrors").Inc()
+							ct.stats.Counter("NetworkSecurityPolicy_WatchErrors").Inc()
 							break innerLoop
 						}
 
 						// handle event in parallel
-						ct.handleSGPolicyEventParallel(evt)
+						ct.handleNetworkSecurityPolicyEventParallel(evt)
 					}
 				}
 				apicl.Close()
@@ -844,16 +844,16 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 	}()
 }
 
-// WatchSGPolicy starts watch on SGPolicy object
-func (ct *ctrlerCtx) WatchSGPolicy(handler SGPolicyHandler) error {
-	kind := "SGPolicy"
+// WatchNetworkSecurityPolicy starts watch on NetworkSecurityPolicy object
+func (ct *ctrlerCtx) WatchNetworkSecurityPolicy(handler NetworkSecurityPolicyHandler) error {
+	kind := "NetworkSecurityPolicy"
 
 	// see if we already have a watcher
 	ct.Lock()
 	_, ok := ct.watchers[kind]
 	ct.Unlock()
 	if ok {
-		return fmt.Errorf("SGPolicy watcher already exists")
+		return fmt.Errorf("NetworkSecurityPolicy watcher already exists")
 	}
 
 	// save handler
@@ -861,29 +861,29 @@ func (ct *ctrlerCtx) WatchSGPolicy(handler SGPolicyHandler) error {
 	ct.handlers[kind] = handler
 	ct.Unlock()
 
-	// run SGPolicy watcher in a go routine
-	ct.runSGPolicyWatcher()
+	// run NetworkSecurityPolicy watcher in a go routine
+	ct.runNetworkSecurityPolicyWatcher()
 
 	return nil
 }
 
-// SGPolicyAPI returns
-type SGPolicyAPI interface {
-	Create(obj *security.SGPolicy) error
-	Update(obj *security.SGPolicy) error
-	Delete(obj *security.SGPolicy) error
-	Find(meta *api.ObjectMeta) (*SGPolicy, error)
-	List() []*SGPolicy
-	Watch(handler SGPolicyHandler) error
+// NetworkSecurityPolicyAPI returns
+type NetworkSecurityPolicyAPI interface {
+	Create(obj *security.NetworkSecurityPolicy) error
+	Update(obj *security.NetworkSecurityPolicy) error
+	Delete(obj *security.NetworkSecurityPolicy) error
+	Find(meta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
+	List() []*NetworkSecurityPolicy
+	Watch(handler NetworkSecurityPolicyHandler) error
 }
 
-// dummy struct that implements SGPolicyAPI
-type sgpolicyAPI struct {
+// dummy struct that implements NetworkSecurityPolicyAPI
+type networksecuritypolicyAPI struct {
 	ct *ctrlerCtx
 }
 
-// Create creates SGPolicy object
-func (api *sgpolicyAPI) Create(obj *security.SGPolicy) error {
+// Create creates NetworkSecurityPolicy object
+func (api *networksecuritypolicyAPI) Create(obj *security.NetworkSecurityPolicy) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -891,18 +891,18 @@ func (api *sgpolicyAPI) Create(obj *security.SGPolicy) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), obj)
+		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
+			_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
 		}
 		return err
 	}
 
-	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
-// Update triggers update on SGPolicy object
-func (api *sgpolicyAPI) Update(obj *security.SGPolicy) error {
+// Update triggers update on NetworkSecurityPolicy object
+func (api *networksecuritypolicyAPI) Update(obj *security.NetworkSecurityPolicy) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -910,15 +910,15 @@ func (api *sgpolicyAPI) Update(obj *security.SGPolicy) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
+		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
 		return err
 	}
 
-	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
-// Delete deletes SGPolicy object
-func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
+// Delete deletes NetworkSecurityPolicy object
+func (api *networksecuritypolicyAPI) Delete(obj *security.NetworkSecurityPolicy) error {
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -926,58 +926,58 @@ func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &obj.ObjectMeta)
 		return err
 	}
 
-	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
 // Find returns an object by meta
-func (api *sgpolicyAPI) Find(meta *api.ObjectMeta) (*SGPolicy, error) {
+func (api *networksecuritypolicyAPI) Find(meta *api.ObjectMeta) (*NetworkSecurityPolicy, error) {
 	// find the object
-	obj, err := api.ct.FindObject("SGPolicy", meta)
+	obj, err := api.ct.FindObject("NetworkSecurityPolicy", meta)
 	if err != nil {
 		return nil, err
 	}
 
 	// asset type
 	switch obj.(type) {
-	case *SGPolicy:
-		hobj := obj.(*SGPolicy)
+	case *NetworkSecurityPolicy:
+		hobj := obj.(*NetworkSecurityPolicy)
 		return hobj, nil
 	default:
 		return nil, errors.New("incorrect object type")
 	}
 }
 
-// List returns a list of all SGPolicy objects
-func (api *sgpolicyAPI) List() []*SGPolicy {
-	var objlist []*SGPolicy
+// List returns a list of all NetworkSecurityPolicy objects
+func (api *networksecuritypolicyAPI) List() []*NetworkSecurityPolicy {
+	var objlist []*NetworkSecurityPolicy
 
-	objs := api.ct.ListObjects("SGPolicy")
+	objs := api.ct.ListObjects("NetworkSecurityPolicy")
 	for _, obj := range objs {
 		switch tp := obj.(type) {
-		case *SGPolicy:
-			eobj := obj.(*SGPolicy)
+		case *NetworkSecurityPolicy:
+			eobj := obj.(*NetworkSecurityPolicy)
 			objlist = append(objlist, eobj)
 		default:
-			log.Fatalf("Got invalid object type %v while looking for SGPolicy", tp)
+			log.Fatalf("Got invalid object type %v while looking for NetworkSecurityPolicy", tp)
 		}
 	}
 
 	return objlist
 }
 
-// Watch sets up a event handlers for SGPolicy object
-func (api *sgpolicyAPI) Watch(handler SGPolicyHandler) error {
-	api.ct.startWorkerPool("SGPolicy")
-	return api.ct.WatchSGPolicy(handler)
+// Watch sets up a event handlers for NetworkSecurityPolicy object
+func (api *networksecuritypolicyAPI) Watch(handler NetworkSecurityPolicyHandler) error {
+	api.ct.startWorkerPool("NetworkSecurityPolicy")
+	return api.ct.WatchNetworkSecurityPolicy(handler)
 }
 
-// SGPolicy returns SGPolicyAPI
-func (ct *ctrlerCtx) SGPolicy() SGPolicyAPI {
-	return &sgpolicyAPI{ct: ct}
+// NetworkSecurityPolicy returns NetworkSecurityPolicyAPI
+func (ct *ctrlerCtx) NetworkSecurityPolicy() NetworkSecurityPolicyAPI {
+	return &networksecuritypolicyAPI{ct: ct}
 }
 
 // App is a wrapper object that implements additional functionality

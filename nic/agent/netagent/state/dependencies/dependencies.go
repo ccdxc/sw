@@ -184,8 +184,8 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.IPSecPolicy:
 		ip := o.(*netproto.IPSecPolicy)
 		return ip.TypeMeta, ip.ObjectMeta, nil
-	case *netproto.SGPolicy:
-		sp := o.(*netproto.SGPolicy)
+	case *netproto.NetworkSecurityPolicy:
+		sp := o.(*netproto.NetworkSecurityPolicy)
 		return sp.TypeMeta, sp.ObjectMeta, nil
 	case *netproto.Tunnel:
 		tu := o.(*netproto.Tunnel)
@@ -277,7 +277,7 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 	case "ipsecpolicy":
 		selfLink = fmt.Sprintf("/api/ipsec/policies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
-	case "sgpolicy":
+	case "networksecuritypolicy":
 		selfLink = fmt.Sprintf("/api/security/policies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	case "tunnel":

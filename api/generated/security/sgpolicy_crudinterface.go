@@ -14,4 +14,4 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-const KindSGPolicy ObjKind = "SGPolicy"
+const KindNetworkSecurityPolicy ObjKind = "NetworkSecurityPolicy"

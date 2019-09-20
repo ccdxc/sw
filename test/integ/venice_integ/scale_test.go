@@ -39,8 +39,8 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 	cfg := cfgen.DefaultCfgenParams
 	cfg.NetworkParams.NumNetworks = 4
 	cfg.WorkloadsPerHost = 200
-	cfg.SGPolicyParams.NumPolicies = 1
-	cfg.SGPolicyParams.NumRulesPerPolicy = 1000
+	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
+	cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 1000
 	cfg.AppParams.NumApps = 1000
 	cfg.NumDNSAlgs = 0
 	cfg.Smartnics = snicList
@@ -74,7 +74,7 @@ func (it *veniceIntegSuite) createScaleConfig(loginCtx context.Context, c *C, cf
 	}
 
 	for _, sgp := range cfg.ConfigItems.SGPolicies {
-		_, err := it.restClient.SecurityV1().SGPolicy().Create(loginCtx, sgp)
+		_, err := it.restClient.SecurityV1().NetworkSecurityPolicy().Create(loginCtx, sgp)
 		AssertOk(c, err, fmt.Sprintf("Error creating sgp %+v", *sgp))
 	}
 
@@ -150,15 +150,15 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListSGPolicy()) == len(cfg.ConfigItems.SGPolicies), nil
+				return len(ag.NetworkAgent.ListNetworkSecurityPolicy()) == len(cfg.ConfigItems.SGPolicies), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
-				waitCh <- fmt.Errorf("Scale: SGPolicy count incorrect found %d expected %d",
-					len(ag.NetworkAgent.ListSGPolicy()), len(cfg.ConfigItems.SGPolicies))
+				waitCh <- fmt.Errorf("Scale: NetworkSecurityPolicy count incorrect found %d expected %d",
+					len(ag.NetworkAgent.ListNetworkSecurityPolicy()), len(cfg.ConfigItems.SGPolicies))
 				return
 			}
-			agObjs := ag.NetworkAgent.ListSGPolicy()
+			agObjs := ag.NetworkAgent.ListNetworkSecurityPolicy()
 			for _, obj := range cfg.ConfigItems.SGPolicies {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
@@ -176,14 +176,14 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 		}(sn.agent)
 	}
 	for ii := 0; ii < len(it.snics); ii++ {
-		AssertOk(c, <-waitCh, "Scale: SGPolicy info incorrect in datapath")
+		AssertOk(c, <-waitCh, "Scale: NetworkSecurityPolicy info incorrect in datapath")
 	}
 }
 
 // delete objects from venice
 func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
 	for _, sgp := range cfg.ConfigItems.SGPolicies {
-		_, err := it.restClient.SecurityV1().SGPolicy().Delete(loginCtx, &sgp.ObjectMeta)
+		_, err := it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(loginCtx, &sgp.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting sgp %+v", *sgp))
 	}
 	for _, app := range cfg.ConfigItems.Apps {
@@ -246,7 +246,7 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListSGPolicy()) == 0, nil
+				return len(ag.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Scale: All SGPolicies are not deleted in datapath")
 				return
@@ -256,7 +256,7 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 		}(sn.agent)
 	}
 	for ii := 0; ii < len(it.snics); ii++ {
-		AssertOk(c, <-waitCh, "Scale: SGPolicy info incorrect in datapath")
+		AssertOk(c, <-waitCh, "Scale: NetworkSecurityPolicy info incorrect in datapath")
 	}
 
 	for _, sn := range it.snics {

@@ -21,7 +21,7 @@ const fixedSeed = 42
 func main() {
 	var (
 		numRules = flag.Int("numRules", 0, "Number of rules in a single policy")
-		policies []*netproto.SGPolicy
+		policies []*netproto.NetworkSecurityPolicy
 		rules    []netproto.PolicyRule
 	)
 	flag.Parse()
@@ -73,14 +73,14 @@ func main() {
 
 	rules = append(rules, permitAllRule)
 
-	sgp := &netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := &netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "scale-rules",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules:        rules,
 		},
@@ -92,7 +92,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not write the generated policy. Err: %v", err)
 	}
-	fmt.Printf("Succesfully generated SGPolicy with %d rules to %s\n", *numRules, fileName)
+	fmt.Printf("Succesfully generated NetworkSecurityPolicy with %d rules to %s\n", *numRules, fileName)
 }
 
 func GenIPAddress(subnet string, count int) (ipAddrs []string, gw string, err error) {

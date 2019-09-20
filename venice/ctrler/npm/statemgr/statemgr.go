@@ -33,13 +33,13 @@ type updatable interface {
 
 // Topics are the Nimbus message bus topics
 type Topics struct {
-	AppTopic              *nimbus.AppTopic
-	EndpointTopic         *nimbus.EndpointTopic
-	NetworkTopic          *nimbus.NetworkTopic
-	SecurityProfileTopic  *nimbus.SecurityProfileTopic
-	SecurityGroupTopic    *nimbus.SecurityGroupTopic
-	SGPolicyTopic         *nimbus.SGPolicyTopic
-	NetworkInterfaceTopic *nimbus.InterfaceTopic
+	AppTopic                   *nimbus.AppTopic
+	EndpointTopic              *nimbus.EndpointTopic
+	NetworkTopic               *nimbus.NetworkTopic
+	SecurityProfileTopic       *nimbus.SecurityProfileTopic
+	SecurityGroupTopic         *nimbus.SecurityGroupTopic
+	NetworkSecurityPolicyTopic *nimbus.NetworkSecurityPolicyTopic
+	NetworkInterfaceTopic      *nimbus.InterfaceTopic
 }
 
 // Statemgr is the object state manager
@@ -161,7 +161,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching endpoint")
 	}
-	err = ctrler.SGPolicy().Watch(statemgr)
+	err = ctrler.NetworkSecurityPolicy().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching sg policy")
 	}
@@ -195,7 +195,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		logger.Errorf("Error starting SG RPC server")
 		return nil, err
 	}
-	statemgr.topics.SGPolicyTopic, err = nimbus.AddSGPolicyTopic(mserver, statemgr)
+	statemgr.topics.NetworkSecurityPolicyTopic, err = nimbus.AddNetworkSecurityPolicyTopic(mserver, statemgr)
 	if err != nil {
 		logger.Errorf("Error starting SG policy RPC server")
 		return nil, err

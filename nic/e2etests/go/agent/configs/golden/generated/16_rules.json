@@ -1,6 +1,6 @@
 [
   {
-    "kind": "SGPolicy",
+    "kind": "NetworkSecurityPolicy",
     "meta": {
       "name": "global-fw-rules-vrf-0",
       "tenant": "default",
@@ -366,7 +366,7 @@
   },
 
   {
-    "kind": "SGPolicy",
+    "kind": "NetworkSecurityPolicy",
     "meta": {
       "name": "global-fw-rules-vrf-1",
       "tenant": "default",
@@ -386,7 +386,7 @@
     "status": {}
   },
   {
-    "kind": "SGPolicy",
+    "kind": "NetworkSecurityPolicy",
     "meta": {
       "name": "global-fw-rules-vrf-2",
       "tenant": "default",
@@ -406,7 +406,7 @@
     "status": {}
   },
   {
-    "kind": "SGPolicy",
+    "kind": "NetworkSecurityPolicy",
     "meta": {
       "name": "global-fw-rules-vrf-3",
       "tenant": "default",

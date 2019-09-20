@@ -1035,7 +1035,7 @@ export class Utility {
         return 'admin/authpolicy';
       case 'App':
         return 'security/securityapps';
-      case 'SGPolicy':
+      case 'NetworkSecurityPolicy':
         return 'security/sgpolicies';
       case 'AuditEvent':
         return 'monitoring/auditevents';

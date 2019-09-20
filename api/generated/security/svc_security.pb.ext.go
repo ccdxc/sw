@@ -55,12 +55,12 @@ func (m *FirewallProfileList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *SGPolicyList) MakeKey(prefix string) string {
-	obj := SGPolicy{}
+func (m *NetworkSecurityPolicyList) MakeKey(prefix string) string {
+	obj := NetworkSecurityPolicy{}
 	return obj.MakeKey(prefix)
 }
 
-func (m *SGPolicyList) MakeURI(ver, prefix string) string {
+func (m *NetworkSecurityPolicyList) MakeURI(ver, prefix string) string {
 	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
@@ -103,8 +103,8 @@ func (m *AutoMsgFirewallProfileWatchHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSGPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := SGPolicy{}
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := NetworkSecurityPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -268,44 +268,44 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Defaults(ver string) bool
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgSGPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgSGPolicyWatchHelper
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNetworkSecurityPolicyWatchHelper
 	var ok bool
 	if into == nil {
-		out = &AutoMsgSGPolicyWatchHelper{}
+		out = &AutoMsgNetworkSecurityPolicyWatchHelper{}
 	} else {
-		out, ok = into.(*AutoMsgSGPolicyWatchHelper)
+		out, ok = into.(*AutoMsgNetworkSecurityPolicyWatchHelper)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *(ref.DeepCopy(m).(*AutoMsgSGPolicyWatchHelper))
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkSecurityPolicyWatchHelper))
 	return out, nil
 }
 
 // Default sets up the defaults for the object
-func (m *AutoMsgSGPolicyWatchHelper) Defaults(ver string) bool {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgSGPolicyWatchHelper_WatchEvent
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent
 	var ok bool
 	if into == nil {
-		out = &AutoMsgSGPolicyWatchHelper_WatchEvent{}
+		out = &AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent{}
 	} else {
-		out, ok = into.(*AutoMsgSGPolicyWatchHelper_WatchEvent)
+		out, ok = into.(*AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *(ref.DeepCopy(m).(*AutoMsgSGPolicyWatchHelper_WatchEvent))
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent))
 	return out, nil
 }
 
 // Default sets up the defaults for the object
-func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -436,23 +436,23 @@ func (m *FirewallProfileList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SGPolicyList) Clone(into interface{}) (interface{}, error) {
-	var out *SGPolicyList
+func (m *NetworkSecurityPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkSecurityPolicyList
 	var ok bool
 	if into == nil {
-		out = &SGPolicyList{}
+		out = &NetworkSecurityPolicyList{}
 	} else {
-		out, ok = into.(*SGPolicyList)
+		out, ok = into.(*NetworkSecurityPolicyList)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *(ref.DeepCopy(m).(*SGPolicyList))
+	*out = *(ref.DeepCopy(m).(*NetworkSecurityPolicyList))
 	return out, nil
 }
 
 // Default sets up the defaults for the object
-func (m *SGPolicyList) Defaults(ver string) bool {
+func (m *NetworkSecurityPolicyList) Defaults(ver string) bool {
 	return false
 }
 
@@ -710,7 +710,7 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Normalize() {
 
 }
 
-func (m *AutoMsgSGPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
 		dlmtr := "."
@@ -727,7 +727,7 @@ func (m *AutoMsgSGPolicyWatchHelper) References(tenant string, path string, resp
 	}
 }
 
-func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -742,7 +742,7 @@ func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
-func (m *AutoMsgSGPolicyWatchHelper) Normalize() {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper) Normalize() {
 
 	for k, v := range m.Events {
 		if v != nil {
@@ -753,7 +753,7 @@ func (m *AutoMsgSGPolicyWatchHelper) Normalize() {
 
 }
 
-func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
 		dlmtr := "."
@@ -769,7 +769,7 @@ func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) References(tenant string, path s
 	}
 }
 
-func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Object != nil {
@@ -787,7 +787,7 @@ func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
-func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Normalize() {
+func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -975,7 +975,7 @@ func (m *FirewallProfileList) Normalize() {
 
 }
 
-func (m *SGPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *NetworkSecurityPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
 		dlmtr := "."
@@ -992,7 +992,7 @@ func (m *SGPolicyList) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *NetworkSecurityPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -1007,7 +1007,7 @@ func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 	return ret
 }
 
-func (m *SGPolicyList) Normalize() {
+func (m *NetworkSecurityPolicyList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {

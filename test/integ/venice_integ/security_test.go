@@ -22,14 +22,14 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	AssertOk(c, err, "Error creating logged in context")
 
 	// sg policy params
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "policy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -48,14 +48,14 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	}
 
 	// create security policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating security policy")
 
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) {
 				notFound = true
 			}
@@ -65,7 +65,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		tsgp, gerr := it.restClient.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
 		if err != nil {
 			return false, gerr
 		}
@@ -92,14 +92,14 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 		Action: "PERMIT",
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
-	_, err = it.restClient.SecurityV1().SGPolicy().Update(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Update(ctx, &sgp)
 	AssertOk(c, err, "Error updating security policy")
 
 	// verify policy gets updated in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) {
 				notFound = true
 			}
@@ -112,7 +112,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		tsgp, gerr := it.restClient.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
 		if err != nil {
 			return false, gerr
 		}
@@ -127,12 +127,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
 
 	// perform dummy update that just increments the generation id
-	_, err = it.restClient.SecurityV1().SGPolicy().Update(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Update(ctx, &sgp)
 	AssertOk(c, err, "Error updating security policy")
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		tsgp, gerr := it.restClient.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
 		if err != nil {
 			return false, gerr
 		}
@@ -146,14 +146,14 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
 
 	// delete policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy")
 
 	// verify policy gets deleted in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		found := false
 		for _, sn := range it.snics {
-			_, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if cerr == nil {
 				found = true
 			}
@@ -376,7 +376,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	AssertOk(c, err, "Error deleting network")
 }
 
-func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
+func (it *veniceIntegSuite) TestNetworkSecurityPolicyRuleWithMultipleApps(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
@@ -421,14 +421,14 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 	time.Sleep(time.Millisecond * 10)
 
 	// sg policy params
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "policy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -442,14 +442,14 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 	}
 
 	// create security policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating security policy")
 
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) || len(rsgp.Spec.Rules) != 2 {
 				notFound = true
 			}
@@ -459,7 +459,7 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		tsgp, gerr := it.restClient.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
 		if err != nil {
 			return false, gerr
 		}
@@ -474,7 +474,7 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
 
 	// delete policy
-	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy")
 
 	// delete apps

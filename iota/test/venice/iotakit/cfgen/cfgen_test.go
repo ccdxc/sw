@@ -12,8 +12,8 @@ import (
 
 func TestCfgenPolicyGen(t *testing.T) {
 	cfg := DefaultCfgenParams
-	cfg.SGPolicyParams.NumPolicies = 1
-	cfg.SGPolicyParams.NumRulesPerPolicy = 50000
+	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
+	cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 50000
 	cfg.WorkloadParams.WorkloadsPerHost = 200
 	cfg.AppParams.NumApps = 10000
 	cfg.NumDNSAlgs = 10

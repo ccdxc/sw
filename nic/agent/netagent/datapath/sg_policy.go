@@ -14,8 +14,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// CreateSGPolicy creates a security group policy in the datapath
-func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
+// CreateNetworkSecurityPolicy creates a security group policy in the datapath
+func (hd *Datapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -56,7 +56,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
-							SecurityPolicyId: sgp.Status.SGPolicyID,
+							SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 							VrfIdOrHandle:    vrfKey,
 						},
 					},
@@ -66,7 +66,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 		},
 	}
 
-	log.Infof("Sending SGPolicy Create to datapath: %+v", sgPolicyReqMsg.Request[0].KeyOrHandle)
+	log.Infof("Sending NetworkSecurityPolicy Create to datapath: %+v", sgPolicyReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyReqMsg)
@@ -83,7 +83,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 						KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 							PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 								SecurityPolicyKey: &halproto.SecurityPolicyKey{
-									SecurityPolicyId: sgp.Status.SGPolicyID,
+									SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 									VrfIdOrHandle:    vrfKey,
 								},
 							},
@@ -115,8 +115,8 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 	return nil
 }
 
-// UpdateSGPolicy updates a security group policy in the datapath
-func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
+// UpdateNetworkSecurityPolicy updates a security group policy in the datapath
+func (hd *Datapath) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -157,7 +157,7 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
-							SecurityPolicyId: sgp.Status.SGPolicyID,
+							SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 							VrfIdOrHandle:    vrfKey,
 						},
 					},
@@ -167,12 +167,12 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 		},
 	}
 
-	log.Infof("Sending SGPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg.Request[0].KeyOrHandle)
+	log.Infof("Sending NetworkSecurityPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
 		if err != nil {
-			log.Errorf("Error updating SGPolicy. Err: %v", err)
+			log.Errorf("Error updating NetworkSecurityPolicy. Err: %v", err)
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
@@ -182,7 +182,7 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 	} else {
 		_, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
 		if err != nil {
-			log.Errorf("Error updating SGPolicy. Err: %v", err)
+			log.Errorf("Error updating NetworkSecurityPolicy. Err: %v", err)
 			return err
 		}
 	}
@@ -192,8 +192,8 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 	return nil
 }
 
-// DeleteSGPolicy deletes a security group policy in the datapath
-func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+// DeleteNetworkSecurityPolicy deletes a security group policy in the datapath
+func (hd *Datapath) DeleteNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -211,7 +211,7 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
-							SecurityPolicyId: sgp.Status.SGPolicyID,
+							SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 							VrfIdOrHandle:    vrfKey,
 						},
 					},
@@ -220,7 +220,7 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 		},
 	}
 
-	log.Infof("Sending SGPolicy Delete to datapath: %+v", sgPolicyDelReq.Request[0].KeyOrHandle)
+	log.Infof("Sending NetworkSecurityPolicy Delete to datapath: %+v", sgPolicyDelReq.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)
@@ -470,8 +470,8 @@ func convertRPCData(rpcData []*netproto.RPC) []*halproto.AppData_RPCData {
 
 // ------------------------ test utility functions -------------
 
-// FindSGPolicy finds sg policy object in datapath
-func (hd *Datapath) FindSGPolicy(meta api.ObjectMeta) (*halproto.SecurityPolicyRequestMsg, error) {
+// FindNetworkSecurityPolicy finds sg policy object in datapath
+func (hd *Datapath) FindNetworkSecurityPolicy(meta api.ObjectMeta) (*halproto.SecurityPolicyRequestMsg, error) {
 	hd.Lock()
 	sgp, ok := hd.DB.SgPolicyDB[objectKey(&meta)]
 	hd.Unlock()

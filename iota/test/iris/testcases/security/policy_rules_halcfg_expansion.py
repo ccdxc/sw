@@ -43,7 +43,7 @@ def Verify(tc):
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
-    newObjects = newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    newObjects = newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
     agent_api.PushConfigObjects(newObjects)
 
     return api.types.status.SUCCESS

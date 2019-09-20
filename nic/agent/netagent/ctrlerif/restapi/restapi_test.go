@@ -362,14 +362,14 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "preCreatedSGPolicy",
+			Name:      "preCreatedNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachGroup:  []string{"preCreatedSecurityGroup"},
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
@@ -392,7 +392,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		},
 	}
 
-	err = nagent.CreateSGPolicy(&sgPolicy)
+	err = nagent.CreateNetworkSecurityPolicy(&sgPolicy)
 	if err != nil {
 		log.Errorf("Failed to create SG policy. {%v}", sg)
 		return

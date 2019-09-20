@@ -250,7 +250,7 @@ func (na *Nagent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
 
 // UpdateApp updates a app.
 func (na *Nagent) UpdateApp(app *netproto.App) error {
-	var linkedSGPolicies []*netproto.SGPolicy
+	var linkedSGPolicies []*netproto.NetworkSecurityPolicy
 	var algMapper int
 
 	// find the corresponding namespace
@@ -381,8 +381,8 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 
 	err = na.saveApp(app)
 
-	// Find the sg policies that are currently referring to this App and trigger an SGPolicy Update
-	for _, sgp := range na.ListSGPolicy() {
+	// Find the sg policies that are currently referring to this App and trigger an NetworkSecurityPolicy Update
+	for _, sgp := range na.ListNetworkSecurityPolicy() {
 		for _, r := range sgp.Spec.Rules {
 			if r.AppName == app.Name {
 				linkedSGPolicies = append(linkedSGPolicies, sgp)
@@ -392,7 +392,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 	}
 
 	for _, sgp := range linkedSGPolicies {
-		if err := na.performSGPolicyUpdate(sgp); err != nil {
+		if err := na.performNetworkSecurityPolicyUpdate(sgp); err != nil {
 			log.Errorf("Failed to update the corresponding SG Policy. Err: %v", err)
 			return err
 		}

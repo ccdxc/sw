@@ -9,18 +9,18 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 
-export interface ISecuritySGPolicySpec {
+export interface ISecurityNetworkSecurityPolicySpec {
     'attach-groups'?: Array<string>;
     'attach-tenant'?: boolean;
     'rules'?: Array<ISecuritySGRule>;
 }
 
 
-export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicySpec {
+export class SecurityNetworkSecurityPolicySpec extends BaseModel implements ISecurityNetworkSecurityPolicySpec {
     'attach-groups': Array<string> = null;
     'attach-tenant': boolean = null;
     'rules': Array<SecuritySGRule> = null;
-    public static propInfo: { [prop in keyof ISecuritySGPolicySpec]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicySpec]: PropInfoItem } = {
         'attach-groups': {
             required: false,
             type: 'Array<string>'
@@ -36,19 +36,19 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySGPolicySpec.propInfo[propName];
+        return SecurityNetworkSecurityPolicySpec.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecuritySGPolicySpec.propInfo;
+        return SecurityNetworkSecurityPolicySpec.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySGPolicySpec.propInfo[prop] != null &&
-                        SecuritySGPolicySpec.propInfo[prop].default != null);
+        return (SecurityNetworkSecurityPolicySpec.propInfo[prop] != null &&
+                        SecurityNetworkSecurityPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -70,15 +70,15 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     setValues(values: any, fillDefaults = true): void {
         if (values && values['attach-groups'] != null) {
             this['attach-groups'] = values['attach-groups'];
-        } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-groups')) {
-            this['attach-groups'] = [ SecuritySGPolicySpec.propInfo['attach-groups'].default];
+        } else if (fillDefaults && SecurityNetworkSecurityPolicySpec.hasDefaultValue('attach-groups')) {
+            this['attach-groups'] = [ SecurityNetworkSecurityPolicySpec.propInfo['attach-groups'].default];
         } else {
             this['attach-groups'] = [];
         }
         if (values && values['attach-tenant'] != null) {
             this['attach-tenant'] = values['attach-tenant'];
-        } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-tenant')) {
-            this['attach-tenant'] = SecuritySGPolicySpec.propInfo['attach-tenant'].default;
+        } else if (fillDefaults && SecurityNetworkSecurityPolicySpec.hasDefaultValue('attach-tenant')) {
+            this['attach-tenant'] = SecurityNetworkSecurityPolicySpec.propInfo['attach-tenant'].default;
         } else {
             this['attach-tenant'] = null
         }
@@ -94,8 +94,8 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attach-groups': CustomFormControl(new FormControl(this['attach-groups']), SecuritySGPolicySpec.propInfo['attach-groups']),
-                'attach-tenant': CustomFormControl(new FormControl(this['attach-tenant']), SecuritySGPolicySpec.propInfo['attach-tenant']),
+                'attach-groups': CustomFormControl(new FormControl(this['attach-groups']), SecurityNetworkSecurityPolicySpec.propInfo['attach-groups']),
+                'attach-tenant': CustomFormControl(new FormControl(this['attach-tenant']), SecurityNetworkSecurityPolicySpec.propInfo['attach-tenant']),
                 'rules': new FormArray([]),
             });
             // generate FormArray control elements

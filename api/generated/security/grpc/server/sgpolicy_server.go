@@ -47,34 +47,32 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for ssecuritySgpolicyBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"security.PropagationStatus": apisrvpkg.NewMessage("security.PropagationStatus"),
-		"security.ProtoPort":         apisrvpkg.NewMessage("security.ProtoPort"),
-		"security.SGPolicy": apisrvpkg.NewMessage("security.SGPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
+		"security.NetworkSecurityPolicy": apisrvpkg.NewMessage("security.NetworkSecurityPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
-				r := security.SGPolicy{}
+				r := security.NetworkSecurityPolicy{}
 				return r.MakeKey(prefix)
 			}
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(security.SGPolicy)
-			r.Kind = "SGPolicy"
+			r := i.(security.NetworkSecurityPolicy)
+			r.Kind = "NetworkSecurityPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			key := r.MakeKey(prefix)
-			r.Kind = "SGPolicy"
+			r.Kind = "NetworkSecurityPolicy"
 			var err error
 			if create {
 				if updateFn != nil {
-					upd := &security.SGPolicy{}
+					upd := &security.NetworkSecurityPolicy{}
 					n, err := updateFn(upd)
 					if err != nil {
 						l.ErrorLog("msg", "could not create new object", "err", err)
 						return nil, err
 					}
-					new := n.(*security.SGPolicy)
+					new := n.(*security.NetworkSecurityPolicy)
 					new.TypeMeta = r.TypeMeta
 					new.GenerationID = "1"
 					new.UUID = r.UUID
@@ -90,14 +88,14 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 			} else {
 				if updateFn != nil {
-					into := &security.SGPolicy{}
+					into := &security.NetworkSecurityPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 					if err != nil {
 						l.ErrorLog("msg", "Consistent update failed", "err", err)
 					}
 					r = *into
 				} else {
-					var cur security.SGPolicy
+					var cur security.NetworkSecurityPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -119,18 +117,18 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
 				if updatefn != nil {
-					upd := &security.SGPolicy{}
+					upd := &security.NetworkSecurityPolicy{}
 					n, err := updatefn(upd)
 					if err != nil {
 						l.ErrorLog("msg", "could not create new object", "err", err)
 						return err
 					}
-					new := n.(*security.SGPolicy)
+					new := n.(*security.NetworkSecurityPolicy)
 					new.TypeMeta = r.TypeMeta
 					new.GenerationID = "1"
 					new.UUID = r.UUID
@@ -146,7 +144,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 			} else {
 				if updatefn != nil {
-					var cur security.SGPolicy
+					var cur security.NetworkSecurityPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -157,10 +155,10 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
 						return err
 					}
-					r = *robj.(*security.SGPolicy)
+					r = *robj.(*security.NetworkSecurityPolicy)
 					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 				} else {
-					var cur security.SGPolicy
+					var cur security.NetworkSecurityPolicy
 					err = kvs.Get(ctx, key, &cur)
 					if err != nil {
 						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
@@ -184,11 +182,11 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			r.UUID = uuid.NewV4().String()
 			return r, nil
 		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -196,7 +194,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -204,18 +202,18 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			r.SelfLink = path
 			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := security.SGPolicy{}
+			r := security.NetworkSecurityPolicy{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := security.SGPolicy{}
+			r := security.NetworkSecurityPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
@@ -228,27 +226,27 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return err
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 			r.Normalize()
 			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
-			r := i.(security.SGPolicy)
+			r := i.(security.NetworkSecurityPolicy)
 
 			tenant := r.Tenant
 			r.References(tenant, "", ret)
 			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
-			var n *security.SGPolicy
-			if v, ok := i.(security.SGPolicy); ok {
+			var n *security.NetworkSecurityPolicy
+			if v, ok := i.(security.NetworkSecurityPolicy); ok {
 				n = &v
-			} else if v, ok := i.(*security.SGPolicy); ok {
+			} else if v, ok := i.(*security.NetworkSecurityPolicy); ok {
 				n = v
 			} else {
 				return nil
@@ -268,7 +266,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if oldObj == nil {
 					return nil, errors.New("nil object")
 				}
-				o := oldObj.(*security.SGPolicy)
+				o := oldObj.(*security.NetworkSecurityPolicy)
 				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
 				ts, err := types.TimestampProto(time.Now())
 				if err != nil {
@@ -278,10 +276,10 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return n, nil
 			}
 		}).WithReplaceSpecFunction(func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
-			var n *security.SGPolicy
-			if v, ok := i.(security.SGPolicy); ok {
+			var n *security.NetworkSecurityPolicy
+			if v, ok := i.(security.NetworkSecurityPolicy); ok {
 				n = &v
-			} else if v, ok := i.(*security.SGPolicy); ok {
+			} else if v, ok := i.(*security.NetworkSecurityPolicy); ok {
 				n = v
 			} else {
 				return nil
@@ -289,12 +287,12 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			dryRun := cache.IsDryRun(ctx)
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if oldObj == nil {
-					rete := &security.SGPolicy{}
+					rete := &security.NetworkSecurityPolicy{}
 					rete.TypeMeta, rete.ObjectMeta, rete.Spec = n.TypeMeta, n.ObjectMeta, n.Spec
 					rete.GenerationID = "1"
 					return rete, nil
 				}
-				if ret, ok := oldObj.(*security.SGPolicy); ok {
+				if ret, ok := oldObj.(*security.NetworkSecurityPolicy); ok {
 					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
 					if !dryRun {
 						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
@@ -311,16 +309,16 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				return nil, errors.New("invalid object")
 			}
 		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
-			var n *security.SGPolicy
-			if v, ok := i.(security.SGPolicy); ok {
+			var n *security.NetworkSecurityPolicy
+			if v, ok := i.(security.NetworkSecurityPolicy); ok {
 				n = &v
-			} else if v, ok := i.(*security.SGPolicy); ok {
+			} else if v, ok := i.(*security.NetworkSecurityPolicy); ok {
 				n = v
 			} else {
 				return nil
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
-				if ret, ok := oldObj.(*security.SGPolicy); ok {
+				if ret, ok := oldObj.(*security.NetworkSecurityPolicy); ok {
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -328,10 +326,12 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 		}),
 
-		"security.SGPolicySpec":   apisrvpkg.NewMessage("security.SGPolicySpec"),
-		"security.SGPolicyStatus": apisrvpkg.NewMessage("security.SGPolicyStatus"),
-		"security.SGRule":         apisrvpkg.NewMessage("security.SGRule"),
-		"security.SGRuleStatus":   apisrvpkg.NewMessage("security.SGRuleStatus"),
+		"security.NetworkSecurityPolicySpec":   apisrvpkg.NewMessage("security.NetworkSecurityPolicySpec"),
+		"security.NetworkSecurityPolicyStatus": apisrvpkg.NewMessage("security.NetworkSecurityPolicyStatus"),
+		"security.PropagationStatus":           apisrvpkg.NewMessage("security.PropagationStatus"),
+		"security.ProtoPort":                   apisrvpkg.NewMessage("security.ProtoPort"),
+		"security.SGRule":                      apisrvpkg.NewMessage("security.SGRule"),
+		"security.SGRuleStatus":                apisrvpkg.NewMessage("security.SGRuleStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

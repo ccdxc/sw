@@ -440,14 +440,14 @@ func (ds *delphidpTestSuite) TestDelphiSecurityGroup(t *C) {
 
 func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 	// sg policy
-	sgPolicy := netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSGPolicy",
+			Name:      "testNetworkSecurityPolicy",
 		},
-		Spec: netproto.SGPolicySpec{
+		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -547,7 +547,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 	}
 
 	// create a sg policy
-	err := ds.datapath.CreateSGPolicy(&sgPolicy, 100, nil, nil)
+	err := ds.datapath.CreateNetworkSecurityPolicy(&sgPolicy, 100, nil, nil)
 	AssertOk(t, err, "Error creating sgpolicy in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -556,11 +556,11 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 		return (len(sgplist) == 1), sgplist
 	}, "invalid number of sg policies")
 
-	err = ds.datapath.UpdateSGPolicy(&sgPolicy, 100, nil)
+	err = ds.datapath.UpdateNetworkSecurityPolicy(&sgPolicy, 100, nil)
 	AssertOk(t, err, "Error updating sg policy in delphi")
 
 	// delete the network
-	err = ds.datapath.DeleteSGPolicy(&sgPolicy, 100)
+	err = ds.datapath.DeleteNetworkSecurityPolicy(&sgPolicy, 100)
 	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify interface is acutually gone

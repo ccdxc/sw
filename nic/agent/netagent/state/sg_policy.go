@@ -19,11 +19,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// ErrSGPolicyNotFound is returned when sgpolicy is not found
-var ErrSGPolicyNotFound = errors.New("sgpolicy not found")
+// ErrNetworkSecurityPolicyNotFound is returned when sgpolicy is not found
+var ErrNetworkSecurityPolicyNotFound = errors.New("sgpolicy not found")
 
-// CreateSGPolicy creates a security group policy
-func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
+// CreateNetworkSecurityPolicy creates a security group policy
+func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	var securityGroups []*netproto.SecurityGroup
 	var ruleIDAppLUT sync.Map
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
@@ -32,12 +32,12 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// Check  for max allowed SGPolicies
-	if len(na.ListSGPolicy()) != 0 {
+	if len(na.ListNetworkSecurityPolicy()) != 0 {
 		log.Errorf("Exceeds maximum allowed Network Security Policy of %d", globals.MaxAllowedSGPolicies)
 		return fmt.Errorf("exceeds maximum allowed Network Security Policy of %d", globals.MaxAllowedSGPolicies)
 	}
 
-	oldSgp, err := na.FindSGPolicy(sgp.ObjectMeta)
+	oldSgp, err := na.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 	if err == nil {
 		if !proto.Equal(&oldSgp.Spec, &sgp.Spec) {
 			log.Errorf("Network Security Policy  %+v already exists", oldSgp.GetKey())
@@ -112,8 +112,8 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// Allocate ID only on first object creates and use existing ones during config replay
-	if sgp.Status.SGPolicyID == 0 {
-		sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
+	if sgp.Status.NetworkSecurityPolicyID == 0 {
+		sgp.Status.NetworkSecurityPolicyID, err = na.Store.GetNextID(types.NetworkSecurityPolicyID)
 	}
 
 	if err != nil {
@@ -122,9 +122,9 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSGPolicy(sgp, vrf.Status.VrfID, securityGroups, &ruleIDAppLUT)
+	err = na.Datapath.CreateNetworkSecurityPolicy(sgp, vrf.Status.VrfID, securityGroups, &ruleIDAppLUT)
 	if err != nil {
-		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp.GetKey(), err)
+		log.Errorf("Error creating security group policy in datapath. NetworkSecurityPolicy {%+v}. Err: %v", sgp.GetKey(), err)
 		return err
 	}
 
@@ -153,28 +153,28 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// save it in db
-	err = na.saveSGPolicy(sgp)
+	err = na.saveNetworkSecurityPolicy(sgp)
 
 	return err
 }
 
-func (na *Nagent) saveSGPolicy(sgp *netproto.SGPolicy) error {
+func (na *Nagent) saveNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	// save it in db
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
-	na.SGPolicyDB[key] = sgp
+	na.NetworkSecurityPolicyDB[key] = sgp
 	na.Unlock()
 
 	// write to delphi
 	if na.DelphiClient != nil {
-		dsgp := dnetproto.SGPolicy{
-			Key:      key,
-			SGPolicy: sgp,
+		dsgp := dnetproto.NetworkSecurityPolicy{
+			Key:                   key,
+			NetworkSecurityPolicy: sgp,
 		}
 
 		err := na.DelphiClient.SetObject(&dsgp)
 		if err != nil {
-			log.Errorf("Error writing SGPolicy %s to delphi. Err: %v", key, err)
+			log.Errorf("Error writing NetworkSecurityPolicy %s to delphi. Err: %v", key, err)
 			return err
 		}
 	}
@@ -185,23 +185,23 @@ func (na *Nagent) saveSGPolicy(sgp *netproto.SGPolicy) error {
 	return err
 }
 
-func (na *Nagent) discardSGPolicy(sgp *netproto.SGPolicy) error {
+func (na *Nagent) discardNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	// delete from db
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
-	delete(na.SGPolicyDB, key)
+	delete(na.NetworkSecurityPolicyDB, key)
 	na.Unlock()
 
 	// remove it from delphi
 	if na.DelphiClient != nil {
-		dsgp := dnetproto.SGPolicy{
-			Key:      key,
-			SGPolicy: sgp,
+		dsgp := dnetproto.NetworkSecurityPolicy{
+			Key:                   key,
+			NetworkSecurityPolicy: sgp,
 		}
 
 		err := na.DelphiClient.DeleteObject(&dsgp)
 		if err != nil {
-			log.Errorf("Error Deleting SGPolicy %s from delphi. Err: %v", key, err)
+			log.Errorf("Error Deleting NetworkSecurityPolicy %s from delphi. Err: %v", key, err)
 			return err
 		}
 	}
@@ -209,10 +209,10 @@ func (na *Nagent) discardSGPolicy(sgp *netproto.SGPolicy) error {
 	return na.Store.RawDelete(sgp.GetKind(), sgp.GetKey())
 }
 
-// FindSGPolicy finds a security group policy in local db
-func (na *Nagent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) {
+// FindNetworkSecurityPolicy finds a security group policy in local db
+func (na *Nagent) FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
 	typeMeta := api.TypeMeta{
-		Kind: "SGPolicy",
+		Kind: "NetworkSecurityPolicy",
 	}
 	// lock the db
 	na.Lock()
@@ -220,7 +220,7 @@ func (na *Nagent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) 
 
 	// lookup the database
 	key := na.Solver.ObjectKey(meta, typeMeta)
-	sgp, ok := na.SGPolicyDB[key]
+	sgp, ok := na.NetworkSecurityPolicyDB[key]
 	if !ok {
 		return nil, fmt.Errorf("security group policy not found %v", meta.Name)
 	}
@@ -228,30 +228,30 @@ func (na *Nagent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) 
 	return sgp, nil
 }
 
-// ListSGPolicy returns the list of security group polices
-func (na *Nagent) ListSGPolicy() []*netproto.SGPolicy {
-	var sgPolicyList []*netproto.SGPolicy
+// ListNetworkSecurityPolicy returns the list of security group polices
+func (na *Nagent) ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy {
+	var sgPolicyList []*netproto.NetworkSecurityPolicy
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	for _, sgp := range na.SGPolicyDB {
+	for _, sgp := range na.NetworkSecurityPolicyDB {
 		sgPolicyList = append(sgPolicyList, sgp)
 	}
 
 	return sgPolicyList
 }
 
-// UpdateSGPolicy updates a security group policy
-func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
+// UpdateNetworkSecurityPolicy updates a security group policy
+func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	// find the corresponding namespace
 	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
 	}
-	existingSgp, err := na.FindSGPolicy(sgp.ObjectMeta)
+	existingSgp, err := na.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 	if err != nil {
-		log.Errorf("SGPolicy %v not found", sgp.ObjectMeta)
+		log.Errorf("NetworkSecurityPolicy %v not found", sgp.ObjectMeta)
 		return err
 	}
 
@@ -261,13 +261,13 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
-	sgp.Status.SGPolicyID = existingSgp.Status.SGPolicyID
+	sgp.Status.NetworkSecurityPolicyID = existingSgp.Status.NetworkSecurityPolicyID
 
-	return na.performSGPolicyUpdate(sgp)
+	return na.performNetworkSecurityPolicyUpdate(sgp)
 }
 
-// performSGPolicyUpdate
-func (na *Nagent) performSGPolicyUpdate(sgp *netproto.SGPolicy) error {
+// performNetworkSecurityPolicyUpdate
+func (na *Nagent) performNetworkSecurityPolicyUpdate(sgp *netproto.NetworkSecurityPolicy) error {
 	var ruleIDAppLUT sync.Map
 
 	// find the corresponding vrf for the sg policy
@@ -301,20 +301,20 @@ func (na *Nagent) performSGPolicyUpdate(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
+	err = na.Datapath.UpdateNetworkSecurityPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", sgp.ObjectMeta, err)
 		return err
 	}
 
-	err = na.saveSGPolicy(sgp)
+	err = na.saveNetworkSecurityPolicy(sgp)
 	return err
 }
 
-// DeleteSGPolicy deletes a security group policy
-func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
-	sgp := &netproto.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+// DeleteNetworkSecurityPolicy deletes a security group policy
+func (na *Nagent) DeleteNetworkSecurityPolicy(tn, namespace, name string) error {
+	sgp := &netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tn,
 			Namespace: namespace,
@@ -331,35 +331,35 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 		return err
 	}
 
-	existingSGPolicy, err := na.FindSGPolicy(sgp.ObjectMeta)
+	existingNetworkSecurityPolicy, err := na.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 	if err != nil {
-		log.Errorf("SGPolicy %+v not found", sgp.ObjectMeta)
-		return ErrSGPolicyNotFound
+		log.Errorf("NetworkSecurityPolicy %+v not found", sgp.ObjectMeta)
+		return ErrNetworkSecurityPolicyNotFound
 	}
 
 	// find the corresponding vrf for the sg policy
-	vrf, err := na.ValidateVrf(existingSGPolicy.Tenant, existingSGPolicy.Namespace, existingSGPolicy.Spec.VrfName)
+	vrf, err := na.ValidateVrf(existingNetworkSecurityPolicy.Tenant, existingNetworkSecurityPolicy.Namespace, existingNetworkSecurityPolicy.Spec.VrfName)
 	if err != nil {
-		log.Errorf("Failed to find the vrf %v", existingSGPolicy.Spec.VrfName)
+		log.Errorf("Failed to find the vrf %v", existingNetworkSecurityPolicy.Spec.VrfName)
 		return err
 	}
 
 	// check if the current sg policy has any objects referring to it
-	err = na.Solver.Solve(existingSGPolicy)
+	err = na.Solver.Solve(existingNetworkSecurityPolicy)
 	if err != nil {
-		log.Errorf("Found active references to %v. Err: %v", existingSGPolicy.Name, err)
+		log.Errorf("Found active references to %v. Err: %v", existingNetworkSecurityPolicy.Name, err)
 		return err
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, vrf.Status.VrfID)
+	err = na.Datapath.DeleteNetworkSecurityPolicy(existingNetworkSecurityPolicy, vrf.Status.VrfID)
 	if err != nil {
 		log.Errorf("Error deleting security group policy {%+v}. Err: %v", sgp, err)
 		return err
 	}
 
 	// Update parent references
-	for _, s := range existingSGPolicy.Spec.AttachGroup {
+	for _, s := range existingNetworkSecurityPolicy.Spec.AttachGroup {
 		sgMeta := api.ObjectMeta{
 			Tenant:    sgp.Tenant,
 			Namespace: sgp.Namespace,
@@ -370,35 +370,35 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 			log.Errorf("Could not find the security group to attach the sg policy")
 			return err
 		}
-		err = na.Solver.Remove(sg, existingSGPolicy)
+		err = na.Solver.Remove(sg, existingNetworkSecurityPolicy)
 		if err != nil {
 			log.Errorf("Could not remove the reference to the security group: %v. Err: %v", sg.Name, err)
 			return err
 		}
 	}
 
-	if existingSGPolicy.Spec.AttachTenant {
-		err = na.Solver.Remove(vrf, existingSGPolicy)
+	if existingNetworkSecurityPolicy.Spec.AttachTenant {
+		err = na.Solver.Remove(vrf, existingNetworkSecurityPolicy)
 		if err != nil {
 			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
 			return err
 		}
 	}
 
-	err = na.Solver.Remove(vrf, existingSGPolicy)
+	err = na.Solver.Remove(vrf, existingNetworkSecurityPolicy)
 	if err != nil {
-		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingSGPolicy.Spec.VrfName, err)
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingNetworkSecurityPolicy.Spec.VrfName, err)
 		return err
 	}
 
-	err = na.Solver.Remove(ns, existingSGPolicy)
+	err = na.Solver.Remove(ns, existingNetworkSecurityPolicy)
 	if err != nil {
-		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", existingSGPolicy.Namespace, err)
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", existingNetworkSecurityPolicy.Namespace, err)
 		return err
 	}
 
 	// delete from db
-	err = na.discardSGPolicy(sgp)
+	err = na.discardNetworkSecurityPolicy(sgp)
 
 	return err
 }

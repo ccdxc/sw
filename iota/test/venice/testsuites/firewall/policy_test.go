@@ -61,7 +61,7 @@ func checkEventually(eval evaluator) error {
 // testPolicy tests policy for a combination
 func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 	workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
-	spc := ts.model.SGPolicy("test-policy").DeleteAllRules()
+	spc := ts.model.NetworkSecurityPolicy("test-policy").DeleteAllRules()
 
 	// add allow all rule for workload followed by deny all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "PERMIT")
@@ -156,7 +156,7 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 // testBlacklistPolicy tests if black list policies work
 func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
-	spc := ts.model.SGPolicy("test-policy").DeleteAllRules()
+	spc := ts.model.NetworkSecurityPolicy("test-policy").DeleteAllRules()
 
 	// add deny rule for workload followed by allow all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "DENY")
@@ -256,24 +256,24 @@ var _ = Describe("firewall policy model tests", func() {
 		}).Should(Succeed())
 
 		// delete the default allow policy
-		Expect(ts.model.DefaultSGPolicy().Delete()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
-		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.DefaultSGPolicy().Delete()
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 	Context("policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {
 			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
 				Skip("Skipping policy model tests on PR tests")
 			}
-			Expect(ts.model.NewSGPolicy("test-policy").Commit()).Should(Succeed())
+			Expect(ts.model.NewNetworkSecurityPolicy("test-policy").Commit()).Should(Succeed())
 
 			// whitelist tests
 			whitelistResult := make(map[string]error)
@@ -337,7 +337,7 @@ var _ = Describe("firewall policy model tests", func() {
 			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
 				Skip("Skipping policy model tests on PR tests")
 			}
-			Expect(ts.model.NewSGPolicy("test-policy").Commit()).Should(Succeed())
+			Expect(ts.model.NewNetworkSecurityPolicy("test-policy").Commit()).Should(Succeed())
 
 			// blacklist tests
 			blacklistResult := make(map[string]error)

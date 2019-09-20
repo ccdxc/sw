@@ -73,18 +73,18 @@ var typesMapSvc_security = map[string]*api.Struct{
 			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FirewallProfile"},
 		},
 	},
-	"security.AutoMsgSGPolicyWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSGPolicyWatchHelper{}) },
+	"security.AutoMsgNetworkSecurityPolicyWatchHelper": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNetworkSecurityPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
-			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{ID: "events", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.AutoMsgSGPolicyWatchHelper.WatchEvent"},
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{ID: "events", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.AutoMsgNetworkSecurityPolicyWatchHelper.WatchEvent"},
 		},
 	},
-	"security.AutoMsgSGPolicyWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSGPolicyWatchHelper_WatchEvent{}) },
+	"security.AutoMsgNetworkSecurityPolicyWatchHelper.WatchEvent": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicy"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.NetworkSecurityPolicy"},
 		},
 	},
 	"security.AutoMsgSecurityGroupWatchHelper": &api.Struct{
@@ -147,14 +147,14 @@ var typesMapSvc_security = map[string]*api.Struct{
 			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.SGPolicyList": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyList{}) },
+	"security.NetworkSecurityPolicyList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSecurityPolicyList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
 			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{ID: "list-meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "list-meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{ID: "items", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicy"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{ID: "items", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.NetworkSecurityPolicy"},
 
 			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
@@ -205,8 +205,8 @@ var keyMapSvc_security = map[string][]api.PathsMap{
 		{URI: "/configs/security/v1/tenant/{Tenant}/certificates/{Name}", Key: "/venice/config/security/certificates/{Tenant}/{Name}"}},
 	"security.FirewallProfile": []api.PathsMap{
 		{URI: "/configs/security/v1/tenant/{Tenant}/firewallprofiles/{Name}", Key: "/venice/config/security/firewallprofiles/{Tenant}/{Name}"}},
-	"security.SGPolicy": []api.PathsMap{
-		{URI: "/configs/security/v1/tenant/{Tenant}/sgpolicies/{Name}", Key: "/venice/config/security/sgpolicies/{Tenant}/{Name}"}},
+	"security.NetworkSecurityPolicy": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/networksecuritypolicies/{Name}", Key: "/venice/config/security/networksecuritypolicies/{Tenant}/{Name}"}},
 	"security.SecurityGroup": []api.PathsMap{
 		{URI: "/configs/security/v1/tenant/{Tenant}/security-groups/{Name}", Key: "/venice/config/security/security-groups/{Tenant}/{Name}"}},
 	"security.TrafficEncryptionPolicy": []api.PathsMap{

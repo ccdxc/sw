@@ -19,15 +19,15 @@ import (
 
 func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	// sg policy
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:       "default",
 			Namespace:    "default",
 			Name:         "testpolicy",
 			GenerationID: "1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -46,13 +46,13 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, nil
 			}
@@ -60,12 +60,12 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -99,13 +99,13 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
 	sgp.ObjectMeta.GenerationID = "2"
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "error updating sg policy")
 
 	// verify agent state updated policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, nil
 			}
@@ -113,12 +113,12 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -130,7 +130,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}, "SgPolicy status was not updated after updating the policy", "100ms", it.pollTimeout())
 
 	// delete sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(c, err, "error deleting sg policy")
 }
 
@@ -141,14 +141,14 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	}}
 
 	// sg policy refering an app that doesnt exist
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      c.TestName(),
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -162,22 +162,22 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	}
 
 	// create sg policy and verify it fails
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	Assert(c, err != nil, "sgpolicy create with invalid app reference didnt fail")
 
 	// create sg policy without app it should fail as it doesn't have valid ports
 	sgp.Spec.Rules[0].Apps = []string{}
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	Assert(c, err != nil, "sg policy with no apps and no proto ports must fail")
 
 	// create a valid sg policy with ports
 	sgp.Spec.Rules[0].ProtoPorts = protoPorts
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "sgpolicy create must succeed with valid proto ports and no app")
 
 	// try updating the policy with invalid app
 	sgp.Spec.Rules[0].Apps = []string{"invalid"}
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 	Assert(c, err != nil, "sgpolicy update with invalid app reference didnt fail")
 
 	// ICMP app
@@ -206,7 +206,7 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	sgp.Spec.Rules[0].Apps = []string{"icmp-app"}
 	// clear up protoPorts
 	sgp.Spec.Rules[0].ProtoPorts = nil
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "Error updating sgpolicy with reference to icmp app")
 
 	// try deleing the app, it should fail
@@ -214,7 +214,7 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	Assert(c, err != nil, "Was able to delete app while sgpolicy was refering to it")
 
 	// finally, delete sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy with reference to icmp app")
 
 	// now, we should be able to delete the app
@@ -224,15 +224,15 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 
 func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	// sg policy
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:       "default",
 			Namespace:    "default",
 			Name:         "testpolicy",
 			GenerationID: "1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -251,13 +251,13 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, nil
 			}
@@ -265,12 +265,12 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -293,7 +293,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify new agent got the sgpolicy
 	AssertEventually(c, func() (bool, interface{}) {
-		gsgp, gerr := agent.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+		gsgp, gerr := agent.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 		if gerr != nil {
 			return false, nil
 		}
@@ -301,11 +301,11 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 			return false, gsgp
 		}
 		return true, nil
-	}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", agent.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+	}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", agent.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 
 	// verify policy status reflects new agent
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -326,7 +326,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify policy status is not changed by unhealthy snic
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -348,7 +348,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify policy status reflects snic being healthy
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -366,7 +366,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify policy status reflects agent going away
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -382,7 +382,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify policy shows pending
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -401,7 +401,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// verify policy is not pending anymore
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -412,21 +412,21 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not updated after making new smartnic unhealthy", "100ms", it.pollTimeout())
 
 	// finally, delete sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy with reference to icmp app")
 }
 
 func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	// sg policy
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:       "default",
 			Namespace:    "default",
 			Name:         "testpolicy",
 			GenerationID: "1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -445,13 +445,13 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	}
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, nil
 			}
@@ -459,12 +459,12 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
 	AssertEventually(c, func() (bool, interface{}) {
-		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 		if gerr != nil {
 			return false, gerr
 		}
@@ -495,7 +495,7 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 				},
 			}
 			sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
-			_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+			_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 			AssertOk(c, err, "error updating sg policy")
 		}
 
@@ -504,7 +504,7 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 		// verify agent state has the policy and has the rules
 		for _, ag := range it.agents {
 			AssertEventually(c, func() (bool, interface{}) {
-				gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+				gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 				if gerr != nil {
 					return false, nil
 				}
@@ -515,12 +515,12 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 					return false, []string{gsgp.Spec.Rules[0].Dst.AppConfigs[0].Port, sgp.Spec.Rules[0].ProtoPorts[0].Ports}
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 		}
 
 		// verify sgpolicy status reflects propagation status
 		AssertEventually(c, func() (bool, interface{}) {
-			tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+			tsgp, gerr := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
 			if gerr != nil {
 				return false, gerr
 			}
@@ -536,18 +536,18 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	}
 
 	// finally, delete sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy with reference to icmp app")
 
 	// verify policy is gone from agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr == nil {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 }
 
@@ -602,14 +602,14 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 	AssertOk(c, err, "error creating app")
 
 	// create a policy using this alg
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
@@ -624,13 +624,13 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
@@ -641,11 +641,11 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 				return false, gsgp.Spec.Rules
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// finally, delete sg policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy ")
 
 	// delete apps

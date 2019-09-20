@@ -102,7 +102,7 @@ def ForceReleasePort(port, node):
 
 def update_sgpolicy(app_name, allowDefault=False):
    #Query will get the reference of objects on store
-    store_policy_objects = netagent_cfg_api.QueryConfigs(kind='SGPolicy')
+    store_policy_objects = netagent_cfg_api.QueryConfigs(kind='NetworkSecurityPolicy')
     if len(store_policy_objects) == 0:
         api.Logger.error("No SG Policy objects in store")
         return api.types.status.FAILURE

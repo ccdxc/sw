@@ -618,7 +618,7 @@
         "Version": "v1",
         "Messages": [
           "SecurityGroup",
-          "SGPolicy",
+          "NetworkSecurityPolicy",
           "App",
           "FirewallProfile",
           "Certificate",
@@ -657,7 +657,7 @@
             ],
             "URI": "/configs/security/v1/firewallprofiles"
           },
-          "SGPolicy": {
+          "NetworkSecurityPolicy": {
             "Scopes": [
               "tenant"
             ],
@@ -669,7 +669,7 @@
               "list",
               "watch"
             ],
-            "URI": "/configs/security/v1/sgpolicies"
+            "URI": "/configs/security/v1/networksecuritypolicies"
           },
           "SecurityGroup": {
             "Scopes": [

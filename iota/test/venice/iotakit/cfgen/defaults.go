@@ -68,17 +68,17 @@ var scaleCfgenParams = &Cfgen{
 			},
 		},
 	},
-	SGPolicyParams: SGPolicyParams{
+	NetworkSecurityPolicyParams: NetworkSecurityPolicyParams{
 		NumPolicies:       1,
 		NumRulesPerPolicy: 10000,
-		SGPolicyTemplate: &security.SGPolicy{
-			TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		NetworkSecurityPolicyTemplate: &security.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
 				Name:      "sgpolicy-{{iter}}",
 			},
-			Spec: security.SGPolicySpec{
+			Spec: security.NetworkSecurityPolicySpec{
 				AttachTenant: true,
 			},
 		},

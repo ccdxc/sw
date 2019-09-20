@@ -12,11 +12,11 @@ import "github.com/pensando/sw/nic/agent/protos/netproto/sgpolicy.proto";
 import "delphi.proto";
 
 
-// SGPolicy object
-message SGPolicy {
+// NetworkSecurityPolicy object
+message NetworkSecurityPolicy {
     option (delphi.update_event) = true;
     delphi.ObjectMeta   Meta        = 1;
     string              Key         = 2;
-    netproto.SGPolicy   SGPolicy    = 3;
+    netproto.NetworkSecurityPolicy   NetworkSecurityPolicy    = 3;
 }
 

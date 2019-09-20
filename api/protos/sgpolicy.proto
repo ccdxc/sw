@@ -13,7 +13,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 import "github.com/pensando/sw/api/protos/tenant.proto";
 
 
-// ----------------------------- SgPolicy Object -----------------------------
+// ----------------------------- NetworkSecurityPolicy Object -----------------------------
 
 message ProtoPort {
     // protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.
@@ -59,7 +59,7 @@ message SGRule {
     repeated string ToSecurityGroups    = 7 [(venice.objRelation) = {Type: "NamedRef", To: "security/SecurityGroup"}, (gogoproto.jsontag) = "to-security-groups,omitempty"];
 }
 
-message SGPolicySpec {
+message NetworkSecurityPolicySpec {
     // list of security groups this policy is attached to
     repeated string AttachGroups = 1 [(venice.objRelation) = {Type: "NamedRef", To: "security/SecurityGroup"}, (gogoproto.jsontag) = "attach-groups,omitempty"];
 
@@ -89,21 +89,21 @@ message SGRuleStatus {
     string RuleHash = 1 [(gogoproto.jsontag) = "rule-hash"];
 }
 
-message SGPolicyStatus {
+message NetworkSecurityPolicyStatus {
     // The status of the configuration propagation to the Naples
     PropagationStatus PropagationStatus         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
     repeated SGRuleStatus RuleStatus            = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rule-status,omitempty"];
 }
 
-// Sgpolicy represents a security policy for security groups
-message SGPolicy {
-    option (venice.objectPrefix) = {Collection: "sgpolicies", Path: "/{O.Tenant}"};
+// NetworkSecurityPolicy represents a security policy for security groups
+message NetworkSecurityPolicy {
+    option (venice.objectPrefix) = {Collection: "networksecuritypolicies", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    // Spec contains the configuration of the sgpolicy.
-    SGPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    // Spec contains the configuration of the Network Security Policy.
+    NetworkSecurityPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
-    // Status contains the current state of the sgpolicy.
-    SGPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    // Status contains the current state of the Network Security Policy.
+    NetworkSecurityPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }

@@ -234,21 +234,21 @@ func (it *integTestSuite) DeleteSecurityGroup(tenant, sgname string) error {
 // CreateSgpolicy injects a create sg policy event on the watcher
 func (it *integTestSuite) CreateSgpolicy(tenant, namespace, pname string, attachTenant bool, attachGroups []string, rules []security.SGRule) error {
 	// build sg object
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenant,
 			Namespace: namespace,
 			Name:      pname,
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: attachTenant,
 			AttachGroups: attachGroups,
 			Rules:        rules,
 		},
 	}
 
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 
 	return err
 }
@@ -256,8 +256,8 @@ func (it *integTestSuite) CreateSgpolicy(tenant, namespace, pname string, attach
 // DeleteSgpolicy injects a delete sg policy event to the watcher
 func (it *integTestSuite) DeleteSgpolicy(tenant, namespace, pname string) error {
 	// build a sg object
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      pname,
 			Namespace: namespace,
@@ -265,7 +265,7 @@ func (it *integTestSuite) DeleteSgpolicy(tenant, namespace, pname string) error 
 		},
 	}
 
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 
 	return err
 }

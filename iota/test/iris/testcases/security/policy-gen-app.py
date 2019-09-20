@@ -15,7 +15,7 @@ object_template = {
 default_policy = {"action": "PERMIT"}
 
 sgpolicy_template = {
-    "kind"                  : "SGPolicy",
+    "kind"                  : "NetworkSecurityPolicy",
 
     "meta": {
         "name"              : "default-policy",

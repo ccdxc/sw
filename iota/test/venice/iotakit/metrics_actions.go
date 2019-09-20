@@ -56,7 +56,7 @@ func (act *ActionCtx) FindFwlogForWorkloadPairs(protocol, fwaction, timestr stri
 }
 
 // VerifyRuleStats verifies rule stats for policies
-func (act *ActionCtx) VerifyRuleStats(timestr string, spc *SGPolicyCollection, minCounts []map[string]float64) error {
+func (act *ActionCtx) VerifyRuleStats(timestr string, spc *NetworkSecurityPolicyCollection, minCounts []map[string]float64) error {
 	stsc, err := spc.Status()
 	if err != nil {
 		return err

@@ -14,7 +14,7 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
     ret = api.types.status.SUCCESS
 
     for i in range(0,100):

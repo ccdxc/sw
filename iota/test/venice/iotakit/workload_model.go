@@ -282,7 +282,7 @@ func (wc *WorkloadCollection) Delete() error {
 	return nil
 }
 
-func (wpc *WorkloadPairCollection) policyHelper(policyCollection *SGPolicyCollection, action, proto string) *WorkloadPairCollection {
+func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurityPolicyCollection, action, proto string) *WorkloadPairCollection {
 	if wpc.err != nil {
 		return wpc
 	}
@@ -341,17 +341,17 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *SGPolicyCollec
 }
 
 // Permit get allowed workloads with proto
-func (wpc *WorkloadPairCollection) Permit(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+func (wpc *WorkloadPairCollection) Permit(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
 	return wpc.policyHelper(policyCollection, "PERMIT", proto)
 }
 
 // Deny get Denied workloads with proto
-func (wpc *WorkloadPairCollection) Deny(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+func (wpc *WorkloadPairCollection) Deny(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
 	return wpc.policyHelper(policyCollection, "DENY", proto)
 }
 
 // Reject get rejected workloads with proto
-func (wpc *WorkloadPairCollection) Reject(policyCollection *SGPolicyCollection, proto string) *WorkloadPairCollection {
+func (wpc *WorkloadPairCollection) Reject(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
 	return wpc.policyHelper(policyCollection, "REJECT", proto)
 }
 

@@ -345,8 +345,8 @@ func convertRuleAction(action string) *halproto.SecurityRuleAction {
 	return &ruleAction
 }
 
-// CreateSGPolicy creates a security group policy in the datapath
-func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
+// CreateNetworkSecurityPolicy creates a security group policy in the datapath
+func (dp *DelphiDatapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -375,7 +375,7 @@ func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, s
 		KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 			PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 				SecurityPolicyKey: &halproto.SecurityPolicyKey{
-					SecurityPolicyId: sgp.Status.SGPolicyID,
+					SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 					VrfIdOrHandle:    vrfKey,
 				},
 			},
@@ -391,8 +391,8 @@ func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, s
 	return nil
 }
 
-// UpdateSGPolicy updates a security group policy in the datapath
-func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
+// UpdateNetworkSecurityPolicy updates a security group policy in the datapath
+func (dp *DelphiDatapath) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -421,7 +421,7 @@ func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, r
 		KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 			PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 				SecurityPolicyKey: &halproto.SecurityPolicyKey{
-					SecurityPolicyId: sgp.Status.SGPolicyID,
+					SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 					VrfIdOrHandle:    vrfKey,
 				},
 			},
@@ -437,8 +437,8 @@ func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, r
 	return nil
 }
 
-// DeleteSGPolicy deletes sg policy
-func (dp *DelphiDatapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+// DeleteNetworkSecurityPolicy deletes sg policy
+func (dp *DelphiDatapath) DeleteNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64) error {
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: vrfID,
@@ -449,7 +449,7 @@ func (dp *DelphiDatapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) e
 		KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 			PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 				SecurityPolicyKey: &halproto.SecurityPolicyKey{
-					SecurityPolicyId: sgp.Status.SGPolicyID,
+					SecurityPolicyId: sgp.Status.NetworkSecurityPolicyID,
 					VrfIdOrHandle:    vrfKey,
 				},
 			},

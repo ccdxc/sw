@@ -12,7 +12,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, ISearchPolicySearchResponse, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
-import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint, ISecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { ISecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
@@ -87,7 +87,7 @@ interface RuleHitEntry {
   encapsulation: ViewEncapsulation.None,
   animations: [Animations]
 })
-export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy, SecuritySGPolicy> implements OnInit, OnDestroy, AfterViewInit {
+export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy> implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('tableEditComponent') tableViewComponent: TablevieweditHTMLComponent;
   viewInitComplete: boolean = false;
   searchPolicyInvoked: boolean = false;  // avoid loop caused by invokeSearchPolicy
@@ -138,7 +138,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
   selectedPolicyId: string;
 
   // Current policy that is being displayed
-  selectedPolicy: SecuritySGPolicy;
+  selectedPolicy: SecurityNetworkSecurityPolicy;
 
   // TODO: Update with actual creator
   creator = 'pensando';
@@ -154,8 +154,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
   ]), { description: 'Value should be either <protocol>/<port> or app name' });
 
   // Holds all policy objects
-  sgPolicies: ReadonlyArray<SecuritySGPolicy>;
-  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
+  sgPolicies: ReadonlyArray<SecurityNetworkSecurityPolicy>;
+  sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
 
   // Holds all the policy rules of the currently selected policy
   dataObjects: ReadonlyArray<any>;
@@ -507,7 +507,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
   getSGPoliciesDetail() {
     // We perform a get as well as a watch so that we can know if the object the user is
     // looking for exists or not.
-    const getSubscription = this.securityService.GetSGPolicy(this.selectedPolicyId).subscribe(
+    const getSubscription = this.securityService.GetNetworkSecurityPolicy(this.selectedPolicyId).subscribe(
       response => {
         // We do nothing, and wait for the callback of the watch to populate the view
       },
@@ -521,11 +521,11 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecuritySGPolicy
       }
     );
     this.subscriptions.push(getSubscription);
-    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
+    const subscription = this.securityService.WatchNetworkSecurityPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
-        if (this.searchSubscription != null) { this.searchSubscription.unsubscribe(); }  // avoid racing condition for searchSubscription and WatchSGPolicy
+        if (this.searchSubscription != null) { this.searchSubscription.unsubscribe(); }  // avoid racing condition for searchSubscription and WatchNetworkSecurityPolicy
         this.sgPoliciesEventUtility.processEvents(response);
         if (this.sgPolicies.length > 1) {
           // because of the name selector, we should

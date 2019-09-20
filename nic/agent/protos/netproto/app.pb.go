@@ -136,12 +136,12 @@
 		Service
 		ServiceBackendSpec
 		ServiceBackendStatus
-		SGPolicy
-		SGPolicySpec
+		NetworkSecurityPolicy
+		NetworkSecurityPolicySpec
 		PolicyRule
-		SGPolicyStatus
-		SGPolicyList
-		SGPolicyEvent
+		NetworkSecurityPolicyStatus
+		NetworkSecurityPolicyList
+		NetworkSecurityPolicyEvent
 		SecurityProfile
 		SecurityProfileSpec
 		Timeouts

@@ -391,7 +391,7 @@ func (na *Nagent) findIPSecSADecrypt(policyMeta api.ObjectMeta, saName string) (
 
 }
 
-// TODO Unify hash generation between SGPolicy and IPSecPolicy
+// TODO Unify hash generation between NetworkSecurityPolicy and IPSecPolicy
 func generateIPSecRuleHash(r *netproto.IPSecRule, key string) uint64 {
 	h := fnv.New64()
 	rule, _ := r.Marshal()

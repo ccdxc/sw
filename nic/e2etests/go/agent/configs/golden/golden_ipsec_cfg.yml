@@ -27,7 +27,7 @@ objects:
   rest-endpoint: "/api/mirror/sessions/"
   count: 8
   spec-file: "generated/mirrors.json"
-- kind: SGPolicy
+- kind: NetworkSecurityPolicy
   name: scale-sg-policy
   count: 1
   rest-endpoint: "/api/security/policies/"

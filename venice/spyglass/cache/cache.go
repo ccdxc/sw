@@ -50,8 +50,8 @@ func (c *Cache) UpdateObject(object interface{}) error {
 
 	// validate kind
 	kind := object.(runtime.Object).GetObjectKind()
-	if kind != "SGPolicy" {
-		return fmt.Errorf("Invalid object kind, SGPolicy expected")
+	if kind != "NetworkSecurityPolicy" {
+		return fmt.Errorf("Invalid object kind, NetworkSecurityPolicy expected")
 	}
 
 	// add/update object
@@ -80,8 +80,8 @@ func (c *Cache) DeleteObject(object interface{}) error {
 
 	// validate kind
 	kind := object.(runtime.Object).GetObjectKind()
-	if kind != "SGPolicy" {
-		return fmt.Errorf("Invalid object kind, SGPolicy expected")
+	if kind != "NetworkSecurityPolicy" {
+		return fmt.Errorf("Invalid object kind, NetworkSecurityPolicy expected")
 	}
 
 	// delete object
@@ -239,7 +239,7 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 	// Handle special case, check if all the key fields are empty
 	// There needs to be atleast one or more valid keys for the query
 	if query.App == "" &&
-		query.SGPolicy == "" &&
+		query.NetworkSecurityPolicy == "" &&
 		query.FromIPAddress == "" &&
 		query.ToIPAddress == "" &&
 		query.FromSecurityGroup == "" &&
@@ -249,18 +249,18 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 
 	results := make(map[string]*search.PolicyMatchEntries)
 
-	// Search within a specific SGPolicy object if specified
-	if query.SGPolicy != "" {
-		objKey := c.getObjectKey(query.Namespace, query.SGPolicy)
+	// Search within a specific NetworkSecurityPolicy object if specified
+	if query.NetworkSecurityPolicy != "" {
+		objKey := c.getObjectKey(query.Namespace, query.NetworkSecurityPolicy)
 		obj, ok := c.cache[query.Tenant][objKey]
 		if !ok {
-			c.logger.Errorf("SearchPolicy: SGPolicy object key: %s not found", objKey)
-			return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, fmt.Errorf("SGPolicy object: %s not found", query.SGPolicy)
+			c.logger.Errorf("SearchPolicy: NetworkSecurityPolicy object key: %s not found", objKey)
+			return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, fmt.Errorf("NetworkSecurityPolicy object: %s not found", query.NetworkSecurityPolicy)
 		}
-		sgp, ok := obj.(*security.SGPolicy)
+		sgp, ok := obj.(*security.NetworkSecurityPolicy)
 		if !ok {
-			c.logger.Errorf("SGPolicy kind assertion failure, for tenant: %s object: %s",
-				query.Tenant, query.SGPolicy)
+			c.logger.Errorf("NetworkSecurityPolicy kind assertion failure, for tenant: %s object: %s",
+				query.Tenant, query.NetworkSecurityPolicy)
 			return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, nil
 		}
 		// search SGP, if there's a match return result
@@ -278,9 +278,9 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 
 	// Search all SGPolicies within a Tenant
 	for key, obj := range c.cache[query.Tenant] {
-		sgp, ok := obj.(*security.SGPolicy)
+		sgp, ok := obj.(*security.NetworkSecurityPolicy)
 		if !ok {
-			c.logger.Errorf("SGPolicy kind assertion failure, for tenant: %s object-key: %s",
+			c.logger.Errorf("NetworkSecurityPolicy kind assertion failure, for tenant: %s object-key: %s",
 				query.Tenant, key)
 			continue
 		}
@@ -301,8 +301,8 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 	return resp, nil
 }
 
-// Helper function to match on SGPolicy attributes
-func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPolicy) (match bool, objName string, entries *search.PolicyMatchEntries, err error) {
+// Helper function to match on NetworkSecurityPolicy attributes
+func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.NetworkSecurityPolicy) (match bool, objName string, entries *search.PolicyMatchEntries, err error) {
 
 	if query == nil || sgp == nil {
 		return false, "", nil, fmt.Errorf("Invalid arguments")

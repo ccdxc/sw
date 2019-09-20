@@ -39,7 +39,7 @@ func TestWriteObjStructMap(t *testing.T) {
 }
 
 func TestWriteObjStructSlice(t *testing.T) {
-	ctx := &cliContext{subcmd: "sgpolicy"}
+	ctx := &cliContext{subcmd: "networksecuritypolicy"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -57,9 +57,9 @@ func TestWriteObjStructSlice(t *testing.T) {
 		t.Fatalf("error '%s' writing object", err)
 	}
 
-	sObj := obj.(*security.SGPolicy)
+	sObj := obj.(*security.NetworkSecurityPolicy)
 	if !reflect.DeepEqual(sObj.Spec.AttachGroups, []string{"sg1", "sg-223"}) {
-		t.Fatalf("unable to find attach groups in sgpolicy: %+v", sObj)
+		t.Fatalf("unable to find attach groups in networksecuritypolicy: %+v", sObj)
 	}
 	expectedSGRules := []security.SGRule{
 		{Apps: []string{apps[0]}, FromSecurityGroups: []string{fromSgs[0]}},
@@ -81,7 +81,7 @@ func TestWalkStruct(t *testing.T) {
 
 	walkStruct(ctx.structInfo, 0)
 
-	ctx = &cliContext{subcmd: "sgpolicy"}
+	ctx = &cliContext{subcmd: "networksecuritypolicy"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}

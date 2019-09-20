@@ -41,7 +41,7 @@ import (
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/bindings/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NatPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
-                        {{else if strEq $crudObject "SGPolicy"}}
+                        {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
@@ -208,9 +208,9 @@ import (
                                                       }
                               err := netutils.HTTPPost("http://"+agentRestURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
                               getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}List )
-                          {{else if strEq $crudObject "SGPolicy"}}
-                                                       {{lower .}}Data := netproto.SGPolicy{
-                                                           TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+                          {{else if strEq $crudObject "NetworkSecurityPolicy"}}
+                                                       {{lower .}}Data := netproto.NetworkSecurityPolicy{
+                                                           TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
                                                            ObjectMeta: api.ObjectMeta{
                                                                Tenant: "default",
                                                                Namespace: "default",
@@ -1033,7 +1033,7 @@ import (
                                                                 }
                                  AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
-                           {{else if strEq $crudObject "SGPolicy"}}
+                           {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
                                                                       VrfName: "default",
@@ -1065,8 +1065,8 @@ import (
                                   }
                                }
                                // Rule hashes are expected to change during update, so mask rule-id hashes here
-                               for idx := range actualSGPolicySpec.Rules {
-                                 actualSGPolicySpec.Rules[idx].ID = 0
+                               for idx := range actualNetworkSecurityPolicySpec.Rules {
+                                 actualNetworkSecurityPolicySpec.Rules[idx].ID = 0
                                }
                                AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
@@ -1501,7 +1501,7 @@ import (
                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
 
-                         {{else if strEq $crudObject "SGPolicy"}}
+                         {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                               {{lower .}}Data := netproto.{{title $crudObject}}{
                                   TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                   ObjectMeta: api.ObjectMeta{
@@ -1675,7 +1675,7 @@ import (
              err := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &badPostData, &resp)
           {{else if strEq $crudObject "SecurityGroup"}}
              err := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &badPostData, &resp)
-          {{else if strEq $crudObject "SGPolicy"}}
+          {{else if strEq $crudObject "NetworkSecurityPolicy"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &badPostData, &resp)
           {{else if strEq $crudObject "Tunnel"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/tunnels/", &badPostData, &resp)
@@ -1729,7 +1729,7 @@ import (
           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "SecurityGroup"}}
           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
-       {{else if strEq $crudObject "SGPolicy"}}
+       {{else if strEq $crudObject "NetworkSecurityPolicy"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "Tunnel"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tunnels/default/default/badObject", &badDelData, &resp)
@@ -1796,7 +1796,7 @@ import (
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/interfaces/default/default/badObject", &badDelData, &resp)
     {{else if strEq $crudObject "SecurityGroup"}}
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/sgs/default/default/badObject", &badDelData, &resp)
-    {{else if strEq $crudObject "SGPolicy"}}
+    {{else if strEq $crudObject "NetworkSecurityPolicy"}}
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
     {{else if strEq $crudObject "Tunnel"}}
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/tunnels/default/default/badObject", &badDelData, &resp)

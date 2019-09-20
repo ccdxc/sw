@@ -41,7 +41,7 @@ import (
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/bindings/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NatPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
-                        {{else if strEq $crudObject "SGPolicy"}}
+                        {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
@@ -72,7 +72,7 @@ import (
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/interfaces/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "NatPolicy"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "SGPolicy"}}
+                        {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/policies/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "NatPool"}}
                            	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/pools/", &{{lower .}}Data, &resp)
@@ -133,7 +133,7 @@ import (
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             	{{else if strEq $crudObject "Tenant"}}
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                           		{{else if strEq $crudObject "SGPolicy"}}
+                           		{{else if strEq $crudObject "NetworkSecurityPolicy"}}
                                		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "SecurityProfile"}}
                                		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/profiles/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
@@ -179,7 +179,7 @@ import (
                              			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Namespace"}}
                              			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        			{{else if strEq $crudObject "SGPolicy"}}
+                        			{{else if strEq $crudObject "NetworkSecurityPolicy"}}
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "SecurityProfile"}}
 																	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/profiles/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)

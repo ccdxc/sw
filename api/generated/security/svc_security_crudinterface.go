@@ -27,14 +27,14 @@ type SecurityV1SecurityGroupInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
-// SecurityV1SGPolicyInterface exposes the CRUD methods for SGPolicy
-type SecurityV1SGPolicyInterface interface {
-	Create(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
-	Update(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
-	UpdateStatus(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*SGPolicy, error)
+// SecurityV1NetworkSecurityPolicyInterface exposes the CRUD methods for NetworkSecurityPolicy
+type SecurityV1NetworkSecurityPolicyInterface interface {
+	Create(ctx context.Context, in *NetworkSecurityPolicy) (*NetworkSecurityPolicy, error)
+	Update(ctx context.Context, in *NetworkSecurityPolicy) (*NetworkSecurityPolicy, error)
+	UpdateStatus(ctx context.Context, in *NetworkSecurityPolicy) (*NetworkSecurityPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*NetworkSecurityPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
 }
@@ -90,7 +90,7 @@ type SecurityV1TrafficEncryptionPolicyInterface interface {
 // SecurityV1Interface exposes objects with CRUD operations allowed by the service
 type SecurityV1Interface interface {
 	SecurityGroup() SecurityV1SecurityGroupInterface
-	SGPolicy() SecurityV1SGPolicyInterface
+	NetworkSecurityPolicy() SecurityV1NetworkSecurityPolicyInterface
 	App() SecurityV1AppInterface
 	FirewallProfile() SecurityV1FirewallProfileInterface
 	Certificate() SecurityV1CertificateInterface

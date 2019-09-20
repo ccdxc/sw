@@ -21,7 +21,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 	var topoClient iota.TopologyApiClient
 	var cfgClient iota.ConfigMgmtApiClient
 
-	var sgPolicy security.SGPolicy
+	var sgPolicy security.NetworkSecurityPolicy
 
 	iotaClient, err := createNewGRPCClient()
 	if err != nil {
@@ -77,7 +77,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 
 
 	queryMsg := &iota.ConfigQueryMsg{
-		Kind: "SGPolicy",
+		Kind: "NetworkSecurityPolicy",
 			Selectors: []*iota.MatchSelector{
 				{
 					Key: "O.Tenant",
@@ -156,7 +156,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 		if err != nil {
 			// Decide how to handle the error. Fail or Skip or ignore.
 		}
-		// Handle updates for the SGPolicy here
+		// Handle updates for the NetworkSecurityPolicy here
 		sgPolicy.Spec.Rules[0].Action = "PERMIT"
 
 		b, _  := json.Marshal(sgPolicy)

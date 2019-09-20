@@ -21,7 +21,7 @@ It has these top-level messages:
 	Namespace
 	Network
 	SecurityGroup
-	SGPolicy
+	NetworkSecurityPolicy
 	SecurityProfile
 	Tenant
 	Interface

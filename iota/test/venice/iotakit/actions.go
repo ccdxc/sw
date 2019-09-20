@@ -156,7 +156,7 @@ func (act *ActionCtx) GetVeniceServices() (string, error) {
 }
 
 // VerifyPolicyStatus verifies SG policy status
-func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
+func (act *ActionCtx) VerifyPolicyStatus(spc *NetworkSecurityPolicyCollection) error {
 	if spc.err != nil {
 		return spc.err
 	}
@@ -165,7 +165,7 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 	}
 
 	for _, pol := range spc.policies {
-		pstat, err := act.model.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)
+		pstat, err := act.model.tb.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
 		if err != nil {
 			log.Errorf("Error getting SG policy %+v. Err: %v", pol.venicePolicy.ObjectMeta, err)
 			return err

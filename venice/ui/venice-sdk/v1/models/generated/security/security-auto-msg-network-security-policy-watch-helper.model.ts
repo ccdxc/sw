@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { SecurityAutoMsgSGPolicyWatchHelperWatchEvent, ISecurityAutoMsgSGPolicyWatchHelperWatchEvent } from './security-auto-msg-sg-policy-watch-helper-watch-event.model';
+import { SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent, ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent } from './security-auto-msg-network-security-policy-watch-helper-watch-event.model';
 
-export interface ISecurityAutoMsgSGPolicyWatchHelper {
-    'events'?: Array<ISecurityAutoMsgSGPolicyWatchHelperWatchEvent>;
+export interface ISecurityAutoMsgNetworkSecurityPolicyWatchHelper {
+    'events'?: Array<ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>;
 }
 
 
-export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgSGPolicyWatchHelper {
-    'events': Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent> = null;
-    public static propInfo: { [prop in keyof ISecurityAutoMsgSGPolicyWatchHelper]: PropInfoItem } = {
+export class SecurityAutoMsgNetworkSecurityPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgNetworkSecurityPolicyWatchHelper {
+    'events': Array<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent> = null;
+    public static propInfo: { [prop in keyof ISecurityAutoMsgNetworkSecurityPolicyWatchHelper]: PropInfoItem } = {
         'events': {
             required: false,
             type: 'object'
@@ -24,19 +24,19 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityAutoMsgSGPolicyWatchHelper.propInfo[propName];
+        return SecurityAutoMsgNetworkSecurityPolicyWatchHelper.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return SecurityAutoMsgSGPolicyWatchHelper.propInfo;
+        return SecurityAutoMsgNetworkSecurityPolicyWatchHelper.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityAutoMsgSGPolicyWatchHelper.propInfo[prop] != null &&
-                        SecurityAutoMsgSGPolicyWatchHelper.propInfo[prop].default != null);
+        return (SecurityAutoMsgNetworkSecurityPolicyWatchHelper.propInfo[prop] != null &&
+                        SecurityAutoMsgNetworkSecurityPolicyWatchHelper.propInfo[prop].default != null);
     }
 
     /**
@@ -45,7 +45,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['events'] = new Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -56,7 +56,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent);
         } else {
             this['events'] = [];
         }
@@ -70,7 +70,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
                 'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillFormArray<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('events') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('events').get(field);
@@ -86,7 +86,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent);
         }
     }
 }

@@ -20,25 +20,25 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// FindSGPolicy finds an SGPolicy by object meta
-func (ms *MbusServer) FindSGPolicy(objmeta *api.ObjectMeta) (*netproto.SGPolicy, error) {
+// FindNetworkSecurityPolicy finds an NetworkSecurityPolicy by object meta
+func (ms *MbusServer) FindNetworkSecurityPolicy(objmeta *api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
 	// find the object
-	obj, err := ms.memDB.FindObject("SGPolicy", objmeta)
+	obj, err := ms.memDB.FindObject("NetworkSecurityPolicy", objmeta)
 	if err != nil {
 		return nil, err
 	}
 
-	return SGPolicyFromObj(obj)
+	return NetworkSecurityPolicyFromObj(obj)
 }
 
-// ListSGPolicys lists all SGPolicys in the mbus
-func (ms *MbusServer) ListSGPolicys(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.SGPolicy, error) {
-	var objlist []*netproto.SGPolicy
+// ListNetworkSecurityPolicys lists all NetworkSecurityPolicys in the mbus
+func (ms *MbusServer) ListNetworkSecurityPolicys(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.NetworkSecurityPolicy, error) {
+	var objlist []*netproto.NetworkSecurityPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SGPolicy", filterFn)
+	objs := ms.memDB.ListObjects("NetworkSecurityPolicy", filterFn)
 	for _, oo := range objs {
-		obj, err := SGPolicyFromObj(oo)
+		obj, err := NetworkSecurityPolicyFromObj(oo)
 		if err == nil {
 			objlist = append(objlist, obj)
 		}
@@ -47,27 +47,27 @@ func (ms *MbusServer) ListSGPolicys(ctx context.Context, filterFn func(memdb.Obj
 	return objlist, nil
 }
 
-// SGPolicyStatusReactor is the reactor interface implemented by controllers
-type SGPolicyStatusReactor interface {
-	OnSGPolicyCreateReq(nodeID string, objinfo *netproto.SGPolicy) error
-	OnSGPolicyUpdateReq(nodeID string, objinfo *netproto.SGPolicy) error
-	OnSGPolicyDeleteReq(nodeID string, objinfo *netproto.SGPolicy) error
-	OnSGPolicyOperUpdate(nodeID string, objinfo *netproto.SGPolicy) error
-	OnSGPolicyOperDelete(nodeID string, objinfo *netproto.SGPolicy) error
+// NetworkSecurityPolicyStatusReactor is the reactor interface implemented by controllers
+type NetworkSecurityPolicyStatusReactor interface {
+	OnNetworkSecurityPolicyCreateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyUpdateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyDeleteReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyOperUpdate(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
+	OnNetworkSecurityPolicyOperDelete(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
-// SGPolicyTopic is the SGPolicy topic on message bus
-type SGPolicyTopic struct {
+// NetworkSecurityPolicyTopic is the NetworkSecurityPolicy topic on message bus
+type NetworkSecurityPolicyTopic struct {
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
-	statusReactor SGPolicyStatusReactor // status event reactor
+	statusReactor NetworkSecurityPolicyStatusReactor // status event reactor
 }
 
-// AddSGPolicyTopic returns a network RPC server
-func AddSGPolicyTopic(server *MbusServer, reactor SGPolicyStatusReactor) (*SGPolicyTopic, error) {
+// AddNetworkSecurityPolicyTopic returns a network RPC server
+func AddNetworkSecurityPolicyTopic(server *MbusServer, reactor NetworkSecurityPolicyStatusReactor) (*NetworkSecurityPolicyTopic, error) {
 	// RPC handler instance
-	handler := SGPolicyTopic{
+	handler := NetworkSecurityPolicyTopic{
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
@@ -75,115 +75,115 @@ func AddSGPolicyTopic(server *MbusServer, reactor SGPolicyStatusReactor) (*SGPol
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterSGPolicyApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterNetworkSecurityPolicyApiServer(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
 }
 
-// CreateSGPolicy creates SGPolicy
-func (eh *SGPolicyTopic) CreateSGPolicy(ctx context.Context, objinfo *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+// CreateNetworkSecurityPolicy creates NetworkSecurityPolicy
+func (eh *NetworkSecurityPolicyTopic) CreateNetworkSecurityPolicy(ctx context.Context, objinfo *netproto.NetworkSecurityPolicy) (*netproto.NetworkSecurityPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateSGPolicy from node %v: {%+v}", nodeID, objinfo)
+	log.Infof("Received CreateNetworkSecurityPolicy from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyCreateReq(nodeID, objinfo)
+		eh.statusReactor.OnNetworkSecurityPolicyCreateReq(nodeID, objinfo)
 	}
 
 	// increment stats
-	eh.server.Stats("SGPolicy", "AgentCreate").Inc()
+	eh.server.Stats("NetworkSecurityPolicy", "AgentCreate").Inc()
 
 	return objinfo, nil
 }
 
-// UpdateSGPolicy updates SGPolicy
-func (eh *SGPolicyTopic) UpdateSGPolicy(ctx context.Context, objinfo *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+// UpdateNetworkSecurityPolicy updates NetworkSecurityPolicy
+func (eh *NetworkSecurityPolicyTopic) UpdateNetworkSecurityPolicy(ctx context.Context, objinfo *netproto.NetworkSecurityPolicy) (*netproto.NetworkSecurityPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received UpdateSGPolicy from node %v: {%+v}", nodeID, objinfo)
+	log.Infof("Received UpdateNetworkSecurityPolicy from node %v: {%+v}", nodeID, objinfo)
 
 	// incr stats
-	eh.server.Stats("SGPolicy", "AgentUpdate").Inc()
+	eh.server.Stats("NetworkSecurityPolicy", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyUpdateReq(nodeID, objinfo)
+		eh.statusReactor.OnNetworkSecurityPolicyUpdateReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
 }
 
-// DeleteSGPolicy deletes an SGPolicy
-func (eh *SGPolicyTopic) DeleteSGPolicy(ctx context.Context, objinfo *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+// DeleteNetworkSecurityPolicy deletes an NetworkSecurityPolicy
+func (eh *NetworkSecurityPolicyTopic) DeleteNetworkSecurityPolicy(ctx context.Context, objinfo *netproto.NetworkSecurityPolicy) (*netproto.NetworkSecurityPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received DeleteSGPolicy from node %v: {%+v}", nodeID, objinfo)
+	log.Infof("Received DeleteNetworkSecurityPolicy from node %v: {%+v}", nodeID, objinfo)
 
 	// incr stats
-	eh.server.Stats("SGPolicy", "AgentDelete").Inc()
+	eh.server.Stats("NetworkSecurityPolicy", "AgentDelete").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
-		eh.statusReactor.OnSGPolicyDeleteReq(nodeID, objinfo)
+		eh.statusReactor.OnNetworkSecurityPolicyDeleteReq(nodeID, objinfo)
 	}
 
 	return objinfo, nil
 }
 
-// SGPolicyFromObj converts memdb object to SGPolicy
-func SGPolicyFromObj(obj memdb.Object) (*netproto.SGPolicy, error) {
+// NetworkSecurityPolicyFromObj converts memdb object to NetworkSecurityPolicy
+func NetworkSecurityPolicyFromObj(obj memdb.Object) (*netproto.NetworkSecurityPolicy, error) {
 	switch obj.(type) {
-	case *netproto.SGPolicy:
-		eobj := obj.(*netproto.SGPolicy)
+	case *netproto.NetworkSecurityPolicy:
+		eobj := obj.(*netproto.NetworkSecurityPolicy)
 		return eobj, nil
 	default:
 		return nil, ErrIncorrectObjectType
 	}
 }
 
-// GetSGPolicy returns a specific SGPolicy
-func (eh *SGPolicyTopic) GetSGPolicy(ctx context.Context, objmeta *api.ObjectMeta) (*netproto.SGPolicy, error) {
+// GetNetworkSecurityPolicy returns a specific NetworkSecurityPolicy
+func (eh *NetworkSecurityPolicyTopic) GetNetworkSecurityPolicy(ctx context.Context, objmeta *api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
 	// find the object
-	obj, err := eh.server.memDB.FindObject("SGPolicy", objmeta)
+	obj, err := eh.server.memDB.FindObject("NetworkSecurityPolicy", objmeta)
 	if err != nil {
 		return nil, err
 	}
 
-	return SGPolicyFromObj(obj)
+	return NetworkSecurityPolicyFromObj(obj)
 }
 
-// ListSGPolicys lists all SGPolicys matching object selector
-func (eh *SGPolicyTopic) ListSGPolicys(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SGPolicyList, error) {
-	var objlist netproto.SGPolicyList
+// ListNetworkSecurityPolicys lists all NetworkSecurityPolicys matching object selector
+func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Context, objsel *api.ObjectMeta) (*netproto.NetworkSecurityPolicyList, error) {
+	var objlist netproto.NetworkSecurityPolicyList
 
 	filterFn := func(memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("SGPolicy", objsel)
+		filterFn = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", objsel)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SGPolicy", filterFn)
+	objs := eh.server.memDB.ListObjects("NetworkSecurityPolicy", filterFn)
 	for _, oo := range objs {
-		obj, err := SGPolicyFromObj(oo)
+		obj, err := NetworkSecurityPolicyFromObj(oo)
 		if err == nil {
-			objlist.SGPolicys = append(objlist.SGPolicys, obj)
+			objlist.NetworkSecurityPolicys = append(objlist.NetworkSecurityPolicys, obj)
 		}
 	}
 
 	return &objlist, nil
 }
 
-// WatchSGPolicys watches SGPolicys and sends streaming resp
-func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.SGPolicyApi_WatchSGPolicysServer) error {
+// WatchNetworkSecurityPolicys watches NetworkSecurityPolicys and sends streaming resp
+func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(ometa *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApi_WatchNetworkSecurityPolicysServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("SGPolicy", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", ometa)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -193,31 +193,31 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("SGPolicy", &watcher)
-	defer eh.server.memDB.StopWatchObjects("SGPolicy", &watcher)
+	eh.server.memDB.WatchObjects("NetworkSecurityPolicy", &watcher)
+	defer eh.server.memDB.StopWatchObjects("NetworkSecurityPolicy", &watcher)
 
-	// get a list of all SGPolicys
-	objlist, err := eh.ListSGPolicys(context.Background(), ometa)
+	// get a list of all NetworkSecurityPolicys
+	objlist, err := eh.ListNetworkSecurityPolicys(context.Background(), ometa)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
 
 	// increment stats
-	eh.server.Stats("SGPolicy", "ActiveWatch").Inc()
-	eh.server.Stats("SGPolicy", "WatchConnect").Inc()
-	defer eh.server.Stats("SGPolicy", "ActiveWatch").Dec()
-	defer eh.server.Stats("SGPolicy", "WatchDisconnect").Inc()
+	eh.server.Stats("NetworkSecurityPolicy", "ActiveWatch").Inc()
+	eh.server.Stats("NetworkSecurityPolicy", "WatchConnect").Inc()
+	defer eh.server.Stats("NetworkSecurityPolicy", "ActiveWatch").Dec()
+	defer eh.server.Stats("NetworkSecurityPolicy", "WatchDisconnect").Inc()
 
-	// walk all SGPolicys and send it out
-	for _, obj := range objlist.SGPolicys {
-		watchEvt := netproto.SGPolicyEvent{
-			EventType: api.EventType_CreateEvent,
-			SGPolicy:  *obj,
+	// walk all NetworkSecurityPolicys and send it out
+	for _, obj := range objlist.NetworkSecurityPolicys {
+		watchEvt := netproto.NetworkSecurityPolicyEvent{
+			EventType:             api.EventType_CreateEvent,
+			NetworkSecurityPolicy: *obj,
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+			log.Errorf("Error sending NetworkSecurityPolicy to stream. Err: %v", err)
 			return err
 		}
 	}
@@ -244,20 +244,20 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 			}
 
 			// get the object
-			obj, err := SGPolicyFromObj(evt.Obj)
+			obj, err := NetworkSecurityPolicyFromObj(evt.Obj)
 			if err != nil {
 				return err
 			}
 
 			// convert to netproto format
-			watchEvt := netproto.SGPolicyEvent{
-				EventType: etype,
-				SGPolicy:  *obj,
+			watchEvt := netproto.NetworkSecurityPolicyEvent{
+				EventType:             etype,
+				NetworkSecurityPolicy: *obj,
 			}
 			// streaming send
 			err = stream.Send(&watchEvt)
 			if err != nil {
-				log.Errorf("Error sending SGPolicy to stream. Err: %v", err)
+				log.Errorf("Error sending NetworkSecurityPolicy to stream. Err: %v", err)
 				return err
 			}
 		case <-ctx.Done():
@@ -268,49 +268,49 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 	// done
 }
 
-// updateSGPolicyOper triggers oper update callbacks
-func (eh *SGPolicyTopic) updateSGPolicyOper(oper *netproto.SGPolicyEvent, nodeID string) error {
+// updateNetworkSecurityPolicyOper triggers oper update callbacks
+func (eh *NetworkSecurityPolicyTopic) updateNetworkSecurityPolicyOper(oper *netproto.NetworkSecurityPolicyEvent, nodeID string) error {
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
 	case api.EventType_UpdateEvent:
 		// incr stats
-		eh.server.Stats("SGPolicy", "AgentUpdate").Inc()
+		eh.server.Stats("NetworkSecurityPolicy", "AgentUpdate").Inc()
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
-			return eh.statusReactor.OnSGPolicyOperUpdate(nodeID, &oper.SGPolicy)
+			return eh.statusReactor.OnNetworkSecurityPolicyOperUpdate(nodeID, &oper.NetworkSecurityPolicy)
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
-		eh.server.Stats("SGPolicy", "AgentDelete").Inc()
+		eh.server.Stats("NetworkSecurityPolicy", "AgentDelete").Inc()
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
-			eh.statusReactor.OnSGPolicyOperDelete(nodeID, &oper.SGPolicy)
+			eh.statusReactor.OnNetworkSecurityPolicyOperDelete(nodeID, &oper.NetworkSecurityPolicy)
 		}
 	}
 
 	return nil
 }
 
-func (eh *SGPolicyTopic) SGPolicyOperUpdate(stream netproto.SGPolicyApi_SGPolicyOperUpdateServer) error {
+func (eh *NetworkSecurityPolicyTopic) NetworkSecurityPolicyOperUpdate(stream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("SGPolicyOperUpdate stream ended. closing..")
+			log.Errorf("NetworkSecurityPolicyOperUpdate stream ended. closing..")
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from SGPolicyOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from NetworkSecurityPolicyOperUpdate stream. Err: %v", err)
 			return err
 		}
 
-		err = eh.updateSGPolicyOper(oper, nodeID)
+		err = eh.updateNetworkSecurityPolicyOper(oper, nodeID)
 		if err != nil {
-			log.Errorf("Error updating SGPolicy oper state. Err: %v", err)
+			log.Errorf("Error updating NetworkSecurityPolicy oper state. Err: %v", err)
 		}
 	}
 }

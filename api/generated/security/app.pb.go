@@ -34,23 +34,23 @@
 		SecurityGroup
 		SecurityGroupSpec
 		SecurityGroupStatus
+		NetworkSecurityPolicy
+		NetworkSecurityPolicySpec
+		NetworkSecurityPolicyStatus
 		PropagationStatus
 		ProtoPort
-		SGPolicy
-		SGPolicySpec
-		SGPolicyStatus
 		SGRule
 		SGRuleStatus
 		AppList
 		AutoMsgAppWatchHelper
 		AutoMsgCertificateWatchHelper
 		AutoMsgFirewallProfileWatchHelper
-		AutoMsgSGPolicyWatchHelper
+		AutoMsgNetworkSecurityPolicyWatchHelper
 		AutoMsgSecurityGroupWatchHelper
 		AutoMsgTrafficEncryptionPolicyWatchHelper
 		CertificateList
 		FirewallProfileList
-		SGPolicyList
+		NetworkSecurityPolicyList
 		SecurityGroupList
 		TrafficEncryptionPolicyList
 		Certificate

@@ -796,7 +796,7 @@ export class MockDataUtil {
   }
 
 
-  public static buildmockSGPolicyObject() {
+  public static buildmockNetworkSecurityPolicyObject() {
     const objName = (name) ? name : 'sgpolicy-' + Utility.s4();
     const cmDate = this.buidCreateAndModDates();
     const cDate = cmDate.cdate;
@@ -884,7 +884,7 @@ export class MockDataUtil {
     const len = 1;
     const sgpolices = [];
     for (let i = 0; i < len; i++) {
-      sgpolices.push(this.buildmockSGPolicyObject());
+      sgpolices.push(this.buildmockNetworkSecurityPolicyObject());
     }
 
     return {

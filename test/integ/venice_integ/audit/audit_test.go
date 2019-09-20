@@ -707,7 +707,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 		panic(fmt.Sprintf("error starting elastic auditor: %v", err))
 	}
 	defer auditor.Shutdown()
-	sgPolicy := getSGPolicyData(nRules)
+	sgPolicy := getNetworkSecurityPolicyData(nRules)
 	event := &auditapi.Event{
 		TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 		ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
@@ -761,15 +761,15 @@ func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.Ev
 	return err
 }
 
-func getSGPolicyData(nRules int) *security.SGPolicy {
-	sgPolicy := &security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+func getNetworkSecurityPolicyData(nRules int) *security.NetworkSecurityPolicy {
+	sgPolicy := &security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "policy1",
 		},
-		Spec: security.SGPolicySpec{
+		Spec: security.NetworkSecurityPolicySpec{
 			AttachTenant: true,
 		},
 	}

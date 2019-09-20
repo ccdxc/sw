@@ -39,7 +39,7 @@ var _ = Describe("firewall scale tests", func() {
 				Skip("Skipping scale connection runs")
 			}
 
-			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "tcp")
+			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "8000")).ShouldNot(HaveOccurred())
 
 		})
@@ -50,7 +50,7 @@ var _ = Describe("firewall scale tests", func() {
 				Skip("Skipping scale connection runs")
 			}
 
-			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultSGPolicy(), "tcp")
+			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "8000")).Should(HaveOccurred())
 
 		})

@@ -28,7 +28,7 @@ type CfgPush struct {
 	Networks           []*netproto.Network
 	Endpoints          []*netproto.Endpoint
 	Apps               []*netproto.App
-	SGPolicies         []*netproto.SGPolicy
+	SGPolicies         []*netproto.NetworkSecurityPolicy
 	SecurityProfiles   []*netproto.SecurityProfile
 	FlowExportPolicies []*monitoring.FlowExportPolicy
 	Tunnels            []*netproto.Tunnel
@@ -89,7 +89,7 @@ func (p *CfgPush) PushConfigs() error {
 
 		// push SG Policy
 		for _, sgp := range p.SGPolicies {
-			if err := restClient.SGPolicyCreate(*sgp); err != nil {
+			if err := restClient.NetworkSecurityPolicyCreate(*sgp); err != nil {
 				log.Errorf("Failed to push sg policy %v. Err: %v", sgp.Name, err)
 				return fmt.Errorf("failed to push sg policy %v. Err: %v", sgp.Name, err)
 			}
@@ -158,16 +158,16 @@ func (p *CfgPush) ReadJSON() error {
 		return errors.New("failed to cast JSON data onto []*netproto.App")
 	}
 
-	// Read SGPolicy
-	objs, err = readJSON("SGPolicy", path.Join(p.GenDir, "sgpolicies.json"))
+	// Read NetworkSecurityPolicy
+	objs, err = readJSON("NetworkSecurityPolicy", path.Join(p.GenDir, "sgpolicies.json"))
 	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
-	p.SGPolicies, ok = objs.([]*netproto.SGPolicy)
+	p.SGPolicies, ok = objs.([]*netproto.NetworkSecurityPolicy)
 	if err != libs.ErrHeimdallSkip && !ok {
-		log.Errorf("Failed to cast JSON data onto []*netproto.SGPolicy")
-		return errors.New("failed to cast JSON data onto []*netproto.SGPolicy")
+		log.Errorf("Failed to cast JSON data onto []*netproto.NetworkSecurityPolicy")
+		return errors.New("failed to cast JSON data onto []*netproto.NetworkSecurityPolicy")
 	}
 
 	// Read SecurityProfile
@@ -259,8 +259,8 @@ func readJSON(kind, filePath string) (interface{}, error) {
 		var apps []*netproto.App
 		err := json.Unmarshal(*objBytes, &apps)
 		return apps, err
-	case "SGPolicy":
-		var sgp []*netproto.SGPolicy
+	case "NetworkSecurityPolicy":
+		var sgp []*netproto.NetworkSecurityPolicy
 		err := json.Unmarshal(*objBytes, &sgp)
 		return sgp, err
 	case "SecurityProfile":

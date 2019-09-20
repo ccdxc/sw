@@ -457,57 +457,57 @@ func TestTopLevelBashCompletion(t *testing.T) {
 	veniceLogin()
 
 	out := veniceCLI("edit --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("create --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("update --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("patch --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("delete --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("read --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("label --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("example --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("definition --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("tree --gbc")
-	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy", "workload", "securitygroup"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 
 	out = veniceCLI("create -f --gbc")
-	if !matchLineFields(out, []string{"sgpolicy"}) {
+	if !matchLineFields(out, []string{"networksecuritypolicy"}) {
 		t.Fatalf("unable to validate command completion: %s", out)
 	}
 }

@@ -39,13 +39,13 @@ const (
 // `ToIPAddress` should have individual IP Address, IP Mask or hyphen separated IP Range
 // Specifying `AttachTenant` should mandatorily have `FromIPAddress` and `ToIPAddresses`
 // For `FromIPAddresses` and `ToIPAddresses` cannot be empty. If the intent is to allow all. Enforce a mandatory `any` keyword.
-// func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
+// func (s *securityHooks) validateNetworkSecurityPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *securityHooks) validateNetworkSecurityPolicy(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 	if ignoreSpec {
 		// only spec is validated in the hook
 		return nil
 	}
-	sgp, ok := i.(security.SGPolicy)
+	sgp, ok := i.(security.NetworkSecurityPolicy)
 	ret := []error{}
 	if !ok {
 		return []error{fmt.Errorf("invalid input type")}
@@ -105,21 +105,21 @@ func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus
 	return ret
 }
 
-// enforceMaxSGPolicyPreCommitHook ensures that SG Policies will not exceed globals.MaxAllowedSGPolicies
-func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
-	policy, ok := i.(security.SGPolicy)
+// enforceMaxNetworkSecurityPolicyPreCommitHook ensures that SG Policies will not exceed globals.MaxAllowedSGPolicies
+func (s *securityHooks) enforceMaxNetworkSecurityPolicyPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	policy, ok := i.(security.NetworkSecurityPolicy)
 	if !ok {
-		return i, false, fmt.Errorf("invalid object type %T. Expecting SGPolicy", i)
+		return i, false, fmt.Errorf("invalid object type %T. Expecting NetworkSecurityPolicy", i)
 	}
 
 	if ctx == nil || kvs == nil {
-		return i, false, fmt.Errorf("enforceMaxSGPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+		return i, false, fmt.Errorf("enforceMaxNetworkSecurityPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
 	}
 
 	switch oper {
 	case apiintf.CreateOper:
-		var sgPolicies security.SGPolicyList
-		pol := security.SGPolicy{}
+		var sgPolicies security.NetworkSecurityPolicyList
+		pol := security.NetworkSecurityPolicy{}
 		pol.Tenant = policy.Tenant
 		sgpKey := strings.TrimSuffix(pol.MakeKey(string(apiclient.GroupSecurity)), "/")
 
@@ -134,10 +134,9 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 			}
 		}
 
-		// check if we are exceeding max limit
-		if len(sgPolicies.Items) >= globals.MaxAllowedSGPolicies {
-			log.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
-			return nil, true, fmt.Errorf("failed to create SGPolicy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
+		if len(sgPolicies.Items) == globals.MaxAllowedSGPolicies {
+			log.Errorf("failed to create Network Security Policy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
+			return nil, true, fmt.Errorf("failed to create Network Security Policy: %s, exceeds max allowed polices %d", policy.Name, globals.MaxAllowedSGPolicies)
 		}
 		return i, true, nil
 	default:
@@ -148,13 +147,13 @@ func (s *securityHooks) enforceMaxSGPolicyPreCommitHook(ctx context.Context, kvs
 
 // enforceMaxSGRulePreCommitHook ensures that SG Policies will not exceed globals.MaxAllowedSGRules
 func (s *securityHooks) enforceMaxSGRulePreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
-	policy, ok := i.(security.SGPolicy)
+	policy, ok := i.(security.NetworkSecurityPolicy)
 	if !ok {
-		return i, false, fmt.Errorf("invalid object type %T. Expecting SGPolicy", i)
+		return i, false, fmt.Errorf("invalid object type %T. Expecting NetworkSecurityPolicy", i)
 	}
 
 	if ctx == nil || kvs == nil {
-		return i, false, fmt.Errorf("enforceMaxSGPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+		return i, false, fmt.Errorf("enforceMaxNetworkSecurityPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
 	}
 
 	switch oper {
@@ -165,8 +164,8 @@ func (s *securityHooks) enforceMaxSGRulePreCommitHook(ctx context.Context, kvs k
 		numRules := len(policy.Spec.Rules)
 		log.Infof("Found %d rules", numRules)
 		if numRules > globals.MaxAllowedSGRules {
-			log.Errorf("Failed to create SGPolicy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
-			return nil, false, fmt.Errorf("failed to create SGPolicy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
+			log.Errorf("Failed to create Network Security Policy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
+			return nil, false, fmt.Errorf("failed to create Network Security Policy: %s with %d rules, exceeds max allowed rules of %d", policy.Name, numRules, globals.MaxAllowedSGRules)
 		}
 		return i, true, nil
 	default:
@@ -480,22 +479,22 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 	return ret
 }
 
-func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
+func registerNetworkSecurityPolicyHooks(svc apiserver.Service, logger log.Logger) {
 	r := securityHooks{
 		svc:    svc,
 		logger: logger.WithContext("Service", "SecurityV1"),
 	}
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("SGPolicy", apiintf.CreateOper).GetRequestType().WithValidate(r.validateSGPolicy)
-	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGPolicyPreCommitHook)
-	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
-	svc.GetCrudService("SGPolicy", apiintf.UpdateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
+	svc.GetCrudService("NetworkSecurityPolicy", apiintf.CreateOper).GetRequestType().WithValidate(r.validateNetworkSecurityPolicy)
+	svc.GetCrudService("NetworkSecurityPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxNetworkSecurityPolicyPreCommitHook)
+	svc.GetCrudService("NetworkSecurityPolicy", apiintf.CreateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
+	svc.GetCrudService("NetworkSecurityPolicy", apiintf.UpdateOper).WithPreCommitHook(r.enforceMaxSGRulePreCommitHook)
 	svc.GetCrudService("App", apiintf.CreateOper).GetRequestType().WithValidate(r.validateApp)
 }
 
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
-	apisrv.RegisterHooksCb("security.SecurityV1", registerSGPolicyHooks)
+	apisrv.RegisterHooksCb("security.SecurityV1", registerNetworkSecurityPolicyHooks)
 }
 
 func (s *securityHooks) isProtocolTCPorUDP(protocol string) bool {

@@ -16,12 +16,12 @@ import (
 
 func (c *CfgGen) GenerateFirewallPolicies() error {
 	var cfg pkg.IOTAConfig
-	var sgPolicies []*netproto.SGPolicy
+	var sgPolicies []*netproto.NetworkSecurityPolicy
 
 	var sgPolicyManifest, sgRuleManifest *pkg.Object
 	for _, o := range c.Config.Objects {
 		o := o
-		if o.Kind == "SGPolicy" {
+		if o.Kind == "NetworkSecurityPolicy" {
 			sgPolicyManifest = &o
 		}
 		if o.Kind == "SGRule" {
@@ -59,16 +59,16 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 
 		policyRules := c.generatePolicyRules(namespace.Name, rulesPerPolicy)[:rulesPerPolicy]
 
-		sgPolicy := netproto.SGPolicy{
+		sgPolicy := netproto.NetworkSecurityPolicy{
 			TypeMeta: api.TypeMeta{
-				Kind: "SGPolicy",
+				Kind: "NetworkSecurityPolicy",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: namespace.Name,
 				Name:      sgPolicyName,
 			},
-			Spec: netproto.SGPolicySpec{
+			Spec: netproto.NetworkSecurityPolicySpec{
 				AttachTenant: true,
 				Rules:        policyRules,
 			},

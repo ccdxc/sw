@@ -38,7 +38,7 @@ import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.sp
 import { BehaviorSubject } from 'rxjs';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { SecurityService } from '@app/services/generated/security.service';
-import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 
 
 describe('fwlogsComponent', () => {
@@ -49,7 +49,7 @@ describe('fwlogsComponent', () => {
 
   const fwlog: ITelemetry_queryFwlogsQueryResponse = { 'tenant': 'default', 'results': [{ 'statement_id': 0, 'logs': [{ 'source': '130.121.45.86', 'destination': '187.173.108.78', 'source-port': 3981, 'destination-port': 137, 'protocol': 'ICMP', 'action': Telemetry_queryFwlog_action.deny, 'direction': Telemetry_queryFwlog_direction['from-uplink'], 'rule-id': '3779', 'session-id': '807', 'session-state': 'create', 'reporter-id': '00ae.cd00.1142', 'time': '2019-05-14T18:23:31.03798656Z' as any }] }] };
 
-  const policy1 = new SecuritySGPolicy({
+  const policy1 = new SecurityNetworkSecurityPolicy({
     meta: {
       name: 'policy1',
       'mod-time': '2018-08-23T17:35:08.534909931Z',
@@ -185,7 +185,7 @@ describe('fwlogsComponent', () => {
         }
       ]
     });
-    spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+    spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
       sgPolicyObserver
     );
     const telemetryService = TestBed.get(TelemetryqueryService);
@@ -234,7 +234,7 @@ describe('fwlogsComponent', () => {
         }
       ]
     });
-    spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+    spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
       sgPolicyObserver
     );
     fixture.detectChanges();
@@ -323,7 +323,7 @@ describe('fwlogsComponent', () => {
         ]
       });
 
-      spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+      spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
         sgPolicyObserver
       );
       const telemetryService = TestBed.get(TelemetryqueryService);
