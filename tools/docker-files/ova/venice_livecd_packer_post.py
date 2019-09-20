@@ -73,6 +73,3 @@ os.remove("output-venice-livecd/venice-livecd/venice-livecd.mf")
 # Re-package the ova
 cmd = "ovftool output-venice-livecd/venice-livecd/venice-livecd.ovf output-venice-livecd/venice-livecd/venice-livecd.ova"
 subprocess.check_output(cmd, shell=True)
-cmd = "install -m 444 output-venice-livecd/venice-livecd/venice-livecd.ova /var/www/html/venice-livecd.ova"
-subprocess.check_output(cmd, shell=True)
-

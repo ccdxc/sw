@@ -4,7 +4,7 @@
       {
           "type": "shell-local",
           "script": "venice_livecd_packer_post.py",
-          "execute_command": ["/bin/sh", "-c", "echo /usr/bin/python {{.Script}}"]
+          "execute_command": ["/bin/sh", "-c", "/usr/bin/python {{.Script}}"]
       }
     ]
   ],
