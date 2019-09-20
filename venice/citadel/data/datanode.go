@@ -258,7 +258,18 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 								// get node for url
 								node, nerr := cluster.GetNode(sr.NodeUUID)
 								if nerr != nil {
-									return nerr
+									// recover if it is our own node missing in the node map
+									if sr.NodeUUID == dn.nodeUUID {
+										log.Warnf("failed to find node %v in node list", sr.NodeUUID)
+										// recover
+										node = &meta.NodeState{
+											NodeUUID: dn.nodeUUID,
+											NodeURL:  dn.nodeURL,
+										}
+									} else {
+										log.Errorf("failed to find node %v in node list", sr.NodeUUID)
+										return nerr
+									}
 								}
 
 								// build replica info
