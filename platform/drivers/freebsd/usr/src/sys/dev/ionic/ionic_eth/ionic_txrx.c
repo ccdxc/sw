@@ -574,9 +574,7 @@ ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 	bus_dmamap_destroy(rxq->buf_tag, rxbuf->dma_map);
 	rxbuf->dma_map = NULL;
 
-	if (rxbuf->m)
-		m_freem(rxbuf->m);
-
+	m_freem(rxbuf->m);
 	rxbuf->m = NULL;
 }
 
@@ -667,8 +665,8 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	}
 
 	rxq->stats.task++;
-	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d\n",
-		rxq->comp_index, rxq->head_index, rxq->tail_index);
+	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail: %d\n",
+		       rxq->comp_index, rxq->head_index, rxq->tail_index);
 
 	/*
 	 * Process all Rx frames.
@@ -827,8 +825,8 @@ ionic_legacy_isr(int irq, void *data)
 
 		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", rxq->name));
-		IONIC_QUE_INFO(rxq, "Interrupt source index:%d\n",
-			rxq->intr.index);
+		IONIC_QUE_INFO(rxq, "Interrupt source index: %d\n",
+			       rxq->intr.index);
 
 		if ((status & (1 << rxq->intr.index)) == 0)
 			continue;
@@ -996,8 +994,8 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	if (!ionic_tx_avail(txq, nsegs)) {
 		stats->no_descs++;
 		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
-		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
-			txq->head_index, txq->tail_index, nsegs);
+		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs: %d\n",
+			       txq->head_index, txq->tail_index, nsegs);
 		return (ENOSPC);
 	}
 
@@ -1066,8 +1064,8 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 		m, nsegs, m->m_pkthdr.len);
 
 	for (i = 0; i < nsegs; i++) {
-		IONIC_TX_TRACE(txq, "mbuf seg[%d] pa: 0x%lx len:%ld\n",
-			i, seg[i].ds_addr, seg[i].ds_len);
+		IONIC_TX_TRACE(txq, "mbuf seg[%d] pa: 0x%lx len: %ld\n",
+			       i, seg[i].ds_addr, seg[i].ds_len);
 	}
 
 	IONIC_TX_TRACE(txq, "start: %d stop: %d\n", txq->head_index, stop_index);
@@ -1181,11 +1179,11 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	bool start, end, has_vlan;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
-		txq->head_index, txq->tail_index);
+		       txq->head_index, txq->tail_index);
 
 	if ((error = ionic_get_header_size(txq, *m_headp, &eth_type, &proto, &hdr_len))) {
-		IONIC_QUE_ERROR(txq, "mbuf packet discarded, type: %x proto: %x"
-			" hdr_len :%u\n", eth_type, proto, hdr_len);
+		IONIC_QUE_ERROR(txq, "mbuf pkt discarded, type: %x proto: %x hdr_len: %u\n",
+				eth_type, proto, hdr_len);
 		ionic_dump_mbuf(*m_headp);
 		stats->bad_ethtype++;
 		m_freem(*m_headp);
@@ -3218,29 +3216,30 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		break;
 
 	case SIOCSIFCAP:
-	{
 		mask = ifr->ifr_reqcap ^ if_getcapenable(ifp);
 
 		IONIC_LIF_LOCK(lif);
 
 		hw_features = lif->hw_features;
 
-		if ((mask & IFCAP_LRO) && (if_getcapabilities(ifp) & IFCAP_LRO)) {
+		if ((mask & IFCAP_LRO) &&
+		    (if_getcapabilities(ifp) & IFCAP_LRO)) {
 			if_togglecapenable(ifp, IFCAP_LRO);
 		}
 
 		// tx checksum offloads
-		if ((mask & IFCAP_TXCSUM) && (if_getcapabilities(ifp) & IFCAP_TXCSUM)) {
+		if ((mask & IFCAP_TXCSUM) &&
+		    (if_getcapabilities(ifp) & IFCAP_TXCSUM)) {
 			if_togglecapenable(ifp, IFCAP_TXCSUM);
 		}
 
 		if ((mask & IFCAP_TXCSUM_IPV6) &&
-			(if_getcapabilities(ifp) & IFCAP_TXCSUM_IPV6)) {
+		    (if_getcapabilities(ifp) & IFCAP_TXCSUM_IPV6)) {
 			if_togglecapenable(ifp, IFCAP_TXCSUM_IPV6);
 		}
 
 		if ((mask & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6)) &&
-			(if_getcapabilities(ifp) & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6))) {
+		    (if_getcapabilities(ifp) & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6))) {
 			hw_features ^= ETH_HW_TX_CSUM;
 		}
 
@@ -3255,48 +3254,49 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			if_sethwassistbits(ifp, 0, (CSUM_TCP_IPV6 | CSUM_UDP_IPV6));
 
 		// rx checksum offload
-		if ((mask & IFCAP_RXCSUM) && (if_getcapabilities(ifp) & IFCAP_RXCSUM)) {
+		if ((mask & IFCAP_RXCSUM) &&
+		    (if_getcapabilities(ifp) & IFCAP_RXCSUM)) {
 			if_togglecapenable(ifp, IFCAP_RXCSUM);
 		}
 
 		if ((mask & IFCAP_RXCSUM_IPV6) &&
-			(if_getcapabilities(ifp) & IFCAP_RXCSUM_IPV6)) {
+		    (if_getcapabilities(ifp) & IFCAP_RXCSUM_IPV6)) {
 			if_togglecapenable(ifp, IFCAP_RXCSUM_IPV6);
 		}
 
 		if ((mask & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) &&
-			(if_getcapabilities(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
+		    (if_getcapabilities(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
 			hw_features ^= ETH_HW_RX_CSUM;
 		}
 
 		// checksum offload for vlan tagged packets
 		if ((mask & IFCAP_VLAN_HWCSUM) &&
-			(if_getcapabilities(ifp) & IFCAP_VLAN_HWCSUM)) {
+		    (if_getcapabilities(ifp) & IFCAP_VLAN_HWCSUM)) {
 			if_togglecapenable(ifp, IFCAP_VLAN_HWCSUM);
 		}
 
 		// rx vlan strip & tx vlan insert offloads
 		if ((mask & IFCAP_VLAN_HWTAGGING) &&
-			(if_getcapabilities(ifp) & IFCAP_VLAN_HWTAGGING)) {
+		    (if_getcapabilities(ifp) & IFCAP_VLAN_HWTAGGING)) {
 			if_togglecapenable(ifp, IFCAP_VLAN_HWTAGGING);
 			hw_features ^= (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP);
 		}
 
 		if ((mask & IFCAP_VLAN_HWFILTER) &&
-			(if_getcapabilities(ifp) & IFCAP_VLAN_HWFILTER)) {
+		    (if_getcapabilities(ifp) & IFCAP_VLAN_HWFILTER)) {
 			if_togglecapenable(ifp, IFCAP_VLAN_HWFILTER);
 			hw_features ^= IFCAP_VLAN_HWFILTER;
 		}
 
 		// tso offloads
 		if ((mask & IFCAP_TSO4) &&
-			(if_getcapabilities(ifp) & IFCAP_TSO4)) {
+		    (if_getcapabilities(ifp) & IFCAP_TSO4)) {
 			if_togglecapenable(ifp, IFCAP_TSO4);
 			hw_features ^= ETH_HW_TSO;
 		}
 
 		if ((mask & IFCAP_TSO6) &&
-			(if_getcapabilities(ifp) & IFCAP_TSO6)) {
+		    (if_getcapabilities(ifp) & IFCAP_TSO6)) {
 			if_togglecapenable(ifp, IFCAP_TSO6);
 			hw_features ^= ETH_HW_TSO_IPV6;
 		}
@@ -3312,17 +3312,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		// enable offloads on hardware
 		error = ionic_set_hw_features(lif, hw_features);
 		if (error) {
-			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capabilities, err: %d\n",
-				error);
+			IONIC_NETDEV_ERROR(ifp, "Failed to set capabilities, err: %d\n",
+					   error);
 			IONIC_LIF_UNLOCK(lif);
 			break;
 		}
 
 		IONIC_LIF_UNLOCK(lif);
 		VLAN_CAPABILITIES(ifp);
-
 		break;
-	}
 
 	case SIOCSIFMTU:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFMTU (Set Interface MTU)\n");
@@ -3334,14 +3332,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_LIF_LOCK(lif);
 		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
 		if (error)
-			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set mtu, err: %d\n", error);
+			IONIC_NETDEV_ERROR(ifp, "Failed to set mtu %d, err: %d\n",
+					   ifr->ifr_mtu, error);
 		IONIC_LIF_UNLOCK(lif);
 		break;
 
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
 		IONIC_NETDEV_INFO(ifp, "ioctl: %s (Add/Del Multicast Filter)\n",
-			(command == SIOCADDMULTI) ? "SIOCADDMULTI" : "SIOCDELMULTI");
+				  (command == SIOCADDMULTI) ? "SIOCADDMULTI" : "SIOCDELMULTI");
 		error =  ionic_set_multi(lif);
 		break;
 

@@ -42,27 +42,15 @@ struct rx_filter {
 
 struct rx_filters {
 	bool init;
-#ifdef __FreeBSD__
 	struct mtx mtx;
-#else
-	spinlock_t lock;
-#endif
 	struct hlist_head by_hash[RX_FILTER_HLISTS];	/* by skb hash */
 	struct hlist_head by_id[RX_FILTER_HLISTS];	/* by filter_id */
 };
 
-#ifdef __FreeBSD__
 #define IONIC_RX_FILTER_INIT(x)		mtx_init(&(x)->mtx, "rx filter", NULL, MTX_DEF)
 #define IONIC_RX_FILTER_DESTROY(x)	mtx_destroy(&(x)->mtx)
 #define IONIC_RX_FILTER_LOCK(x)		mtx_lock(&(x)->mtx)
 #define IONIC_RX_FILTER_UNLOCK(x)	mtx_unlock(&(x)->mtx)
-#else
-#define IONIC_RX_FILTER_INIT(x) 	spin_lock_init(&(x)->lock);
-#define IONIC_RX_FILTER_DESTROY(x)
-#define IONIC_RX_FILTER_LOCK(x)		spin_lock_bh(&(x)->lock);
-#define IONIC_RX_FILTER_UNLOCK(x)	spin_unlock_bh(&(x)->lock);
-
-#endif
 
 struct ionic_admin_ctx;
 

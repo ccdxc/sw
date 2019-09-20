@@ -204,7 +204,6 @@ struct ionic {
 #define IONIC_WDOG_UNLOCK(x)		mtx_unlock(&(x)->wdog_mtx);
 #define IONIC_WDOG_LOCK_OWNED(x)	mtx_owned(&(x)->wdog_mtx)
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx, bool);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);

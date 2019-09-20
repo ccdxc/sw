@@ -83,7 +83,6 @@ const char
 	}
 }
 
-
 const char
 *ionic_port_pause_type_str(enum port_pause_type type)
 {
@@ -152,9 +151,10 @@ const char
 	}
 }
 
-static const char
+const char
 *ionic_error_to_str(enum status_code code)
 {
+
 	switch (code) {
 	case IONIC_RC_SUCCESS:
 		return "IONIC_RC_SUCCESS";
@@ -203,8 +203,10 @@ static const char
 	}
 }
 
-static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
+static const char
+*ionic_opcode_to_str(enum cmd_opcode opcode)
 {
+
 	switch (opcode) {
 	case CMD_OPCODE_NOP:
 		return "CMD_OPCODE_NOP";
@@ -268,7 +270,7 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 static void
 ionic_adminq_flush(struct lif *lif)
 {
-	struct adminq* adminq = lif->adminq;
+	struct adminq *adminq = lif->adminq;
 	struct admin_cmd *cmd;
 	struct ionic_admin_ctx *ctx;
 	int cmd_index;
@@ -278,8 +280,9 @@ ionic_adminq_flush(struct lif *lif)
 		cmd_index = adminq->tail_index;
 		cmd = &adminq->cmd_ring[cmd_index];
 		IONIC_QUE_WARN(adminq, "flushing tail: %d cmd %s(%d)\n",
-				adminq->tail_index, ionic_opcode_to_str(cmd->opcode),
-				cmd->opcode);
+			       adminq->tail_index,
+			       ionic_opcode_to_str(cmd->opcode),
+			       cmd->opcode);
 		ctx = adminq->ctx_ring[cmd_index];
 		memset(cmd, 0, sizeof(*cmd));
 		adminq->ctx_ring[cmd_index] = NULL;
@@ -287,12 +290,16 @@ ionic_adminq_flush(struct lif *lif)
 	}
 	IONIC_ADMIN_UNLOCK(adminq);
 
-	IONIC_QUE_INFO(adminq, "head :%d tail: %d comp index: %d\n",
-		adminq->head_index, adminq->tail_index, adminq->comp_index);
+	IONIC_QUE_INFO(adminq, "head: %d tail: %d comp index: %d\n",
+		       adminq->head_index,
+		       adminq->tail_index,
+		       adminq->comp_index);
 }
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
-	bool timeout)
+static int
+ionic_adminq_check_err(struct lif *lif,
+		       struct ionic_admin_ctx *ctx,
+		       bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
 	const char *name;
@@ -317,7 +324,68 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	return err;
 }
 
-int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
+static void
+ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
+{
+	IONIC_QUE_INFO(adminq, "ring doorbell for index: %d\n", index);
+
+	ionic_dbell_ring(adminq->lif->kern_dbpage,
+			 adminq->hw_type,
+			 adminq->dbval | index);
+}
+
+static bool
+ionic_adminq_avail(struct adminq *adminq, int want)
+{
+	int avail;
+
+	avail = ionic_desc_avail(adminq->num_descs,
+				 adminq->head_index, adminq->tail_index);
+	return (avail > want);
+}
+
+static int
+ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+{
+	struct adminq *adminq = lif->adminq;
+	struct admin_cmd *cmd;
+
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
+	IONIC_ADMIN_LOCK(adminq);
+
+	if (adminq->stop) {
+		IONIC_QUE_INFO(adminq, "can't post admin queue command\n");
+		IONIC_ADMIN_UNLOCK(adminq);
+		return (-ESHUTDOWN);
+	}
+
+	if (!ionic_adminq_avail(adminq, 1)) {
+		IONIC_QUE_ERROR(adminq, "adminq is hung, head: %d tail: %d\n",
+				adminq->head_index, adminq->tail_index);
+		IONIC_ADMIN_UNLOCK(adminq);
+		return (-ENOSPC);
+	}
+
+	adminq->ctx_ring[adminq->head_index] = ctx;
+	cmd = &adminq->cmd_ring[adminq->head_index];
+	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
+
+	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
+		       cmd->opcode, adminq->head_index);
+	if (__IONIC_DEBUG)
+		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+				     &ctx->cmd, sizeof(ctx->cmd), true);
+
+	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
+	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
+
+	IONIC_ADMIN_UNLOCK(adminq);
+
+	return 0;
+}
+
+int
+ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct adminq *adminq = lif->adminq;
 	struct ifnet *ifp = lif->netdev;
@@ -325,7 +393,7 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	int err, remaining, processed;
 	const char *name;
 
-	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif is not locked", lif->name));
+	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
 
 	err = ionic_adminq_post(lif, ctx);
 	if (err == -ESHUTDOWN) {
@@ -356,107 +424,6 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 		IONIC_ADMIN_UNLOCK(adminq);
 	}
 	return ionic_adminq_check_err(lif, ctx, remaining == 0);
-}
-
-#define IONIC_DEV_CMD_WARN_DELAY_MS 3000
-static int
-ionic_dev_cmd_wait(struct ionic_dev *idev,
-		   unsigned long max_wait,
-		   bool sleepable_ctx)
-{
-	unsigned long cmd_start, cmd_timo, msecs;
-	int done, waits = 0;
-
-	/* Bail out if the interface was disabled in response to an error */
-	if (unlikely(ionic_dev_cmd_disabled(idev)))
-		return ENXIO;
-
-	cmd_start = ticks;
-	cmd_timo = cmd_start + max_wait;
-	do {
-		done = ionic_dev_cmd_done(idev);
-		if (done) {
-			msecs = (ticks - cmd_start) * 1000 / HZ;
-			if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
-				IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
-					    msecs, waits);
-			} else {
-				IONIC_INFO("DEVCMD took %lums (%d waits)\n",
-					   msecs, waits);
-			}
-			return 0;
-		}
-
-		/* Either sleep for 100ms or spin for 1ms */
-		if (sleepable_ctx)
-			schedule_timeout_uninterruptible(HZ / 10);
-		else
-			/* XXX: should use msleep, but lack mtx access */
-			DELAY(1000);
-		waits++;
-	} while (time_after(cmd_timo, ticks));
-
-	msecs = (ticks - cmd_start) * 1000 / HZ;
-
-	/* Last chance */
-	done = ionic_dev_cmd_done(idev);
-	if (done) {
-		if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
-			IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
-				    msecs, waits);
-		} else {
-			IONIC_INFO("DEVCMD took %lums (%d waits)\n",
-				   msecs, waits);
-		}
-		return 0;
-	}
-
-	IONIC_ERROR("DEVCMD timeout after %lums (%d waits)\n", msecs, waits);
-
-	return ETIMEDOUT;
-}
-
-static int
-ionic_dev_cmd_check_error(struct ionic_dev *idev)
-{
-	u8 status;
-
-	status = ionic_dev_cmd_status(idev);
-	if (status) {
-		IONIC_ERROR("DEVCMD(%d) failed, status: %s\n",
-			    idev->dev_cmd_regs->cmd.cmd.opcode,
-			    ionic_error_to_str(status));
-		return (EIO);
-	}
-
-	return 0;
-}
-
-int
-ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
-{
-	int err;
-
-	/* Preserve current behavior by declaring a non-sleepable ctx */
-	err = ionic_dev_cmd_wait(idev, max_wait, false);
-	if (!err)
-		err = ionic_dev_cmd_check_error(idev);
-	if (err == ETIMEDOUT)
-		ionic_dev_cmd_disable(idev);
-	return err;
-}
-
-int
-ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait)
-{
-	int err;
-
-	err = ionic_dev_cmd_wait(idev, max_wait, true);
-	if (!err)
-		err = ionic_dev_cmd_check_error(idev);
-	if (err == ETIMEDOUT)
-		ionic_dev_cmd_disable(idev);
-	return err;
 }
 
 int ionic_set_dma_mask(struct ionic *ionic)
@@ -535,7 +502,7 @@ int ionic_init(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;	
+	return err;
 }
 
 int ionic_reset(struct ionic *ionic)
@@ -548,7 +515,7 @@ int ionic_reset(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;	
+	return err;
 }
 
 int ionic_port_identify(struct ionic *ionic)
@@ -600,7 +567,7 @@ ionic_port_init(struct ionic *ionic)
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
 					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	config = &ident->port.config;
-	
+
 	if (!ionic->is_mgmt_nic)
 		config->state = PORT_ADMIN_STATE_UP;
 	for (i = 0; i < nwords; i++)

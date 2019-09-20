@@ -40,8 +40,7 @@
 #define IONIC_WDOG_FW_WARN_MS		1250 /* msecs */
 #define IONIC_WDOG_MIN_MS		100  /* msecs */
 
-struct ionic_dev_bar
-{
+struct ionic_dev_bar {
 	void __iomem *vaddr;
 	dma_addr_t bus_addr;
 	unsigned long len;
@@ -153,8 +152,7 @@ enum ionic_fw_hb_state {
 
 struct ionic;
 
-struct ionic_dev
-{
+struct ionic_dev {
 	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd_regs;
 	bool dev_cmd_disabled;
@@ -192,15 +190,10 @@ struct ionic_dev
 
 #define INTR_INDEX_NOT_ASSIGNED (-1)
 
-#ifndef __FreeBSD__
-#define INTR_NAME_MAX_SZ 	(32)
-#else
 /* Interrupt name can't be longer than MAXCOMLEN */
 #define INTR_NAME_MAX_SZ 	(MAXCOMLEN)
-#endif
 
-struct intr
-{
+struct intr {
 	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
@@ -214,12 +207,7 @@ void ionic_cmd_hb_resched(struct ionic_dev *idev);
 void ionic_fw_hb_resched(struct ionic_dev *idev);
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
-u8 ionic_dev_cmd_status(struct ionic_dev *idev);
-bool ionic_dev_cmd_done(struct ionic_dev *idev);
-void ionic_dev_cmd_disable(struct ionic_dev *idev);
-bool ionic_dev_cmd_disabled(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
-void ionic_dev_cmd_nop(struct ionic_dev *idev);
 
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver);
 void ionic_dev_cmd_init(struct ionic_dev *idev);
@@ -249,7 +237,6 @@ void ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group);
 void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
 	uint8_t type, uint8_t ver);
 
-char *ionic_dev_asic_name(u8 asic_type);
 int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
@@ -257,6 +244,7 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 
 int ionic_desc_avail(int ndescs, int head, int tail);
 
+const char *ionic_error_to_str(enum status_code code);
 const char *ionic_port_oper_status_str(enum port_oper_status status);
 const char *ionic_port_admin_state_str(enum PortAdminState state);
 const char *ionic_port_fec_type_str(enum port_fec_type type);

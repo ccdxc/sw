@@ -136,7 +136,7 @@ struct adminq {
 	unsigned int head_index;		/* Index for buffer and command descriptors. */
 	unsigned int tail_index;
 	unsigned int comp_index;		/* Index for completion descriptors. */
-	int done_color; 			/* Expected comletion color. */
+	int done_color; 			/* Expected completion color. */
 
 	struct adminq_stats stats;
 	struct intr intr;

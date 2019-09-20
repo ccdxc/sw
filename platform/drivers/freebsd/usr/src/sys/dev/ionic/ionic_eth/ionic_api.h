@@ -250,6 +250,4 @@ struct ionic_admin_ctx {
  */
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
 
-int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
-
 #endif /* IONIC_API_H */

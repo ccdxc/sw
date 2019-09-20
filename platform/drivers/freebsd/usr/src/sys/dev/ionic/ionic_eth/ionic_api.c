@@ -236,24 +236,6 @@ void ionic_api_put_dbid(struct lif *lif, int dbid)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
-static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
-{
-	IONIC_NETDEV_INFO(adminq->lif->netdev, "ring doorbell for index: %d\n", index);
-
-	ionic_dbell_ring(adminq->lif->kern_dbpage,
-			 adminq->hw_type,
-			 adminq->dbval | index);
-}
-
-static bool ionic_adminq_avail(struct adminq *adminq, int want)
-{
-	int avail;
-
-	avail = ionic_desc_avail(adminq->num_descs, adminq->head_index, adminq->tail_index);
-
-	return (avail > want);
-}
-
 /* External users: post commands using dev_cmds */
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -294,45 +276,3 @@ err_out:
 	return err;
 }
 EXPORT_SYMBOL_GPL(ionic_api_adminq_post);
-
-/* Ethernet users: post commands using AdminQ */
-/* TODO: Move out of API */
-int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
-{
-	struct adminq *adminq = lif->adminq;
-
-	struct admin_cmd *cmd;
-	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s is not locked", lif->name));
-
-	IONIC_ADMIN_LOCK(adminq);
-
-	if (adminq->stop) {
-		IONIC_QUE_INFO(adminq, "can't post admin queue command\n");
-		IONIC_ADMIN_UNLOCK(adminq);
-		return (-ESHUTDOWN);
-	}
-
-	if (!ionic_adminq_avail(adminq, 1)) {
-		IONIC_QUE_ERROR(adminq, "adminq is hung!, head: %d tail: %d\n",
-			adminq->head_index, adminq->tail_index);
-		IONIC_ADMIN_UNLOCK(adminq);
-		return (-ENOSPC);
-	}
-
-	adminq->ctx_ring[adminq->head_index] = ctx;
-	cmd =  &adminq->cmd_ring[adminq->head_index];
-	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
-
-	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
-		cmd->opcode, adminq->head_index);
-	if (__IONIC_DEBUG)
-		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-				     &ctx->cmd, sizeof(ctx->cmd), true);
-
-	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
-	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
-
-	IONIC_ADMIN_UNLOCK(adminq);
-
-	return 0;
-}
