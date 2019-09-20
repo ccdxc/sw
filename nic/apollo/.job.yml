@@ -175,6 +175,14 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
+  apulu/gtest:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
 
 cache:
   name: "sw"

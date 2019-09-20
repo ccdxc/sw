@@ -263,6 +263,10 @@ jobd/artemis/scale_test_sim: ${JOBD_PREREQS}
 jobd/artemis/ftlite: ${JOBD_PREREQS}
 	${NICDIR}/utils/ftlite/test/run.sh
 
+.PHONY: jobd/apulu/gtest
+jobd/apulu/gtest: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apulu_gtest
+
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --storage
