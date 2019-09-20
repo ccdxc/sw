@@ -235,6 +235,12 @@
             "_comment": "256K * 64B"
         },
         {
+            "name": "nexthop",
+            "size": "4M",
+            "cache": "p4eg",
+            "_comment": "64K * 64B"
+        },
+        {
             "name": "nat",
             "size": "131072K",
             "cache": "p4eg",

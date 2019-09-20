@@ -93,6 +93,7 @@ uint16_t g_vpc_id1 = 0x2EC;
 uint16_t g_bd_id1 = 0x2ED;
 uint16_t g_vnic_id1 = 0x2EE;
 uint32_t g_session_id1 = 0x55E51;
+uint32_t g_nexthop_id1 = 0x2EF;
 
 uint64_t g_dmac1 = 0x000102030405ULL;
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
@@ -413,7 +414,7 @@ input_properties_init (void)
 }
 
 static void
-mappings_init (void)
+local_mappings_init (void)
 {
     local_mapping_swkey_t key;
     local_mapping_actiondata_t data;
@@ -429,6 +430,26 @@ mappings_init (void)
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
+}
+
+static void
+mappings_init (void)
+{
+    mapping_swkey_t key;
+    mapping_actiondata_t data;
+    mapping_mapping_info_t *mapping_info = &data.action_u.mapping_mapping_info;
+    uint32_t tbl_id = P4TBL_ID_MAPPING;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+    key.txdma_to_p4e_mapping_lkp_id = g_bd_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dmac1, 6);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    mapping_info->nexthop_id = g_nexthop_id1;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 
 static void
@@ -453,6 +474,19 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+}
+
+static void
+nexthops_init (void)
+{
+    nexthop_actiondata_t data;
+    nexthop_nexthop_info_t *nexthop_info = &data.action_u.nexthop_nexthop_info;
+    uint16_t tbl_id = P4TBL_ID_NEXTHOP;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nexthop_info->port = TM_PORT_UPLINK_1;
+    entry_write(tbl_id, g_nexthop_id1, 0, 0, &data, false, 0);
 }
 
 class apulu_test : public ::testing::Test {
@@ -534,7 +568,7 @@ TEST_F(apulu_test, test1)
     cfg.pgm_cfg[1].path = std::string("rxdma_bin");
     cfg.pgm_cfg[2].path = std::string("txdma_bin");
 
-    cfg.num_asm_cfgs = 1;
+    cfg.num_asm_cfgs = 3;
     memset(cfg.asm_cfg, 0, sizeof(cfg.asm_cfg));
     cfg.asm_cfg[0].name = std::string("apulu_p4");
     cfg.asm_cfg[0].path = std::string("p4_asm");
@@ -592,8 +626,10 @@ TEST_F(apulu_test, test1)
 
 #ifdef SIM
     input_properties_init();
+    local_mappings_init();
     mappings_init();
     flows_init();
+    nexthops_init();
 
     uint32_t port = 0;
     uint32_t cos = 0;
@@ -618,8 +654,8 @@ TEST_F(apulu_test, test1)
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt1));
         memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-        epkt.resize(sizeof(g_rcv_pkt1));
-        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        epkt.resize(sizeof(g_snd_pkt1));
+        memcpy(epkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
         std::cout << "[TCID=" << tcid << "] Testing P4I-P4E" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);

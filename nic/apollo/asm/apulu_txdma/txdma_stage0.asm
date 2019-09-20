@@ -18,6 +18,7 @@
 struct phv_ p;
 
 %%
+#if 0
     .param      eth_tx_fetch_desc
     .param      eth_tx_drop
     .param      adminq_fetch_desc
@@ -25,6 +26,7 @@ struct phv_ p;
     .param      edma_fetch_desc
     .param      nicmgr_fetch_desc
     .param      nicmgr_drop
+#endif
     .param      read_qstate_info
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -34,6 +36,7 @@ tx_dummy:
    phvwr.e     p.capri_intr_drop, 1
    nop
 
+#if 0
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
@@ -72,8 +75,9 @@ nicmgr_req_stage0:
 nicmgr_resp_stage0:
     j   nicmgr_fetch_desc
     nop
+#endif
 
 .align
-apollo_read_qstate:
+apulu_read_qstate:
     j           read_qstate_info
     nop
