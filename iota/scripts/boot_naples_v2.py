@@ -710,7 +710,7 @@ class EsxHostManagement(HostManagement):
         return retcode
 
     def __check_naples_deivce(self):
-        ret = self.RunSshCmd("sudo lspci | grep Pensando")
+        ret = self.RunSshCmd("lspci | grep Pensando")
         if ret:
             raise Exception("Cmd failed lspci | grep Pensando")
 

@@ -686,6 +686,9 @@ message TestBedNode {
     string nic_uuid                 = 20;
     // node name
     string node_name                = 21;
+
+    //server type
+    string server_type              = 22;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

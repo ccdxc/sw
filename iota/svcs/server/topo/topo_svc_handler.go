@@ -115,6 +115,9 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
 				cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
 				cmd += fmt.Sprintf(" --mode hostpin")
+				if node.ServerType != "" {
+					cmd += fmt.Sprintf("  --server %v", node.ServerType)
+				}
 				cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, nodeOs)
 				cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
 				cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)

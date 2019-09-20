@@ -20,7 +20,6 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -56,6 +55,7 @@ type InstanceParams struct {
 	NicConsolePort string // NIC's console server port
 	NicMgmtIP      string // NIC's oob mgmt port address
 	NodeCimcIP     string // CIMC ip address of the server
+	NodeServer     string // NodeServer whether server is ucs/hpe
 	Resource       struct {
 		NICType    string // NIC type (naples, intel, mellanox etc)
 		NICUuid    string // NIC's mac address
@@ -481,6 +481,7 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 		NicConsolePort:      node.instParams.NicConsolePort,
 		NicIpAddress:        node.instParams.NicMgmtIP,
 		CimcIpAddress:       node.instParams.NodeCimcIP,
+		ServerType:          node.instParams.NodeServer,
 		NicUuid:             node.instParams.Resource.NICUuid,
 		NodeName:            node.NodeName,
 	}
@@ -766,90 +767,6 @@ func (tb *TestBed) initNodeState() error {
 	return nil
 }
 
-// recoverTestbed recovers testbed even if its in a bad state
-// FIXME: this basically runs a python script to install golden fw on naples and recover it.
-//        There is got to be a better way of doing this!!
-func (tb *TestBed) recoverTestbed() error {
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		log.Errorf("GOPATH not defined in the environment")
-		return fmt.Errorf("GOPATH not defined in the environment")
-	}
-	wsdir := gopath + "/src/github.com/pensando/sw"
-
-	pool, _ := errgroup.WithContext(context.Background())
-
-	for _, node := range tb.Nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			cmd := fmt.Sprintf("%s/iota/scripts/boot_naples_v2.py", wsdir)
-			cmd += fmt.Sprintf(" --console-ip %s", node.instParams.NicConsoleIP)
-			cmd += fmt.Sprintf(" --console-port %s", node.instParams.NicConsolePort)
-			cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
-			cmd += fmt.Sprintf(" --host-ip %s", node.instParams.NodeMgmtIP)
-			cmd += fmt.Sprintf(" --cimc-ip %s", node.instParams.NodeCimcIP)
-			cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
-			cmd += fmt.Sprintf(" --mode hostpin")
-			cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, node.topoNode.HostOS)
-			cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
-			cmd += fmt.Sprintf(" --uuid %s", node.instParams.Resource.NICUuid)
-			cmd += fmt.Sprintf(" --os %s", node.topoNode.HostOS)
-
-			latestGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz", wsdir, node.topoNode.HostOS, node.topoNode.HostOS)
-			oldGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz", wsdir, node.topoNode.HostOS, node.topoNode.HostOS)
-			realPath, _ := filepath.EvalSymlinks(latestGoldDriver)
-			latestGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-			realPath, _ = filepath.EvalSymlinks(oldGoldDriver)
-			oldGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-			cmd += fmt.Sprintf(" --gold-firmware-latest-version %s", latestGoldDriverVer)
-			cmd += fmt.Sprintf(" --gold-drivers-latest-pkg %s", latestGoldDriver)
-			cmd += fmt.Sprintf(" --gold-firmware-old-version %s", oldGoldDriverVer)
-			cmd += fmt.Sprintf(" --gold-drivers-old-pkg %s", oldGoldDriver)
-
-			if node.topoNode.HostOS == "esx" {
-				cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
-				cmd += fmt.Sprintf(" --host-username %s", tb.Params.Provision.Vars["EsxUsername"])
-				cmd += fmt.Sprintf(" --host-password %s", tb.Params.Provision.Vars["EsxPassword"])
-
-			}
-			nodeName := node.NodeName
-
-			// add the command to pool to be executed in parallel
-			pool.Go(func() error {
-				command := exec.Command("sh", "-c", cmd)
-				log.Infof("Running command: %s", cmd)
-
-				// open the out file for writing
-				outfile, err := os.Create(fmt.Sprintf("%s/iota/%s-firmware-upgrade.log", wsdir, nodeName))
-				if err != nil {
-					log.Errorf("Error creating log file. Err: %v", err)
-					return err
-				}
-				defer outfile.Close()
-				command.Stdout = outfile
-				command.Stderr = outfile
-				err = command.Start()
-				if err != nil {
-					log.Errorf("Error running command %s. Err: %v", cmd, err)
-					return err
-				}
-
-				return command.Wait()
-			})
-
-		}
-	}
-
-	err := pool.Wait()
-	if err != nil {
-		log.Errorf("Error executing pool. Err: %v", err)
-		return err
-	}
-
-	log.Infof("Recovering naples nodes complete...")
-
-	return nil
-}
-
 // connectToIotaServer connects to iota server
 func (tb *TestBed) connectToIotaServer() error {
 	srvURL := os.Getenv("IOTA_SERVER_URL")
@@ -981,6 +898,7 @@ func (tb *TestBed) setupTestBed() error {
 			NicConsolePort:      node.instParams.NicConsolePort,
 			NicIpAddress:        node.instParams.NicMgmtIP,
 			CimcIpAddress:       node.instParams.NodeCimcIP,
+			ServerType:          node.instParams.NodeServer,
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
 		}
