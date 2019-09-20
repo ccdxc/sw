@@ -303,6 +303,12 @@ func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 
 func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Mutex.Lock()
+	if ros.Spec.GetSuspend() {
+		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
+		ros.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
+		ros.eventChan <- fsmEvSuspend
+		return
+	}
 
 	if ros.Spec.ScheduledStartTime == nil {
 		ros.eventChan <- fsmEvScheduleNow
@@ -353,12 +359,6 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 
 func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 
-	if ros.Spec.GetSuspend() {
-		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
-		ros.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
-		ros.eventChan <- fsmEvSuspend
-		return
-	}
 	if ros.Status.StartTime == nil {
 		ros.setStartTime()
 	}
@@ -424,7 +424,8 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 		ros.doUpdateSmartNICs()
 
 		numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
-		if numFailures == 0 {
+		numSkipped := atomic.LoadUint32(&ros.numSkipped)
+		if numFailures == 0 && numSkipped == 0 {
 			ros.eventChan <- fsmEvSuccess
 		} else {
 			ros.eventChan <- fsmEvFail

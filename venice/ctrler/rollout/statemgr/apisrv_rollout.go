@@ -36,6 +36,7 @@ type RolloutState struct {
 
 	numPreUpgradeFailures int32 // number of failures seen so far (computed from status)
 	numFailuresSeen       uint32
+	numSkipped            uint32
 	completionDelta       float32
 }
 

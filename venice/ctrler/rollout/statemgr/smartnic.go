@@ -175,6 +175,9 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 		if existingStatus.OpStatus == s.OpStatus {
 			continue
 		}
+		if s.OpStatus == opStatusSkipped {
+			atomic.AddUint32(&snicState.ros.numSkipped, 1)
+		}
 		updateStatus = true
 		if s.OpStatus == opStatusSuccess || s.OpStatus == opStatusSkipped {
 			switch s.Op {
