@@ -1,0 +1,82 @@
+{
+    "post-processors": [
+    [
+      {
+          "type": "shell-local",
+          "script": "venice_livecd_packer_post.py",
+          "execute_command": ["/bin/sh", "-c", "/usr/bin/python {{.Script}}"]
+      }
+    ]
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "wait_for_venice_install.sh",
+      "pause_before": "60s"
+    }
+  ],
+  "builders": [
+    {
+      "version": "13",
+      "boot_wait": "7s",
+      "communicator": "ssh",
+      "cores": "2",
+      "cpus": "2",
+      "disk_size": 80000,
+      "disk_type_id": "thin",
+      "format": "ovf",
+      "guest_os_type": "centos7-64",
+      "headless": false,
+      "http_directory": ".",
+      "iso_checksum": "{{user `checksum`}}",
+      "iso_checksum_type": "sha1",
+      "iso_url": "pen-install.iso",
+      "keep_registered": false,
+      "memory": "16384",
+      "name": "{{user `template_name`}}",
+      "network_adapter_type": "vmxnet3",
+      "remote_datastore": "{{user `packer_esxi_datastore`}}",
+      "remote_host": "{{user `packer_esxi_host`}}",
+      "remote_password": "{{user `packer_esxi_password`}}",
+      "remote_type": "esx5",
+      "remote_username": "{{user `packer_esxi_username`}}",
+      "shutdown_command": "sudo -S /usr/sbin/shutdown -h now",
+      "skip_compaction": true,
+      "ssh_password": "{{user `password`}}",
+      "ssh_pty": "true",
+      "ssh_username": "{{user `username`}}",
+      "ssh_wait_timeout": "60m",
+      "tools_upload_flavor": "",
+      "type": "vmware-iso",
+      "vm_name": "{{user `template_name`}}",
+      "vmdk_name": "{{user `template_name`}}",
+      "vmx_data": {
+        "ethernet0.addressType": "generated",
+        "ethernet0.generatedAddressOffset": "0",
+        "ethernet0.networkName": "{{user `packer_esxi_portgroup`}}",
+        "ethernet0.present": "TRUE",
+        "ethernet0.startConnected": "TRUE",
+        "ethernet0.wakeOnPcktRcv": "FALSE"
+      },
+      "vmx_data_post": {
+        "ethernet0.virtualDev": "vmxnet3",
+        "ide1:0.clientDevice": "TRUE",
+        "ide1:0.fileName": "emptyBackingString",
+        "ide1:0.startConnected": "FALSE"
+      },
+      "vnc_disable_password": true
+    }
+  ],
+  "variables": {
+    "packer_esxi_datastore": "datastore2",
+    "packer_esxi_host": "ae-s6.pensando.io",
+    "packer_esxi_password": "pen123!",
+    "packer_esxi_portgroup": "VM Network",
+    "packer_esxi_username": "root",
+    "password": "centos",
+    "template_name": "venice-livecd",
+    "username": "root",
+    "checksum": "d9e731670bd9dcb0597c565888d974ba8ae0de37"
+  }
+}
+
