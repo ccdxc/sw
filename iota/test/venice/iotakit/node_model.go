@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -408,6 +409,28 @@ func (vnc *VeniceNodeCollection) Leader() *VeniceNodeCollection {
 
 	return &VeniceNodeCollection{err: fmt.Errorf("Could not find a leader node")}
 
+}
+
+//CaptureGRETCPDump tcpdump untill ctx is done
+func (vnc *VeniceNodeCollection) CaptureGRETCPDump(ctx context.Context) (string, error) {
+
+	trig := vnc.sm.tb.NewTrigger()
+
+	trig.AddBackgroundCommand("tcpdump -x -nni eth0 ip proto gre",
+		vnc.nodes[0].iotaNode.Name+"_venice", vnc.nodes[0].iotaNode.Name)
+
+	resp, err := trig.Run()
+	if err != nil {
+		return "", fmt.Errorf("Error running command %v", err.Error())
+	}
+
+	<-ctx.Done()
+	stopResp, err := trig.StopCommands(resp)
+	if err != nil {
+		return "", fmt.Errorf("Error stopping command %v", err.Error())
+	}
+
+	return stopResp[0].GetStdout(), nil
 }
 
 type selectParams struct {

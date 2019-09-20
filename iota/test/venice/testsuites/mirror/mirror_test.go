@@ -3,6 +3,10 @@
 package mirror_test
 
 import (
+	"context"
+	"strings"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,35 +27,54 @@ var _ = Describe("mirror tests", func() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 
+			veniceCollector := ts.model.VeniceNodes().Leader()
 			// add permit rules for workload pairs
-			collector := ts.model.Workloads().Any(2)
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().ExcludeWorkloads(collector).Any(1)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp/0/0")
-			msc.AddCollector(collector, "udp/4545", 0)
+			msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
 			Expect(msc.Commit()).Should(Succeed())
 
-			Eventually(func() error {
-				aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 0)
-				if aerr != nil {
-					return aerr
-				}
-				return nil
-			}).Should(Succeed())
+			ctx, cancel := context.WithCancel(context.Background())
+			tcpdumpDone := make(chan error)
+			var output string
+			go func() {
+				var err error
+				output, err = veniceCollector.CaptureGRETCPDump(ctx)
+				tcpdumpDone <- err
+
+			}()
+
+			//Sleep for a while so that tcpdump starts
+			time.Sleep(2 * time.Second)
+			ts.model.Action().PingPairs(workloadPairs)
+			cancel()
+			<-tcpdumpDone
+
+			Expect(strings.Contains(output, "GREv0, length")).Should(BeTrue())
 
 			// Clear collectors
 			msc.ClearCollectors()
 
 			// Update the collector
-			msc.AddCollector(collector, "udp/4545", 1)
+			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
 
-			Eventually(func() error {
-				aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 1)
-				if aerr != nil {
-					return aerr
-				}
-				return nil
-			}).Should(Succeed())
+			ctx, cancel = context.WithCancel(context.Background())
+			tcpdumpDone = make(chan error)
+			go func() {
+				var err error
+				output, err = veniceCollector.CaptureGRETCPDump(ctx)
+				tcpdumpDone <- err
+
+			}()
+
+			//Sleep for a while so that tcpdump starts
+			time.Sleep(2 * time.Second)
+			ts.model.Action().PingPairs(workloadPairs)
+			cancel()
+			<-tcpdumpDone
+
+			Expect(strings.Contains(output, "GREv0, length")).Should(BeTrue())
 
 			// Delete the Mirror session
 			Expect(msc.Delete()).Should(Succeed())

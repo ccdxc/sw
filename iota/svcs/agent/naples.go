@@ -1324,31 +1324,37 @@ func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) 
 			cmdKey = cmd.Handle
 		}
 
-		cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
-		node.logger.Println("Command error :", err)
-		node.logger.Println("Command exit code :", cmd.ExitCode)
-		node.logger.Println("Command timed out :", cmd.TimedOut)
-		node.logger.Println("Command handle  :", cmd.Handle)
-		node.logger.Println("Command stdout :", cmd.Stdout)
-		node.logger.Println("Command stderr:", cmd.Stderr)
+		if err == nil {
+			cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
+			node.logger.Println("Command error :", err)
+			node.logger.Println("Command exit code :", cmd.ExitCode)
+			node.logger.Println("Command timed out :", cmd.TimedOut)
+			node.logger.Println("Command handle  :", cmd.Handle)
+			node.logger.Println("Command stdout :", cmd.Stdout)
+			node.logger.Println("Command stderr:", cmd.Stderr)
 
-		if cmd.StderrOnErr && cmd.ExitCode == 0 {
-			cmd.Stderr = ""
-		}
-
-		if cmd.StdoutOnErr && cmd.ExitCode == 0 {
-			cmd.Stdout = ""
-		}
-
-		fixUtf := func(r rune) rune {
-			if r == utf8.RuneError {
-				return -1
+			if cmd.StderrOnErr && cmd.ExitCode == 0 {
+				cmd.Stderr = ""
 			}
-			return r
+
+			if cmd.StdoutOnErr && cmd.ExitCode == 0 {
+				cmd.Stdout = ""
+			}
+
+			fixUtf := func(r rune) rune {
+				if r == utf8.RuneError {
+					return -1
+				}
+				return r
+			}
+			cmd.Stdout = strings.Map(fixUtf, cmd.Stdout)
+			cmd.Stderr = strings.Map(fixUtf, cmd.Stderr)
+
+		} else {
+			cmd.ExitCode = 1
+			cmd.Stderr = fmt.Sprintf("Error running command %v", err.Error())
 		}
 
-		cmd.Stdout = strings.Map(fixUtf, cmd.Stdout)
-		cmd.Stderr = strings.Map(fixUtf, cmd.Stderr)
 		if len(cmd.Stdout) > maxStdoutSize || len(cmd.Stderr) > maxStdoutSize {
 			cmd.Stdout = ""
 			cmd.Stderr = "Stdout/Stderr output limit Exceeded."

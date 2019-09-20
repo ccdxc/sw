@@ -1593,13 +1593,13 @@ func (tb *TestBed) CollectLogs() error {
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_naples/%s_naples.tar /pensando/iota/logs /pensando/iota/varlog", node.NodeName, node.NodeName), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s_venice/", node.NodeName), node.NodeName+"_venice", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_venice/%s_venice.tar /var/log/pensando /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_venice", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_venice/%s_venice.tar /var/log/pensando /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_venice", node.NodeName)
 		}
 	}
 

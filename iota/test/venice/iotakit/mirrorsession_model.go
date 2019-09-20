@@ -68,6 +68,25 @@ func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 	return msc
 }
 
+// AddVeniceCollector adds venice collector
+func (msc *MirrorSessionCollection) AddVeniceCollector(vnc *VeniceNodeCollection, transport string, wlnum int) *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
+	}
+	collector := monitoring.MirrorCollector{
+		Type: monitoring.PacketCollectorType_ERSPAN.String(),
+		ExportCfg: &monitoring.MirrorExportConfig{
+			Destination: strings.Split(vnc.nodes[0].iotaNode.IpAddress, "/")[0],
+		},
+	}
+
+	for _, sess := range msc.sessions {
+		sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
+	}
+
+	return msc
+}
+
 // ClearCollectors adds a collector to the mirrorsession
 func (msc *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
 	if msc.err != nil {

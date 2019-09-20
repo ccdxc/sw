@@ -77,6 +77,7 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 
 //Init initalize node type
 func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
+	venice.commandNode.Init(in)
 	venice.iotaNode.name = in.GetName()
 	venice.iotaNode.nodeMsg = in
 	venice.logger.Printf("Bring up request received for : %v. Req: %+v", in.GetName(), in)
