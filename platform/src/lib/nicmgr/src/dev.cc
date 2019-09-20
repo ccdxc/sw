@@ -82,7 +82,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                 sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-#if !defined(APOLLO) && !defined(ARTEMIS)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                 sdk::lib::PAL_RET_OK);
 #endif
@@ -103,7 +103,8 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
     // int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
-    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
+    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN,
+                                  (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
@@ -119,8 +120,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 string
 DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
 {
-#if !defined(APOLLO) && !defined(ARTEMIS)
-
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
     sdk::lib::device *device = NULL;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     sdk::lib::dev_feature_profile_t feature_profile;

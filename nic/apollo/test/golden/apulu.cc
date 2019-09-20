@@ -428,7 +428,11 @@ TEST_F(apulu_test, test1)
 
     printf("Connecting to ASIC\n");
     sdk::lib::logger::init(sdk_trace_cb);
+#ifdef HW
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
+#else
     ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
+#endif
 
     cfg.num_pgm_cfgs = 3;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
@@ -481,12 +485,15 @@ TEST_F(apulu_test, test1)
     ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, SDK_RET_OK);
 
+#ifdef SIM
     config_done();
+#endif
 
     init_service_lif();
     table_constants_init();
     checksum_init();
 
+#ifdef SIM
 #if 0
     uint32_t port = 0;
     uint32_t cos = 0;
@@ -526,8 +533,8 @@ TEST_F(apulu_test, test1)
         }
     }
 #endif
-
     exit_simulation();
+#endif
 
 }
 
