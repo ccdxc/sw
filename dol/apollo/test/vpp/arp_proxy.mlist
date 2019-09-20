@@ -1,0 +1,16 @@
+# Feature arp_proxy plugin in vpp modules list
+
+feature:
+    id          : vpp
+    sub         : arp_proxy
+    package     : test.vpp
+    module      : vpp
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_ARP_PROXY
+        spec    : arp_proxy.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2L,Label=NETWORKING
