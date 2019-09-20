@@ -40,8 +40,8 @@ read_pktdesc:
     phvwr.c1   p.txdma_control_lpm1_base_addr, d.read_pktdesc_d.route_base_addr
     phvwr.c1   p.txdma_predicate_lpm1_enable, TRUE
 
-    // Fill meter_idx into session info
-    phvwr      p.txdma_to_p4e_meter_idx, d.read_pktdesc_d.meter_result
+    // Fill meter_id into session info
+    phvwr      p.txdma_to_p4e_meter_id, d.read_pktdesc_d.meter_result
 
     /* Initialize rx_to_tx_hdr */
     phvwr.e.f       p.{rx_to_tx_hdr_remote_ip, \

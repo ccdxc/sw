@@ -1,53 +1,54 @@
 header_type apulu_p4i_to_rxdma_header_t {
     fields {
-        p4plus_app_id : 4;
-        lpm1_enable   : 1;
-        lpm2_enable   : 1;
-        vnic_info_en  : 1;
-        apulu_p4plus  : 1;
+        p4plus_app_id   : 4;
+        lpm1_enable     : 1;
+        lpm2_enable     : 1;
+        vnic_info_en    : 1;
+        apulu_p4plus    : 1;
 
-        pad0          : 6;
-        rx_packet     : 1;
-        iptype        : 1;
-        vnic_id       : 16;
-        vpc_id        : 16;
-        tag_root      : 40;
+        pad0            : 6;
+        rx_packet       : 1;
+        iptype          : 1;
+        vnic_id         : 16;
+        vpc_id          : 16;
+        tag_root        : 40;
 
-        flow_src      : 128;
-        flow_sport    : 16;
-        flow_dport    : 16;
-        flow_proto    : 8;
-        flow_dst      : 128;
-        service_tag   : 32;
+        flow_src        : 128;
+        flow_sport      : 16;
+        flow_dport      : 16;
+        flow_proto      : 8;
+        flow_dst        : 128;
+        service_tag     : 32;
     }
 }
 
 header_type apulu_txdma_to_p4e_header_t {
     fields {
-        p4plus_app_id  : 4;
-        pad0           : 3;
-        drop           : 1;
-        mapping_lkp_id : 16;
-        nexthop_idx    : 16;
-        meter_idx      : 16;
+        p4plus_app_id   : 4;
+        nexthop_type    : 2;
+        mapping_bypass  : 1;
+        drop            : 1;
+        mapping_lkp_id  : 16;
+        nexthop_id      : 16;
+        meter_id        : 16;
     }
 }
 
 header_type apulu_ingress_recirc_header_t {
     fields {
-        flow_ohash : 32;
+        flow_ohash          : 32;
         local_mapping_ohash : 32;
-        pad1 : 6;
-        flow_done : 1;
-        local_mapping_done : 1;
+        pad1                : 6;
+        flow_done           : 1;
+        local_mapping_done  : 1;
     }
 }
 
 header_type apulu_egress_recirc_header_t {
     fields {
-        mapping_ohash : 32;
-        pad1 : 7;
-        mapping_done : 1;
+        mapping_ohash   : 32;
+        pad1            : 7;
+        mapping_done    : 1;
     }
 }
 

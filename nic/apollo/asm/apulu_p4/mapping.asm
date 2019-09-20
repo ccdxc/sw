@@ -12,8 +12,10 @@ struct phv_         p;
 %%
 
 mapping_info:
-    bbne        d.mapping_info_d.entry_valid, TRUE, mapping_miss
+    bbeq        k.txdma_to_p4e_mapping_bypass, TRUE, mapping_miss
+    phvwr       p.rewrite_metadata_nexthop_type, k.txdma_to_p4e_nexthop_type
 
+    bbne        d.mapping_info_d.entry_valid, TRUE, mapping_miss
     // Set bit 31 for overflow hash lookup to work
     ori         r2, r0, 0x80000000
     bcf         [c1], mapping_hit
@@ -68,6 +70,9 @@ mapping_miss:
     nop
 
 mapping_hit:
+    seq         c1, d.mapping_info_d.nexthop_valid, TRUE
+    phvwr.c1    p.rewrite_metadata_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr.c1   p.txdma_to_p4e_nexthop_id, d.mapping_info_d.nexthop_id
     phvwr.e     p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
     phvwr.f     p.egress_recirc_mapping_done, TRUE
 

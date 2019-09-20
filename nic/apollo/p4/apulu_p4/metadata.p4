@@ -56,11 +56,10 @@ header_type rewrite_metadata_t {
     fields {
         ip                  : 128;
         l4port              : 16;
-        nexthop_id          : 16;
-        nexthop_group_id    : 16;
         flags               : 8;
         policer_id          : 16;
         dmaci               : 48;
+        nexthop_type        : 2;
     }
 }
 
@@ -80,9 +79,7 @@ header_type scratch_metadata_t {
         drop_stats_pad      : 88;
         drop_stats_pkts     : 40;
         mac                 : 48;
-        pad8                : 8;
-        pad31               : 31;
-        more_hints_pad      : 8;
+        pad12               : 12;
         tcp_state           : 4;
         tcp_seq_num         : 32;
         tcp_ack_num         : 32;
@@ -91,9 +88,7 @@ header_type scratch_metadata_t {
         timestamp           : 48;
         tcp_flags           : 8;
         session_stats_addr  : 34;
-        num_nexthop_groups  : 4;
         num_nexthops        : 4;
-        nexthop_group_id    : 16;
         nexthop_id          : 16;
     }
 }

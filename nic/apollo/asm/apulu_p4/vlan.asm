@@ -49,11 +49,15 @@ vlan_local_mapping_key_rx_non_ipv4:
 
 vlan_mapping_key:
     seq.c7          c7, d.vlan_info_d.rmac, k.ethernet_1_dstAddr
+    bcf             [!c7], vlan_mapping_key_non_ipv4
     phvwr.c7        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
-    phvwr.c7        p.p4i_i2e_mapping_lkp_addr, k.ipv4_1_dstAddr
-    phvwr.!c7       p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
-    nop.e
-    phvwr.!c7       p.p4i_i2e_mapping_lkp_addr, k.ethernet_1_dstAddr
+    phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ipv4_1_dstAddr
+    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r7
+
+vlan_mapping_key_non_ipv4:
+    phvwr           p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
+    phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ethernet_1_dstAddr
+    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r6
 
 /*****************************************************************************/
 /* error function                                                            */

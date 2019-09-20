@@ -1,11 +1,11 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
-@pragma capi appdatafields epoch session_id flow_role
+@pragma capi appdatafields epoch session_id flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action flow_hash(epoch, session_id, flow_role, pad8,
+action flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
                  hash1, hint1, hash2, hint2, hash3, hint3,
-                 hash4, hint4,  more_hashes, more_hints, more_hints_pad,
+                 hash4, hint4,  more_hashes, more_hints, nexthop_id,
                  entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
@@ -18,6 +18,16 @@ action flow_hash(epoch, session_id, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(p4i_i2e.session_id, session_id);
             modify_field(p4i_i2e.flow_role, flow_role);
+            modify_field(scratch_metadata.flag, nexthop_valid);
+            if (nexthop_valid == TRUE) {
+                modify_field(txdma_to_p4e.nexthop_type, nexthop_type);
+                if (nexthop_type == NEXTHOP_TYPE_VPC) {
+                    modify_field(txdma_to_p4e.mapping_lkp_id, nexthop_id);
+                } else {
+                    modify_field(txdma_to_p4e.mapping_bypass, TRUE);
+                    modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+                }
+            }
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -69,9 +79,6 @@ action flow_hash(epoch, session_id, flow_role, pad8,
     modify_field(scratch_metadata.flow_hash, hash2);
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
-
-    modify_field(scratch_metadata.pad8, pad8);
-    modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
 }
 
 @pragma stage 2
@@ -108,11 +115,11 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
-@pragma capi appdatafields epoch session_id flow_role
+@pragma capi appdatafields epoch session_id flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(epoch, session_id, flow_role, pad8,
+action ipv4_flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
-                      more_hints_pad, entry_valid) {
+                      nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -124,6 +131,16 @@ action ipv4_flow_hash(epoch, session_id, flow_role, pad8,
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(p4i_i2e.session_id, session_id);
             modify_field(p4i_i2e.flow_role, flow_role);
+            modify_field(scratch_metadata.flag, nexthop_valid);
+            if (nexthop_valid == TRUE) {
+                modify_field(txdma_to_p4e.nexthop_type, nexthop_type);
+                if (nexthop_type == NEXTHOP_TYPE_VPC) {
+                    modify_field(txdma_to_p4e.mapping_lkp_id, nexthop_id);
+                } else {
+                    modify_field(txdma_to_p4e.mapping_bypass, TRUE);
+                    modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+                }
+            }
         }
 
         // if hardware register indicates miss, compare hashes with r1
@@ -163,9 +180,6 @@ action ipv4_flow_hash(epoch, session_id, flow_role, pad8,
     modify_field(scratch_metadata.flag, entry_valid);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
-
-    modify_field(scratch_metadata.pad8, pad8);
-    modify_field(scratch_metadata.more_hints_pad, more_hints_pad);
 }
 
 @pragma stage 2

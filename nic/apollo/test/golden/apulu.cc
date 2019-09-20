@@ -20,6 +20,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"
@@ -32,6 +33,7 @@
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
 #include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
+#include "nic/apollo/test/golden/apulu_pkts.h"
 
 #define EPOCH 0x55
 
@@ -83,8 +85,18 @@ typedef struct cache_line_s {
     uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
 } cache_line_t;
 
+uint16_t g_vpc_id = 0x2FC;
+uint16_t g_bd_id = 0x2FD;
+uint16_t g_vnic_id = 0x2FE;
+
+uint16_t g_vpc_id1 = 0x2EC;
+uint16_t g_bd_id1 = 0x2ED;
+uint16_t g_vnic_id1 = 0x2EE;
+uint32_t g_session_id1 = 0x55E51;
+
 uint64_t g_dmac1 = 0x000102030405ULL;
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
+uint16_t g_ctag1 = 0x64;
 uint32_t g_sip1 = 0x0B0B0101;
 uint32_t g_dip1 = 0x0A0A0101;
 uint8_t  g_proto1 = 0x6;
@@ -361,6 +373,88 @@ checksum_init (void)
     entry_write(tbl_id, idx, NULL, NULL, &data, false, CHECKSUM_TABLE_SIZE);
 }
 
+static void
+lif_table_init (void)
+{
+    lif_actiondata_t data;
+    lif_lif_info_t *lif_info = &data.action_u.lif_lif_info;
+    uint16_t tbl_id = P4TBL_ID_LIF;
+    uint16_t index = 0;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = LIF_LIF_INFO_ID;
+    lif_info->vpc_id = g_vpc_id;
+    lif_info->bd_id = g_bd_id;
+    lif_info->vnic_id = g_vnic_id;
+    entry_write(tbl_id, index, 0, 0, &data, false, 0);
+}
+
+static void
+vlan_table_init (void)
+{
+    vlan_actiondata_t data;
+    vlan_vlan_info_t *vlan_info = &data.action_u.vlan_vlan_info;
+    uint16_t tbl_id = P4TBL_ID_VLAN;
+    uint16_t index = g_ctag1;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = VLAN_VLAN_INFO_ID;
+    vlan_info->vpc_id = g_vpc_id1;
+    vlan_info->bd_id = g_bd_id1;
+    vlan_info->vnic_id = 0;
+    entry_write(tbl_id, index, 0, 0, &data, false, 0);
+}
+
+static void
+input_properties_init (void)
+{
+    lif_table_init();
+    vlan_table_init();
+}
+
+static void
+mappings_init (void)
+{
+    local_mapping_swkey_t key;
+    local_mapping_actiondata_t data;
+    local_mapping_local_mapping_info_t *local_info =
+        &data.action_u.local_mapping_local_mapping_info;
+    uint32_t tbl_id = P4TBL_ID_LOCAL_MAPPING;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.key_metadata_local_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip1, 4);
+    local_info->entry_valid = 1;
+    local_info->vnic_id = g_vnic_id1;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
+}
+
+static void
+flows_init (void)
+{
+    ipv4_flow_swkey_t key;
+    ipv4_flow_actiondata_t data;
+    ipv4_flow_ipv4_flow_hash_t *flow_hash_info =
+        &data.action_u.ipv4_flow_ipv4_flow_hash;
+    uint32_t tbl_id = P4TBL_ID_IPV4_FLOW;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_id = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+}
+
 class apulu_test : public ::testing::Test {
 protected:
     apulu_test() {}
@@ -456,6 +550,9 @@ TEST_F(apulu_test, test1)
     cfg.asm_cfg[2].symbols_func = txdma_symbols_init;
 
     cfg.completion_func = NULL;
+    sdk::lib::device_profile_t device_profile = {0};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+    cfg.device_profile = &device_profile;
 
     printf("Doing asic init ...\n");
     ret = sdk::asic::asic_init(&cfg);
@@ -494,7 +591,10 @@ TEST_F(apulu_test, test1)
     checksum_init();
 
 #ifdef SIM
-#if 0
+    input_properties_init();
+    mappings_init();
+    flows_init();
+
     uint32_t port = 0;
     uint32_t cos = 0;
     std::vector<uint8_t> ipkt;
@@ -532,7 +632,6 @@ TEST_F(apulu_test, test1)
             testcase_end(tcid, i + 1);
         }
     }
-#endif
     exit_simulation();
 #endif
 

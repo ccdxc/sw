@@ -4,7 +4,7 @@
 action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                     iflow_tcp_win_sz, iflow_tcp_win_scale, rflow_tcp_state,
                     rflow_tcp_seq_num, rflow_tcp_ack_num, rflow_tcp_win_sz,
-                    rflow_tcp_win_scale, tx_dst_ip, tx_dst_l4port, nexthop_id,
+                    rflow_tcp_win_scale, tx_dst_ip, tx_dst_l4port,
                     tx_rewrite_flags, rx_rewrite_flags, tx_policer_id,
                     rx_policer_id, timestamp, drop) {
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
@@ -49,7 +49,6 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 
     modify_field(rewrite_metadata.ip, tx_dst_ip);
     modify_field(rewrite_metadata.l4port, tx_dst_l4port);
-    modify_field(rewrite_metadata.nexthop_id, nexthop_id);
 
     if (p4e_i2e.rx_packet == FALSE) {
         modify_field(rewrite_metadata.flags, tx_rewrite_flags);

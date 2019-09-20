@@ -20,21 +20,31 @@ vni_info:
     cmov            r7, c1, d.vni_info_d.vpc_id, k.vnic_metadata_vpc_id
     phvwr           p.control_metadata_tunneled_packet, TRUE
 
-vni_mapping_key:
-    bbeq            k.ipv4_2_valid, TRUE, vni_mapping_key_non_ipv4
-    nop
-    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_IPV4
+    seq             c7, k.ipv4_2_valid, TRUE
+    bcf             [!c7], vni_local_mapping_key_non_ipv4
+vni_local_mapping_key_ipv4:
+    phvwr.c7        p.key_metadata_local_mapping_lkp_type, KEY_TYPE_IPV4
     phvwr           p.key_metadata_local_mapping_lkp_addr, k.ipv4_2_dstAddr
+    b               vni_mapping_key
     phvwr           p.key_metadata_local_mapping_lkp_id, r7
-    phvwr.e         p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
-    phvwr.f         p.p4i_i2e_mapping_lkp_addr, k.ipv4_2_dstAddr
 
-vni_mapping_key_non_ipv4:
+vni_local_mapping_key_non_ipv4:
     phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_MAC
     phvwr           p.key_metadata_local_mapping_lkp_addr, k.ethernet_2_dstAddr
+    b               vni_mapping_key
     phvwr           p.key_metadata_local_mapping_lkp_id, r6
-    phvwr.e         p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
-    phvwr.f         p.p4i_i2e_mapping_lkp_addr, k.ethernet_2_dstAddr
+
+vni_mapping_key:
+    seq.c7          c7, d.vni_info_d.rmac, k.ethernet_2_dstAddr
+    bcf             [!c7], vni_mapping_key_non_ipv4
+    phvwr.c7        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
+    phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ipv4_2_dstAddr
+    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r7
+
+vni_mapping_key_non_ipv4:
+    phvwr           p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
+    phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ethernet_2_dstAddr
+    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r6
 
 /*****************************************************************************/
 /* error function                                                            */

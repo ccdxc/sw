@@ -1,26 +1,22 @@
 /******************************************************************************
  * Overlay Nexthop Group
  *****************************************************************************/
-action overlay_nexthop_group_info(nexthop_group_id, num_nexthop_groups) {
-    if (rewrite_metadata.nexthop_group_id == 0) {
-        // return
-    }
-
-    modify_field(scratch_metadata.num_nexthop_groups, num_nexthop_groups);
-    if (num_nexthop_groups == 0) {
-        modify_field(scratch_metadata.nexthop_group_id, nexthop_group_id);
+action overlay_nexthop_group_info(nexthop_id, nexthop_type, num_nexthops) {
+    modify_field(scratch_metadata.num_nexthops, num_nexthops);
+    if (num_nexthops == 0) {
+        modify_field(scratch_metadata.nexthop_id, nexthop_id);
     } else {
-        modify_field(scratch_metadata.nexthop_group_id, nexthop_group_id +
-            (p4e_i2e.entropy_hash % scratch_metadata.num_nexthop_groups));
+        modify_field(scratch_metadata.nexthop_id, nexthop_id +
+            (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
-    modify_field(rewrite_metadata.nexthop_group_id,
-                 scratch_metadata.nexthop_group_id);
+    modify_field(rewrite_metadata.nexthop_type, nexthop_type);
+    modify_field(txdma_to_p4e.nexthop_id, scratch_metadata.nexthop_id);
 }
 
 @pragma stage 2
 table overlay_nexthop_group {
     reads {
-        rewrite_metadata.nexthop_group_id   : exact;
+        txdma_to_p4e.nexthop_id : exact;
     }
     actions {
         overlay_nexthop_group_info;
@@ -32,10 +28,6 @@ table overlay_nexthop_group {
  * Underlay Nexthop Group
  *****************************************************************************/
 action underlay_nexthop_group_info(nexthop_id, num_nexthops) {
-    if (rewrite_metadata.nexthop_group_id == 0) {
-        // return
-    }
-
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
     if (num_nexthops == 0) {
         modify_field(scratch_metadata.nexthop_id, nexthop_id);
@@ -43,13 +35,13 @@ action underlay_nexthop_group_info(nexthop_id, num_nexthops) {
         modify_field(scratch_metadata.nexthop_id, nexthop_id +
             (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
-    modify_field(rewrite_metadata.nexthop_id, scratch_metadata.nexthop_id);
+    modify_field(txdma_to_p4e.nexthop_id, scratch_metadata.nexthop_id);
 }
 
 @pragma stage 3
 table underlay_nexthop_group {
     reads {
-        rewrite_metadata.nexthop_group_id   : exact;
+        txdma_to_p4e.nexthop_id : exact;
     }
     actions {
         underlay_nexthop_group_info;
@@ -61,7 +53,7 @@ table underlay_nexthop_group {
  * Nexthop
  *****************************************************************************/
 action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, dmaci) {
-    if (rewrite_metadata.nexthop_id == 0) {
+    if (txdma_to_p4e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
     modify_field(capri_intrinsic.tm_oport, port);
@@ -77,7 +69,7 @@ action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, dmaci) {
 @pragma hbm_table
 table nexthop {
     reads {
-        rewrite_metadata.nexthop_id : exact;
+        txdma_to_p4e.nexthop_id : exact;
     }
     actions {
         nexthop_info;
@@ -86,8 +78,10 @@ table nexthop {
 }
 
 control nexthops {
-    if (control_metadata.rx_packet == FALSE) {
+    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_OVERLAY) {
         apply(overlay_nexthop_group);
+    }
+    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_UNDERLAY) {
         apply(underlay_nexthop_group);
     }
     apply(nexthop);

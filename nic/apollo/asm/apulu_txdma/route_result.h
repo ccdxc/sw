@@ -10,7 +10,7 @@ route_result_handler:
     bcf             [c1], route_result_rem_st
     nop
 route_result_nexthop_group:
-    phvwr.e         p.txdma_to_p4e_nexthop_idx, res_reg[19:0]
+    phvwr.e         p.txdma_to_p4e_nexthop_id, res_reg[19:0]
     // Disable Peer VNET Route lookup
     phvwr           p.txdma_predicate_lpm1_enable, FALSE
 

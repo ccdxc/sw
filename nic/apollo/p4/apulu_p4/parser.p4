@@ -20,13 +20,13 @@ header apulu_egress_recirc_header_t egress_recirc;
 header mirror_blob_t mirror_blob;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_rxdma.flow_src                 key_metadata.src
-@pragma pa_field_union ingress p4_to_rxdma.flow_dst                 key_metadata.dst
-@pragma pa_field_union ingress p4_to_rxdma.flow_proto               key_metadata.proto
-@pragma pa_field_union ingress p4_to_rxdma.flow_sport               key_metadata.sport
-@pragma pa_field_union ingress p4_to_rxdma.flow_dport               key_metadata.dport
-@pragma pa_field_union ingress p4_to_rxdma.vnic_id                  vnic_metadata.vnic_id
-@pragma pa_field_union ingress p4_to_rxdma.vpc_id                   vnic_metadata.vpc_id
+@pragma pa_field_union ingress p4i_to_rxdma.flow_src                key_metadata.src
+@pragma pa_field_union ingress p4i_to_rxdma.flow_dst                key_metadata.dst
+@pragma pa_field_union ingress p4i_to_rxdma.flow_proto              key_metadata.proto
+@pragma pa_field_union ingress p4i_to_rxdma.flow_sport              key_metadata.sport
+@pragma pa_field_union ingress p4i_to_rxdma.flow_dport              key_metadata.dport
+@pragma pa_field_union ingress p4i_to_rxdma.vnic_id                 vnic_metadata.vnic_id
+@pragma pa_field_union ingress p4i_to_rxdma.vpc_id                  vnic_metadata.vpc_id
 header apulu_p4i_to_rxdma_header_t p4i_to_rxdma;
 
 @pragma synthetic_header
@@ -568,8 +568,8 @@ field_list ipv4_1_checksum_list {
     ipv4_1.dstAddr;
 }
 
+@pragma checksum verify_len ohi.l4_1_len
 @pragma checksum hdr_len_expr ohi.ipv4_1_len + 0
-@pragma checksum verify_len ohi.ipv4_1_len
 @pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
 field_list_calculation ipv4_1_checksum {
     input {
@@ -749,8 +749,8 @@ field_list ipv4_2_checksum_list {
 }
 
 @pragma checksum gress ingress
+@pragma checksum verify_len ohi.l4_2_len
 @pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
-@pragma checksum verify_len ohi.ipv4_2_len
 field_list_calculation ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;

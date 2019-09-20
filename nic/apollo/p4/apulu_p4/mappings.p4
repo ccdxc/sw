@@ -8,7 +8,6 @@ action local_mapping_info(entry_valid, vnic_id,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           hash7, hint7, hash8, hint8, hash9, hint9,
                           hash10, hint10, more_hashes, more_hints) {
-
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         if (vnic_id != 0) {
@@ -144,14 +143,23 @@ control local_mapping {
 /******************************************************************************/
 @pragma capi appdatafields dmaci
 @pragma capi hwfields_access_api
-action mapping_info(entry_valid, pad31, dmaci,
+action mapping_info(entry_valid,
+                    pad12, nexthop_valid, nexthop_type, nexthop_id, dmaci,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
-
+    if (txdma_to_p4e.mapping_bypass == FALSE) {
+        modify_field(rewrite_metadata.nexthop_type, txdma_to_p4e.nexthop_type);
+        // return
+    }
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(rewrite_metadata.dmaci, dmaci);
+        modify_field(scratch_metadata.flag, nexthop_valid);
+        if (nexthop_valid == TRUE) {
+            modify_field(rewrite_metadata.nexthop_type, nexthop_type);
+            modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+        }
         modify_field(egress_recirc.mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
@@ -219,7 +227,7 @@ action mapping_info(entry_valid, pad31, dmaci,
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
-    modify_field(scratch_metadata.pad31, pad31);
+    modify_field(scratch_metadata.pad12, pad12);
     modify_field(scratch_metadata.mapping_hash, hash1);
     modify_field(scratch_metadata.mapping_hash, hash2);
     modify_field(scratch_metadata.mapping_hash, hash3);

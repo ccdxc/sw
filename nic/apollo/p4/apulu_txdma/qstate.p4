@@ -74,7 +74,7 @@ action read_pktdesc(remote_ip,
     modify_field(rx_to_tx_hdr.iptype, iptype);
     modify_field(rx_to_tx_hdr.rx_packet, rx_packet);
 
-    modify_field(txdma_to_p4e.meter_idx, scratch_metadata.meter_result);
+    modify_field(txdma_to_p4e.meter_id, scratch_metadata.meter_result);
 
     // Initialize the first P1 table index = (sip_classid << 7) | sport_classid
     modify_field(scratch_metadata.field20, (scratch_metadata.field10 << 7)|

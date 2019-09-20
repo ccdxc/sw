@@ -14,4 +14,5 @@ MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${NIC_COMMON_LDLIBS} \
                   ${${PIPELINE}_GTEST_COMMON_LDLIBS}
 MODULE_SRCS     := ${MODULE_SRC_DIR}/apulu.cc
+MODULE_DEPS     := ${MODULE_SRC_DIR}/apulu_pkts.h
 include ${MKDEFS}/post.mk

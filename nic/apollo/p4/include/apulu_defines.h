@@ -28,9 +28,17 @@
 
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_SESSION_INVALID        0
-#define P4E_DROP_SESSION_HIT            0
-#define P4E_DROP_NEXTHOP_INVALID        0
-#define P4E_DROP_REASON_MAX             0
+#define P4E_DROP_SESSION_HIT            1
+#define P4E_DROP_NEXTHOP_INVALID        2
+#define P4E_DROP_REASON_MAX             2
+
+/*****************************************************************************/
+/* nexthop types                                                            */
+/*****************************************************************************/
+#define NEXTHOP_TYPE_VPC                0
+#define NEXTHOP_TYPE_OVERLAY            1
+#define NEXTHOP_TYPE_UNDERLAY           2
+#define NEXTHOP_TYPE_NEXTHOP            3
 
 /*****************************************************************************/
 /* flow role                                                                 */

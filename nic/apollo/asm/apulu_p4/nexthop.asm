@@ -10,7 +10,7 @@ struct phv_         p;
 %%
 
 nexthop_info:
-    seq         c1, k.rewrite_metadata_nexthop_id, r0
+    seq         c1, k.txdma_to_p4e_nexthop_id, r0
     bcf         [c1], nexthop_invalid
     seq         c1, d.nexthop_info_d.port, TM_PORT_DMA
     nop.!c1.e

@@ -9,6 +9,10 @@ struct phv_     p;
 %%
 
 nacl_permit:
+    phvwr           p.capri_p4_intrinsic_valid, 1
+    phvwr           p.txdma_to_p4e_valid, 1
+    phvwr           p.p4i_i2e_valid, 1
+    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
     nop.e
     nop
 

@@ -38,7 +38,6 @@ session_tcp_responder:
 session_info_common:
     phvwr           p.rewrite_metadata_ip, d.session_info_d.tx_dst_ip
     phvwr           p.rewrite_metadata_l4port, d.session_info_d.tx_dst_l4port
-    phvwr           p.rewrite_metadata_nexthop_id, d.session_info_d.nexthop_id
 
     bbeq            k.p4e_i2e_rx_packet, FALSE, session_tx
 session_rx:
