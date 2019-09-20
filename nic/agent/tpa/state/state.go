@@ -1495,8 +1495,6 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 
 // ListFlowExportPolicy is the LIST all entry point
 func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
-	log.Infof("LIST:")
-
 	s.Lock()
 	defer s.Unlock()
 
@@ -1511,7 +1509,9 @@ func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.Flo
 	flowExpList := []*tpmprotos.FlowExportPolicy{}
 
 	if err != nil {
-		log.Errorf("failed to list flow export policy, err:%s", err)
+		if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
+			log.Errorf("failed to list flow export policy, err:%s", err)
+		}
 		return flowExpList, nil
 	}
 

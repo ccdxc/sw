@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -1556,13 +1557,13 @@ func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
 	}
 	oldMs, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err == nil {
-		if proto.Equal(oldMs, pcSession) {
-			log.Errorf("MirrorSession %+v update is same as what is already created", oldMs)
-			return errors.New("Duplicate MirrorSession during update")
+		if reflect.DeepEqual(oldMs.Spec, pcSession.Spec) {
+			log.Infof("no change in mirrorsession %+v", oldMs.Name)
+			return nil
 		}
 	} else {
 		log.Errorf("MirrorSession %v does not exist to update", pcSession.Name)
-		return ErrInvalidMirrorSpec
+		return fmt.Errorf("mirrorsession %v does not exist", pcSession.Name)
 	}
 	if pcSession.Spec.Enable {
 		return tsa.createUpdatePacketCaptureSession(pcSession, true)

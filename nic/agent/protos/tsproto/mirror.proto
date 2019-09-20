@@ -112,4 +112,5 @@ service MirrorSessionApi {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
     rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
+    rpc ListMirrorSessions (api.ObjectMeta) returns (MirrorSessionEventList) {};
 }

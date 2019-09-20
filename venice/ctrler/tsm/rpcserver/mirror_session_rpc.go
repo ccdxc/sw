@@ -99,6 +99,24 @@ func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, s
 	return &msList, nil
 }
 
+// ListMirrorSessions api to list
+func (r *MirrorSessionRPCServer) ListMirrorSessions(ctx context.Context, sel *api.ObjectMeta) (*tsproto.MirrorSessionEventList, error) {
+	tmsList, err := r.ListMirrorSessionsActive(context.Background(), sel)
+	if err != nil {
+		log.Errorf("Error getting a list of MirrorSessions. Err: %v", err)
+		return nil, err
+	}
+	evList := &tsproto.MirrorSessionEventList{}
+	for _, tms := range tmsList.MirrorSessions {
+		evList.MirrorSessionEvents = append(evList.MirrorSessionEvents,
+			&tsproto.MirrorSessionEvent{
+				EventType:     api.EventType_CreateEvent,
+				MirrorSession: *tms,
+			})
+	}
+	return evList, nil
+}
+
 // WatchMirrorSessions watches mirror session objects for changes and sends them as streaming rpc
 // This function is invoked when agent (grpc client) performs stream.Recv() on this watch stream service
 func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream tsproto.MirrorSessionApi_WatchMirrorSessionsServer) error {
