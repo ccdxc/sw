@@ -1501,10 +1501,12 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 			hwstat->tx_bcast_bytes);
 
 	case IFCOUNTER_IMCASTS:
-		return (hwstat->rx_mcast_packets);
+		return (hwstat->rx_mcast_packets +
+			hwstat->rx_bcast_packets);
 
 	case IFCOUNTER_OMCASTS:
-		return (hwstat->tx_mcast_packets);
+		return (hwstat->tx_mcast_packets +
+			hwstat->tx_bcast_packets);
 
 	case IFCOUNTER_IQDROPS:
 		return (hwstat->rx_ucast_drop_packets +
