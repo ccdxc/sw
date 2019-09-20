@@ -127,18 +127,19 @@ class TableDataMap:
                 self.by_pg_name[table["name"]+".bin"] = table
     
     def _init_table_loader_info(self):
-        reader = csv.reader(open(env.capri_loader_conf, 'r'))
-        for row in reader:
-            try:
-                table = self.by_pg_name[row[0]]
-            except:
-                #P4 plus tables have different convention
-                # Their tables names will not be found in the json files.
-                continue
-            table["start_addr"] = "0x" + row[1]
-            table["end_addr"] = "0x" + row[2]
-            range_addr = range(int(row[1], 16), int(row[2], 16) + 1)
-            self.by_addr_range[range_addr] = table 
+        with open(env.capri_loader_conf) as json_file:
+            data = json.load(json_file)
+            for program in data["programs"]:
+                try:
+                    table = self.by_pg_name[program["name"]]
+                except:
+                    #P4 plus tables have different convention
+                    # Their tables names will not be found in the json files.
+                    continue
+                table["start_addr"] =  program["base_addr_hex"]
+                table["end_addr"] =  program["end_addr_hex"]
+                range_addr = range(int(table["start_addr"], 16), int(table["end_addr"], 16) + 1)
+                self.by_addr_range[range_addr] = table
     
 def create_html_page(index_page_name):
 
@@ -239,10 +240,11 @@ def generate_pipeline_data(data, asm_out_dir, output_dir):
     illegal_instr_file = open(output_dir + "/" + "illegal_ins.txt", "w+")
    
     for feature in next(os.walk(asm_out_dir))[1]:
-        cmd = "mkdir -p " + output_dir + "/" + feature
+        out_feature = feature.replace("::", "_")
+        cmd = "mkdir -p " + output_dir + "/" + out_feature
         subprocess.call([cmd], shell=True)
         for module_dir in next(os.walk(asm_out_dir + "/" + feature))[1]:
-            module_data = ModuleData(os.path.basename(module_dir), feature, None)
+            module_data = ModuleData(os.path.basename(module_dir), out_feature, None)
             for tc_dir in next(os.walk(asm_out_dir + "/" +  feature + "/" + module_dir))[1]:
                 module_data.num_of_test_cases += 1
                 for tc_file in next(os.walk(asm_out_dir + "/" + feature + "/" + module_dir + "/" +  tc_dir))[2]:

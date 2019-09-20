@@ -277,15 +277,18 @@ class CapcovCoverage(CoverageBase):
             raise
         subprocess.call(["mkdir", "-p", cov_output_dir])
 
+        prgm_data = None
         try:
-            reader = csv.reader(open(env.capri_loader_conf, 'r'))
+            with open(env.capri_loader_conf) as json_file:
+                prgm_data = json.load(json_file)
         except:
             print ("Error reading capri loader configuration file")
             sys.exit(1)
 
         cap_loader_info = {}
-        for row in reader:
-            cap_loader_info[row[0]] = {"start_addr" : "0x" + row[1], "end_addr" : "0x" + row[2]}
+        for program in prgm_data["programs"]:
+            cap_loader_info[program["name"]] = {"start_addr" :  program["base_addr_hex"],
+                     "end_addr" : program["end_addr_hex"]}
 
         for dir in data.get("dirs", []):
             for root, dirs, files in os.walk(dir):

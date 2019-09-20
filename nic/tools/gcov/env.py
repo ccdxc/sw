@@ -20,7 +20,7 @@ if not nic_dir:
     print ("Nic not set, please set NIC_DIR")
     sys.exit(1)
 nic_dir = os.path.abspath(nic_dir)
-asm_src_dir = nic_dir + "/" + "asm"
+asm_src_dir = nic_dir + "/" + "hal/iris/datapath/asm"
 
 capcov_cmd = os.environ.get("CAPCOV")
 if not capcov_cmd:

@@ -69,7 +69,7 @@
                 ".h",
                 ".s"
             ],
-            "obj_dir" : "build/x86_64/iris/out",
+            "obj_dir" : "build/x86_64/iris/out/iris_asmbin/hal/iris/datapath/asm/iris/",
             "obj_dir_type" : "flat",
             "cov_type" : "capcov"
         }
@@ -78,7 +78,7 @@
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [
-                "hal"
+                "hal", "asm"
             ]
         },
         "mbt": {
