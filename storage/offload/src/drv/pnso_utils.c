@@ -290,6 +290,81 @@ out:
 }
 
 pnso_error_t
+putil_get_dc_packed_sgl(const struct per_core_resource *pcr,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl)
+{
+	pnso_error_t err;
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct cpdc_sgl *sgl;
+	struct buffer_addr_len addr_len;
+	uint32_t total_len;
+
+	/*
+	 * This routne programs single-sgl, in such a way that first and
+	 * second pair of addr/len to point to the user-supplied output
+	 * buffer/len to avoid truncation issue in HW.
+	 *
+	 * This routine assumes that the caller supplied buffer len is less
+	 * than or equal to 4K.
+	 *
+	 */
+	if (!svc_blist->blist || svc_blist->blist->count != 1) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer list null/empty! err: %d", err);
+		return err;
+	}
+
+	svc_sgl->mpool_type = mpool_type;
+	svc_sgl->sgl = NULL;
+	total_len = 0;
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			svc_blist->len);
+	if (iter) {
+		sgl = pc_res_mpool_object_get(pcr, mpool_type);
+		if (!sgl) {
+			err = EAGAIN;
+			OSAL_LOG_DEBUG("cannot obtain sgl from pool! err: %d",
+					err);
+			goto out;
+		}
+		memset(sgl, 0, sizeof(*sgl));
+
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+				&addr_len);
+
+		sgl->cs_addr_0 = addr_len.addr;
+		sgl->cs_len_0 = addr_len.len;
+
+		sgl->cs_addr_1 = addr_len.addr;
+		sgl->cs_len_1 = addr_len.len;
+
+		total_len = addr_len.len;
+		svc_sgl->sgl = sgl;
+
+		OSAL_LOG_DEBUG("addr_len.addr: 0x" PRIx64 " addr_len.len: %u cs_addr_0: 0x" PRIx64 " cs_len_0: %u cs_addr_1: 0x" PRIx64 " cs_len_1: %u",
+				addr_len.addr, addr_len.len,
+				sgl->cs_addr_0, sgl->cs_len_0, 
+				sgl->cs_addr_1, sgl->cs_len_1);
+	}
+
+	if (!total_len) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
+		goto out;
+	}
+
+	return PNSO_OK;
+out:
+	OSAL_LOG_SPECIAL_ERROR("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
 pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
 		      uint32_t block_size,

@@ -809,21 +809,30 @@ cpdc_update_service_info_dst_sgl(struct service_info *svc_info)
 				MPOOL_TYPE_CPDC_SGL_VECTOR,
 				&svc_info->si_dst_sgl, false);
 	} else {
-		err = ((svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS) &&
-				(svc_info->si_dst_blist.len >=
-				 CPDC_MIN_USER_BUFFER_LEN)) ?
-			putil_get_dc_prepad_packed_sgl(svc_info->si_pcr,
-					&svc_info->si_dst_blist,
-					CPDC_SGL_TUPLE_LEN_MAX,
-					MPOOL_TYPE_CPDC_SGL,
-					&svc_info->si_dst_sgl) :
-			pc_res_sgl_packed_get(svc_info->si_pcr,
-					&svc_info->si_dst_blist,
-					CPDC_SGL_TUPLE_LEN_MAX,
-					MPOOL_TYPE_CPDC_SGL,
-					&svc_info->si_dst_sgl);
+		if (svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS) {
+			err = (svc_info->si_dst_blist.len > PAGE_SIZE) ?
+				putil_get_dc_prepad_packed_sgl(
+						svc_info->si_pcr,
+						&svc_info->si_dst_blist,
+						CPDC_SGL_TUPLE_LEN_MAX,
+						MPOOL_TYPE_CPDC_SGL,
+						&svc_info->si_dst_sgl) :
+				putil_get_dc_packed_sgl(svc_info->si_pcr,
+						&svc_info->si_dst_blist,
+						CPDC_SGL_TUPLE_LEN_MAX,
+						MPOOL_TYPE_CPDC_SGL,
+						&svc_info->si_dst_sgl);
+			goto out;
+		}
+
+		err = pc_res_sgl_packed_get(svc_info->si_pcr,
+				&svc_info->si_dst_blist,
+				CPDC_SGL_TUPLE_LEN_MAX,
+				MPOOL_TYPE_CPDC_SGL,
+				&svc_info->si_dst_sgl);
 	}
 
+out:
 	return err;
 }
 

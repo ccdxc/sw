@@ -77,6 +77,13 @@ putil_get_dc_prepad_packed_sgl(const struct per_core_resource *pcr,
 		      struct service_cpdc_sgl *svc_sgl);
 
 pnso_error_t
+putil_get_dc_packed_sgl(const struct per_core_resource *pcr,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl);
+
+pnso_error_t
 pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
 		      uint32_t block_size,
