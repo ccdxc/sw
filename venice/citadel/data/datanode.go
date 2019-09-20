@@ -10,11 +10,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/user"
 	"strconv"
 	"sync"
 
-	context "golang.org/x/net/context"
+	"golang.org/x/net/context"
 
 	"github.com/cenkalti/backoff"
 
@@ -111,15 +110,6 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, quer
 		return nil, err
 	}
 
-	if querydbPath == "" {
-		// use the tpmfs dir, /run/user/$uid/qstore
-		if u, err := user.Current(); err == nil {
-			querydbPath = fmt.Sprintf("/run/user/%s/qstore", u.Uid)
-		} else { // pick one from /tmp
-			querydbPath = "/tmp/qstore"
-		}
-	}
-
 	// If nodeURL was passed with :0, then update the nodeURL to the real URL
 	nodeURL = rpcSrv.GetListenURL()
 
@@ -160,6 +150,11 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, quer
 // getDbPath returns the db path for store type
 func (dn *DNode) getDbPath(clusterType string, replicaID uint64) string {
 	return fmt.Sprintf("%s/%s/%d", dn.dbPath, clusterType, replicaID)
+}
+
+// getQueryDbPath returns the query db path
+func (dn *DNode) getQueryDbPath(clusterType string) string {
+	return fmt.Sprintf("%s/%s/qdb", dn.dbPath, clusterType)
 }
 
 // readAllShards reads all shard state from metadata store and restores state

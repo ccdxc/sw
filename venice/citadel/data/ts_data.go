@@ -428,6 +428,9 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 
 // newQueryStore creates ts engine for query
 func (dn *DNode) newQueryStore() error {
+	if dn.querydbPath == "" {
+		dn.querydbPath = dn.getQueryDbPath(meta.ClusterTypeTstore)
+	}
 	// get default
 	cfg := tsdb.NewConfig()
 
@@ -436,9 +439,8 @@ func (dn *DNode) newQueryStore() error {
 
 	// set engine config
 
-	// cache to 2 GB
-	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
-	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheSnapshotMemorySize
+	cfg.CacheMaxMemorySize = tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotMemorySize = tsdb.DefaultCacheSnapshotMemorySize
 	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
 	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
 	cfg.MaxSeriesPerDatabase = 5 * tsdb.DefaultMaxSeriesPerDatabase
