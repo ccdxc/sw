@@ -269,7 +269,7 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
 			return false, sgp
@@ -378,7 +378,7 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		prop := &sgp.SGPolicy.Status.PropagationStatus
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 1 || prop.Pending != 1 || prop.GenerationID != "2" || prop.MinVersion != "1" {
 			return false, sgp
