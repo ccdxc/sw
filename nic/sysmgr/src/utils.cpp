@@ -352,17 +352,21 @@ std::string get_main_config_file()
 
     pt::read_json(DEVICE_JSON, ptree);
 
-    int fwd = ptree.get<int>("forwarding-mode",
-        device::FORWARDING_MODE_NONE);
-    if (fwd == device::FORWARDING_MODE_CLASSIC)
+    fwd_mode = ptree.get<std::string>("forwarding-mode",
+        "FORWARDING_MODE_CLASSIC");
+    
+    if (fwd_mode == "FORWARDING_MODE_CLASSIC" ||
+        fwd_mode == std::to_string(device::FORWARDING_MODE_CLASSIC))
     {
         fwd_mode = "classic";
     }
-    else if (fwd == device::FORWARDING_MODE_HOSTPIN)
+    else if (fwd_mode == "FORWARDING_MODE_HOSTPIN" ||
+        fwd_mode == std::to_string(device::FORWARDING_MODE_HOSTPIN))
     {
         fwd_mode = "hostpin";
     }
-    else if (fwd == device::FORWARDING_MODE_SWITCH)
+    else if (fwd_mode == "FORWARDING_MODE_SWITCH" ||
+        fwd_mode == std::to_string(device::FORWARDING_MODE_SWITCH))
     {
         fwd_mode = "switch";
     }

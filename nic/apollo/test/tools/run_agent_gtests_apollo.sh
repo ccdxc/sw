@@ -4,7 +4,7 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf/
 export ZMQ_SOC_DIR=${NICDIR}
 export PATH=${PATH}:${BUILD_DIR}/bin
-export HAL_LOG_DIR=${NICDIR}
+export NON_PERSISTENT_LOGDIR=${NICDIR}
 unset CAPRI_MOCK_MODE
 
 cleanup () {

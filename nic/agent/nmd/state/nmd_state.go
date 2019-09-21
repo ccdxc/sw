@@ -949,25 +949,24 @@ func initAllowedCommands() {
 	allowedCommands["halctldebug"] = 22
 	allowedCommands["mksshdir"] = 23
 	allowedCommands["touchsshauthkeys"] = 24
-	allowedCommands["pensshkeygen"] = 25
-	allowedCommands["touchsshdlock"] = 26
-	allowedCommands["disablesshd"] = 27
-	allowedCommands["stopsshd"] = 28
-	allowedCommands["enablesshd"] = 29
-	allowedCommands["startsshd"] = 30
-	allowedCommands["lnlocaltime"] = 31
-	allowedCommands["setdate"] = 32
-	allowedCommands["getdate"] = 33
-	allowedCommands["getsysmem"] = 34
-	allowedCommands["getprocmeminfo"] = 35
-	allowedCommands["halctlshowqosclass"] = 36
-	allowedCommands["halctlshowqosclassgroup"] = 37
-	allowedCommands["halctldebugdeleteqosclassqosgroup"] = 38
-	allowedCommands["halctlshowsystemqueuestats"] = 39
-	allowedCommands["consoledisable"] = 40
-	allowedCommands["consoleenable"] = 41
-	allowedCommands["rmpentechsupportdir"] = 42
-	allowedCommands["penverifyfirmware"] = 43
+	allowedCommands["touchsshdlock"] = 25
+	allowedCommands["disablesshd"] = 26
+	allowedCommands["stopsshd"] = 27
+	allowedCommands["enablesshd"] = 28
+	allowedCommands["startsshd"] = 29
+	allowedCommands["lnlocaltime"] = 30
+	allowedCommands["setdate"] = 31
+	allowedCommands["getdate"] = 32
+	allowedCommands["getsysmem"] = 33
+	allowedCommands["getprocmeminfo"] = 34
+	allowedCommands["halctlshowqosclass"] = 35
+	allowedCommands["halctlshowqosclassgroup"] = 36
+	allowedCommands["halctldebugdeleteqosclassqosgroup"] = 37
+	allowedCommands["halctlshowsystemqueuestats"] = 38
+	allowedCommands["consoledisable"] = 39
+	allowedCommands["consoleenable"] = 40
+	allowedCommands["rmpentechsupportdir"] = 41
+	allowedCommands["penverifyfirmware"] = 42
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1085,12 +1084,6 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	} else if req.Executable == "killsshd" {
 		req.Executable = "killall"
 		req.Opts = "sshd"
-	} else if req.Executable == "pensshkeygen" {
-		req.Executable = "ssh-keygen"
-		req.Opts = "-A"
-	} else if req.Executable == "startsshd" {
-		req.Executable = "/usr/sbin/sshd"
-		req.Opts = ""
 	} else if req.Executable == "touchsshdlock" {
 		req.Executable = "touch"
 		req.Opts = "/var/lock/sshd"

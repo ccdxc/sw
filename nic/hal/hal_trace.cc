@@ -15,17 +15,23 @@ uint64_t g_cpu_mask;
 // wrapper for HAL trace init function
 void
 trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
-            const char *trace_file, size_t file_size, size_t num_files,
-            ::utils::trace_level_e trace_level)
+            const char *persistent_trace_file,
+            const char *non_persistent_trace_file,
+            size_t file_size, size_t num_files,
+            ::utils::trace_level_e persistent_trace_level,
+            ::utils::trace_level_e non_persistent_trace_level)
 {
-    if ((name == NULL) || (trace_file == NULL)) {
+    if ((name == NULL) ||
+        (persistent_trace_file == NULL && non_persistent_trace_file == NULL)) {
         return;
     }
     g_trace_logger =
         ::utils::log::factory(name, cores_mask,
             sync_mode ? ::utils::log_mode_sync : ::utils::log_mode_async,
-            false, trace_file, file_size, num_files,
-            ::utils::trace_debug, ::utils::log_none);
+            false, persistent_trace_file, non_persistent_trace_file,
+            file_size, num_files,
+            persistent_trace_level, non_persistent_trace_level,
+            ::utils::log_none);
 }
 
 void

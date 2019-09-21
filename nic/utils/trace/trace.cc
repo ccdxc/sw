@@ -84,9 +84,12 @@ log::set_cpu_affinity(void)
 
 bool
 log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
-          bool syslogger, const char *trace_file_name,
+          bool syslogger, const char *persistent_file_name,
+          const char *non_persistent_file_name,
           size_t file_size, size_t max_files,
-          trace_level_e trace_level, syslog_level_e syslog_level,
+          trace_level_e persistent_trace_level,
+          trace_level_e non_persistent_trace_level,
+          syslog_level_e syslog_level,
           bool truncate) {
     std::function<void()> worker_thread_cb = set_cpu_affinity;
 
@@ -101,7 +104,7 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
         g_logger_cpu_mask = cpu_mask;
     }
     syslogger_ = syslogger;
-    trace_level_ = trace_level;
+    trace_level_ = non_persistent_trace_level;
     log_level_ = syslog_level;
     if (log_mode == log_mode_async) {
         spdlog::set_async_mode(k_async_qsize_, k_async_overflow_policy_,
@@ -110,22 +113,35 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
     if (syslogger) {
         logger_ = spdlog::syslog_logger(name, name, LOG_PID);
     } else {
-        if (truncate) {
-            logger_ = spdlog::rotating_logger_mt(name, trace_file_name, file_size,
-                                                 max_files);
-        } else {
-            auto sink = std::make_shared < spdlog::sinks::rotating_file_sink_mt >
-                       (trace_file_name, file_size, max_files);
+            
+        auto dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
 
-            logger_ = std::make_shared < spdlog::logger > (name, sink);
+        if (persistent_file_name &&
+            strcmp(persistent_file_name, "") != 0) {
+            auto sink_persist = std::make_shared <spdlog::sinks::rotating_file_sink_mt>
+                (persistent_file_name, file_size, max_files);
+            sink_persist->set_level(
+                trace_level_to_spdlog_level(persistent_trace_level));
+            dist_sink->add_sink(sink_persist);
         }
+
+        if (non_persistent_file_name &&
+            strcmp(non_persistent_file_name, "") != 0) {
+            auto sink_non_persist = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
+                (non_persistent_file_name, file_size, max_files);
+            sink_non_persist->set_level(
+                trace_level_to_spdlog_level(trace_verbose));
+            dist_sink->add_sink(sink_non_persist);
+        }
+
+        logger_ = std::make_shared<spdlog::logger>(name, dist_sink);
     }
     if (logger_) {
         logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
         if (syslogger) {
             logger_->set_level(syslog_level_to_spdlog_level(syslog_level));
         } else {
-            logger_->set_level(trace_level_to_spdlog_level(trace_level));
+            logger_->set_level(trace_level_to_spdlog_level(trace_level_));
         }
 
         // trigger flush if the log severity is error or higher
@@ -137,14 +153,17 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
 
 log *
 log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
-             bool syslogger, const char *trace_file_name,
+             bool syslogger, const char *persistent_trace_file_name,
+             const char *non_persistent_file_name,
              size_t file_size, size_t max_files,
-             trace_level_e trace_level, syslog_level_e syslog_level,
+             trace_level_e persistent_trace_level,
+             trace_level_e non_persistent_trace_level,
+             syslog_level_e syslog_level,
              bool truncate) {
     void    *mem;
     log     *new_logger;
 
-    if (!name || !trace_file_name) {
+    if (!name || (!persistent_trace_file_name && !non_persistent_file_name)) {
         return NULL;
     }
 
@@ -154,8 +173,10 @@ log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
     }
 
     new_logger = new (mem) log();
-    if (new_logger->init(name, cpu_mask, log_mode, syslogger, trace_file_name,
-                         file_size, max_files, trace_level, syslog_level,
+    if (new_logger->init(name, cpu_mask, log_mode, syslogger,
+                         persistent_trace_file_name, non_persistent_file_name,
+                         file_size, max_files, persistent_trace_level,
+                         non_persistent_trace_level, syslog_level,
                          truncate) == false) {
         new_logger->~log();
         free(new_logger);

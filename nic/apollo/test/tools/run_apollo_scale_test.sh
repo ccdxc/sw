@@ -2,7 +2,7 @@
 
 set -ex
 export NICDIR=`pwd`
-export HAL_LOG_DIR=${NICDIR}
+export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
 export CAPRI_MOCK_MEMORY_MODE=1

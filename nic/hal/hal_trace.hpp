@@ -12,8 +12,11 @@ namespace utils {
 extern ::utils::log *g_trace_logger;
 extern ::utils::log *g_syslog_logger;
 void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
-                const char *trace_file, size_t file_size, size_t max_files,
-                ::utils::trace_level_e trace_level);
+                const char *persistent_trace_file,
+                const char *non_persistent_trace_file,
+                size_t file_size, size_t max_files,
+                ::utils::trace_level_e persistent_trace_level,
+                ::utils::trace_level_e non_persistent_trace_level);
 void trace_deinit(void);
 
 // wrapper APIs to get logger and syslogger

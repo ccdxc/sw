@@ -145,14 +145,6 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "pensshkeygen",
-		Opts:       strings.Join([]string{""}, ""),
-	}
-	if err := naplesExecCmd(v); err != nil {
-		fmt.Println(err)
-		return errors.New("Unable to create missing keys")
-	}
-	v = &nmd.NaplesCmdExecute{
 		Executable: "enablesshd",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -163,14 +155,6 @@ func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	v = &nmd.NaplesCmdExecute{
 		Executable: "startsshd",
 		Opts:       strings.Join([]string{"start"}, ""),
-	}
-	if err := naplesExecCmd(v); err != nil {
-		fmt.Println(err)
-		return errors.New("Unable to start sshd")
-	}
-	v = &nmd.NaplesCmdExecute{
-		Executable: "touchsshdlock",
-		Opts:       strings.Join([]string{""}, ""),
 	}
 	return naplesExecCmd(v)
 }

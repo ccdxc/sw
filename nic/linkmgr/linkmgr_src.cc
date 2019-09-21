@@ -89,52 +89,79 @@ svc_reg (ServerBuilder *server_builder,
     return HAL_RET_OK;
 }
 
+// verify_logdir checks if the dir exists and we have write permisions
+static bool
+verify_logdir (const char *logdir)
+{
+    struct stat st = { 0 };
+
+    // check if this log dir exists
+    if (stat(logdir, &st) == -1) {
+        // doesn't exist, try to create
+        if (mkdir(logdir, 0755) < 0) {
+            fprintf(stderr,
+                "Log directory %s/ doesn't exist, failed to create one\n",
+                logdir);
+            return false;
+        }
+    } else {
+        // log dir exists, check if we have write permissions
+        if (access(logdir, W_OK) < 0) {
+            // don't have permissions to create this directory
+            fprintf(stderr,
+                "No permissions to create log file in %s\n",
+                logdir);
+            return false;
+        }
+    }
+    return true;
+}
+
+// get_logfile returns the full path of a logfile based on enviromental
+// variables
+static const std::string
+get_logfile (const char *env, const char *base, const char *alt)
+{
+    const char *logdir = NULL;
+    
+    logdir = std::getenv(env);
+    if (!logdir) {
+        return std::string(alt);
+    }
+
+    if (!verify_logdir(logdir)) {
+        return std::string("");
+    }
+
+    return std::string(logdir) + "/" + std::string(base);
+}
+    
 //------------------------------------------------------------------------------
 // logger init for linkmgr
 //------------------------------------------------------------------------------
 ::utils::log *
 linkmgr_logger_init (void)
 {
-    std::string     logfile;
-    char            *logdir;
-    struct stat     st = { 0 };
-    ::utils::log    *logger;
+    ::utils::log *logger;
+    std::string  persistent;
+    std::string  non_persistent;
 
-    logdir = std::getenv("HAL_LOG_DIR");
-    if (!logdir) {
-        // log in the current dir
-        logfile = std::string("./linkmgr.log");
-    } else {
-        // check if this log dir exists
-        if (stat(logdir, &st) == -1) {
-            // doesn't exist, try to create
-            if (mkdir(logdir, 0755) < 0) {
-                fprintf(stderr,
-                        "Log directory %s/ doesn't exist, failed to create one\n",
-                        logdir);
-                return NULL;
-            }
-        } else {
-            // log dir exists, check if we have write permissions
-            if (access(logdir, W_OK) < 0) {
-                // don't have permissions to create this directory
-                fprintf(stderr,
-                        "No permissions to create log file in %s\n",
-                        logdir);
-                return NULL;
-            }
-        }
-        logfile = logdir + std::string("/linkmgr.log");
-    }
+    persistent = get_logfile("PERSISTENT_LOGDIR", "linkmgr.log",
+        "./linkmgr.pers.log");
+    non_persistent = get_logfile("NON_PERSISTENT_LOGDIR", "linkmgr.log",
+        "./linkmgr.nonpers.log");
 
     logger =
         ::utils::log::factory("linkmgr",
                               sdk::lib::thread::control_cores_mask(),
                               ::utils::log_mode_sync,
-                              false, logfile.c_str(),
+                              false,
+                              persistent.c_str(),
+                              non_persistent.c_str(),
                               5 << 20, // size(5MB)
                               1 /* number of files */,
-                              ::utils::trace_debug,
+                              ::utils::trace_err,   /* for persistent */
+                              ::utils::trace_debug, /* for non-persistent */
                               ::utils::log_none);
     SDK_ASSERT(logger != NULL);
 

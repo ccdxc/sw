@@ -1454,9 +1454,9 @@ TEST_F(gft_test, test1) {
 
     printf("Connecting to ASIC SIM\n");
     hal::hal_sdk_init();
-    hal::utils::trace_init("hal", 0, true, "hal.log",
+    hal::utils::trace_init("hal", 0, true, "hal.log", NULL,
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
-                           ::utils::trace_debug);
+                           ::utils::trace_debug, ::utils::trace_none);
     ret = sdk::lib::pal_init(platform);
     ASSERT_TRUE(ret == 0);
 

@@ -512,42 +512,67 @@ hal_cores_validate (uint64_t sys_core,
     return HAL_RET_OK;
 }
 
+
+// verify_logdir checks if the dir exists and we have write permisions
+static bool
+verify_logdir (const char *logdir)
+{
+    struct stat st = { 0 };
+
+    // check if this log dir exists
+    if (stat(logdir, &st) == -1) {
+        // doesn't exist, try to create
+        if (mkdir(logdir, 0755) < 0) {
+            fprintf(stderr,
+                "Log directory %s/ doesn't exist, failed to create one\n",
+                logdir);
+            return false;
+        }
+    } else {
+        // log dir exists, check if we have write permissions
+        if (access(logdir, W_OK) < 0) {
+            // don't have permissions to create this directory
+            fprintf(stderr,
+                "No permissions to create log file in %s\n",
+                logdir);
+            return false;
+        }
+    }
+    return true;
+}
+
+// get_logfile returns the full path of a logfile based on enviromental
+// variables
+static const std::string
+get_logfile (const char *env, const char *base, const char *alt)
+{
+    const char *logdir = NULL;
+    
+    logdir = std::getenv(env);
+    if (!logdir) {
+        return std::string(alt);
+    }
+
+    if (!verify_logdir(logdir)) {
+        return std::string("");
+    }
+
+    return std::string(logdir) + "/" + std::string(base);
+}
+
 //------------------------------------------------------------------------------
 // initialize HAL logging
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_logger_init (hal_cfg_t *hal_cfg)
 {
-    std::string          logfile;
-    char                 *logdir;
-    struct stat          st = { 0 };
+    std::string persistent_logfile;
+    std::string non_persistent_logfile;
 
-    logdir = std::getenv("HAL_LOG_DIR");
-    if (!logdir) {
-        // log in the current dir
-        logfile = std::string("./hal.log");
-    } else {
-        // check if this log dir exists
-        if (stat(logdir, &st) == -1) {
-            // doesn't exist, try to create
-            if (mkdir(logdir, 0755) < 0) {
-                fprintf(stderr,
-                        "Log directory %s/ doesn't exist, failed to create one\n",
-                        logdir);
-                return HAL_RET_ERR;
-            }
-        } else {
-            // log dir exists, check if we have write permissions
-            if (access(logdir, W_OK) < 0) {
-                // don't have permissions to create this directory
-                fprintf(stderr,
-                        "No permissions to create log file in %s\n",
-                        logdir);
-                return HAL_RET_ERR;
-            }
-        }
-        logfile = logdir + std::string("/hal.log");
-    }
+    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "hal.log",
+        "./hal.pers.log");
+    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "hal.log",
+        "./hal.nonpers.log");
 
     // initialize the logger
     hal_cfg->sync_mode_logging = false;
@@ -557,9 +582,12 @@ hal_logger_init (hal_cfg_t *hal_cfg)
         hal_cfg->sync_mode_logging = true;
     }
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
-                           hal_cfg->sync_mode_logging, logfile.c_str(),
+                           hal_cfg->sync_mode_logging,
+                           persistent_logfile.c_str(),
+                           non_persistent_logfile.c_str(),
                            5 << 20, // 50MB
                            10,      // 10 files
+                           ::utils::trace_err,
                            getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
                                                        (::utils::trace_debug));
 

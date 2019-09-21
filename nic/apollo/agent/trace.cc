@@ -25,8 +25,8 @@ trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
     g_trace_logger =
         utils::log::factory(name, cores_mask,
             sync_mode ? utils::log_mode_sync : utils::log_mode_async,
-            false, trace_file, file_size, num_files,
-            utils::trace_debug, utils::log_none);
+            false, trace_file, NULL, file_size, num_files,
+            utils::trace_debug, utils::trace_none, utils::log_none);
 }
 
 //------------------------------------------------------------------------------

@@ -5,14 +5,16 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export HAL_LOG_DIR=/obfl
+export PERSISTENT_LOGDIR=/obfl
+export NON_PERSISTENT_LOGDIR=/var/log/pensando
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export COVFILE=$HAL_CONFIG_PATH/hw_bullseye_hal.cov
 #export DISABLE_AGING=1
 
 # remove logs
-rm -f $HAL_LOG_DIR/hal.log*
+rm -f $PERSISTENT_LOGDIR/hal.log*
+rm -f $NON_PERSISTENT_LOGDIR/hal.log*
 
 ulimit -c unlimited
 

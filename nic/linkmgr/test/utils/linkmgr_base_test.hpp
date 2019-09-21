@@ -47,9 +47,10 @@ linkmgr_initialize (const char c_file[])
     // Initialize the logger
     hal::utils::trace_init("linkmgr_gtest",
                            sdk::lib::thread::control_cores_mask(),
-                           true, "linkmgr_gtest.log",
+                           true, "linkmgr_gtest.log", NULL,
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
-                           ::utils::trace_debug);
+                           ::utils::trace_debug,
+                           ::utils::trace_none);
     sdk::lib::logger::init(sdk_trace_cb);
 
     sdk::lib::thread::control_cores_mask_set(0x1);

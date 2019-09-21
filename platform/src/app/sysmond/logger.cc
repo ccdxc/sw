@@ -89,13 +89,15 @@ initializeLogger (void)
     if (!initDone) {
         g_trace_logger = ::utils::log::factory("sysmond", 0x0,
                                         ::utils::log_mode_sync, false,
-                                        LOG_FILENAME, LOG_MAX_FILESIZE,
+                                        NULL, LOG_FILENAME, LOG_MAX_FILESIZE,
                                         LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::trace_debug,
                                         ::utils::log_none);
         obfl_trace_logger = ::utils::log::factory("sysmond_obfl", 0x0,
                                         ::utils::log_mode_sync, false,
-                                        OBFL_LOG_FILENAME, OBFL_LOG_MAX_FILESIZE,
+                                        OBFL_LOG_FILENAME, NULL, OBFL_LOG_MAX_FILESIZE,
                                         LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::trace_debug,
                                         ::utils::log_none);
         initDone = true;
     }

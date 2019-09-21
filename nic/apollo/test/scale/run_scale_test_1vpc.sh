@@ -2,7 +2,7 @@
 
 set -e
 export NICDIR=`pwd`
-export HAL_LOG_DIR=${NICDIR}
+export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export SKIP_VERIFY=1
 export BUILD_DIR=${NICDIR}/build/x86_64/apollo/

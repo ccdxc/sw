@@ -5,6 +5,7 @@
 #define SPDLOG_ENABLE_SYSLOG    1
 
 #include <spdlog/fmt/ostr.h>
+#include <spdlog/sinks/dist_sink.h>
 #include <spdlog/spdlog.h>
 
 /*
@@ -95,10 +96,12 @@ public:
     // cpu_mask is the CPU to which the logger backend threads will be pinned to
     static log *factory(const char *name, uint64_t cpu_mask,
                         log_mode_e log_mode, bool syslogger,
-                        const char *trace_file_name,
+                        const char *persistent_trace_file_name,
+                        const char *non_persistent_trace_file_name,
                         size_t file_size = TRACE_FILE_SIZE_DEFAULT,
                         size_t max_files = TRACE_NUM_FILES_DEFAULT,
-                        trace_level_e trace_level = trace_err,
+                        trace_level_e persistent_trace_level = trace_err,
+                        trace_level_e non_persistent_trace_level = trace_err,
                         syslog_level_e syslog_level = log_notice,
                         bool truncate = true);
     static void destroy(log *logger_obj);
@@ -122,9 +125,12 @@ private:
     log() {}
     ~log();
     bool init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
-              bool syslogger, const char *trace_file_name,
+              bool syslogger, const char *persistent_trace_file_name,
+              const char *non_persistent_file_name,
               size_t file_size, size_t max_files,
-              trace_level_e trace_level, syslog_level_e syslog_level,
+              trace_level_e persistent_trace_level,
+              trace_level_e non_persistent_trace_level,
+              syslog_level_e syslog_level,
               bool truncate);
     static void set_cpu_affinity(void);
     spdlog::level::level_enum trace_level_to_spdlog_level(trace_level_e level);
@@ -132,8 +138,11 @@ private:
 };
 
 void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
-                const char *trace_file, size_t file_size, size_t max_files,
-                trace_level_e trace_level);
+                const char *persistent_trace_file,
+                const char *non_persistent_trace_file,
+                size_t file_size, size_t max_files,
+                trace_level_e persistent_trace_level,
+                trace_level_e non_persistent_trace_level);
 
 void trace_deinit(void);
 
