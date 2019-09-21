@@ -191,10 +191,7 @@ main()
     if [ $need_pkg -ne 0 ]; then
         [ -z "$PKG" ] && usage
     fi
-    D=$R/update/update`expr $$ % 10`
-    if [ $IS_CUSTOM_INSTALLER -eq 0 ]; then
-        rm -rf $D
-    fi
+    D=/tmp/update$$
     mkdir -p $D
     MANIFEST=$D/MANIFEST
     INSTALLER=$D/installer
