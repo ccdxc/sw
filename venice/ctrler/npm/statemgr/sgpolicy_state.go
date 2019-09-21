@@ -389,7 +389,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	sgp.Spec = nsgp.Spec
 
 	// clear propagation status on update
-	sgp.SGPolicy.Status.PropagationStatus = security.PropagationStatus{}
+	sgp.NetworkSecurityPolicy.Status.PropagationStatus = security.PropagationStatus{}
 
 	// find the policy state
 	sgps, err := SgpolicyStateFromObj(sgp)
