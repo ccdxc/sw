@@ -90,6 +90,9 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   version: ClusterVersion = new ClusterVersion();
   versionSubscription: Subscription = null;
 
+  clock: any; // VS-838 build a UTC clock in Venice-UI
+  clocktimer: any = null;
+
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
   @ViewChild('sidenav') _sidenav: MatSidenav;
@@ -140,6 +143,10 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this._bindtoStore();
     this.userName = Utility.getInstance().getLoginName() ;
     this.setMomentJSSettings();
+
+    this.clocktimer = setInterval(() => {
+      this.clock = new Date();
+    }, 1000);
   }
 
   updateRolloutUIBlock() {
@@ -301,6 +308,10 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     });
     this._boolInitApp = false;
     this.idle.stop();
+
+    if (this.clocktimer) {
+      clearInterval(this.clocktimer);
+    }
   }
 
   /**

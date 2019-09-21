@@ -22,6 +22,7 @@ import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
 import { RepeaterData, ValueType} from 'web-app-framework';
 import { SearchUtil } from '@components/search/SearchUtil';
 import * as _ from 'lodash';
+import { TableCol } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-naples',
@@ -59,7 +60,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   fieldFormArray = new FormArray([]);
   maxRecords: number = 8000;
 
-  cols: any[] = [
+  cols: TableCol[] = [
     { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
     { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true },
     { field: 'status.DSCVersion', header: 'Version', class: 'naples-column-version', sortable: true },
