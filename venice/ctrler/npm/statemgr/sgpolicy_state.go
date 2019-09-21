@@ -231,6 +231,22 @@ func (sgp *SgpolicyState) detachFromApps() error {
 	return nil
 }
 
+// initNodeVersions initializes node versions for the policy
+func (sgp *SgpolicyState) initNodeVersions() error {
+	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
+
+	// walk all smart nics
+	for _, dsc := range dscs {
+		if sgp.stateMgr.isDscAdmitted(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			if _, ok := sgp.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
+				sgp.NodeVersions[dsc.DistributedServiceCard.Name] = ""
+			}
+		}
+	}
+
+	return nil
+}
+
 // SgpolicyStateFromObj converts from memdb object to sgpolicy state
 func SgpolicyStateFromObj(obj runtime.Object) (*SgpolicyState, error) {
 	switch obj.(type) {
@@ -353,6 +369,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 		return err
 	}
 
+	sgps.initNodeVersions()
 	sm.PeriodicUpdaterPush(sgps)
 
 	return nil
@@ -370,6 +387,9 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	}
 	sgp.ObjectMeta = nsgp.ObjectMeta
 	sgp.Spec = nsgp.Spec
+
+	// clear propagation status on update
+	sgp.SGPolicy.Status.PropagationStatus = security.PropagationStatus{}
 
 	// find the policy state
 	sgps, err := SgpolicyStateFromObj(sgp)
@@ -407,6 +427,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	}
 
 	log.Infof("Updated sgpolicy %#v", sgp.ObjectMeta)
+
+	sgps.initNodeVersions()
 	sm.PeriodicUpdaterPush(sgps)
 
 	return nil
@@ -449,7 +471,7 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	snic, err := sm.FindDistributedServiceCard(tenant, nodeuuid)
 	if err == nil {
 		// if smartnic is not healthy, dont update
-		if !sm.isDistributedServiceCardHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
+		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
 			return
 		}
 	}
@@ -458,9 +480,7 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	policy.NetworkSecurityPolicy.Lock()
 	defer policy.NetworkSecurityPolicy.Unlock()
 
-	if policy.NodeVersions == nil {
-		policy.NodeVersions = make(map[string]string)
-	}
+	// update node version
 	policy.NodeVersions[nodeuuid] = generationID
 
 	sm.PeriodicUpdaterPush(policy)

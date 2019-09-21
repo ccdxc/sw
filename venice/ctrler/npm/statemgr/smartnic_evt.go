@@ -64,8 +64,8 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		return err
 	}
 
-	// see if smartnic is haelthy
-	if sm.isDistributedServiceCardHealthy(&smartNic.DistributedServiceCard) {
+	// see if smartnic is admitted
+	if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
@@ -133,7 +133,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		if sm.isDistributedServiceCardHealthy(nsnic) {
+		if sm.isDscAdmitted(nsnic) {
 			if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
 				policy.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(policy)
@@ -150,7 +150,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 	// update firewall profiles
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
-		if sm.isDistributedServiceCardHealthy(nsnic) {
+		if sm.isDscAdmitted(nsnic) {
 			if _, ok := fwprofile.NodeVersions[nsnic.Name]; ok == false {
 				fwprofile.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
@@ -278,8 +278,25 @@ func (sm *Statemgr) FindDistributedServiceCardByHname(hname string) (*Distribute
 	return nil, fmt.Errorf("Smartnic not found for name %v", hname)
 }
 
-// isDistributedServiceCardHealthy returns true if smartnic is in healthry condition
-func (sm *Statemgr) isDistributedServiceCardHealthy(nsnic *cluster.DistributedServiceCard) bool {
+// ListDistributedServiceCards lists all smart nics
+func (sm *Statemgr) ListDistributedServiceCards() ([]*DistributedServiceCardState, error) {
+	objs := sm.ListObjects("DistributedServiceCard")
+
+	var dscs []*DistributedServiceCardState
+	for _, obj := range objs {
+		dsc, err := DistributedServiceCardStateFromObj(obj)
+		if err != nil {
+			return dscs, err
+		}
+
+		dscs = append(dscs, dsc)
+	}
+
+	return dscs, nil
+}
+
+// isDscHealthy returns true if smartnic is in healthry condition
+func (sm *Statemgr) isDscHealthy(nsnic *cluster.DistributedServiceCard) bool {
 	isHealthy := false
 	if len(nsnic.Status.Conditions) > 0 {
 		for _, cond := range nsnic.Status.Conditions {
@@ -290,4 +307,9 @@ func (sm *Statemgr) isDistributedServiceCardHealthy(nsnic *cluster.DistributedSe
 	}
 
 	return isHealthy
+}
+
+// isDscAdmitted returns true if the DSC is admited into the cluster
+func (sm *Statemgr) isDscAdmitted(nsnic *cluster.DistributedServiceCard) bool {
+	return nsnic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String()
 }

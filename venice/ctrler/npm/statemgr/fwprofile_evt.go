@@ -86,7 +86,7 @@ func (sm *Statemgr) updatePropogationStatus(genID string,
 	pendingNodes := []string{}
 	for _, obj := range objs {
 		snic, err := DistributedServiceCardStateFromObj(obj)
-		if err != nil || !sm.isDistributedServiceCardHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
+		if err != nil || !sm.isDscAdmitted(&snic.DistributedServiceCard.DistributedServiceCard) {
 			continue
 		}
 
@@ -104,6 +104,7 @@ func (sm *Statemgr) updatePropogationStatus(genID string,
 	// set status
 	if newProp.Pending == 0 {
 		newProp.Status = fmt.Sprintf("Propagation Complete")
+		newProp.PendingNaples = []string{}
 	} else {
 		newProp.Status = fmt.Sprintf("Propagation pending on: %s", strings.Join(pendingNodes, ", "))
 		newProp.PendingNaples = pendingNodes
