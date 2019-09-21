@@ -47,6 +47,7 @@ def Teardown(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/naples-disruptive-upgrade-tech-support.tar.gz")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar.gz")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar.gz")
+        api.Trigger_AddNaplesCommand(req, node, "rm /data/sysmgr.json")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)

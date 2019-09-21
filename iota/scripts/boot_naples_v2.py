@@ -499,6 +499,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -f /sysconfig/config0/frequency.json", "#")
 
         self.SendlineExpect("rm -rf /data/log && sync", "#")
+        self.SendlineExpect("rm -rf /data/sysmgr.json && sync", "#")
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
