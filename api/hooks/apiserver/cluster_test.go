@@ -764,13 +764,13 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
-	cluster := &cluster.Cluster{
+	cl := &cluster.Cluster{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testCluster",
 		},
 	}
-	clusterKey := cluster.MakeKey("cluster")
+	clusterKey := cl.MakeKey("cluster")
 	clusterHooks := &clusterHooks{
 		logger: l,
 	}
@@ -787,7 +787,11 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 		out, ok, err := clusterHooks.setAuthBootstrapFlag(ctx, kvs, txn, clusterKey, "AuthBootstrapComplete", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
-		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		if test.err == nil {
+			o1, o2 := out.(cluster.Cluster), test.out.(cluster.Cluster)
+			o1.ModTime, o1.CreationTime = o2.ModTime, o2.CreationTime
+			Assert(t, reflect.DeepEqual(o2, o1), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		}
 	}
 }
 
@@ -1044,13 +1048,13 @@ jkyfA7bgnrfYqr+pv2Y+319JpMCr6t+e+vLafbU=
 	if err != nil {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
-	cluster := &cluster.Cluster{
+	cl := &cluster.Cluster{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testCluster",
 		},
 	}
-	clusterKey := cluster.MakeKey("cluster")
+	clusterKey := cl.MakeKey("cluster")
 	clusterHooks := &clusterHooks{
 		logger: l,
 	}
@@ -1067,7 +1071,11 @@ jkyfA7bgnrfYqr+pv2Y+319JpMCr6t+e+vLafbU=
 		out, ok, err := clusterHooks.setTLSConfig(ctx, kvs, txn, clusterKey, "UpdateTLSConfig", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
-		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		if test.err == nil {
+			o1, o2 := out.(cluster.Cluster), test.out.(cluster.Cluster)
+			o1.ModTime, o1.CreationTime = o2.ModTime, o2.CreationTime
+			Assert(t, reflect.DeepEqual(o2, o1), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		}
 	}
 }
 

@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	es "github.com/olivere/elastic"
 	uuid "github.com/satori/go.uuid"
 
@@ -42,6 +44,9 @@ func TestAuditManager(t *testing.T) {
 	err := ti.setupElastic()
 	AssertOk(t, err, "setupElastic failed")
 	defer ti.teardownElastic()
+
+	ts, _ := types.TimestampProto(time.Now())
+	ts1 := api.Timestamp{Timestamp: *ts}
 	tests := []struct {
 		name   string
 		events []*auditapi.Event
@@ -54,7 +59,7 @@ func TestAuditManager(t *testing.T) {
 			events: []*auditapi.Event{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
-					ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
+					ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
 					EventAttributes: auditapi.EventAttributes{
 						Level:       auditapi.Level_RequestResponse.String(),
 						Stage:       auditapi.Stage_RequestProcessing.String(),
@@ -79,7 +84,7 @@ func TestAuditManager(t *testing.T) {
 			events: []*auditapi.Event{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
-					ObjectMeta: api.ObjectMeta{Name: "auditevent2", UUID: uuid.NewV4().String(), Tenant: "default"},
+					ObjectMeta: api.ObjectMeta{Name: "auditevent2", UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
 					EventAttributes: auditapi.EventAttributes{
 						Level:       auditapi.Level_RequestResponse.String(),
 						Stage:       auditapi.Stage_RequestProcessing.String(),
@@ -95,7 +100,7 @@ func TestAuditManager(t *testing.T) {
 				},
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
-					ObjectMeta: api.ObjectMeta{Name: "auditevent3", UUID: uuid.NewV4().String(), Tenant: "default"},
+					ObjectMeta: api.ObjectMeta{Name: "auditevent3", UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
 					EventAttributes: auditapi.EventAttributes{
 						Level:       auditapi.Level_RequestResponse.String(),
 						Stage:       auditapi.Stage_RequestProcessing.String(),

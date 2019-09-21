@@ -709,7 +709,8 @@ func expectWatchEvent(t *testing.T, ch <-chan *kvstore.WatchEvent, evType kvstor
 			// while Watch returns the version at the time of deletion.
 			obj.(*TestObj).ResourceVersion = ev.Object.(*TestObj).ResourceVersion
 		}
-
+		o1, o2 := ev.Object.(runtime.ObjectMetaAccessor).GetObjectMeta(), obj.(runtime.ObjectMetaAccessor).GetObjectMeta()
+		o1.ModTime, o1.CreationTime = o2.ModTime, o2.CreationTime
 		if !reflect.DeepEqual(ev.Object, obj) {
 			t.Fatalf("Expected obj %+v, got %+v", obj, ev.Object)
 		}

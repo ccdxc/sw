@@ -2513,6 +2513,8 @@ func TestReturnUser(t *testing.T) {
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
 		if err == nil {
 			user, _ := out.(auth.User)
+			// overwrite the creation time and mod time
+			user.ModTime, user.CreationTime = test.out.ModTime, test.out.CreationTime
 			Assert(t, reflect.DeepEqual(user, test.out), fmt.Sprintf("[%v] test failed, expected user [%#v], got [%#v]", test.name, test.out, user))
 		}
 		kvs.Delete(ctx, userKey, nil)

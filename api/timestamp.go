@@ -25,6 +25,10 @@ const (
 func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	var str string
 	json.Unmarshal(b, &str)
+	if str == "" {
+		t.SetTime(time.Unix(0, 0))
+		return nil
+	}
 
 	return t.Parse(str)
 }
@@ -34,6 +38,9 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	stdTime, err := types.TimestampFromProto(&t.Timestamp)
 	if err != nil {
 		return []byte("null"), err
+	}
+	if stdTime.Second() == 0 && stdTime.Nanosecond() == 0 {
+		return json.Marshal("")
 	}
 	return json.Marshal(stdTime.Format(time.RFC3339Nano))
 }

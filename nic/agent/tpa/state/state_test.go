@@ -740,7 +740,8 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		})
 
 		tu.AssertOk(t, err, fmt.Sprintf("failed to read export policy %s-%d", policyPrefix, l))
-		tu.Assert(t, reflect.DeepEqual(rp, pol), "policy in db didn;t match, got %+v, expected:%+v", pol, rp)
+		tu.Assert(t, rp.Name == pol.Name && rp.Namespace == pol.Namespace && rp.Tenant == pol.Tenant, "policy in db didn;t match, got %+v, expected:%+v", pol, rp)
+		tu.Assert(t, reflect.DeepEqual(rp.Spec, pol.Spec), "policy in db didn;t match, got %+v, expected:%+v", pol, rp)
 	}
 
 	for l := 0; l < tpm.MaxNumExportPolicy; l++ {
