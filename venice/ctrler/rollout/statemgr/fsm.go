@@ -305,8 +305,8 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Mutex.Lock()
 	if ros.Spec.GetSuspend() {
 		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
-		ros.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
 		ros.eventChan <- fsmEvSuspend
+		ros.Mutex.Unlock()
 		return
 	}
 
