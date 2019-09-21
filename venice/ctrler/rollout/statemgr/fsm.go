@@ -227,7 +227,7 @@ func fsmAcCreated(ros *RolloutState) {
 	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
 	ros.computeProgressDelta()
 
-	if ros.Spec.GetSuspend() {
+	if ros.Spec.GetSuspend() && len(ros.Status.ControllerNodesStatus) == 0 {
 		log.Infof("Rollout object created with state SUSPENDED.")
 		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 		ros.eventChan <- fsmEvSuspend
@@ -303,7 +303,7 @@ func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 
 func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Mutex.Lock()
-	if ros.Spec.GetSuspend() {
+	if ros.Spec.GetSuspend() && len(ros.Status.ControllerNodesStatus) == 0 {
 		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
 		ros.eventChan <- fsmEvSuspend
 		ros.Mutex.Unlock()
