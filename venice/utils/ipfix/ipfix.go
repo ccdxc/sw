@@ -441,7 +441,12 @@ func GeneratePensandoTemplates() []ipfix.TemplateRecord {
 	}
 
 	ipfixNonIPFields := []ipfix.TemplateFieldSpecifier{
-		// 14 bytes
+		// 18 bytes
+		{
+			EnterpriseID: 0,
+			FieldID:      234,
+			Length:       4,
+		},
 		{
 			EnterpriseID: 0,
 			FieldID:      56,
