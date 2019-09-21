@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -103,7 +104,7 @@ func (u *updater) doWork(apicl apiclient.Services) error {
 				_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 					return apicl.DiagnosticsV1().Module().Create(u.ctx, wrk.module)
 				}, apiSrvRetryInterval, apiSrvMaxRetries)
-				if err != nil {
+				if err != nil && !strings.Contains(err.Error(), "AlreadyExists") {
 					recorder.Event(eventtypes.MODULE_CREATION_FAILED, fmt.Sprintf("failed to create module (%s) to collect diagnostics, err: %v", wrk.module.Name, err), wrk.module)
 					u.logger.ErrorLog("method", "doWork", "msg", fmt.Sprintf("failed to create module (%+v) to collect diagnositcs, err: %v", wrk.module, err))
 				}
