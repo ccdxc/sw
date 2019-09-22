@@ -101,9 +101,9 @@ process_req_tx:
         phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), d.congestion_mgmt_enable  // Branch Delay Slot
         // Reset spec-cindex to cindex, spec_msg_psn to msg_psn and resend packet on dcqcn-rl-failure.
         tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
-        add            r1, d.msg_psn, r0
-        mincr          r1, 24, -1
-        tblwr.c4       d.spec_msg_psn, r1
+        add            r2, d.msg_psn, r0
+        mincr          r2, 24, -1
+        tblwr.c4       d.spec_msg_psn, r2
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
@@ -127,6 +127,7 @@ poll_for_work:
         sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
         mincr          r3, d.log_num_wqes, r0
         sle            c1, r2, r3
+        // ** DO NOT use r1 before here in this branch since it has phv-global-data-offset initialized at the beginning of program ** 
         CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
         // header_template_addr is needed to load hdr_template_process in fast-path.
@@ -260,32 +261,33 @@ pt_process:
 
 in_progress:
         // do not speculate for in_progress processing
-        add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+        add            r4, r0, SQ_C_INDEX // Branch Delay Slot
 
         // Set rexmit bit if spec-cindex is behind sqd-cindex
         sub            r2, SQ_P_INDEX, d.sqd_cindex
         mincr          r2, d.log_num_wqes, r0
-        sub            r3, SQ_P_INDEX, r1
+        sub            r3, SQ_P_INDEX, r4
         mincr          r3, d.log_num_wqes, r0
         sle            c1, r2, r3
+        // ** DO NOT use r1 before here in this branch since it has phv-global-data-offset initialized at the beginning of program ** 
         CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
         phvwrpair CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr, \
                   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
        
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
+                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r4
         
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r1
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r4
         
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r1
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r4
         
-        mincr          r1, d.log_num_wqes, 1
+        mincr          r4, d.log_num_wqes, 1
 
         bcf            [c4], in_progress_spec // c4 has d.spec_enable
-        tblwr          SPEC_SQ_C_INDEX, r1 // BD-slot
+        tblwr          SPEC_SQ_C_INDEX, r4 // BD-slot
 
         /******Slow path*****/
 
@@ -564,6 +566,7 @@ fence:
     sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
     mincr          r3, d.log_num_wqes, r0
     sle            c1, r2, r3
+    // ** DO NOT use r1 before here in this branch since it has phv-global-data-offset initialized at the beginning of program ** 
     CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
     // Setup to-stage info.
@@ -615,6 +618,7 @@ frpmr:
     sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
     mincr          r3, d.log_num_wqes, r0
     sle            c1, r2, r3
+    // ** DO NOT use r1 before this in this branch since it has phv-global-data-offset initialized at the beginning of program ** 
     CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
     // Its ok to reset the flag here. cindex-copy update is not expected to fail!
