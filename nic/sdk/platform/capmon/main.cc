@@ -5,8 +5,8 @@
 ///
 /// \file
 /// This file contains the implementation for capmon tool
-/// usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon] -s[pps]
-///  -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]<interval>
+/// usage: capmon -v[erbose] -r[eset] -q[ueues] -b[wmon] -s[]<interval>
+///  -l[lif] -t[qtype] -i[qid] -R[ring] -p[oll]<count>
 ///
 //===----------------------------------------------------------------------===//
 
@@ -58,11 +58,18 @@ int no_opt = 1;
 bool export_to_file = 0;
 export_format_t export_format = EXPORT_TEXT;
 
+void usage()
+{
+    cout << "usage: capmon -v[erbose] -r[eset] -q[ueues] -b[wmon]"
+         << " -s[]<interval> -l[lif] -t[qtype] -i[qid] -R[ring] -p[oll]<count>"
+         << "\n" << endl;
+    cout << "Example: capmon -q -l 1003 -t 0 -i 5 -R 1 -p 100" << endl;
+}
+
 int
 main(int argc, char *argv[])
 {
-    int i = 1;
-    int interval = 0;
+    int interval = 1;
     int queue_dump = 0;
     int qtype = -1;
     int qid_max = 16000000;
@@ -76,23 +83,30 @@ main(int argc, char *argv[])
     int lif_max = 2048;
     int lif_start = 0;
     int lif_end = lif_max - 1;
+    int opt = 0;
+    int start = 0;
+    int end = 0;
+    int inputs = 0;
 
-    while (i < (argc)) {
-        if (strcmp(argv[i], "-r") == 0) {
+    while ((opt = getopt(argc, argv, "rvql:i:t:R:z:p::nbcx:s::h")) != -1) {
+        switch (opt) {
+        case 'r':
             reset_counters();
-        } else if (strcmp(argv[i], "-v") == 0) {
-            verbose = 1;
-        } else if (strcmp(argv[i], "-q") == 0) {
+            break;
+        case 'v':
+            verbose=1;
+            break;
+        case 'q':
             queue_dump = 1;
-        } else if (strcmp(argv[i], "-l") == 0) {
-            int start = 0;
-            int end = 0;
-            int inputs = 0;
-
-            i++;
-            inputs = sscanf(argv[i], "%d:%d", &start, &end);
+            break;
+        case 'l':
+            start = 0;
+            end = 0;
+            inputs = 0;
+            inputs = sscanf(optarg, "%d:%d", &start, &end);
             if (!inputs) {
-                printf("Error: -l requires a lif\n");
+                cout << "Error: -l requires a valid lif range" << endl;
+                usage();
                 return (-1);
             }
             lif_start = start;
@@ -107,32 +121,30 @@ main(int argc, char *argv[])
 
             if ((lif_start < 0) || (lif_end >= lif_max) ||
                 (lif_start > lif_end)) {
-                printf("Error: Invalid lif range %d:%d\n", lif_start, lif_end);
+                cout << "Error: Invalid lif range " << lif_start << ":"
+                     << lif_end << " provided. Valid range is 0:2047"
+                     << endl;
                 return (-1);
             }
-            printf("lif = %d:%d\n", lif_start, lif_end);
-        } else if (strcmp(argv[i], "-t") == 0) {
-            i++;
-            if (i >= argc) {
-                printf("Error: -t requires a queue type\n");
-                return (-1);
-            }
-
-            qtype = atoi(argv[i]);
+            cout << "lif = " << lif_start << ":" << lif_end << endl;
+            break;
+        case 't':
+            qtype = atoi(optarg);
             if ((qtype < 0) || (qtype >= 8)) {
-                printf("Error: Invalid queue type %d\n", qtype);
+                cout << "Error: Invalid queue type " << qtype << endl;
                 return (-1);
             }
-            printf("qtype = %d\n", qtype);
-        } else if (strcmp(argv[i], "-i") == 0) {
-            int start = 0;
-            int end = 0;
-            int inputs = 0;
+            cout << "qtype = " << qtype << endl;
+            break;
+        case 'i':
+            start = 0;
+            end = 0;
+            inputs = 0;
 
-            i++;
-            inputs = sscanf(argv[i], "%d:%d", &start, &end);
+            inputs = sscanf(optarg, "%d:%d", &start, &end);
             if (!inputs) {
-                printf("Error: -i requires a lif\n");
+                cout << "Error: -i requires a queue range" << endl;
+                usage();
                 return (-1);
             }
 
@@ -146,94 +158,95 @@ main(int argc, char *argv[])
             }
             if ((qid_start < 0) || (qid_end >= qid_max) ||
                 (qid_start > qid_end)) {
-                printf("Error: Invalid qid range %d:%d\n", qid_start, qid_end);
+                cout << "Error: Invalid qid range " << qid_start << ":"
+                     << qid_end << " provided. Valid range is 0:15999999"
+                     << endl;
                 return (-1);
             }
-            printf("qid = %d:%d\n", qid_start, qid_end);
-        } else if (strcmp(argv[i], "-R") == 0) {
-            i++;
-            if (i >= argc) {
-                printf("Error: -R requires a ring id\n");
-                return (-1);
-            }
-
-            rid = atoi(argv[i]);
+            cout << "qid = " << qid_start << ":" << qid_end << endl;
+            break;
+        case 'R':
+            rid = atoi(optarg);
             if ((rid < 0) || (rid >= rid_max)) {
-                printf("Error: Invalid ring id %d\n", rid);
+                cout << "Error: Invalid ring id " << rid << " should not "
+                     << "exceed max value " << rid_max << endl;
                 return (-1);
             }
-            printf("rid = %d\n", rid);
-        } else if (strcmp(argv[i], "-z") == 0) {
-            i++;
-            if (i >= argc) {
-                printf("Error: -z requires ring size\n");
-                return (-1);
-            }
-
-            rsize = atoi(argv[i]);
+            cout << "rid = " << rid << endl;
+            break;
+        case 'z':
+            rsize = atoi(optarg);
             if ((rsize < 0) || (rsize > rsize_max)) {
-                printf("Error: Invalid ring size %d\n", rsize);
+                cout << "Error: Invalid ring size " << rsize << " should "
+                     << "not exceed max size " << rsize_max << endl;
                 return (-1);
             }
-            printf("rsize = %d\n", rsize);
-        } else if (strcmp(argv[i], "-p") == 0) {
-            i++;
-            if (i < argc) {
-                poll = atoi(argv[i]);
-            }
-            printf("Poll = %d\n", poll);
-        } else if (strcmp(argv[i], "-n") == 0) {
-            no_opt = 0;
-        } else if (strcmp(argv[i], "-b") == 0) {
-            bwmon = 1;
-        } else if (strcmp(argv[i], "-c") == 0) {
-            crypto = 1;
-        } else if (strcmp(argv[i], "-x") == 0) {
-            export_to_file = true;
-            i++;
-            if (i < argc) {
-                if ((strcmp(argv[i], "txt") == 0) ||
-                    (strcmp(argv[i], "text") == 0)) {
-                    export_format = EXPORT_TEXT;
-                } else if (strcmp(argv[i], "json") == 0) {
-                    export_format = EXPORT_JSON;
-                } else if (strcmp(argv[i], "xml") == 0) {
-                    export_format = EXPORT_XML;
-                } else if (strcmp(argv[i], "csv") == 0) {
-                    export_format = EXPORT_CSV;
-                } else if (strcmp(argv[i], "html") == 0) {
-                    export_format = EXPORT_HTML;
-                } else {
-                    // set to TEXT by default
-                    export_format = EXPORT_TEXT;
-                    i--;
+            cout << "rsize = " << rsize << endl;
+            break;
+        case 'p':
+            if (optarg) {
+                poll = atoi(optarg);
+            } else {
+                if (optind < argc) {
+                    poll = atoi(argv[optind]);
+                    optind++;
                 }
             }
-        } else if (strcmp(argv[i], "-s") == 0) {
-            i++;
-            if (argc > i) {
-                interval = atoi(argv[i]);
+            cout << "Poll = " << poll << endl;
+            break;
+        case 'n':
+            no_opt = 0;
+            break;
+        case 'b':
+            bwmon = 1;
+            break;
+        case 'c':
+            crypto = 1;
+            break;
+        case 'x':
+            export_to_file = true;
+            if ((strcmp(optarg, "txt") == 0) ||
+                (strcmp(optarg, "text") == 0)) {
+                export_format = EXPORT_TEXT;
+            } else if (strcmp(optarg, "json") == 0) {
+                export_format = EXPORT_JSON;
+            } else if (strcmp(optarg, "xml") == 0) {
+                export_format = EXPORT_XML;
+            } else if (strcmp(optarg, "csv") == 0) {
+                export_format = EXPORT_CSV;
+            } else if (strcmp(optarg, "html") == 0) {
+                export_format = EXPORT_HTML;
             } else {
-                interval = 1;
+                // set to TEXT by default
+                export_format = EXPORT_TEXT;
+            }
+            break;
+        case 's':
+            if (optarg) {
+                interval = atoi(optarg);
+            } else {
+                if (optind < argc) {
+                    interval = atoi(argv[optind]);
+                    optind++;
+                }
             }
             measure_pps(interval);
             return (0);
-        } else {
-            printf(
-                "usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon]"
-                " -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
-                "<interval>\n\n");
-            printf("Example: capmon -q -l 1003:1005 -t 0 -i 0:5 -R 1 -p 100\n");
+        case 'h':
+            usage();
             return (0);
+        default:
+            usage();
+            return (-1);
         }
-        i++;
     }
     capmon_struct_init(NULL);
 
     if ((poll != 0) &&
         ((lif_start != lif_end) || (qtype == -1) || (qid_start != qid_end))) {
-        printf("Error: -p requires just one lif, qtype and qid to be "
-               "specified.\n");
+        cout << "Error: -p requires just one lif, qtype and one qid to be "
+             << "specified." << endl;
+        usage();
         return (-1);
     }
 
