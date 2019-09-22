@@ -78,6 +78,11 @@ type NMD struct {
 	rebootNeeded bool
 	metrics      *NMDMetrics
 	Pipeline     Pipeline
+
+	// Naples Information
+	RunningFirmware        *nmd.NaplesRunningSoftware
+	RunningFirmwareName    string
+	RunningFirmwareVersion string
 }
 
 // Agent is the wrapper object that contains NMD and Platform components

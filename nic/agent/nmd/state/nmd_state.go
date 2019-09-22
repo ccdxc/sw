@@ -233,30 +233,35 @@ func NewNMD(pipeline Pipeline,
 	if pipeline != nil {
 		delClient = pipeline.GetDelphiClient()
 	}
+
 	// create NMD object
 	nm := NMD{
-		store:              emdb,
-		nodeUUID:           fru.MacStr,
-		macAddr:            fru.MacStr,
-		Platform:           pa,
-		Upgmgr:             uc,
-		DelphiClient:       delClient,
-		nic:                nil,
-		certsListenURL:     globals.Localhost + ":" + globals.CMDUnauthCertAPIPort,
-		nicRegInitInterval: regInterval,
-		nicRegInterval:     regInterval,
-		isRegOngoing:       false,
-		nicUpdInterval:     updInterval,
-		isUpdOngoing:       false,
-		isRestSrvRunning:   false,
-		listenURL:          listenURL,
-		stopNICReg:         make(chan bool, 1),
-		stopNICUpd:         make(chan bool, 1),
-		config:             config,
-		ro:                 ro,
-		revProxy:           revProxy,
-		metrics:            nil,
+		store:               emdb,
+		nodeUUID:            fru.MacStr,
+		macAddr:             fru.MacStr,
+		Platform:            pa,
+		Upgmgr:              uc,
+		DelphiClient:        delClient,
+		nic:                 nil,
+		certsListenURL:      globals.Localhost + ":" + globals.CMDUnauthCertAPIPort,
+		nicRegInitInterval:  regInterval,
+		nicRegInterval:      regInterval,
+		isRegOngoing:        false,
+		nicUpdInterval:      updInterval,
+		isUpdOngoing:        false,
+		isRestSrvRunning:    false,
+		listenURL:           listenURL,
+		stopNICReg:          make(chan bool, 1),
+		stopNICUpd:          make(chan bool, 1),
+		config:              config,
+		ro:                  ro,
+		revProxy:            revProxy,
+		metrics:             nil,
+		RunningFirmware:     GetRunningFirmware(),
+		RunningFirmwareName: GetRunningFirmwareName(),
 	}
+
+	nm.RunningFirmwareVersion = GetRunningFirmwareVersion(nm.RunningFirmwareName, nm.RunningFirmware)
 
 	err = nm.updateLocalTimeZone()
 	if err != nil {
@@ -1257,7 +1262,8 @@ func (n *NMD) NaplesVersionGetHandler(r *http.Request) (interface{}, error) {
 	if n.metrics != nil && n.metrics.GetCalls != nil {
 		n.metrics.GetCalls.Inc()
 	}
-	return GetNaplesSoftwareInfo()
+
+	return n.GetNaplesSoftwareInfo()
 }
 
 // GetRegStatus returns the current status of NIC registration task

@@ -23,7 +23,8 @@ import (
 
 const capriStoragePath = "/sys/bus/mmc/devices/mmc0:0001"
 
-func getRunningFirmwareName() (string, error) {
+// GetRunningFirmwareName returns the currently running firmware name
+func GetRunningFirmwareName() string {
 	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -r").Output()
 	if err != nil {
 		// TODO : Remove this. Adding this temporarily to ensure progress.
@@ -32,11 +33,11 @@ func getRunningFirmwareName() (string, error) {
 		// The platformAgent allows for easy mocking of this API
 		// Tracker Jira : PS-1172
 
-		return "mainfwa", nil
+		return "mainfwa"
 	}
 
 	log.Infof("Got running software version : %v", string(out))
-	return strings.TrimSuffix(string(out), "\n"), err
+	return strings.TrimSuffix(string(out), "\n")
 }
 
 func getStartupFirmwareName() (string, error) {
@@ -87,7 +88,8 @@ func getInstalledSoftware() (*nmd.NaplesInstalledSoftware, error) {
 	return &naplesVersion, nil
 }
 
-func getRunningSoftware() (*nmd.NaplesRunningSoftware, error) {
+// GetRunningFirmware gets details about the currently running naples firmware
+func GetRunningFirmware() *nmd.NaplesRunningSoftware {
 	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -L").Output()
 	if err != nil {
 		log.Errorf("Returning Software info default values")
@@ -108,7 +110,7 @@ func getRunningSoftware() (*nmd.NaplesRunningSoftware, error) {
 				},
 			},
 		}
-		return n, nil
+		return n
 	}
 
 	var naplesVersion nmd.NaplesRunningSoftware
@@ -116,28 +118,29 @@ func getRunningSoftware() (*nmd.NaplesRunningSoftware, error) {
 
 	log.Infof("Got Naples Running Version %v", naplesVersion)
 
-	return &naplesVersion, nil
+	return &naplesVersion
 }
 
-func getRunningFirwmwareVersion(naplesVersion *nmd.NaplesRunningSoftware) (string, error) {
-	currentFw, err := getRunningFirmwareName()
-	if err != nil {
-		return "", err
+// GetRunningFirmwareVersion gets the version of the current firmware
+func GetRunningFirmwareVersion(currentFw string, naplesVersion *nmd.NaplesRunningSoftware) string {
+	if naplesVersion == nil {
+		log.Errorf("Naples version passed is nil.")
+		return ""
 	}
 
 	switch currentFw {
 	case "mainfwa":
-		return naplesVersion.MainFwA.SystemImage.SoftwareVersion, nil
+		return naplesVersion.MainFwA.SystemImage.SoftwareVersion
 	case "mainfwb":
-		return naplesVersion.MainFwB.SystemImage.SoftwareVersion, nil
+		return naplesVersion.MainFwB.SystemImage.SoftwareVersion
 	default:
-		return "", errors.New("unknown firmware version")
+		return ""
 	}
 }
 
 func getStartupFirmwareVersion(naplesVersion *nmd.NaplesInstalledSoftware) (string, error) {
 	startupFw, err := getStartupFirmwareName()
-	if err != nil {
+	if err != nil || len(startupFw) == 0 || naplesVersion == nil {
 		return "", err
 	}
 
@@ -152,28 +155,13 @@ func getStartupFirmwareVersion(naplesVersion *nmd.NaplesInstalledSoftware) (stri
 }
 
 // GetNaplesSoftwareInfo gets the software versions which are running and will run at startup
-func GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
-	runningImages, err := getRunningSoftware()
-	if err != nil {
-		return nil, err
-	}
-
+func (n *NMD) GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
 	installedImages, err := getInstalledSoftware()
 	if err != nil {
 		return nil, err
 	}
 
-	runningFirmwareVersion, err := getRunningFirwmwareVersion(runningImages)
-	if err != nil {
-		return nil, err
-	}
-
 	startupFirmwareVersion, err := getStartupFirmwareVersion(installedImages)
-	if err != nil {
-		return nil, err
-	}
-
-	runningFw, err := getRunningFirmwareName()
 	if err != nil {
 		return nil, err
 	}
@@ -184,11 +172,11 @@ func GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
 	}
 
 	return &nmd.NaplesSoftwareVersionInfo{
-		RunningFw:           runningFw,
-		RunningFwVersion:    runningFirmwareVersion,
+		RunningFw:           n.RunningFirmwareName,
+		RunningFwVersion:    n.RunningFirmwareVersion,
 		StartupFw:           startupFw,
 		StartupFwVersion:    startupFirmwareVersion,
-		RunningUbootVersion: runningImages.Uboot.Image.BaseVersion,
+		RunningUbootVersion: n.RunningFirmware.Uboot.Image.BaseVersion,
 		StartupUbootVersion: installedImages.Uboot.Image.BaseVersion,
 		InstalledImages:     installedImages,
 	}, nil
@@ -399,17 +387,6 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	log.Info("Updating Smart NIC information.")
 	nic, _ := n.GetSmartNIC()
 
-	naplesVersion, err := getRunningSoftware()
-	if err != nil {
-		log.Errorf("GetVersion failed. Err : %v", err)
-		return err
-	}
-
-	ver, err := getRunningFirwmwareVersion(naplesVersion)
-	if err != nil {
-		log.Errorf("Failed to get running software version. : %v", err)
-	}
-
 	// TODO : Improve the code below. Too clunky
 	if nic != nil {
 
@@ -429,7 +406,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.Status.PrimaryMAC = n.config.Status.Fru.MacStr
 		nic.Status.IPConfig = n.config.Status.IPConfig
 		nic.Status.Interfaces = listInterfaces()
-		nic.Status.DSCVersion = ver
+		nic.Status.DSCVersion = n.RunningFirmwareVersion
 		nic.Status.DSCSku = n.config.Status.Fru.PartNum
 	} else {
 
@@ -456,7 +433,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 				IPConfig:       n.config.Status.IPConfig,
 				SystemInfo:     nil,
 				Interfaces:     listInterfaces(),
-				DSCVersion:     ver,
+				DSCVersion:     n.RunningFirmwareVersion,
 				DSCSku:         n.config.Status.Fru.PartNum,
 			},
 		}
@@ -465,7 +442,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	// SystemInfo has static information of Naples which does not change during the lifetime of Naples.
 	if nic.Status.SystemInfo == nil {
 		nic.Status.SystemInfo = UpdateNaplesInfo()
-		nic.Status.SystemInfo.BiosInfo = updateBiosInfo(naplesVersion)
+		nic.Status.SystemInfo.BiosInfo = updateBiosInfo(n.RunningFirmware)
 	}
 
 	nic.Status.Conditions = n.UpdateNaplesHealth()
