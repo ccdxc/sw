@@ -301,6 +301,9 @@ hal_init (hal_cfg_t *hal_cfg)
     // linkmgr init
     hal_linkmgr_init(hal_cfg, hal::port_event_cb);
 
+    // vmotion thread init
+    hal_vmotion_init(hal_cfg);
+
     // start monitoring HAL heartbeat
     hb::heartbeat_init();
 

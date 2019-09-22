@@ -8,6 +8,7 @@
 #include "lib/list/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/hal/lib/hal_handle.hpp"
 
 #include "gen/proto/types.pb.h"
 

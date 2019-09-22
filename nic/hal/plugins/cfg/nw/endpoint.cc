@@ -2550,6 +2550,32 @@ ep_handle_ipsg_change_cb (void *ht_entry, void *ctxt)
     return false;
 }
 
+ep_t *
+find_ep_by_mac (mac_addr_t mac) 
+{
+    struct ep_get_t {
+        mac_addr_t mac;
+        ep_t *ep;
+    } ctxt = {};
+
+    auto walk_func = [](void *ht_entry, void *ctxt) {
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        ep_t *tmp_ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+        if (tmp_ep->l2_key.mac_addr == ((ep_get_t *)ctxt)->mac) {
+            ((ep_get_t *)ctxt)->ep = tmp_ep;
+            return true;
+        }
+      
+        return false;
+    };
+
+    memcpy(&ctxt.mac, mac, ETH_ADDR_LEN);
+    ctxt.ep = NULL;
+    g_hal_state->ep_l2_ht()->walk(walk_func, &ctxt);
+
+    return ctxt.ep;
+}
+
 //------------------------------------------------------------------------------
 // process a endpoint get request
 //------------------------------------------------------------------------------

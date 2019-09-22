@@ -2,6 +2,7 @@
   "mode" : "hw",
   "sw" : {
     "grpc_port" : "50054",
+    "vmotion_port" : "50055",
     "feature_set" : "iris",
     "control_cores_mask" : "0xD",
     "data_cores_mask" : "0x2",

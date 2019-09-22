@@ -58,6 +58,7 @@ nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtcam.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtimerfd.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcatalog.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libvmotion.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdcommon.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcore.so                             /nic/lib/

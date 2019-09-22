@@ -32,9 +32,11 @@ protected:
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase();
 
+#if 0
   static void SetUpTestCase(const char c_file[]);
+#endif
 
-  static void SetUpTestCase(bool disable_fte, std::string c_file="hal.json");
+  static void SetUpTestCase(bool disable_fte, std::string c_file="hal.json", std::string vmotion_port = "0");
 
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase(void);

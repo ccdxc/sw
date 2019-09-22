@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+import "types.proto";
+import "session.proto";
+
+package vmotion;
+option go_package="halproto";
+
+enum VmotionMessageType {
+    VMOTION_MSG_TYPE_INITIATE           = 0; // initiate vmotion :: cl -> srv
+    VMOTION_MSG_TYPE_INITIATE_DONE      = 1; // vmotion initiation done :: srv -> cl
+    VMOTION_MSG_TYPE_STATE_SYNC_START   = 2; // start syncing state :: cl -> srv
+    VMOTION_MSG_TYPE_STATE_SYNC         = 3; // syncing state :: srv -> cl
+    VMOTION_MSG_TYPE_STATE_SYNC_END     = 4; // syncing done :: srv -> cl
+    VMOTION_MSG_TYPE_END                = 5; // vmotion end :: cl -> srv
+    VMOTION_MSG_TYPE_END_ACK            = 6; // vmotion end ack :: srv -> cl
+}
+
+enum VmotionMessageStatus {
+    STATUS_OK   = 0; 
+    STATUS_ERR  = 1;
+}
+
+message VmotionInitiate {
+    uint64 mac_address = 1; // mac of EP in vmotion
+}
+
+message VmotionInitiateDone {
+    VmotionMessageStatus status = 1;
+}
+
+message VmotionStateSyncStart {
+}
+
+message VmotionStateSync {
+  repeated session.SessionGetResponse response = 1; // list of sessions
+}
+
+message VmotionStateSyncEnd {
+    VmotionMessageStatus status = 1;
+}
+
+message VmotionEnd {
+}
+
+message VmotionEndAck {
+}
+
+message VmotionMessage {
+    VmotionMessageType type                     = 1;
+    oneof msg {
+        VmotionInitiate       init              = 2; 
+        VmotionInitiateDone   init_done         = 3;
+        VmotionStateSyncStart state_sync_start  = 4;
+        VmotionStateSync      state_sync        = 5;
+        VmotionStateSyncEnd   state_sync_end    = 6;
+        VmotionEnd            end               = 7;
+        VmotionEndAck         end_ack           = 8;
+    }
+}

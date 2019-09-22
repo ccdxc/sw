@@ -38,6 +38,7 @@ It is generated from these files:
 	tcp_proxy.proto
 	telemetry.proto
 	types.proto
+	vmotion.proto
 	vrf.proto
 
 It has these top-level messages:
@@ -1378,6 +1379,14 @@ It has these top-level messages:
 	DropReasons
 	EgressDropReasons
 	RuleMatch
+	VmotionInitiate
+	VmotionInitiateDone
+	VmotionStateSyncStart
+	VmotionStateSync
+	VmotionStateSyncEnd
+	VmotionEnd
+	VmotionEndAck
+	VmotionMessage
 	VrfSpec
 	VrfRequestMsg
 	VrfStatusEpd

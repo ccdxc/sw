@@ -1413,6 +1413,40 @@ tx_create_gft_entry3() {
     tx_gft_entry_write(&key, &data);
 }
 
+static int
+hal_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    if ((int)hal_trace_level() >= (int)tracel_level)  {
+        va_start(args, format);
+        vsnprintf(logbuf, sizeof(logbuf), format, args);
+        switch (tracel_level) {
+        case sdk::lib::SDK_TRACE_LEVEL_ERR:
+            HAL_TRACE_ERR_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_WARN:
+            HAL_TRACE_WARN_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_INFO:
+            HAL_TRACE_INFO_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+            HAL_TRACE_DEBUG_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+            HAL_TRACE_VERBOSE_NO_META("{}", logbuf);
+            break;
+        default:
+            break;
+        }
+        va_end(args);
+    }
+
+    return 0;
+}
+
 TEST_F(gft_test, test1) {
     int ret = 0;
     char *default_config_dir = NULL;
@@ -1453,7 +1487,9 @@ TEST_F(gft_test, test1) {
     cfg.pgm_name = std::string("gft");
 
     printf("Connecting to ASIC SIM\n");
-    hal::hal_sdk_init();
+    // hal::hal_sdk_init();
+    sdk::lib::logger::init(hal_sdk_logger);
+
     hal::utils::trace_init("hal", 0, true, "hal.log", NULL,
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug, ::utils::trace_none);

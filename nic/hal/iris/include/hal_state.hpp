@@ -23,6 +23,7 @@
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/hal/src/debug/snake.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/vmotion/vmotion.hpp"
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -356,6 +357,9 @@ public:
     void set_snake_test(snake_test_t *snake) { snake_test_ = snake; }
     snake_test_t *snake_test(void) const { return snake_test_; }
 
+    hal_vmotion *vmotion(void) const { return vmotion_; }
+    void set_vmotion(hal_vmotion *vmotion) { vmotion_ = vmotion; }
+
     std::map<std::string, uint32_t> *lif_name_id_map() { return &lif_name_id_map_; }
 
 private:
@@ -450,6 +454,9 @@ private:
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
     void         *fte_stats_;
+
+    // vmotion object
+    hal_vmotion *vmotion_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -768,6 +775,9 @@ public:
 
     void set_snake_test(snake_test_t *snake) { oper_db_->set_snake_test(snake); }
     snake_test_t *snake_test(void) const { return oper_db_->snake_test(); }
+
+    void set_vmotion(hal_vmotion *vmotion) { oper_db_->set_vmotion(vmotion); }
+    hal_vmotion *vmotion(void) const { return oper_db_->vmotion(); }
 
     slab_ptr_t register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
         return (cfg_db_->register_slab(slab_id, slab_args));

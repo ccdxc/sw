@@ -100,7 +100,7 @@ grpc_server_run (void *ctxt)
 #endif
 
 static void inline
-hal_initialize (const char c_file[], bool disable_fte=true)
+hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)
 {
     char        cfg_file[32];
     char        def_cfg_file[] = "hal.json";
@@ -142,6 +142,9 @@ hal_initialize (const char c_file[], bool disable_fte=true)
 
     // disabling async logging
     hal::g_hal_cfg.sync_mode_logging = true;
+
+    // get vmotion port
+    hal::g_hal_cfg.vmotion_port = vmotion_port;
 
     /*
        {
@@ -198,20 +201,22 @@ hal_uninitialize (void)
 void
 hal_base_test::SetUpTestCase (void)
 {
-    hal_initialize("");
+    hal_initialize(true, "hal.json", "0");
 }
 
 void
-hal_base_test::SetUpTestCase (bool disable_fte, std::string c_file)
+hal_base_test::SetUpTestCase (bool disable_fte, std::string c_file, std::string vmotion_port)
 {
-    hal_initialize(c_file.c_str(), disable_fte);
+    hal_initialize(disable_fte, c_file.c_str(), vmotion_port);
 }
 
+#if 0
 void
 hal_base_test::SetUpTestCase (const char c_file[])
 {
-    hal_initialize(c_file);
+    hal_initialize(true, c_file);
 }
+#endif
 
 void
 hal_base_test::TearDownTestCase()

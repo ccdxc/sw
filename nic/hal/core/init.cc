@@ -11,6 +11,9 @@
 #include "lib/periodic/periodic.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/lib/device/device.hpp"
+#include "nic/hal/vmotion/vmotion.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 uint64_t g_mgmt_if_mac;
 
@@ -413,6 +416,11 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");
             HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", hal_cfg->grpc_port);
         }
+        hal_cfg->vmotion_port = pt.get<std::string>("sw.vmotion_port");
+        if (getenv("HAL_VMOTION_PORT")) {
+            hal_cfg->vmotion_port = getenv("HAL_VMOTION_PORT");
+            HAL_TRACE_DEBUG("Overriding VMotion Port to : {}", hal_cfg->grpc_port);
+        }
         sparam = pt.get<std::string>("sw.feature_set");
         if (!memcmp("iris", sparam.c_str(), 5)) {
             hal_cfg->features = HAL_FEATURE_SET_IRIS;
@@ -634,6 +642,29 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
     }
 #endif
 
+    return ret;
+}
+
+#define HAL_VMOTION_MAX_SERVERS \
+    (HAL_THREAD_ID_VMOTION_SERVER_MAX - HAL_THREAD_ID_VMOTION_SERVER_MIN + 1)
+#define HAL_VMOTION_MAX_CLIENTS \
+    (HAL_THREAD_ID_VMOTION_CLIENT_MAX - HAL_THREAD_ID_VMOTION_CLIENT_MIN + 1)
+#define HAL_VMOTION_PORT 50055
+hal_ret_t
+hal_vmotion_init (hal_cfg_t *hal_cfg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    hal_vmotion *vm;
+
+    if (hal_cfg->device_cfg.forwarding_mode == 
+        HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+        HAL_TRACE_DEBUG("vmotion init");
+        vm = hal_vmotion::factory(HAL_VMOTION_MAX_SERVERS,
+                                  HAL_VMOTION_MAX_CLIENTS,
+                                  stoi(hal_cfg->vmotion_port) ? 
+                                  stoi(hal_cfg->vmotion_port) : HAL_VMOTION_PORT);
+    }
+    g_hal_state->set_vmotion(vm);
     return ret;
 }
 
