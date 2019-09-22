@@ -626,9 +626,11 @@ p4pd_p4plus_app_init (void)
 
     for (int i = P4PLUS_APPTYPE_MIN; i <= P4PLUS_APPTYPE_MAX; i++) {
         switch(i) {
+#ifndef P4_16
             case P4PLUS_APPTYPE_DEFAULT:
                 data.action_id = P4PLUS_APP_P4PLUS_APP_DEFAULT_ID;
                 break;
+#endif
             case P4PLUS_APPTYPE_CLASSIC_NIC:
                 data.action_id = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
                 break;

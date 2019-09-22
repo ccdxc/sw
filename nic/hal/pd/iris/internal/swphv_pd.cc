@@ -15,7 +15,9 @@
 #undef __INGRESS_PHV__
 #include "gen/p4gen/tcp_proxy_rxdma/include/ingress_phv.h"
 #undef __INGRESS_PHV__
+#ifndef P4_16 //ISSUE_1222
 #include "gen/p4gen/p4/include/ingress_phv.h"
+#endif
 // FIXME: Need to fix an issue with generated egress_phv.h
 // #include "gen/p4gen/p4/include/egress_phv.h"
 
@@ -70,6 +72,7 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
 
 	break;
     }
+#ifndef P4_16 //ISSUE_1222
     case PD_SWPHV_TYPE_INGRESS:
     {
         p4_ingress_phv_t *phv = (p4_ingress_phv_t *)data;
@@ -99,6 +102,7 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
 
 	break;
     }
+#endif
     }
 
     HAL_TRACE_DEBUG("pd_swphv_inject: Injecting Software PHV type {} on lif {}. size of phv: {}", args->type, lif_id, phv_size);
