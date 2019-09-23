@@ -25,6 +25,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	// blank import to pull in objstore service into api gateway
 	_ "github.com/pensando/sw/api/generated/objstore/gateway"
+	// blank import to pull in orchestration service into api gateway
+	_ "github.com/pensando/sw/api/generated/orchestration/gateway"
 	// blank import to pull in rollout service into api gateway
 	_ "github.com/pensando/sw/api/generated/rollout/gateway"
 	// blank import to pull in search service into api gateway

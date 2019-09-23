@@ -35,6 +35,10 @@
       "description": "Objstore API reference",
       "path": "/swagger/objstore"
     },
+    "orchestration": {
+      "description": "Orchestration API reference",
+      "path": "/swagger/orchestration"
+    },
     "rollout": {
       "description": "Configure and manage rollout feature to upgrade/downgrade software for the cluster",
       "path": "/swagger/rollout"

@@ -7,13 +7,78 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
+	api_cache "github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/vchub/sim"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
+
+	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+const (
+	apiServerAddress = ":9009"
+)
+
+var (
+	logger = log.WithContext("module", "VCHubTest")
+
+	// Create mock events recorder
+	mr = mockevtsrecorder.NewRecorder("vchub_test", logger)
+	_  = recorder.Override(mr)
+)
+
+type testInfo struct {
+	apiServerAddr string
+	apiServer     apiserver.Server
+	rpcClient     *rpckit.RPCClient
+}
+
+var tInfo testInfo
+
+func testSetup() {
+	grpclog.SetLoggerV2(logger)
+
+	scheme := runtime.GetDefaultScheme()
+	srvConfig := apiserver.Config{
+		GrpcServerPort: apiServerAddress,
+		DebugMode:      false,
+		Logger:         logger,
+		Version:        "v1",
+		Scheme:         scheme,
+		Kvstore: store.Config{
+			Type:  store.KVStoreTypeMemkv,
+			Codec: runtime.NewJSONCodec(scheme),
+		},
+		GetOverlay:       api_cache.GetOverlay,
+		IsDryRun:         api_cache.IsDryRun,
+		AllowMultiTenant: true,
+	}
+
+	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
+	go tInfo.apiServer.Run(srvConfig)
+	tInfo.apiServer.WaitRunning()
+}
+
+func testTeardown() {
+	mr.ClearEvents()
+
+	// Stop the API server
+	tInfo.apiServer.Stop()
+}
+
 func TestVCHub(t *testing.T) {
+	testSetup()
+	defer testTeardown()
+
 	var opts cliOpts
 	err := parseOpts(&opts)
 	if err == nil {
@@ -40,7 +105,8 @@ func TestVCHub(t *testing.T) {
 
 	time.Sleep(50 * time.Millisecond)
 
-	os.Args = []string{"vchub", "-listen-url", ":9898", "-store-url", "memkv:", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk", "-log-to-file", "/tmp/vchub.log"}
+	//os.Args = []string{"vchub", "-listen-url", ":9898", "-store-url", "memkv:", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk", "-log-to-file", "/tmp/vchub.log"}
+	os.Args = []string{"vchub", "-listen-url", ":9898", "-store-url", "memkv:", "-vcenter-list", vc1 + ",http://user:pass@127.0.0.1:8990/sdk", "-log-to-file", "/tmp/vchub.log"}
 	err = parseOpts(&opts)
 	if err != nil {
 		t.Errorf("parseOpts returned %v", err)

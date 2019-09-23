@@ -10,6 +10,7 @@
 | [Monitoring](generated/apiref/monitoring/index.html) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |
 | [Network](generated/apiref/network/index.html) | Configure and Manage Networks and Services |
 | [Objstore](generated/apiref/objstore/index.html) | Objstore API reference |
+| [Orchestration](generated/apiref/orchestration/index.html) | Orchestration API reference |
 | [Rollout](generated/apiref/rollout/index.html) | Configure and manage rollout feature to upgrade/downgrade software for the cluster |
 | [Search](generated/apiref/search/index.html) | Powerful search API to search configuration policies, events etc. |
 | [Security](generated/apiref/security/index.html) | Configure and manage security features like Security Groups, Rules, Certificates etc. |

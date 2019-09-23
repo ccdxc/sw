@@ -16,6 +16,7 @@ import (
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
 	objstore "github.com/pensando/sw/api/generated/objstore"
+	orchestration "github.com/pensando/sw/api/generated/orchestration"
 	rollout "github.com/pensando/sw/api/generated/rollout"
 	security "github.com/pensando/sw/api/generated/security"
 	staging "github.com/pensando/sw/api/generated/staging"
@@ -139,6 +140,18 @@ func (m *MockServices) ObjstoreV1() objstore.ObjstoreV1Interface {
 // ObjstoreV1 indicates an expected call of ObjstoreV1
 func (mr *MockServicesMockRecorder) ObjstoreV1() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjstoreV1", reflect.TypeOf((*MockServices)(nil).ObjstoreV1))
+}
+
+// OrchestratorV1 mocks base method
+func (m *MockServices) OrchestratorV1() orchestration.OrchestratorV1Interface {
+	ret := m.ctrl.Call(m, "OrchestratorV1")
+	ret0, _ := ret[0].(orchestration.OrchestratorV1Interface)
+	return ret0
+}
+
+// OrchestratorV1 indicates an expected call of OrchestratorV1
+func (mr *MockServicesMockRecorder) OrchestratorV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OrchestratorV1", reflect.TypeOf((*MockServices)(nil).OrchestratorV1))
 }
 
 // RolloutV1 mocks base method

@@ -1,0 +1,68 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package orchestration;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/protos/export.proto";
+
+// --------------------------------- ORCHESTRATOR ---------------------------------------------
+//
+// Orchestrator represents the config object which allows Venice to connect to the appropriate orchestrator
+//
+//
+message Orchestrator {
+    option (venice.objectPrefix) = {Collection: "orchestrator"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the vcenter.
+    OrchestratorSpec Spec     = 3 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the cluster.
+    OrchestratorStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// OrchestratorSpec contains the configuration of the cluster.
+message OrchestratorSpec {
+    enum OrchestratorType {
+	// ui-hint: vcenter
+        VCenter = 0 [(venice.enumValueStr) = "vcenter"];
+    }
+
+    string Type = 1 [(gogoproto.jsontag) = "type", (venice.check) = "StrEnum(OrchestratorSpec.OrchestratorType)"];
+    string URI = 2 [(gogoproto.jsontag) = "uri"]; 
+    monitoring.ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
+    map<string, string>  LoginData = 4 [(gogoproto.jsontag) = "login-data,omitempty"];
+}
+
+// OrchestratorStatus contains the current state of connection with the orchestrator.
+message OrchestratorStatus {
+    enum ConnectionStatus {
+	// ui-hint: Unknown
+        Unknown = 0 [(venice.enumValueStr) = "unknown"]; // Unknown status, initial state.
+
+	// ui-hint: Success
+        Success = 1 [(venice.enumValueStr) = "success"]; // Connection succeeded
+
+	// ui-hint: Failure
+        Failure = 2 [(venice.enumValueStr) = "failure"]; // Connection failed
+    }
+
+    string Status = 1 [(gogoproto.jsontag) = "connection-status", (venice.check) = "StrEnum(OrchestratorStatus.ConnectionStatus)"];
+    api.Timestamp LastConnected   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-connected,omitempty"];
+    api.Timestamp LastSync        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-sync,omitempty"];
+    string SessionID              = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-id,omitempty"];
+}

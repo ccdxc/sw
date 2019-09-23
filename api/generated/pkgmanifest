@@ -9,6 +9,7 @@ true events events.proto svc_events.proto
 true monitoring alerts.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 
 true network lb.proto network.proto networkinterface.proto service.proto svc_network.proto vrf.proto 
 true objstore objstore.proto svc_objstore.proto 
+true orchestration orchestration.proto svc_orchestration.proto 
 true rollout rollout.proto svc_rollout.proto 
 true search search.proto svc_search.proto 
 true security app.proto fwprofile.proto networkencryption.proto securitygroup.proto sgpolicy.proto svc_security.proto x509.proto 

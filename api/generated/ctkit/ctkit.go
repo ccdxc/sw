@@ -94,6 +94,7 @@ type Controller interface {
 	NetworkInterface() NetworkInterfaceAPI               // return NetworkInterface API interface
 	Bucket() BucketAPI                                   // return Bucket API interface
 	Object() ObjectAPI                                   // return Object API interface
+	Orchestrator() OrchestratorAPI                       // return Orchestrator API interface
 	Rollout() RolloutAPI                                 // return Rollout API interface
 	RolloutAction() RolloutActionAPI                     // return RolloutAction API interface
 	SecurityGroup() SecurityGroupAPI                     // return SecurityGroup API interface

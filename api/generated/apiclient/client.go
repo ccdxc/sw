@@ -20,6 +20,8 @@ import (
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
 	objstore "github.com/pensando/sw/api/generated/objstore"
 	objstoreClient "github.com/pensando/sw/api/generated/objstore/grpc/client"
+	orchestration "github.com/pensando/sw/api/generated/orchestration"
+	orchestrationClient "github.com/pensando/sw/api/generated/orchestration/grpc/client"
 	rollout "github.com/pensando/sw/api/generated/rollout"
 	rolloutClient "github.com/pensando/sw/api/generated/rollout/grpc/client"
 	security "github.com/pensando/sw/api/generated/security"
@@ -37,17 +39,18 @@ import (
 type APIGroup string
 
 const (
-	GroupAuth        APIGroup = "auth"
-	GroupBookstore   APIGroup = "bookstore"
-	GroupCluster     APIGroup = "cluster"
-	GroupDiagnostics APIGroup = "diagnostics"
-	GroupMonitoring  APIGroup = "monitoring"
-	GroupNetwork     APIGroup = "network"
-	GroupObjstore    APIGroup = "objstore"
-	GroupRollout     APIGroup = "rollout"
-	GroupSecurity    APIGroup = "security"
-	GroupStaging     APIGroup = "staging"
-	GroupWorkload    APIGroup = "workload"
+	GroupAuth          APIGroup = "auth"
+	GroupBookstore     APIGroup = "bookstore"
+	GroupCluster       APIGroup = "cluster"
+	GroupDiagnostics   APIGroup = "diagnostics"
+	GroupMonitoring    APIGroup = "monitoring"
+	GroupNetwork       APIGroup = "network"
+	GroupObjstore      APIGroup = "objstore"
+	GroupOrchestration APIGroup = "orchestration"
+	GroupRollout       APIGroup = "rollout"
+	GroupSecurity      APIGroup = "security"
+	GroupStaging       APIGroup = "staging"
+	GroupWorkload      APIGroup = "workload"
 )
 
 // Services is list of all services exposed by the client ---
@@ -68,6 +71,8 @@ type Services interface {
 	NetworkV1() network.NetworkV1Interface
 	// Package is objstore and len of messages is 2
 	ObjstoreV1() objstore.ObjstoreV1Interface
+	// Package is orchestration and len of messages is 1
+	OrchestratorV1() orchestration.OrchestratorV1Interface
 	// Package is rollout and len of messages is 2
 	RolloutV1() rollout.RolloutV1Interface
 	// Package is security and len of messages is 6
@@ -83,17 +88,18 @@ type apiGrpcServerClient struct {
 	logger log.Logger
 	client *rpckit.RPCClient
 
-	aAuthV1        auth.AuthV1Interface
-	aBookstoreV1   bookstore.BookstoreV1Interface
-	aClusterV1     cluster.ClusterV1Interface
-	aDiagnosticsV1 diagnostics.DiagnosticsV1Interface
-	aMonitoringV1  monitoring.MonitoringV1Interface
-	aNetworkV1     network.NetworkV1Interface
-	aObjstoreV1    objstore.ObjstoreV1Interface
-	aRolloutV1     rollout.RolloutV1Interface
-	aSecurityV1    security.SecurityV1Interface
-	aStagingV1     staging.StagingV1Interface
-	aWorkloadV1    workload.WorkloadV1Interface
+	aAuthV1         auth.AuthV1Interface
+	aBookstoreV1    bookstore.BookstoreV1Interface
+	aClusterV1      cluster.ClusterV1Interface
+	aDiagnosticsV1  diagnostics.DiagnosticsV1Interface
+	aMonitoringV1   monitoring.MonitoringV1Interface
+	aNetworkV1      network.NetworkV1Interface
+	aObjstoreV1     objstore.ObjstoreV1Interface
+	aOrchestratorV1 orchestration.OrchestratorV1Interface
+	aRolloutV1      rollout.RolloutV1Interface
+	aSecurityV1     security.SecurityV1Interface
+	aStagingV1      staging.StagingV1Interface
+	aWorkloadV1     workload.WorkloadV1Interface
 }
 
 // Close closes the client
@@ -129,6 +135,10 @@ func (a *apiGrpcServerClient) ObjstoreV1() objstore.ObjstoreV1Interface {
 	return a.aObjstoreV1
 }
 
+func (a *apiGrpcServerClient) OrchestratorV1() orchestration.OrchestratorV1Interface {
+	return a.aOrchestratorV1
+}
+
 func (a *apiGrpcServerClient) RolloutV1() rollout.RolloutV1Interface {
 	return a.aRolloutV1
 }
@@ -158,17 +168,18 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		client: client,
 		logger: logger,
 
-		aAuthV1:        authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
-		aBookstoreV1:   bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
-		aClusterV1:     clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
-		aDiagnosticsV1: diagnosticsClient.NewGrpcCrudClientDiagnosticsV1(client.ClientConn, logger),
-		aMonitoringV1:  monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
-		aNetworkV1:     networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
-		aObjstoreV1:    objstoreClient.NewGrpcCrudClientObjstoreV1(client.ClientConn, logger),
-		aRolloutV1:     rolloutClient.NewGrpcCrudClientRolloutV1(client.ClientConn, logger),
-		aSecurityV1:    securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
-		aStagingV1:     stagingClient.NewGrpcCrudClientStagingV1(client.ClientConn, logger),
-		aWorkloadV1:    workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
+		aAuthV1:         authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
+		aBookstoreV1:    bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
+		aClusterV1:      clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
+		aDiagnosticsV1:  diagnosticsClient.NewGrpcCrudClientDiagnosticsV1(client.ClientConn, logger),
+		aMonitoringV1:   monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
+		aNetworkV1:      networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
+		aObjstoreV1:     objstoreClient.NewGrpcCrudClientObjstoreV1(client.ClientConn, logger),
+		aOrchestratorV1: orchestrationClient.NewGrpcCrudClientOrchestratorV1(client.ClientConn, logger),
+		aRolloutV1:      rolloutClient.NewGrpcCrudClientRolloutV1(client.ClientConn, logger),
+		aSecurityV1:     securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
+		aStagingV1:      stagingClient.NewGrpcCrudClientStagingV1(client.ClientConn, logger),
+		aWorkloadV1:     workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
 	}, nil
 }
 
@@ -177,17 +188,18 @@ type apiRestServerClient struct {
 	logger        log.Logger
 	httpTransport *http.Transport
 
-	aAuthV1        auth.AuthV1Interface
-	aBookstoreV1   bookstore.BookstoreV1Interface
-	aClusterV1     cluster.ClusterV1Interface
-	aDiagnosticsV1 diagnostics.DiagnosticsV1Interface
-	aMonitoringV1  monitoring.MonitoringV1Interface
-	aNetworkV1     network.NetworkV1Interface
-	aObjstoreV1    objstore.ObjstoreV1Interface
-	aRolloutV1     rollout.RolloutV1Interface
-	aSecurityV1    security.SecurityV1Interface
-	aStagingV1     staging.StagingV1Interface
-	aWorkloadV1    workload.WorkloadV1Interface
+	aAuthV1         auth.AuthV1Interface
+	aBookstoreV1    bookstore.BookstoreV1Interface
+	aClusterV1      cluster.ClusterV1Interface
+	aDiagnosticsV1  diagnostics.DiagnosticsV1Interface
+	aMonitoringV1   monitoring.MonitoringV1Interface
+	aNetworkV1      network.NetworkV1Interface
+	aObjstoreV1     objstore.ObjstoreV1Interface
+	aOrchestratorV1 orchestration.OrchestratorV1Interface
+	aRolloutV1      rollout.RolloutV1Interface
+	aSecurityV1     security.SecurityV1Interface
+	aStagingV1      staging.StagingV1Interface
+	aWorkloadV1     workload.WorkloadV1Interface
 }
 
 // Close closes the client
@@ -226,6 +238,10 @@ func (a *apiRestServerClient) ObjstoreV1() objstore.ObjstoreV1Interface {
 	return a.aObjstoreV1
 }
 
+func (a *apiRestServerClient) OrchestratorV1() orchestration.OrchestratorV1Interface {
+	return a.aOrchestratorV1
+}
+
 func (a *apiRestServerClient) RolloutV1() rollout.RolloutV1Interface {
 	return a.aRolloutV1
 }
@@ -256,17 +272,18 @@ func NewRestAPIClient(url string) (Services, error) {
 		logger:        log.WithContext("module", "RestAPIClient"),
 		httpTransport: ht,
 
-		aAuthV1:        authClient.NewRestCrudClientAuthV1(url, httpClient),
-		aBookstoreV1:   bookstoreClient.NewRestCrudClientBookstoreV1(url, httpClient),
-		aClusterV1:     clusterClient.NewRestCrudClientClusterV1(url, httpClient),
-		aDiagnosticsV1: diagnosticsClient.NewRestCrudClientDiagnosticsV1(url, httpClient),
-		aMonitoringV1:  monitoringClient.NewRestCrudClientMonitoringV1(url, httpClient),
-		aNetworkV1:     networkClient.NewRestCrudClientNetworkV1(url, httpClient),
-		aObjstoreV1:    objstoreClient.NewRestCrudClientObjstoreV1(url, httpClient),
-		aRolloutV1:     rolloutClient.NewRestCrudClientRolloutV1(url, httpClient),
-		aSecurityV1:    securityClient.NewRestCrudClientSecurityV1(url, httpClient),
-		aStagingV1:     stagingClient.NewRestCrudClientStagingV1(url, httpClient),
-		aWorkloadV1:    workloadClient.NewRestCrudClientWorkloadV1(url, httpClient),
+		aAuthV1:         authClient.NewRestCrudClientAuthV1(url, httpClient),
+		aBookstoreV1:    bookstoreClient.NewRestCrudClientBookstoreV1(url, httpClient),
+		aClusterV1:      clusterClient.NewRestCrudClientClusterV1(url, httpClient),
+		aDiagnosticsV1:  diagnosticsClient.NewRestCrudClientDiagnosticsV1(url, httpClient),
+		aMonitoringV1:   monitoringClient.NewRestCrudClientMonitoringV1(url, httpClient),
+		aNetworkV1:      networkClient.NewRestCrudClientNetworkV1(url, httpClient),
+		aObjstoreV1:     objstoreClient.NewRestCrudClientObjstoreV1(url, httpClient),
+		aOrchestratorV1: orchestrationClient.NewRestCrudClientOrchestratorV1(url, httpClient),
+		aRolloutV1:      rolloutClient.NewRestCrudClientRolloutV1(url, httpClient),
+		aSecurityV1:     securityClient.NewRestCrudClientSecurityV1(url, httpClient),
+		aStagingV1:      stagingClient.NewRestCrudClientStagingV1(url, httpClient),
+		aWorkloadV1:     workloadClient.NewRestCrudClientWorkloadV1(url, httpClient),
 	}, nil
 }
 
@@ -284,16 +301,17 @@ func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
 		logger:        log.WithContext("module", "RestAPIClient"),
 		httpTransport: ht,
 
-		aAuthV1:        authClient.NewStagedRestCrudClientAuthV1(url, bufferId, httpClient),
-		aBookstoreV1:   bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId, httpClient),
-		aClusterV1:     clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId, httpClient),
-		aDiagnosticsV1: diagnosticsClient.NewStagedRestCrudClientDiagnosticsV1(url, bufferId, httpClient),
-		aMonitoringV1:  monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId, httpClient),
-		aNetworkV1:     networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId, httpClient),
-		aObjstoreV1:    objstoreClient.NewStagedRestCrudClientObjstoreV1(url, bufferId, httpClient),
-		aRolloutV1:     rolloutClient.NewStagedRestCrudClientRolloutV1(url, bufferId, httpClient),
-		aSecurityV1:    securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId, httpClient),
-		aStagingV1:     stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId, httpClient),
-		aWorkloadV1:    workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId, httpClient),
+		aAuthV1:         authClient.NewStagedRestCrudClientAuthV1(url, bufferId, httpClient),
+		aBookstoreV1:    bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId, httpClient),
+		aClusterV1:      clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId, httpClient),
+		aDiagnosticsV1:  diagnosticsClient.NewStagedRestCrudClientDiagnosticsV1(url, bufferId, httpClient),
+		aMonitoringV1:   monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId, httpClient),
+		aNetworkV1:      networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId, httpClient),
+		aObjstoreV1:     objstoreClient.NewStagedRestCrudClientObjstoreV1(url, bufferId, httpClient),
+		aOrchestratorV1: orchestrationClient.NewStagedRestCrudClientOrchestratorV1(url, bufferId, httpClient),
+		aRolloutV1:      rolloutClient.NewStagedRestCrudClientRolloutV1(url, bufferId, httpClient),
+		aSecurityV1:     securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId, httpClient),
+		aStagingV1:      stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId, httpClient),
+		aWorkloadV1:     workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId, httpClient),
 	}, nil
 }

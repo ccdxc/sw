@@ -14,10 +14,12 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
+	"github.com/pensando/sw/venice/orch/vchub/instance_manager"
 	"github.com/pensando/sw/venice/orch/vchub/server"
 	"github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/orch/vchub/vcprobe"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 const (
@@ -31,6 +33,7 @@ type cliOpts struct {
 	vcenterList     []*url.URL
 	logToFile       string
 	logToStdoutFlag bool
+	resolverURLs    string
 }
 
 func printUsage(f *flag.FlagSet) {
@@ -41,7 +44,6 @@ func printUsage(f *flag.FlagSet) {
 func parseOpts(opts *cliOpts) error {
 	var storeArg string
 	var vcList string
-	var resolverURLs string
 
 	flagSet := flag.NewFlagSet("vchub", flag.ContinueOnError)
 	flagSet.StringVar(&opts.listenURL,
@@ -56,7 +58,7 @@ func parseOpts(opts *cliOpts) error {
 		"vcenter-list",
 		"",
 		"Comma separated list of vc URL of the form 'https://user:pass@ip:port'")
-	flagSet.StringVar(&resolverURLs,
+	flagSet.StringVar(&opts.resolverURLs,
 		"resolver-urls",
 		":"+globals.CMDResolverPort,
 		"Comma separated list of resolver URLs of the form 'ip:port'")
@@ -76,12 +78,6 @@ func parseOpts(opts *cliOpts) error {
 		return err
 	}
 
-	if vcList == "" {
-		printUsage(flagSet)
-		log.Errorf("vcenter-list cannot be empty")
-		return fmt.Errorf("vcenter-list cannot be empty")
-	}
-
 	s := strings.Split(storeArg, ":")
 	if s[0] != "etcd" && s[0] != "memkv" {
 		printUsage(flagSet)
@@ -90,13 +86,15 @@ func parseOpts(opts *cliOpts) error {
 	}
 	opts.storeType = s[0]
 	opts.storeURL = s[1]
-	vcs := strings.Split(vcList, ",")
-	opts.vcenterList = make([]*url.URL, len(vcs))
-	for ix, vc := range vcs {
-		opts.vcenterList[ix], err = soap.ParseURL(vc)
-		if err != nil {
-			log.Errorf("Error %v parsing url %s", err, vc)
-			return fmt.Errorf("Error %v parsing url %s", err, vc)
+	if len(vcList) > 0 {
+		vcs := strings.Split(vcList, ",")
+		opts.vcenterList = make([]*url.URL, len(vcs))
+		for ix, vc := range vcs {
+			opts.vcenterList[ix], err = soap.ParseURL(vc)
+			if err != nil {
+				log.Errorf("Error %v parsing url %s", err, vc)
+				return fmt.Errorf("Error %v parsing url %s", err, vc)
+			}
 		}
 	}
 
@@ -108,15 +106,20 @@ func waitForever() {
 }
 
 func launchVCHub(opts *cliOpts) {
+	// Start probes
+	retryMap := make(map[string]*vcprobe.VCProbe)
+
 	// Initialize store and start grpc server
 	if _, err := store.Init(opts.storeURL, opts.storeType); err != nil {
 		log.Errorf("failed to init store %v", err)
-		os.Exit(1)
+		// TODO : Reenable this line
+		//os.Exit(1)
 	}
 	_, err := server.NewVCHServer(opts.listenURL)
 	if err != nil {
 		log.Errorf("VCHServer start failed %v", err)
-		os.Exit(1)
+		// TODO : Reenable this line
+		//os.Exit(1)
 	}
 
 	log.Infof("%s is running", globals.VCHub)
@@ -125,15 +128,23 @@ func launchVCHub(opts *cliOpts) {
 	vchStore := store.NewVCHStore(context.Background())
 	vchStore.Run(storeCh)
 
-	// Start probes
-	retryMap := make(map[string]*vcprobe.VCProbe)
-	for _, u := range opts.vcenterList {
-		vcp := vcprobe.NewVCProbe(u, storeCh)
-		if vcp.Start() == nil {
-			vcp.Run()
-		} else {
-			vcp.Stop()
-			retryMap[u.String()] = vcp
+	r := resolver.New(&resolver.Config{Name: globals.VCHub, Servers: strings.Split(opts.resolverURLs, ",")})
+
+	log.Info("Starting VCenter config watcher")
+	watcher, err := watcher.NewWatcher(globals.APIServer, r)
+	if err != nil || watcher == nil {
+		log.Errorf("Failed to create api server watcher. Err : %v", err)
+	}
+
+	if len(opts.vcenterList) > 0 {
+		for _, u := range opts.vcenterList {
+			vcp := vcprobe.NewVCProbe(u, storeCh)
+			if vcp.Start() == nil {
+				vcp.Run()
+			} else {
+				vcp.Stop()
+				retryMap[u.String()] = vcp
+			}
 		}
 	}
 
@@ -157,10 +168,10 @@ func launchVCHub(opts *cliOpts) {
 
 func main() {
 	var opts cliOpts
-
 	err := parseOpts(&opts)
 	if err != nil {
-		os.Exit(1)
+		// TODO : Re-enable this line
+		//os.Exit(1)
 	}
 
 	// Fill logger config params

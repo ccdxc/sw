@@ -28,6 +28,7 @@ import { NetworkVirtualRouter } from './network';
 import { NetworkNetworkInterface } from './network';
 import { ObjstoreBucket } from './objstore';
 import { ObjstoreObject } from './objstore';
+import { OrchestrationOrchestrator } from './orchestration';
 import { RolloutRollout } from './rollout';
 import { RolloutRolloutAction } from './rollout';
 import { SecuritySecurityGroup } from './security';
@@ -210,6 +211,13 @@ export const CategoryMapping: CatMap  = {
     "Object" : {
       instance: new ObjstoreObject(),
       scopes: [ 'tenant',  'namespace', ] ,
+      actions:  [] ,
+    },
+  },
+  "Orchestration" : {
+    "Orchestrator" : {
+      instance: new OrchestrationOrchestrator(),
+      scopes: [ 'cluster', ] ,
       actions:  [] ,
     },
   },

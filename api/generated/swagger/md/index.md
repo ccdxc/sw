@@ -12,6 +12,7 @@
 | [monitoring](/swagger/monitoring) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |
 | [network](/swagger/network) | Configure and Manage Networks and Services |
 | [objstore](/swagger/objstore) | Objstore API reference |
+| [orchestration](/swagger/orchestration) | Orchestration API reference |
 | [rollout](/swagger/rollout) | Configure and manage rollout feature to upgrade/downgrade software for the cluster |
 | [search](/swagger/search) | Powerful search API to search configuration policies, events etc. |
 | [security](/swagger/security) | Configure and manage security features like Security Groups, Rules, Certificates etc. |

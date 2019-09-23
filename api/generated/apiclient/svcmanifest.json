@@ -573,6 +573,35 @@
       "svc_objstore.proto"
     ]
   },
+  "orchestration": {
+    "Svcs": {
+      "OrchestratorV1": {
+        "Version": "v1",
+        "Messages": [
+          "Orchestrator"
+        ],
+        "Properties": {
+          "Orchestrator": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/orchestrator/v1/orchestrator"
+          }
+        }
+      }
+    },
+    "Files": [
+      "svc_orchestration.proto"
+    ]
+  },
   "rollout": {
     "Svcs": {
       "RolloutV1": {
