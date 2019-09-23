@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.test.iris.utils.naples_host as host
 
+IONIC_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth"
 
 def Main(tCase):
     for node in api.GetNaplesHostnames():
@@ -9,13 +10,14 @@ def Main(tCase):
             req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
             if api.GetNodeOs(node) == host.OS_TYPE_BSD:
                 api.Trigger_AddHostCommand(
-                    req, node, 'sysctl dev.%s | grep pkts | grep -v ": 0"' % host.GetNaplesSysctl(i))
+                    req, node, "bash " + IONIC_DRV_PATH + "/ionic_stats.sh check %s" %
+                    host.GetNaplesSysctl(i))
                 # Clear the stats.
                 api.Trigger_AddHostCommand(
-                    req, node, 'sysctl dev.%s.reset_stats=1' % host.GetNaplesSysctl(i))
+                    req, node, 'sysctl dev.%s.reset_stats=1 1>/dev/null' % host.GetNaplesSysctl(i))
             else:
                 api.Trigger_AddHostCommand(
-                    req, node, 'ethtool -S %s | grep packets | grep -v ": 0' % i)
+                    req, node, 'ethtool -S %s | grep packets | grep -v ": 0"' % i)
 
             resp = api.Trigger(req)
             if resp is None:
@@ -24,15 +26,13 @@ def Main(tCase):
                 return api.types.status.FAILURE
 
             for cmd in resp.commands:
-                if cmd.exit_code != 0:
-                    if cmd.stdout is None:
-			# Some tests can have driver loaded but no traffic
-			# is generated
-                        api.Logger.info("Stats output is empty")
-                        api.PrintCommandResults(cmd)
-                    else:
+                if cmd.exit_code == 0:
+                    if cmd.stdout:
+                        #Log for debugging for now.
                         api.Logger.info("Stats output for %s: %s" %
                                         (i, cmd.stdout))
-                        api.PrintCommandResults(cmd)
+                else:
+                    api.Logger.error("Command failed to run: %s" %
+                                     cmd.stderr)
 
     return api.types.status.SUCCESS
