@@ -11,10 +11,6 @@ def Setup(tc):
     
     return api.types.status.SUCCESS 
 
-#    tc.nodes = api.GetWorkloadNodeHostnames()
-    #tc.node_intfs = {}
-    #for node in tc.nodes:
-    #    tc.node_intfs[node] = interface.GetNodeInterface(node)
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True) 
@@ -29,7 +25,6 @@ def Trigger(tc):
                 # FreeBSD doesn't have a command
                 # TODO: In verification we will need to do dmesg to extract same info
                 api.types.status.SUCCESS
-            # TODO: ESX: elif tc.os == 'esx':
             else:
                 return api.types.status.FAILURE
 
@@ -54,7 +49,6 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
   
-        # is EXIT code !0?
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
 
