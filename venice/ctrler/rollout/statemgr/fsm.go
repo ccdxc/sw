@@ -227,11 +227,15 @@ func fsmAcCreated(ros *RolloutState) {
 	log.Infof("Completion Percentage %v", ros.Rollout.Status.CompletionPercentage)
 	ros.computeProgressDelta()
 
-	if ros.Spec.GetSuspend() && len(ros.Status.ControllerNodesStatus) == 0 {
-		log.Infof("Rollout object created with state SUSPENDED.")
-		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
-		ros.eventChan <- fsmEvSuspend
-		return
+	if ros.Spec.GetSuspend() {
+		if ros.restart == false {
+			log.Infof("Rollout object created with state SUSPENDED.")
+			ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+			ros.eventChan <- fsmEvSuspend
+			return
+		}
+		//controller node status found suspend_in_progress
+		ros.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
 	}
 
 	if ros.Spec.ScheduledStartTime == nil {
@@ -303,7 +307,8 @@ func fsmAcPreUpgSmartNIC(ros *RolloutState) {
 
 func fsmAcWaitForSchedule(ros *RolloutState) {
 	ros.Mutex.Lock()
-	if ros.Spec.GetSuspend() && len(ros.Status.ControllerNodesStatus) == 0 {
+
+	if ros.Spec.GetSuspend() && ros.restart == false {
 		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
 		ros.eventChan <- fsmEvSuspend
 		ros.Mutex.Unlock()
@@ -313,7 +318,11 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	if ros.Spec.ScheduledStartTime == nil {
 		ros.eventChan <- fsmEvScheduleNow
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
-		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		if ros.Spec.GetSuspend() {
+			ros.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
+		} else {
+			ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		}
 		ros.saveStatus()
 		ros.Mutex.Unlock()
 		ros.updateRolloutAction()
@@ -324,8 +333,12 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	now := time.Now()
 	if err != nil || now.After(t) { // specified time is in the past
 		ros.eventChan <- fsmEvScheduleNow
-		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
-		ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		if ros.Spec.GetSuspend() {
+			ros.Status.OperationalState = rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String()
+		} else {
+			ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
+			ros.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+		}
 		ros.saveStatus()
 		ros.Mutex.Unlock()
 		ros.updateRolloutAction()

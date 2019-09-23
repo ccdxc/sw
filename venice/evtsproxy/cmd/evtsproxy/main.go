@@ -222,7 +222,7 @@ rolloutActionWatcher:
 			switch event.Type {
 			case kvstore.Created, kvstore.Updated:
 				switch rollout.RolloutStatus_RolloutOperationalState(rollout.RolloutStatus_RolloutOperationalState_vvalue[rolloutAcObj.Status.OperationalState]) {
-				case rollout.RolloutStatus_PROGRESSING:
+				case rollout.RolloutStatus_PROGRESSING, rollout.RolloutStatus_SUSPEND_IN_PROGRESS:
 					e.setMaintenanceMode(true)
 				case rollout.RolloutStatus_SUCCESS, rollout.RolloutStatus_SUSPENDED, rollout.RolloutStatus_FAILURE, rollout.RolloutStatus_DEADLINE_EXCEEDED:
 					e.setMaintenanceMode(false)

@@ -30,6 +30,7 @@ type RolloutState struct {
 	stopChan     chan bool
 	currentState rofsmState
 	stopped      bool
+	restart      bool
 	stateTimer   *time.Timer
 
 	fsm [][]fsmNode
@@ -116,6 +117,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		eventChan: make(chan rofsmEvent, 100),
 		stopChan:  make(chan bool),
 		fsm:       roFSM,
+		restart:   false,
 	}
 
 	ros.Mutex.Lock()
@@ -127,6 +129,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	ros.Mutex.Unlock()
 
 	for _, nodeStatus := range ro.Status.ControllerNodesStatus {
+		ros.restart = true
 		veniceRollouts := ros.getVenicePendingPreCheckIssue()
 
 		for _, n := range veniceRollouts {
@@ -163,6 +166,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	for _, snicStatus := range ro.Status.DSCsStatus {
 
 		var op protos.DSCOp
+		ros.restart = true
 		switch ros.Spec.UpgradeType {
 		case roproto.RolloutSpec_Disruptive.String():
 			op = protos.DSCOp_DSCPreCheckForDisruptive
