@@ -25,18 +25,6 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     sdk::table::sdk_table_factory_params_t table_params;
 
     memset(&table_params, 0, sizeof(table_params));
-    table_params.table_id = P4TBL_ID_KEY_NATIVE;
-    table_params.entry_trace_en = false;
-    key_native_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(key_native_tbl() != NULL);
-
-    memset(&table_params, 0, sizeof(table_params));
-    table_params.table_id = P4TBL_ID_KEY_TUNNELED;
-    table_params.entry_trace_en = false;
-    key_tunneled_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(key_tunneled_tbl() != NULL);
-
-    memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_P4I_DROP_STATS;
     table_params.entry_trace_en = false;
     ingress_drop_stats_tbl_ = sltcam::factory(&table_params);
@@ -56,8 +44,6 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
 }
 
 apulu_impl_state::~apulu_impl_state() {
-    sltcam::destroy(key_native_tbl());
-    sltcam::destroy(key_tunneled_tbl());
     sltcam::destroy(ingress_drop_stats_tbl());
     sltcam::destroy(egress_drop_stats_tbl());
     sltcam::destroy(nacl_tbl());

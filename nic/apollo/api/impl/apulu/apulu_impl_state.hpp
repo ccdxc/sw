@@ -39,8 +39,6 @@ public:
     ~apulu_impl_state();
 
     /// \brief accessors
-    sltcam *key_native_tbl(void) { return key_native_tbl_; };
-    sltcam *key_tunneled_tbl(void) { return key_tunneled_tbl_; };
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     sltcam *nacl_tbl(void) { return nacl_tbl_; }
@@ -48,8 +46,6 @@ public:
     friend class apulu_impl;            ///< friend of apulu_impl_state
 
 private:
-    sltcam *key_native_tbl_;            ///< key table for native packets
-    sltcam *key_tunneled_tbl_;          ///< key table for tunneled packets
     sltcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
     sltcam *nacl_tbl_;                  ///< NACL tcam table
