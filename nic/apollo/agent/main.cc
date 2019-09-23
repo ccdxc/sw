@@ -149,8 +149,9 @@ main (int argc, char **argv)
             if (optarg) {
                 pipeline = std::string(optarg);
                 if ((pipeline.compare("apollo") != 0) &&
-                    (pipeline.compare("artemis") != 0)) {
-                    fprintf(stderr, "feature is not valid\n");
+                    (pipeline.compare("artemis") != 0) &&
+                    (pipeline.compare("apulu") != 0)) {
+                    fprintf(stderr, "Unknown feature %s\n", pipeline.c_str());
                     exit(1);
                 }
             } else {
