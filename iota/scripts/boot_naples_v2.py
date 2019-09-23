@@ -394,9 +394,11 @@ class NaplesManagement(EntityManagement):
 
     def InstallPrep(self):
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0", "#")
+        self.SendlineExpect("mount -t ext4 /dev/mmcblk0p10 /data", "#")
         self.CleanUpOldFiles()
         self.SetUpInitFiles()
         self.SendlineExpect("umount /sysconfig/config0", "#")
+        self.SendlineExpect("umount /data", "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):

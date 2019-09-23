@@ -15,7 +15,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 type NetworkReactor interface {
@@ -59,12 +61,15 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	// get a list of objects
 	objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
 	if err != nil {
-		log.Errorf("Error getting Network list. Err: %v", err)
-		return
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting Network list. Err: %v", err)
+			return
+		}
+	} else {
+		// perform a diff of the states
+		client.diffNetworks(objList, reactor, ostream)
 	}
-
-	// perform a diff of the states
-	client.diffNetworks(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.NetworkEvent, evChanLength)
@@ -91,13 +96,16 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			// get a list of objects
 			objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
 			if err != nil {
-				log.Errorf("Error getting Network list. Err: %v", err)
-				return
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Network list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("NetworkWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffNetworks(objList, reactor, ostream)
 			}
-			client.debugStats.AddInt("NetworkWatchResyncs", 1)
-
-			// perform a diff of the states
-			client.diffNetworks(objList, reactor, ostream)
 		}
 	}
 }

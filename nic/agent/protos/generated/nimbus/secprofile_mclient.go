@@ -15,7 +15,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 type SecurityProfileReactor interface {
@@ -59,12 +61,15 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	// get a list of objects
 	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
 	if err != nil {
-		log.Errorf("Error getting SecurityProfile list. Err: %v", err)
-		return
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting SecurityProfile list. Err: %v", err)
+			return
+		}
+	} else {
+		// perform a diff of the states
+		client.diffSecurityProfiles(objList, reactor, ostream)
 	}
-
-	// perform a diff of the states
-	client.diffSecurityProfiles(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.SecurityProfileEvent, evChanLength)
@@ -91,13 +96,16 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			// get a list of objects
 			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
 			if err != nil {
-				log.Errorf("Error getting SecurityProfile list. Err: %v", err)
-				return
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting SecurityProfile list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("SecurityProfileWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffSecurityProfiles(objList, reactor, ostream)
 			}
-			client.debugStats.AddInt("SecurityProfileWatchResyncs", 1)
-
-			// perform a diff of the states
-			client.diffSecurityProfiles(objList, reactor, ostream)
 		}
 	}
 }

@@ -15,7 +15,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 type EndpointReactor interface {
@@ -59,12 +61,15 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	// get a list of objects
 	objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
 	if err != nil {
-		log.Errorf("Error getting Endpoint list. Err: %v", err)
-		return
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting Endpoint list. Err: %v", err)
+			return
+		}
+	} else {
+		// perform a diff of the states
+		client.diffEndpoints(objList, reactor, ostream)
 	}
-
-	// perform a diff of the states
-	client.diffEndpoints(objList, reactor, ostream)
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.EndpointEvent, evChanLength)
@@ -91,13 +96,16 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			// get a list of objects
 			objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
 			if err != nil {
-				log.Errorf("Error getting Endpoint list. Err: %v", err)
-				return
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Endpoint list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("EndpointWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffEndpoints(objList, reactor, ostream)
 			}
-			client.debugStats.AddInt("EndpointWatchResyncs", 1)
-
-			// perform a diff of the states
-			client.diffEndpoints(objList, reactor, ostream)
 		}
 	}
 }
