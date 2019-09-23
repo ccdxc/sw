@@ -606,14 +606,14 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
             this._controllerService.invokeInfoToaster('Alert', alertMsg);
           }
         }
-        if (this.startingAlertCount == null) {
+        if (this.startingAlertCount <= 0  ) {
           this.alertNumbers = this.alerts.length;
         } else {
           this.alertNumbers = Math.max(this.startingAlertCount, this.alerts.length);
-          if (this.alerts.length === this.startingAlertCount) {
+          if (this.alerts.length >= this.startingAlertCount) {   // VS-843, Once websocket gives more alerts than startingAlertCount, we reset startingAlertCount. WS may increment alerts by more than 1.(thus, using >=)
             // Have received all alerts that exist
             // no longer rely on startingAlertCount since we may receive delete events
-            this.startingAlertCount = null;
+            this.startingAlertCount = 0;
           }
         }
       },
