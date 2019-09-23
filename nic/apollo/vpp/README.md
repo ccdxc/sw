@@ -179,7 +179,7 @@ This plugin handles flow miss packets sent to ARM CPU from P4 and programs flow 
 
 Below diagram shows packet path for a flow miss packet among VPP graph nodes:
 
-![Packet path](./flow_plugin/flow_plugin.png)
+![Packet path](./flow/flow_plugin.png)
 
 ## Commands
 
