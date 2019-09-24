@@ -817,9 +817,6 @@ mac_mgmt_cfg_hw (mac_info_t *mac_info)
         // channel mode
         cap_bx_apb_write(chip_id, inst_id, 0x4010, bx[inst_id].ch_mode[start_lane]);
 
-        // Tx/Rx enable
-        cap_bx_set_tx_rx_enable(chip_id, inst_id, 0x3);
-
         // mtu
         cap_bx_set_mtu(chip_id, inst_id, mac_info->mtu, mac_info->mtu + 1);
 
