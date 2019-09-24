@@ -574,6 +574,44 @@ func TestNetworkSecurityPolicyV4DstAnySrc(t *testing.T) {
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
+func TestNetworkSecurityPolicyAnyProtoSpecifiedPorts(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "80",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying ports with any protocol must be rejected. Error: %v", errs)
+}
+
 func TestNetworkSecurityPolicyV6SrcAnyDst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
@@ -2594,6 +2632,28 @@ func TestAppProtoPortConfig(t *testing.T) {
 			ProtoPorts: []security.ProtoPort{
 				{
 					Protocol: "icmp",
+					Ports:    "100",
+				},
+			},
+		},
+	}
+
+	errs = s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "Icmp proto with ports must fail.  Error: %v", errs)
+
+	//port specified with any protocol. Invalid App
+	// icmp proto with ports should fail
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
 					Ports:    "100",
 				},
 			},

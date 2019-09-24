@@ -276,7 +276,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 }
 
 func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
-	switch protocol {
+	switch strings.ToLower(protocol) {
 	case "tcp":
 		return halproto.IPProtocol_IPPROTO_TCP
 	case "udp":

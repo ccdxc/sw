@@ -196,6 +196,11 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 			} else {
 				found := false
 				for _, p := range supportedProtocols {
+					// check if any is specified in protocol
+					if strings.ToLower(pp.Protocol) == "any" && len(pp.Ports) != 0 {
+						return fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports)
+					}
+
 					if p == strings.ToLower(pp.Protocol) {
 						found = true
 						break
@@ -351,6 +356,10 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 		} else {
 			found := false
 			for _, p := range supportedProtocols {
+				if strings.ToLower(pp.Protocol) == "any" && len(pp.Ports) != 0 {
+					ret = append(ret, fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports))
+				}
+
 				if p == strings.ToLower(pp.Protocol) {
 					found = true
 					break
