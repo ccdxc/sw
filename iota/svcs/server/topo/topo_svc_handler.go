@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -846,22 +847,25 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	triggerNodes := []*testbed.TestNode{}
 	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
 		TriggerOp: req.GetTriggerOp()}
-	triggerInfoMap := make(map[string]*iota.TriggerMsg)
-	triggerRespMap := make(map[string]*iota.TriggerMsg)
+
+	triggerInfoMap := new(sync.Map)
+	triggerRespMap := new(sync.Map)
 	var triggerInfo *iota.TriggerMsg
-	var ok bool
 	triggerCmdIndexMap := make(map[string][]int)
 
 	for index, cmd := range req.GetCommands() {
 		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		if triggerInfo, ok = triggerInfoMap[cmd.GetNodeName()]; !ok {
-			triggerInfoMap[cmd.GetNodeName()] = &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+		if item, ok := triggerInfoMap.Load(cmd.GetNodeName()); !ok {
+			triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 				TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-			triggerInfo, _ = triggerInfoMap[cmd.GetNodeName()]
+			triggerInfoMap.Store(cmd.GetNodeName(), triggerMsg)
+			triggerInfo = triggerMsg
 			triggerCmdIndexMap[cmd.GetNodeName()] = []int{}
 		} else {
+			triggerInfo = item.(*iota.TriggerMsg)
 			triggerInfo.Commands = append(triggerInfo.Commands, cmd)
 		}
+
 		triggerCmdIndexMap[cmd.GetNodeName()] = append(triggerCmdIndexMap[cmd.GetNodeName()], index)
 		//Just copy the request for now
 		triggerResp.Commands = append(triggerResp.Commands, cmd)
@@ -882,9 +886,10 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
-				triggerMsg, _ := triggerInfoMap[node.Node.Name]
+				item, _ := triggerInfoMap.Load(node.Node.Name)
+				triggerMsg := item.(*iota.TriggerMsg)
 				triggerResp, err := node.TriggerWithContext(ctx3, triggerMsg)
-				triggerRespMap[node.Node.Name] = triggerResp
+				triggerRespMap.Store(node.Node.Name, triggerResp)
 				if err != nil {
 					return err
 				}
@@ -905,8 +910,9 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	}
 
 	for _, node := range triggerNodes {
-
-		for index, cmd := range triggerRespMap[node.Node.Name].GetCommands() {
+		item, _ := triggerRespMap.Load(node.Node.Name)
+		triggerMsg := item.(*iota.TriggerMsg)
+		for index, cmd := range triggerMsg.Commands {
 			realIndex := triggerCmdIndexMap[node.Node.Name][index]
 			triggerResp.Commands[realIndex] = cmd
 		}
