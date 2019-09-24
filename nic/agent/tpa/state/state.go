@@ -1165,7 +1165,7 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	// Create lateral objects here
 	for _, c := range p.Spec.Exports {
 		mgmtIP := s.getMgmtIPAddr()
-		if err := s.netAgent.CreateLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
+		if err := s.netAgent.CreateLateralNetAgentObjects(p.GetKey(), mgmtIP, c.Destination, false); err != nil {
 			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
 			return err
 		}
@@ -1286,7 +1286,7 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 
 	for _, c := range polCtx.tpmPolicy.Spec.Exports {
 		mgmtIP := s.getMgmtIPAddr()
-		if err := s.netAgent.DeleteLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
+		if err := s.netAgent.DeleteLateralNetAgentObjects(p.GetKey(), mgmtIP, c.Destination, false); err != nil {
 			log.Errorf("Failed to delete lateral objects in netagent. Err: %v", err)
 		}
 	}

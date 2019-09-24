@@ -108,18 +108,6 @@ var (
 				IPv4Gateway: "10.1.1.254",
 			},
 		},
-		{
-			TypeMeta: api.TypeMeta{Kind: "Network"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Name:      "_internal-network",
-				Namespace: "default",
-			},
-			Spec: netproto.NetworkSpec{
-				IPv4Subnet:  "10.1.1.0/24",
-				IPv4Gateway: "10.1.1.254",
-			},
-		},
 	}
 
 	eps = []*netproto.Endpoint{
@@ -148,7 +136,7 @@ var (
 			Spec: netproto.EndpointSpec{
 				EndpointUUID: "testEndpointUUID",
 				WorkloadUUID: "testWorkloadUUID",
-				NetworkName:  "_internal-network",
+				NetworkName:  "_internal_untagged_nw",
 				MacAddress:   "4242.4242.4242",
 			},
 		},

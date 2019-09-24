@@ -1361,10 +1361,19 @@ func (tsa *Tagent) deleteModifyMirrorSessionRules(pcSession *tsproto.MirrorSessi
 	return deleteFmRuleIDs, deleteDropRuleIDs, nil
 }
 
-func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSession, update bool) error {
+func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession, oldMs *tsproto.MirrorSession, update bool) error {
 	// Create lateral objects here
+	if update && oldMs != nil {
+		for _, oldCollectors := range oldMs.Spec.Collectors {
+			// Intercept the update call and issue a lateral object deletion.
+			err := nAgent.DeleteLateralNetAgentObjects(oldMs.GetKey(), getMgmtIP(), oldCollectors.ExportCfg.Destination, true)
+			if err != nil {
+				log.Errorf("Failed to trigged a delete of lateral objects during the update path. Err: %v", err)
+			}
+		}
+	}
 	for _, mirrorCollector := range pcSession.Spec.Collectors {
-		err := nAgent.CreateLateralNetAgentObjects(getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
+		err := nAgent.CreateLateralNetAgentObjects(pcSession.GetKey(), getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
 		if err != nil {
 			log.Errorf("Failed to create lateral objects. Err: %v", err)
 			return fmt.Errorf("failed to create lateral objects. Err: %v", err)
@@ -1456,7 +1465,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 
 func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
 	for _, mirrorCollector := range pcSession.Spec.Collectors {
-		err := nAgent.DeleteLateralNetAgentObjects(getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
+		err := nAgent.DeleteLateralNetAgentObjects(pcSession.GetKey(), getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
 		if err != nil {
 			log.Errorf("Failed to delete lateral objects. Err: %v", err)
 			return fmt.Errorf("failed to delete lateral objects. Err: %v", err)
@@ -1545,7 +1554,7 @@ func (tsa *Tagent) CreateMirrorSession(pcSession *tsproto.MirrorSession) error {
 		tsa.Unlock()
 		return nil
 	}
-	return tsa.createUpdatePacketCaptureSession(pcSession, false)
+	return tsa.createUpdatePacketCaptureSession(pcSession, oldMs, false)
 }
 
 // UpdateMirrorSession updates mirror session
@@ -1566,7 +1575,7 @@ func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
 		return fmt.Errorf("mirrorsession %v does not exist", pcSession.Name)
 	}
 	if pcSession.Spec.Enable {
-		return tsa.createUpdatePacketCaptureSession(pcSession, true)
+		return tsa.createUpdatePacketCaptureSession(pcSession, oldMs, true)
 	}
 	return nil
 }

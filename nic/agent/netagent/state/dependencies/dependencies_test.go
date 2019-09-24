@@ -396,6 +396,61 @@ func TestStateDependencies_ResolveTypeSelfLink(t *testing.T) {
 	AssertEquals(t, "tunnel|testTenant|testNS|testTunnel", key, "failed to compose key for tunnel object")
 	AssertEquals(t, "/api/tunnels/testTenant/testNS/testTunnel", selfLink, "failed to compose key for tunnel object")
 
+	// resolve security group
+	sg := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "securitygroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "testNS",
+			Name:      "testSG"},
+	}
+	tMeta, oMeta, err = s.resolveObjectType(&sg)
+	AssertOk(t, err, "failed to resolve sg object type")
+	m.T = tMeta
+	m.O = oMeta
+	key, selfLink, err = s.composeKeySelfLink(&m)
+	meta = s.composeMetaFromKey(key)
+	Assert(t, meta != nil, "regenerating meta from object key failed")
+	AssertOk(t, err, "failed to compose self link for tunnel")
+	AssertEquals(t, "securitygroup|testTenant|testNS|testSG", key, "failed to compose key for sg object")
+	AssertEquals(t, "/api/sgs/testTenant/testNS/testSG", selfLink, "failed to compose key for sg object")
+
+	tcp := netproto.TCPProxyPolicy{
+		TypeMeta: api.TypeMeta{Kind: "tcpproxypolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "testNS",
+			Name:      "testTCP"},
+	}
+	tMeta, oMeta, err = s.resolveObjectType(&tcp)
+	AssertOk(t, err, "failed to resolve tcp proxy object type")
+	m.T = tMeta
+	m.O = oMeta
+	key, selfLink, err = s.composeKeySelfLink(&m)
+	meta = s.composeMetaFromKey(key)
+	Assert(t, meta != nil, "regenerating meta from object key failed")
+	AssertOk(t, err, "failed to compose self link for tunnel")
+	AssertEquals(t, "tcpproxypolicy|testTenant|testNS|testTCP", key, "failed to compose key for tcp proxy object")
+	AssertEquals(t, "/api/tcp/proxies/testTenant/testNS/testTCP", selfLink, "failed to compose key for tcp proxy object")
+
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "app"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "testNS",
+			Name:      "testApp"},
+	}
+	tMeta, oMeta, err = s.resolveObjectType(&app)
+	AssertOk(t, err, "failed to resolve app object type")
+	m.T = tMeta
+	m.O = oMeta
+	key, selfLink, err = s.composeKeySelfLink(&m)
+	meta = s.composeMetaFromKey(key)
+	Assert(t, meta != nil, "regenerating meta from object key failed")
+	AssertOk(t, err, "failed to compose self link for tunnel")
+	AssertEquals(t, "app|testTenant|testNS|testApp", key, "failed to compose key for app object")
+	AssertEquals(t, "/api/apps/testTenant/testNS/testApp", selfLink, "failed to compose key for app object")
+
 	// invalid object resolution
 	tMeta, oMeta, err = s.resolveObjectType(nil)
 	AssertEquals(t, api.TypeMeta{}, tMeta, "expected type meta to be of zero value")

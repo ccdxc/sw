@@ -182,6 +182,9 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 
 // DeleteNetwork deletes a network. ToDo implement network deletes in datapath
 func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
+	if tn == "default" && namespace == "default" && name == "_internal_untagged_nw" {
+		return errors.New("default untagged network under default tenant and namespace cannot be deleted")
+	}
 	nt := &netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
@@ -254,23 +257,10 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 }
 
 func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint32) (err error) {
-	if vlanID == types.UntaggedVLAN {
-		return
-	}
 	for _, net := range na.ListNetwork() {
-		if net.Spec.VrfName == vrfName {
-			switch {
-			// Dup prefixes
-			//case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:
-			//	err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
-			//	return
-			// Dup VLANs Untagged VLANs are OK.
-			case net.Spec.VlanID != 0 && net.Spec.VlanID == vlanID:
-				err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)
-				return
-			default:
-				return
-			}
+		if vrfName == net.Spec.VrfName && vlanID == net.Spec.VlanID && vlanID != 0 {
+			err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)
+			return
 		}
 	}
 	return

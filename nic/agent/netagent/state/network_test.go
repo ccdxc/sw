@@ -3,8 +3,6 @@ package state
 import (
 	"testing"
 
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -62,7 +60,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 	// verify list api works
 	netList := ag.ListNetwork()
-	Assert(t, len(netList) == 1, "Incorrect number of networks")
+	Assert(t, len(netList) == 2, "Incorrect number of networks")
 
 	// delete the network and verify its gone from db
 	err = ag.DeleteNetwork(nt.Tenant, nt.Namespace, nt.Name)
@@ -521,49 +519,13 @@ func TestNetworkCreateBothVLANAndVxLAN(t *testing.T) {
 	Assert(t, err != nil, "Specifying both vlan and vxlan must fail")
 }
 
-func TestNetworkDuplicateUntaggedVLAN(t *testing.T) {
+func TestDeleteDefaultUntaggedNw(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-			VlanID:      types.UntaggedVLAN,
-		},
-	}
+	err := ag.DeleteNetwork("default", "default", "_internal_untagged_nw")
+	Assert(t, err != nil, "Deleting internal untagged networks must fail")
 
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-	tnt, err := ag.FindNetwork(nt.ObjectMeta)
-	AssertOk(t, err, "Network was not found in DB")
-	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
-
-	dupNt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "dupNet",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-			VlanID:      types.UntaggedVLAN,
-		},
-	}
-
-	// make create network call
-	err = ag.CreateNetwork(&dupNt)
-	AssertOk(t, err, "Network Create with duplicate untagged VLANs must succeed")
 }

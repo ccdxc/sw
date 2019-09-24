@@ -54,6 +54,10 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 		log.Errorf("Failed to create default vrf. Err: %v", err)
 	}
 
+	if err := na.createDefaultUntaggedNw(); err != nil {
+		log.Errorf("Failed to create default untagged network. Err: %v", err)
+	}
+
 	if err := na.GetHwInterfaces(); err != nil {
 		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
 	}
@@ -149,6 +153,29 @@ func (na *Nagent) createDefaultVrf() error {
 	return err
 }
 
+func (na *Nagent) createDefaultUntaggedNw() error {
+	c, _ := gogoproto.TimestampProto(time.Now())
+	defNw := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "_internal_untagged_nw",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
+		},
+		Spec: netproto.NetworkSpec{
+			VlanID: types.UntaggedVLAN, // Untagged
+		},
+	}
+	err := na.CreateNetwork(&defNw)
+	return err
+}
+
 func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {
 	if len(oMeta.Name) == 0 {
 		return fmt.Errorf("%s name can't be empty", kind)
@@ -186,6 +213,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.ArpCache = types.ArpCache{
 		DoneCache: make(map[string]context.CancelFunc),
 	}
+	na.LateralDB = make(map[string][]string)
 }
 
 // PurgeConfigs deletes all netagent configs. This is called during decommission workflow where the NAPLES is moved to host managed mode

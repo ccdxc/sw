@@ -138,7 +138,7 @@ var _ = Describe("Agent create delete loop tests", func() {
 			if err != nil {
 				Fail(fmt.Sprintf("could not get networks, %v", err))
 			}
-			if len(nwList) != 0 {
+			if len(nwList) != 1 {
 				Fail(fmt.Sprintf("expected no networks after symmetric create delete. But found %v. Err: %v", nwList, err))
 			}
 

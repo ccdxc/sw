@@ -82,6 +82,7 @@ func TestValidateMeta(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
@@ -110,6 +111,7 @@ func TestStoreOps(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
@@ -157,6 +159,7 @@ func TestFindNumExports(t *testing.T) {
 		Store:       ds,
 	}
 
+	na.LateralDB = make(map[string][]string)
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
 		ObjectMeta: api.ObjectMeta{Tenant: "default"},
@@ -298,6 +301,7 @@ func TestValidatePolicy(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
@@ -534,6 +538,7 @@ func TestNewTpAgent(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
@@ -599,6 +604,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
@@ -782,7 +788,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
-
+	na.LateralDB = make(map[string][]string)
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
 		ObjectMeta: api.ObjectMeta{Tenant: "default"},
@@ -940,6 +946,7 @@ func TestNetagentInfo(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
@@ -1096,6 +1103,7 @@ func TestTpaDebug(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
@@ -1265,6 +1273,7 @@ func TestPolicyOps(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
@@ -1538,6 +1547,7 @@ func TestMatchRule(t *testing.T) {
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
+	na.LateralDB = make(map[string][]string)
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{

@@ -205,10 +205,10 @@ def PushBaseConfig(ignore_error = True):
     ret = PushConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Tunnel')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
+    # objects = QueryConfigs(kind='Tunnel')
+    # ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    # if not ignore_error and ret != api.types.status.SUCCESS:
+    #     return api.types.status.FAILURE
     objects = QueryConfigs(kind='MirrorSession')
     ret = PushConfigObjects(objects, ignore_error=ignore_error)
     if not ignore_error and ret != api.types.status.SUCCESS:

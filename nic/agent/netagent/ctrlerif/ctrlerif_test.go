@@ -740,12 +740,12 @@ func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
 }
 
 // CreateLateralNetAgentObjects is a stubbed out to satisfy the interface
-func (ag *fakeAgent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+func (ag *fakeAgent) CreateLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error {
 	return nil
 }
 
 // DeleteLateralNetAgentObjects is a stubbed out to satisfy the interface
-func (ag *fakeAgent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+func (ag *fakeAgent) DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error {
 	return nil
 }
 

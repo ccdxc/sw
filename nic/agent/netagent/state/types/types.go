@@ -152,6 +152,7 @@ type NetAgent struct {
 	NetAgentStartTime       time.Time                            // Time when NetAgent was started
 	ArpClient               *arp.Client                          // Arp Client Handler
 	ArpCache                ArpCache                             // ARP Cache
+	LateralDB               map[string][]string                  // Tracks the dependencies for lateral objects
 }
 
 // ArpCache maintains a list of ARP entries for the SPAN Dest IPs
@@ -275,8 +276,8 @@ type CtrlerIntf interface {
 	GetHwInterfaces() error                                                                 // Gets all the uplinks created on the hal by nic mgr
 	GetNaplesInfo() (*NaplesInfo, error)                                                    // Returns Naples information
 	GetNetagentUptime() (string, error)                                                     // Returns NetAgent Uptime
-	CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error                // API for TSAgent and TPAgent to use to create dependent objects
-	DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error                // API for TSAgent and TPAgent to delete dependent objects
+	CreateLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to use to create dependent objects
+	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to delete dependent objects
 	PurgeConfigs() error                                                                    // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                        // Allow client to query for options to use for watch
 }

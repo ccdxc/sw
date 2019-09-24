@@ -5,6 +5,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -205,6 +208,13 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.App:
 		app := o.(*netproto.App)
 		return app.TypeMeta, app.ObjectMeta, nil
+	case *tsproto.MirrorSession:
+		ms := o.(*tsproto.MirrorSession)
+		return ms.TypeMeta, ms.ObjectMeta, nil
+	case *tpmprotos.FlowExportPolicy:
+		fe := o.(*tpmprotos.FlowExportPolicy)
+		return fe.TypeMeta, fe.ObjectMeta, nil
+
 	default:
 		log.Errorf("Invalid object type %v", o)
 		err := fmt.Errorf("invalid object type. %v", o)
@@ -297,6 +307,12 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 		return
 	case "app":
 		selfLink = fmt.Sprintf("/api/apps/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+		return
+	case "mirrorsession":
+		selfLink = fmt.Sprintf("/api/mirror/sessions/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+		return
+	case "flowexportpolicy":
+		selfLink = fmt.Sprintf("/api/telemetry/flowexports/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	default:
 		log.Errorf("Invalid object type %v. Obj: %v", m.T, m.O)
