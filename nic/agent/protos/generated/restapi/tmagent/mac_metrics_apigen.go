@@ -105,3 +105,89 @@ func (s *RestServer) getMacMetricsHandler(r *http.Request) (interface{}, error) 
 	log.Infof("Got GET request MacMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
+
+// AddMgmtMacMetricsAPIRoutes adds routes for MgmtMacMetrics
+func (s *RestServer) AddMgmtMacMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getMgmtMacMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listMgmtMacMetricsHandler))
+}
+
+// listMgmtMacMetricsHandler is the List Handler for MgmtMacMetrics
+func (s *RestServer) listMgmtMacMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewMgmtMacMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.MgmtMacMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("MgmtMacMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MgmtMacMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getMgmtMacMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getMgmtMacMetricsPoints() ([]*tsdb.Point, error) {
+
+	iter, err := goproto.NewMgmtMacMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.GetObjectMeta("MgmtMacMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MgmtMacMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+
+}
+
+// getMgmtMacMetricsHandler is the Get Handler for MgmtMacMetrics
+func (s *RestServer) getMgmtMacMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request MgmtMacMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}

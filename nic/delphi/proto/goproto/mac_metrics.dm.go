@@ -1720,3 +1720,690 @@ func NewMacMetricsIterator() (*MacMetricsIterator, error) {
 
 	return &MacMetricsIterator{iter: iter}, nil
 }
+
+type MgmtMacMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint32
+
+	FramesRxOk metrics.Counter
+
+	FramesRxAll metrics.Counter
+
+	FramesRxBadFcs metrics.Counter
+
+	FramesRxBadAll metrics.Counter
+
+	OctetsRxOk metrics.Counter
+
+	OctetsRxAll metrics.Counter
+
+	FramesRxUnicast metrics.Counter
+
+	FramesRxMulticast metrics.Counter
+
+	FramesRxBroadcast metrics.Counter
+
+	FramesRxPause metrics.Counter
+
+	FramesRxBadLength metrics.Counter
+
+	FramesRxUndersized metrics.Counter
+
+	FramesRxOversized metrics.Counter
+
+	FramesRxFragments metrics.Counter
+
+	FramesRxJabber metrics.Counter
+
+	FramesRx_64B metrics.Counter
+
+	FramesRx_65B_127B metrics.Counter
+
+	FramesRx_128B_255B metrics.Counter
+
+	FramesRx_256B_511B metrics.Counter
+
+	FramesRx_512B_1023B metrics.Counter
+
+	FramesRx_1024B_1518B metrics.Counter
+
+	FramesRxGt_1518B metrics.Counter
+
+	FramesRxFifoFull metrics.Counter
+
+	FramesTxOk metrics.Counter
+
+	FramesTxAll metrics.Counter
+
+	FramesTxBad metrics.Counter
+
+	OctetsTxOk metrics.Counter
+
+	OctetsTxTotal metrics.Counter
+
+	FramesTxUnicast metrics.Counter
+
+	FramesTxMulticast metrics.Counter
+
+	FramesTxBroadcast metrics.Counter
+
+	FramesTxPause metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *MgmtMacMetrics) GetKey() uint32 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *MgmtMacMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.FramesRxOk.Size()
+
+	sz += mtr.FramesRxAll.Size()
+
+	sz += mtr.FramesRxBadFcs.Size()
+
+	sz += mtr.FramesRxBadAll.Size()
+
+	sz += mtr.OctetsRxOk.Size()
+
+	sz += mtr.OctetsRxAll.Size()
+
+	sz += mtr.FramesRxUnicast.Size()
+
+	sz += mtr.FramesRxMulticast.Size()
+
+	sz += mtr.FramesRxBroadcast.Size()
+
+	sz += mtr.FramesRxPause.Size()
+
+	sz += mtr.FramesRxBadLength.Size()
+
+	sz += mtr.FramesRxUndersized.Size()
+
+	sz += mtr.FramesRxOversized.Size()
+
+	sz += mtr.FramesRxFragments.Size()
+
+	sz += mtr.FramesRxJabber.Size()
+
+	sz += mtr.FramesRx_64B.Size()
+
+	sz += mtr.FramesRx_65B_127B.Size()
+
+	sz += mtr.FramesRx_128B_255B.Size()
+
+	sz += mtr.FramesRx_256B_511B.Size()
+
+	sz += mtr.FramesRx_512B_1023B.Size()
+
+	sz += mtr.FramesRx_1024B_1518B.Size()
+
+	sz += mtr.FramesRxGt_1518B.Size()
+
+	sz += mtr.FramesRxFifoFull.Size()
+
+	sz += mtr.FramesTxOk.Size()
+
+	sz += mtr.FramesTxAll.Size()
+
+	sz += mtr.FramesTxBad.Size()
+
+	sz += mtr.OctetsTxOk.Size()
+
+	sz += mtr.OctetsTxTotal.Size()
+
+	sz += mtr.FramesTxUnicast.Size()
+
+	sz += mtr.FramesTxMulticast.Size()
+
+	sz += mtr.FramesTxBroadcast.Size()
+
+	sz += mtr.FramesTxPause.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *MgmtMacMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.FramesRxOk = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxOk.Size()
+
+	mtr.FramesRxAll = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxAll.Size()
+
+	mtr.FramesRxBadFcs = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxBadFcs.Size()
+
+	mtr.FramesRxBadAll = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxBadAll.Size()
+
+	mtr.OctetsRxOk = mtr.metrics.GetCounter(offset)
+	offset += mtr.OctetsRxOk.Size()
+
+	mtr.OctetsRxAll = mtr.metrics.GetCounter(offset)
+	offset += mtr.OctetsRxAll.Size()
+
+	mtr.FramesRxUnicast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxUnicast.Size()
+
+	mtr.FramesRxMulticast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxMulticast.Size()
+
+	mtr.FramesRxBroadcast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxBroadcast.Size()
+
+	mtr.FramesRxPause = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxPause.Size()
+
+	mtr.FramesRxBadLength = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxBadLength.Size()
+
+	mtr.FramesRxUndersized = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxUndersized.Size()
+
+	mtr.FramesRxOversized = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxOversized.Size()
+
+	mtr.FramesRxFragments = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxFragments.Size()
+
+	mtr.FramesRxJabber = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxJabber.Size()
+
+	mtr.FramesRx_64B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_64B.Size()
+
+	mtr.FramesRx_65B_127B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_65B_127B.Size()
+
+	mtr.FramesRx_128B_255B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_128B_255B.Size()
+
+	mtr.FramesRx_256B_511B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_256B_511B.Size()
+
+	mtr.FramesRx_512B_1023B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_512B_1023B.Size()
+
+	mtr.FramesRx_1024B_1518B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRx_1024B_1518B.Size()
+
+	mtr.FramesRxGt_1518B = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxGt_1518B.Size()
+
+	mtr.FramesRxFifoFull = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesRxFifoFull.Size()
+
+	mtr.FramesTxOk = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxOk.Size()
+
+	mtr.FramesTxAll = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxAll.Size()
+
+	mtr.FramesTxBad = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxBad.Size()
+
+	mtr.OctetsTxOk = mtr.metrics.GetCounter(offset)
+	offset += mtr.OctetsTxOk.Size()
+
+	mtr.OctetsTxTotal = mtr.metrics.GetCounter(offset)
+	offset += mtr.OctetsTxTotal.Size()
+
+	mtr.FramesTxUnicast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxUnicast.Size()
+
+	mtr.FramesTxMulticast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxMulticast.Size()
+
+	mtr.FramesTxBroadcast = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxBroadcast.Size()
+
+	mtr.FramesTxPause = mtr.metrics.GetCounter(offset)
+	offset += mtr.FramesTxPause.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *MgmtMacMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "FramesRxOk" {
+		return offset
+	}
+	offset += mtr.FramesRxOk.Size()
+
+	if fldName == "FramesRxAll" {
+		return offset
+	}
+	offset += mtr.FramesRxAll.Size()
+
+	if fldName == "FramesRxBadFcs" {
+		return offset
+	}
+	offset += mtr.FramesRxBadFcs.Size()
+
+	if fldName == "FramesRxBadAll" {
+		return offset
+	}
+	offset += mtr.FramesRxBadAll.Size()
+
+	if fldName == "OctetsRxOk" {
+		return offset
+	}
+	offset += mtr.OctetsRxOk.Size()
+
+	if fldName == "OctetsRxAll" {
+		return offset
+	}
+	offset += mtr.OctetsRxAll.Size()
+
+	if fldName == "FramesRxUnicast" {
+		return offset
+	}
+	offset += mtr.FramesRxUnicast.Size()
+
+	if fldName == "FramesRxMulticast" {
+		return offset
+	}
+	offset += mtr.FramesRxMulticast.Size()
+
+	if fldName == "FramesRxBroadcast" {
+		return offset
+	}
+	offset += mtr.FramesRxBroadcast.Size()
+
+	if fldName == "FramesRxPause" {
+		return offset
+	}
+	offset += mtr.FramesRxPause.Size()
+
+	if fldName == "FramesRxBadLength" {
+		return offset
+	}
+	offset += mtr.FramesRxBadLength.Size()
+
+	if fldName == "FramesRxUndersized" {
+		return offset
+	}
+	offset += mtr.FramesRxUndersized.Size()
+
+	if fldName == "FramesRxOversized" {
+		return offset
+	}
+	offset += mtr.FramesRxOversized.Size()
+
+	if fldName == "FramesRxFragments" {
+		return offset
+	}
+	offset += mtr.FramesRxFragments.Size()
+
+	if fldName == "FramesRxJabber" {
+		return offset
+	}
+	offset += mtr.FramesRxJabber.Size()
+
+	if fldName == "FramesRx_64B" {
+		return offset
+	}
+	offset += mtr.FramesRx_64B.Size()
+
+	if fldName == "FramesRx_65B_127B" {
+		return offset
+	}
+	offset += mtr.FramesRx_65B_127B.Size()
+
+	if fldName == "FramesRx_128B_255B" {
+		return offset
+	}
+	offset += mtr.FramesRx_128B_255B.Size()
+
+	if fldName == "FramesRx_256B_511B" {
+		return offset
+	}
+	offset += mtr.FramesRx_256B_511B.Size()
+
+	if fldName == "FramesRx_512B_1023B" {
+		return offset
+	}
+	offset += mtr.FramesRx_512B_1023B.Size()
+
+	if fldName == "FramesRx_1024B_1518B" {
+		return offset
+	}
+	offset += mtr.FramesRx_1024B_1518B.Size()
+
+	if fldName == "FramesRxGt_1518B" {
+		return offset
+	}
+	offset += mtr.FramesRxGt_1518B.Size()
+
+	if fldName == "FramesRxFifoFull" {
+		return offset
+	}
+	offset += mtr.FramesRxFifoFull.Size()
+
+	if fldName == "FramesTxOk" {
+		return offset
+	}
+	offset += mtr.FramesTxOk.Size()
+
+	if fldName == "FramesTxAll" {
+		return offset
+	}
+	offset += mtr.FramesTxAll.Size()
+
+	if fldName == "FramesTxBad" {
+		return offset
+	}
+	offset += mtr.FramesTxBad.Size()
+
+	if fldName == "OctetsTxOk" {
+		return offset
+	}
+	offset += mtr.OctetsTxOk.Size()
+
+	if fldName == "OctetsTxTotal" {
+		return offset
+	}
+	offset += mtr.OctetsTxTotal.Size()
+
+	if fldName == "FramesTxUnicast" {
+		return offset
+	}
+	offset += mtr.FramesTxUnicast.Size()
+
+	if fldName == "FramesTxMulticast" {
+		return offset
+	}
+	offset += mtr.FramesTxMulticast.Size()
+
+	if fldName == "FramesTxBroadcast" {
+		return offset
+	}
+	offset += mtr.FramesTxBroadcast.Size()
+
+	if fldName == "FramesTxPause" {
+		return offset
+	}
+	offset += mtr.FramesTxPause.Size()
+
+	return offset
+}
+
+// SetFramesRxOk sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxOk(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxOk"))
+	return nil
+}
+
+// SetFramesRxAll sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxAll(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxAll"))
+	return nil
+}
+
+// SetFramesRxBadFcs sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxBadFcs(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxBadFcs"))
+	return nil
+}
+
+// SetFramesRxBadAll sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxBadAll(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxBadAll"))
+	return nil
+}
+
+// SetOctetsRxOk sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetOctetsRxOk(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OctetsRxOk"))
+	return nil
+}
+
+// SetOctetsRxAll sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetOctetsRxAll(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OctetsRxAll"))
+	return nil
+}
+
+// SetFramesRxUnicast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxUnicast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxUnicast"))
+	return nil
+}
+
+// SetFramesRxMulticast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxMulticast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxMulticast"))
+	return nil
+}
+
+// SetFramesRxBroadcast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxBroadcast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxBroadcast"))
+	return nil
+}
+
+// SetFramesRxPause sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxPause(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxPause"))
+	return nil
+}
+
+// SetFramesRxBadLength sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxBadLength(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxBadLength"))
+	return nil
+}
+
+// SetFramesRxUndersized sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxUndersized(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxUndersized"))
+	return nil
+}
+
+// SetFramesRxOversized sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxOversized(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxOversized"))
+	return nil
+}
+
+// SetFramesRxFragments sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxFragments(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxFragments"))
+	return nil
+}
+
+// SetFramesRxJabber sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxJabber(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxJabber"))
+	return nil
+}
+
+// SetFramesRx_64B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_64B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_64B"))
+	return nil
+}
+
+// SetFramesRx_65B_127B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_65B_127B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_65B_127B"))
+	return nil
+}
+
+// SetFramesRx_128B_255B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_128B_255B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_128B_255B"))
+	return nil
+}
+
+// SetFramesRx_256B_511B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_256B_511B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_256B_511B"))
+	return nil
+}
+
+// SetFramesRx_512B_1023B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_512B_1023B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_512B_1023B"))
+	return nil
+}
+
+// SetFramesRx_1024B_1518B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRx_1024B_1518B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRx_1024B_1518B"))
+	return nil
+}
+
+// SetFramesRxGt_1518B sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxGt_1518B(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxGt_1518B"))
+	return nil
+}
+
+// SetFramesRxFifoFull sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesRxFifoFull(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesRxFifoFull"))
+	return nil
+}
+
+// SetFramesTxOk sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxOk(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxOk"))
+	return nil
+}
+
+// SetFramesTxAll sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxAll(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxAll"))
+	return nil
+}
+
+// SetFramesTxBad sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxBad(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxBad"))
+	return nil
+}
+
+// SetOctetsTxOk sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetOctetsTxOk(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OctetsTxOk"))
+	return nil
+}
+
+// SetOctetsTxTotal sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetOctetsTxTotal(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OctetsTxTotal"))
+	return nil
+}
+
+// SetFramesTxUnicast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxUnicast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxUnicast"))
+	return nil
+}
+
+// SetFramesTxMulticast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxMulticast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxMulticast"))
+	return nil
+}
+
+// SetFramesTxBroadcast sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxBroadcast(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxBroadcast"))
+	return nil
+}
+
+// SetFramesTxPause sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetFramesTxPause(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxPause"))
+	return nil
+}
+
+// MgmtMacMetricsIterator is the iterator object
+type MgmtMacMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *MgmtMacMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *MgmtMacMetricsIterator) Next() *MgmtMacMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &MgmtMacMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *MgmtMacMetricsIterator) Find(key uint32) (*MgmtMacMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &MgmtMacMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *MgmtMacMetricsIterator) Create(key uint32) (*MgmtMacMetrics, error) {
+	tmtr := &MgmtMacMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &MgmtMacMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *MgmtMacMetricsIterator) Delete(key uint32) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *MgmtMacMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewMgmtMacMetricsIterator returns an iterator
+func NewMgmtMacMetricsIterator() (*MgmtMacMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("MgmtMacMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &MgmtMacMetricsIterator{iter: iter}, nil
+}

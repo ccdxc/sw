@@ -33,8 +33,31 @@ func macmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var mgmtmacmetricsShowCmd = &cobra.Command{
+
+	Use:   "mgmtmac",
+	Short: "Show MgmtMacMetrics from Naples",
+	Long:  "\n---------------------------------\n Show MgmtMacMetrics From Naples \n---------------------------------\n",
+	RunE:  mgmtmacmetricsShowCmdHandler,
+}
+
+func mgmtmacmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = true
+	bodyBytes, err := restGet("telemetry/v1/metrics/mgmtmacmetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No mgmtmac object(s) found")
+	}
+	return nil
+}
+
 func init() {
 
 	metricsShowCmd.AddCommand(macmetricsShowCmd)
+
+	metricsShowCmd.AddCommand(mgmtmacmetricsShowCmd)
 
 }

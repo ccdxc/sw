@@ -107,3 +107,45 @@ message MacMetrics {
     delphi.Counter      rx_pause_1us_count      = 89;
     delphi.Counter      frames_tx_truncated     = 90;
 }
+
+message MgmtMacMetrics {
+    option (venice.metricInfo) = {
+        DisplayName: "Mgmt Port Packet Statistics",
+        Description: "Key index - PORT ID",
+        Scope: PerPort,
+        Tags: [ Level7 ]
+    };
+    fixed32             Key                     = 1;    // Port id
+    delphi.Counter      frames_rx_ok            = 2;
+    delphi.Counter      frames_rx_all           = 3;
+    delphi.Counter      frames_rx_bad_fcs       = 4;
+    delphi.Counter      frames_rx_bad_all       = 5;
+    delphi.Counter      octets_rx_ok            = 6;
+    delphi.Counter      octets_rx_all           = 7;
+    delphi.Counter      frames_rx_unicast       = 8;
+    delphi.Counter      frames_rx_multicast     = 9;
+    delphi.Counter      frames_rx_broadcast     = 10;
+    delphi.Counter      frames_rx_pause         = 11;
+    delphi.Counter      frames_rx_bad_length    = 12;
+    delphi.Counter      frames_rx_undersized    = 13;
+    delphi.Counter      frames_rx_oversized     = 14;
+    delphi.Counter      frames_rx_fragments     = 15;
+    delphi.Counter      frames_rx_jabber        = 16;
+    delphi.Counter      frames_rx_64b           = 17;
+    delphi.Counter      frames_rx_65b_127b      = 18;
+    delphi.Counter      frames_rx_128b_255b     = 19;
+    delphi.Counter      frames_rx_256b_511b     = 20;
+    delphi.Counter      frames_rx_512b_1023b    = 21;
+    delphi.Counter      frames_rx_1024b_1518b   = 22;
+    delphi.Counter      frames_rx_gt_1518b      = 23;
+    delphi.Counter      frames_rx_fifo_full     = 24;
+    delphi.Counter      frames_tx_ok            = 25;
+    delphi.Counter      frames_tx_all           = 26;
+    delphi.Counter      frames_tx_bad           = 27;
+    delphi.Counter      octets_tx_ok            = 28;
+    delphi.Counter      octets_tx_total         = 29;
+    delphi.Counter      frames_tx_unicast       = 30;
+    delphi.Counter      frames_tx_multicast     = 31;
+    delphi.Counter      frames_tx_broadcast     = 32;
+    delphi.Counter      frames_tx_pause         = 33;
+}

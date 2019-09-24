@@ -399,6 +399,7 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Register for mac metrics
     delphi::objects::MacMetrics::CreateTable();
+    delphi::objects::MgmtMacMetrics::CreateTable();
 
     // send transceiver notification
 
@@ -1167,22 +1168,50 @@ port_led_blink (uint32_t key, port_args_t *port_args) {
 }
 
 static void
-port_metrics_update_helper (port_args_t *port_args,
-                            void        *ctxt,
-                            hal_ret_t   hal_ret)
+port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
 {
-    port_t                               *pi_p   = NULL;
+    delphi::objects::mgmtmacmetrics_t mgmt_mac_metrics;
+
+    mgmt_mac_metrics.frames_rx_ok = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_OK];
+    mgmt_mac_metrics.frames_rx_all = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_ALL];
+    mgmt_mac_metrics.frames_rx_bad_fcs = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_BAD_FCS];
+    mgmt_mac_metrics.frames_rx_bad_all = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_BAD_ALL];
+    mgmt_mac_metrics.octets_rx_ok = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_RX_OK];
+    mgmt_mac_metrics.octets_rx_all = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_RX_ALL];
+    mgmt_mac_metrics.frames_rx_unicast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_UNICAST];
+    mgmt_mac_metrics.frames_rx_multicast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_MULTICAST];
+    mgmt_mac_metrics.frames_rx_broadcast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_BROADCAST];
+    mgmt_mac_metrics.frames_rx_pause = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_PAUSE];
+    mgmt_mac_metrics.frames_rx_bad_length = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_BAD_LENGTH];
+    mgmt_mac_metrics.frames_rx_undersized = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_UNDERSIZED];
+    mgmt_mac_metrics.frames_rx_oversized = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_OVERSIZED];
+    mgmt_mac_metrics.frames_rx_fragments = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_FRAGMENTS];
+    mgmt_mac_metrics.frames_rx_jabber = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_JABBER];
+    mgmt_mac_metrics.frames_rx_64b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_64B];
+    mgmt_mac_metrics.frames_rx_65b_127b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_65B_127B];
+    mgmt_mac_metrics.frames_rx_128b_255b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_128B_255B];
+    mgmt_mac_metrics.frames_rx_256b_511b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_256B_511B];
+    mgmt_mac_metrics.frames_rx_512b_1023b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_512B_1023B];
+    mgmt_mac_metrics.frames_rx_1024b_1518b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_1024B_1518B];
+    mgmt_mac_metrics.frames_rx_gt_1518b = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_GT_1518B];
+    mgmt_mac_metrics.frames_rx_fifo_full = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_FIFO_FULL];
+    mgmt_mac_metrics.frames_tx_ok = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_OK];
+    mgmt_mac_metrics.frames_tx_all = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_ALL];
+    mgmt_mac_metrics.frames_tx_bad = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_BAD];
+    mgmt_mac_metrics.octets_tx_ok = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_TX_OK];
+    mgmt_mac_metrics.octets_tx_total = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_TX_TOTAL];
+    mgmt_mac_metrics.frames_tx_unicast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_UNICAST];
+    mgmt_mac_metrics.frames_tx_multicast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_MULTICAST];
+    mgmt_mac_metrics.frames_tx_broadcast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_BROADCAST];
+    mgmt_mac_metrics.frames_tx_pause = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_PAUSE];
+
+    delphi::objects::MgmtMacMetrics::Publish(port_num, &mgmt_mac_metrics);
+}
+
+static void
+port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args)
+{
     delphi::objects::macmetrics_t mac_metrics;
-
-    if (hal_ret != HAL_RET_OK) {
-        return;
-    }
-
-    pi_p = find_port_by_id(port_args->port_num);
-    if (pi_p == NULL) {
-        return;
-    }
-    port_led_blink(pi_p->port_num, port_args);
 
     mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
     mac_metrics.frames_rx_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL];
@@ -1274,7 +1303,31 @@ port_metrics_update_helper (port_args_t *port_args,
     mac_metrics.rx_pause_1us_count = port_args->stats_data[port::MacStatsType::RX_PAUSE_1US_COUNT];
     mac_metrics.frames_tx_truncated = port_args->stats_data[port::MacStatsType::FRAMES_TX_TRUNCATED];
 
-    delphi::objects::MacMetrics::Publish(pi_p->port_num, &mac_metrics);
+    delphi::objects::MacMetrics::Publish(port_num, &mac_metrics);
+}
+
+static void
+port_metrics_update_helper (port_args_t *port_args,
+                            void        *ctxt,
+                            hal_ret_t   hal_ret)
+{
+    port_t *pi_p   = NULL;
+
+    if (hal_ret != HAL_RET_OK) {
+        return;
+    }
+
+    pi_p = find_port_by_id(port_args->port_num);
+    if (pi_p == NULL) {
+        return;
+    }
+    port_led_blink(pi_p->port_num, port_args);
+
+    if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
+        port_mgmt_metrics_update (pi_p->port_num, port_args);
+    } else {
+        port_uplink_metrics_update (pi_p->port_num, port_args);
+    }
 }
 
 hal_ret_t

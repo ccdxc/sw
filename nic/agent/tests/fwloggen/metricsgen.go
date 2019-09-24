@@ -302,6 +302,15 @@ func metricsInit() {
 		fmt.Printf("failed to init MdhensintipcoreMetrics")
 	}
 
+	if it, err := goproto.NewMgmtMacMetricsIterator(); err == nil {
+		n := &goproto.MgmtMacMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init MgmtMacMetrics")
+	}
+
 	if it, err := goproto.NewMpmpnsintcryptoMetricsIterator(); err == nil {
 		n := &goproto.MpmpnsintcryptoMetrics{}
 		if fillKey(n.GetKey()) == true {
