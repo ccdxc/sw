@@ -189,7 +189,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
         goto error;
     }
     impl->vpc_hw_id_ = vpc->hw_id();
-    memcpy(&impl->key_, &key, sizeof(impl->key_));
+    memcpy(&impl->key_, key, sizeof(impl->key_));
     remote_vnic_tx_hdl = api_params.handle;
 
     ret = nexthop_impl_db()->nh_tbl()->retrieve(
@@ -300,6 +300,10 @@ mapping_impl::build(pds_mapping_key_t *key) {
             goto error;
         }
         impl->handle_.local_.public_ip_hdl_ = api_params.handle;
+        // As public IPs are V4, can copy it without memrev
+        impl->public_ip_.af = IP_AF_IPV4;
+        memcpy(&impl->public_ip_.addr.v4_addr,
+               nat_data.nat_action.nat_ip, IP4_ADDR8_LEN);
         impl->handle_.local_.public_ip_to_overlay_ip_nat_hdl_ =
             local_ip_mapping_data.xlate_index;
 
@@ -1113,8 +1117,10 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
                                                      &nat_data);
         if (ret == SDK_RET_OK) {
             minfo->spec.public_ip_valid = true;
-            memcpy(minfo->spec.public_ip.addr.v6_addr.addr8,
-                   nat_data.nat_action.nat_ip, IP6_ADDR8_LEN);
+            // As public IPs are V4, can copy it without memrev
+            minfo->spec.public_ip.af = IP_AF_IPV4;
+            memcpy(&minfo->spec.public_ip.addr.v4_addr,
+                   nat_data.nat_action.nat_ip, IP4_ADDR8_LEN);
         }
     }
     return ret;
