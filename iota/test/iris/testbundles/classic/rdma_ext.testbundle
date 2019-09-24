@@ -50,7 +50,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             command  : ['ib_send_bw']
         args    :
@@ -62,9 +62,10 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
-            rdma_cm: ['yes']
+            duration : [5]
+            rdma_cm  : ['yes']
             command  : ['ib_send_bw']
         args    :
             type: remote_only
@@ -75,8 +76,9 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [10000]
+            duration : [5]
             command  : ['ib_send_bw']
         args    :
             type: remote_only
@@ -87,8 +89,9 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [12601]
+            duration : [5]
             command  : ['ib_send_bw']
         args    :
             type: remote_only
@@ -99,7 +102,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [32]
             command  : ['ib_send_bw']
         args    :
@@ -111,7 +114,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [32]
             rdma_cm  : ['yes']
             command  : ['ib_send_bw']
@@ -185,7 +188,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             command  : ['ib_write_bw']
         args    :
@@ -197,7 +200,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [10000]
             command  : ['ib_write_bw']
         args    :
@@ -209,7 +212,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [10000]
             rdma_cm  : ['yes']
             command  : ['ib_write_bw']
@@ -222,7 +225,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [12602]
             command  : ['ib_write_bw']
         args    :
@@ -234,7 +237,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [32]
             command  : ['ib_write_bw']
         args    :
@@ -284,7 +287,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             command  : ['ib_read_bw']
         args    :
@@ -296,7 +299,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             rdma_cm  : ['yes']
             command  : ['ib_read_bw']
@@ -309,7 +312,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [10000]
             command  : ['ib_read_bw']
         args    :
@@ -321,7 +324,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [12603]
             command  : ['ib_read_bw']
         args    :
@@ -369,11 +372,11 @@ testcases:
         testcase: testcases.rdma.rc_bw_bidir_vlan
         stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes','no']
-            flip: ['yes','no']
-            test: ['send','write','read']
+            type     : nested
+            num_qp   : [1]
+            rdma_cm  : ['yes','no']
+            flip     : ['yes','no']
+            test     : ['send','write','read']
         args    :
             type: remote_only
 
@@ -386,7 +389,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             command  : ['ib_atomic_bw']
         args    :
@@ -398,7 +401,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [1024]
             cmp_swp  : ['yes']
             command  : ['ib_atomic_bw']
@@ -413,7 +416,7 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [65536, 32768, 16384]
             numsges  : [4, 8, 16]
             command  : ['ib_send_bw']
@@ -428,7 +431,7 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [65536, 32768]
             numsges  : [8, 16]
             command  : ['ib_read_bw']
@@ -443,7 +446,7 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [65536, 16384]
             numsges  : [4, 16]
             command  : ['ib_write_bw']
@@ -459,7 +462,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             size     : [65536, 16384]
             numsges  : [16]
             command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
@@ -476,7 +479,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [8]
-            server   : [ 'yes', 'no']
+            server   : ['yes', 'no']
             mtu      : [4096]
             transport: ['UD']
             command  : ['ib_send_bw']
@@ -486,8 +489,8 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            rdma_cm  : [ 'yes']
-            server   : [ 'yes', 'no']
+            rdma_cm  : ['yes']
+            server   : ['yes', 'no']
             mtu      : [4096]
             transport: ['UD']
             command  : ['ib_send_bw']
@@ -503,7 +506,7 @@ testcases:
         iterators :
             type    : nested
             pktsize : [23, 32, 65, 1025, 2048, 4096, 16384, 65535]
-            server  : [ 'yes', 'no']
+            server  : ['yes', 'no']
 
     #=======================================
     # KRping
@@ -515,7 +518,7 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['yes', 'no']
+            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
 
@@ -526,10 +529,10 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['yes', 'no']
+            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
-            size: [4096, 65536]
+            size    : [4096, 65536]
 
     -   name    : KRping_TxDepth
         testcase: testcases.rdma.krping
@@ -538,11 +541,11 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['yes', 'no']
+            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
-            txdepth: [256, 1021]
-            count: [5, 100, 2000]
+            txdepth : [256, 1021]
+            count   : [5, 100, 2000]
 
     -   name    : KRping_Fr
         testcase: testcases.rdma.krping
@@ -551,10 +554,10 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['no']
-            fr: ['yes']
-            txdepth: [512]
-            count: [1000]
+            compat  : ['no']
+            fr      : ['yes']
+            txdepth : [512]
+            count   : [1000]
 
     #=======================================
     # Teardown

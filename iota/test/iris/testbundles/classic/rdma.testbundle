@@ -64,6 +64,7 @@ testcases:
             type     : nested
             num_qp   : [8]
             size     : [32, 1024, 10000, 12601]
+            duration : [5]
             command  : ['ib_send_bw']
         args    :
             type: remote_only
