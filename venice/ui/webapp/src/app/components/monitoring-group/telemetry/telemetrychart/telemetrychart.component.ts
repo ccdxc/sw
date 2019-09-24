@@ -292,6 +292,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.chartConfig.graphTransforms.transforms = graphTransforms;
     const dataSourceConfig: DataTransformConfig[] = [];
     this.dataSources.forEach( source => {
+      if (source.measurement == null || source.fields.length === 0) {
+        return; // Don't save an incomplete query
+      }
       dataSourceConfig.push(source.save());
     });
     this.chartConfig.dataTransforms = dataSourceConfig;
