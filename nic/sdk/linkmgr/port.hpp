@@ -6,6 +6,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/eth.hpp"
+#include "include/sdk/timestamp.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
 #include "port_mac.hpp"
@@ -196,6 +197,11 @@ public:
     void set_num_link_down(uint32_t link_down) {
         this->num_link_down_ = link_down;
     }
+
+    const char *last_down_timestamp(void) { return this->last_down_timestamp_; }
+
+    uint64_t bringup_duration_sec(void) { return this->bringup_duration_.tv_sec; }
+    uint64_t bringup_duration_nsec(void) { return this->bringup_duration_.tv_nsec; }
 
     uint32_t mac_faults(void) { return this->mac_faults_; }
     void set_mac_faults(uint32_t faults) { this->mac_faults_ = faults; }
@@ -394,6 +400,10 @@ private:
     uint32_t                  mtu_;                       // number of lanes for this port
     uint32_t                  debounce_time_;             // Debounce time in ms
     uint32_t                  bringup_timer_val_;         // current bringup timer value
+    char                      last_down_timestamp_[TIME_STR_SIZE]; // last down time in string format
+    timespec_t                last_down_ts_;              // ts at which link went down last
+    timespec_t                last_up_ts_;                // ts at which link went up last
+    timespec_t                bringup_duration_;          // time taken for link to come up: last_up_ts_ - last_down_ts_
     uint32_t                  user_cap_;                  //  AN user_cap
     bool                      fec_ability_;               //  AN fec_ability
     uint32_t                  fec_request_;               //  AN fec_request
@@ -447,6 +457,11 @@ private:
     sdk_ret_t port_mac_stats_persist_collate(uint64_t *stats_data);
     sdk_ret_t port_mac_stats_persist_update(void);
     sdk_ret_t port_mac_stats_persist_clear(bool reset);
+
+    // methods to update last link down and up times
+    sdk_ret_t set_last_down_ts(void);
+    sdk_ret_t set_last_up_ts(void);
+    sdk_ret_t set_bringup_duration(void);
 
 };
 

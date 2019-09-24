@@ -1037,6 +1037,8 @@ It has these top-level messages:
 	PortDeleteResponseMsg
 	MgmtMacStats
 	MacStats
+	TimeDuration
+	LinkTimingInfo
 	PortStats
 	PortGetRequest
 	PortGetRequestMsg

@@ -393,11 +393,23 @@ message MacStats {
   uint64         count = 2;
 }
 
+message TimeDuration {
+    uint32    sec  = 1;
+    uint64    nsec = 2; // nsec after sec's
+}
+
+// Port's Link timing info
+message LinkTimingInfo {
+    string        last_down_timestamp   = 1; // Port last down time
+    TimeDuration  bringup_duration      = 2; // Port bringup time
+}
+
 // PortStats captures all the statistics of given Port
 message PortStats {
-    repeated MacStats     mac_stats      = 1;  // Port MAC stats
-    repeated MgmtMacStats mgmt_mac_stats = 2;  // Mgmt Port MAC stats
-    uint32                num_link_down  = 3;  // Number of link down events
+    repeated MacStats     mac_stats          = 1;  // Port MAC stats
+    repeated MgmtMacStats mgmt_mac_stats     = 2;  // Mgmt Port MAC stats
+    uint32                num_link_down      = 3;  // Number of link down events
+    LinkTimingInfo        link_timing_info   = 4;  // Port's link last info
 }
 
 // PortGetRequest is used to get information about a port

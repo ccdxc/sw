@@ -7,6 +7,9 @@
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
 #include "platform/utils/mpartition.hpp"
+#include "include/sdk/timestamp.hpp"
+
+#define TIME_STR_SIZE 30
 
 namespace sdk {
 namespace linkmgr {
@@ -70,6 +73,8 @@ typedef struct port_args_s {
     port_link_sm_t        link_sm;                    // internal port state machine
     port_loopback_mode_t  loopback_mode;              // port loopback mode - MAC/PHY
     uint32_t              num_link_down;              // number of link down events
+    char                  last_down_timestamp[TIME_STR_SIZE]; // time at which link last went down
+    timespec_t            bringup_duration;           // time taken for last link bringup
     uint32_t              breakout_modes;             // supported breakout modes
     uint8_t               mac_addr[6];                // MAC addr of port
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane

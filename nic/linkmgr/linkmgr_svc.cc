@@ -466,8 +466,16 @@ populate_port_get_response_spec (port_args_t *port_args,
 
         // MAC stats
         stats = response->mutable_stats();
-
         stats->set_num_link_down(port_args->num_link_down);
+
+        // Port bringup time
+        auto linkinfo = stats->mutable_link_timing_info();
+        linkinfo->set_last_down_timestamp(port_args->last_down_timestamp);
+
+        auto duration = linkinfo->mutable_bringup_duration();
+
+        duration->set_sec(port_args->bringup_duration.tv_sec);
+        duration->set_nsec(port_args->bringup_duration.tv_nsec);
 
         if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
             for (int i = 0; i < MAX_MGMT_MAC_STATS; ++i) {

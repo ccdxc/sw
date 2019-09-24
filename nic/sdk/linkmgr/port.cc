@@ -923,6 +923,8 @@ port::port_link_sm_process(bool start_en_timer)
 
         switch (this->link_sm_) {
             case port_link_sm_t::PORT_LINK_SM_DISABLED:
+                // set the link down ts
+                set_last_down_ts();
 
                 // Enable MAC TX drain and set Tx/Rx=0x0
                 port_mac_tx_drain(true);
@@ -1266,6 +1268,8 @@ port::port_link_sm_process(bool start_en_timer)
                 SDK_PORT_SM_DEBUG(this, "PCAL continuous");
                 port_serdes_pcal_continuous_start();
 
+                set_last_up_ts();
+
                 SDK_PORT_SM_TRACE(this, "Link UP");
 
                 // start persist stats collection - relevant on first link-up and remains set
@@ -1284,6 +1288,7 @@ port::port_link_sm_process(bool start_en_timer)
 
                 // set operational status as up
                 this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
+                set_bringup_duration();
 
                 // enable pCal
 
@@ -1414,6 +1419,40 @@ bool
 port::bringup_timer_expired(void)
 {
     return (this->bringup_timer_val_ > MAX_LINK_BRINGUP_TIMEOUT);
+}
+
+// for absoulte time diff, use CLOCK_MONOTONIC_RAW
+sdk_ret_t
+port::set_last_down_ts(void)
+{
+    time_t now = time(NULL);
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &this->last_down_ts_);
+    strftime(this->last_down_timestamp_, TIME_STR_SIZE, "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::set_last_up_ts(void)
+{
+    clock_gettime(CLOCK_MONOTONIC_RAW, &this->last_up_ts_);
+    return SDK_RET_OK;
+}
+
+// If curent oper_status is UP, then, update bringup_duration_
+sdk_ret_t
+port::set_bringup_duration(void)
+{
+    if (this->oper_status_ == port_oper_status_t::PORT_OPER_STATUS_UP) {
+        this->bringup_duration_ = sdk::timestamp_diff(&this->last_up_ts_, &this->last_down_ts_);
+        SDK_LINKMGR_TRACE_DEBUG("port: %u Link down count %d last bringup duration: %lus.%luns\n", port_num(),
+                                num_link_down(),
+                                this->bringup_duration_.tv_sec,
+                                this->bringup_duration_.tv_nsec);
+
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

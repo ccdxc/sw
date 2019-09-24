@@ -1315,6 +1315,9 @@ port_get (void *pd_p, port_args_t *args)
     args->link_sm     = port_p->port_link_sm();
     args->loopback_mode = port_p->loopback_mode();
     args->num_link_down = port_p->num_link_down();
+    args->bringup_duration.tv_sec = port_p->bringup_duration_sec();
+    args->bringup_duration.tv_nsec = port_p->bringup_duration_nsec();
+    strncpy(args->last_down_timestamp, port_p->last_down_timestamp(), TIME_STR_SIZE);
 
     if (args->link_sm == port_link_sm_t::PORT_LINK_SM_AN_CFG &&
         port_p->auto_neg_enable() == true) {
