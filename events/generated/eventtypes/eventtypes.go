@@ -235,7 +235,7 @@ func init() {
 		Severity:   "critical",
 		Category:   "cluster",
 		Desc:       "Writing of AuditEvent failed",
-		SuppressMM: false}
+		SuppressMM: true}
 
 	eventTypes[PASSWORD_CHANGED] = &EventTypeAttributes{
 		EType:      PASSWORD_CHANGED.String(),

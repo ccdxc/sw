@@ -164,21 +164,22 @@ enum EventTypes {
                                            (suppress_mm) = true];
 
     // --------------------------- Auth/Audit events ------------------------- //
-    LOGIN_FAILED                    = 300 [(category) = Cluster,
-                                           (severity) = INFO,
-                                           (desc)     = "User login failed"];
+    LOGIN_FAILED                    = 300 [(category)    = Cluster,
+                                           (severity)    = INFO,
+                                           (desc)        = "User login failed"];
 
-    AUDITING_FAILED                 = 301 [(category) = Cluster,
-                                           (severity) = CRITICAL,
-                                           (desc)     = "Writing of AuditEvent failed"];
+    AUDITING_FAILED                 = 301 [(category)    = Cluster,
+                                           (severity)    = CRITICAL,
+                                           (desc)        = "Writing of AuditEvent failed",
+                                           (suppress_mm) = true];
 
-    PASSWORD_CHANGED                = 302 [(category) = Cluster,
-                                           (severity) = WARN,
-                                           (desc)     = "Password changed"];
+    PASSWORD_CHANGED                = 302 [(category)    = Cluster,
+                                           (severity)    = WARN,
+                                           (desc)        = "Password changed"];
 
-    PASSWORD_RESET                  = 303 [(category) = Cluster,
-                                           (severity) = WARN,
-                                           (desc)     = "Password reset"];
+    PASSWORD_RESET                  = 303 [(category)    = Cluster,
+                                           (severity)    = WARN,
+                                           (desc)        = "Password reset"];
 
 
     // --------------------------- HAL/Link events --------------------------- //
