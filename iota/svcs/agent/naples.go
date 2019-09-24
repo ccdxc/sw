@@ -55,6 +55,7 @@ var workloadTypeMap = map[iota.WorkloadType]string{
 	iota.WorkloadType_WORKLOAD_TYPE_VM:                        Workload.WorkloadTypeESX,
 	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL:                Workload.WorkloadTypeBareMetal,
 	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN:       Workload.WorkloadTypeMacVlan,
+	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER_MAC_VLAN:        Workload.WorkloadTypeContainerMacVlan,
 	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP: Workload.WorkloadTypeMacVlanEncap,
 }
 

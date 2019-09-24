@@ -40,6 +40,9 @@ const (
 
 	//WorkloadTypeMacVlanEncap  macvlan Encap workload
 	WorkloadTypeMacVlanEncap = "mac-vlan-encap"
+
+	//WorkloadTypeContainerMacVlan  macvlan workload
+	WorkloadTypeContainerMacVlan = "container-mac-vlan"
 )
 
 var (
@@ -117,6 +120,10 @@ type containerWorkload struct {
 	workloadBase
 	containerHandle *utils.Container
 	subIF           string
+}
+
+type containerMacVlanWorkload struct {
+	containerWorkload
 }
 
 func vlanIntf(name string, vlan int) string {
@@ -339,6 +346,20 @@ func (app *containerWorkload) AddInterface(parentInterface string, workloadInter
 	return intfToAttach, nil
 }
 
+func (app *containerMacVlanWorkload) BringUp(args ...string) error {
+	return app.containerWorkload.BringUp(args...)
+}
+
+func (app *containerMacVlanWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+
+	stdout, err := addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6address, macAddress)
+	if err != nil {
+		return stdout, err
+	}
+
+	return app.containerWorkload.AddInterface(workloadInterface, workloadInterface, macAddress, ipaddress, ipv6address, 0)
+}
+
 func (app *containerWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
 	return nil
 }
@@ -529,8 +550,7 @@ func (app *bareMetalWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses
 	return nil
 }
 
-func (app *bareMetalMacVlanWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
-
+func addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6address, macAddress string) (string, error) {
 	ifconfigCmd := []string{"ifconfig", parentInterface, "up"}
 	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
 		return "", errors.Errorf("Could not bring up parent interface %s : %s", parentInterface, stdout)
@@ -576,6 +596,16 @@ func (app *bareMetalMacVlanWorkload) AddInterface(parentInterface string, worklo
 	cmd := []string{"ip", "link", "set", "dev", workloadInterface, "up"}
 	if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 		return "", errors.Wrap(err, stdout)
+	}
+
+	return "", nil
+}
+
+func (app *bareMetalMacVlanWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+
+	stdout, err := addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6address, macAddress)
+	if err != nil {
+		return stdout, err
 	}
 
 	app.subIF = workloadInterface
@@ -972,6 +1002,11 @@ func newBareMetalMacVlanWorkload(name string, parent string, logger *log.Logger)
 		wlType: WorkloadTypeMacVlan, name: name, parent: parent, logger: logger}}}
 }
 
+func newContainerMacVlanWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &containerMacVlanWorkload{containerWorkload: containerWorkload{workloadBase: workloadBase{
+		wlType: WorkloadTypeContainerMacVlan, name: name, parent: parent, logger: logger}}}
+}
+
 func newBareMetalMacVlanEncapWorkload(name string, parent string, logger *log.Logger) Workload {
 	return &bareMetalMacVlanEncapWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{
 		wlType: WorkloadTypeMacVlanEncap, name: name, parent: parent, logger: logger}}}
@@ -988,13 +1023,14 @@ func newRemoteWorkload(name string, parent string, logger *log.Logger) Workload 
 }
 
 var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logger) Workload{
-	WorkloadTypeContainer:    newContainerWorkload,
-	WorkloadTypeVM:           newVMWorkload,
-	WorkloadTypeESX:          newVMESXWorkload,
-	WorkloadTypeBareMetal:    newBareMetalWorkload,
-	WorkloadTypeRemote:       newRemoteWorkload,
-	WorkloadTypeMacVlan:      newBareMetalMacVlanWorkload,
-	WorkloadTypeMacVlanEncap: newBareMetalMacVlanEncapWorkload,
+	WorkloadTypeContainer:        newContainerWorkload,
+	WorkloadTypeVM:               newVMWorkload,
+	WorkloadTypeESX:              newVMESXWorkload,
+	WorkloadTypeBareMetal:        newBareMetalWorkload,
+	WorkloadTypeRemote:           newRemoteWorkload,
+	WorkloadTypeMacVlan:          newBareMetalMacVlanWorkload,
+	WorkloadTypeContainerMacVlan: newContainerMacVlanWorkload,
+	WorkloadTypeMacVlanEncap:     newBareMetalMacVlanEncapWorkload,
 }
 
 //NewWorkload creates a workload
