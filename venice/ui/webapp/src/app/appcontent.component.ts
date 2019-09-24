@@ -192,7 +192,9 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
   checkRollouts() {
     for  (let i = 0; i < this.rolloutObjects.length; i++) {
-      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.progressing) {
+      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.progressing  ||
+         this.rolloutObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress'] ) {
+        // VS-842. Venice appliance may reboot while suspending rollout. At that monment, rollout is not done.
         this.currentRollout = this.rolloutObjects[i];
         break;
       } else if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.success && this.rolloutObjects[i] === this.currentRollout) {
