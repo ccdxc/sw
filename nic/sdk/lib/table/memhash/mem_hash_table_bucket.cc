@@ -519,6 +519,8 @@ mem_hash_table_bucket::clear_hint_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::remove_with_handle_(mem_hash_api_context *ctx) {
     // This is an exact match entry, clear the key and data fields.
+    MEMHASH_TRACE_VERBOSE("%s: Removing entry by handle, Ctx: [%s]",
+                          ctx->idstr(), ctx->metastr());
     clear_sw_key_(ctx);
     clear_sw_data_appdata_(ctx);
     valid_ = false;

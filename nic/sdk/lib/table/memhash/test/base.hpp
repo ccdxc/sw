@@ -350,6 +350,7 @@ protected:
 
     sdk_ret_t ValidateStats() {
 #ifndef PERF_DBG
+        EXPECT_TRUE(table->state_validate() == sdk::SDK_RET_OK);
         PrintStats();
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(mtable_count + htable_count, table_stats.entries);

@@ -340,3 +340,17 @@ mem_hash_main_table::iterate_(mem_hash_api_context *ctx) {
 
     return SDK_RET_OK;
 }
+
+sdk_ret_t
+mem_hash_main_table::validate_(mem_hash_api_context *ctx) {
+    // Currently there is no state validation in main table.
+    // Future validations can be added here.
+    
+    // Next: Validate the hint table
+    auto ret = hint_table_->validate_(ctx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    return SDK_RET_OK;
+}

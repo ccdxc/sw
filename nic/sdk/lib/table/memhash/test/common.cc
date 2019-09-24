@@ -90,9 +90,10 @@ void*
 h5_gendata ()
 {
     static uint32_t index = 1;
+    static uint8_t d1index = 1;
     static mem_hash_h5_appdata_t data;
 
-    data.d1 = 1;
+    data.d1 = d1index++;
     data.d2 = index++;
 
     return (void *)&data;

@@ -104,8 +104,8 @@ mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::dealloc_(mem_hash_api_context *ctx) {
-    if (HINT_IS_VALID(ctx->hint)) {
-        indexer::status irs = indexer_->free(ctx->hint);
+    if (HINT_IS_VALID(ctx->table_index)) {
+        indexer::status irs = indexer_->free(ctx->table_index);
         if (irs == indexer::DUPLICATE_FREE) {
             // TODO: Why do we need to special case duplicate free ?
             SDK_ASSERT(0);
@@ -114,11 +114,12 @@ mem_hash_hint_table::dealloc_(mem_hash_api_context *ctx) {
         if (irs != indexer::SUCCESS) {
             return SDK_RET_ERR;
         }
-        MEMHASH_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
+        MEMHASH_TRACE_VERBOSE("HintTable: Freed index:%d num_indices_allocated:%ld",
+                              ctx->table_index, indexer_->num_indices_allocated());
     }
 
     // Clear the hint and set write pending
-    HINT_SET_INVALID(ctx->hint);
+    HINT_SET_INVALID(ctx->table_index);
     ctx->write_pending = true;
     return SDK_RET_OK;
 }
@@ -329,6 +330,11 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
     if (hctx->handle->valid()) {
         // If handle is valid, insert directly using the handle.
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_with_handle_(hctx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        dealloc_(hctx);
     } else {
         // Remove entry from the bucket
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_(hctx);
@@ -386,4 +392,16 @@ mem_hash_hint_table::find_(mem_hash_api_context *ctx,
 
     SDK_ASSERT(*match_ctx != hctx);
     return ret;
+}
+
+sdk_ret_t
+mem_hash_hint_table::validate_(mem_hash_api_context *ctx) {
+    sdk_table_stats_t ts;
+    ctx->table_stats->get(&ts);
+    if (ts.collisions != indexer_->num_indices_allocated()) {
+        MEMHASH_TRACE_ERR("Hint count mismatch table_stats:%d indexer_stats:%d",
+                          ts.collisions, indexer_->num_indices_allocated());
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
 }

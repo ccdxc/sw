@@ -103,6 +103,7 @@ typedef enum sdk_table_api_op_ {
     SDK_TABLE_API_RELEASE,
     SDK_TABLE_API_ITERATE,
     SDK_TABLE_API_CLEAR,
+    SDK_TABLE_API_VALIDATE,
 } sdk_table_api_op_t;
 
 #define SDK_TABLE_API_OP_IS_CRUD(_op) \

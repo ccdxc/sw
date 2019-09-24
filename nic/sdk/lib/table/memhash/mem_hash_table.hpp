@@ -86,6 +86,7 @@ private:
     sdk_ret_t defragment_(mem_hash_api_context *ctx);
     sdk_ret_t tail_(mem_hash_api_context *ctx,
                     mem_hash_api_context **retctx);
+    sdk_ret_t validate_(mem_hash_api_context *ctx);
 
 public:
     static mem_hash_hint_table* factory(sdk::table::properties_t *props);
@@ -120,7 +121,7 @@ private:
     sdk_ret_t find_(mem_hash_api_context *ctx,
                     mem_hash_api_context **retctx);
     sdk_ret_t iterate_(mem_hash_api_context *ctx);
-
+    sdk_ret_t validate_(mem_hash_api_context *ctx);
 public:
     static mem_hash_main_table* factory(sdk::table::properties_t *props);
 

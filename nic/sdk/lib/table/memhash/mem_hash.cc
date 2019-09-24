@@ -456,6 +456,21 @@ mem_hash::stats_get(sdk_table_api_stats_t *api_stats,
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+mem_hash::state_validate() {
+    auto ret = ctxinit_(sdk::table::SDK_TABLE_API_VALIDATE, NULL);
+    if (ret != SDK_RET_OK) {
+        MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
+        return ret;
+    }
+
+    ret = static_cast<mem_hash_main_table*>(main_table_)->validate_(&apictx_);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
 //---------------------------------------------------------------------------
 // mem_hash start transaction
 //---------------------------------------------------------------------------

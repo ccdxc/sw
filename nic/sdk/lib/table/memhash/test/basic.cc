@@ -31,6 +31,8 @@ TEST_F(basic, update)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = UpdateAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = GetAllCached(sdk::SDK_RET_OK, false);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(basic, repeated_update)
