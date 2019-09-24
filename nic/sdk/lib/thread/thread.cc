@@ -30,6 +30,14 @@ thread::init(const char *name, uint32_t thread_id,
              thread_entry_func_t entry_func, uint32_t prio,
              int sched_policy, bool can_yield)
 {
+    if (!name || !entry_func) {
+        return -1;
+    }
+
+    if (cores_mask_validate(thread_role, cores_mask) != SDK_RET_OK) {
+        return -1;
+    }
+
     strncpy(name_, name, SDK_MAX_THREAD_NAME_LEN);
     thread_id_ = thread_id;
     entry_func_ = entry_func;
@@ -98,14 +106,6 @@ thread::factory(const char *name, uint32_t thread_id,
     int       rv;
     void      *mem;
     thread    *new_thread;
-
-    if (!name || !entry_func) {
-        return NULL;
-    }
-
-    if (cores_mask_validate(thread_role, cores_mask) != SDK_RET_OK) {
-        return NULL;
-    }
 
     mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_THREAD, sizeof(thread));
     if (!mem) {
@@ -205,10 +205,12 @@ thread::start(void *ctxt)
     }
 
     // set core affinity
-    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_set_);
-    if (rv != 0) {
-        SDK_TRACE_ERR("pthread_attr_setaffinity_np failure, err : %d", rv);
-        return SDK_RET_ERR;
+    if (mask != 0) {
+        rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_set_);
+        if (rv != 0) {
+            SDK_TRACE_ERR("pthread_attr_setaffinity_np failure, err : %d", rv);
+            return SDK_RET_ERR;
+        }
     }
 
     if ((sched_policy_ == SCHED_FIFO) || (sched_policy_ == SCHED_RR)) {

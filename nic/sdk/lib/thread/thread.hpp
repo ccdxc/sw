@@ -47,8 +47,8 @@ public:
                            uint32_t prio, int sched_policy, bool can_yield);
     static void destroy(thread *th);
     static void *dummy_entry_func(void *ctxt) { return NULL; }
-    sdk_ret_t start(void *ctxt);
-    sdk_ret_t stop(void);
+    virtual sdk_ret_t start(void *ctxt);
+    virtual sdk_ret_t stop(void);
     sdk_ret_t wait(void);
     sdk_ret_t wait_until_complete(void);
     const char *name(void) const { return name_; }
@@ -139,13 +139,15 @@ private:
     static uint64_t               data_cores_mask_;
     static bool                   super_user_;
 
-private:
+protected:
+    virtual int init(const char *name, uint32_t thread_id,
+        thread_role_t thread_role, uint64_t cores_mask,
+        thread_entry_func_t entry_func,
+        uint32_t prio, int sched_policy, bool can_yield);
     thread() {};
     ~thread();
-    int init(const char *name, uint32_t thread_id,
-             thread_role_t thread_role, uint64_t cores_mask,
-             thread_entry_func_t entry_func,
-             uint32_t prio, int sched_policy, bool can_yield);
+
+private:
     static sdk_ret_t cores_mask_validate(thread_role_t thread_role,
                                          uint64_t mask);
 };
