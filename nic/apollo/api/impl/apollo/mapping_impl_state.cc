@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
@@ -107,6 +108,59 @@ mapping_impl_state::table_transaction_end(void) {
     remote_vnic_mapping_rx_tbl_->txn_end();
     remote_vnic_mapping_tx_tbl_->txn_end();
     //nat_tbl_->txn_end();
+    return SDK_RET_OK;
+}
+
+void
+mapping_dump_cb(sdk_table_api_params_t *params)
+{
+    int fd = *(int *)(params->cbdata);
+
+    local_ip_mapping_swkey_t *key = (local_ip_mapping_swkey_t *)(params->key);
+    local_ip_mapping_appdata_t *data =(local_ip_mapping_appdata_t *)(params->appdata);
+
+    dprintf(fd, "%-7u%-16s%-7u%-8u%-6s\n",
+            key->key_metadata_lkp_id,
+            ipv4addr2str(*(uint32_t *)key->control_metadata_mapping_lkp_addr),
+            data->vpc_id,
+            data->xlate_index,
+            (data->ip_type == IP_TYPE_OVERLAY) ? "overlay" : "public");
+}
+
+sdk_ret_t
+mapping_impl_state::mapping_dump(int fd, debug::cmd_args_t *args) {
+    sdk_table_api_params_t api_params = { 0 };
+
+    dprintf(fd, "%s\n", std::string(44, '-').c_str());
+    dprintf(fd, "%-7s%-16s%-7s%-8s%-6s\n",
+            "VnicID", "PrivateIP", "VpcID", "XlateID", "IPType");
+    dprintf(fd, "%s\n", std::string(44, '-').c_str());
+
+    if (!args) {
+        api_params.itercb = mapping_dump_cb;
+        api_params.cbdata = &fd;
+        local_ip_mapping_tbl_->iterate(&api_params);
+    } else {
+        debug::mapping_dump_args_t  *mapping_args = args->mapping_dump;
+        local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
+        local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
+        sdk_ret_t                   ret;
+
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
+                                             mapping_args->key.vpc.id,
+                                             &mapping_args->key.ip_addr,
+                                             true);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
+                                       NULL, &local_ip_mapping_data,
+                                       LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,
+                                       sdk::table::handle_t::null());
+        api_params.cbdata = &fd;
+
+        ret = local_ip_mapping_tbl_->get(&api_params);
+        if (ret == SDK_RET_OK) {
+            mapping_dump_cb(&api_params);
+        }
+    }
     return SDK_RET_OK;
 }
 

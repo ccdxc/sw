@@ -20,11 +20,83 @@
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 using sdk::table::handle_t;
 
 namespace api {
 namespace impl {
+
+// TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vnic_hw_id, ip, rev)       \
+{                                                                            \
+    (key)->key_metadata_lkp_id = vnic_hw_id;                                 \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        if (rev) {                                                           \
+            sdk::lib::memrev((key)->control_metadata_mapping_lkp_addr,       \
+                             (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);       \
+        } else {                                                             \
+            memcpy((key)->control_metadata_mapping_lkp_addr,                 \
+                   (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                 \
+        }                                                                    \
+    } else {                                                                 \
+        /* key is initialized to zero by the caller */                       \
+        memcpy((key)->control_metadata_mapping_lkp_addr,                     \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vpc_hw_id, xlate_idx,   \
+                                               iptype)                       \
+{                                                                            \
+    (data)->vpc_id = (vpc_hw_id);                                            \
+    (data)->vpc_id_valid = true;                                             \
+    (data)->xlate_index = (uint32_t)xlate_idx;                               \
+    (data)->ip_type = (iptype);                                              \
+}
+
+// TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
+#define PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(key, vpc_hw_id, ip, rev)  \
+{                                                                            \
+    (key)->txdma_to_p4e_header_vpc_id = vpc_hw_id;                           \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        if (rev) {                                                           \
+            sdk::lib::memrev((key)->p4e_apollo_i2e_dst,                      \
+                             (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);       \
+        } else {                                                             \
+            memcpy((key)->p4e_apollo_i2e_dst, (ip)->addr.v6_addr.addr8,      \
+                   IP6_ADDR8_LEN);                                           \
+        }                                                                    \
+    } else {                                                                 \
+        /* key is initialized to zero by the caller */                       \
+        memcpy((key)->p4e_apollo_i2e_dst,                                    \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
+#define PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_APPDATA(data, nh_id, encap)     \
+{                                                                            \
+    (data)->nexthop_group_index = (nh_id);                                   \
+    (data)->dst_slot_id_valid = 1;                                           \
+    if ((encap)->type == PDS_ENCAP_TYPE_MPLSoUDP) {                          \
+        (data)->dst_slot_id = (encap)->val.mpls_tag;                         \
+    } else if ((encap)->type == PDS_ENCAP_TYPE_VXLAN) {                      \
+        (data)->dst_slot_id = (encap)->val.vnid;                             \
+    }                                                                        \
+}
+
+#define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
+{                                                                            \
+    (data)->action_id = NAT_NAT_ID;                                          \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        sdk::lib::memrev((data)->nat_action.nat_ip,                          \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        /* key is initialized to zero by the caller */                       \
+        memcpy((data)->nat_action.nat_ip, &(ip)->addr.v4_addr,               \
+               IP4_ADDR8_LEN);                                               \
+    }                                                                        \
+}
 
 ///\defgroup PDS_MAPPING_IMPL - mapping functionality
 ///\ingroup PDS_MAPPING

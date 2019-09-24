@@ -63,6 +63,12 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief     API to dump mapping entries
+    /// \param[in] fd   file descriptor where entries are dumped
+    /// \param[in] args command arguments
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t mapping_dump(int fd, debug::cmd_args_t *args);
+
 private:
     mem_hash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
     mem_hash *remote_vnic_mapping_rx_tbl(void) {

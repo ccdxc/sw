@@ -119,6 +119,8 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/memhash_test                        /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
 
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
+
 nic/apollo/test/scale/scale_cfg.json                              /nic/conf/
 nic/apollo/test/scale/scale_cfg_v4_only.json                      /nic/conf/
 nic/apollo/test/scale/scale_cfg_p1.json                           /nic/conf/
@@ -193,6 +195,8 @@ nic/conf/captrace/p4eg-all.json                                   /nic/conf/capt
 nic/conf/captrace/p4-all.json                                     /nic/conf/captrace/
 nic/conf/captrace/pipeline-all.json                               /nic/conf/captrace/
 nic/conf/captrace/sample-conf.json                                /nic/conf/captrace/
+
+nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 
 # agent specific files
 nic/apollo/tools/start-agent.sh                                   /nic/tools/

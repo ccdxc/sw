@@ -103,6 +103,8 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json      
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 
+nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
+
 # link specific libs
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
@@ -116,6 +118,9 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/apollo_scale_test                   /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/memhash_test                        /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
+
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
+
 nic/apollo/test/scale/artemis/scale_cfg.json                      /nic/conf/
 nic/apollo/test/scale/artemis/scale_cfg_1vpc.json                 /nic/conf/
 nic/apollo/test/scale/artemis/scale_cfg_l2l.json                  /nic/conf/

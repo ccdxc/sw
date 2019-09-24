@@ -219,6 +219,9 @@ pds_init (pds_init_params_t *params)
     // spin periodic thread. have to be before linkmgr init
     core::thread_periodic_spawn(&api::g_pds_state);
 
+    // spin periodic thread. have to be before linkmgr init
+    core::thread_cmd_server_spawn(&api::g_pds_state);
+
     // trigger linkmgr initialization
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);

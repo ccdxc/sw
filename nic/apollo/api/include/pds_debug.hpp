@@ -12,6 +12,7 @@
 #define __INCLUDE_API_PDS_DEBUG_HPP__
 
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/debug.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -84,6 +85,7 @@ sdk_ret_t pds_arm_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
 sdk_ret_t pds_get_system_power(pds_system_power_t *pow);
 sdk_ret_t pds_table_stats_get(table_stats_get_cb_t cb, void *ctxt);
+sdk_ret_t pds_mapping_dump(debug::cmd_ctxt_t *ctxt);
 sdk_ret_t pds_llc_setup(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_llc_get(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_pb_stats_get(debug::pb_stats_get_cb_t cb, void *ctxt);

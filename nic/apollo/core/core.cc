@@ -17,6 +17,7 @@
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
+#include "nic/apollo/api/debug.hpp"
 //#include "nic/apollo/fte/fte.hpp"
 
 using boost::property_tree::ptree;
@@ -196,6 +197,28 @@ thread_periodic_spawn (pds_state *state)
             NULL);
     SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                             "Periodic thread create failure");
+    new_thread->start(new_thread);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+thread_cmd_server_spawn (pds_state *state)
+{
+    sdk::lib::thread    *new_thread;
+
+    // spawn periodic thread that does background tasks
+    new_thread =
+        thread_create(std::string("cmd-server").c_str(),
+            THREAD_ID_FD_RECV,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            debug::fd_recv_thread_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
+    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                            "Command server thread create failure");
     new_thread->start(new_thread);
 
     return SDK_RET_OK;

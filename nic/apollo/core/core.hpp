@@ -1,4 +1,3 @@
-//
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
@@ -25,6 +24,7 @@ enum {
     THREAD_ID_PERIODIC   = 2,
     THREAD_ID_NICMGR     = 3,
     THREAD_ID_PCIEMGR    = 4,
+    THREAD_ID_FD_RECV    = 5,
     THREAD_ID_FTE_START  = 16,
     THREAD_ID_FTE_1      = THREAD_ID_FTE_START,
     THREAD_ID_FTE_2      = THREAD_ID_FTE_1 + 1,
@@ -40,6 +40,7 @@ enum {
 };
 
 sdk_ret_t thread_periodic_spawn(pds_state *state);
+sdk_ret_t thread_cmd_server_spawn(pds_state *state);
 sdk_ret_t thread_nicmgr_spawn(pds_state *state);
 sdk_ret_t thread_pciemgr_spawn(pds_state *state);
 //sdk_ret_t thread_fte_spawn(pds_state *state);

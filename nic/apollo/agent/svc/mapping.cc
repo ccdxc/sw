@@ -3,12 +3,15 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
+#include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
+#include "nic/apollo/api/debug.hpp"
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,
@@ -72,6 +75,36 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
             }
         }
     }
+
+    return Status::OK;
+}
+
+Status
+MappingSvcImpl::MappingDump(ServerContext *context,
+                            const pds::MappingDumpRequest *proto_req,
+                            Empty *proto_rsp) {
+    debug::cmd_ctxt_t ctxt = { 0 };
+
+    ctxt.fd = debug::fd_get_from_cid(proto_req->cid());
+    ctxt.cmd = debug::CLI_CMD_MAPPING_DUMP;
+
+    if (proto_req->id_size()) {
+        // If filter specified include in cmd args
+        debug::cmd_args_t args = { 0 };
+        debug::mapping_dump_args_t mapping_args = { 0 };
+
+        mapping_args.key.vpc.id = proto_req->id(0).vpcid();
+        ipaddr_proto_spec_to_api_spec(&mapping_args.key.ip_addr,
+                                      proto_req->id(0).ipaddr());
+        args.mapping_dump = &mapping_args;
+        ctxt.args = &args;
+    }
+
+    debug::pds_mapping_dump(&ctxt);
+
+    // Close File and reset state
+    close(ctxt.fd);
+    debug::cid_remove_from_fd_map(proto_req->cid());
 
     return Status::OK;
 }

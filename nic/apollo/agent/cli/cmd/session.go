@@ -10,10 +10,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	"github.com/spf13/cobra"
 )
 
 var (

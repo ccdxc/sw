@@ -7,6 +7,7 @@
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
+#include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"

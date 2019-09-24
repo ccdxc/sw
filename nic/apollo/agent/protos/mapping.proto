@@ -15,6 +15,7 @@ service MappingSvc {
   rpc MappingCreate (MappingRequest) returns (MappingResponse) {}
   rpc MappingUpdate (MappingRequest) returns (MappingResponse) {}
   rpc MappingGet (MappingGetRequest) returns (MappingGetResponse) {}
+  rpc MappingDump (MappingDumpRequest) returns (types.Empty) {}
   rpc MappingDelete (MappingDeleteRequest) returns (MappingDeleteResponse) {}
 }
 
@@ -96,6 +97,12 @@ message MappingGetRequest {
 message MappingGetResponse {
   types.ApiStatus  ApiStatus = 1;
   repeated Mapping Response = 2;
+}
+
+// mapping dump request
+message MappingDumpRequest {
+  int64    CId           = 1;
+  repeated MappingKey Id = 2;
 }
 
 // mapping delete request
