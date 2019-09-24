@@ -111,6 +111,11 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 
 	recreate := false
 
+	// check if host parameter has changed
+	if nwrk.Spec.HostName != w.Spec.HostName {
+		recreate = true
+	}
+
 	// check interface params changed
 	if len(nwrk.Spec.Interfaces) != len(w.Spec.Interfaces) {
 		// number of interfaces changed, delete old ones
