@@ -7,17 +7,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/vmware/govmomi/vim25/soap"
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
-	"github.com/pensando/sw/venice/orch/vchub/instance_manager"
+	"github.com/pensando/sw/venice/orch/vchub/instanceManager"
 	"github.com/pensando/sw/venice/orch/vchub/server"
 	"github.com/pensando/sw/venice/orch/vchub/store"
-	"github.com/pensando/sw/venice/orch/vchub/vcprobe"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -106,9 +104,6 @@ func waitForever() {
 }
 
 func launchVCHub(opts *cliOpts) {
-	// Start probes
-	retryMap := make(map[string]*vcprobe.VCProbe)
-
 	// Initialize store and start grpc server
 	if _, err := store.Init(opts.storeURL, opts.storeType); err != nil {
 		log.Errorf("failed to init store %v", err)
@@ -130,40 +125,12 @@ func launchVCHub(opts *cliOpts) {
 
 	r := resolver.New(&resolver.Config{Name: globals.VCHub, Servers: strings.Split(opts.resolverURLs, ",")})
 
-	log.Info("Starting VCenter config watcher")
-	watcher, err := watcher.NewWatcher(globals.APIServer, r)
-	if err != nil || watcher == nil {
+	instance, err := instanceManager.NewInstanceManager(globals.APIServer, r, storeCh, opts.vcenterList)
+	if instance == nil || err != nil {
 		log.Errorf("Failed to create api server watcher. Err : %v", err)
 	}
 
-	if len(opts.vcenterList) > 0 {
-		for _, u := range opts.vcenterList {
-			vcp := vcprobe.NewVCProbe(u, storeCh)
-			if vcp.Start() == nil {
-				vcp.Run()
-			} else {
-				vcp.Stop()
-				retryMap[u.String()] = vcp
-			}
-		}
-	}
-
-	for {
-		if len(retryMap) == 0 {
-			break
-		}
-
-		time.Sleep(time.Second)
-		for u, v := range retryMap {
-			if v.Start() == nil {
-				v.Run()
-				delete(retryMap, u)
-			} else {
-				v.Stop()
-			}
-		}
-
-	}
+	instance.Start()
 }
 
 func main() {
