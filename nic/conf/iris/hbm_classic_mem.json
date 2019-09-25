@@ -446,7 +446,8 @@
         },
         {
             "name": "rss_indir_table",
-            "size": "1024K"
+            "size": "1024K",
+            "cache": "p4plus-all"
         },
         {
             "name": "qos-hbm-fifo",
@@ -475,8 +476,7 @@
         },
         {
             "name": "eth_desc_cache",
-            "size": "65536K",
-            "cache": "p4plus-all"
+            "size": "65536K"
         },
         {
             "name": "tls_proxy_global_stats",

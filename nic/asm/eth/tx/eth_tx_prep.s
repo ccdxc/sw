@@ -19,10 +19,8 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 #define  _c_do_tso        c3  // TSO
 #define  _c_do_cq         c4  // Create CQ entry
 
-#define  _r_num_desc      r1  // Number of descriptors consumed
-#define  _r_op_x          r2  // Opcode processing register
-#define  _r_op_y          r3  // Opcode processing register
-#define  _r_tx_pktlen     r5  // Number of bytes that will be transferred
+#define  _r_t1            r2  // Opcode processing register
+#define  _r_t2            r3  // Opcode processing register
 #define  _r_stats         r6  // Stats
 
 
@@ -30,101 +28,132 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 eth_tx_prep:
   LOAD_STATS(_r_stats)
 
-  bcf             [c2 | c3 | c7], eth_tx_prep_error
+  bcf         [c2 | c3 | c7], eth_tx_prep_error
   nop
 
   // Set intrinsics
 #ifndef GFT
-  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_INGRESS
+  phvwrpair   p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_INGRESS
 #else
-  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
+  phvwrpair   p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
 #endif
 
   // Setup DMA CMD PTR
-  phvwr           p.p4_txdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
-  phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+  phvwr       p.p4_txdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
+  phvwr       p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
-  seq             c1, r0, k.eth_tx_t0_s2s_num_todo
-  bcf             [c1], eth_tx_prep_error
+  // Set APP type
+  seq         c7, k.eth_tx_global_cpu_queue, 1
+  cmov        r7, c7, P4PLUS_APPTYPE_CPU, P4PLUS_APPTYPE_CLASSIC_NIC
+  phvwr       p.eth_tx_app_hdr_p4plus_app_id, r7
+
+  // Vlan offload
+  sne         c7, d.vlan_insert, 0
+  phvwr.c7    p.eth_tx_app_hdr_insert_vlan_tag, d.vlan_insert
+  phvwr.c7    p.eth_tx_app_hdr_vlan_tag, d.{vlan_tci}.hx
+  // SET_STAT(_r_stats, c7, oper_vlan_insert)
+
+  // Opcode handling
+  add         r7, r0, d.opcode
+.brbegin
+  br          r7[1:0]
   nop
+  .brcase TXQ_DESC_OPCODE_CSUM_NONE
+      b             eth_tx_opcode_done
+      phvwri        p.eth_tx_global_cq_entry, 1
+  .brcase TXQ_DESC_OPCODE_CSUM_PARTIAL
+      b             eth_tx_calc_csum
+      phvwri        p.eth_tx_global_cq_entry, 1
+  .brcase TXQ_DESC_OPCODE_CSUM_TCPUDP
+      b             eth_tx_calc_csum_tcpudp
+      phvwri        p.eth_tx_global_cq_entry, 1
+  .brcase TXQ_DESC_OPCODE_TSO
+      b             eth_tx_opcode_tso
+      phvwr         p.eth_tx_global_cq_entry, d.{csum_l4_or_eot}
+.brend
+  // SET_STAT(_r_stats, _C_TRUE, desc_opcode_invalid)
+  b               eth_tx_opcode_done
+  nop
+eth_tx_opcode_csum_none:
+  // SET_STAT(_r_stats, _C_TRUE, desc_opcode_csum_none)
+  b               eth_tx_opcode_done
+  nop
+eth_tx_calc_csum:
+  // SET_STAT(_r_stats, _C_TRUE, desc_opcode_csum_partial)
+  add             _r_t1, d.{csum_start_or_hdr_len}.hx, 46
+  add             _r_t2, _r_t1, d.{csum_offset_or_mss}.hx
+  phvwri          p.eth_tx_app_hdr_gso_valid, 1
+  b               eth_tx_opcode_done
+  phvwrpair       p.eth_tx_app_hdr_gso_start, _r_t1, p.eth_tx_app_hdr_gso_offset, _r_t2
+eth_tx_calc_csum_tcpudp:
+  // SET_STAT(_r_stats, _C_TRUE, desc_opcode_csum_hw)
+  // SET_STAT(_r_stats, _C_TRUE, oper_csum_hw)
+  seq             c7, d.encap, 1
+  // SET_STAT(_r_stats, c7, oper_csum_hw_inner)
+  phvwrpair       p.eth_tx_app_hdr_compute_l4_csum, d.csum_l4_or_eot, p.eth_tx_app_hdr_compute_ip_csum, d.csum_l3_or_sot
+  b               eth_tx_opcode_done
+  phvwrpair.c7    p.eth_tx_app_hdr_compute_inner_l4_csum, d.csum_l4_or_eot, p.eth_tx_app_hdr_compute_inner_ip_csum, d.csum_l3_or_sot
+eth_tx_opcode_tso:
+  // SET_STAT(_r_stats, _C_TRUE, desc_opcode_tso)
+  phvwri          p.eth_tx_t0_s2s_do_tso, 1
+  phvwri          p.eth_tx_app_hdr_tso_valid, 1
+  phvwr           p.{eth_tx_global_tso_eot,eth_tx_global_tso_sot}, d.{csum_l4_or_eot,csum_l3_or_sot}
+  phvwr           p.{eth_tx_app_hdr_tso_last_segment,eth_tx_app_hdr_tso_first_segment}, d.{csum_l4_or_eot,csum_l3_or_sot}
+  bbeq            d.csum_l3_or_sot, 1, eth_tx_opcode_tso_sot
+  phvwri          p.{eth_tx_app_hdr_update_tcp_seq_no...eth_tx_app_hdr_update_ip_id}, 0x7
+  bbne            d.csum_l4_or_eot, 1, eth_tx_opcode_tso_cont
+  nop
+eth_tx_opcode_tso_eot:
+  // SET_STAT(_r_stats, _C_TRUE, oper_tso_eot)
+eth_tx_opcode_tso_cont:
+  b               eth_tx_opcode_tso_done
+  phvwr           p.eth_tx_to_s2_tso_hdr_addr[13:0], d.{csum_offset_or_mss}.hx
+eth_tx_opcode_tso_sot:
+  // SET_STAT(_r_stats, _C_TRUE, oper_tso_sot)
+  BUF_ADDR_FROM_DATA(_r_t1)
+  add             _r_t2, r0, d.{csum_start_or_hdr_len}.hx
+  b               eth_tx_opcode_tso_done
+  phvwrpair       p.eth_tx_to_s2_tso_hdr_addr, _r_t1, p.eth_tx_to_s2_tso_hdr_len, _r_t2
+eth_tx_opcode_tso_done:
+  // SET_STAT(_r_stats, _C_TRUE, oper_csum_hw)
+  seq             c7, d.encap, 1
+  // SET_STAT(_r_stats, c7, oper_csum_hw_inner)
+  phvwrpair       p.eth_tx_app_hdr_compute_l4_csum, 1, p.eth_tx_app_hdr_compute_ip_csum, 1
+  b               eth_tx_opcode_done
+  phvwrpair.c7    p.eth_tx_app_hdr_compute_inner_l4_csum, 1, p.eth_tx_app_hdr_compute_inner_ip_csum, 1
+eth_tx_opcode_done:
+
+  // Save descriptor in PHV
+  phvwr           p.to_stage_3_to_stage_data, d[511:384]
+
+  // Set number of bytes to tx (for rate limiter)
+  phvwr           p.p4_intr_packet_len, d.{len}.hx
+
+  // Set number of sg elements to process
+  sne             c1, d.num_sg_elems, 0
+  phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
+  phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems
+  // SET_STAT(_r_stats, c1, oper_sg)
+
+  // SAVE_STATS(_r_stats)
 
   // Launch commit stage
   phvwri          p.common_te0_phv_table_lock_en, 1
-  phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
-  phvwri          p.common_te0_phv_table_pc, eth_tx_commit[38:6]
-
-eth_tx_prep1:
-  BUILD_APP_HEADER(0, _r_op_x, _r_op_y, _r_stats)
-  addi            _r_num_desc, r0, 1
-  add             _r_tx_pktlen, r0, d.{len0}.hx
-  phvwr           p.to_stage_3_to_stage_data, d[511:384]
-
-  // if we have finished processing all the descriptors then stop
-  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
-  // if the next descriptor is SG or TSO then stop
-  sne             c2, d.num_sg_elems1, 0
-  seq             c3, d.opcode1, TXQ_DESC_OPCODE_TSO
-  bcf             [c1|c2|c3], eth_tx_prep_done
-  nop
-
-eth_tx_prep2:
-  BUILD_APP_HEADER(1, _r_op_x, _r_op_y, _r_stats)
-  addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len1}.hx
-  phvwr           p.to_stage_4_to_stage_data, d[383:256]
-
-  // if we have finished processing all the descriptors then stop
-  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
-  // if the next descriptor is SG or TSO then stop
-  sne             c2, d.num_sg_elems2, 0
-  seq             c3, d.opcode2, TXQ_DESC_OPCODE_TSO
-  bcf             [c1|c2|c3], eth_tx_prep_done
-  nop
-
-eth_tx_prep3:
-  BUILD_APP_HEADER(2, _r_op_x, _r_op_y, _r_stats)
-  addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len2}.hx
-  phvwr           p.to_stage_5_to_stage_data, d[255:128]
-
-  // if we have finished processing all the descriptors then stop
-  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
-  // if the next descriptor is SG or TSO then stop
-  sne             c2, d.num_sg_elems3, 0
-  seq             c3, d.opcode3, TXQ_DESC_OPCODE_TSO
-  bcf             [c1|c2|c3], eth_tx_prep_done
-  nop
-
-eth_tx_prep4:
-  BUILD_APP_HEADER(3, _r_op_x, _r_op_y, _r_stats)
-  addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len3}.hx
-  phvwr           p.to_stage_6_to_stage_data, d[127:0]
-
-eth_tx_prep_done:
-  // Set number of sg elements to process
-  sne             c1, d.num_sg_elems0, 0
-  SET_STAT(_r_stats, c1, oper_sg)
-
-  phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
-  phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems0
-
-  SAVE_STATS(_r_stats)
-
-  // Set number of descriptors to process
-  phvwr.e         p.eth_tx_t0_s2s_num_desc, _r_num_desc
-  // Set number of bytes to tx (for rate limiter)
-  phvwr.f         p.p4_intr_packet_len, _r_tx_pktlen
+  phvwrpair.e     p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
+  phvwri.f        p.common_te0_phv_table_pc, eth_tx_commit[38:6]
 
 eth_tx_prep_error:
   SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
 
   SAVE_STATS(_r_stats)
 
+  // Don't drop the phv, because, we have claimed a descriptor.
+  // Generate an error completion.
+  phvwr           p.eth_tx_global_cq_entry, 1
+  phvwr           p.eth_tx_cq_desc_status, ETH_TX_DESC_ADDR_ERROR
   phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
-  phvwr           p.p4_intr_global_drop, 1
 
-  // Launch eth_tx_stats action
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
-  phvwri.e        p.common_te1_phv_table_pc, eth_tx_stats[38:6]
-  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  // Launch commit stage
+  phvwri          p.common_te0_phv_table_lock_en, 1
+  phvwrpair.e     p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
+  phvwri.f        p.common_te0_phv_table_pc, eth_tx_commit[38:6]

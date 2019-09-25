@@ -8,7 +8,6 @@
 struct phv_ p;
 struct tx_table_s3_t0_k_ k;
 
-#define   _r_num_desc   r1  // Remaining number of descriptors
 #define   _r_addr       r2  // Buffer address
 #define   _r_stats      r3  // Stats
 #define   _r_ptr        r5  // Current DMA byte offset in PHV
@@ -29,41 +28,19 @@ eth_tx_start:
   // Load DMA command pointer
   add             _r_index, r0, k.eth_tx_global_dma_cur_index
 
-  // Do we need to process any more descriptors ?
-  seq             c1, r0, k.eth_tx_t0_s2s_num_desc
-  bcf             [c1], eth_tx_done
-  nop
-
-  add             _r_num_desc, r0, k.eth_tx_t0_s2s_num_desc
-
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_INTRINSIC(0, _r_ptr)
+  DMA_INTRINSIC(_r_ptr)
   DMA_CMD_NEXT(_r_index)
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_PKT(0, _r_addr, _r_ptr, to_s3)
+  DMA_PKT(_r_addr, _r_ptr, to_s3)
   DMA_CMD_NEXT(_r_index)
-
-  subi            _r_num_desc, _r_num_desc, 1
-  beq             _r_num_desc, r0, eth_tx_done
 
   // Save DMA command index
   phvwr           p.eth_tx_global_dma_cur_index, _r_index
 
-eth_tx_continue:
-  SAVE_STATS(_r_stats)
-
-  // Update the remaining number of descriptors
-  phvwr.e         p.eth_tx_t0_s2s_num_desc, _r_num_desc
-
-  // Launch eth_tx stage
-  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
-
 eth_tx_done:
   SAVE_STATS(_r_stats)
-
-  // Update the remaining number of descriptors
-  phvwr           p.eth_tx_t0_s2s_num_desc, _r_num_desc
 
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
 

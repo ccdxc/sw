@@ -55,7 +55,7 @@ class HostManagement:
         self.hdl = pexpect.spawn("ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s" % self.__ssh_host)
         self.hdl.timeout = GlobalOptions.timeout
         self.hdl.logfile = sys.stdout.buffer
-        self.hdl.expect(["[Pp]assword:", "Password for root@"])
+        self.hdl.expect(["[Pp]assword", "Password for root@"])
         self.hdl.sendline(GlobalOptions.host_password)
         self.hdl.expect_exact(USER_EXP_PROMPT)
         self.hdl.sendline("uptime")

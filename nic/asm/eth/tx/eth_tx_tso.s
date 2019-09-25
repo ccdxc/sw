@@ -37,7 +37,7 @@ eth_tx_tso_start:
   nop
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_INTRINSIC(0, _r_ptr)
+  DMA_INTRINSIC(_r_ptr)
   DMA_CMD_NEXT(_r_index)
 
 eth_tx_tso:
@@ -45,13 +45,13 @@ eth_tx_tso:
   nop
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_TSO_HDR(0, _r_addr, _r_ptr, to_s3)
+  DMA_TSO_HDR(_r_addr, _r_ptr, to_s3)
   DMA_CMD_NEXT(_r_index)
 
 eth_tx_tso_sot:
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HDR(0, _r_addr, _r_ptr, to_s3)
+  DMA_HDR(_r_addr, _r_ptr, to_s3)
   DMA_CMD_NEXT(_r_index)
 
 eth_tx_tso_cont:

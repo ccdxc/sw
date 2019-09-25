@@ -102,6 +102,10 @@ class EthRingObject(ring.RingObject):
         if descriptor.GetColor() != self.exp_color:
             return status.RETRY
 
+        if descriptor.GetCompletionIndex() >= self.size:
+            logger.error("Consume: Invalid completion index.")
+            return status.ERROR
+
         # For RX queues, match the completion with the posted buffer.
         # We need this to verify buffer contents.
         buf = self.queue.buffers[self.ci]

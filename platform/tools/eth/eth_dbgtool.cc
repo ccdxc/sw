@@ -1052,6 +1052,7 @@ eth_stats(uint16_t lif)
     printf("tx_queue_error              : %lu\n", stats.tx_queue_error);
     printf("tx_desc_fetch_error         : %lu\n", stats.tx_desc_fetch_error);
     printf("tx_desc_data_error          : %lu\n", stats.tx_desc_data_error);
+    printf("tx_queue_empty              : %lu\n", stats.tx_queue_empty);
 
     printf("tx_ucast_drop_bytes         : %lu\n", stats.tx_ucast_drop_bytes);
     printf("tx_ucast_drop_packets       : %lu\n", stats.tx_ucast_drop_packets);

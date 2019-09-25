@@ -105,8 +105,8 @@
     modify_field(eth_tx_global_scratch.tso_eot, eth_tx_global.tso_eot); \
     modify_field(eth_tx_global_scratch.host_queue, eth_tx_global.host_queue); \
     modify_field(eth_tx_global_scratch.cpu_queue, eth_tx_global.cpu_queue); \
-    modify_field(eth_tx_global_scratch.cq_entry, eth_tx_global.cq_entry); \
     modify_field(eth_tx_global_scratch.intr_enable, eth_tx_global.intr_enable); \
+    modify_field(eth_tx_global_scratch.cq_entry, eth_tx_global.cq_entry); \
     modify_field(eth_tx_global_scratch.lif, eth_tx_global.lif); \
     modify_field(eth_tx_global_scratch.stats, eth_tx_global.stats); \
     modify_field(eth_tx_global_scratch.drop, eth_tx_global.drop);
@@ -142,7 +142,7 @@
     modify_field(eth_tx_to_s2_scratch.rsvd, eth_tx_to_s2.rsvd);
 
 #define MODIFY_ETH_TX_TO_S3 \
-    MODIFY_TX_DESC_KEY(to_s3, 0)
+    MODIFY_TX_DESC_KEY(to_s3,)
 
 #define PARAMS_ETH_TX_QSTATE \
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \

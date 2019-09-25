@@ -36,11 +36,12 @@ eth_tx_stats:
 eth_tx_stats_incr_drop:
     // Update queue & desc counters
     addi            _r_offset, _r_lif_offset, LIF_STATS_TX_QUEUE_DISABLED_OFFSET
-    ATOMIC_INC_VAL_4(_r_base, _r_offset, _r_addr, _r_val,
+    ATOMIC_INC_VAL_5(_r_base, _r_offset, _r_addr, _r_val,
                     k.eth_tx_global_stats[STAT_queue_disabled],
                     k.eth_tx_global_stats[STAT_queue_error],
                     k.eth_tx_global_stats[STAT_desc_fetch_error],
-                    k.eth_tx_global_stats[STAT_desc_data_error])
+                    k.eth_tx_global_stats[STAT_desc_data_error],
+                    k.eth_tx_global_stats[STAT_queue_empty])
 
 #if 0
     // Update operation counters

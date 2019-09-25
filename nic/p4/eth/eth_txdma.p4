@@ -127,10 +127,7 @@ header_type eth_tx_qstate_d {
 
 header_type eth_tx_desc_d {
     fields {
-        HEADER_TX_DESC(0)
-        HEADER_TX_DESC(1)
-        HEADER_TX_DESC(2)
-        HEADER_TX_DESC(3)
+        HEADER_TX_DESC()
     }
 }
 
@@ -162,8 +159,8 @@ header_type eth_tx_global_k {
         tso_sot : 1;    // start of tso
         host_queue : 1;
         cpu_queue : 1;
-        cq_entry : 1;   // generate a completion
         intr_enable : 1;    // generate an interrupt
+        cq_entry : 1;   // generate a completion
         lif : 11;
         stats : 32;
         drop : 1;
@@ -212,25 +209,7 @@ header_type eth_tx_to_s2_k {
 
 header_type eth_tx_to_s3_k {
     fields {
-        HEADER_TX_DESC(0)
-    }
-}
-
-header_type eth_tx_to_s4_k {
-    fields {
-        HEADER_TX_DESC(1)
-    }
-}
-
-header_type eth_tx_to_s5_k {
-    fields {
-        HEADER_TX_DESC(2)
-    }
-}
-
-header_type eth_tx_to_s6_k {
-    fields {
-        HEADER_TX_DESC(3)
+        HEADER_TX_DESC()
     }
 }
 
@@ -274,21 +253,6 @@ metadata eth_tx_to_s3_k eth_tx_to_s3;
 @pragma scratch_metadata
 metadata eth_tx_to_s3_k eth_tx_to_s3_scratch;
 
-@pragma pa_header_union ingress to_stage_4
-metadata eth_tx_to_s4_k eth_tx_to_s4;
-@pragma scratch_metadata
-metadata eth_tx_to_s4_k eth_tx_to_s4_scratch;
-
-@pragma pa_header_union ingress to_stage_5
-metadata eth_tx_to_s5_k eth_tx_to_s5;
-@pragma scratch_metadata
-metadata eth_tx_to_s5_k eth_tx_to_s5_scratch;
-
-@pragma pa_header_union ingress to_stage_6
-metadata eth_tx_to_s6_k eth_tx_to_s6;
-@pragma scratch_metadata
-metadata eth_tx_to_s6_k eth_tx_to_s6_scratch;
-
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
@@ -305,23 +269,15 @@ metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
  * P-vector
  *****************************************************************************/
 
-@pragma pa_align 128
+// Use to stage0 header from Flit1
 @pragma dont_trim
+@pragma pa_header_union ingress to_stage_0
 metadata eth_tx_cq_desc_p eth_tx_cq_desc;
 
-// Use the App Header from Flit0 for the first packet
+// Use the App Header from Flit0
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
-metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr0;
-
-// Additional APP Headers for other packets
-@pragma dont_trim
-@pragma pa_align 512
-metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr1;
-@pragma dont_trim
-metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr2;
-@pragma dont_trim
-metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr3;
+metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr;
 
 // DMA headers
 @pragma pa_align 512

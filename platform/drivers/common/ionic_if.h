@@ -2256,7 +2256,7 @@ struct lif_stats {
 	__le64 tx_queue_error;
 	__le64 tx_desc_fetch_error;
 	__le64 tx_desc_data_error;
-	__le64 rsvd9;
+	__le64 tx_queue_empty;
 	__le64 rsvd10;
 	__le64 rsvd11;
 	__le64 rsvd12;

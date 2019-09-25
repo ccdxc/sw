@@ -51,10 +51,7 @@ action eth_tx_fetch_desc(PARAMS_ETH_TX_QSTATE)
 }
 
 action eth_tx_prep(
-    PARAM_TX_DESC(0),
-    PARAM_TX_DESC(1),
-    PARAM_TX_DESC(2),
-    PARAM_TX_DESC(3)
+    PARAM_TX_DESC()
 )
 {
     // K+I
@@ -63,10 +60,7 @@ action eth_tx_prep(
     MODIFY_ETH_TX_TO_S1
 
     // D
-    MODIFY_TX_DESC(0)
-    MODIFY_TX_DESC(1)
-    MODIFY_TX_DESC(2)
-    MODIFY_TX_DESC(3)
+    MODIFY_TX_DESC()
 }
 
 action eth_tx_commit(PARAMS_ETH_TX_QSTATE)
