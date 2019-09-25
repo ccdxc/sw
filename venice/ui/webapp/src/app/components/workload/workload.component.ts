@@ -228,7 +228,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
-        this.dataObjects = Utility.sortDate(this.dataObjects, ['meta', 'mod-time'], -1);  // VS-791, sort workoad object by mod-time. UI table will match web-socket return.
       },
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
