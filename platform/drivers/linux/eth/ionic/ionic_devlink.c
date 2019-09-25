@@ -24,12 +24,17 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 	if (err)
 		return err;
 
-	devlink_info_version_running_put(req, "fw_version",
-					 idev->dev_info.fw_version);
+	err = devlink_info_version_running_put(req,
+					       DEVLINK_INFO_VERSION_GENERIC_FW,
+					       idev->dev_info.fw_version);
+	if (err)
+		return err;
 
 	val = ioread32(&idev->dev_info_regs->fw_heartbeat);
 	snprintf(buf, sizeof(buf), "0x%x", val);
-	devlink_info_version_running_put(req, "fw_heartbeat", buf);
+	err = devlink_info_version_running_put(req, "fw.heartbeat", buf);
+	if (err)
+		return err;
 
 	snprintf(buf, sizeof(buf), "0x%x", idev->dev_info.asic_type);
 	err = devlink_info_version_fixed_put(req,

@@ -579,23 +579,6 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 				 q->dbval | q->head->index);
 }
 
-unsigned int ionic_q_space_avail(struct queue *q)
-{
-	unsigned int avail = q->tail->index;
-
-	if (q->head->index >= avail)
-		avail += q->head->left - 1;
-	else
-		avail -= q->head->index + 1;
-
-	return avail;
-}
-
-bool ionic_q_has_space(struct queue *q, unsigned int want)
-{
-	return ionic_q_space_avail(q) >= want;
-}
-
 static bool ionic_q_is_posted(struct queue *q, unsigned int pos)
 {
 	unsigned int mask, tail, head;

@@ -79,7 +79,13 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 	struct lif *lif;
 	int nqueues;
 
+	/* Create a netdev big enough to handle all the queues
+	 * needed for lif0 and any macvlan slave lifs.
+	 */
 	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+	dev_dbg(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d nintrs=%d\n",
+		ionic->ntxqs_per_lif, ionic->nslaves,
+		nqueues, ionic->nintrs);
 
 	return alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
 }
@@ -311,24 +317,25 @@ static void ionic_remove(struct pci_dev *pdev)
 {
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
-	if (ionic) {
-		ionic_devlink_unregister(ionic);
-		ionic_lifs_unregister(ionic);
-		ionic_lifs_deinit(ionic);
-		ionic_lifs_free(ionic);
-		ionic_bus_free_irq_vectors(ionic);
-		ionic_port_reset(ionic);
-		ionic_reset(ionic);
-		ionic_dev_teardown(ionic);
-		ionic_unmap_bars(ionic);
-		pci_release_regions(pdev);
-		pci_clear_master(pdev);
-		pci_disable_sriov(pdev);
-		pci_disable_device(pdev);
-		ionic_debugfs_del_dev(ionic);
-		mutex_destroy(&ionic->dev_cmd_lock);
-		ionic_devlink_free(ionic);
-	}
+	if (!ionic)
+		return;
+
+	ionic_devlink_unregister(ionic);
+	ionic_lifs_unregister(ionic);
+	ionic_lifs_deinit(ionic);
+	ionic_lifs_free(ionic);
+	ionic_bus_free_irq_vectors(ionic);
+	ionic_port_reset(ionic);
+	ionic_reset(ionic);
+	ionic_dev_teardown(ionic);
+	ionic_unmap_bars(ionic);
+	pci_release_regions(pdev);
+	pci_clear_master(pdev);
+	pci_disable_sriov(pdev);
+	pci_disable_device(pdev);
+	ionic_debugfs_del_dev(ionic);
+	mutex_destroy(&ionic->dev_cmd_lock);
+	ionic_devlink_free(ionic);
 }
 
 static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)

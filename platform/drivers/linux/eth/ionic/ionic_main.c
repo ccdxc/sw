@@ -553,10 +553,13 @@ int ionic_port_init(struct ionic *ionic)
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err) {
 		dev_err(ionic->dev, "Failed to init port\n");
-		return err;
+		dma_free_coherent(ionic->dev, idev->port_info_sz,
+				  idev->port_info, idev->port_info_pa);
+		idev->port_info = NULL;
+		idev->port_info_pa = 0;
 	}
 
-	return 0;
+	return err;
 }
 
 int ionic_port_reset(struct ionic *ionic)
@@ -571,16 +574,15 @@ int ionic_port_reset(struct ionic *ionic)
 	ionic_dev_cmd_port_reset(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
-	if (err) {
-		dev_err(ionic->dev, "Failed to reset port\n");
-		return err;
-	}
 
 	dma_free_coherent(ionic->dev, idev->port_info_sz,
 			  idev->port_info, idev->port_info_pa);
 
 	idev->port_info = NULL;
 	idev->port_info_pa = 0;
+
+	if (err)
+		dev_err(ionic->dev, "Failed to reset port\n");
 
 	return err;
 }

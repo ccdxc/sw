@@ -33,6 +33,7 @@
 #include <asm/io.h>
 #include <linux/ethtool.h>
 #include <linux/if_vlan.h>
+#include <net/devlink.h>
 
 #ifndef GCC_VERSION
 #define GCC_VERSION (__GNUC__ * 10000		\
@@ -6290,6 +6291,7 @@ static inline dma_addr_t __kc_xdp_umem_get_dma(struct xdp_umem *umem, u64 addr)
 #endif
 #ifndef netdev_unbind_sb_channel
 #define netdev_unbind_sb_channel(x, y) do { } while (0)
+
 #endif
 #define REQUIRE_PCI_CLEANUP_AER_ERROR_STATUS
 #if (SLE_VERSION_CODE && (SLE_VERSION_CODE >= SLE_VERSION(15,1,0)))
@@ -6416,6 +6418,9 @@ __kc_eth_get_headlen(const struct net_device __always_unused *dev, void *data,
 #define HAVE_NETDEV_XMIT_MORE
 #endif /* 5.2.0 */
 
+#ifndef DEVLINK_INFO_VERSION_GENERIC_FW
+#define DEVLINK_INFO_VERSION_GENERIC_FW        "fw.version"
+#endif
 #ifndef DEVLINK_INFO_VERSION_GENERIC_ASIC_ID
 #define DEVLINK_INFO_VERSION_GENERIC_ASIC_ID   "asic.id"
 #endif

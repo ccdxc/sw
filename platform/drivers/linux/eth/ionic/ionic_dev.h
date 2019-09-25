@@ -229,6 +229,23 @@ static inline void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 	intr->index = index;
 }
 
+static inline unsigned int ionic_q_space_avail(struct queue *q)
+{
+	unsigned int avail = q->tail->index;
+
+	if (q->head->index >= avail)
+		avail += q->head->left - 1;
+	else
+		avail -= q->head->index + 1;
+
+	return avail;
+}
+
+static inline bool ionic_q_has_space(struct queue *q, unsigned int want)
+{
+	return ionic_q_space_avail(q) >= want;
+}
+
 void ionic_init_devinfo(struct ionic *ionic);
 int ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_teardown(struct ionic *ionic);
@@ -281,8 +298,6 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa);
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg);
 void ionic_q_rewind(struct queue *q, struct desc_info *start);
-unsigned int ionic_q_space_avail(struct queue *q);
-bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 int ionic_heartbeat_check(struct ionic *ionic);
