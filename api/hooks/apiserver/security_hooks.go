@@ -197,8 +197,14 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 				found := false
 				for _, p := range supportedProtocols {
 					// check if any is specified in protocol
-					if strings.ToLower(pp.Protocol) == "any" && len(pp.Ports) != 0 {
-						return fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports)
+
+					if strings.ToLower(pp.Protocol) == "any" {
+						if len(r.ProtoPorts) > 1 {
+							return fmt.Errorf("cannot specify more than one proto-ports if any is specified since this supersedes other proto-ports within a rule. Found %d proto-ports", len(r.ProtoPorts))
+						}
+						if len(pp.Ports) != 0 {
+							return fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports)
+						}
 					}
 
 					if p == strings.ToLower(pp.Protocol) {
@@ -255,7 +261,10 @@ func (s *securityHooks) validateIPAddresses(addresses []string) (int, error) {
 	var ipAddresses []*net.IP
 	for _, a := range addresses {
 		// special keyword to denote match all on ip addresses
-		if a == "any" {
+		if strings.ToLower(a) == "any" {
+			if len(addresses) > 1 {
+				return ipNone, fmt.Errorf("cannot specify more than one IP addresses if any is specified since this supersedes other IP addresses within a rule. Found %d proto-ports", len(addresses))
+			}
 			continue
 		}
 		if strings.Contains(a, "-") {
@@ -356,8 +365,13 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 		} else {
 			found := false
 			for _, p := range supportedProtocols {
-				if strings.ToLower(pp.Protocol) == "any" && len(pp.Ports) != 0 {
-					ret = append(ret, fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports))
+				if strings.ToLower(pp.Protocol) == "any" {
+					if len(app.Spec.ProtoPorts) > 1 {
+						ret = append(ret, fmt.Errorf("cannot specify more than one proto-ports if any is specified since this supersedes other proto-ports within a rule. Found %d proto-ports", len(app.Spec.ProtoPorts)))
+					}
+					if len(pp.Ports) != 0 {
+						ret = append(ret, fmt.Errorf("cannot specify ports when protocol is any. Ports: %v", pp.Ports))
+					}
 				}
 
 				if p == strings.ToLower(pp.Protocol) {

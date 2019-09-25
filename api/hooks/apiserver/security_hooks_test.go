@@ -612,6 +612,219 @@ func TestNetworkSecurityPolicyAnyProtoSpecifiedPorts(t *testing.T) {
 	Assert(t, len(errs) != 0, "Specifying ports with any protocol must be rejected. Error: %v", errs)
 }
 
+func TestNetworkSecurityPolicyAnyProtoSingletonWithAdditionalPorts(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "1337",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying more than one proto-port with any must be rejected. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyAnyAppProtoSingletonWithAdditionalPorts(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "1337",
+				},
+			},
+		},
+	}
+
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "failed to create app. Error: %v", errs)
+
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			Apps:            []string{"badApp"},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "any", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying more than one proto-port with any must be rejected. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyAnyFromIPSingletonWithAdditionalFromIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "any", "1001:1::3"},
+			ToIPAddresses:   []string{"42.42.42.42"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying more than one ip addresses with any must be rejected. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyAnyFromIPSingletonWithAdditionalToIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"42.42.42.42"},
+			ToIPAddresses:   []string{"1001:1::1", "any", "1001:1::3"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying more than one ip addresses with any must be rejected. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyAnyFromIPSingletonWithAdditionalFromAndToIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "any",
+					Ports:    "",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"42.42.42.42", "any"},
+			ToIPAddresses:   []string{"1001:1::1", "any", "1001:1::3"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "Specifying more than one ip addresses with any must be rejected. Error: %v", errs)
+}
+
 func TestNetworkSecurityPolicyV6SrcAnyDst(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
