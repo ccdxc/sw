@@ -299,10 +299,6 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &lif->ionic->idev;
-#ifdef ETHTOOL_FEC_NONE
-	u8 fec_type = PORT_FEC_TYPE_NONE;
-	u32 req_rs, req_fc;
-#endif
 	int err = 0;
 
 	/* set autoneg */
@@ -324,34 +320,6 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 		if (err)
 			return err;
 	}
-
-#ifdef ETHTOOL_FEC_NONE
-	/* set FEC */
-	req_rs = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_RS);
-	req_fc = ethtool_link_ksettings_test_link_mode(ks, advertising, FEC_BASER);
-	if (req_rs && req_fc) {
-		netdev_info(netdev, "Only select one FEC mode at a time\n");
-		return -EINVAL;
-	} else if (req_fc &&
-		   idev->port_info->config.fec_type != PORT_FEC_TYPE_FC) {
-		fec_type = PORT_FEC_TYPE_FC;
-	} else if (req_rs &&
-		   idev->port_info->config.fec_type != PORT_FEC_TYPE_RS) {
-		fec_type = PORT_FEC_TYPE_RS;
-	} else if (!(req_rs | req_fc) &&
-		 idev->port_info->config.fec_type != PORT_FEC_TYPE_NONE) {
-		fec_type = PORT_FEC_TYPE_NONE;
-	}
-
-	if (fec_type != idev->port_info->config.fec_type) {
-		mutex_lock(&ionic->dev_cmd_lock);
-		ionic_dev_cmd_port_fec(idev, fec_type);
-		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
-		mutex_unlock(&ionic->dev_cmd_lock);
-		if (err)
-			return err;
-	}
-#endif
 
 	return 0;
 }
@@ -402,6 +370,72 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 	return 0;
 }
 
+#ifdef ETHTOOL_FEC_NONE
+static int ionic_get_fecparam(struct net_device *netdev,
+			      struct ethtool_fecparam *fec)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	switch (lif->ionic->idev.port_info->config.fec_type) {
+	case PORT_FEC_TYPE_NONE:
+		fec->active_fec = ETHTOOL_FEC_OFF;
+		break;
+	case PORT_FEC_TYPE_RS:
+		fec->active_fec = ETHTOOL_FEC_RS;
+		break;
+	case PORT_FEC_TYPE_FC:
+		fec->active_fec = ETHTOOL_FEC_BASER;
+		break;
+	}
+
+	fec->fec = ETHTOOL_FEC_OFF | ETHTOOL_FEC_RS | ETHTOOL_FEC_BASER;
+
+	return 0;
+}
+
+static int ionic_set_fecparam(struct net_device *netdev,
+			      struct ethtool_fecparam *fec)
+{
+	struct lif *lif = netdev_priv(netdev);
+	u8 fec_type;
+	int ret = 0;
+
+	if (lif->ionic->idev.port_info->config.an_enable) {
+		netdev_err(netdev, "FEC request not allowed while autoneg is enabled\n");
+		return -EINVAL;
+	}
+
+	switch (fec->fec) {
+	case ETHTOOL_FEC_NONE:
+		fec_type = PORT_FEC_TYPE_NONE;
+		break;
+	case ETHTOOL_FEC_OFF:
+		fec_type = PORT_FEC_TYPE_NONE;
+		break;
+	case ETHTOOL_FEC_RS:
+		fec_type = PORT_FEC_TYPE_RS;
+		break;
+	case ETHTOOL_FEC_BASER:
+		fec_type = PORT_FEC_TYPE_FC;
+		break;
+	case ETHTOOL_FEC_AUTO:
+	default:
+		netdev_err(netdev, "FEC request 0x%04x not supported\n",
+			   fec->fec);
+		return -EINVAL;
+	}
+
+	if (fec_type != lif->ionic->idev.port_info->config.fec_type) {
+		mutex_lock(&lif->ionic->dev_cmd_lock);
+		ionic_dev_cmd_port_fec(&lif->ionic->idev, fec_type);
+		ret = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
+		mutex_unlock(&lif->ionic->dev_cmd_lock);
+	}
+
+	return ret;
+}
+
+#endif /* ETHTOOL_FEC_NONE */
 static int ionic_get_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
@@ -828,6 +862,7 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_regs		= ionic_get_regs,
 	.get_link		= ethtool_op_get_link,
 	.get_link_ksettings	= ionic_get_link_ksettings,
+	.set_link_ksettings	= ionic_set_link_ksettings,
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
@@ -850,7 +885,10 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_module_eeprom	= ionic_get_module_eeprom,
 	.get_pauseparam		= ionic_get_pauseparam,
 	.set_pauseparam		= ionic_set_pauseparam,
-	.set_link_ksettings	= ionic_set_link_ksettings,
+#ifdef ETHTOOL_FEC_NONE
+	.get_fecparam		= ionic_get_fecparam,
+	.set_fecparam		= ionic_set_fecparam,
+#endif
 	.nway_reset		= ionic_nway_reset,
 };
 
