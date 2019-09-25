@@ -30,8 +30,10 @@ message ERSpanSpec {
   // VPC id
   uint32          VPCId  = 1;
   // IP address of the ERSPAN destination
+  // NOTE: only IPv4 is supported
   types.IPAddress DstIP  = 2;
   // Source IP address to be used for ERSPAN
+  // NOTE: only IPv6 is supported
   types.IPAddress SrcIP  = 3;
   // DSCP value to use in the packet
   uint32          Dscp   = 4;

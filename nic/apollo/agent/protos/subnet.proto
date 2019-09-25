@@ -25,9 +25,9 @@ message SubnetSpec {
   // virtual private cloud this subnet is belongs to
   uint32         VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv4 prefix of this subnet, this must be a sub prefix of VPC's prefix
-  types.IPPrefix V4Prefix              = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPv4Prefix V4Prefix            = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv6 prefix of this subnet, this must be a sub prefix of VPC's prefix
-  types.IPPrefix V6Prefix              = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPv6Prefix V6Prefix            = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv4 Virtual Router (VR) IP of this subnet, this IP is owned by the device
   // and packets originated by this device carry this IP as source IP
   uint32         IPv4VirtualRouterIP   = 5;

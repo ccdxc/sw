@@ -35,9 +35,9 @@ message VPCSpec {
   // type of the VPC
   VPCType        Type             = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv4 prefix of this VPC
-  types.IPPrefix V4Prefix         = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPv4Prefix V4Prefix       = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv6 prefix of this VPC
-  types.IPPrefix V6Prefix         = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPv6Prefix V6Prefix       = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used and this route table is
   // inherited by the subnets under this VPC, if they are created with no route
   // table explicitly
@@ -55,7 +55,7 @@ message VPCSpec {
   // IPv6 prefix/IP to be used to NAT the IPv4 traffic destined to reach a
   // service in IPv6 only network/service (all VNICs in this VPC will use this
   // prefix to get their IPv4 traffic (S)NAT-ed in the outbound direction)
-  types.IPPrefix Nat46Prefix      = 9;
+  types.IPv6Prefix Nat46Prefix    = 9;
 }
 
 // operational status of a VPC, if any

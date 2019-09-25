@@ -320,8 +320,6 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
-    //MAC_UINT64_TO_ADDR(api_spec->provider_mac_addr,
-    //                   proto_spec.providermacaddress());
     api_spec->rsc_pool_id = proto_spec.resourcepoolid();
     api_spec->src_dst_check = proto_spec.sourceguardenable();
     for (int i = 0; i < proto_spec.txmirrorsessionid_size(); i++) {
@@ -347,6 +345,42 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->v4_meter.id = proto_spec.v4meterid();
     api_spec->v6_meter.id = proto_spec.v6meterid();
     api_spec->switch_vnic = proto_spec.switchvnic();
+    if (proto_spec.ingv4securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
+        PDS_TRACE_ERR("No. of IPv4 ingress security policies on vnic can't "
+                      "exceed {}", PDS_MAX_VNIC_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_ing_v4_policy = proto_spec.ingv4securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
+        api_spec->ing_v4_policy[i].id = proto_spec.ingv4securitypolicyid(i);
+    }
+    if (proto_spec.ingv6securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
+        PDS_TRACE_ERR("No. of IPv6 ingress security policies on vnic can't "
+                      "exceed {}", PDS_MAX_VNIC_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_ing_v6_policy = proto_spec.ingv6securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
+        api_spec->ing_v6_policy[i].id = proto_spec.ingv6securitypolicyid(i);
+    }
+    if (proto_spec.egv4securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
+        PDS_TRACE_ERR("No. of IPv4 egress security policies on vnic can't "
+                      "exceed {}", PDS_MAX_VNIC_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_egr_v4_policy = proto_spec.egv4securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
+        api_spec->egr_v4_policy[i].id = proto_spec.egv4securitypolicyid(i);
+    }
+    if (proto_spec.egv6securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
+        PDS_TRACE_ERR("No. of IPv6 egress security policies on vnic can't "
+                      "exceed {}", PDS_MAX_VNIC_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_egr_v6_policy = proto_spec.egv6securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
+        api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
+    }
     return SDK_RET_OK;
 }
 
@@ -387,10 +421,18 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
         }
     }
     proto_spec->set_switchvnic(api_spec->switch_vnic);
-    proto_spec->set_ingv4securitypolicyid(api_spec->ing_v4_policy.id);
-    proto_spec->set_ingv6securitypolicyid(api_spec->ing_v6_policy.id);
-    proto_spec->set_egv4securitypolicyid(api_spec->egr_v4_policy.id);
-    proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
+    for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
+        proto_spec->set_ingv4securitypolicyid(i, api_spec->ing_v4_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
+        proto_spec->set_ingv6securitypolicyid(i, api_spec->ing_v6_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
+        proto_spec->set_egv4securitypolicyid(i, api_spec->egr_v4_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
+        proto_spec->set_egv6securitypolicyid(i, api_spec->egr_v6_policy[i].id);
+    }
 }
 
 // populate proto buf status from vnic API status
@@ -1914,7 +1956,7 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     proto_spec->set_vpcid(api_spec->vpc.id);
     ipv4pfx_api_spec_to_proto_spec(
                     proto_spec->mutable_v4prefix(), &api_spec->v4_prefix);
-    ippfx_api_spec_to_proto_spec(
+    ippfx_api_spec_to_ipv6pfx_proto_spec(
                     proto_spec->mutable_v6prefix(), &api_spec->v6_prefix);
     proto_spec->set_ipv4virtualrouterip(api_spec->v4_vr_ip);
     proto_spec->set_ipv6virtualrouterip(&api_spec->v6_vr_ip.addr.v6_addr.addr8,
@@ -1967,7 +2009,8 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->key.id = proto_spec.id();
     api_spec->vpc.id = proto_spec.vpcid();
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
-    ippfx_proto_spec_to_api_spec(&api_spec->v6_prefix, proto_spec.v6prefix());
+    ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->v6_prefix,
+                                         proto_spec.v6prefix());
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
     api_spec->v6_vr_ip.af = IP_AF_IPV6;
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
@@ -1997,8 +2040,10 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
         api_spec->type = PDS_VPC_TYPE_SUBSTRATE;
     }
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
-    ippfx_proto_spec_to_api_spec(&api_spec->v6_prefix, proto_spec.v6prefix());
-    ippfx_proto_spec_to_api_spec(&api_spec->nat46_prefix, proto_spec.nat46prefix());
+    ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->v6_prefix,
+                                         proto_spec.v6prefix());
+    ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->nat46_prefix,
+                                         proto_spec.nat46prefix());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
@@ -2016,10 +2061,14 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     } else if (api_spec->type == PDS_VPC_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
-    ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(), &api_spec->v4_prefix);
-    ippfx_api_spec_to_proto_spec(proto_spec->mutable_v6prefix(), &api_spec->v6_prefix);
-    ippfx_api_spec_to_proto_spec(proto_spec->mutable_nat46prefix(), &api_spec->nat46_prefix);
-    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(), &api_spec->fabric_encap);
+    ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(),
+                                   &api_spec->v4_prefix);
+    ippfx_api_spec_to_ipv6pfx_proto_spec(proto_spec->mutable_v6prefix(),
+                                         &api_spec->v6_prefix);
+    ippfx_api_spec_to_ipv6pfx_proto_spec(proto_spec->mutable_nat46prefix(),
+                                         &api_spec->nat46_prefix);
+    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
+                             &api_spec->fabric_encap);
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
     proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
     proto_spec->set_v6routetableid(api_spec->v6_route_table.id);

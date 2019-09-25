@@ -44,11 +44,10 @@ cid_remove_from_fd_map (int64_t cid)
 void *
 fd_recv_thread_start (void *ctxt)
 {
+    int ret;
     int sock_fd, sock_fd2, max_fd;
     fd_set master_set, active_set;
     struct sockaddr_un sock_addr;
-    void *mem;
-    int ret;
 
     // initialize unix socket
     if ((sock_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -75,7 +74,7 @@ fd_recv_thread_start (void *ctxt)
 
     while (1) {
         active_set = master_set;
- 
+
         if ((ret = select(max_fd + 1, &active_set, NULL, NULL, NULL)) < 0) {
             if (errno == EAGAIN) {
                 continue;
@@ -124,7 +123,6 @@ fd_recv_thread_start (void *ctxt)
             }
         }
     }
-
     return NULL;
 }
 

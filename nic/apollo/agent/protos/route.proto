@@ -25,9 +25,13 @@ message Route {
   oneof Nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
       types.IPAddress NextHop        = 2;
+      // nexthop for this route
       uint32          NexthopId      = 3;
+      // ECMP nexthop for this route
       uint32          NexthopGroupId = 4;
+      // peer VPC in case of VPC peering
       uint32          VPCId          = 5;
+      // Tunnel this prefix is pointing to
       uint32          TunnelId       = 6;
   }
 }

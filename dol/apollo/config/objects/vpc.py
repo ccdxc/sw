@@ -147,12 +147,12 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
-        utils.GetRpcIPPrefix(self.IPPrefix[1], spec.V4Prefix)
-        utils.GetRpcIPPrefix(self.IPPrefix[0], spec.V6Prefix)
+        utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
+        utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
         if self.Vnid:
             utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
-            utils.GetRpcIPPrefix(self.Nat46_pfx, spec.Nat46Prefix)
+            utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
         return grpcmsg
 
     def GetGrpcReadMessage(self):

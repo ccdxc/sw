@@ -107,10 +107,10 @@ func printVPC(vpc *pds.VPC) {
 	fmt.Printf("%-6d%-10s%-18s%-18s%-10d%-10d%-20s%-14s%-18s\n",
 		spec.GetId(),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
-		utils.IPPrefixToStr(spec.GetV4Prefix()),
-		utils.IPPrefixToStr(spec.GetV6Prefix()),
+		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
+		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		spec.GetV4RouteTableId(), spec.GetV6RouteTableId(),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		utils.EncapToString(spec.GetFabricEncap()),
-		utils.IPPrefixToStr(spec.GetNat46Prefix()))
+		utils.IPv6PrefixToStr(spec.GetNat46Prefix()))
 }
