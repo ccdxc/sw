@@ -13,6 +13,8 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl_state.hpp"
+#include "nic/apollo/api/impl/lif_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/if_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
@@ -20,7 +22,6 @@
 #include "nic/apollo/api/impl/apulu/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/security_policy_impl_state.hpp"
-#include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/mirror_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl_state.hpp"
@@ -49,6 +50,7 @@ public:
     ~pds_impl_state();
     apulu_impl_state *apulu_impl_db(void) const { return apulu_impl_db_; }
     lif_impl_state *lif_impl_db(void) const { return lif_impl_db_; }
+    if_impl_state *if_impl_db(void) const { return if_impl_db_; }
     tep_impl_state *tep_impl_db(void) const { return tep_impl_db_; }
     vpc_impl_state *vpc_impl_db(void) const { return vpc_impl_db_; }
     vnic_impl_state *vnic_impl_db(void) const { return vnic_impl_db_; }
@@ -72,6 +74,7 @@ public:
 private:
     apulu_impl_state           *apulu_impl_db_;
     lif_impl_state             *lif_impl_db_;
+    if_impl_state              *if_impl_db_;
     tep_impl_state             *tep_impl_db_;
     vpc_impl_state             *vpc_impl_db_;
     vnic_impl_state            *vnic_impl_db_;
