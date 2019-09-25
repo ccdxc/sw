@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleBufferEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchBuffer(handler BufferHandler) error {
 // BufferAPI returns
 type BufferAPI interface {
 	Create(obj *staging.Buffer) error
+	CreateEvent(obj *staging.Buffer) error
 	Update(obj *staging.Buffer) error
 	Delete(obj *staging.Buffer) error
 	Find(meta *api.ObjectMeta) (*Buffer, error)
@@ -418,6 +423,28 @@ func (api *bufferAPI) Create(obj *staging.Buffer) error {
 			_, err = apicl.StagingV1().Buffer().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Buffer object and synchronously triggers local event
+func (api *bufferAPI) CreateEvent(obj *staging.Buffer) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.StagingV1().Buffer().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

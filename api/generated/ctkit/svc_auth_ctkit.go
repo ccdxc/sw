@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchUser(handler UserHandler) error {
 // UserAPI returns
 type UserAPI interface {
 	Create(obj *auth.User) error
+	CreateEvent(obj *auth.User) error
 	Update(obj *auth.User) error
 	Delete(obj *auth.User) error
 	Find(meta *api.ObjectMeta) (*User, error)
@@ -418,6 +423,28 @@ func (api *userAPI) Create(obj *auth.User) error {
 			_, err = apicl.AuthV1().User().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates User object and synchronously triggers local event
+func (api *userAPI) CreateEvent(obj *auth.User) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().User().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().User().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchAuthenticationPolicy(handler AuthenticationPolicyHandl
 // AuthenticationPolicyAPI returns
 type AuthenticationPolicyAPI interface {
 	Create(obj *auth.AuthenticationPolicy) error
+	CreateEvent(obj *auth.AuthenticationPolicy) error
 	Update(obj *auth.AuthenticationPolicy) error
 	Delete(obj *auth.AuthenticationPolicy) error
 	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
@@ -896,6 +928,28 @@ func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error
 			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates AuthenticationPolicy object and synchronously triggers local event
+func (api *authenticationpolicyAPI) CreateEvent(obj *auth.AuthenticationPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchRole(handler RoleHandler) error {
 // RoleAPI returns
 type RoleAPI interface {
 	Create(obj *auth.Role) error
+	CreateEvent(obj *auth.Role) error
 	Update(obj *auth.Role) error
 	Delete(obj *auth.Role) error
 	Find(meta *api.ObjectMeta) (*Role, error)
@@ -1374,6 +1433,28 @@ func (api *roleAPI) Create(obj *auth.Role) error {
 			_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Role object and synchronously triggers local event
+func (api *roleAPI) CreateEvent(obj *auth.Role) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().Role().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchRoleBinding(handler RoleBindingHandler) error {
 // RoleBindingAPI returns
 type RoleBindingAPI interface {
 	Create(obj *auth.RoleBinding) error
+	CreateEvent(obj *auth.RoleBinding) error
 	Update(obj *auth.RoleBinding) error
 	Delete(obj *auth.RoleBinding) error
 	Find(meta *api.ObjectMeta) (*RoleBinding, error)
@@ -1852,6 +1938,28 @@ func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
 			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates RoleBinding object and synchronously triggers local event
+func (api *rolebindingAPI) CreateEvent(obj *auth.RoleBinding) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchUserPreference(handler UserPreferenceHandler) error {
 // UserPreferenceAPI returns
 type UserPreferenceAPI interface {
 	Create(obj *auth.UserPreference) error
+	CreateEvent(obj *auth.UserPreference) error
 	Update(obj *auth.UserPreference) error
 	Delete(obj *auth.UserPreference) error
 	Find(meta *api.ObjectMeta) (*UserPreference, error)
@@ -2330,6 +2443,28 @@ func (api *userpreferenceAPI) Create(obj *auth.UserPreference) error {
 			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates UserPreference object and synchronously triggers local event
+func (api *userpreferenceAPI) CreateEvent(obj *auth.UserPreference) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

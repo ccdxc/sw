@@ -444,6 +444,7 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 			}
 		}
 		node.NaplesConfig.VeniceIps = veniceIps
+		node.NaplesMultSimConfig.VeniceIps = veniceIps
 	case iota.PersonalityType_PERSONALITY_VENICE:
 		if tb.hasNaplesSim {
 			for _, vn := range tb.Nodes {

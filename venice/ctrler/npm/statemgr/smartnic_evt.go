@@ -48,17 +48,10 @@ func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stat
 
 // OnDistributedServiceCardCreate handles smartNic creation
 func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedServiceCard) error {
-	// see if we already have the smartNic
-	sns, err := sm.FindDistributedServiceCard(smartNic.Tenant, smartNic.Name)
-	if err == nil {
-		sns.DistributedServiceCard = smartNic
-		return nil
-	}
-
 	log.Infof("Creating smart nic: %+v", smartNic)
 
 	// create new smartNic object
-	sns, err = NewDistributedServiceCardState(smartNic, sm)
+	sns, err := NewDistributedServiceCardState(smartNic, sm)
 	if err != nil {
 		log.Errorf("Error creating smartNic %+v. Err: %v", smartNic, err)
 		return err

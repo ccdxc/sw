@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleClusterEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchCluster(handler ClusterHandler) error {
 // ClusterAPI returns
 type ClusterAPI interface {
 	Create(obj *cluster.Cluster) error
+	CreateEvent(obj *cluster.Cluster) error
 	Update(obj *cluster.Cluster) error
 	Delete(obj *cluster.Cluster) error
 	Find(meta *api.ObjectMeta) (*Cluster, error)
@@ -418,6 +423,28 @@ func (api *clusterAPI) Create(obj *cluster.Cluster) error {
 			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Cluster object and synchronously triggers local event
+func (api *clusterAPI) CreateEvent(obj *cluster.Cluster) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleNodeEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchNode(handler NodeHandler) error {
 // NodeAPI returns
 type NodeAPI interface {
 	Create(obj *cluster.Node) error
+	CreateEvent(obj *cluster.Node) error
 	Update(obj *cluster.Node) error
 	Delete(obj *cluster.Node) error
 	Find(meta *api.ObjectMeta) (*Node, error)
@@ -896,6 +928,28 @@ func (api *nodeAPI) Create(obj *cluster.Node) error {
 			_, err = apicl.ClusterV1().Node().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Node object and synchronously triggers local event
+func (api *nodeAPI) CreateEvent(obj *cluster.Node) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Node().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Node().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handleHostEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchHost(handler HostHandler) error {
 // HostAPI returns
 type HostAPI interface {
 	Create(obj *cluster.Host) error
+	CreateEvent(obj *cluster.Host) error
 	Update(obj *cluster.Host) error
 	Delete(obj *cluster.Host) error
 	Find(meta *api.ObjectMeta) (*Host, error)
@@ -1374,6 +1433,28 @@ func (api *hostAPI) Create(obj *cluster.Host) error {
 			_, err = apicl.ClusterV1().Host().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Host object and synchronously triggers local event
+func (api *hostAPI) CreateEvent(obj *cluster.Host) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Host().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Host().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEvent(evt *kvstore.WatchEvent) 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallel(evt *kvstore.Watc
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchDistributedServiceCard(handler DistributedServiceCardH
 // DistributedServiceCardAPI returns
 type DistributedServiceCardAPI interface {
 	Create(obj *cluster.DistributedServiceCard) error
+	CreateEvent(obj *cluster.DistributedServiceCard) error
 	Update(obj *cluster.DistributedServiceCard) error
 	Delete(obj *cluster.DistributedServiceCard) error
 	Find(meta *api.ObjectMeta) (*DistributedServiceCard, error)
@@ -1852,6 +1938,28 @@ func (api *distributedservicecardAPI) Create(obj *cluster.DistributedServiceCard
 			_, err = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates DistributedServiceCard object and synchronously triggers local event
+func (api *distributedservicecardAPI) CreateEvent(obj *cluster.DistributedServiceCard) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleTenantEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchTenant(handler TenantHandler) error {
 // TenantAPI returns
 type TenantAPI interface {
 	Create(obj *cluster.Tenant) error
+	CreateEvent(obj *cluster.Tenant) error
 	Update(obj *cluster.Tenant) error
 	Delete(obj *cluster.Tenant) error
 	Find(meta *api.ObjectMeta) (*Tenant, error)
@@ -2330,6 +2443,28 @@ func (api *tenantAPI) Create(obj *cluster.Tenant) error {
 			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Tenant object and synchronously triggers local event
+func (api *tenantAPI) CreateEvent(obj *cluster.Tenant) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2471,7 +2606,9 @@ func (ct *ctrlerCtx) handleVersionEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2552,7 +2689,9 @@ func (ct *ctrlerCtx) handleVersionEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2782,6 +2921,7 @@ func (ct *ctrlerCtx) WatchVersion(handler VersionHandler) error {
 // VersionAPI returns
 type VersionAPI interface {
 	Create(obj *cluster.Version) error
+	CreateEvent(obj *cluster.Version) error
 	Update(obj *cluster.Version) error
 	Delete(obj *cluster.Version) error
 	Find(meta *api.ObjectMeta) (*Version, error)
@@ -2808,6 +2948,28 @@ func (api *versionAPI) Create(obj *cluster.Version) error {
 			_, err = apicl.ClusterV1().Version().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleVersionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Version object and synchronously triggers local event
+func (api *versionAPI) CreateEvent(obj *cluster.Version) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Version().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Version().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleVersionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleSecurityGroupEventParallel(evt *kvstore.WatchEvent) e
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchSecurityGroup(handler SecurityGroupHandler) error {
 // SecurityGroupAPI returns
 type SecurityGroupAPI interface {
 	Create(obj *security.SecurityGroup) error
+	CreateEvent(obj *security.SecurityGroup) error
 	Update(obj *security.SecurityGroup) error
 	Delete(obj *security.SecurityGroup) error
 	Find(meta *api.ObjectMeta) (*SecurityGroup, error)
@@ -418,6 +423,28 @@ func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
 			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates SecurityGroup object and synchronously triggers local event
+func (api *securitygroupAPI) CreateEvent(obj *security.SecurityGroup) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEvent(evt *kvstore.WatchEvent) e
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventParallel(evt *kvstore.Watch
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchNetworkSecurityPolicy(handler NetworkSecurityPolicyHan
 // NetworkSecurityPolicyAPI returns
 type NetworkSecurityPolicyAPI interface {
 	Create(obj *security.NetworkSecurityPolicy) error
+	CreateEvent(obj *security.NetworkSecurityPolicy) error
 	Update(obj *security.NetworkSecurityPolicy) error
 	Delete(obj *security.NetworkSecurityPolicy) error
 	Find(meta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
@@ -896,6 +928,28 @@ func (api *networksecuritypolicyAPI) Create(obj *security.NetworkSecurityPolicy)
 			_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates NetworkSecurityPolicy object and synchronously triggers local event
+func (api *networksecuritypolicyAPI) CreateEvent(obj *security.NetworkSecurityPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handleAppEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchApp(handler AppHandler) error {
 // AppAPI returns
 type AppAPI interface {
 	Create(obj *security.App) error
+	CreateEvent(obj *security.App) error
 	Update(obj *security.App) error
 	Delete(obj *security.App) error
 	Find(meta *api.ObjectMeta) (*App, error)
@@ -1374,6 +1433,28 @@ func (api *appAPI) Create(obj *security.App) error {
 			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates App object and synchronously triggers local event
+func (api *appAPI) CreateEvent(obj *security.App) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().App().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleFirewallProfileEventParallel(evt *kvstore.WatchEvent)
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchFirewallProfile(handler FirewallProfileHandler) error 
 // FirewallProfileAPI returns
 type FirewallProfileAPI interface {
 	Create(obj *security.FirewallProfile) error
+	CreateEvent(obj *security.FirewallProfile) error
 	Update(obj *security.FirewallProfile) error
 	Delete(obj *security.FirewallProfile) error
 	Find(meta *api.ObjectMeta) (*FirewallProfile, error)
@@ -1852,6 +1938,28 @@ func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
 			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates FirewallProfile object and synchronously triggers local event
+func (api *firewallprofileAPI) CreateEvent(obj *security.FirewallProfile) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleCertificateEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchCertificate(handler CertificateHandler) error {
 // CertificateAPI returns
 type CertificateAPI interface {
 	Create(obj *security.Certificate) error
+	CreateEvent(obj *security.Certificate) error
 	Update(obj *security.Certificate) error
 	Delete(obj *security.Certificate) error
 	Find(meta *api.ObjectMeta) (*Certificate, error)
@@ -2330,6 +2443,28 @@ func (api *certificateAPI) Create(obj *security.Certificate) error {
 			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Certificate object and synchronously triggers local event
+func (api *certificateAPI) CreateEvent(obj *security.Certificate) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2471,7 +2606,9 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2552,7 +2689,9 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventParallel(evt *kvstore.Wat
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2782,6 +2921,7 @@ func (ct *ctrlerCtx) WatchTrafficEncryptionPolicy(handler TrafficEncryptionPolic
 // TrafficEncryptionPolicyAPI returns
 type TrafficEncryptionPolicyAPI interface {
 	Create(obj *security.TrafficEncryptionPolicy) error
+	CreateEvent(obj *security.TrafficEncryptionPolicy) error
 	Update(obj *security.TrafficEncryptionPolicy) error
 	Delete(obj *security.TrafficEncryptionPolicy) error
 	Find(meta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
@@ -2808,6 +2948,28 @@ func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPol
 			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates TrafficEncryptionPolicy object and synchronously triggers local event
+func (api *trafficencryptionpolicyAPI) CreateEvent(obj *security.TrafficEncryptionPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

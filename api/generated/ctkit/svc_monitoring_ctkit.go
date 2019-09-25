@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchEventPolicy(handler EventPolicyHandler) error {
 // EventPolicyAPI returns
 type EventPolicyAPI interface {
 	Create(obj *monitoring.EventPolicy) error
+	CreateEvent(obj *monitoring.EventPolicy) error
 	Update(obj *monitoring.EventPolicy) error
 	Delete(obj *monitoring.EventPolicy) error
 	Find(meta *api.ObjectMeta) (*EventPolicy, error)
@@ -418,6 +423,28 @@ func (api *eventpolicyAPI) Create(obj *monitoring.EventPolicy) error {
 			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates EventPolicy object and synchronously triggers local event
+func (api *eventpolicyAPI) CreateEvent(obj *monitoring.EventPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleStatsPolicyEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchStatsPolicy(handler StatsPolicyHandler) error {
 // StatsPolicyAPI returns
 type StatsPolicyAPI interface {
 	Create(obj *monitoring.StatsPolicy) error
+	CreateEvent(obj *monitoring.StatsPolicy) error
 	Update(obj *monitoring.StatsPolicy) error
 	Delete(obj *monitoring.StatsPolicy) error
 	Find(meta *api.ObjectMeta) (*StatsPolicy, error)
@@ -896,6 +928,28 @@ func (api *statspolicyAPI) Create(obj *monitoring.StatsPolicy) error {
 			_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates StatsPolicy object and synchronously triggers local event
+func (api *statspolicyAPI) CreateEvent(obj *monitoring.StatsPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchFwlogPolicy(handler FwlogPolicyHandler) error {
 // FwlogPolicyAPI returns
 type FwlogPolicyAPI interface {
 	Create(obj *monitoring.FwlogPolicy) error
+	CreateEvent(obj *monitoring.FwlogPolicy) error
 	Update(obj *monitoring.FwlogPolicy) error
 	Delete(obj *monitoring.FwlogPolicy) error
 	Find(meta *api.ObjectMeta) (*FwlogPolicy, error)
@@ -1374,6 +1433,28 @@ func (api *fwlogpolicyAPI) Create(obj *monitoring.FwlogPolicy) error {
 			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates FwlogPolicy object and synchronously triggers local event
+func (api *fwlogpolicyAPI) CreateEvent(obj *monitoring.FwlogPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallel(evt *kvstore.WatchEvent
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchFlowExportPolicy(handler FlowExportPolicyHandler) erro
 // FlowExportPolicyAPI returns
 type FlowExportPolicyAPI interface {
 	Create(obj *monitoring.FlowExportPolicy) error
+	CreateEvent(obj *monitoring.FlowExportPolicy) error
 	Update(obj *monitoring.FlowExportPolicy) error
 	Delete(obj *monitoring.FlowExportPolicy) error
 	Find(meta *api.ObjectMeta) (*FlowExportPolicy, error)
@@ -1852,6 +1938,28 @@ func (api *flowexportpolicyAPI) Create(obj *monitoring.FlowExportPolicy) error {
 			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates FlowExportPolicy object and synchronously triggers local event
+func (api *flowexportpolicyAPI) CreateEvent(obj *monitoring.FlowExportPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleAlertEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchAlert(handler AlertHandler) error {
 // AlertAPI returns
 type AlertAPI interface {
 	Create(obj *monitoring.Alert) error
+	CreateEvent(obj *monitoring.Alert) error
 	Update(obj *monitoring.Alert) error
 	Delete(obj *monitoring.Alert) error
 	Find(meta *api.ObjectMeta) (*Alert, error)
@@ -2330,6 +2443,28 @@ func (api *alertAPI) Create(obj *monitoring.Alert) error {
 			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Alert object and synchronously triggers local event
+func (api *alertAPI) CreateEvent(obj *monitoring.Alert) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2471,7 +2606,9 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2552,7 +2689,9 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallel(evt *kvstore.WatchEvent) err
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2782,6 +2921,7 @@ func (ct *ctrlerCtx) WatchAlertPolicy(handler AlertPolicyHandler) error {
 // AlertPolicyAPI returns
 type AlertPolicyAPI interface {
 	Create(obj *monitoring.AlertPolicy) error
+	CreateEvent(obj *monitoring.AlertPolicy) error
 	Update(obj *monitoring.AlertPolicy) error
 	Delete(obj *monitoring.AlertPolicy) error
 	Find(meta *api.ObjectMeta) (*AlertPolicy, error)
@@ -2808,6 +2948,28 @@ func (api *alertpolicyAPI) Create(obj *monitoring.AlertPolicy) error {
 			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates AlertPolicy object and synchronously triggers local event
+func (api *alertpolicyAPI) CreateEvent(obj *monitoring.AlertPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2949,7 +3111,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -3030,7 +3194,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallel(evt *kvstore.WatchEvent
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -3260,6 +3426,7 @@ func (ct *ctrlerCtx) WatchAlertDestination(handler AlertDestinationHandler) erro
 // AlertDestinationAPI returns
 type AlertDestinationAPI interface {
 	Create(obj *monitoring.AlertDestination) error
+	CreateEvent(obj *monitoring.AlertDestination) error
 	Update(obj *monitoring.AlertDestination) error
 	Delete(obj *monitoring.AlertDestination) error
 	Find(meta *api.ObjectMeta) (*AlertDestination, error)
@@ -3286,6 +3453,28 @@ func (api *alertdestinationAPI) Create(obj *monitoring.AlertDestination) error {
 			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates AlertDestination object and synchronously triggers local event
+func (api *alertdestinationAPI) CreateEvent(obj *monitoring.AlertDestination) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -3427,7 +3616,9 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -3508,7 +3699,9 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallel(evt *kvstore.WatchEvent) e
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -3738,6 +3931,7 @@ func (ct *ctrlerCtx) WatchMirrorSession(handler MirrorSessionHandler) error {
 // MirrorSessionAPI returns
 type MirrorSessionAPI interface {
 	Create(obj *monitoring.MirrorSession) error
+	CreateEvent(obj *monitoring.MirrorSession) error
 	Update(obj *monitoring.MirrorSession) error
 	Delete(obj *monitoring.MirrorSession) error
 	Find(meta *api.ObjectMeta) (*MirrorSession, error)
@@ -3764,6 +3958,28 @@ func (api *mirrorsessionAPI) Create(obj *monitoring.MirrorSession) error {
 			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates MirrorSession object and synchronously triggers local event
+func (api *mirrorsessionAPI) CreateEvent(obj *monitoring.MirrorSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -3905,7 +4121,9 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -3986,7 +4204,9 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallel(evt *kvstore.Watc
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -4216,6 +4436,7 @@ func (ct *ctrlerCtx) WatchTroubleshootingSession(handler TroubleshootingSessionH
 // TroubleshootingSessionAPI returns
 type TroubleshootingSessionAPI interface {
 	Create(obj *monitoring.TroubleshootingSession) error
+	CreateEvent(obj *monitoring.TroubleshootingSession) error
 	Update(obj *monitoring.TroubleshootingSession) error
 	Delete(obj *monitoring.TroubleshootingSession) error
 	Find(meta *api.ObjectMeta) (*TroubleshootingSession, error)
@@ -4242,6 +4463,28 @@ func (api *troubleshootingsessionAPI) Create(obj *monitoring.TroubleshootingSess
 			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates TroubleshootingSession object and synchronously triggers local event
+func (api *troubleshootingsessionAPI) CreateEvent(obj *monitoring.TroubleshootingSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -4383,7 +4626,9 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -4464,7 +4709,9 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallel(evt *kvstore.WatchEve
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -4694,6 +4941,7 @@ func (ct *ctrlerCtx) WatchTechSupportRequest(handler TechSupportRequestHandler) 
 // TechSupportRequestAPI returns
 type TechSupportRequestAPI interface {
 	Create(obj *monitoring.TechSupportRequest) error
+	CreateEvent(obj *monitoring.TechSupportRequest) error
 	Update(obj *monitoring.TechSupportRequest) error
 	Delete(obj *monitoring.TechSupportRequest) error
 	Find(meta *api.ObjectMeta) (*TechSupportRequest, error)
@@ -4720,6 +4968,28 @@ func (api *techsupportrequestAPI) Create(obj *monitoring.TechSupportRequest) err
 			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates TechSupportRequest object and synchronously triggers local event
+func (api *techsupportrequestAPI) CreateEvent(obj *monitoring.TechSupportRequest) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleOrchestratorEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallel(evt *kvstore.WatchEvent) er
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchOrchestrator(handler OrchestratorHandler) error {
 // OrchestratorAPI returns
 type OrchestratorAPI interface {
 	Create(obj *orchestration.Orchestrator) error
+	CreateEvent(obj *orchestration.Orchestrator) error
 	Update(obj *orchestration.Orchestrator) error
 	Delete(obj *orchestration.Orchestrator) error
 	Find(meta *api.ObjectMeta) (*Orchestrator, error)
@@ -418,6 +423,28 @@ func (api *orchestratorAPI) Create(obj *orchestration.Orchestrator) error {
 			_, err = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Orchestrator object and synchronously triggers local event
+func (api *orchestratorAPI) CreateEvent(obj *orchestration.Orchestrator) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

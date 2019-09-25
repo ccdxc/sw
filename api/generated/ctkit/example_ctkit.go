@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleOrderEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchOrder(handler OrderHandler) error {
 // OrderAPI returns
 type OrderAPI interface {
 	Create(obj *bookstore.Order) error
+	CreateEvent(obj *bookstore.Order) error
 	Update(obj *bookstore.Order) error
 	Delete(obj *bookstore.Order) error
 	Find(meta *api.ObjectMeta) (*Order, error)
@@ -418,6 +423,28 @@ func (api *orderAPI) Create(obj *bookstore.Order) error {
 			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Order object and synchronously triggers local event
+func (api *orderAPI) CreateEvent(obj *bookstore.Order) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Order().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleBookEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchBook(handler BookHandler) error {
 // BookAPI returns
 type BookAPI interface {
 	Create(obj *bookstore.Book) error
+	CreateEvent(obj *bookstore.Book) error
 	Update(obj *bookstore.Book) error
 	Delete(obj *bookstore.Book) error
 	Find(meta *api.ObjectMeta) (*Book, error)
@@ -896,6 +928,28 @@ func (api *bookAPI) Create(obj *bookstore.Book) error {
 			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Book object and synchronously triggers local event
+func (api *bookAPI) CreateEvent(obj *bookstore.Book) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Book().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handlePublisherEventParallel(evt *kvstore.WatchEvent) error
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchPublisher(handler PublisherHandler) error {
 // PublisherAPI returns
 type PublisherAPI interface {
 	Create(obj *bookstore.Publisher) error
+	CreateEvent(obj *bookstore.Publisher) error
 	Update(obj *bookstore.Publisher) error
 	Delete(obj *bookstore.Publisher) error
 	Find(meta *api.ObjectMeta) (*Publisher, error)
@@ -1374,6 +1433,28 @@ func (api *publisherAPI) Create(obj *bookstore.Publisher) error {
 			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Publisher object and synchronously triggers local event
+func (api *publisherAPI) CreateEvent(obj *bookstore.Publisher) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleStoreEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchStore(handler StoreHandler) error {
 // StoreAPI returns
 type StoreAPI interface {
 	Create(obj *bookstore.Store) error
+	CreateEvent(obj *bookstore.Store) error
 	Update(obj *bookstore.Store) error
 	Delete(obj *bookstore.Store) error
 	Find(meta *api.ObjectMeta) (*Store, error)
@@ -1852,6 +1938,28 @@ func (api *storeAPI) Create(obj *bookstore.Store) error {
 			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Store object and synchronously triggers local event
+func (api *storeAPI) CreateEvent(obj *bookstore.Store) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Store().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleCouponEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchCoupon(handler CouponHandler) error {
 // CouponAPI returns
 type CouponAPI interface {
 	Create(obj *bookstore.Coupon) error
+	CreateEvent(obj *bookstore.Coupon) error
 	Update(obj *bookstore.Coupon) error
 	Delete(obj *bookstore.Coupon) error
 	Find(meta *api.ObjectMeta) (*Coupon, error)
@@ -2330,6 +2443,28 @@ func (api *couponAPI) Create(obj *bookstore.Coupon) error {
 			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Coupon object and synchronously triggers local event
+func (api *couponAPI) CreateEvent(obj *bookstore.Coupon) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -2471,7 +2606,9 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2552,7 +2689,9 @@ func (ct *ctrlerCtx) handleCustomerEventParallel(evt *kvstore.WatchEvent) error 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2782,6 +2921,7 @@ func (ct *ctrlerCtx) WatchCustomer(handler CustomerHandler) error {
 // CustomerAPI returns
 type CustomerAPI interface {
 	Create(obj *bookstore.Customer) error
+	CreateEvent(obj *bookstore.Customer) error
 	Update(obj *bookstore.Customer) error
 	Delete(obj *bookstore.Customer) error
 	Find(meta *api.ObjectMeta) (*Customer, error)
@@ -2808,6 +2948,28 @@ func (api *customerAPI) Create(obj *bookstore.Customer) error {
 			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Customer object and synchronously triggers local event
+func (api *customerAPI) CreateEvent(obj *bookstore.Customer) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

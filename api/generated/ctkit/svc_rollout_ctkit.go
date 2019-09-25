@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleRolloutEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchRollout(handler RolloutHandler) error {
 // RolloutAPI returns
 type RolloutAPI interface {
 	Create(obj *rollout.Rollout) error
+	CreateEvent(obj *rollout.Rollout) error
 	Update(obj *rollout.Rollout) error
 	Delete(obj *rollout.Rollout) error
 	Find(meta *api.ObjectMeta) (*Rollout, error)
@@ -418,6 +423,28 @@ func (api *rolloutAPI) Create(obj *rollout.Rollout) error {
 			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Rollout object and synchronously triggers local event
+func (api *rolloutAPI) CreateEvent(obj *rollout.Rollout) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleRolloutActionEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallel(evt *kvstore.WatchEvent) e
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchRolloutAction(handler RolloutActionHandler) error {
 // RolloutActionAPI returns
 type RolloutActionAPI interface {
 	Create(obj *rollout.RolloutAction) error
+	CreateEvent(obj *rollout.RolloutAction) error
 	Update(obj *rollout.RolloutAction) error
 	Delete(obj *rollout.RolloutAction) error
 	Find(meta *api.ObjectMeta) (*RolloutAction, error)
@@ -896,6 +928,28 @@ func (api *rolloutactionAPI) Create(obj *rollout.RolloutAction) error {
 			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates RolloutAction object and synchronously triggers local event
+func (api *rolloutactionAPI) CreateEvent(obj *rollout.RolloutAction) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

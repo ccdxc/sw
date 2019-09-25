@@ -209,6 +209,7 @@ func (h *hub) sendNotify(cl *hubClient, msg *messenger.Message) {
 
 	_, err := cl.connection.Write(buffer.Bytes())
 	if err != nil {
+		cl.connection.Close()
 		log.Printf("Error sending notify: Err %v", err)
 	}
 }
@@ -227,6 +228,7 @@ func (h *hub) sendStatus(conn net.Conn) {
 
 	_, err := conn.Write(buffer.Bytes())
 	if err != nil {
-		panic(err)
+		conn.Close()
+		return
 	}
 }

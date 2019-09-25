@@ -385,6 +385,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 		sgp.ObjectMeta = nsgp.ObjectMeta
 		return nil
 	}
+
+	// update old state
 	sgp.ObjectMeta = nsgp.ObjectMeta
 	sgp.Spec = nsgp.Spec
 

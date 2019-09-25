@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleBucketEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleBucketEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchBucket(handler BucketHandler) error {
 // BucketAPI returns
 type BucketAPI interface {
 	Create(obj *objstore.Bucket) error
+	CreateEvent(obj *objstore.Bucket) error
 	Update(obj *objstore.Bucket) error
 	Delete(obj *objstore.Bucket) error
 	Find(meta *api.ObjectMeta) (*Bucket, error)
@@ -418,6 +423,28 @@ func (api *bucketAPI) Create(obj *objstore.Bucket) error {
 			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Bucket object and synchronously triggers local event
+func (api *bucketAPI) CreateEvent(obj *objstore.Bucket) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleObjectEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleObjectEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchObject(handler ObjectHandler) error {
 // ObjectAPI returns
 type ObjectAPI interface {
 	Create(obj *objstore.Object) error
+	CreateEvent(obj *objstore.Object) error
 	Update(obj *objstore.Object) error
 	Delete(obj *objstore.Object) error
 	Find(meta *api.ObjectMeta) (*Object, error)
@@ -896,6 +928,28 @@ func (api *objectAPI) Create(obj *objstore.Object) error {
 			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Object object and synchronously triggers local event
+func (api *objectAPI) CreateEvent(obj *objstore.Object) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleModuleEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleModuleEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchModule(handler ModuleHandler) error {
 // ModuleAPI returns
 type ModuleAPI interface {
 	Create(obj *diagnostics.Module) error
+	CreateEvent(obj *diagnostics.Module) error
 	Update(obj *diagnostics.Module) error
 	Delete(obj *diagnostics.Module) error
 	Find(meta *api.ObjectMeta) (*Module, error)
@@ -418,6 +423,28 @@ func (api *moduleAPI) Create(obj *diagnostics.Module) error {
 			_, err = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Module object and synchronously triggers local event
+func (api *moduleAPI) CreateEvent(obj *diagnostics.Module) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})

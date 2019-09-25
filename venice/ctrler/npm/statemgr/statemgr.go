@@ -45,10 +45,11 @@ type Topics struct {
 // Statemgr is the object state manager
 type Statemgr struct {
 	sync.Mutex
-	mbus                 *nimbus.MbusServer // nimbus server
-	periodicUpdaterQueue chan updatable     // queue for periodically writing items back to apiserver
-	ctrler               ctkit.Controller   // controller instance
-	topics               Topics             // message bus topics
+	mbus                 *nimbus.MbusServer     // nimbus server
+	periodicUpdaterQueue chan updatable         // queue for periodically writing items back to apiserver
+	ctrler               ctkit.Controller       // controller instance
+	topics               Topics                 // message bus topics
+	networkLocks         map[string]*sync.Mutex // lock for performing network operation
 	logger               log.Logger
 }
 
@@ -96,8 +97,9 @@ func (sm *Statemgr) Stop() error {
 func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, options ...Option) (*Statemgr, error) {
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		mbus:   mserver,
-		logger: logger,
+		mbus:         mserver,
+		networkLocks: make(map[string]*sync.Mutex),
+		logger:       logger,
 	}
 
 	// create controller instance

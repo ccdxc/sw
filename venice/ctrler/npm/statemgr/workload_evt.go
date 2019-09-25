@@ -212,6 +212,36 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	return ws.deleteEndpoints()
 }
 
+// createNetwork creates a network for workload's external vlan
+func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
+	// acquire a lock per network
+	lk, ok := ws.stateMgr.networkLocks[netName]
+	if !ok {
+		lk = &sync.Mutex{}
+		ws.stateMgr.networkLocks[netName] = lk
+	}
+	lk.Lock()
+	defer lk.Unlock()
+
+	nwt := network.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      netName,
+			Namespace: ws.Workload.Namespace,
+			Tenant:    ws.Workload.Tenant,
+		},
+		Spec: network.NetworkSpec{
+			IPv4Subnet:  "",
+			IPv4Gateway: "",
+			VlanID:      extVlan,
+		},
+		Status: network.NetworkStatus{},
+	}
+
+	// create it in apiserver
+	return ws.stateMgr.ctrler.Network().CreateEvent(&nwt)
+}
+
 // createEndpoints tries to create all endpoints for a workload
 func (ws *WorkloadState) createEndpoints() error {
 	var ns *NetworkState
@@ -230,20 +260,7 @@ func (ws *WorkloadState) createEndpoints() error {
 		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
-			err = ws.stateMgr.ctrler.Network().Create(&network.Network{
-				TypeMeta: api.TypeMeta{Kind: "Network"},
-				ObjectMeta: api.ObjectMeta{
-					Name:      netName,
-					Namespace: ws.Workload.Namespace,
-					Tenant:    ws.Workload.Tenant,
-				},
-				Spec: network.NetworkSpec{
-					IPv4Subnet:  "",
-					IPv4Gateway: "",
-					VlanID:      ws.Workload.Spec.Interfaces[ii].ExternalVlan,
-				},
-				Status: network.NetworkStatus{},
-			})
+			err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 			if err != nil {
 				log.Errorf("Error creating network. Err: %v", err)
 				return err

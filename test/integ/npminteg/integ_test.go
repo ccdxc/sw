@@ -74,9 +74,6 @@ var (
 
 // Hook up gocheck into the "go test" runner.
 func TestNpmInteg(t *testing.T) {
-	// TODO
-	t.Skip("Enable after fixing issues found in https://github.com/pensando/sw/issues/13233")
-
 	// integ test suite
 	var sts = &integTestSuite{}
 

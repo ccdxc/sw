@@ -405,7 +405,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 		if gerr != nil {
 			return false, gerr
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 1) {
 			return false, tsgp
 		}
 		return true, nil

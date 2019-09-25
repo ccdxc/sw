@@ -81,7 +81,9 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -162,7 +164,9 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -392,6 +396,7 @@ func (ct *ctrlerCtx) WatchNetwork(handler NetworkHandler) error {
 // NetworkAPI returns
 type NetworkAPI interface {
 	Create(obj *network.Network) error
+	CreateEvent(obj *network.Network) error
 	Update(obj *network.Network) error
 	Delete(obj *network.Network) error
 	Find(meta *api.ObjectMeta) (*Network, error)
@@ -418,6 +423,28 @@ func (api *networkAPI) Create(obj *network.Network) error {
 			_, err = apicl.NetworkV1().Network().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Network object and synchronously triggers local event
+func (api *networkAPI) CreateEvent(obj *network.Network) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().Network().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().Network().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -559,7 +586,9 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -640,7 +669,9 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -870,6 +901,7 @@ func (ct *ctrlerCtx) WatchService(handler ServiceHandler) error {
 // ServiceAPI returns
 type ServiceAPI interface {
 	Create(obj *network.Service) error
+	CreateEvent(obj *network.Service) error
 	Update(obj *network.Service) error
 	Delete(obj *network.Service) error
 	Find(meta *api.ObjectMeta) (*Service, error)
@@ -896,6 +928,28 @@ func (api *serviceAPI) Create(obj *network.Service) error {
 			_, err = apicl.NetworkV1().Service().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates Service object and synchronously triggers local event
+func (api *serviceAPI) CreateEvent(obj *network.Service) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().Service().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().Service().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1037,7 +1091,9 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1118,7 +1174,9 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1348,6 +1406,7 @@ func (ct *ctrlerCtx) WatchLbPolicy(handler LbPolicyHandler) error {
 // LbPolicyAPI returns
 type LbPolicyAPI interface {
 	Create(obj *network.LbPolicy) error
+	CreateEvent(obj *network.LbPolicy) error
 	Update(obj *network.LbPolicy) error
 	Delete(obj *network.LbPolicy) error
 	Find(meta *api.ObjectMeta) (*LbPolicy, error)
@@ -1374,6 +1433,28 @@ func (api *lbpolicyAPI) Create(obj *network.LbPolicy) error {
 			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates LbPolicy object and synchronously triggers local event
+func (api *lbpolicyAPI) CreateEvent(obj *network.LbPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1515,7 +1596,9 @@ func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1596,7 +1679,9 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -1826,6 +1911,7 @@ func (ct *ctrlerCtx) WatchVirtualRouter(handler VirtualRouterHandler) error {
 // VirtualRouterAPI returns
 type VirtualRouterAPI interface {
 	Create(obj *network.VirtualRouter) error
+	CreateEvent(obj *network.VirtualRouter) error
 	Update(obj *network.VirtualRouter) error
 	Delete(obj *network.VirtualRouter) error
 	Find(meta *api.ObjectMeta) (*VirtualRouter, error)
@@ -1852,6 +1938,28 @@ func (api *virtualrouterAPI) Create(obj *network.VirtualRouter) error {
 			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates VirtualRouter object and synchronously triggers local event
+func (api *virtualrouterAPI) CreateEvent(obj *network.VirtualRouter) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
@@ -1993,7 +2101,9 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error 
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2074,7 +2184,9 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
+		ct.Lock()
 		handler, ok := ct.handlers[kind]
+		ct.Unlock()
 		if !ok {
 			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
@@ -2304,6 +2416,7 @@ func (ct *ctrlerCtx) WatchNetworkInterface(handler NetworkInterfaceHandler) erro
 // NetworkInterfaceAPI returns
 type NetworkInterfaceAPI interface {
 	Create(obj *network.NetworkInterface) error
+	CreateEvent(obj *network.NetworkInterface) error
 	Update(obj *network.NetworkInterface) error
 	Delete(obj *network.NetworkInterface) error
 	Find(meta *api.ObjectMeta) (*NetworkInterface, error)
@@ -2330,6 +2443,28 @@ func (api *networkinterfaceAPI) Create(obj *network.NetworkInterface) error {
 			_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
 		}
 		return err
+	}
+
+	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates NetworkInterface object and synchronously triggers local event
+func (api *networkinterfaceAPI) CreateEvent(obj *network.NetworkInterface) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
 	}
 
 	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
