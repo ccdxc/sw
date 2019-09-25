@@ -2769,6 +2769,17 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	return rc;
 }
 
+static void ionic_cq_add_ref(struct ionic_cq *cq)
+{
+	refcount_inc(&cq->cq_refcnt);
+}
+
+static void ionic_cq_rem_ref(struct ionic_cq *cq)
+{
+	if (refcount_dec_and_test(&cq->cq_refcnt))
+		complete(&cq->cq_rel_comp);
+}
+
 static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 					  struct ionic_tbl_buf *buf,
 					  const struct ib_cq_init_attr *attr,
@@ -2780,7 +2791,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
 	int rc, eq_idx;
-	unsigned long irqflags;
 
 	if (!ctx) {
 		rc = ionic_validate_udata(udata, 0, 0);
@@ -2865,13 +2875,12 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_resp;
 
-	rc = xa_err(xa_store(&dev->cq_tbl, cq->cqid, cq, GFP_KERNEL));
+	init_completion(&cq->cq_rel_comp);
+	refcount_set(&cq->cq_refcnt, 1);
+
+	rc = xa_err(xa_store_irq(&dev->cq_tbl, cq->cqid, cq, GFP_KERNEL));
 	if (rc)
 		goto err_xa;
-
-	spin_lock_irqsave(&dev->dev_lock, irqflags);
-	list_add_tail(&cq->cq_list_ent, &dev->cq_list);
-	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	ionic_dbgfs_add_cq(dev, cq);
 
@@ -2895,15 +2904,10 @@ err_cq:
 
 static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
-	unsigned long irqflags;
+	xa_erase_irq(&dev->cq_tbl, cq->cqid);
 
-	spin_lock_irqsave(&dev->dev_lock, irqflags);
-	list_del(&cq->cq_list_ent);
-	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
-
-	xa_erase(&dev->cq_tbl, cq->cqid);
-
-	synchronize_rcu();
+	ionic_cq_rem_ref(cq);
+	wait_for_completion(&cq->cq_rel_comp);
 
 	ionic_dbgfs_rm_cq(cq);
 
@@ -3020,8 +3024,6 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ib_wc *wc)
 
 	wc->status = IB_WC_WR_FLUSH_ERR;
 	wc->wr_id = meta->wrid;
-
-	/* XXX possible use-after-free after rcu read unlock */
 	wc->qp = &qp->ibqp;
 
 	meta->next = qp->rq_meta_head;
@@ -3162,7 +3164,6 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	wc->wr_id = meta->wrid;
 
 	if (!cqe_qp->is_srq)
-		/* XXX possible use-after-free after rcu read unlock */
 		wc->qp = &cqe_qp->ibqp;
 
 	if (ionic_v1_cqe_error(cqe)) {
@@ -3295,8 +3296,6 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 
 	wc->status = meta->ibsts;
 	wc->wr_id = meta->wrid;
-
-	/* XXX possible use-after-free after rcu read unlock */
 	wc->qp = &qp->ibqp;
 
 	if (meta->ibsts == IB_WC_SUCCESS) {
@@ -4374,6 +4373,17 @@ static void ionic_qp_rq_destroy(struct ionic_ibdev *dev,
 		ionic_queue_destroy(&qp->rq, dev->hwdev);
 }
 
+static void ionic_qp_add_ref(struct ionic_qp *qp)
+{
+        refcount_inc(&qp->qp_refcnt);
+}
+
+static void ionic_qp_rem_ref(struct ionic_qp *qp)
+{
+        if (refcount_dec_and_test(&qp->qp_refcnt))
+                complete(&qp->qp_rel_comp);
+}
+
 static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 				     struct ib_qp_init_attr *attr,
 				     struct ib_udata *udata)
@@ -4511,7 +4521,10 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	qp->ibqp.qp_num = qp->qpid;
 
-	rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+	init_completion(&qp->qp_rel_comp);
+	refcount_set(&qp->qp_refcnt, 1);
+
+	rc = xa_err(xa_store_irq(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
 	if (rc)
 		goto err_resp;
 
@@ -4538,10 +4551,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 			ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
 						  qp->rq_spec);
 	}
-
-	spin_lock_irqsave(&dev->dev_lock, irqflags);
-	list_add_tail(&qp->qp_list_ent, &dev->qp_list);
-	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
 	ionic_dbgfs_add_qp(dev, qp);
 
@@ -4622,22 +4631,24 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 	unsigned long irqflags;
 	int i;
 
+	local_irq_save(irqflags);
+
 	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
-		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_lock(&cq->lock);
 		ionic_clean_cq(cq, qp->qpid);
-		spin_unlock_irqrestore(&cq->lock, irqflags);
+		spin_unlock(&cq->lock);
 	}
 
 	if (qp->ibqp.recv_cq) {
 		cq = to_ionic_cq(qp->ibqp.recv_cq);
-		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_lock(&cq->lock);
 		ionic_clean_cq(cq, qp->qpid);
-		spin_unlock_irqrestore(&cq->lock, irqflags);
+		spin_unlock(&cq->lock);
 	}
 
 	if (qp->has_sq) {
-		spin_lock_irqsave(&qp->sq_lock, irqflags);
+		spin_lock(&qp->sq_lock);
 		qp->sq_flush = false;
 		qp->sq_flush_rcvd = false;
 		qp->sq_msn_prod = 0;
@@ -4646,11 +4657,11 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->sq_cmb_prod = 0;
 		qp->sq.prod = 0;
 		qp->sq.cons = 0;
-		spin_unlock_irqrestore(&qp->sq_lock, irqflags);
+		spin_unlock(&qp->sq_lock);
 	}
 
 	if (qp->has_rq) {
-		spin_lock_irqsave(&qp->rq_lock, irqflags);
+		spin_lock(&qp->rq_lock);
 		qp->rq_flush = false;
 		qp->rq_cmb_prod = 0;
 		qp->rq.prod = 0;
@@ -4659,8 +4670,10 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 			qp->rq_meta[i].next = &qp->rq_meta[i + 1];
 		qp->rq_meta[i].next = IONIC_META_LAST;
 		qp->rq_meta_head = &qp->rq_meta[0];
-		spin_unlock_irqrestore(&qp->rq_lock, irqflags);
+		spin_unlock(&qp->rq_lock);
 	}
+
+	local_irq_restore(irqflags);
 }
 
 static bool ionic_qp_cur_state_is_ok(enum ib_qp_state q_state,
@@ -5000,13 +5013,12 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	if (rc)
 		return rc;
 
+	xa_erase_irq(&dev->qp_tbl, qp->qpid);
+
+	ionic_qp_rem_ref(qp);
+	wait_for_completion(&qp->qp_rel_comp);
+
 	ionic_dbgfs_rm_qp(qp);
-
-	spin_lock_irqsave(&dev->dev_lock, irqflags);
-	list_del(&qp->qp_list_ent);
-	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
-
-	xa_erase(&dev->qp_tbl, qp->qpid);
 
 	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
@@ -5921,7 +5933,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
 		qp->ibsrq.ext.xrc.srq_num = qp->qpid;
 
-		rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+		rc = xa_err(xa_store_irq(&dev->qp_tbl,
+					 qp->qpid, qp, GFP_KERNEL));
 		if (rc)
 			goto err_resp;
 
@@ -6008,7 +6021,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	ionic_dbgfs_rm_qp(qp);
 
 	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
-		xa_erase(&dev->qp_tbl, qp->qpid);
+		xa_erase_irq(&dev->qp_tbl, qp->qpid);
 
 #ifdef HAVE_SRQ_EXT_CQ
 		cq = to_ionic_cq(qp->ibsrq.ext.cq);
@@ -6120,10 +6133,14 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 {
 	struct ib_event ibev;
 	struct ionic_cq *cq;
+	unsigned long irqflags;
 
-	rcu_read_lock();
-
+	xa_lock_irqsave(&dev->cq_tbl, irqflags);
 	cq = xa_load(&dev->cq_tbl, cqid);
+	if (cq)
+		ionic_cq_add_ref(cq);
+	xa_unlock_irqrestore(&dev->cq_tbl, irqflags);
+
 	if (!cq) {
 		dev_dbg(&dev->ibdev.dev, "missing cqid %#x code %u\n",
 			cqid, code);
@@ -6153,17 +6170,22 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 		cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
 
 out:
-	rcu_read_unlock();
+	if (cq)
+		ionic_cq_rem_ref(cq);
 }
 
 static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 {
 	struct ib_event ibev;
 	struct ionic_qp *qp;
+	unsigned long irqflags;
 
-	rcu_read_lock();
-
+	xa_lock_irqsave(&dev->qp_tbl, irqflags);
 	qp = xa_load(&dev->qp_tbl, qpid);
+	if (qp)
+		ionic_qp_add_ref(qp);
+	xa_unlock_irqrestore(&dev->qp_tbl, irqflags);
+
 	if (!qp) {
 		dev_dbg(&dev->ibdev.dev, "missing qpid %#x code %u\n",
 			qpid, code);
@@ -6233,7 +6255,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 	}
 
 out:
-	rcu_read_unlock();
+	if (qp)
+		ionic_qp_rem_ref(qp);
 }
 
 static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
@@ -6636,8 +6659,6 @@ err_aq:
 
 static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 {
-	struct ionic_qp *qp;
-	struct ionic_cq *cq;
 	bool do_flush = false;
 	unsigned long irqflags;
 	int i;
@@ -6662,13 +6683,38 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 	}
 
 	if (do_flush) {
-		/* Flush qp send and recv, and notify completion */
-		spin_lock(&dev->dev_lock);
-		list_for_each_entry(qp, &dev->qp_list, qp_list_ent)
+#ifdef HAVE_XARRAY
+		struct ionic_qp *qp;
+		struct ionic_cq *cq;
+		unsigned long index;
+
+		/* Flush qp send and recv */
+		xa_lock(&dev->qp_tbl);
+		xa_for_each(&dev->qp_tbl, index, qp)
 			ionic_flush_qp(qp);
-		list_for_each_entry(cq, &dev->cq_list, cq_list_ent)
+		xa_unlock(&dev->qp_tbl);
+
+		/* Notify completions */
+		xa_lock(&dev->cq_tbl);
+		xa_for_each(&dev->cq_tbl, index, cq)
 			ionic_notify_flush_cq(cq);
-		spin_unlock(&dev->dev_lock);
+		xa_unlock(&dev->cq_tbl);
+#else
+		struct xa_iter iter;
+		void **slot;
+
+		/* Flush qp send and recv */
+		xa_lock(&dev->qp_tbl);
+		xa_for_each_slot(&dev->qp_tbl, slot, &iter)
+			ionic_flush_qp(*slot);
+		xa_unlock(&dev->qp_tbl);
+
+		/* Notify completions */
+		xa_lock(&dev->cq_tbl);
+		xa_for_each_slot(&dev->cq_tbl, slot, &iter)
+			ionic_notify_flush_cq(*slot);
+		xa_unlock(&dev->cq_tbl);
+#endif /* HAVE_XARRAY */
 	}
 
 	local_irq_restore(irqflags);
@@ -6759,11 +6805,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 
 	INIT_WORK(&dev->reset_work, ionic_reset_work);
 	INIT_DELAYED_WORK(&dev->admin_dwork, ionic_admin_dwork);
-	spin_lock_init(&dev->dev_lock);
 	dev->admin_state = IONIC_ADMIN_KILLED;
-
-	INIT_LIST_HEAD(&dev->qp_list);
-	INIT_LIST_HEAD(&dev->cq_list);
 
 	if (ionic_aq_count > 0 && ionic_aq_count < dev->aq_count) {
 		dev_dbg(&dev->ibdev.dev, "limiting adminq count to %d\n",
@@ -7435,6 +7477,9 @@ static void ionic_netdev_work(struct work_struct *ws)
 			break;
 		}
 
+		/* Avoid spurious unregisters caused by ethernet LIF reset */
+		/* TODO: When Linux implements ethernet LIF reset */
+
 		netdev_dbg(ndev, "unregister ibdev\n");
 
 		ionic_api_set_private(work->lif, NULL, NULL,
@@ -7532,6 +7577,8 @@ static struct notifier_block ionic_netdev_notifier = {
 void ionic_ibdev_reset(struct ionic_ibdev *dev)
 {
 	int rc;
+
+	dev->reset_posted = true;
 
 	rc = ionic_netdev_event_post(dev->ndev, NETDEV_UNREGISTER);
 	if (rc) {

@@ -108,12 +108,6 @@ struct ionic_ibdev {
 	struct xarray		qp_tbl;
 	struct xarray		cq_tbl;
 
-	/* These lists are used in the slow path for device mgmt.
-	 * They are protected by the dev_lock.
-	 */
-	struct list_head	qp_list;
-	struct list_head	cq_list;
-
 	struct mutex		inuse_lock; /* for id reservation */
 	spinlock_t		inuse_splock; /* for ahid reservation */
 
@@ -129,9 +123,9 @@ struct ionic_ibdev {
 	int			next_srqid;
 
 	struct work_struct	reset_work;
+	bool			reset_posted;
 
 	struct delayed_work	admin_dwork;
-	spinlock_t		dev_lock;
 	struct ionic_aq		**aq_vec;
 	int			aq_count;
 
@@ -254,13 +248,15 @@ struct ionic_cq {
 	bool			flush;
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
-	struct list_head	cq_list_ent;
 
 	struct ionic_queue	q;
 	bool			color;
 	int			reserve;
 	u16			arm_any_prod;
 	u16			arm_sol_prod;
+
+	refcount_t		cq_refcnt;
+	struct completion	cq_rel_comp;
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
@@ -301,8 +297,6 @@ struct ionic_qp {
 
 	bool			sig_all;
 
-	struct list_head	qp_list_ent;
-
 	struct list_head	cq_poll_sq;
 	struct list_head	cq_flush_sq;
 	struct list_head	cq_flush_rq;
@@ -332,6 +326,9 @@ struct ionic_qp {
 	int			rq_spec;
 	u16			rq_old_prod;
 	u16			rq_cmb_prod;
+
+	refcount_t		qp_refcnt;
+	struct completion	qp_rel_comp;
 
 	/* infrequently accessed, keep at end */
 	int			sgid_index;

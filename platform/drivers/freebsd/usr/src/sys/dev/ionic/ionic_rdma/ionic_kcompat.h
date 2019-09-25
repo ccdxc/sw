@@ -150,33 +150,49 @@ dev_is_pci(struct device *d)
 	return true;
 }
 
+#define refcount_t            atomic_t
+#define refcount_set          atomic_set
+#define refcount_dec_and_test atomic_dec_and_test
+#define refcount_inc          atomic_inc
+
+/* Create an xarray that includes a radix_tree_root and a spinlock */
 #include <linux/radix-tree.h>
 
 struct xarray {
 	spinlock_t x_lock;
 	struct radix_tree_root x_tree;
 };
+#define xa_tree(_xa) &(_xa)->x_tree
+
+#define xa_lock(_xa) spin_lock(&(_xa)->x_lock)
+#define xa_unlock(_xa) spin_unlock(&(_xa)->x_lock);
+#define xa_lock_irq(_xa) spin_lock_irq(&(_xa)->x_lock)
+#define xa_unlock_irq(_xa) spin_unlock_irq(&(_xa)->x_lock)
+#define xa_lock_irqsave(_xa, _flags)					\
+	spin_lock_irqsave(&(_xa)->x_lock, _flags)
+#define xa_unlock_irqrestore(_xa, _flags)				\
+	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
 
 static inline void xa_init(struct xarray *xa)
 {
 	spin_lock_init(&xa->x_lock);
-	INIT_RADIX_TREE(&xa->x_tree, GFP_KERNEL);
+	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
 }
 
-static inline void *xa_load(struct xarray *xa, unsigned long idx)
-{
-	return radix_tree_lookup(&xa->x_tree, idx);
-}
+#define xa_iter radix_tree_iter
+#define xa_for_each_slot(_xa, _slot, _iter)				\
+	radix_tree_for_each_slot((_slot), xa_tree(_xa), (_iter), 0)
+#define xa_load(_xa, _idx) radix_tree_lookup(xa_tree(_xa), _idx)
+#define xa_destroy(_xa)
 
-static inline void *xa_store(struct xarray *xa, unsigned long idx, void *item,
-			     gfp_t unused)
+static inline void *xa_store_irq(struct xarray *xa, unsigned long idx,
+				 void *item, gfp_t unused)
 {
-	unsigned long flags;
 	int ret;
 
-	spin_lock_irqsave(&xa->x_lock, flags);
-	ret = radix_tree_insert(&xa->x_tree, idx, item);
-	spin_unlock_irqrestore(&xa->x_lock, flags);
+	xa_lock_irq(xa);
+	ret = radix_tree_insert(xa_tree(xa), idx, item);
+	xa_unlock_irq(xa);
 
 	return (ret ? ERR_PTR(ret) : item);
 }
@@ -186,41 +202,12 @@ static inline int xa_err(void *item)
 	return (IS_ERR(item) ? PTR_ERR(item) : 0);
 }
 
-static inline void xa_erase(struct xarray *xa, unsigned long idx)
+static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 {
-	unsigned long flags;
-
-	spin_lock_irqsave(&xa->x_lock, flags);
-	radix_tree_delete(&xa->x_tree, idx);
-	spin_unlock_irqrestore(&xa->x_lock, flags);
+	xa_lock_irq(xa);
+	radix_tree_delete(xa_tree(xa), idx);
+	xa_unlock_irq(xa);
 }
-
-static inline void xa_destroy(struct xarray *xa)
-{
-	/* No equivalent for radix-tree */
-}
-
-#ifndef HAVE_REAL_SRCU
-
-/* RCU cruft */
-#undef  rcu_read_lock
-#define rcu_read_lock()							\
-	unsigned long _rcuflags;					\
-	read_lock_irqsave(&dev->rcu_lock, _rcuflags)
-
-#undef  rcu_read_unlock
-#define rcu_read_unlock()						\
-	read_unlock_irqrestore(&dev->rcu_lock, _rcuflags)
-
-#undef  synchronize_rcu
-#define synchronize_rcu()						\
-	do {								\
-		unsigned long _rcuflags;				\
-		write_lock_irqsave(&dev->rcu_lock, _rcuflags);		\
-		write_unlock_irqrestore(&dev->rcu_lock, _rcuflags);	\
-	} while (0)
-
-#endif /* HAVE_REAL_SRCU */
 
 static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 {
