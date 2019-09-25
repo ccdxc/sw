@@ -56,11 +56,11 @@ func getStartupFirmwareName() (string, error) {
 	return strings.TrimSuffix(string(out), "\n"), err
 }
 
-func getInstalledSoftware() (*nmd.NaplesInstalledSoftware, error) {
+func getInstalledSoftware() (*nmd.DSCInstalledSoftware, error) {
 	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -l").Output()
 	if err != nil {
 		log.Errorf("Returning Software info default values")
-		n := &nmd.NaplesInstalledSoftware{
+		n := &nmd.DSCInstalledSoftware{
 			// TODO : Remove this. Adding this temporarily to ensure progress.
 			// All these APIs can be moved under nmd/platform as it feels a more natural
 			// home for this platform dependent code.
@@ -80,7 +80,7 @@ func getInstalledSoftware() (*nmd.NaplesInstalledSoftware, error) {
 		return n, nil
 	}
 
-	var naplesVersion nmd.NaplesInstalledSoftware
+	var naplesVersion nmd.DSCInstalledSoftware
 	json.Unmarshal([]byte(out), &naplesVersion)
 
 	log.Infof("Got Naples Version %v", naplesVersion)
@@ -89,11 +89,11 @@ func getInstalledSoftware() (*nmd.NaplesInstalledSoftware, error) {
 }
 
 // GetRunningFirmware gets details about the currently running naples firmware
-func GetRunningFirmware() *nmd.NaplesRunningSoftware {
+func GetRunningFirmware() *nmd.DSCRunningSoftware {
 	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -L").Output()
 	if err != nil {
 		log.Errorf("Returning Software info default values")
-		n := &nmd.NaplesRunningSoftware{
+		n := &nmd.DSCRunningSoftware{
 			// TODO : Remove this. Adding this temporarily to ensure progress.
 			// All these APIs can be moved under nmd/platform as it feels a more natural
 			// home for this platform dependent code.
@@ -113,7 +113,7 @@ func GetRunningFirmware() *nmd.NaplesRunningSoftware {
 		return n
 	}
 
-	var naplesVersion nmd.NaplesRunningSoftware
+	var naplesVersion nmd.DSCRunningSoftware
 	json.Unmarshal([]byte(out), &naplesVersion)
 
 	log.Infof("Got Naples Running Version %v", naplesVersion)
@@ -122,7 +122,7 @@ func GetRunningFirmware() *nmd.NaplesRunningSoftware {
 }
 
 // GetRunningFirmwareVersion gets the version of the current firmware
-func GetRunningFirmwareVersion(currentFw string, naplesVersion *nmd.NaplesRunningSoftware) string {
+func GetRunningFirmwareVersion(currentFw string, naplesVersion *nmd.DSCRunningSoftware) string {
 	if naplesVersion == nil {
 		log.Errorf("Naples version passed is nil.")
 		return ""
@@ -138,7 +138,7 @@ func GetRunningFirmwareVersion(currentFw string, naplesVersion *nmd.NaplesRunnin
 	}
 }
 
-func getStartupFirmwareVersion(naplesVersion *nmd.NaplesInstalledSoftware) (string, error) {
+func getStartupFirmwareVersion(naplesVersion *nmd.DSCInstalledSoftware) (string, error) {
 	startupFw, err := getStartupFirmwareName()
 	if err != nil || len(startupFw) == 0 || naplesVersion == nil {
 		return "", err
@@ -155,7 +155,7 @@ func getStartupFirmwareVersion(naplesVersion *nmd.NaplesInstalledSoftware) (stri
 }
 
 // GetNaplesSoftwareInfo gets the software versions which are running and will run at startup
-func (n *NMD) GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
+func (n *NMD) GetNaplesSoftwareInfo() (*nmd.DSCSoftwareVersionInfo, error) {
 	installedImages, err := getInstalledSoftware()
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (n *NMD) GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
 		return nil, err
 	}
 
-	return &nmd.NaplesSoftwareVersionInfo{
+	return &nmd.DSCSoftwareVersionInfo{
 		RunningFw:           n.RunningFirmwareName,
 		RunningFwVersion:    n.RunningFirmwareVersion,
 		StartupFw:           startupFw,
@@ -183,7 +183,7 @@ func (n *NMD) GetNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersionInfo, error) {
 }
 
 // ReadFruFromJSON reads the fru.json file created at Startup
-func ReadFruFromJSON() *nmd.NaplesFru {
+func ReadFruFromJSON() *nmd.DistributedServiceCardFru {
 	log.Infof("Updating FRU from /tmp/fru.json")
 	fruJSON, err := os.Open("/tmp/fru.json")
 	if err != nil {
@@ -210,7 +210,7 @@ func ReadFruFromJSON() *nmd.NaplesFru {
 		return nil
 	}
 
-	return &nmd.NaplesFru{
+	return &nmd.DistributedServiceCardFru{
 		ManufacturingDate: dat["manufacturing-date"].(string),
 		Manufacturer:      dat["manufacturer"].(string),
 		ProductName:       dat["product-name"].(string),
@@ -375,7 +375,7 @@ func UpdateNaplesInfo() *cmd.DSCInfo {
 }
 
 // updateBiosInfo - queries cardconfig and gets the BIOS information
-func updateBiosInfo(naplesVersion *nmd.NaplesRunningSoftware) *cmd.BiosInfo {
+func updateBiosInfo(naplesVersion *nmd.DSCRunningSoftware) *cmd.BiosInfo {
 	log.Info("updating Bios Info in SmartNIC object")
 	return &cmd.BiosInfo{
 		Version: naplesVersion.Uboot.Image.BaseVersion,

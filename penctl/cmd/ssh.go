@@ -18,29 +18,29 @@ import (
 
 var setSSHConfigCmd = &cobra.Command{
 	Use:   "ssh-pub-key",
-	Short: "Configure ssh pub-key on Naples",
-	Long:  "\n---------------------------------\n Configure ssh pub-key on Naples \n---------------------------------\n",
+	Short: "Configure ssh pub-key on Distributed Service Card",
+	Long:  "\n---------------------------------\n Configure ssh pub-key on Distributed Service Card \n---------------------------------\n",
 	RunE:  setSSHConfigCmdHandler,
 }
 
 var delSSHConfigCmd = &cobra.Command{
 	Use:   "ssh-pub-key",
-	Short: "Delete ssh pub-key on Naples",
-	Long:  "\n------------------------------\n Delete ssh pub-key on Naples \n------------------------------\n",
+	Short: "Delete ssh pub-key on Distributed Service Card",
+	Long:  "\n------------------------------\n Delete ssh pub-key on Distributed Service Card \n------------------------------\n",
 	RunE:  delSSHConfigCmdHandler,
 }
 
 var enableSSHConfigCmd = &cobra.Command{
 	Use:   "enable-sshd",
-	Short: "Enable sshd on Naples",
-	Long:  "\n------------------------------\n Enable sshd on Naples \n------------------------------\n",
+	Short: "Enable sshd on Distributed Service Card",
+	Long:  "\n------------------------------\n Enable sshd on Distributed Service Card \n------------------------------\n",
 	RunE:  enableSSHConfigCmdHandler,
 }
 
 var disableSSHConfigCmd = &cobra.Command{
 	Use:   "disable-sshd",
-	Short: "Disable sshd on Naples",
-	Long:  "\n------------------------------\n Disable sshd on Naples \n------------------------------\n",
+	Short: "Disable sshd on Distributed Service Card",
+	Long:  "\n------------------------------\n Disable sshd on Distributed Service Card \n------------------------------\n",
 	RunE:  disableSSHConfigCmdHandler,
 }
 
@@ -57,7 +57,7 @@ func init() {
 }
 
 func delSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penrmauthkeys",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -65,13 +65,13 @@ func delSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "mksshdir",
 		Opts:       strings.Join([]string{""}, ""),
 	}
 	naplesExecCmd(v)
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "touchsshauthkeys",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -95,14 +95,14 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 
 	pubKeyFile := filepath.Base(uploadPubKeyFile)
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "setsshauthkey",
 		Opts:       strings.Join([]string{pubKeyFile}, ""),
 	}
 
 	if err = naplesExecCmd(v); err != nil {
 		fmt.Println(err)
-		v = &nmd.NaplesCmdExecute{
+		v = &nmd.DistributedServiceCardCmdExecute{
 			Executable: "penrmpubkey",
 			Opts:       strings.Join([]string{pubKeyFile}, ""),
 		}
@@ -112,7 +112,7 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to install pubKeyFile " + pubKeyFile)
 	}
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penrmpubkey",
 		Opts:       strings.Join([]string{pubKeyFile}, ""),
 	}
@@ -120,7 +120,7 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "disablesshd",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -128,7 +128,7 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		return errors.New("Unable to disable sshd")
 	}
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "stopsshd",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -136,7 +136,7 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		return errors.New("Unable to stop sshd")
 	}
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penrmsshdfiles",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -144,7 +144,7 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "enablesshd",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -152,7 +152,7 @@ func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		return errors.New("Unable to enable sshd")
 	}
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "startsshd",
 		Opts:       strings.Join([]string{"start"}, ""),
 	}

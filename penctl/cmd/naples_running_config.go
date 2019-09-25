@@ -11,10 +11,11 @@ import (
 )
 
 var naplesConfigShowCmd = &cobra.Command{
-	Use:   "naples-config",
-	Short: "Show NAPLES Configuration",
-	Long:  "\n---------------------------\n Show NAPLES Configuration \n---------------------------n",
-	RunE:  naplesConfigShowCmdHandler,
+	Use:     "dsc-config",
+	Aliases: []string{"naples-config"},
+	Short:   "Show Distributed Service Card Configuration",
+	Long:    "\n---------------------------\n Show Distributed Service Card Configuration \n---------------------------n",
+	RunE:    naplesConfigShowCmdHandler,
 }
 
 func init() {

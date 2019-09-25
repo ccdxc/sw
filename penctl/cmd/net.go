@@ -28,14 +28,19 @@ func getNaplesURL() (string, error) {
 	if naplesURL != "" {
 		return naplesURL, nil
 	}
-	return "", errors.New("Could not figure out naplesURL")
+	return "", errors.New("Could not figure out dsc URL")
 }
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
 	if mockMode {
 		return nil
 	}
-	if val, ok := os.LookupEnv("NAPLES_URL"); ok {
+	if val, ok := os.LookupEnv("DSC_URL"); ok {
+		for strings.HasSuffix(val, "/") {
+			val = val[:len(val)-1]
+		}
+		naplesURL = val
+	} else if val, ok := os.LookupEnv("NAPLES_URL"); ok {
 		for strings.HasSuffix(val, "/") {
 			val = val[:len(val)-1]
 		}
@@ -43,7 +48,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("localhost") {
 		naplesURL = "http://127.0.0.1"
 	} else {
-		return errors.New("naples unreachable. please set NAPLES_URL variable to http://<naples_ip>")
+		return errors.New("Distributed Service Card unreachable. please set DSC_URL variable to http://<naples_ip>")
 	}
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.AgentProxyPort
@@ -58,7 +63,7 @@ func isNaplesReachable() error {
 	_, err := net.DialTimeout("tcp", naplesIP+":"+revProxyPort, timeOut)
 
 	if err != nil {
-		fmt.Printf("Could not reach Naples on %s\n", naplesIP+":"+revProxyPort)
+		fmt.Printf("Could not reach Distributed Service Card on %s\n", naplesIP+":"+revProxyPort)
 		return err
 	}
 	return nil
@@ -70,7 +75,7 @@ func isNaplesReachableOverLocalHost() error {
 	_, err := net.DialTimeout("tcp", "127.0.0.1"+":"+revProxyPort, timeOut)
 
 	if err != nil {
-		fmt.Printf("Could not reach Naples on %s\n", "127.0.0.1"+":"+revProxyPort)
+		fmt.Printf("Could not reach Distributed Service Card on %s\n", "127.0.0.1"+":"+revProxyPort)
 		return err
 	}
 	return nil

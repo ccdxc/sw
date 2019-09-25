@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
+func executeCmd(req *nmd.DistributedServiceCardCmdExecute, parts []string) (string, error) {
 	cmd := exec.Command(req.Executable, parts...)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, req.Env)
@@ -23,7 +23,7 @@ func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
 	return string(stdoutStderr), nil
 }
 
-func execCmd(req *nmd.NaplesCmdExecute) (string, error) {
+func execCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
 	return executeCmd(req, parts)
 }
@@ -63,7 +63,7 @@ func createMetaFiles(pkgName string) error {
 }
 
 func getRunningMeta() (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-L"}, ""),
 	}
@@ -71,7 +71,7 @@ func getRunningMeta() (string, error) {
 }
 
 func getUpgImageMeta(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "tar",
 		Opts:       strings.Join([]string{"xfO ", "/update/" + pkgName, " MANIFEST"}, ""),
 	}
@@ -79,7 +79,7 @@ func getUpgImageMeta(pkgName string) (string, error) {
 }
 
 func pkgVerify(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
 	}
@@ -87,22 +87,22 @@ func pkgVerify(pkgName string) (string, error) {
 }
 
 func rmUpgTechSupportFiles() (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/data/pre-upgrade-logs.tar.gz"}, ""),
 	}
 	execCmd(v)
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/data/post-upgrade-logs.tar.gz"}, ""),
 	}
 	execCmd(v)
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/data/naples-disruptive-upgrade-tech-support*"}, ""),
 	}
 	execCmd(v)
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/data/NaplesTechSupport-*"}, ""),
 	}

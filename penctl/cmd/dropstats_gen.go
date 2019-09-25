@@ -15,8 +15,8 @@ import (
 var dropmetricsShowCmd = &cobra.Command{
 
 	Use:   "drop",
-	Short: "Show DropMetrics from Naples",
-	Long:  "\n---------------------------------\n Show DropMetrics From Naples \n---------------------------------\n",
+	Short: "Show DropMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show DropMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  dropmetricsShowCmdHandler,
 }
 
@@ -36,8 +36,8 @@ func dropmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 var egressdropmetricsShowCmd = &cobra.Command{
 
 	Use:   "egressdrop",
-	Short: "Show EgressDropMetrics from Naples",
-	Long:  "\n---------------------------------\n Show EgressDropMetrics From Naples \n---------------------------------\n",
+	Short: "Show EgressDropMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show EgressDropMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  egressdropmetricsShowCmdHandler,
 }
 

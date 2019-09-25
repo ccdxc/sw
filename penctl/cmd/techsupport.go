@@ -22,8 +22,8 @@ import (
 
 var showTechCmd = &cobra.Command{
 	Use:   "tech-support",
-	Short: "Get Tech Support from Naples",
-	Long:  "\n------------------------------\n Get Tech Support from Naples \n------------------------------\n",
+	Short: "Get Tech Support from Distributed Service Card",
+	Long:  "\n------------------------------\n Get Tech Support from Distributed Service Card \n------------------------------\n",
 	RunE:  showTechCmdHandler,
 }
 
@@ -123,7 +123,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Downloaded tech-support file: " + tarFile)
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "rmpentechsupportdir",
 		Opts:       strings.Join([]string{""}, ""),
 	}

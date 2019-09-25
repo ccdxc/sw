@@ -126,10 +126,10 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					// NIC has been decommissioned by user. Go back to classic mode.
 					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
 					recorder.Event(eventtypes.DSC_DECOMMISSIONED, fmt.Sprintf("DSC %s(%s) decommissioned from the cluster", nic.Spec.ID, nic.Name), nic)
-					cfg := nmd.Naples{}
+					cfg := nmd.DistributedServiceCard{}
 					// Update config status to reflect the mode change
 					cfg.Spec.Mode = nmd.MgmtMode_HOST.String()
-					cfg.Spec.NaplesProfile = "default"
+					cfg.Spec.DSCProfile = "default"
 					err = n.StartNMDRestServer()
 					if err != nil {
 						log.Errorf("Error starting NIC managed mode: %v", err)

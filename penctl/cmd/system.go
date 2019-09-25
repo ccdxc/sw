@@ -18,15 +18,15 @@ import (
 
 var getSysMemCmd = &cobra.Command{
 	Use:   "system-memory-usage",
-	Short: "Show free/used memory on Naples (in MB)",
-	Long:  "\n-----------------------------------------\n Show Free/Used Memory on Naples (in MB)\n-----------------------------------------\n",
+	Short: "Show free/used memory on Distributed Service Card (in MB)",
+	Long:  "\n-----------------------------------------\n Show Free/Used Memory on Distributed Service Card (in MB)\n-----------------------------------------\n",
 	RunE:  getSysMemCmdHandler,
 }
 
 var getProcMemInfoCmd = &cobra.Command{
 	Use:   "proc-meminfo",
-	Short: "Check /proc/meminfo file on Naples",
-	Long:  "\n------------------------------------\n Check /proc/meminfo file on Naples \n------------------------------------\n",
+	Short: "Check /proc/meminfo file on Distributed Service Card",
+	Long:  "\n------------------------------------\n Check /proc/meminfo file on Distributed Service Card \n------------------------------------\n",
 	RunE:  getProcMemInfoCmdHandler,
 }
 
@@ -67,7 +67,7 @@ func init() {
 }
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "getsysmem",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -75,7 +75,7 @@ func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "getprocmeminfo",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -118,7 +118,7 @@ func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
 
 func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	//halctlStr := "halctl show system queue-statistics "
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowsystemqueuestats",
 		Opts:       "",
 	}

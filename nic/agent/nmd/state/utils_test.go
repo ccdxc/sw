@@ -12,7 +12,7 @@ import (
 
 func TestValidHostMode(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode: nmdProto.MgmtMode_HOST.String(),
 	}
 
@@ -22,7 +22,7 @@ func TestValidHostMode(t *testing.T) {
 
 func TestValidNetworkMode(t *testing.T) {
 	t.Parallel()
-	netModeSpec := nmdProto.NaplesSpec{
+	netModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:        nmdProto.MgmtMode_NETWORK.String(),
 		NetworkMode: nmdProto.NetworkMode_INBAND.String(),
 		Controllers: []string{"4.2.2.2"},
@@ -37,7 +37,7 @@ func TestValidNetworkMode(t *testing.T) {
 
 func TestInValidHostModeAndNetworkMode(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:        nmdProto.MgmtMode_HOST.String(),
 		NetworkMode: nmdProto.MgmtMode_NETWORK.String(),
 	}
@@ -48,7 +48,7 @@ func TestInValidHostModeAndNetworkMode(t *testing.T) {
 
 func TestInValidHostModeAndControllers(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:        nmdProto.MgmtMode_HOST.String(),
 		Controllers: []string{"42.42.42.42"},
 	}
@@ -59,7 +59,7 @@ func TestInValidHostModeAndControllers(t *testing.T) {
 
 func TestInValidHostModeAndIPAddress(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode: nmdProto.MgmtMode_HOST.String(),
 		IPConfig: &cluster.IPConfig{
 			IPAddress: "42.42.42.42",
@@ -72,7 +72,7 @@ func TestInValidHostModeAndIPAddress(t *testing.T) {
 
 func TestInValidHostModeAndDefaultGW(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode: nmdProto.MgmtMode_HOST.String(),
 		IPConfig: &cluster.IPConfig{
 			DefaultGW: "42.42.42.42",
@@ -85,7 +85,7 @@ func TestInValidHostModeAndDefaultGW(t *testing.T) {
 
 func TestInValidHostModeAndDNSServers(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode: nmdProto.MgmtMode_HOST.String(),
 		IPConfig: &cluster.IPConfig{
 			DNSServers: []string{"dnssec.pensando.io"},
@@ -97,7 +97,7 @@ func TestInValidHostModeAndDNSServers(t *testing.T) {
 
 func TestValidHostModeZeroValueIPConfig(t *testing.T) {
 	t.Parallel()
-	hostModeSpec := nmdProto.NaplesSpec{
+	hostModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:     nmdProto.MgmtMode_HOST.String(),
 		IPConfig: &cluster.IPConfig{},
 	}
@@ -107,7 +107,7 @@ func TestValidHostModeZeroValueIPConfig(t *testing.T) {
 
 func TestInValidNetworkModeEmptyMgmtNetwork(t *testing.T) {
 	t.Parallel()
-	netModeSpec := nmdProto.NaplesSpec{
+	netModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:        nmdProto.MgmtMode_NETWORK.String(),
 		Controllers: []string{"4.2.2.2"},
 	}
@@ -118,7 +118,7 @@ func TestInValidNetworkModeEmptyMgmtNetwork(t *testing.T) {
 
 func TestInValidNetworkModeBadMgmtNetwork(t *testing.T) {
 	t.Parallel()
-	netModeSpec := nmdProto.NaplesSpec{
+	netModeSpec := nmdProto.DistributedServiceCardSpec{
 		Mode:        nmdProto.MgmtMode_NETWORK.String(),
 		NetworkMode: "Bad Management Network",
 		Controllers: []string{"4.2.2.2"},
@@ -130,11 +130,11 @@ func TestInValidNetworkModeBadMgmtNetwork(t *testing.T) {
 
 func TestInValidNetworkModeWithNaplesProfile(t *testing.T) {
 	t.Parallel()
-	netModeSpec := nmdProto.NaplesSpec{
-		Mode:          nmdProto.MgmtMode_NETWORK.String(),
-		NetworkMode:   nmdProto.NetworkMode_INBAND.String(),
-		NaplesProfile: "default",
-		Controllers:   []string{"4.2.2.2"},
+	netModeSpec := nmdProto.DistributedServiceCardSpec{
+		Mode:        nmdProto.MgmtMode_NETWORK.String(),
+		NetworkMode: nmdProto.NetworkMode_INBAND.String(),
+		DSCProfile:  "default",
+		Controllers: []string{"4.2.2.2"},
 	}
 
 	err := isNetworkModeValid(netModeSpec)

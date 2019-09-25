@@ -30,7 +30,7 @@ func (s *service) OnMountComplete() {
 	s.sysmgrClient.InitDone()
 
 	// walk naples status object
-	nslist := delphiProto.NaplesStatusList(s.DelphiClient)
+	nslist := delphiProto.DistributedServiceCardStatusList(s.DelphiClient)
 
 	for _, ns := range nslist {
 		log.Infof("Got Controllers : %v", ns.Controllers)
@@ -42,28 +42,28 @@ func (s *service) Name() string {
 	return s.name
 }
 
-// OnNaplesStatusCreate event handler
-func (s *service) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusCreate event handler
+func (s *service) OnDistributedServiceCardStatusCreate(obj *delphiProto.DistributedServiceCardStatus) {
 	log.Info("Naples Status create handler")
 	s.handleNaplesObjectUpdates(obj)
 	return
 }
 
-// OnNaplesStatusUpdate event handler
-func (s *service) OnNaplesStatusUpdate(old, new *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusUpdate event handler
+func (s *service) OnDistributedServiceCardStatusUpdate(old, new *delphiProto.DistributedServiceCardStatus) {
 	log.Info("Naples Status Updated")
 	s.handleNaplesObjectUpdates(new)
 	return
 }
 
-// OnNaplesStatusDelete event handler
-func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusDelete event handler
+func (s *service) OnDistributedServiceCardStatusDelete(obj *delphiProto.DistributedServiceCardStatus) {
 	return
 }
 
-func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
+func (s *service) handleNaplesObjectUpdates(obj *delphiProto.DistributedServiceCardStatus) {
 	log.Infof("TechSupport reactor called with %v", obj)
-	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+	if obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_INBAND || obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 
 		for _, ip := range obj.Controllers {
@@ -154,10 +154,10 @@ func main() {
 	delphiService.sysmgrClient = sysmgr.NewClient(delphiClient, delphiService.Name())
 
 	// Mount delphi naples status object
-	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
+	delphiProto.DistributedServiceCardStatusMount(delphiClient, dproto.MountMode_ReadMode)
 
 	// Set up watches
-	delphiProto.NaplesStatusWatch(delphiService.DelphiClient, delphiService)
+	delphiProto.DistributedServiceCardStatusWatch(delphiService.DelphiClient, delphiService)
 
 	// run delphi thread in background
 	go delphiService.DelphiClient.Run()

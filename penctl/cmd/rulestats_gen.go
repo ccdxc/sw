@@ -15,8 +15,8 @@ import (
 var rulemetricsShowCmd = &cobra.Command{
 
 	Use:   "rule",
-	Short: "Show RuleMetrics from Naples",
-	Long:  "\n---------------------------------\n Show RuleMetrics From Naples \n---------------------------------\n",
+	Short: "Show RuleMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show RuleMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  rulemetricsShowCmdHandler,
 }
 

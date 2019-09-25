@@ -6,7 +6,7 @@ package nmd;
 
 import "delphi.proto";
 // Has all the information read from FRU.json
-message NaplesFru {
+message DistributedServiceCardFru {
     string ManufacturingDate = 1;
     string Manufacturer      = 2;
     string ProductName       = 3;
@@ -18,8 +18,8 @@ message NaplesFru {
     string MacStr            = 9;
 }
 
-// NaplesStatus contains current status of a Naples I/O subsystem
-message NaplesStatus {
+// DistributedServiceCardStatus contains current status of a DistributedServiceCard I/O subsystem
+message DistributedServiceCardStatus {
     option (delphi.update_event)            = true;
     option (delphi.singleton)               = true;
 
@@ -53,8 +53,8 @@ message NaplesStatus {
     // Resolved Controllers/Venice IPs
     repeated string Controllers             = 3;
 
-    // Naples management mode
-    Mode NaplesMode                         = 4;
+    // DistributedServiceCard management mode
+    Mode DistributedServiceCardMode                         = 4;
 
     Transition TransitionPhase              = 5;
 
@@ -66,5 +66,5 @@ message NaplesStatus {
 
     string DSCName                      = 8;
 
-    NaplesFru                   Fru          = 9;
+    DistributedServiceCardFru                   Fru          = 9;
 }

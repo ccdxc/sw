@@ -67,8 +67,8 @@ import (
 	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
 		{{$cli := TrimSuffix .GetName "Metrics"}}
 		Use:   "{{ToLower $cli}}",
-		Short: "Show {{.GetName}} from Naples",
-		Long:  "\n---------------------------------\n Show {{.GetName}} From Naples \n---------------------------------\n",
+		Short: "Show {{.GetName}} from Distributed Service Card",
+		Long:  "\n---------------------------------\n Show {{.GetName}} From Distributed Service Card \n---------------------------------\n",
 		RunE:  {{ToLower .GetName}}ShowCmdHandler,
 	}
 

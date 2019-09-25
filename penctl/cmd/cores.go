@@ -20,15 +20,15 @@ import (
 
 var coreShowCmd = &cobra.Command{
 	Use:   "core-dumps",
-	Short: "Show core dumps from Naples",
-	Long:  "\n-----------------------------\n Show Core Dumps From Naples \n-----------------------------\n",
+	Short: "Show core dumps from Distributed Service Card",
+	Long:  "\n-----------------------------\n Show Core Dumps From Distributed Service Card \n-----------------------------\n",
 	RunE:  coreShowCmdHandler,
 }
 
 var coreDeleteCmd = &cobra.Command{
 	Use:   "core-dump",
-	Short: "Delete a core dump from Naples",
-	Long:  "\n--------------------------------\n Delete a Core Dump From Naples \n--------------------------------\n",
+	Short: "Delete a core dump from Distributed Service Card",
+	Long:  "\n--------------------------------\n Delete a Core Dump From Distributed Service Card \n--------------------------------\n",
 	RunE:  coreDeleteCmdHandler,
 }
 

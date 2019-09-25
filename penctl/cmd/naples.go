@@ -23,47 +23,52 @@ import (
 )
 
 var naplesCmd = &cobra.Command{
-	Use:   "naples",
-	Short: "Set NAPLES Modes and Profiles",
-	Long:  "\n----------------------------\n Set NAPLES configuration \n----------------------------\n",
-	RunE:  naplesCmdHandler,
-	Args:  naplesCmdValidator,
+	Use:     "dsc",
+	Aliases: []string{"naples"},
+	Short:   "Set Distributed Service Card Modes and Profiles",
+	Long:    "\n----------------------------\n Set Distributed Service Card configuration \n----------------------------\n",
+	RunE:    naplesCmdHandler,
+	Args:    naplesCmdValidator,
 }
 
 var naplesShowCmd = &cobra.Command{
-	Use:   "naples",
-	Short: "Show NAPLES Modes and Profiles",
-	Long:  "\n-------------------------------------------------------------------\n Show NAPLES configuration \n-------------------------------------------------------------------\n",
-	RunE:  naplesShowCmdHandler,
+	Use:     "dsc",
+	Aliases: []string{"naples"},
+	Short:   "Show Distributed Service Card Modes and Profiles",
+	Long:    "\n-------------------------------------------------------------------\n Show Distributed Service Card configuration \n-------------------------------------------------------------------\n",
+	RunE:    naplesShowCmdHandler,
 }
 
 var naplesProfileCreateCmd = &cobra.Command{
-	Use:   "naples-profile",
-	Short: "naples profile object",
-	Long:  "\n----------------------------\n Create NAPLES Profiles \n----------------------------\n",
-	RunE:  naplesProfileCreateCmdHandler,
-	Args:  naplesProfileCreateCmdValidator,
+	Use:     "dsc-profile",
+	Aliases: []string{"naples-profile"},
+	Short:   "Distributed Service Card profile object",
+	Long:    "\n----------------------------\n Create Distributed Service Card Profiles \n----------------------------\n",
+	RunE:    naplesProfileCreateCmdHandler,
+	Args:    naplesProfileCreateCmdValidator,
 }
 
 var naplesProfileShowCmd = &cobra.Command{
-	Use:   "naples-profiles",
-	Short: "Show Available NAPLES Profiles",
-	Long:  "\n----------------------------\n Show NAPLES Profiles \n----------------------------\n",
-	RunE:  naplesProfileShowCmdHandler,
+	Use:     "dsc-profiles",
+	Aliases: []string{"naples-profiles"},
+	Short:   "Show Available Distributed Service Card Profiles",
+	Long:    "\n----------------------------\n Show Distributed Service Card Profiles \n----------------------------\n",
+	RunE:    naplesProfileShowCmdHandler,
 }
 
 var naplesProfileDeleteCmd = &cobra.Command{
-	Use:   "naples-profile",
-	Short: "naples profile object",
-	Long:  "\n----------------------------\n Delete NAPLES Profiles \n----------------------------\n",
-	RunE:  naplesProfileDeleteCmdHandler,
-	Args:  naplesProfileDeleteCmdValidator,
+	Use:     "dsc-profile",
+	Aliases: []string{"naples-profile"},
+	Short:   "Distributed Service Card profile object",
+	Long:    "\n----------------------------\n Delete Distributed Service Card Profiles \n----------------------------\n",
+	RunE:    naplesProfileDeleteCmdHandler,
+	Args:    naplesProfileDeleteCmdValidator,
 }
 
 var naplesProfileUpdateCmd = &cobra.Command{
-	Use:   "naples-profile",
-	Short: "naples profile object",
-	Long:  "\n----------------------------\n Update NAPLES Profiles \n----------------------------\n",
+	Use:   "dsc-profile",
+	Short: "Distributed Service Card profile object",
+	Long:  "\n----------------------------\n Update Distributed Service Card Profiles \n----------------------------\n",
 	RunE:  naplesProfileUpdateCmdHandler,
 	Args:  naplesProfileCreateCmdValidator,
 }
@@ -81,21 +86,22 @@ func init() {
 	updateCmd.AddCommand(naplesProfileUpdateCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or ids")
-	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "NAPLES Management. host or network")
+	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "Distributed Service Card Management. host or network")
 	naplesCmd.Flags().StringVarP(&managementNetwork, "management-network", "k", "", "Management Network. inband or oob")
 	naplesCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
-	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "Naples ID")
+	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "DSC ID")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active NAPLES Profile")
+	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "default", "Active Distributed Service Card Profile")
+	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
-	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be created")
+	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
 	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
 	naplesProfileCreateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 
-	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
+	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be deleted")
 
-	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be created")
+	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
 	naplesProfileUpdateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
 	naplesProfileUpdateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 }
@@ -128,8 +134,8 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		networkManagementMode = nmd.NetworkMode_OOB
 	}
 
-	naplesCfg := nmd.Naples{
-		Spec: nmd.NaplesSpec{
+	naplesCfg := nmd.DistributedServiceCard{
+		Spec: nmd.DistributedServiceCardSpec{
 			PrimaryMAC: priMac,
 			ID:         id,
 			IPConfig: &cluster.IPConfig{
@@ -137,10 +143,10 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				DefaultGW:  defaultGW,
 				DNSServers: dnsServers,
 			},
-			Mode:          managementMode.String(),
-			NetworkMode:   networkManagementMode.String(),
-			Controllers:   controllers,
-			NaplesProfile: naplesProfile,
+			Mode:        managementMode.String(),
+			NetworkMode: networkManagementMode.String(),
+			Controllers: controllers,
+			DSCProfile:  naplesProfile,
 		},
 	}
 
@@ -151,7 +157,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				fmt.Println("success")
 			}
 		} else {
-			fmt.Printf("Unable to update naples, error: %v\n", err)
+			fmt.Printf("Unable to update dsc, error: %v\n", err)
 			return err
 		}
 	}
@@ -161,7 +167,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Println("Changes applied. A reboot is required for the changes to take effect. Verify that 'penctl show naples' command says REBOOT_PENDING, prior to performing a reboot.")
+	fmt.Println("Changes applied. A reboot is required for the changes to take effect. Verify that 'penctl show dsc' command says REBOOT_PENDING, prior to performing a reboot.")
 	return nil
 }
 
@@ -174,7 +180,7 @@ func naplesShowCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	naplesCfg := nmd.Naples{}
+	naplesCfg := nmd.DistributedServiceCard{}
 	json.Unmarshal(resp, &naplesCfg)
 	if verbose {
 		fmt.Printf("%+v\n", naplesCfg.Spec)
@@ -191,7 +197,7 @@ func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	var profiles []nmd.NaplesProfile
+	var profiles []nmd.DSCProfile
 	json.Unmarshal(resp, &profiles)
 	if verbose {
 		for _, p := range profiles {
@@ -211,12 +217,12 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
 	}
 
-	profile := nmd.NaplesProfile{
-		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
+	profile := nmd.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 		ObjectMeta: api.ObjectMeta{
 			Name: profileName,
 		},
-		Spec: nmd.NaplesProfileSpec{
+		Spec: nmd.DSCProfileSpec{
 			NumLifs:          numLifs,
 			DefaultPortAdmin: portState,
 		},
@@ -255,7 +261,7 @@ func naplesProfileDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 func naplesProfileCreateCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	if len(profileName) == 0 {
-		err = errors.New("must specify a naples profile name")
+		err = errors.New("must specify a dsc profile name")
 		return
 	}
 
@@ -279,12 +285,12 @@ func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
 	}
 
-	profile := nmd.NaplesProfile{
-		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
+	profile := nmd.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 		ObjectMeta: api.ObjectMeta{
 			Name: profileName,
 		},
-		Spec: nmd.NaplesProfileSpec{
+		Spec: nmd.DSCProfileSpec{
 			NumLifs:          numLifs,
 			DefaultPortAdmin: portState,
 		},
@@ -310,7 +316,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	switch managedBy {
 	case "host":
 		if len(managementNetwork) != 0 || len(controllers) != 0 || len(defaultGW) != 0 || len(dnsServers) != 0 || len(mgmtIP) != 0 || len(priMac) != 0 {
-			err = errors.New("specified options, --management-network, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is managed by host")
+			err = errors.New("specified options, --management-network, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when Distributed Service Card is managed by host")
 			return
 		}
 
@@ -388,7 +394,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		if len(naplesProfile) != 0 && naplesProfile != "default" {
-			err = fmt.Errorf("naples profile is not applicable when NAPLES is manged by network")
+			err = fmt.Errorf("dsc profile is not applicable when Distributed Service Card is manged by network")
 		}
 
 		if len(id) != 0 {
@@ -410,7 +416,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 
 func naplesProfileDeleteCmdValidator(cmd *cobra.Command, args []string) error {
 	if len(profileName) == 0 {
-		return errors.New("must specify a naples profile name")
+		return errors.New("must specify a dsc profile name")
 	}
 
 	if profileName == "default" {
@@ -437,7 +443,7 @@ func checkProfileExists(profileName string) error {
 	resp, err := penHTTPClient.Get(url)
 	if err != nil {
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("DSC is part of a cluster, authentication token required")
 		}
 		fmt.Println("Failed to get existing profiles. Err: ", err)
 		return fmt.Errorf("Failed to get existing profiles. Err: %v", err)
@@ -445,7 +451,7 @@ func checkProfileExists(profileName string) error {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	var profiles []*nmd.NaplesProfile
+	var profiles []*nmd.DSCProfile
 	json.Unmarshal(body, &profiles)
 
 	for _, p := range profiles {
@@ -469,7 +475,7 @@ func checkAttachedProfile(profileName string) error {
 	resp, err := penHTTPClient.Get(url)
 	if err != nil {
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("DSC is part of a cluster, authentication token required")
 		}
 		fmt.Println("Failed to get existing profiles. Err: ", err)
 		return fmt.Errorf("failed to get existing profiles. Err: %v", err)
@@ -477,11 +483,11 @@ func checkAttachedProfile(profileName string) error {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	var naplesCfg nmd.Naples
+	var naplesCfg nmd.DistributedServiceCard
 	json.Unmarshal(body, &naplesCfg)
 
-	if naplesCfg.Spec.NaplesProfile == profileName {
-		return fmt.Errorf("naples profile %v is currently in use", profileName)
+	if naplesCfg.Spec.DSCProfile == profileName {
+		return fmt.Errorf("dsc profile %v is currently in use", profileName)
 	}
 
 	return nil

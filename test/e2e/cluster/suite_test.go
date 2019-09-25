@@ -91,7 +91,7 @@ var _ = BeforeSuite(func() {
 			Expect(rclient).ShouldNot(Equal(nil))
 			ts.netagentClients = append(ts.netagentClients, rclient)
 
-			var naples nmd.Naples
+			var naples nmd.DistributedServiceCard
 			nmdURL := "http://" + agIP.String() + ":" + globals.AgentProxyPort + "/api/v1/naples/"
 			By(fmt.Sprintf("Getting Naples object from %v", nmdURL))
 

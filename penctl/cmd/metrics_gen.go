@@ -15,8 +15,8 @@ import (
 var lifmetricsShowCmd = &cobra.Command{
 
 	Use:   "lif",
-	Short: "Show LifMetrics from Naples",
-	Long:  "\n---------------------------------\n Show LifMetrics From Naples \n---------------------------------\n",
+	Short: "Show LifMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show LifMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  lifmetricsShowCmdHandler,
 }
 

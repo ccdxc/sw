@@ -45,7 +45,7 @@ type NMD struct {
 	Upgmgr         nmdapi.UpgMgrAPI      // Upgrade Manager API
 	resolverClient resolver.Interface    // Resolver client instance
 
-	config       nmd.Naples                  // Naples config received via REST
+	config       nmd.DistributedServiceCard  // Naples config received via REST
 	nic          *cmd.DistributedServiceCard // DistributedServiceCard object
 	DelphiClient clientAPI.Client
 	IPClient     *ipif.IPClient
@@ -71,7 +71,7 @@ type NMD struct {
 	// Rollout related stuff
 	ro           nmd.NaplesRollout
 	objectMeta   api.ObjectMeta
-	profiles     []*nmd.NaplesProfile
+	profiles     []*nmd.DSCProfile
 	revProxy     *revproxy.ReverseProxyRouter
 	stateMachine *NMDStateMachine
 	tsdbCancel   context.CancelFunc
@@ -80,7 +80,7 @@ type NMD struct {
 	Pipeline     Pipeline
 
 	// Naples Information
-	RunningFirmware        *nmd.NaplesRunningSoftware
+	RunningFirmware        *nmd.DSCRunningSoftware
 	RunningFirmwareName    string
 	RunningFirmwareVersion string
 }

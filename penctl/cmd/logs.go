@@ -15,8 +15,8 @@ import (
 
 var logsShowCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "Show logs from Naples",
-	Long:  "\n------------------------------\n Show Module Logs From Naples \n------------------------------\n",
+	Short: "Show logs from Distributed Service Card",
+	Long:  "\n------------------------------\n Show Module Logs From Distributed Service Card \n------------------------------\n",
 	RunE:  logsShowCmdHandler,
 	Args:  logsShowCmdArgsValidator,
 }

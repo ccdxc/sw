@@ -15,8 +15,8 @@ import (
 var ftecpsmetricsShowCmd = &cobra.Command{
 
 	Use:   "ftecps",
-	Short: "Show FteCPSMetrics from Naples",
-	Long:  "\n---------------------------------\n Show FteCPSMetrics From Naples \n---------------------------------\n",
+	Short: "Show FteCPSMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show FteCPSMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  ftecpsmetricsShowCmdHandler,
 }
 
@@ -36,8 +36,8 @@ func ftecpsmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 var ftelifqmetricsShowCmd = &cobra.Command{
 
 	Use:   "ftelifq",
-	Short: "Show FteLifQMetrics from Naples",
-	Long:  "\n---------------------------------\n Show FteLifQMetrics From Naples \n---------------------------------\n",
+	Short: "Show FteLifQMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show FteLifQMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  ftelifqmetricsShowCmdHandler,
 }
 
@@ -57,8 +57,8 @@ func ftelifqmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 var sessionsummarymetricsShowCmd = &cobra.Command{
 
 	Use:   "sessionsummary",
-	Short: "Show SessionSummaryMetrics from Naples",
-	Long:  "\n---------------------------------\n Show SessionSummaryMetrics From Naples \n---------------------------------\n",
+	Short: "Show SessionSummaryMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show SessionSummaryMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  sessionsummarymetricsShowCmdHandler,
 }
 

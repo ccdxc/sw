@@ -441,7 +441,7 @@ func TestCreateNMDs(t *testing.T) {
 						}
 						AssertEventually(t, f1, "Failed to verify mode is in Classic")
 
-						var naplesCfg proto.Naples
+						var naplesCfg proto.DistributedServiceCard
 
 						// Validate REST endpoint
 						f2 := func() (bool, interface{}) {
@@ -460,10 +460,10 @@ func TestCreateNMDs(t *testing.T) {
 						AssertEventually(t, f2, "Failed to get the default naples config via REST")
 
 						// Switch to Managed mode
-						naplesCfg = proto.Naples{
-							ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-							TypeMeta:   api.TypeMeta{Kind: "Naples"},
-							Spec: proto.NaplesSpec{
+						naplesCfg = proto.DistributedServiceCard{
+							ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+							TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+							Spec: proto.DistributedServiceCardSpec{
 								Mode:        proto.MgmtMode_NETWORK.String(),
 								NetworkMode: proto.NetworkMode_OOB.String(),
 								Controllers: []string{"127.0.0.1"},
@@ -632,7 +632,7 @@ func setHostSmartNICIDs(t *testing.T, meta *api.ObjectMeta, ids []pencluster.Dis
 func setNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
 	var err error
 	f := func() (bool, interface{}) {
-		var naplesCfg proto.Naples
+		var naplesCfg proto.DistributedServiceCard
 		err = netutils.HTTPGet(nmdURL+"/", &naplesCfg)
 		if err != nil {
 			log.Errorf("Failed to get naples config via REST, err:%+v", err)
@@ -654,7 +654,7 @@ func setNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
 func checkNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
 	var err error
 	f := func() (bool, interface{}) {
-		var naplesCfg proto.Naples
+		var naplesCfg proto.DistributedServiceCard
 		err = netutils.HTTPGet(nmdURL+"/", &naplesCfg)
 		if err != nil {
 			log.Errorf("Failed to get naples config via REST, err:%+v", err)
@@ -725,7 +725,7 @@ func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
 	} else {
 		url = "http://" + url
 	}
-	var naplesCfg proto.Naples
+	var naplesCfg proto.DistributedServiceCard
 	resp, err := client.Req("GET", url, nil, &naplesCfg)
 	if err != nil || resp != http.StatusOK {
 		return fmt.Errorf("Failed to get naples config via reverse proxy. AdmPhase: %v, Resp: %+v, err: %v", admPhase, resp, err)
@@ -910,10 +910,10 @@ func TestNICReadmit(t *testing.T) {
 	nmd := nmdInst.agent.GetNMD()
 
 	// Switch to Managed mode
-	naplesCfg := proto.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: proto.NaplesSpec{
+	naplesCfg := proto.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: proto.DistributedServiceCardSpec{
 			Mode:        proto.MgmtMode_NETWORK.String(),
 			NetworkMode: proto.NetworkMode_OOB.String(),
 			Controllers: []string{"127.0.0.1"},
@@ -1067,10 +1067,10 @@ func TestNICDecommissionFlow(t *testing.T) {
 	nmdURL := nmd.GetNMDUrl()
 
 	// Switch to Managed mode
-	naplesCfg := proto.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: proto.NaplesSpec{
+	naplesCfg := proto.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: proto.DistributedServiceCardSpec{
 			Mode:        proto.MgmtMode_NETWORK.String(),
 			NetworkMode: proto.NetworkMode_OOB.String(),
 			Controllers: []string{"127.0.0.1"},

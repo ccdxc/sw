@@ -115,7 +115,7 @@ func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 		halctlStr = "halctl show interface tunnel mplsoudp"
 	}
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: strings.Replace(halctlStr, " ", "", -1),
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -139,7 +139,7 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	halctlStr := "halctl debug delete interface --encap " + ifEncap + " --name " + ifName
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctldebugdeleteinterface",
 		Opts:       strings.Join(execCmd[4:], " "),
 	}
@@ -176,7 +176,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctldebugupdateinterface",
 		Opts:       strings.Join(execCmd[4:], " "),
 	}

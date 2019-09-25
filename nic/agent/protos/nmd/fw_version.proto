@@ -32,8 +32,8 @@ message FwVersion {
     ImageInfo KernelFit = 2[(gogoproto.jsontag) = "kernel_fit,omitempty"];
 }
 
-// Naples Software object
-message NaplesInstalledSoftware {
+// DSC Software object
+message DSCInstalledSoftware {
     UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
@@ -41,13 +41,13 @@ message NaplesInstalledSoftware {
     ImageInfo DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
 }
 
-message NaplesRunningSoftware {
+message DSCRunningSoftware {
     UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
 }
 
-message NaplesSoftwareVersionInfo {
+message DSCSoftwareVersionInfo {
     string RunningFw            = 1 [(gogoproto.jsontag) = "running-fw,omitempty"];
     string RunningFwVersion     = 2 [(gogoproto.jsontag) = "running-fw-version,omitempty"];
     string StartupFw            = 3 [(gogoproto.jsontag) = "startup-fw,omitempty"];
@@ -55,5 +55,5 @@ message NaplesSoftwareVersionInfo {
     string RunningUbootVersion  = 6 [(gogoproto.jsontag) = "running-uboot,omitempty"];
     string StartupUbootVersion  = 7 [(gogoproto.jsontag) = "startup-uboot,omitempty"];
 
-    NaplesInstalledSoftware InstalledImages = 8 [(gogoproto.jsontag) = "all-installed-fw,omitempty"];
+    DSCInstalledSoftware InstalledImages = 8 [(gogoproto.jsontag) = "all-installed-fw,omitempty"];
 }

@@ -10,8 +10,8 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/smartnic.proto";
 
-// Naples Fru object
-message NaplesFru {
+// DistributedServiceCard Fru object
+message DistributedServiceCardFru {
     string ManufacturingDate = 1[(gogoproto.jsontag) = "manufacturing-date,omitempty"];
     string Manufacturer      = 2[(gogoproto.jsontag) = "manufacturer,omitempty"];
     string ProductName       = 3[(gogoproto.jsontag) = "product-name,omitempty"];
@@ -23,8 +23,8 @@ message NaplesFru {
     string MacStr            = 9[(gogoproto.jsontag) = "mac-string,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 }
 
-// Naples config object
-message Naples {
+// DistributedServiceCard config object
+message DistributedServiceCard {
     option (venice.objectPrefix) = {Collection: "config"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
@@ -36,15 +36,15 @@ message Naples {
                             (gogoproto.jsontag) = "meta,omitempty"];
 
     // Spec contains the configuration of the NIC.
-    NaplesSpec Spec     = 3 [(gogoproto.nullable) = false,
+    DistributedServiceCardSpec Spec     = 3 [(gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the NIC.
-    NaplesStatus Status = 4 [(gogoproto.nullable) = false,
+    DistributedServiceCardStatus Status = 4 [(gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// Operational mode of a Naples
+// Operational mode of a DistributedServiceCard
 enum MgmtMode {
     HOST     = 0; // Host managed mode
     NETWORK  = 1; // Network managed mode
@@ -57,8 +57,8 @@ enum NetworkMode {
     INBAND   = 2; // Inband Network Management
 }
 
-// NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
-message NaplesSpec {
+// DistributedServiceCardSpec contains initial bootstrap configuration of the DistributedServiceCard I/O subsystem
+message DistributedServiceCardSpec {
 
     // PrimaryMAC is the MAC address of the primary PF exposed by DSC
     string PrimaryMAC               = 1 [(gogoproto.jsontag) = "primary-mac,omitempty"];
@@ -71,11 +71,11 @@ message NaplesSpec {
 
     // Operational mode of the NIC
     string Mode                     = 4 [(gogoproto.jsontag) = "mode",
-                                         (venice.check) = "StrEnum(Naples.MgmtMode)"];
+                                         (venice.check) = "StrEnum(DistributedServiceCard.MgmtMode)"];
 
     // Operational mode of the NIC
     string NetworkMode              = 5 [(gogoproto.jsontag) = "network-mode",
-                                         (venice.check) = "StrEnum(Naples.NetworkMode)"];
+                                         (venice.check) = "StrEnum(DistributedServiceCard.NetworkMode)"];
 
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
@@ -85,12 +85,12 @@ message NaplesSpec {
     // Controllers contains the list of controller IPs or Hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 
-    // NaplesProfile captures the smart nic profile that is associated with this Naples
-    string NaplesProfile            = 8 [(gogoproto.jsontag) = "naples-profile,omitempty"];
+    // DSCProfile captures the profile that is associated with this DistributedServiceCard
+    string DSCProfile            = 8 [(gogoproto.jsontag) = "dsc-profile,omitempty"];
 }
 
-// NaplesStatus contains current status of a Naples I/O subsystem
-message NaplesStatus {
+// DistributedServiceCardStatus contains current status of a DistributedServiceCard I/O subsystem
+message DistributedServiceCardStatus {
     enum Transition {
         NONE                                = 0;
         DHCP_SENT                           = 1;
@@ -112,15 +112,15 @@ message NaplesStatus {
     repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
 
     string TransitionPhase                  = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
-                                                 (venice.check) = "StrEnum(NaplesStatus.Transition)"];
+                                                 (venice.check) = "StrEnum(DistributedServiceCardStatus.Transition)"];
     // Operational mode of the NIC
     string Mode                   	        = 5 [(gogoproto.jsontag) = "mode",
-                                                 (venice.check) = "StrEnum(Naples.MgmtMode)"];
+                                                 (venice.check) = "StrEnum(DistributedServiceCard.MgmtMode)"];
 
     // FRU information read from FRU.json
-    NaplesFru Fru                = 7  [(gogoproto.jsontag) = "fru,omitempty"];
+    DistributedServiceCardFru Fru                = 7  [(gogoproto.jsontag) = "fru,omitempty"];
 
-    // Naples generated DSC name which should be used as UUID for Naples
+    // DistributedServiceCard generated DSC name which should be used as UUID for DistributedServiceCard
     string DSCName           = 8 [(gogoproto.jsontag) = "dsc-name,omitempty"];
 
     // TimeZone
@@ -130,17 +130,17 @@ message NaplesStatus {
     string AdmissionPhaseReason     = 10 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
 }
 
-// NaplesCmdExecute contains information on what command to execute
-message NaplesCmdExecute {
-    // Executable to run on naples side
+// DistributedServiceCardCmdExecute contains information on what command to execute
+message DistributedServiceCardCmdExecute {
+    // Executable to run on DSC side
     string Executable               = 1 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "executable,omitempty"];
 
-    // Flags for the executable to run on naples side
+    // Flags for the executable to run on DSC side
     string Opts                     = 2 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "opts,omitempty"];
 
-    // Environment variables to set on naples side to execute the command
+    // Environment variables to set on DSC side to execute the command
     string Env                      = 3 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "env,omitempty"];
 }

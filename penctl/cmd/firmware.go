@@ -21,49 +21,49 @@ import (
 
 var showFirmwareCmd = &cobra.Command{
 	Use:   "firmware-version",
-	Short: "Get firmware version on Naples",
-	Long:  "\n--------------------------------\n Get Firmware Version On Naples \n--------------------------------\n",
+	Short: "Get firmware version on Distributed Service Card",
+	Long:  "\n--------------------------------\n Get Firmware Version On Distributed Service Card \n--------------------------------\n",
 	RunE:  showFirmwareDetailCmdHandler,
 }
 
 var showRunningFirmwareCmd = &cobra.Command{
 	Use:   "running-firmware",
-	Short: "Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)",
-	Long:  "\n-----------------------------------------------------------------------------------------------\n Show Running Firmware from Naples. (To be deprecated. Please use: penctl show firmware-version) \n-----------------------------------------------------------------------------------------------\n",
+	Short: "Show running firmware from Distributed Service Card (To be deprecated. Please use: penctl show firmware-version)",
+	Long:  "\n-----------------------------------------------------------------------------------------------\n Show Running Firmware from Distributed Service Card. (To be deprecated. Please use: penctl show firmware-version) \n-----------------------------------------------------------------------------------------------\n",
 	RunE:  showRunningFirmwareCmdHandler,
 }
 
 var showStartupFirmwareCmd = &cobra.Command{
 	Use:   "startup-firmware",
-	Short: "Show startup firmware from Naples",
-	Long:  "\n-----------------------------------\n Show Startup Firmware from Naples \n-----------------------------------\n",
+	Short: "Show startup firmware from Distributed Service Card",
+	Long:  "\n-----------------------------------\n Show Startup Firmware from Distributed Service Card \n-----------------------------------\n",
 	RunE:  showStartupFirmwareCmdHandler,
 }
 
 var startupFirmwareCmd = &cobra.Command{
 	Use:   "startup-firmware",
-	Short: "Set startup firmware on Naples",
-	Long:  "\n--------------------------------\n Set Startup Firmware on Naples\n--------------------------------\n",
+	Short: "Set startup firmware on Distributed Service Card",
+	Long:  "\n--------------------------------\n Set Startup Firmware on Distributed Service Card\n--------------------------------\n",
 }
 
 var setStartupFirmwareMainfwaCmd = &cobra.Command{
 	Use:   "mainfwa",
-	Short: "Set startup firmware on Naples to mainfwa",
-	Long:  "\n-------------------------------------------\n Set Startup Firmware on Naples to mainfwa \n-------------------------------------------\n",
+	Short: "Set startup firmware on Distributed Service Card to mainfwa",
+	Long:  "\n-------------------------------------------\n Set Startup Firmware on Distributed Service Card to mainfwa \n-------------------------------------------\n",
 	RunE:  setStartupFirmwareMainfwaCmdHandler,
 }
 
 var setStartupFirmwareMainfwbCmd = &cobra.Command{
 	Use:   "mainfwb",
-	Short: "Set startup firmware on Naples to mainfwb",
-	Long:  "\n-------------------------------------------\n Set Startup Firmware on Naples to mainfwb \n-------------------------------------------\n",
+	Short: "Set startup firmware on Distributed Service Card to mainfwb",
+	Long:  "\n-------------------------------------------\n Set Startup Firmware on Distributed Service Card to mainfwb \n-------------------------------------------\n",
 	RunE:  setStartupFirmwareMainfwbCmdHandler,
 }
 
 var setFirmwareCmd = &cobra.Command{
 	Use:   "firmware-install",
-	Short: "Copy and Install Firmware Image to Naples",
-	Long:  "\n-------------------------------------------\n Copy and Install Firmware Image to Naples \n-------------------------------------------\n",
+	Short: "Copy and Install Firmware Image to Distributed Service Card",
+	Long:  "\n-------------------------------------------\n Copy and Install Firmware Image to Distributed Service Card \n-------------------------------------------\n",
 	RunE:  setFirmwareCmdHandler,
 }
 
@@ -105,7 +105,7 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "showRunningFirmware",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -127,7 +127,7 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "showStartupFirmware",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -135,7 +135,7 @@ func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "setStartupToMainfwa",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -143,7 +143,7 @@ func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) erro
 }
 
 func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "setStartupToMainfwb",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -189,14 +189,14 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("golden") {
 		fw = "goldfw"
 	}
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "installFirmware",
 		Opts:       strings.Join([]string{firmware, " " + fw}, ""),
 	}
 
 	if err = naplesExecCmd(v); err != nil {
 		fmt.Println(err)
-		v = &nmd.NaplesCmdExecute{
+		v = &nmd.DistributedServiceCardCmdExecute{
 			Executable: "penrmfirmware",
 			Opts:       strings.Join([]string{firmware}, ""),
 		}
@@ -206,7 +206,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to install firmware " + firmware)
 	}
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penrmfirmware",
 		Opts:       strings.Join([]string{firmware}, ""),
 	}
@@ -215,7 +215,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if goldfw == false {
-		v = &nmd.NaplesCmdExecute{
+		v = &nmd.DistributedServiceCardCmdExecute{
 			Executable: "setStartupToAltfw",
 			Opts:       strings.Join([]string{""}, ""),
 		}

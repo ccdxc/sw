@@ -20,7 +20,7 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 		intfName := strconv.FormatUint(uint64(portID), 10)
 		if delphiClient != nil {
 			nodeUUID := ""
-			nslist := delphiProto.NaplesStatusList(delphiClient)
+			nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
 			for _, ns := range nslist {
 				nodeUUID = ns.GetDSCName()
 			}

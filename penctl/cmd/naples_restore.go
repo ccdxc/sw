@@ -14,15 +14,15 @@ import (
 
 var factoryDefaultCmd = &cobra.Command{
 	Use:   "factory-default",
-	Short: "Perform \"erase-config\" plus remove all Naples internal databases and diagnostic failure logs (reboot required)",
-	Long:  "\n------------------------------------------------------------------------------------------------------------------\n Perform \"erase-config\" plus remove all Naples internal databases and diagnostic failure logs (reboot required) \n------------------------------------------------------------------------------------------------------------------\n",
+	Short: "Perform \"erase-config\" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required)",
+	Long:  "\n------------------------------------------------------------------------------------------------------------------\n Perform \"erase-config\" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required) \n------------------------------------------------------------------------------------------------------------------\n",
 	RunE:  factoryDefaultCmdHandler,
 }
 
 var eraseConfigCmd = &cobra.Command{
 	Use:   "erase-config",
-	Short: "Erase all local Naples configuration and revert to \"host-managed\" mode. (reboot required)",
-	Long:  "\n---------------------------------------------------------------------------------------------\n Erase all local Naples configuration and revert to \"host-managed\" mode. (reboot required) \n---------------------------------------------------------------------------------------------\n",
+	Short: "Erase all local Distributed Service Card configuration and revert to \"host-managed\" mode. (reboot required)",
+	Long:  "\n---------------------------------------------------------------------------------------------\n Erase all local Distributed Service Card configuration and revert to \"host-managed\" mode. (reboot required) \n---------------------------------------------------------------------------------------------\n",
 	RunE:  eraseConfigCmdHandler,
 }
 
@@ -32,7 +32,7 @@ func init() {
 }
 
 func eraseConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "eraseConfig",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -40,7 +40,7 @@ func eraseConfigCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func factoryDefaultCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "factoryDefault",
 		Opts:       strings.Join([]string{""}, ""),
 	}

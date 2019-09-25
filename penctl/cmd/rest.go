@@ -118,9 +118,9 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	printHTTPReq(req)
 	res, err := penHTTPClient.Do(req)
 	if err != nil {
-		fmt.Println("Unable to get response from Naples.")
+		fmt.Println("Unable to get response from Distributed Service Card.")
 		if strings.Contains(err.Error(), httpsSignature) || strings.Contains(err.Error(), "transport connection broken") {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
 		}
 		return nil, err
 	}
@@ -210,9 +210,9 @@ func restGet(url string) ([]byte, error) {
 	printHTTPReq(getReq)
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
-		fmt.Println("Unable to get response from Naples.")
+		fmt.Println("Unable to get response from Distributed Service Card.")
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
 		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
@@ -278,9 +278,9 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	printHTTPReq(getReq)
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
-		fmt.Println("Unable to get response from Naples.")
+		fmt.Println("Unable to get response from Distributed Service Card.")
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
 		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
@@ -344,9 +344,9 @@ func restGetResp(url string) (*http.Response, error) {
 	printHTTPReq(getReq)
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
-		fmt.Println("Unable to get response from Naples.")
+		fmt.Println("Unable to get response from Distributed Service Card.")
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
 		}
 		if verbose {
 			fmt.Println("Err: ", err.Error())
@@ -389,7 +389,7 @@ func restDelete(url string) ([]byte, error) {
 	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		if strings.Contains(err.Error(), httpsSignature) {
-			err = fmt.Errorf("Naples is part of a cluster, authentication token required")
+			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
 		}
 		return nil, err
 	}

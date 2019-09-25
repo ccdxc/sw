@@ -173,7 +173,7 @@ func NewNMDStateMachine() *NMDStateMachine {
 						return
 					}
 					log.Info("Setting the transition phase to reboot pending")
-					nmd.config.Status.TransitionPhase = nmdProto.NaplesStatus_REBOOT_PENDING.String()
+					nmd.config.Status.TransitionPhase = nmdProto.DistributedServiceCardStatus_REBOOT_PENDING.String()
 				},
 			},
 		),

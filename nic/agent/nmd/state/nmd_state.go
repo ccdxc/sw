@@ -164,38 +164,38 @@ func NewNMD(pipeline Pipeline,
 	}
 
 	// construct default config and a default profile
-	defaultProfile := &nmd.NaplesProfile{
+	defaultProfile := &nmd.DSCProfile{
 		ObjectMeta: api.ObjectMeta{
 			Name: "default",
 		},
 		TypeMeta: api.TypeMeta{
-			Kind: "NaplesProfile",
+			Kind: "DSCProfile",
 		},
-		Spec: nmd.NaplesProfileSpec{
+		Spec: nmd.DSCProfileSpec{
 			NumLifs:          1,
 			DefaultPortAdmin: nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(),
 		},
 	}
 
-	config := nmd.Naples{
+	config := nmd.DistributedServiceCard{
 		ObjectMeta: api.ObjectMeta{
-			Name: "NaplesConfig",
+			Name: "DistributedServiceCardConfig",
 		},
 		TypeMeta: api.TypeMeta{
-			Kind: "Naples",
+			Kind: "DistributedServiceCard",
 		},
-		Spec: nmd.NaplesSpec{
-			Mode:          nmd.MgmtMode_HOST.String(),
-			PrimaryMAC:    fru.MacStr,
-			ID:            fru.MacStr,
-			NaplesProfile: "default",
+		Spec: nmd.DistributedServiceCardSpec{
+			Mode:       nmd.MgmtMode_HOST.String(),
+			PrimaryMAC: fru.MacStr,
+			ID:         fru.MacStr,
+			DSCProfile: "default",
 			IPConfig: &cluster.IPConfig{
 				IPAddress:  "",
 				DefaultGW:  "",
 				DNSServers: nil,
 			},
 		},
-		Status: nmd.NaplesStatus{
+		Status: nmd.DistributedServiceCardStatus{
 			Fru:      fru,
 			TimeZone: "UTC",
 			DSCName:  fru.MacStr,
@@ -209,7 +209,7 @@ func NewNMD(pipeline Pipeline,
 	if cfgObj != nil && err == nil {
 		log.Info("Config object found in NMD DB. Using persisted values.")
 		// Use the persisted config moving forward
-		config = *cfgObj.(*nmd.Naples)
+		config = *cfgObj.(*nmd.DistributedServiceCard)
 
 		// Always re-read the contents of fru.json upon startup
 		config.Status.Fru = ReadFruFromJSON()
@@ -269,15 +269,15 @@ func NewNMD(pipeline Pipeline,
 	}
 
 	// check if naples NaplesProfiles exist in emdb
-	p := nmd.NaplesProfile{
-		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
+	p := nmd.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 	}
 	profileObjs, err := emdb.List(&p)
 
 	if profileObjs != nil && err == nil {
 		// Use Persisted profiles moving forward
 		for _, p := range profileObjs {
-			profile := p.(*nmd.NaplesProfile)
+			profile := p.(*nmd.DSCProfile)
 			nm.CreateNaplesProfile(*profile)
 		}
 	} else {
@@ -405,7 +405,7 @@ func (n *NMD) GetControllerIps() []string {
 // NaplesConfigHandler is the REST handler for Naples Config POST operation
 func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 
-	req := nmd.Naples{}
+	req := nmd.DistributedServiceCard{}
 	resp := NaplesConfigResp{}
 	content, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -434,7 +434,7 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 
 // NaplesProfileHandler is the REST handler for Naples Profile POST
 func (n *NMD) NaplesProfileHandler(r *http.Request) (interface{}, error) {
-	req := nmd.NaplesProfile{}
+	req := nmd.DSCProfile{}
 	resp := NaplesConfigResp{}
 
 	content, err := ioutil.ReadAll(r.Body)
@@ -979,7 +979,7 @@ func isCmdAllowed(cmd string) bool {
 	return ok
 }
 
-func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
+func executeCmd(req *nmd.DistributedServiceCardCmdExecute, parts []string) (string, error) {
 	cmd := exec.Command(req.Executable, parts...)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, req.Env)
@@ -992,7 +992,7 @@ func executeCmd(req *nmd.NaplesCmdExecute, parts []string) (string, error) {
 	return string(stdoutStderr), nil
 }
 
-func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
+func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	if !isCmdAllowed(req.Executable) {
 		return "Unknown executable " + req.Executable, errors.New("Unknown executable " + req.Executable)
 	}
@@ -1147,7 +1147,7 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 }
 
 func naplesPkgVerify(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penverifyfirmware",
 		Opts:       strings.Join([]string{pkgName}, ""),
 	}
@@ -1155,7 +1155,7 @@ func naplesPkgVerify(pkgName string) (string, error) {
 }
 
 func naplesPkgInstall(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "installFirmware",
 		Opts:       strings.Join([]string{pkgName, " all"}, ""),
 	}
@@ -1163,7 +1163,7 @@ func naplesPkgInstall(pkgName string) (string, error) {
 }
 
 func naplesSetBootImg() (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "setStartupToAltfw",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -1171,7 +1171,7 @@ func naplesSetBootImg() (string, error) {
 }
 
 func naplesDelBootImg(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "penrmfirmware",
 		Opts:       strings.Join([]string{pkgName}, ""),
 	}
@@ -1193,7 +1193,7 @@ func naplesHostDisruptiveUpgrade(pkgName string) (string, error) {
 
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
 func (n *NMD) NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
-	req := nmd.NaplesCmdExecute{}
+	req := nmd.DistributedServiceCardCmdExecute{}
 	resp := NaplesConfigResp{}
 	defer r.Body.Close()
 
@@ -1233,7 +1233,7 @@ func (n *NMD) NaplesInfoGetHandler(r *http.Request) (interface{}, error) {
 func (n *NMD) updateLocalTimeZone() error {
 	timeZone := n.GetTimeZone()
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "pensettimezone",
 		Opts:       strings.Join([]string{timeZone}, ""),
 	}
@@ -1244,7 +1244,7 @@ func (n *NMD) updateLocalTimeZone() error {
 		return err
 	}
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "lnlocaltime",
 		Opts:       strings.Join([]string{timeZone}, " "),
 	}
@@ -1313,7 +1313,7 @@ func (n *NMD) GetConfigMode() string {
 }
 
 // SetNaplesConfig sets naples config and status
-func (n *NMD) SetNaplesConfig(cfgSpec nmd.NaplesSpec) {
+func (n *NMD) SetNaplesConfig(cfgSpec nmd.DistributedServiceCardSpec) {
 	n.Lock()
 	defer n.Unlock()
 	c, _ := types.TimestampProto(time.Now())
@@ -1326,7 +1326,7 @@ func (n *NMD) SetNaplesConfig(cfgSpec nmd.NaplesSpec) {
 }
 
 // GetNaplesConfig returns the current naples config received via REST
-func (n *NMD) GetNaplesConfig() nmd.Naples {
+func (n *NMD) GetNaplesConfig() nmd.DistributedServiceCard {
 	n.Lock()
 	defer n.Unlock()
 
@@ -1413,13 +1413,13 @@ func (n *NMD) writeDeviceFiles() (err error) {
 	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC.String()
 		var featureProfile device.FeatureProfile
-		var profile *nmd.NaplesProfile
+		var profile *nmd.DSCProfile
 		var defaultPortAdmin string
 		var ok bool
 		log.Info("Updating feature profile.")
 		// Check if the profile exists.
 		for _, p := range n.profiles {
-			if p.Name == n.config.Spec.NaplesProfile {
+			if p.Name == n.config.Spec.DSCProfile {
 				profile = p
 				ok = true
 				break
@@ -1427,8 +1427,8 @@ func (n *NMD) writeDeviceFiles() (err error) {
 		}
 
 		if !ok {
-			log.Errorf("could not find profile %v in nmd state, profs: %+v", n.config.Spec.NaplesProfile, n.profiles)
-			err = fmt.Errorf("could not find profile %v in nmd state", n.config.Spec.NaplesProfile)
+			log.Errorf("could not find profile %v in nmd state, profs: %+v", n.config.Spec.DSCProfile, n.profiles)
+			err = fmt.Errorf("could not find profile %v in nmd state", n.config.Spec.DSCProfile)
 			return
 		}
 
@@ -1624,7 +1624,7 @@ func macToUint64(macAddr net.HardwareAddr) (mac uint64) {
 
 // NaplesProfileUpdateHandler is the REST handler for Naples Profile PUT
 func (n *NMD) NaplesProfileUpdateHandler(r *http.Request) (interface{}, error) {
-	req := nmd.NaplesProfile{}
+	req := nmd.DSCProfile{}
 	resp := NaplesConfigResp{}
 
 	content, err := ioutil.ReadAll(r.Body)

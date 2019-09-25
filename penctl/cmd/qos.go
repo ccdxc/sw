@@ -94,7 +94,7 @@ func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
 	halctlStr := "halctl show qos-class "
 	if cmd.Flags().Changed("qosgroup") {
 		halctlStr += ("--qosgroup " + qosGroup)
-		v := &nmd.NaplesCmdExecute{
+		v := &nmd.DistributedServiceCardCmdExecute{
 			Executable: "halctlshowqosclassgroup",
 			Opts:       qosGroup,
 		}
@@ -102,7 +102,7 @@ func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowqosclass",
 		Opts:       "",
 	}
@@ -123,7 +123,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	//halctlStr := "halctl debug delete qos-class --qosgroup " + qosGroup
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctldebugdeleteqosclassqosgroup",
 		Opts:       qosGroup,
 	}
@@ -195,7 +195,7 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	}
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctldebug",
 		Opts:       strings.Join(execCmd[2:], " "),
 	}

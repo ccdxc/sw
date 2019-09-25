@@ -144,7 +144,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		}
 		_, err = os.Stat("/nic/tools/fwupdate")
 		if err == nil {
-			v := &nmd.NaplesCmdExecute{
+			v := &nmd.DistributedServiceCardCmdExecute{
 				Executable: "fwupdate",
 				Opts:       strings.Join([]string{"-r"}, ""),
 			}

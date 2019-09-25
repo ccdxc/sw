@@ -83,7 +83,7 @@ func (n *nClient) OnMountComplete() {
 	n.sysmgrClient.InitDone()
 
 	// walk naples status object
-	nsList := delphiProto.NaplesStatusList(n.DelphiClient)
+	nsList := delphiProto.DistributedServiceCardStatusList(n.DelphiClient)
 	for _, ns := range nsList {
 		n.handleVeniceCoordinates(ns)
 	}
@@ -93,20 +93,20 @@ func (n *nClient) Name() string {
 	return n.name
 }
 
-// OnNaplesStatusCreate event handler
-func (n *nClient) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusCreate event handler
+func (n *nClient) OnDistributedServiceCardStatusCreate(obj *delphiProto.DistributedServiceCardStatus) {
 	n.handleVeniceCoordinates(obj)
 	return
 }
 
-// OnNaplesStatusUpdate event handler
-func (n *nClient) OnNaplesStatusUpdate(old, new *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusUpdate event handler
+func (n *nClient) OnDistributedServiceCardStatusUpdate(old, new *delphiProto.DistributedServiceCardStatus) {
 	n.handleVeniceCoordinates(new)
 	return
 }
 
-// OnNaplesStatusDelete event handler
-func (n *nClient) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusDelete event handler
+func (n *nClient) OnDistributedServiceCardStatusDelete(obj *delphiProto.DistributedServiceCardStatus) {
 	return
 }
 
@@ -118,13 +118,13 @@ func (n *nClient) Stop() {
 	}
 }
 
-func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
+func (n *nClient) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCardStatus) {
 	n.logger.Infof("%s reactor called with %v", globals.EvtsProxy, obj)
 
 	n.evtServices.Lock()
 	defer n.evtServices.Unlock()
 
-	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+	if obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_INBAND || obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_OOB {
 		n.evtServices.nodeName = obj.GetID()
 		var controllers []string
 
@@ -228,10 +228,10 @@ func main() {
 	}
 
 	// Mount delphi naples status object
-	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
+	delphiProto.DistributedServiceCardStatusMount(delphiClient, dproto.MountMode_ReadMode)
 
 	// Set up watches
-	delphiProto.NaplesStatusWatch(delphiClient, nClient)
+	delphiProto.DistributedServiceCardStatusWatch(delphiClient, nClient)
 
 	// run delphi thread in background
 	go delphiClient.Run()

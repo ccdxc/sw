@@ -14,8 +14,8 @@ enum PortAdminState {
   PORT_ADMIN_STATE_DISABLE  = 1;
 }
 
-// Naples config object
-message NaplesProfile {
+// DSC config object
+message DSCProfile {
 
     option (venice.objectPrefix) = {Collection: "config"};
 
@@ -28,23 +28,23 @@ message NaplesProfile {
                                       (gogoproto.jsontag) = "meta,omitempty"];
 
     // Spec contains the configuration of the NIC.
-    NaplesProfileSpec Spec           = 3 [(gogoproto.nullable) = false,
+    DSCProfileSpec Spec           = 3 [(gogoproto.nullable) = false,
                                       (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the NIC.
-    NaplesProfileStatus Status   = 4 [(gogoproto.nullable) = false,
+    DSCProfileStatus Status   = 4 [(gogoproto.nullable) = false,
                                       (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
-// NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
-message NaplesProfileSpec {
+// DSCSpec contains initial bootstrap configuration of the DSC I/O subsystem
+message DSCProfileSpec {
     // Num Lifs contains the number of LIFs on the ETH Device. Supports either 1 or 16
     int32 NumLifs = 1 [(gogoproto.jsontag) = "num-lifs,omitempty"];
 
     string DefaultPortAdmin = 4 [(gogoproto.jsontag) = "default-port-admin"];
 }
 
-// NaplesStatus contains current status of a Naples I/O subsystem
-message NaplesProfileStatus {
+// DSCStatus contains current status of a DSC I/O subsystem
+message DSCProfileStatus {
 }

@@ -10,8 +10,8 @@ It is generated from these files:
 	naples_status.proto
 
 It has these top-level messages:
-	NaplesFru
-	NaplesStatus
+	DistributedServiceCardFru
+	DistributedServiceCardStatus
 */
 package nmd
 
@@ -32,52 +32,54 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type NaplesStatus_Mode int32
+type DistributedServiceCardStatus_Mode int32
 
 const (
 	// ui-hint: None
-	NaplesStatus_NONE NaplesStatus_Mode = 0
+	DistributedServiceCardStatus_NONE DistributedServiceCardStatus_Mode = 0
 	// ui-hint: Host Managed
-	NaplesStatus_HOST_MANAGED NaplesStatus_Mode = 1
+	DistributedServiceCardStatus_HOST_MANAGED DistributedServiceCardStatus_Mode = 1
 	// ui-hint: Network Managed Inband
-	NaplesStatus_NETWORK_MANAGED_INBAND NaplesStatus_Mode = 2
+	DistributedServiceCardStatus_NETWORK_MANAGED_INBAND DistributedServiceCardStatus_Mode = 2
 	// ui-hint: Network Managed Out of Band
-	NaplesStatus_NETWORK_MANAGED_OOB NaplesStatus_Mode = 3
+	DistributedServiceCardStatus_NETWORK_MANAGED_OOB DistributedServiceCardStatus_Mode = 3
 )
 
-var NaplesStatus_Mode_name = map[int32]string{
+var DistributedServiceCardStatus_Mode_name = map[int32]string{
 	0: "NONE",
 	1: "HOST_MANAGED",
 	2: "NETWORK_MANAGED_INBAND",
 	3: "NETWORK_MANAGED_OOB",
 }
-var NaplesStatus_Mode_value = map[string]int32{
+var DistributedServiceCardStatus_Mode_value = map[string]int32{
 	"NONE":                   0,
 	"HOST_MANAGED":           1,
 	"NETWORK_MANAGED_INBAND": 2,
 	"NETWORK_MANAGED_OOB":    3,
 }
 
-func (x NaplesStatus_Mode) String() string {
-	return proto.EnumName(NaplesStatus_Mode_name, int32(x))
+func (x DistributedServiceCardStatus_Mode) String() string {
+	return proto.EnumName(DistributedServiceCardStatus_Mode_name, int32(x))
 }
-func (NaplesStatus_Mode) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 0} }
+func (DistributedServiceCardStatus_Mode) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{1, 0}
+}
 
-type NaplesStatus_Transition int32
+type DistributedServiceCardStatus_Transition int32
 
 const (
-	NaplesStatus_TRANSITION_NONE                     NaplesStatus_Transition = 0
-	NaplesStatus_DHCP_SENT                           NaplesStatus_Transition = 1
-	NaplesStatus_DHCP_DONE                           NaplesStatus_Transition = 2
-	NaplesStatus_DHCP_TIMEDOUT                       NaplesStatus_Transition = 3
-	NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES NaplesStatus_Transition = 4
-	NaplesStatus_VENICE_REGISTRATION_SENT            NaplesStatus_Transition = 5
-	NaplesStatus_VENICE_REGISTRATION_DONE            NaplesStatus_Transition = 6
-	NaplesStatus_VENICE_UNREACHABLE                  NaplesStatus_Transition = 7
-	NaplesStatus_REBOOT_PENDING                      NaplesStatus_Transition = 8
+	DistributedServiceCardStatus_TRANSITION_NONE                     DistributedServiceCardStatus_Transition = 0
+	DistributedServiceCardStatus_DHCP_SENT                           DistributedServiceCardStatus_Transition = 1
+	DistributedServiceCardStatus_DHCP_DONE                           DistributedServiceCardStatus_Transition = 2
+	DistributedServiceCardStatus_DHCP_TIMEDOUT                       DistributedServiceCardStatus_Transition = 3
+	DistributedServiceCardStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES DistributedServiceCardStatus_Transition = 4
+	DistributedServiceCardStatus_VENICE_REGISTRATION_SENT            DistributedServiceCardStatus_Transition = 5
+	DistributedServiceCardStatus_VENICE_REGISTRATION_DONE            DistributedServiceCardStatus_Transition = 6
+	DistributedServiceCardStatus_VENICE_UNREACHABLE                  DistributedServiceCardStatus_Transition = 7
+	DistributedServiceCardStatus_REBOOT_PENDING                      DistributedServiceCardStatus_Transition = 8
 )
 
-var NaplesStatus_Transition_name = map[int32]string{
+var DistributedServiceCardStatus_Transition_name = map[int32]string{
 	0: "TRANSITION_NONE",
 	1: "DHCP_SENT",
 	2: "DHCP_DONE",
@@ -88,7 +90,7 @@ var NaplesStatus_Transition_name = map[int32]string{
 	7: "VENICE_UNREACHABLE",
 	8: "REBOOT_PENDING",
 }
-var NaplesStatus_Transition_value = map[string]int32{
+var DistributedServiceCardStatus_Transition_value = map[string]int32{
 	"TRANSITION_NONE":                     0,
 	"DHCP_SENT":                           1,
 	"DHCP_DONE":                           2,
@@ -100,13 +102,15 @@ var NaplesStatus_Transition_value = map[string]int32{
 	"REBOOT_PENDING":                      8,
 }
 
-func (x NaplesStatus_Transition) String() string {
-	return proto.EnumName(NaplesStatus_Transition_name, int32(x))
+func (x DistributedServiceCardStatus_Transition) String() string {
+	return proto.EnumName(DistributedServiceCardStatus_Transition_name, int32(x))
 }
-func (NaplesStatus_Transition) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 1} }
+func (DistributedServiceCardStatus_Transition) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{1, 1}
+}
 
 // Has all the information read from FRU.json
-type NaplesFru struct {
+type DistributedServiceCardFru struct {
 	ManufacturingDate string `protobuf:"bytes,1,opt,name=ManufacturingDate" json:"ManufacturingDate,omitempty"`
 	Manufacturer      string `protobuf:"bytes,2,opt,name=Manufacturer" json:"Manufacturer,omitempty"`
 	ProductName       string `protobuf:"bytes,3,opt,name=ProductName" json:"ProductName,omitempty"`
@@ -118,140 +122,140 @@ type NaplesFru struct {
 	MacStr            string `protobuf:"bytes,9,opt,name=MacStr" json:"MacStr,omitempty"`
 }
 
-func (m *NaplesFru) Reset()                    { *m = NaplesFru{} }
-func (m *NaplesFru) String() string            { return proto.CompactTextString(m) }
-func (*NaplesFru) ProtoMessage()               {}
-func (*NaplesFru) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *DistributedServiceCardFru) Reset()                    { *m = DistributedServiceCardFru{} }
+func (m *DistributedServiceCardFru) String() string            { return proto.CompactTextString(m) }
+func (*DistributedServiceCardFru) ProtoMessage()               {}
+func (*DistributedServiceCardFru) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *NaplesFru) GetManufacturingDate() string {
+func (m *DistributedServiceCardFru) GetManufacturingDate() string {
 	if m != nil {
 		return m.ManufacturingDate
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetManufacturer() string {
+func (m *DistributedServiceCardFru) GetManufacturer() string {
 	if m != nil {
 		return m.Manufacturer
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetProductName() string {
+func (m *DistributedServiceCardFru) GetProductName() string {
 	if m != nil {
 		return m.ProductName
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetSerialNum() string {
+func (m *DistributedServiceCardFru) GetSerialNum() string {
 	if m != nil {
 		return m.SerialNum
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetPartNum() string {
+func (m *DistributedServiceCardFru) GetPartNum() string {
 	if m != nil {
 		return m.PartNum
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetBoardId() string {
+func (m *DistributedServiceCardFru) GetBoardId() string {
 	if m != nil {
 		return m.BoardId
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetEngChangeLevel() string {
+func (m *DistributedServiceCardFru) GetEngChangeLevel() string {
 	if m != nil {
 		return m.EngChangeLevel
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetNumMacAddr() string {
+func (m *DistributedServiceCardFru) GetNumMacAddr() string {
 	if m != nil {
 		return m.NumMacAddr
 	}
 	return ""
 }
 
-func (m *NaplesFru) GetMacStr() string {
+func (m *DistributedServiceCardFru) GetMacStr() string {
 	if m != nil {
 		return m.MacStr
 	}
 	return ""
 }
 
-// NaplesStatus contains current status of a Naples I/O subsystem
-type NaplesStatus struct {
+// DistributedServiceCardStatus contains current status of a DistributedServiceCard I/O subsystem
+type DistributedServiceCardStatus struct {
 	Meta *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	// Resolved Controllers/Venice IPs
 	Controllers []string `protobuf:"bytes,3,rep,name=Controllers" json:"Controllers,omitempty"`
-	// Naples management mode
-	NaplesMode      NaplesStatus_Mode       `protobuf:"varint,4,opt,name=NaplesMode,enum=nmd.NaplesStatus_Mode" json:"NaplesMode,omitempty"`
-	TransitionPhase NaplesStatus_Transition `protobuf:"varint,5,opt,name=TransitionPhase,enum=nmd.NaplesStatus_Transition" json:"TransitionPhase,omitempty"`
+	// DistributedServiceCard management mode
+	DistributedServiceCardMode DistributedServiceCardStatus_Mode       `protobuf:"varint,4,opt,name=DistributedServiceCardMode,enum=nmd.DistributedServiceCardStatus_Mode" json:"DistributedServiceCardMode,omitempty"`
+	TransitionPhase            DistributedServiceCardStatus_Transition `protobuf:"varint,5,opt,name=TransitionPhase,enum=nmd.DistributedServiceCardStatus_Transition" json:"TransitionPhase,omitempty"`
 	// ID is used as a user friendly identifier in logs/events
 	ID string `protobuf:"bytes,6,opt,name=ID" json:"ID,omitempty"`
 	// IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
-	MgmtIP  string     `protobuf:"bytes,7,opt,name=MgmtIP" json:"MgmtIP,omitempty"`
-	DSCName string     `protobuf:"bytes,8,opt,name=DSCName" json:"DSCName,omitempty"`
-	Fru     *NaplesFru `protobuf:"bytes,9,opt,name=Fru" json:"Fru,omitempty"`
+	MgmtIP  string                     `protobuf:"bytes,7,opt,name=MgmtIP" json:"MgmtIP,omitempty"`
+	DSCName string                     `protobuf:"bytes,8,opt,name=DSCName" json:"DSCName,omitempty"`
+	Fru     *DistributedServiceCardFru `protobuf:"bytes,9,opt,name=Fru" json:"Fru,omitempty"`
 }
 
-func (m *NaplesStatus) GetDelphiMessage() proto.Message {
+func (m *DistributedServiceCardStatus) GetDelphiMessage() proto.Message {
 	return m
 }
 
-func (m *NaplesStatus) GetDelphiMeta() *delphi.ObjectMeta {
+func (m *DistributedServiceCardStatus) GetDelphiMeta() *delphi.ObjectMeta {
 	return m.Meta
 }
 
-func (m *NaplesStatus) SetDelphiMeta(meta *delphi.ObjectMeta) {
+func (m *DistributedServiceCardStatus) SetDelphiMeta(meta *delphi.ObjectMeta) {
 	m.Meta = meta
 }
 
-func (m *NaplesStatus) GetDelphiKey() string {
+func (m *DistributedServiceCardStatus) GetDelphiKey() string {
 	return "default"
 }
 
-func (m *NaplesStatus) GetDelphiKind() string {
-	return "NaplesStatus"
+func (m *DistributedServiceCardStatus) GetDelphiKind() string {
+	return "DistributedServiceCardStatus"
 }
 
-func (m *NaplesStatus) GetDelphiPath() string {
+func (m *DistributedServiceCardStatus) GetDelphiPath() string {
 	return fmt.Sprintf("%s|%s", m.GetDelphiKind(), m.GetDelphiKey())
 }
 
-func (m *NaplesStatus) DelphiClone() clientApi.BaseObject {
-	obj, _ := proto.Clone(m).(*NaplesStatus)
+func (m *DistributedServiceCardStatus) DelphiClone() clientApi.BaseObject {
+	obj, _ := proto.Clone(m).(*DistributedServiceCardStatus)
 	return obj
 }
 
-func NaplesStatusMount(client clientApi.Client, mode delphi.MountMode) {
-	client.MountKind("NaplesStatus", mode)
+func DistributedServiceCardStatusMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("DistributedServiceCardStatus", mode)
 }
 
-func GetNaplesStatus(client clientApi.Client) *NaplesStatus {
-	o := client.GetObject("NaplesStatus", "default")
+func GetDistributedServiceCardStatus(client clientApi.Client) *DistributedServiceCardStatus {
+	o := client.GetObject("DistributedServiceCardStatus", "default")
 	if o == nil {
 		return nil
 	}
-	obj, ok := o.(*NaplesStatus)
+	obj, ok := o.(*DistributedServiceCardStatus)
 	if ok != true {
 		panic("Cast failed")
 	}
 	return obj
 }
 
-func (m *NaplesStatus) IsPersistent() bool {
+func (m *DistributedServiceCardStatus) IsPersistent() bool {
 	return false
 }
-func NaplesStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
-	var msg NaplesStatus
+func DistributedServiceCardStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg DistributedServiceCardStatus
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
 		return nil, err
@@ -259,101 +263,101 @@ func NaplesStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.Bas
 	return &msg, nil
 }
 
-func NaplesStatusWatch(client clientApi.Client, reactor NaplesStatusReactor) {
-	client.WatchKind("NaplesStatus", reactor)
+func DistributedServiceCardStatusWatch(client clientApi.Client, reactor DistributedServiceCardStatusReactor) {
+	client.WatchKind("DistributedServiceCardStatus", reactor)
 }
-func NaplesStatusList(client clientApi.Client) []*NaplesStatus {
-	bobjs := client.List("NaplesStatus")
-	objs := make([]*NaplesStatus, 0)
+func DistributedServiceCardStatusList(client clientApi.Client) []*DistributedServiceCardStatus {
+	bobjs := client.List("DistributedServiceCardStatus")
+	objs := make([]*DistributedServiceCardStatus, 0)
 	for _, bobj := range bobjs {
-		obj, _ := bobj.(*NaplesStatus)
+		obj, _ := bobj.(*DistributedServiceCardStatus)
 		objs = append(objs, obj)
 	}
 	return objs
 }
-func (m *NaplesStatus) TriggerEvent(sdkClient clientApi.Client, old clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+func (m *DistributedServiceCardStatus) TriggerEvent(sdkClient clientApi.Client, old clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
-		rctr, ok := r.(NaplesStatusReactor)
+		rctr, ok := r.(DistributedServiceCardStatusReactor)
 		if ok == false {
 			panic("Not a Reactor")
 		}
 		if op == delphi.ObjectOperation_SetOp {
 			if old == nil {
-				rctr.OnNaplesStatusCreate(m)
+				rctr.OnDistributedServiceCardStatusCreate(m)
 			} else {
-				oldObj, ok := old.(*NaplesStatus)
+				oldObj, ok := old.(*DistributedServiceCardStatus)
 				if ok == false {
-					panic("Not an NaplesStatus object")
+					panic("Not an DistributedServiceCardStatus object")
 				}
-				rctr.OnNaplesStatusUpdate(oldObj, m)
+				rctr.OnDistributedServiceCardStatusUpdate(oldObj, m)
 			}
 		} else {
-			rctr.OnNaplesStatusDelete(m)
+			rctr.OnDistributedServiceCardStatusDelete(m)
 		}
 	}
 }
 
-type NaplesStatusReactor interface {
-	OnNaplesStatusCreate(obj *NaplesStatus)
-	OnNaplesStatusUpdate(old *NaplesStatus, obj *NaplesStatus)
-	OnNaplesStatusDelete(obj *NaplesStatus)
+type DistributedServiceCardStatusReactor interface {
+	OnDistributedServiceCardStatusCreate(obj *DistributedServiceCardStatus)
+	OnDistributedServiceCardStatusUpdate(old *DistributedServiceCardStatus, obj *DistributedServiceCardStatus)
+	OnDistributedServiceCardStatusDelete(obj *DistributedServiceCardStatus)
 }
 
-func (m *NaplesStatus) Reset()                    { *m = NaplesStatus{} }
-func (m *NaplesStatus) String() string            { return proto.CompactTextString(m) }
-func (*NaplesStatus) ProtoMessage()               {}
-func (*NaplesStatus) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *DistributedServiceCardStatus) Reset()                    { *m = DistributedServiceCardStatus{} }
+func (m *DistributedServiceCardStatus) String() string            { return proto.CompactTextString(m) }
+func (*DistributedServiceCardStatus) ProtoMessage()               {}
+func (*DistributedServiceCardStatus) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *NaplesStatus) GetMeta() *delphi.ObjectMeta {
+func (m *DistributedServiceCardStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
 		return m.Meta
 	}
 	return nil
 }
 
-func (m *NaplesStatus) GetControllers() []string {
+func (m *DistributedServiceCardStatus) GetControllers() []string {
 	if m != nil {
 		return m.Controllers
 	}
 	return nil
 }
 
-func (m *NaplesStatus) GetNaplesMode() NaplesStatus_Mode {
+func (m *DistributedServiceCardStatus) GetDistributedServiceCardMode() DistributedServiceCardStatus_Mode {
 	if m != nil {
-		return m.NaplesMode
+		return m.DistributedServiceCardMode
 	}
-	return NaplesStatus_NONE
+	return DistributedServiceCardStatus_NONE
 }
 
-func (m *NaplesStatus) GetTransitionPhase() NaplesStatus_Transition {
+func (m *DistributedServiceCardStatus) GetTransitionPhase() DistributedServiceCardStatus_Transition {
 	if m != nil {
 		return m.TransitionPhase
 	}
-	return NaplesStatus_TRANSITION_NONE
+	return DistributedServiceCardStatus_TRANSITION_NONE
 }
 
-func (m *NaplesStatus) GetID() string {
+func (m *DistributedServiceCardStatus) GetID() string {
 	if m != nil {
 		return m.ID
 	}
 	return ""
 }
 
-func (m *NaplesStatus) GetMgmtIP() string {
+func (m *DistributedServiceCardStatus) GetMgmtIP() string {
 	if m != nil {
 		return m.MgmtIP
 	}
 	return ""
 }
 
-func (m *NaplesStatus) GetDSCName() string {
+func (m *DistributedServiceCardStatus) GetDSCName() string {
 	if m != nil {
 		return m.DSCName
 	}
 	return ""
 }
 
-func (m *NaplesStatus) GetFru() *NaplesFru {
+func (m *DistributedServiceCardStatus) GetFru() *DistributedServiceCardFru {
 	if m != nil {
 		return m.Fru
 	}
@@ -361,53 +365,54 @@ func (m *NaplesStatus) GetFru() *NaplesFru {
 }
 
 func init() {
-	proto.RegisterType((*NaplesFru)(nil), "nmd.NaplesFru")
-	clientApi.RegisterFactory("NaplesStatus", NaplesStatusFactory)
-	proto.RegisterType((*NaplesStatus)(nil), "nmd.NaplesStatus")
-	proto.RegisterEnum("nmd.NaplesStatus_Mode", NaplesStatus_Mode_name, NaplesStatus_Mode_value)
-	proto.RegisterEnum("nmd.NaplesStatus_Transition", NaplesStatus_Transition_name, NaplesStatus_Transition_value)
+	proto.RegisterType((*DistributedServiceCardFru)(nil), "nmd.DistributedServiceCardFru")
+	clientApi.RegisterFactory("DistributedServiceCardStatus", DistributedServiceCardStatusFactory)
+	proto.RegisterType((*DistributedServiceCardStatus)(nil), "nmd.DistributedServiceCardStatus")
+	proto.RegisterEnum("nmd.DistributedServiceCardStatus_Mode", DistributedServiceCardStatus_Mode_name, DistributedServiceCardStatus_Mode_value)
+	proto.RegisterEnum("nmd.DistributedServiceCardStatus_Transition", DistributedServiceCardStatus_Transition_name, DistributedServiceCardStatus_Transition_value)
 }
 
 func init() { proto.RegisterFile("naples_status.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 596 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0xc1, 0x6e, 0xda, 0x4c,
-	0x14, 0x85, 0x7f, 0x63, 0x42, 0xe0, 0x86, 0x10, 0xe7, 0x46, 0xe2, 0xb7, 0xa2, 0xa8, 0x42, 0xae,
-	0x94, 0x76, 0x51, 0xb1, 0xa0, 0x52, 0x17, 0xdd, 0x19, 0x7b, 0x20, 0xa3, 0xc6, 0x63, 0xcb, 0x76,
-	0x92, 0xa5, 0x35, 0xc1, 0x53, 0x42, 0x05, 0x76, 0x34, 0xd8, 0x5d, 0x77, 0x53, 0xa9, 0x6f, 0x90,
-	0xe7, 0xe8, 0x33, 0xf5, 0x45, 0x2a, 0x0f, 0x4e, 0xa1, 0x44, 0x5d, 0x9e, 0xf3, 0x1d, 0x73, 0xe1,
-	0x43, 0x86, 0xb3, 0x8c, 0x3f, 0x2e, 0xc5, 0x3a, 0x59, 0x17, 0xbc, 0x28, 0xd7, 0xc3, 0x47, 0x99,
-	0x17, 0x39, 0xea, 0xd9, 0x2a, 0x3d, 0xef, 0xa6, 0x62, 0xf9, 0xf8, 0xb0, 0xd8, 0x54, 0xd6, 0xcf,
-	0x06, 0x74, 0x98, 0x9a, 0x4e, 0x64, 0x89, 0xef, 0xe0, 0xd4, 0xe3, 0x59, 0xf9, 0x99, 0xcf, 0x8a,
-	0x52, 0x2e, 0xb2, 0xb9, 0xcb, 0x0b, 0x61, 0x6a, 0x03, 0xed, 0x6d, 0x27, 0x7c, 0x09, 0xd0, 0x82,
-	0xee, 0xb6, 0x14, 0xd2, 0x6c, 0xa8, 0xe1, 0x5f, 0x1d, 0x0e, 0xe0, 0x28, 0x90, 0x79, 0x5a, 0xce,
-	0x0a, 0xc6, 0x57, 0xc2, 0xd4, 0xd5, 0x64, 0xb7, 0xc2, 0x0b, 0xe8, 0x44, 0x42, 0x2e, 0xf8, 0x92,
-	0x95, 0x2b, 0xb3, 0xa9, 0xf8, 0xb6, 0x40, 0x13, 0x0e, 0x03, 0x2e, 0x8b, 0x8a, 0x1d, 0x28, 0xf6,
-	0x1c, 0x2b, 0x32, 0xce, 0xb9, 0x4c, 0x69, 0x6a, 0xb6, 0x36, 0xa4, 0x8e, 0x78, 0x09, 0x3d, 0x92,
-	0xcd, 0x9d, 0x07, 0x9e, 0xcd, 0xc5, 0xb5, 0xf8, 0x2a, 0x96, 0xe6, 0xa1, 0x1a, 0xec, 0xb5, 0xf8,
-	0x0a, 0x80, 0x95, 0x2b, 0x8f, 0xcf, 0xec, 0x34, 0x95, 0x66, 0x5b, 0x6d, 0x76, 0x1a, 0xec, 0x43,
-	0xcb, 0xe3, 0xb3, 0xa8, 0x90, 0x66, 0x47, 0xb1, 0x3a, 0x59, 0xdf, 0x0f, 0xa0, 0xbb, 0x71, 0x16,
-	0x29, 0xbb, 0x78, 0x09, 0x4d, 0x4f, 0x14, 0x5c, 0x99, 0x3a, 0x1a, 0xe1, 0xb0, 0x36, 0xec, 0xdf,
-	0x7f, 0x11, 0xb3, 0xa2, 0x22, 0xa1, 0xe2, 0x95, 0x0c, 0x27, 0xcf, 0x0a, 0x99, 0x2f, 0x97, 0x42,
-	0xae, 0x4d, 0x7d, 0xa0, 0x57, 0x32, 0x76, 0x2a, 0xfc, 0x00, 0xb0, 0xf9, 0x64, 0x2f, 0x4f, 0x85,
-	0xb2, 0xd1, 0x1b, 0xf5, 0x87, 0xd9, 0x2a, 0x1d, 0xee, 0x1e, 0x1c, 0x56, 0x34, 0xdc, 0x59, 0xe2,
-	0x04, 0x4e, 0x62, 0xc9, 0xb3, 0xf5, 0xa2, 0x58, 0xe4, 0x59, 0xf0, 0xc0, 0xd7, 0x42, 0xe9, 0xea,
-	0x8d, 0x2e, 0x5e, 0x3e, 0xbc, 0x1d, 0x86, 0xfb, 0x0f, 0x61, 0x0f, 0x1a, 0xd4, 0xad, 0x7d, 0x36,
-	0xa8, 0xab, 0x14, 0xcc, 0x57, 0x05, 0x0d, 0x6a, 0x85, 0x75, 0xaa, 0xe4, 0xbb, 0x91, 0xa3, 0xfe,
-	0xd2, 0x8d, 0xb7, 0xe7, 0x88, 0x03, 0xd0, 0x27, 0xb2, 0x54, 0xc6, 0x8e, 0x46, 0xbd, 0x9d, 0xeb,
-	0x13, 0x59, 0x86, 0x15, 0xb2, 0xee, 0xa0, 0xa9, 0xbe, 0x73, 0x1b, 0x9a, 0xcc, 0x67, 0xc4, 0xf8,
-	0x0f, 0x0d, 0xe8, 0x5e, 0xf9, 0x51, 0x9c, 0x78, 0x36, 0xb3, 0xa7, 0xc4, 0x35, 0x34, 0x3c, 0x87,
-	0x3e, 0x23, 0xf1, 0x9d, 0x1f, 0x7e, 0x7a, 0x2e, 0x13, 0xca, 0xc6, 0x36, 0x73, 0x8d, 0x06, 0xfe,
-	0x0f, 0x67, 0xfb, 0xcc, 0xf7, 0xc7, 0x86, 0x6e, 0xfd, 0xd2, 0x00, 0xb6, 0x3f, 0x08, 0xcf, 0xe0,
-	0x24, 0x0e, 0x6d, 0x16, 0xd1, 0x98, 0xfa, 0x2c, 0xa9, 0x4f, 0x1d, 0x43, 0xc7, 0xbd, 0x72, 0x82,
-	0x24, 0x22, 0x2c, 0x36, 0xb4, 0x3f, 0xd1, 0xad, 0x68, 0x03, 0x4f, 0xe1, 0x58, 0xc5, 0x98, 0x7a,
-	0xc4, 0xf5, 0x6f, 0x62, 0x43, 0xc7, 0x37, 0xf0, 0xda, 0xa3, 0x51, 0x44, 0xd9, 0x34, 0xb9, 0x25,
-	0xcc, 0xf5, 0xc3, 0x24, 0x0a, 0x88, 0x43, 0x27, 0x94, 0xb8, 0x89, 0x1d, 0xc7, 0x21, 0x1d, 0xdf,
-	0xc4, 0x24, 0x32, 0x9a, 0x78, 0x01, 0xe6, 0x2d, 0x61, 0xd4, 0x21, 0x49, 0x48, 0xa6, 0x34, 0x8a,
-	0x43, 0x5b, 0xdd, 0x55, 0x87, 0x0e, 0xfe, 0x45, 0xd5, 0xdd, 0x16, 0xf6, 0x01, 0x6b, 0x7a, 0xc3,
-	0x42, 0x62, 0x3b, 0x57, 0xf6, 0xf8, 0x9a, 0x18, 0x87, 0x88, 0xd0, 0x0b, 0xc9, 0xd8, 0xf7, 0xe3,
-	0x24, 0x20, 0xcc, 0xa5, 0x6c, 0x6a, 0xb4, 0x3f, 0xb6, 0xbf, 0x3d, 0x59, 0xda, 0x8f, 0x27, 0x4b,
-	0xbb, 0x6f, 0xa9, 0x57, 0xf8, 0xfd, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc6, 0xc1, 0xe3, 0xbf,
-	0xec, 0x03, 0x00, 0x00,
+	// 617 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x94, 0xd1, 0x4e, 0xdb, 0x30,
+	0x18, 0x85, 0x97, 0xa6, 0x94, 0xf6, 0x07, 0x4a, 0x30, 0x12, 0xcb, 0x10, 0x42, 0x28, 0x93, 0xd8,
+	0x2e, 0x50, 0x35, 0x75, 0x77, 0xbb, 0x4b, 0x13, 0xb7, 0x58, 0x23, 0x4e, 0x94, 0x04, 0xb8, 0x8c,
+	0x4c, 0x63, 0x4a, 0xa6, 0x36, 0x41, 0x8e, 0xc3, 0xf5, 0x2e, 0xf7, 0x06, 0x3c, 0xcf, 0x9e, 0x65,
+	0xda, 0x7b, 0x4c, 0x31, 0x61, 0x65, 0x8c, 0x75, 0x97, 0xe7, 0x7c, 0x7f, 0xfd, 0xdb, 0xe7, 0x54,
+	0x81, 0xdd, 0x9c, 0xdd, 0xce, 0x79, 0x99, 0x94, 0x92, 0xc9, 0xaa, 0x1c, 0xdc, 0x8a, 0x42, 0x16,
+	0x48, 0xcf, 0x17, 0xe9, 0xfe, 0x66, 0xca, 0xe7, 0xb7, 0x37, 0xd9, 0x83, 0x65, 0x7d, 0x6f, 0xc1,
+	0x1b, 0x37, 0x2b, 0xa5, 0xc8, 0xae, 0x2a, 0xc9, 0xd3, 0x88, 0x8b, 0xbb, 0x6c, 0xca, 0x1d, 0x26,
+	0xd2, 0xb1, 0xa8, 0xd0, 0x09, 0xec, 0x78, 0x2c, 0xaf, 0xae, 0xd9, 0x54, 0x56, 0x22, 0xcb, 0x67,
+	0x2e, 0x93, 0xdc, 0xd4, 0x8e, 0xb4, 0xf7, 0xbd, 0xf0, 0x6f, 0x80, 0x2c, 0xd8, 0x5c, 0x9a, 0x5c,
+	0x98, 0x2d, 0x35, 0xf8, 0x87, 0x87, 0x8e, 0x60, 0x23, 0x10, 0x45, 0x5a, 0x4d, 0x25, 0x65, 0x0b,
+	0x6e, 0xea, 0x6a, 0xe4, 0xa9, 0x85, 0x0e, 0xa0, 0x17, 0x71, 0x91, 0xb1, 0x39, 0xad, 0x16, 0x66,
+	0x5b, 0xf1, 0xa5, 0x81, 0x4c, 0x58, 0x0f, 0x98, 0x90, 0x35, 0x5b, 0x53, 0xec, 0x51, 0xd6, 0x64,
+	0x54, 0x30, 0x91, 0x92, 0xd4, 0xec, 0x3c, 0x90, 0x46, 0xa2, 0x63, 0xe8, 0xe3, 0x7c, 0xe6, 0xdc,
+	0xb0, 0x7c, 0xc6, 0xcf, 0xf8, 0x1d, 0x9f, 0x9b, 0xeb, 0x6a, 0xe0, 0x99, 0x8b, 0x0e, 0x01, 0x68,
+	0xb5, 0xf0, 0xd8, 0xd4, 0x4e, 0x53, 0x61, 0x76, 0xd5, 0xcc, 0x13, 0x07, 0xed, 0x41, 0xc7, 0x63,
+	0xd3, 0x48, 0x0a, 0xb3, 0xa7, 0x58, 0xa3, 0xac, 0x9f, 0x6b, 0x70, 0xf0, 0x72, 0x86, 0x91, 0x4a,
+	0x1f, 0x1d, 0x43, 0xdb, 0xe3, 0x92, 0xa9, 0xe4, 0x36, 0x86, 0x68, 0xd0, 0x34, 0xe0, 0x5f, 0x7d,
+	0xe1, 0x53, 0x59, 0x93, 0x50, 0xf1, 0x3a, 0x1c, 0xa7, 0xc8, 0xa5, 0x28, 0xe6, 0x73, 0x2e, 0x4a,
+	0x53, 0x3f, 0xd2, 0xeb, 0x70, 0x9e, 0x58, 0xe8, 0x1a, 0xf6, 0x5f, 0xde, 0xe4, 0x15, 0x29, 0x57,
+	0x69, 0xf5, 0x87, 0xc7, 0x83, 0x7c, 0x91, 0x0e, 0x56, 0x5d, 0x68, 0x50, 0x4f, 0x87, 0x2b, 0x4e,
+	0x42, 0x17, 0xb0, 0x1d, 0x0b, 0x96, 0x97, 0x99, 0xcc, 0x8a, 0x3c, 0xb8, 0x61, 0x25, 0x57, 0x71,
+	0xf7, 0x87, 0x27, 0xff, 0x3f, 0x7c, 0xf9, 0xc3, 0xf0, 0xf9, 0x21, 0xa8, 0x0f, 0x2d, 0xe2, 0x36,
+	0xfd, 0xb4, 0x88, 0xab, 0x22, 0x9d, 0x2d, 0x24, 0x09, 0x9a, 0x4a, 0x1a, 0x55, 0x97, 0xe9, 0x46,
+	0x8e, 0xfa, 0x8b, 0x3c, 0xf4, 0xf0, 0x28, 0xd1, 0x07, 0xd0, 0xc7, 0xa2, 0x52, 0x0d, 0x6c, 0x0c,
+	0x0f, 0x57, 0xdc, 0x66, 0x2c, 0xaa, 0xb0, 0x1e, 0xb5, 0x2e, 0xa1, 0xad, 0xde, 0xd4, 0x85, 0x36,
+	0xf5, 0x29, 0x36, 0x5e, 0x21, 0x03, 0x36, 0x4f, 0xfd, 0x28, 0x4e, 0x3c, 0x9b, 0xda, 0x13, 0xec,
+	0x1a, 0x1a, 0xda, 0x87, 0x3d, 0x8a, 0xe3, 0x4b, 0x3f, 0xfc, 0xfc, 0x68, 0x26, 0x84, 0x8e, 0x6c,
+	0xea, 0x1a, 0x2d, 0xf4, 0x1a, 0x76, 0x9f, 0x33, 0xdf, 0x1f, 0x19, 0xba, 0xf5, 0x43, 0x03, 0x58,
+	0x3e, 0x10, 0xed, 0xc2, 0x76, 0x1c, 0xda, 0x34, 0x22, 0x31, 0xf1, 0x69, 0xd2, 0xac, 0xda, 0x82,
+	0x9e, 0x7b, 0xea, 0x04, 0x49, 0x84, 0x69, 0x6c, 0x68, 0xbf, 0xa5, 0x5b, 0xd3, 0x16, 0xda, 0x81,
+	0x2d, 0x25, 0x63, 0xe2, 0x61, 0xd7, 0x3f, 0x8f, 0x0d, 0x1d, 0xbd, 0x83, 0xb7, 0x1e, 0x89, 0x22,
+	0x42, 0x27, 0xc9, 0x05, 0xa6, 0xae, 0x1f, 0x26, 0x51, 0x80, 0x1d, 0x32, 0x26, 0xd8, 0x4d, 0xec,
+	0x38, 0x0e, 0xc9, 0xe8, 0x3c, 0xc6, 0x91, 0xd1, 0x46, 0x07, 0x60, 0x5e, 0x60, 0x4a, 0x1c, 0x9c,
+	0x84, 0x78, 0x42, 0xa2, 0x38, 0xb4, 0xd5, 0x5e, 0xb5, 0x68, 0xed, 0x5f, 0x54, 0xed, 0xed, 0xa0,
+	0x3d, 0x40, 0x0d, 0x3d, 0xa7, 0x21, 0xb6, 0x9d, 0x53, 0x7b, 0x74, 0x86, 0x8d, 0x75, 0x84, 0xa0,
+	0x1f, 0xe2, 0x91, 0xef, 0xc7, 0x49, 0x80, 0xa9, 0x4b, 0xe8, 0xc4, 0xe8, 0x7e, 0xea, 0x7e, 0xbd,
+	0xb7, 0xb4, 0x6f, 0xf7, 0x96, 0x76, 0xd5, 0x51, 0x9f, 0x8c, 0x8f, 0xbf, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xdc, 0x74, 0xb8, 0xe5, 0x5c, 0x04, 0x00, 0x00,
 }

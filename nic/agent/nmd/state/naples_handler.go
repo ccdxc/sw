@@ -64,7 +64,7 @@ const (
 )
 
 // CreateNaplesProfile creates a Naples Profile
-func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
+func (n *NMD) CreateNaplesProfile(profile nmd.DSCProfile) error {
 	log.Infof("Creating Naples Profile : %v", profile)
 	// Validate the number of LIFs
 	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {
@@ -180,7 +180,7 @@ func bringAllLinksDown() error {
 }
 
 // UpdateNaplesConfig updates a local Naples Config object
-func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
+func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 	oldCfg, _ := json.Marshal(n.config)
 	newCfg, _ := json.Marshal(cfg)
 	log.Infof("NAPLES Update: Old: %s", string(oldCfg))
@@ -309,9 +309,9 @@ func (n *NMD) handleNetworkModeTransition() error {
 			if n.IPClient != nil {
 				switch n.IPClient.GetDHCPState() {
 				case "dhcpTimedout":
-					n.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_TIMEDOUT.String()
+					n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_DHCP_TIMEDOUT.String()
 				case "missingVendorAttributes":
-					n.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+					n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 				}
 			}
 			n.config.Status.AdmissionPhase = ""
@@ -352,7 +352,7 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.AdmissionPhase = ""
 
 		if n.rebootNeeded {
-			n.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
+			n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_REBOOT_PENDING.String()
 		}
 
 		if err := n.persistState(true); err != nil {
@@ -572,7 +572,7 @@ func (n *NMD) AdmitNaples() {
 				n.setRegistrationErrorStatus(err.Error())
 				if strings.Contains(err.Error(), "deadline") {
 					log.Infof("Setting the transition phase to venice unreachable.")
-					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+					n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_VENICE_UNREACHABLE.String()
 				}
 			} else {
 				resp := msg.AdmissionResponse
@@ -729,7 +729,7 @@ func (n *NMD) AdmitNaples() {
 
 					// Registration is complete here. Set the status to Registration done.
 					log.Infof("Setting the transition phase to registration done")
-					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+					n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_VENICE_REGISTRATION_DONE.String()
 
 					nic, _ := n.GetSmartNIC()
 					recorder.Event(eventtypes.DSC_ADMITTED, fmt.Sprintf("DSC %s(%s) admitted to the cluster", nic.Spec.ID, nic.Name), nic)
@@ -891,7 +891,7 @@ func (n *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []
 }
 
 // UpdateNaplesProfile creates a Naples Profile
-func (n *NMD) UpdateNaplesProfile(profile nmd.NaplesProfile) error {
+func (n *NMD) UpdateNaplesProfile(profile nmd.DSCProfile) error {
 	log.Infof("Creating Naples Profile : %v", profile)
 	// Validate the number of LIFs
 	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {

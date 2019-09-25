@@ -13,8 +13,8 @@ import (
 
 var eventsShowCmd = &cobra.Command{
 	Use:   "events",
-	Short: "Show events from Naples",
-	Long:  "\n-------------------------\n Show Events From Naples \n-------------------------\n",
+	Short: "Show events from Distributed Service Card",
+	Long:  "\n-------------------------\n Show Events From Distributed Service Card \n-------------------------\n",
 	RunE:  eventsShowCmdHandler,
 }
 

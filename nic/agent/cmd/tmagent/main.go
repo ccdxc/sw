@@ -55,7 +55,7 @@ func (s *service) OnMountComplete() {
 	s.sysmgrClient.InitDone()
 
 	// walk naples status object
-	nslist := delphiProto.NaplesStatusList(s.DelphiClient)
+	nslist := delphiProto.DistributedServiceCardStatusList(s.DelphiClient)
 	for _, ns := range nslist {
 		s.handleVeniceCoordinates(ns)
 	}
@@ -65,26 +65,26 @@ func (s *service) Name() string {
 	return s.name
 }
 
-// OnNaplesStatusCreate event handler
-func (s *service) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusCreate event handler
+func (s *service) OnDistributedServiceCardStatusCreate(obj *delphiProto.DistributedServiceCardStatus) {
 	s.handleVeniceCoordinates(obj)
 }
 
-// OnNaplesStatusUpdate event handler
-func (s *service) OnNaplesStatusUpdate(old, newStat *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusUpdate event handler
+func (s *service) OnDistributedServiceCardStatusUpdate(old, newStat *delphiProto.DistributedServiceCardStatus) {
 	s.handleVeniceCoordinates(newStat)
 }
 
-// OnNaplesStatusDelete event handler
-func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusDelete event handler
+func (s *service) OnDistributedServiceCardStatusDelete(obj *delphiProto.DistributedServiceCardStatus) {
 }
 
-func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
+func (s *service) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCardStatus) {
 	log.Infof("Tmagent reactor called with %v", obj)
-	s.tmagent.mode = obj.NaplesMode.String()
+	s.tmagent.mode = obj.DistributedServiceCardMode.String()
 	s.tmagent.nodeUUID = obj.GetDSCName()
 	log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
-	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+	if obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_INBAND || obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 		var err error
 
@@ -268,11 +268,11 @@ func main() {
 	delphiService.sysmgrClient = sysmgr.NewClient(delphiClient, delphiService.Name())
 
 	// Mount delphi naples status and interface objects
-	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
+	delphiProto.DistributedServiceCardStatusMount(delphiClient, dproto.MountMode_ReadMode)
 	dnetproto.InterfaceMount(delphiClient, dproto.MountMode_ReadMode)
 
 	// Set up watches
-	delphiProto.NaplesStatusWatch(delphiClient, delphiService)
+	delphiProto.DistributedServiceCardStatusWatch(delphiClient, delphiService)
 
 	// run delphi thread in background
 	go delphiClient.Run()

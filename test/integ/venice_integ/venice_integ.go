@@ -360,10 +360,10 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		n := nmdAg.GetNMD()
 
 		// Switch to Managed mode
-		naplesCfg := nmdproto.Naples{
-			ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-			TypeMeta:   api.TypeMeta{Kind: "Naples"},
-			Spec: nmdproto.NaplesSpec{
+		naplesCfg := nmdproto.DistributedServiceCard{
+			ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+			TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+			Spec: nmdproto.DistributedServiceCardSpec{
 				Mode:        nmdproto.MgmtMode_NETWORK.String(),
 				NetworkMode: nmdproto.NetworkMode_OOB.String(),
 				Controllers: []string{"localhost"},

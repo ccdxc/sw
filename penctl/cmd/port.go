@@ -76,7 +76,7 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowport",
 		Opts:       strings.Join(execCmd[3:], " "),
 	}
@@ -91,7 +91,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
 		execCmd := strings.Fields(halctlStr)
-		v := &nmd.NaplesCmdExecute{
+		v := &nmd.DistributedServiceCardCmdExecute{
 			Executable: "halctlshowport",
 			Opts:       strings.Join(execCmd[3:], " "),
 		}
@@ -99,7 +99,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowport",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -116,7 +116,7 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowport",
 		Opts:       strings.Join(execCmd[3:], " "),
 	}
@@ -187,7 +187,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	execCmd := strings.Fields(halctlStr)
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctldebug",
 		Opts:       strings.Join(execCmd[2:], " "),
 	}

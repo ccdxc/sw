@@ -102,7 +102,7 @@ func (p *Pipeline) GetDelphiClient() clientAPI.Client {
 func (p *Pipeline) MountDelphiObjects() interface{} {
 	// mount objects
 	log.Infof("Mounting naples status rw")
-	delphiProto.NaplesStatusMount(p.DelSrv.DelphiClient, delphi.MountMode_ReadWriteMode)
+	delphiProto.DistributedServiceCardStatusMount(p.DelSrv.DelphiClient, delphi.MountMode_ReadWriteMode)
 	return nil
 }
 
@@ -156,26 +156,26 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	n := p.Nmd
 	var mgmtIP string
 
-	var transitionPhase delphiProto.NaplesStatus_Transition
+	var transitionPhase delphiProto.DistributedServiceCardStatus_Transition
 	naplesConfig := p.DelSrv.Agent.Nmd.GetNaplesConfig()
 
 	switch naplesConfig.Status.TransitionPhase {
-	case delphiProto.NaplesStatus_DHCP_SENT.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_SENT
-	case delphiProto.NaplesStatus_DHCP_DONE.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_DONE
-	case delphiProto.NaplesStatus_DHCP_TIMEDOUT.String():
-		transitionPhase = delphiProto.NaplesStatus_DHCP_TIMEDOUT
-	case delphiProto.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String():
-		transitionPhase = delphiProto.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES
-	case delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
-	case delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
-	case delphiProto.NaplesStatus_VENICE_UNREACHABLE.String():
-		transitionPhase = delphiProto.NaplesStatus_VENICE_UNREACHABLE
-	case delphiProto.NaplesStatus_REBOOT_PENDING.String():
-		transitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+	case delphiProto.DistributedServiceCardStatus_DHCP_SENT.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_DHCP_SENT
+	case delphiProto.DistributedServiceCardStatus_DHCP_DONE.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_DHCP_DONE
+	case delphiProto.DistributedServiceCardStatus_DHCP_TIMEDOUT.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_DHCP_TIMEDOUT
+	case delphiProto.DistributedServiceCardStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES
+	case delphiProto.DistributedServiceCardStatus_VENICE_REGISTRATION_SENT.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_VENICE_REGISTRATION_SENT
+	case delphiProto.DistributedServiceCardStatus_VENICE_REGISTRATION_DONE.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_VENICE_REGISTRATION_DONE
+	case delphiProto.DistributedServiceCardStatus_VENICE_UNREACHABLE.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_VENICE_UNREACHABLE
+	case delphiProto.DistributedServiceCardStatus_REBOOT_PENDING.String():
+		transitionPhase = delphiProto.DistributedServiceCardStatus_REBOOT_PENDING
 	default:
 		transitionPhase = 0
 	}
@@ -188,20 +188,20 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	}
 
 	// Set up appropriate mode
-	var naplesMode delphiProto.NaplesStatus_Mode
+	var naplesMode delphiProto.DistributedServiceCardStatus_Mode
 
 	switch naplesConfig.Spec.NetworkMode {
 	case nmd.NetworkMode_INBAND.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
+		naplesMode = delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_INBAND
 	case nmd.NetworkMode_OOB.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
+		naplesMode = delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_OOB
 	default:
-		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
-		naplesStatus := delphiProto.NaplesStatus{
-			NaplesMode: naplesMode,
-			ID:         naplesConfig.Spec.ID,
-			DSCName:    naplesConfig.Status.DSCName,
-			Fru: &delphiProto.NaplesFru{
+		naplesMode = delphiProto.DistributedServiceCardStatus_HOST_MANAGED
+		naplesStatus := delphiProto.DistributedServiceCardStatus{
+			DistributedServiceCardMode: naplesMode,
+			ID:                         naplesConfig.Spec.ID,
+			DSCName:                    naplesConfig.Status.DSCName,
+			Fru: &delphiProto.DistributedServiceCardFru{
 				ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
 				Manufacturer:      naplesConfig.Status.Fru.Manufacturer,
 				ProductName:       naplesConfig.Status.Fru.ProductName,
@@ -220,14 +220,14 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		return nil
 	}
 
-	naplesStatus := delphiProto.NaplesStatus{
-		Controllers:     naplesConfig.Status.Controllers,
-		NaplesMode:      naplesMode,
-		TransitionPhase: transitionPhase,
-		MgmtIP:          mgmtIP,
-		ID:              naplesConfig.Spec.ID,
-		DSCName:         naplesConfig.Status.DSCName,
-		Fru: &delphiProto.NaplesFru{
+	naplesStatus := delphiProto.DistributedServiceCardStatus{
+		Controllers:                naplesConfig.Status.Controllers,
+		DistributedServiceCardMode: naplesMode,
+		TransitionPhase:            transitionPhase,
+		MgmtIP:                     mgmtIP,
+		ID:                         naplesConfig.Spec.ID,
+		DSCName:                    naplesConfig.Status.DSCName,
+		Fru: &delphiProto.DistributedServiceCardFru{
 			ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
 			Manufacturer:      naplesConfig.Status.Fru.Manufacturer,
 			ProductName:       naplesConfig.Status.Fru.ProductName,

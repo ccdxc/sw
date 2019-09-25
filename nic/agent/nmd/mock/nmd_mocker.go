@@ -25,12 +25,12 @@ type NMD struct {
 	NicAdded      map[string]*cmd.DistributedServiceCard
 	NicUpdated    map[string]*cmd.DistributedServiceCard
 	NicDeleted    map[string]*cmd.DistributedServiceCard
-	Naples        *nmd.Naples
+	Naples        *nmd.DistributedServiceCard
 	IPConfig      *cmd.IPConfig
 	keyMgr        *keymgr.KeyMgr
 	Rollout       *protos.DSCRollout
 	RolloutStatus *protos.DSCRolloutStatusUpdate
-	Profiles      []*nmd.NaplesProfile
+	Profiles      []*nmd.DSCProfile
 }
 
 // RegisterCMD registers CMD stubbed out
@@ -60,16 +60,16 @@ func CreateMockNMD(name string) *NMD {
 		NicAdded:   make(map[string]*cmd.DistributedServiceCard),
 		NicUpdated: make(map[string]*cmd.DistributedServiceCard),
 		NicDeleted: make(map[string]*cmd.DistributedServiceCard),
-		Naples: &nmd.Naples{
-			TypeMeta: api.TypeMeta{Kind: "NaplesConfig"},
+		Naples: &nmd.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{Kind: "DistributedServiceCardConfig"},
 			ObjectMeta: api.ObjectMeta{
-				Name: "NaplesConfig",
+				Name: "DistributedServiceCardConfig",
 			},
-			Spec: nmd.NaplesSpec{
-				PrimaryMAC:    "42:42:42:42:42:42:42",
-				Mode:          nmd.MgmtMode_HOST.String(),
-				NaplesProfile: "default",
-				Controllers:   []string{"1.1.1.1"},
+			Spec: nmd.DistributedServiceCardSpec{
+				PrimaryMAC:  "42:42:42:42:42:42:42",
+				Mode:        nmd.MgmtMode_HOST.String(),
+				DSCProfile:  "default",
+				Controllers: []string{"1.1.1.1"},
 			},
 		},
 	}
@@ -142,7 +142,7 @@ func (ag *NMD) GetSmartNIC() (*cmd.DistributedServiceCard, error) {
 }
 
 // GetNaplesConfig gets the current naples config
-func (ag *NMD) GetNaplesConfig() (*nmd.Naples, error) {
+func (ag *NMD) GetNaplesConfig() (*nmd.DistributedServiceCard, error) {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.Naples, nil
@@ -179,14 +179,14 @@ func (ag *NMD) DeleteNaplesRollout(rollout *protos.DSCRollout) (err error) {
 }
 
 // GetNaplesProfiles gets naples profiles
-func (ag *NMD) GetNaplesProfiles() (profiles []*nmd.NaplesProfile, err error) {
+func (ag *NMD) GetNaplesProfiles() (profiles []*nmd.DSCProfile, err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.Profiles, nil
 }
 
 // CreateNaplesProfile create naples profiles
-func (ag *NMD) CreateNaplesProfile(profile *nmd.NaplesProfile) (err error) {
+func (ag *NMD) CreateNaplesProfile(profile *nmd.DSCProfile) (err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.Profiles = append(ag.Profiles, profile)
@@ -199,7 +199,7 @@ func (ag *NMD) AdmitNaples() error {
 }
 
 // UpdateNaplesProfile updates naples profile
-func (ag *NMD) UpdateNaplesProfile(profile *nmd.NaplesProfile) (err error) {
+func (ag *NMD) UpdateNaplesProfile(profile *nmd.DSCProfile) (err error) {
 	ag.Lock()
 	defer ag.Unlock()
 	var found bool
@@ -242,7 +242,7 @@ func (ag *NMD) DeleteNaplesProfile(profileName string) (err error) {
 }
 
 // UpdateNaplesConfig updates naples config
-func (ag *NMD) UpdateNaplesConfig(naples *nmd.Naples) error {
+func (ag *NMD) UpdateNaplesConfig(naples *nmd.DistributedServiceCard) error {
 	ag.Lock()
 	defer ag.Unlock()
 	ag.Naples = naples

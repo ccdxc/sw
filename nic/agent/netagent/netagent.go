@@ -66,7 +66,7 @@ type Agent struct {
 	mgmtIPAddr     string
 	SysmgrClient   *sysmgr.Client
 	DelphiClient   clientApi.Client
-	NaplesStatus   delphiProto.NaplesStatus
+	NaplesStatus   delphiProto.DistributedServiceCardStatus
 	Tmagent        *tpa.PolicyAgent
 	mountComplete  bool
 	TroubleShoot   *troubleshooting.Agent
@@ -121,10 +121,10 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 	ag.ResolverClient = resolverClient
 
 	// Mount delphi naples status object
-	delphiProto.NaplesStatusMount(ag.DelphiClient, delphi.MountMode_ReadMode)
+	delphiProto.DistributedServiceCardStatusMount(ag.DelphiClient, delphi.MountMode_ReadMode)
 
 	// Set up watches
-	delphiProto.NaplesStatusWatch(ag.DelphiClient, &ag)
+	delphiProto.DistributedServiceCardStatusWatch(ag.DelphiClient, &ag)
 
 	// Run delphi client
 	go ag.DelphiClient.Run()
@@ -155,7 +155,7 @@ func (ag *Agent) OnMountComplete() {
 	ag.Unlock()
 
 	// walk naples status object
-	nslist := delphiProto.NaplesStatusList(ag.DelphiClient)
+	nslist := delphiProto.DistributedServiceCardStatusList(ag.DelphiClient)
 	for _, ns := range nslist {
 		ag.handleVeniceCoordinates(ns)
 	}
@@ -173,26 +173,26 @@ func (ag *Agent) IsMountComplete() bool {
 	return ag.mountComplete
 }
 
-// OnNaplesStatusCreate event handler
-func (ag *Agent) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusCreate event handler
+func (ag *Agent) OnDistributedServiceCardStatusCreate(obj *delphiProto.DistributedServiceCardStatus) {
 	ag.handleVeniceCoordinates(obj)
 	return
 }
 
-// OnNaplesStatusUpdate event handler
-func (ag *Agent) OnNaplesStatusUpdate(old, new *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusUpdate event handler
+func (ag *Agent) OnDistributedServiceCardStatusUpdate(old, new *delphiProto.DistributedServiceCardStatus) {
 	ag.handleVeniceCoordinates(new)
 	return
 }
 
-// OnNaplesStatusDelete event handler
-func (ag *Agent) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
+// OnDistributedServiceCardStatusDelete event handler
+func (ag *Agent) OnDistributedServiceCardStatusDelete(obj *delphiProto.DistributedServiceCardStatus) {
 	return
 }
 
-func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
+func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCardStatus) {
 	log.Infof("Netagent reactor called with %v", obj)
-	if (obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB) && len(obj.Controllers) != 0 {
+	if (obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_INBAND || obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_NETWORK_MANAGED_OOB) && len(obj.Controllers) != 0 {
 		ag.Lock()
 		defer ag.Unlock()
 		var controllers []string
@@ -279,7 +279,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 				}
 			}
 		}
-	} else if obj.NaplesMode == delphiProto.NaplesStatus_HOST_MANAGED {
+	} else if obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_HOST_MANAGED {
 		log.Info("Switching to host mode. Purging all configs")
 		ag.NetworkAgent.Lock()
 

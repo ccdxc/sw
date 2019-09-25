@@ -833,10 +833,10 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.DistributedServiceCard)
 			}
 
 			// Config to switch to Managed mode
-			naplesCfg := nmd.Naples{
-				ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-				TypeMeta:   api.TypeMeta{Kind: "Naples"},
-				Spec: nmd.NaplesSpec{
+			naplesCfg := nmd.DistributedServiceCard{
+				ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+				TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+				Spec: nmd.DistributedServiceCardSpec{
 					Mode:        nmd.MgmtMode_NETWORK.String(),
 					NetworkMode: cluster.DistributedServiceCardSpec_NetworkModes_name[cluster.DistributedServiceCardSpec_NetworkModes_vvalue[nicObj.Spec.NetworkMode]],
 					PrimaryMAC:  nicObj.Name,

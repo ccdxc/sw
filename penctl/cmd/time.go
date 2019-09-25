@@ -19,15 +19,15 @@ const cmdName string = "time"
 
 var showSystemTimeCmd = &cobra.Command{
 	Use:   cmdName,
-	Short: "Show system clock time from Naples",
-	Long:  "\n------------------------------------\n Show system clock time from Naples \n------------------------------------\n",
+	Short: "Show system clock time from Distributed Service Card",
+	Long:  "\n------------------------------------\n Show system clock time from Distributed Service Card \n------------------------------------\n",
 	RunE:  showSystemTimeCmdHandler,
 }
 
 var setSystemTimeCmd = &cobra.Command{
 	Use:   cmdName,
-	Short: "Set system clock time on Naples",
-	Long:  "\n---------------------------------\n Set system clock time on Naples \n---------------------------------\n",
+	Short: "Set system clock time on Distributed Service Card",
+	Long:  "\n---------------------------------\n Set system clock time on Distributed Service Card \n---------------------------------\n",
 	RunE:  setSystemTimeCmdHandler,
 }
 
@@ -40,7 +40,7 @@ func init() {
 func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 	timezone, err := ioutil.ReadFile("/etc/timezone")
 	if err == nil {
-		v := &nmd.NaplesCmdExecute{
+		v := &nmd.DistributedServiceCardCmdExecute{
 			Executable: "pensettimezone",
 			Opts:       strings.Join([]string{string(timezone)}, ""),
 		}
@@ -50,7 +50,7 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	symlink, err := filepath.EvalSymlinks("/etc/localtime")
 	if err == nil {
-		v := &nmd.NaplesCmdExecute{
+		v := &nmd.DistributedServiceCardCmdExecute{
 			Executable: "lnlocaltime",
 			Opts:       strings.Join([]string{symlink}, " "),
 		}
@@ -59,7 +59,7 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 	}
 	dateString := time.Now().Format("Jan 2 15:04:05 2006")
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "setdate",
 		Opts:       strings.Join([]string{dateString}, ""),
 	}
@@ -67,7 +67,7 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	v = &nmd.NaplesCmdExecute{
+	v = &nmd.DistributedServiceCardCmdExecute{
 		Executable: "sethwclock",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -75,7 +75,7 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func showSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "getdate",
 		Opts:       "",
 	}

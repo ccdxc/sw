@@ -13,8 +13,8 @@ import (
 
 var metricsShowCmd = &cobra.Command{
 	Use:   "metrics",
-	Short: "Show metrics from Naples",
-	Long:  "\n--------------------------\n Show Metrics From Naples \n--------------------------\n",
+	Short: "Show metrics from Distributed Service Card",
+	Long:  "\n--------------------------\n Show Metrics From Distributed Service Card \n--------------------------\n",
 	RunE:  genericmetricsShowCmdHandler,
 }
 

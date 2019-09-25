@@ -9,7 +9,7 @@ import (
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
-func isHostModeValid(spec nmdProto.NaplesSpec) (err error) {
+func isHostModeValid(spec nmdProto.DistributedServiceCardSpec) (err error) {
 	switch {
 	case len(spec.NetworkMode) != 0 && spec.NetworkMode != nmdProto.NetworkMode_NONE.String():
 		return fmt.Errorf("network mode must not be specified when naples is in host managed mode. Found: %v", spec.NetworkMode)
@@ -25,7 +25,7 @@ func isHostModeValid(spec nmdProto.NaplesSpec) (err error) {
 	}
 }
 
-func isNetworkModeValid(spec nmdProto.NaplesSpec) (err error) {
+func isNetworkModeValid(spec nmdProto.DistributedServiceCardSpec) (err error) {
 	switch {
 	case len(spec.NetworkMode) == 0:
 		return errors.New("network mode must specify management network. either inband or oob")
@@ -34,8 +34,8 @@ func isNetworkModeValid(spec nmdProto.NaplesSpec) (err error) {
 	case !(spec.NetworkMode == nmdProto.NetworkMode_INBAND.String() || spec.NetworkMode == nmdProto.NetworkMode_OOB.String()):
 		return fmt.Errorf("network mode must specify management network. either inband or oob. Found: %v", spec.NetworkMode)
 
-	case len(spec.NaplesProfile) != 0 && spec.NaplesProfile != "default":
-		return fmt.Errorf("naples profile is not applicable when naples is in network managed mode. Found: %v", spec.NaplesProfile)
+	case len(spec.DSCProfile) != 0 && spec.DSCProfile != "default":
+		return fmt.Errorf("naples profile is not applicable when naples is in network managed mode. Found: %v", spec.DSCProfile)
 	}
 
 	checkSubnet := false

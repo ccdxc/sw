@@ -14,15 +14,15 @@ import (
 
 var enableConsoleConfigCmd = &cobra.Command{
 	Use:   "enable-console",
-	Short: "Enable serial console on Naples",
-	Long:  "\n------------------------------\n Enable serial console on Naples \n------------------------------\n",
+	Short: "Enable serial console on Distributed Service Card",
+	Long:  "\n------------------------------\n Enable serial console on Distributed Service Card \n------------------------------\n",
 	RunE:  enableConsoleConfigCmdHandler,
 }
 
 var disableConsoleConfigCmd = &cobra.Command{
 	Use:   "disable-console",
-	Short: "Disable serial console on Naples",
-	Long:  "\n------------------------------\n Disable serial console on Naples \n------------------------------\n",
+	Short: "Disable serial console on Distributed Service Card",
+	Long:  "\n------------------------------\n Disable serial console on Distributed Service Card \n------------------------------\n",
 	RunE:  disableConsoleConfigCmdHandler,
 }
 
@@ -32,7 +32,7 @@ func init() {
 }
 
 func disableConsoleConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "consoledisable",
 		Opts:       strings.Join([]string{""}, ""),
 	}
@@ -40,7 +40,7 @@ func disableConsoleConfigCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func enableConsoleConfigCmdHandler(cmd *cobra.Command, args []string) error {
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "consoleenable",
 		Opts:       strings.Join([]string{""}, ""),
 	}

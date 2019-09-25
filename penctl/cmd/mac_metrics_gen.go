@@ -15,8 +15,8 @@ import (
 var macmetricsShowCmd = &cobra.Command{
 
 	Use:   "mac",
-	Short: "Show MacMetrics from Naples",
-	Long:  "\n---------------------------------\n Show MacMetrics From Naples \n---------------------------------\n",
+	Short: "Show MacMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show MacMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  macmetricsShowCmdHandler,
 }
 

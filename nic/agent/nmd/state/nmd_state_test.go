@@ -495,7 +495,7 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 	}
 	AssertEventually(t, f1, "Failed to verify mode is in host")
 
-	var naplesCfg nmd.Naples
+	var naplesCfg nmd.DistributedServiceCard
 
 	f2 := func() (bool, interface{}) {
 		err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
@@ -556,19 +556,19 @@ func TestNaplesNetworkMode(t *testing.T) {
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to start NMD", nm)
 
-	cfg := nmd.Naples{
+	cfg := nmd.DistributedServiceCard{
 		ObjectMeta: api.ObjectMeta{
-			Name: "NaplesConfig",
+			Name: "DistributedServiceCardConfig",
 		},
 		TypeMeta: api.TypeMeta{
-			Kind: "Naples",
+			Kind: "DistributedServiceCard",
 		},
-		Spec: nmd.NaplesSpec{
-			Mode:          nmd.MgmtMode_NETWORK.String(),
-			NetworkMode:   nmd.NetworkMode_INBAND.String(),
-			PrimaryMAC:    "42:42:42:42:42:42",
-			ID:            "42:42:42:42:42:42",
-			NaplesProfile: "default",
+		Spec: nmd.DistributedServiceCardSpec{
+			Mode:        nmd.MgmtMode_NETWORK.String(),
+			NetworkMode: nmd.NetworkMode_INBAND.String(),
+			PrimaryMAC:  "42:42:42:42:42:42",
+			ID:          "42:42:42:42:42:42",
+			DSCProfile:  "default",
 			IPConfig: &cmd.IPConfig{
 				IPAddress:  "4.4.4.4/16",
 				DefaultGW:  "",
@@ -715,10 +715,10 @@ func TestNaplesModeTransitions(t *testing.T) {
 	AssertEventually(t, f1, "Failed to verify mode is in host")
 
 	// Switch to network mode
-	naplesCfg := &nmd.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: nmd.NaplesSpec{
+	naplesCfg := &nmd.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: nmd.DistributedServiceCardSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			NetworkMode: nmd.NetworkMode_INBAND.String(),
 			//Controllers: []string{"192.168.30.10"},
@@ -728,7 +728,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			},
 			PrimaryMAC: nicKey1,
 		},
-		Status: nmd.NaplesStatus{
+		Status: nmd.DistributedServiceCardStatus{
 			AdmissionPhase: cmd.DistributedServiceCardStatus_ADMITTED.String(),
 		},
 	}
@@ -769,7 +769,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 	// Switch to host mode
 	naplesCfg.Spec.Mode = nmd.MgmtMode_HOST.String()
-	naplesCfg.Spec.NaplesProfile = "default"
+	naplesCfg.Spec.DSCProfile = "default"
 
 	AssertEventually(t, f2, "Failed to post the naples config")
 
@@ -795,10 +795,10 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 	var resp NaplesConfigResp
 
 	// Switch to network mode
-	naplesCfg := &nmd.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: nmd.NaplesSpec{
+	naplesCfg := &nmd.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: nmd.DistributedServiceCardSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey2,
 			ID:          nicKey2,
@@ -866,10 +866,10 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 	var resp NaplesConfigResp
 
 	// Switch to network mode
-	naplesCfg := &nmd.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: nmd.NaplesSpec{
+	naplesCfg := &nmd.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: nmd.DistributedServiceCardSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey3,
 			ID:          nicKey3,
@@ -941,10 +941,10 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 	var resp NaplesConfigResp
 
 	// Switch to network mode
-	naplesCfg := &nmd.Naples{
-		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-		TypeMeta:   api.TypeMeta{Kind: "Naples"},
-		Spec: nmd.NaplesSpec{
+	naplesCfg := &nmd.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{Name: "DistributedServiceCardConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		Spec: nmd.DistributedServiceCardSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
 			NetworkMode: nmd.NetworkMode_OOB.String(),
 			PrimaryMAC:  nicKey1,
@@ -998,19 +998,19 @@ func TestNaplesInvalidMode(t *testing.T) {
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to start NMD", nm)
 
-	cfg := nmd.Naples{
+	cfg := nmd.DistributedServiceCard{
 		ObjectMeta: api.ObjectMeta{
-			Name: "NaplesConfig",
+			Name: "DistributedServiceCardConfig",
 		},
 		TypeMeta: api.TypeMeta{
-			Kind: "Naples",
+			Kind: "DistributedServiceCard",
 		},
-		Spec: nmd.NaplesSpec{
-			Mode:          "Invalid Mode",
-			NetworkMode:   nmd.NetworkMode_INBAND.String(),
-			PrimaryMAC:    "42:42:42:42:42:42",
-			ID:            "42:42:42:42:42:42",
-			NaplesProfile: "default",
+		Spec: nmd.DistributedServiceCardSpec{
+			Mode:        "Invalid Mode",
+			NetworkMode: nmd.NetworkMode_INBAND.String(),
+			PrimaryMAC:  "42:42:42:42:42:42",
+			ID:          "42:42:42:42:42:42",
+			DSCProfile:  "default",
 			IPConfig: &cmd.IPConfig{
 				IPAddress:  "4.4.4.4/16",
 				DefaultGW:  "",
@@ -1156,7 +1156,7 @@ func TestNaplesCmdExec(t *testing.T) {
 	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
-	v := &nmd.NaplesCmdExecute{
+	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "ls",
 		Opts:       "-al /",
 	}
