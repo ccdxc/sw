@@ -6,6 +6,8 @@ header_type apulu_i2e_metadata_t {
         flow_role           : 1;
         rx_packet           : 1;
         session_id          : 20;
-        vnic_id             : 8;
+        vnic_id             : 16;
+        bd_id               : 16;
+        vpc_id              : 16;
     }
 }

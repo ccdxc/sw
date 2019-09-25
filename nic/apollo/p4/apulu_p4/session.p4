@@ -4,9 +4,9 @@
 action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                     iflow_tcp_win_sz, iflow_tcp_win_scale, rflow_tcp_state,
                     rflow_tcp_seq_num, rflow_tcp_ack_num, rflow_tcp_win_sz,
-                    rflow_tcp_win_scale, tx_dst_ip, tx_dst_l4port,
-                    tx_rewrite_flags, rx_rewrite_flags, tx_policer_id,
-                    rx_policer_id, timestamp, drop) {
+                    rflow_tcp_win_scale, tx_policer_id, tx_rewrite_flags,
+                    tx_xlate_id, rx_policer_id, rx_rewrite_flags, rx_xlate_id,
+                    timestamp, drop) {
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     modify_field(control_metadata.rx_packet, p4e_i2e.rx_packet);
@@ -47,15 +47,15 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
         modify_field(scratch_metadata.timestamp, timestamp);
     }
 
-    modify_field(rewrite_metadata.ip, tx_dst_ip);
-    modify_field(rewrite_metadata.l4port, tx_dst_l4port);
-
     if (p4e_i2e.rx_packet == FALSE) {
-        modify_field(rewrite_metadata.flags, tx_rewrite_flags);
         modify_field(rewrite_metadata.policer_id, tx_policer_id);
+        modify_field(rewrite_metadata.flags, tx_rewrite_flags);
+        modify_field(rewrite_metadata.xlate_id, tx_xlate_id);
+
     } else {
-        modify_field(rewrite_metadata.flags, rx_rewrite_flags);
         modify_field(rewrite_metadata.policer_id, rx_policer_id);
+        modify_field(rewrite_metadata.flags, rx_rewrite_flags);
+        modify_field(rewrite_metadata.xlate_id, rx_xlate_id);
     }
 }
 

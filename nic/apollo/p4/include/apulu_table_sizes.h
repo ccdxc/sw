@@ -1,3 +1,4 @@
+#define DEVICE_INFO_TABLE_SIZE                              16
 #define LIF_TABLE_SIZE                                      2048
 #define VLAN_TABLE_SIZE                                     4096
 #define VNI_HASH_TABLE_SIZE                                 8192
@@ -14,10 +15,12 @@
 #define MAPPING_OHASH_TABLE_SIZE                            262144      // 256K
 #define SESSION_TABLE_SIZE                                  1048576     // 1M
 #define MIRROR_SESSION_TABLE_SIZE                           256
-#define CHECKSUM_TABLE_SIZE                                 32
-
+#define NAT_TABLE_SIZE                                      65536       // 64K
 #define NEXTHOP_GROUP_TABLE_SIZE                            2048
 #define NEXTHOP_TABLE_SIZE                                  4096
+#define CHECKSUM_TABLE_SIZE                                 32
+#define VPC_TABLE_SIZE                                      1024
+#define BD_TABLE_SIZE                                       1024
 
 #define VNIC_INFO_TABLE_SIZE                                1024
 #define VNIC_INFO_RXDMA_TABLE_SIZE                          2048

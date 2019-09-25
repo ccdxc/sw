@@ -144,16 +144,21 @@ control local_mapping {
 @pragma capi appdatafields dmaci
 @pragma capi hwfields_access_api
 action mapping_info(entry_valid,
-                    pad12, nexthop_valid, nexthop_type, nexthop_id, dmaci,
+                    pad12, nexthop_valid, nexthop_type, nexthop_id,
+                    egress_bd_id, dmaci,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
-    if (txdma_to_p4e.mapping_bypass == FALSE) {
+    if (txdma_to_p4e.nexthop_type == NEXTHOP_TYPE_VPC) {
+        modify_field(p4e_i2e.vpc_id, txdma_to_p4e.mapping_lkp_id);
+    }
+    if (txdma_to_p4e.mapping_bypass == TRUE) {
         modify_field(rewrite_metadata.nexthop_type, txdma_to_p4e.nexthop_type);
         // return
     }
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
+        modify_field(vnic_metadata.egress_bd_id, egress_bd_id);
         modify_field(rewrite_metadata.dmaci, dmaci);
         modify_field(scratch_metadata.flag, nexthop_valid);
         if (nexthop_valid == TRUE) {

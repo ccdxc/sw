@@ -47,6 +47,78 @@
 #define TCP_FLOW_RESPONDER              1
 
 /*****************************************************************************/
+/* rewrite flags                                                             */
+/*****************************************************************************/
+#define TX_REWRITE_DMAC_START                   0
+#define TX_REWRITE_DMAC_MASK                    2
+#define TX_REWRITE_DMAC_NONE                    0
+#define TX_REWRITE_DMAC_FROM_MAPPING            1
+#define TX_REWRITE_DMAC_FROM_NEXTHOP            2
+#define TX_REWRITE_DMAC_BITS                    1:0
+
+#define TX_REWRITE_SMAC_START                   2
+#define TX_REWRITE_SMAC_MASK                    1
+#define TX_REWRITE_SMAC_NONE                    0
+#define TX_REWRITE_SMAC_FROM_VRMAC              1
+#define TX_REWRITE_SMAC_BITS                    2:2
+
+#define TX_REWRITE_SIP_START                    3
+#define TX_REWRITE_SIP_MASK                     1
+#define TX_REWRITE_SIP_NONE                     0
+#define TX_REWRITE_SIP_FROM_NAT                 1
+#define TX_REWRITE_SIP_BITS                     3:3
+
+#define TX_REWRITE_SPORT_START                  4
+#define TX_REWRITE_SPORT_MASK                   1
+#define TX_REWRITE_SPORT_NONE                   0
+#define TX_REWRITE_SPORT_FROM_NAT               1
+#define TX_REWRITE_SPORT_BITS                   4:4
+
+#define TX_REWRITE_ENCAP_START                  5
+#define TX_REWRITE_ENCAP_MASK                   2
+#define TX_REWRITE_ENCAP_NONE                   0
+#define TX_REWRITE_ENCAP_VLAN                   1
+#define TX_REWRITE_ENCAP_VXLAN                  2
+#define TX_REWRITE_ENCAP_BITS                   6:5
+
+#define RX_REWRITE_DMAC_START                   0
+#define RX_REWRITE_DMAC_MASK                    2
+#define RX_REWRITE_DMAC_NONE                    0
+#define RX_REWRITE_DMAC_FROM_MAPPING            1
+#define RX_REWRITE_DMAC_FROM_NEXTHOP            2
+#define RX_REWRITE_DMAC_BITS                    1:0
+
+#define RX_REWRITE_SMAC_START                   2
+#define RX_REWRITE_SMAC_MASK                    1
+#define RX_REWRITE_SMAC_NONE                    0
+#define RX_REWRITE_SMAC_FROM_VRMAC              1
+#define RX_REWRITE_SMAC_BITS                    2:2
+
+#define RX_REWRITE_DIP_START                    3
+#define RX_REWRITE_DIP_MASK                     1
+#define RX_REWRITE_DIP_NONE                     0
+#define RX_REWRITE_DIP_FROM_NAT                 1
+#define RX_REWRITE_DIP_BITS                     3:3
+
+#define RX_REWRITE_DPORT_START                  4
+#define RX_REWRITE_DPORT_MASK                   1
+#define RX_REWRITE_DPORT_NONE                   0
+#define RX_REWRITE_DPORT_FROM_NAT               1
+#define RX_REWRITE_DPORT_BITS                   4:4
+
+#define RX_REWRITE_ENCAP_START                  4
+#define RX_REWRITE_ENCAP_MASK                   1
+#define RX_REWRITE_ENCAP_NONE                   0
+#define RX_REWRITE_ENCAP_VLAN                   1
+#define RX_REWRITE_ENCAP_BITS                   4:4
+
+#define TX_REWRITE(a, attr, val) \
+    ((((a) >> TX_REWRITE_ ## attr ## _START) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
+
+#define RX_REWRITE(a, attr, val) \
+    ((((a) >> RX_REWRITE_ ## attr ## _START) & RX_REWRITE_ ## attr ## _MASK) == RX_REWRITE_ ## attr ## _ ## val)
+
+/*****************************************************************************/
 /* route result type and bit position                                        */
 /*****************************************************************************/
 #define ROUTE_RESULT_TYPE_NEXTHOP                0

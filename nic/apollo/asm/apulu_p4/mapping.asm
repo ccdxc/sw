@@ -12,73 +12,77 @@ struct phv_         p;
 %%
 
 mapping_info:
-    bbeq        k.txdma_to_p4e_mapping_bypass, TRUE, mapping_miss
-    phvwr       p.rewrite_metadata_nexthop_type, k.txdma_to_p4e_nexthop_type
+    seq             c7, k.txdma_to_p4e_nexthop_type, NEXTHOP_TYPE_VPC
+    phvwr.c7        p.p4e_i2e_vpc_id, k.txdma_to_p4e_mapping_lkp_id
 
-    bbne        d.mapping_info_d.entry_valid, TRUE, mapping_miss
+    bbeq            k.txdma_to_p4e_mapping_bypass, TRUE, mapping_miss
+    phvwr           p.rewrite_metadata_nexthop_type, k.txdma_to_p4e_nexthop_type
+
+    bbne            d.mapping_info_d.entry_valid, TRUE, mapping_miss
     // Set bit 31 for overflow hash lookup to work
-    ori         r2, r0, 0x80000000
-    bcf         [c1], mapping_hit
+    ori             r2, r0, 0x80000000
+    bcf             [c1], mapping_hit
 
     // Check hash1 and hint1
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash1
-    sne         c2, d.mapping_info_d.hint1, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint1
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash1
+    sne             c2, d.mapping_info_d.hint1, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint1
     // Check hash2 and hint2
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash2
-    sne         c2, d.mapping_info_d.hint2, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint2
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash2
+    sne             c2, d.mapping_info_d.hint2, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint2
     // Check hash3 and hint3
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash3
-    sne         c2, d.mapping_info_d.hint3, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint3
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash3
+    sne             c2, d.mapping_info_d.hint3, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint3
     // Check hash4 and hint4
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash4
-    sne         c2, d.mapping_info_d.hint4, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint4
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash4
+    sne             c2, d.mapping_info_d.hint4, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint4
     // Check hash5 and hint5
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash5
-    sne         c2, d.mapping_info_d.hint5, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint5
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash5
+    sne             c2, d.mapping_info_d.hint5, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint5
     // Check hash6 and hint6
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash6
-    sne         c2, d.mapping_info_d.hint6, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint6
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash6
+    sne             c2, d.mapping_info_d.hint6, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint6
     // Check hash7 and hint7
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash7
-    sne         c2, d.mapping_info_d.hint7, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint7
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash7
+    sne             c2, d.mapping_info_d.hint7, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint7
     // Check hash8 and hint8
-    seq         c1, r1[HASH_MSB], d.mapping_info_d.hash8
-    sne         c2, d.mapping_info_d.hint8, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.hint8
+    seq             c1, r1[HASH_MSB], d.mapping_info_d.hash8
+    sne             c2, d.mapping_info_d.hint8, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.hint8
     // Check for more hashes
-    seq         c1, d.mapping_info_d.more_hashes, 1
-    sne         c2, d.mapping_info_d.more_hints, r0
-    bcf         [c1&c2], mapping_hash_hit
-    add         r2, r2, d.mapping_info_d.more_hints
+    seq             c1, d.mapping_info_d.more_hashes, 1
+    sne             c2, d.mapping_info_d.more_hints, r0
+    bcf             [c1&c2], mapping_hash_hit
+    add             r2, r2, d.mapping_info_d.more_hints
 mapping_miss:
-    phvwr.e     p.egress_recirc_mapping_done, TRUE
+    phvwr.e         p.egress_recirc_mapping_done, TRUE
     nop
 
 mapping_hit:
-    seq         c1, d.mapping_info_d.nexthop_valid, TRUE
-    phvwr.c1    p.rewrite_metadata_nexthop_type, d.mapping_info_d.nexthop_type
-    phvwr.c1   p.txdma_to_p4e_nexthop_id, d.mapping_info_d.nexthop_id
-    phvwr.e     p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
-    phvwr.f     p.egress_recirc_mapping_done, TRUE
+    seq             c1, d.mapping_info_d.nexthop_valid, TRUE
+    phvwr.c1        p.rewrite_metadata_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr.c1        p.txdma_to_p4e_nexthop_id, d.mapping_info_d.nexthop_id
+    phvwr           p.vnic_metadata_egress_bd_id, d.mapping_info_d.egress_bd_id
+    phvwr.e         p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
+    phvwr.f         p.egress_recirc_mapping_done, TRUE
 
 mapping_hash_hit:
-    phvwr.e     p.egress_recirc_mapping_ohash, r2
-    phvwr.f     p.control_metadata_mapping_ohash_lkp, 1
+    phvwr.e         p.egress_recirc_mapping_ohash, r2
+    phvwr.f         p.control_metadata_mapping_ohash_lkp, 1
 
 /*****************************************************************************/
 /* error function                                                            */

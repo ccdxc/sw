@@ -36,18 +36,18 @@ session_tcp_initiator:
 session_tcp_responder:
 
 session_info_common:
-    phvwr           p.rewrite_metadata_ip, d.session_info_d.tx_dst_ip
-    phvwr           p.rewrite_metadata_l4port, d.session_info_d.tx_dst_l4port
-
     bbeq            k.p4e_i2e_rx_packet, FALSE, session_tx
+    nop
 session_rx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_id, d.session_info_d.rx_policer_id
     b               session_stats
+    phvwr           p.rewrite_metadata_xlate_id, d.session_info_d.rx_xlate_id
 
 session_tx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_id, d.session_info_d.tx_policer_id
+    phvwr           p.rewrite_metadata_xlate_id, d.session_info_d.tx_xlate_id
 
 session_stats:
     seq             c1, k.egress_recirc_valid, TRUE

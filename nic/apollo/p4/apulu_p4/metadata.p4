@@ -28,6 +28,7 @@ header_type vnic_metadata_t {
     fields {
         vnic_id         : 16;
         bd_id           : 16;
+        egress_bd_id    : 16;
         vpc_id          : 16;
     }
 }
@@ -49,17 +50,24 @@ header_type control_metadata_t {
         span_copy               : 1;
         update_checksum         : 1;
         egress_bypass           : 1;
+        l2_enabled              : 1;
+        learn_enabled           : 1;
+        device_profile_id       : 4;
+        to_device_ip            : 1;
     }
 }
 
 header_type rewrite_metadata_t {
     fields {
-        ip                  : 128;
-        l4port              : 16;
+        xlate_id            : 16;
         flags               : 8;
         policer_id          : 16;
         dmaci               : 48;
+        device_ipv4_addr    : 32;
+        device_ipv6_addr    : 128;
         nexthop_type        : 2;
+        vrmac               : 48;
+        vni                 : 24;
     }
 }
 
@@ -90,6 +98,9 @@ header_type scratch_metadata_t {
         session_stats_addr  : 34;
         num_nexthops        : 4;
         nexthop_id          : 16;
+        ip_totallen         : 16;
+        ipv4_addr           : 32;
+        ipv6_addr           : 128;
     }
 }
 

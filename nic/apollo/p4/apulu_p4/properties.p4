@@ -165,3 +165,52 @@ control input_properties {
         apply(vlan);
     }
 }
+
+/******************************************************************************/
+/* VPC info                                                                   */
+/******************************************************************************/
+action vpc_info(vni, vrmac) {
+    modify_field(rewrite_metadata.vni, vni);
+    modify_field(rewrite_metadata.vrmac, vrmac);
+}
+
+@pragma stage 2
+@pragma index_table
+table vpc {
+    reads {
+        p4e_i2e.vpc_id  : exact;
+    }
+    actions {
+        vpc_info;
+    }
+    size : VPC_TABLE_SIZE;
+}
+
+/******************************************************************************/
+/* BD info                                                                    */
+/******************************************************************************/
+action bd_info(vni, vrmac) {
+    if (vnic_metadata.egress_bd_id == 0) {
+        // return;
+    }
+
+    modify_field(rewrite_metadata.vni, vni);
+    modify_field(rewrite_metadata.vrmac, vrmac);
+}
+
+@pragma stage 3
+@pragma index_table
+table bd {
+    reads {
+        vnic_metadata.egress_bd_id  : exact;
+    }
+    actions {
+        bd_info;
+    }
+    size : BD_TABLE_SIZE;
+}
+
+control output_properties {
+    apply(vpc);
+    apply(bd);
+}

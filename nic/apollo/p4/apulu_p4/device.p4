@@ -1,0 +1,55 @@
+/*****************************************************************************/
+/* Device info                                                               */
+/*****************************************************************************/
+action p4i_device_info(device_mac_addr1, device_mac_addr2,
+                       device_ipv4_addr, device_ipv6_addr,
+                       l2_enabled, learn_enabled) {
+    modify_field(scratch_metadata.mac, device_mac_addr1);
+    modify_field(scratch_metadata.mac, device_mac_addr2);
+    modify_field(scratch_metadata.ipv4_addr, device_ipv4_addr);
+    modify_field(scratch_metadata.ipv6_addr, device_ipv6_addr);
+
+    if (((ethernet_1.dstAddr == device_mac_addr1) or
+        (ethernet_1.dstAddr == device_mac_addr2)) and
+        (((ipv4_1.valid == TRUE) and (ipv4_1.dstAddr == device_ipv4_addr)) or
+        ((ipv6_1.valid == TRUE) and (ipv6_1.dstAddr == device_ipv6_addr)))) {
+        modify_field(control_metadata.to_device_ip, TRUE);
+    }
+    modify_field(control_metadata.l2_enabled, l2_enabled);
+    modify_field(control_metadata.learn_enabled, learn_enabled);
+}
+
+@pragma stage 0
+table p4i_device_info {
+    reads {
+        control_metadata.device_profile_id  : exact;
+    }
+    actions {
+        p4i_device_info;
+    }
+    size : DEVICE_INFO_TABLE_SIZE;
+}
+
+control ingress_device_info {
+    apply(p4i_device_info);
+}
+
+action p4e_device_info(device_ipv4_addr, device_ipv6_addr) {
+    modify_field(rewrite_metadata.device_ipv4_addr, device_ipv4_addr);
+    modify_field(rewrite_metadata.device_ipv6_addr, device_ipv6_addr);
+}
+
+@pragma stage 2
+table p4e_device_info {
+    reads {
+        control_metadata.device_profile_id  : exact;
+    }
+    actions {
+        p4e_device_info;
+    }
+    size : DEVICE_INFO_TABLE_SIZE;
+}
+
+control egress_device_info {
+    apply(p4e_device_info);
+}

@@ -14,17 +14,18 @@
 #include "vnic.p4"
 #include "tunnel.p4"
 #include "inter_pipe.p4"
-#include "nat.p4"
 #include "meter.p4"
 #endif
 
+#include "device.p4"
 #include "key.p4"
-#include "input_properties.p4"
+#include "properties.p4"
 #include "mappings.p4"
 #include "flow.p4"
 #include "nacl.p4"
-#include "session.p4"
 #include "mirror.p4"
+#include "session.p4"
+#include "nat.p4"
 #include "nexthops.p4"
 #include "checksum.p4"
 #include "stats.p4"
@@ -46,6 +47,7 @@ action egress_drop(drop_bit) {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
+    ingress_device_info();
     key_init();
     input_properties();
     local_mapping();
@@ -58,12 +60,15 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
+    egress_device_info();
     if (control_metadata.span_copy == TRUE) {
         mirror();
     } else {
         if (control_metadata.egress_bypass == FALSE) {
             mapping();
             session_lookup();
+            output_properties();
+            nat();
             nexthops();
             update_checksums();
             egress_stats();
