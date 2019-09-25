@@ -342,7 +342,8 @@ struct lif {
 	struct ionic_dma_info rss_dma;
 	u32 rss_ind_tbl_sz;
 
-	int intr_coalesce;		/* Interrupt coalescing value programmed. */
+	int intr_coalesce_us;		/* Interrupt coalescing value in us. */
+	int intr_coalesce_max_us;	/* Interrupt coalescing maximum value in us. */
 
 	struct mutex dbid_inuse_lock;
 	unsigned long *dbid_inuse;

@@ -8,6 +8,7 @@ testcases:
     -   name    : UplinkIntf_INTR_COAL
         testcase: testcases.drivers.interruptcoalescing
         disable : False
+        ignore  : True
         iterators :
             type               : nested
             pktsize            : [ 64 ]

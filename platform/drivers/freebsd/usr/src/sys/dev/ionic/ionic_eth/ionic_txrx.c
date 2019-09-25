@@ -131,10 +131,10 @@ TUNABLE_INT("hw.ionic.rx_clean_limit", &ionic_rx_clean_limit);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_clean_limit, CTLFLAG_RWTUN,
     &ionic_rx_clean_limit, 0, "Rx can process maximum number of descriptors.");
 
-int ionic_intr_coalesce = 64;
+int ionic_intr_coalesce = 3;
 TUNABLE_INT("hw.ionic.intr_coalesce", &ionic_intr_coalesce);
 SYSCTL_INT(_hw_ionic, OID_AUTO, intr_coalesce, CTLFLAG_RWTUN,
-    &ionic_intr_coalesce, 0, "Initial interrupt coal value.");
+    &ionic_intr_coalesce, 0, "Initial interrupt coal value in us.");
 
 /* Size of Rx scatter gather buffers, disabled by default. */
 int ionic_rx_sg_size = 0;
@@ -2998,8 +2998,10 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,
 			&lif->rx_mbuf_size, 0, "Size of receive buffers");
-	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "curr_coal", CTLFLAG_RD,
-			&lif->intr_coalesce, 0, "Get current interrupt coalescing value");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "curr_coal_us", CTLFLAG_RD,
+			&lif->intr_coalesce_us, 0, "Get current interrupt coalescing value(us)");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "coal_max_us", CTLFLAG_RD,
+			&lif->intr_coalesce_max_us, 0, "Maximum interrupt coalescing value(us)");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "intr_coal", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 			ionic_intr_coal_handler, "IU", "Set interrupt coalescing value");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",

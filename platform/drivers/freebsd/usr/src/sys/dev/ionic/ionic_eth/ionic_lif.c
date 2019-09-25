@@ -2157,20 +2157,29 @@ ionic_setup_intr_coal(struct lif *lif, int coal)
 	if (ident->dev.intr_coal_div == 0)
 		return (ENXIO);
 	
-	intr_coal = coal * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
-	
-	if (intr_coal == lif->intr_coalesce)
-		return (0);	
-
-	if (intr_coal > INTR_CTRL_COAL_MAX) {
+	if (coal > lif->intr_coalesce_max_us) {
 		IONIC_NETDEV_ERROR(ifp, "Coalescing value %d out of range, max: %d\n", coal,
-				INTR_CTRL_COAL_MAX * ident->dev.intr_coal_div / ident->dev.intr_coal_mult);
+				lif->intr_coalesce_max_us);
 		return (ERANGE);
 	}
 
+	if (coal == lif->intr_coalesce_us)
+		return (0);
+
+	lif->intr_coalesce_us = coal;
+
+	intr_coal = coal * ident->dev.intr_coal_mult /
+		  ident->dev.intr_coal_div;
+
+	/*
+	 * In case user set a value which is min that what we can set,
+	 * roundup the value.
+	 */
+	if (!intr_coal && coal) {
+		intr_coal = 1;
+	}
+
 	IONIC_NETDEV_INFO(ifp, "New intr coal: %d\n", intr_coal);
-	lif->intr_coalesce = intr_coal;
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		ionic_intr_coal_init(idev->intr_ctrl, rxq->intr.index,
@@ -2233,6 +2242,7 @@ static int
 ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
 	struct device *dev = ionic->dev;
+	struct identity *ident = &ionic->ident;
 	struct lif *lif;
 	int err, dbpage_num;
 	char name[16];
@@ -2348,6 +2358,8 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (err)
 		goto err_out_free_qs;
 
+	lif->intr_coalesce_max_us = INTR_CTRL_COAL_MAX * ident->dev.intr_coal_div /
+		  ident->dev.intr_coal_mult;
 	/* Setup tunables. */
 	ionic_setup_intr_coal(lif, ionic_intr_coalesce);
 
@@ -4348,7 +4360,7 @@ try_again:
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ],
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ],
 		neqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_EQ]);
-	dev_info(ionic->dev, "ucasts: %u, mcasts: %u, intr_coal: %u, div: %u\n",
+	dev_info(ionic->dev, "ucasts: %u, mcasts: %u, intr_coal mult: %u, div: %u\n",
 		ident->lif.eth.max_ucast_filters, ident->lif.eth.max_mcast_filters,
 		ident->dev.intr_coal_mult, ident->dev.intr_coal_div);
 

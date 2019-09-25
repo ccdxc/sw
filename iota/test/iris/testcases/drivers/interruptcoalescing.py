@@ -79,7 +79,7 @@ def Verify(tc):
             if tc.os == 'linux':
                 api.Trigger_AddHostCommand(req, n, "ethtool -c %s" % i)
             elif tc.os == 'freebsd':
-                api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.curr_coal" % \
+                api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.curr_coal_us" % \
                                                     (host.GetNaplesSysctl(i)))
 
     tc.resp = api.Trigger(req)
@@ -95,9 +95,9 @@ def Verify(tc):
         current_coalescing = str(int(tc.iterators.coales_interval/coales_period) \
                                      *coales_period)
     elif tc.os == 'freebsd':
-        # freebsd returns coalescing tics
-        # 3 is Naples interrupt period
-        current_coalescing = str(int(tc.iterators.coales_interval/3))
+        # freebsd returns coalescing value, same as
+        # what user programmed.
+        current_coalescing = str(int(tc.iterators.coales_interval))
 
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
