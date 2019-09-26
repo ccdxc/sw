@@ -163,6 +163,7 @@ private:
     PdClient *pd;
     // HAL Info
     devapi *dev_api;
+    bool skip_hwinit;
     // Resources
     std::map<uint64_t, EthLif *> lif_map;
     struct eth_dev_res dev_resources;

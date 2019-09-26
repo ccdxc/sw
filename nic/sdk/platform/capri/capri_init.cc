@@ -152,7 +152,7 @@ capri_asm_init (capri_cfg_t *cfg)
            symbols,
            num_symbols,
            cfg->asm_cfg[i].sort_func,
-           sdk::asic::is_slave_init());
+           sdk::asic::is_soft_init());
 
        if (symbols) {
            for (uint32_t j = 0; j < num_symbols; j++) {
@@ -451,11 +451,16 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "capri_state_pd_init failure, err : %d", ret);
 
-    // Skip the remaining for the slave initialization
-    if (sdk::asic::is_slave_init()) {
+    // soft/upgrade, need to initialize only asm and tm.
+    if (!sdk::asic::is_hard_init()) {
         ret = capri_asm_init(cfg);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Capri ASM init failure, err : %d", ret);
+        // initialize the profiles for capri register accesses by other modules (link manager).
+        ret = capri_tm_init(cfg->catalog,
+                        &cfg->device_profile->qos_profile);
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "Capri TM Slave init failure, err : %d", ret);
         goto end;
     }
 
@@ -521,7 +526,7 @@ end:
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
     }
 
-    return SDK_RET_OK;
+    return ret;
 }
 
 }    // namespace capri
@@ -531,20 +536,53 @@ end:
 namespace sdk {
 namespace asic {
 
-static bool slave_init;
+static asic_init_type_t asic_init_type = ASIC_INIT_TYPE_HARD;
+static asic_init_state_t asic_init_state = ASIC_INIT_STATE_RUNNING;
 
 __attribute__((constructor)) void asic_slave_init_(void) {
-    if (getenv("ASIC_SLAVE_INIT")) {
-        slave_init = true;
+    char *value;
+
+    if ((value = getenv("ASIC_SOFT_INIT"))) {
+        asic_init_type = (asic_init_type_t)atoi(value);
     } else {
-        slave_init = false;
+        asic_init_type = ASIC_INIT_TYPE_HARD;
     }
 }
 
 bool
-is_slave_init (void)
+is_soft_init (void)
 {
-    return slave_init;
+    return asic_init_type == ASIC_INIT_TYPE_SOFT ? true : false;
+}
+
+bool
+is_upgrade_init (void)
+{
+    return asic_init_type == ASIC_INIT_TYPE_UPGRADE ? true : false;
+}
+
+bool
+is_hard_init (void)
+{
+    return asic_init_type == ASIC_INIT_TYPE_HARD ? true : false;
+}
+
+void
+set_init_type (asic_init_type_t type)
+{
+    asic_init_type = type;
+}
+
+void
+set_init_state (asic_init_state_t state)
+{
+    asic_init_state = state;
+}
+
+bool
+is_quiesced (void)
+{
+    return asic_init_state == ASIC_INIT_STATE_QUIESCED ? true : false;
 }
 
 //------------------------------------------------------------------------------

@@ -92,6 +92,7 @@ Eth::Eth(devapi *dev_api,
     sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
+    this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
     NIC_LOG_DEBUG("{}: Restoring eth device in Upgrade mode", spec->name);
 
     // Reserve lifs
@@ -131,27 +132,29 @@ Eth::Eth(devapi *dev_api,
 
     devcmd = &regs->devcmd;
 
-    // Init Device registers
-    regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
-    regs->info.version = 0x1;
+    if (!skip_hwinit) {
+        // Init Device registers
+        regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
+        regs->info.version = 0x1;
 
-    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
-    regs->info.asic_type = sta_ver & 0xf;
-    regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+        const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                            CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+        regs->info.asic_type = sta_ver & 0xf;
+        regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
-    std::string sn;
-    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
-    strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
+        std::string sn;
+        sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+        strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
 
-    boost::property_tree::ptree ver;
-    boost::property_tree::read_json(VERSION_FILE, ver);
-    strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
-        sizeof(regs->info.fw_version));
+        boost::property_tree::ptree ver;
+        boost::property_tree::read_json(VERSION_FILE, ver);
+        strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
+                 sizeof(regs->info.fw_version));
 #endif
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+        WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
+    }
 
     // Allocate CMB region
     if (spec->enable_rdma && spec->barmap_size) {
@@ -197,7 +200,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    memset(port_config, 0, sizeof(union port_config));
+    MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
         port_config_addr);
@@ -211,7 +214,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
-    memset(port_status, 0, sizeof(struct port_status));
+    MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
         port_status_addr);
@@ -288,6 +291,7 @@ Eth::Eth(devapi *dev_api,
     sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
+    this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
 
     // Allocate lifs
     ret = pd->lm_->alloc_id(&dev_resources.lif_base, spec->lif_count);
@@ -326,28 +330,29 @@ Eth::Eth(devapi *dev_api,
 
     devcmd = &regs->devcmd;
 
-    // Init Device registers
-    regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
-    regs->info.version = 0x1;
+    if (!skip_hwinit) {
+        // Init Device registers
+        regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
+        regs->info.version = 0x1;
 
-    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
-    regs->info.asic_type = sta_ver & 0xf;
-    regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+        const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                            CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+        regs->info.asic_type = sta_ver & 0xf;
+        regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
-    std::string sn;
-    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
-    strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
+        std::string sn;
+        sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+        strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
 
-    boost::property_tree::ptree ver;
-    boost::property_tree::read_json(VERSION_FILE, ver);
-    strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
-        sizeof(regs->info.fw_version));
+        boost::property_tree::ptree ver;
+        boost::property_tree::read_json(VERSION_FILE, ver);
+        strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
+                 sizeof(regs->info.fw_version));
 #endif
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+        WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
-
+    }
     // Allocate CMB region
     if (spec->enable_rdma && spec->barmap_size) {
         dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
@@ -392,7 +397,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    memset(port_config, 0, sizeof(union port_config));
+    MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
         port_config_addr);
@@ -406,7 +411,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
-    memset(port_status, 0, sizeof(struct port_status));
+    MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
         port_status_addr);
@@ -596,13 +601,19 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
 bool
 Eth::CreateLocalDevice()
 {
-    NIC_LOG_DEBUG("{}: Creating MNIC device", spec->name);
+    bool skip_init = skip_hwinit;
+    struct mnet_dev_create_req_t *mnet_req = NULL;
 
 #ifndef __aarch64__
-    return true;
+    skip_init = true;
 #endif
 
-    struct mnet_dev_create_req_t *mnet_req = NULL;
+    if (skip_init) {
+        NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
+        return true;
+    }
+
+    NIC_LOG_DEBUG("{}: Creating MNIC device", spec->name);
 
     mnet_req = (struct mnet_dev_create_req_t *)calloc(1, sizeof(*mnet_req));
     if (mnet_req == NULL) {

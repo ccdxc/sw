@@ -870,8 +870,8 @@ artemis_impl::pipeline_init(void) {
     ret = pipeline_p4_hbm_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // skip the remaining if it is a slave initialization
-    if (sdk::asic::is_slave_init()) {
+    // skip the remaining if it is a soft initialization
+    if (sdk::asic::is_soft_init()) {
         return SDK_RET_OK;
     }
 

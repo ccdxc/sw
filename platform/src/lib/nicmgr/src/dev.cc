@@ -96,6 +96,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     this->config_file = config_file;
     pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
+    this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
 
     printf("Nicmgr forwarding mode: %s\n", FWD_MODE_TYPES_str(fwd_mode));
     NIC_LOG_DEBUG("Event loop: {:#x}", (uint64_t)this->loop);
@@ -108,12 +109,13 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
-    ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF,
+    if (!skip_hwinit) {
+        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF,
                                                     NICMGR_LIF_MAX);
-    if (ret != sdk::SDK_RET_OK) {
-        throw runtime_error("Failed to reset LIFs");
+        if (ret != sdk::SDK_RET_OK) {
+            throw runtime_error("Failed to reset LIFs");
+        }
     }
-
     upg_state = UNKNOWN_STATE;
 }
 
@@ -492,11 +494,12 @@ DeviceManager::HalEventHandler(bool status)
         pd->update();
 
         // Create uplinks
-        for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-            uplink_t *up = it->second;
-            dev_api->uplink_create(up->id, up->port, up->is_oob);
+        if (!skip_hwinit) {
+            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+                uplink_t *up = it->second;
+                dev_api->uplink_create(up->id, up->port, up->is_oob);
+            }
         }
-
         // Setting hal clients in all devices
         SetHalClient(dev_api);
 

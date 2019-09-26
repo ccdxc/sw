@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "lib/thread/thread.hpp"
+#include "asic/asic.hpp"
 #include "lib/periodic/periodic.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "lib/pal/pal.hpp"

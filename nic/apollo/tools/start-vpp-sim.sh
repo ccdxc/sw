@@ -49,7 +49,7 @@ counter=$((600*TIMEOUT_SCALE))
 while [ $counter -gt 0 ]
 do
     if [ -f "$NICMGR_FILE" ]; then
-        if grep -q "cpu_mnic0: Creating MNIC device" $NICMGR_FILE; then
+        if grep -q "cpu_mnic0: Skipping MNIC device" $NICMGR_FILE; then
             echo "NICMGR is up, bring-up VPP" >> $VPPLOG_FILE
             break
         fi

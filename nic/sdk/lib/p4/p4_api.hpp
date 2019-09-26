@@ -152,6 +152,16 @@ typedef struct p4pd_cfg_s {
 } p4pd_cfg_t;
 p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
 
+/* P4PD SRAM/TCAM/HBM confinguration
+ * Updated by parsing the table map config file
+ */
+typedef struct p4pd_table_max_cfg_s {
+    uint32_t tcam_ingress_depth;
+    uint32_t tcam_egress_depth;
+    uint32_t sram_ingress_depth;
+    uint32_t sram_egress_depth;
+} p4pd_table_max_cfg_t;
+
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
  * and free up heap memory.
@@ -593,6 +603,8 @@ extern uint16_t p4pd_rxdma_tbl_sw_action_data_size[];
 
 extern uint32_t p4pd_rxdma_tableid_min_get();
 extern uint32_t p4pd_rxdma_tableid_max_get();
+extern uint32_t p4pd_sram_table_depth_get(p4pd_pipeline_t pipeline);
+extern uint32_t p4pd_tcam_table_depth_get(p4pd_pipeline_t pipeline);
 
 /*============================  P4PLUS PD RXDMA TABLE APIs ===================*/
 
@@ -976,5 +988,6 @@ p4pd_txdma_actiondata_appdata_size_get(uint32_t tableid,
 uint32_t
 p4pd_rxdma_actiondata_appdata_size_get(uint32_t tableid,
                                        uint8_t  actionid);
+p4pd_error_t p4pd_table_adjust_offsets(void);
 
 #endif    // __P4_API_H__

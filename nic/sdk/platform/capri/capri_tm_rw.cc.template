@@ -4355,6 +4355,11 @@ capri_tm_init (sdk::lib::catalog* catalog,
 
     set_tm_ctx(tm_cfg_profile, &asic_profile);
 
+    // Below initialization happens only once after reset
+    if (!sdk::asic::is_hard_init()) {
+        return ret;
+    }
+
     ret = capri_tm_global_init();
     if (ret != sdk::SDK_RET_OK) {
         SDK_TRACE_ERR("Error initing global config ret %d", ret);

@@ -80,7 +80,51 @@ typedef struct asic_hbm_bw_s {
     asic_bw_t avg;
 } asic_hbm_bw_t;
 
-bool is_slave_init(void);
+// Asic init types. Programmer has to understand these init types and write the
+// asic init codes under the below types. Purposes of these types are
+//
+// Hard :    Default type.
+//           Initializes all the registers,state variables and bringups all the
+//           threads as per the code flow.
+//
+// Soft :    Initializes the state variables for read access to the tables and registers.
+//           Will not launch the process threads as per the code flow.
+//           Example usage for this initialization is for "CLI" where it requires to
+//           access the registers or tables for debugging.
+//           Codes which are relevant for the above case should be put under is_soft_init()
+//
+// Upgrade : Will be setup by Upgrade manager before launching the new application.
+//           Does not initializes the registers as it is configured by the Hard init
+//           Initializes all the state variables to accept the new configuration from Agent
+//           and program the HW tables.
+//           Registers/tables which are shared by new and currently-active processes/pipeline,
+//           are modified in quiesced state.
+//           Codes which are relevant for the above case should be put under is_upgrade_init()
+typedef enum asic_init_type_e {
+    ASIC_INIT_TYPE_HARD = 0,
+    ASIC_INIT_TYPE_SOFT = 1,
+    ASIC_INIT_TYPE_UPGRADE = 2
+} asic_init_type_t;
+
+// Asic init states.
+// Running  : Default init state.
+// Quiesced : HW has been quiesced to modify HW registers which are used in the P4 data path.
+//            Once the modification has been done, programmer should move back the state to
+//            running.
+typedef enum asic_init_state_e {
+    ASIC_INIT_STATE_RUNNING = 0,
+    ASIC_INIT_STATE_QUIESCED = 1
+} asic_init_state_t;
+
+// returns true if the init type is SOFT, false otherwise
+bool is_soft_init(void);
+// returns true if the init type is UPGRADE, false otherwise
+bool is_upgrade_init(void);
+// returns true if the init type is HARD, false otherwise(SOFT/UPGRADE)
+bool is_hard_init(void);
+void set_init_type(asic_init_type_t type);
+void set_init_state(asic_init_state_t state);
+bool is_quiesced(void);
 
 }    // namespace asic
 }    // namespace sdk

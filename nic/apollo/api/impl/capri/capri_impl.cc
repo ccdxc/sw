@@ -84,7 +84,9 @@ capri_impl::asic_init(asic_cfg_t *asic_cfg) {
     asic_cfg_ = *asic_cfg;
 
     // set the reserved min for uplink ports
-    sdk::platform::capri::capri_tm_set_reserved_min(200);
+    if (sdk::asic::is_hard_init()) {
+        sdk::platform::capri::capri_tm_set_reserved_min(200);
+    }
     return SDK_RET_OK;
 }
 

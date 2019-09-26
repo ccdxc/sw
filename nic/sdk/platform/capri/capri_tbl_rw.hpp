@@ -45,6 +45,7 @@ typedef struct p4plus_prog_s {
 
 int capri_table_rw_init(capri_cfg_t *capri_cfg);
 int capri_p4plus_table_rw_init(void);
+void capri_mpu_icache_invalidate(void);
 
 void capri_table_rw_cleanup();
 
@@ -165,6 +166,7 @@ bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
 
 void capri_table_csr_cache_inval_init(void);
+void capri_table_profile_update (void);
 
 } // namespace capri
 } // namespace platform

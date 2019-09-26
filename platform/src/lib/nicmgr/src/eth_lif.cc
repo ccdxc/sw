@@ -137,6 +137,10 @@ EthLif::EthLif(devapi *dev_api,
 
     EthLif::loop = loop;
 
+    // Update Init type (Master or Slave). State syncing can be done later
+    // If the lif has been created already(from shm info), update to slave init
+    skip_hwinit = pd->is_lif_hwinit_done(res->lif_id);
+
     // Create LIF
     state = LIF_STATE_CREATING;
 
@@ -199,8 +203,10 @@ EthLif::EthLif(devapi *dev_api,
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
-    pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
-        &hal_lif_info_, 0x0);
+    if (!skip_hwinit) {
+        pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
+            &hal_lif_info_, 0x0);
+    }
 
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}",
                  spec->name,
@@ -240,7 +246,7 @@ EthLif::EthLif(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif config!", hal_lif_info_.name);
         throw;
     }
-    memset(lif_config, 0, sizeof(union lif_config));
+    MEM_CLR(lif_config_addr, lif_config, sizeof(union lif_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: lif_config_addr {:#x}", hal_lif_info_.name,
         lif_config_addr);
@@ -254,7 +260,7 @@ EthLif::EthLif(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map lif status!", hal_lif_info_.name);
         throw;
     }
-    memset(lif_status, 0, sizeof(struct lif_status));
+    MEM_CLR(lif_status_addr, lif_status, sizeof(struct lif_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: lif_status_addr {:#x}", hal_lif_info_.name,
         lif_status_addr);
@@ -268,7 +274,7 @@ EthLif::EthLif(devapi *dev_api,
             hal_lif_info_.name);
         throw;
     }
-    MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
+    MEM_CLR(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), skip_hwinit);
 
     NIC_LOG_INFO("{}: notify_ring_base {:#x}", hal_lif_info_.name, notify_ring_base);
 

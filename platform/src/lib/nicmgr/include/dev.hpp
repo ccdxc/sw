@@ -116,6 +116,7 @@ private:
     EV_P;
     devapi *dev_api;
     PdClient *pd;
+    bool skip_hwinit;
     std::map<uint32_t, uplink_t*> uplinks;
 
     bool init_done;

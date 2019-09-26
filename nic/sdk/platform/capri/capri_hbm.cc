@@ -100,17 +100,30 @@ void
 reset_hbm_regions (capri_cfg_t *capri_cfg)
 {
     mpartition_region_t *reg;
-    //uint8_t             tmp[1024], zeros[1024] = {0};
-    //uint64_t            addr = 0;
+    mem_addr_t va, pa;
 
-    if (capri_cfg && (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS)) {
+    if (capri_cfg && ((capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS))) {
         for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
             reg = g_capri_state_pd->mempartition()->region(i);
             if (reg->reset) {
                 // Reset only for haps
                 SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
-                sdk::asic::asic_mem_write(g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                                          NULL, reg->size);
+
+                pa = g_capri_state_pd->mempartition()->addr(reg->start_offset);
+                va = (mem_addr_t)sdk::lib::pal_mem_map(pa, reg->size);
+                if (va) {
+                    memset((void *)va, 0, reg->size);
+                    sdk::lib::pal_mem_unmap((void *)va);
+                } else {
+                    uint8_t zeros[1024] = {0};
+                    int64_t rem = reg->size;
+                    while (rem > 0) {
+                        sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem > sizeof(zeros) ? sizeof(zeros) : rem);
+                        pa += sizeof(zeros);
+                        rem -= sizeof(zeros);
+                    }
+                }
+                SDK_TRACE_DEBUG("Resetting %s hbm region done", reg->mem_reg_name);
 #if 0
                     /*
                      * comparing for all "reset" regions is delaying HAL UP.

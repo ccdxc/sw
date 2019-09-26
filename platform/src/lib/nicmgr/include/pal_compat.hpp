@@ -9,7 +9,16 @@
 
 #include "nic/sdk/lib/pal/pal.hpp"
 
-#define MEM_MAP(pa, sz, flags)   calloc(1, sz)
+static inline uint8_t *MEM_MAP(uint64_t pa, uint32_t sz, uint32_t flags)
+{
+    uint8_t *vaddr = (uint8_t *)malloc(sz);
+    uint32_t remsize = sz;
+    for (uint32_t i = 0; i < sz; i += 1024) {
+        sdk::lib::pal_mem_read(pa + i, vaddr + i, remsize > 1024 ? 1024 : remsize);
+        remsize -= 1024;
+    }
+    return vaddr;
+}
 #define MEM_UNMAP(va)            free(va)
 
 #define READ_MEM        sdk::lib::pal_mem_read
@@ -48,6 +57,12 @@ static inline uint64_t READ_REG64(uint64_t addr)
 
 #define PAL_barrier()   do {} while (0)
 
+#define MEM_CLR(pa, va, sz, skip) { \
+    if (!skip) { \
+        MEM_SET(pa, 0, sz, 0); \
+    } \
+}
+
 #else
 
 #include "nic/sdk/platform/pal/include/pal.h"
@@ -67,6 +82,12 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define WRITE_REG64     pal_reg_wr64
 
 #define WRITE_DB64      pal_reg_wr64
+
+#define MEM_CLR(pa, va, sz, skip) { \
+    if (!skip) { \
+        MEM_SET(pa, 0, sz, 0); \
+    } \
+}
 
 #endif
 

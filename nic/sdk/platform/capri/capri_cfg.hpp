@@ -53,6 +53,7 @@ typedef struct capri_cfg_s {
 
 sdk_ret_t capri_load_config(char *pathname);
 sdk_ret_t capri_verify_config(char *config_dir);
+sdk_ret_t capri_upgrade_config(capri_cfg_t *cfg);
 
 }    // namespace capri
 }    // namespace platform

@@ -314,8 +314,9 @@ thread_pciemgr_spawn (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
-    if ((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
-        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) {
+    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
+        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
+         (getenv("NICMGR_SIM_MODE"))) {
         // spawn pciemgr thread
         new_thread =
             thread_create("pciemgr", THREAD_ID_PCIEMGR,

@@ -10,6 +10,7 @@
 #include <nic/utils/ftl/ftlv4.hpp>
 #include <nic/utils/ftl/ftlv6.hpp>
 #include <nic/sdk/lib/pal/pal.hpp>
+#include <nic/sdk/asic/asic.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
 #include <nic/sdk/platform/capri/capri_p4.hpp>
@@ -18,6 +19,7 @@
 #include <nic/sdk/platform/capri/capri_state.hpp>
 #include <nic/p4/common/defines.h>
 #include <nic/apollo/vpp/infra/pd_utils.h>
+#include "nic/apollo/api/include/pds_init.hpp"
 #include "hw_program.h"
 
 using namespace sdk;
@@ -33,76 +35,45 @@ extern "C" {
 
 p4pd_table_properties_t g_session_tbl_ctx;
 
+
+static int
+pds_init_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+{
+        return 0;
+}
+
+static inline sdk_ret_t
+init_pds (void)
+{
+        sdk_ret_t ret;
+        pds_init_params_t init_params;
+        std::string pipeline=PDS_PIPELINE;
+#ifdef __aarch64__
+        std::string cfg_file = "hal_hw.json";
+#else
+        std::string cfg_file = "hal.json";
+#endif
+
+        // do soft init
+        sdk::asic::set_init_type(sdk::asic::asic_init_type_t::ASIC_INIT_TYPE_SOFT);
+        memset(&init_params, 0, sizeof(init_params));
+        init_params.init_mode = PDS_INIT_MODE_COLD_START;
+        init_params.trace_cb  = pds_init_logger;
+        init_params.pipeline  = pipeline;
+        init_params.cfg_file  = cfg_file;
+        init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+        ret = pds_init(&init_params);
+        return ret;
+}
+
 int
 initialize_flow(void)
 {
-
-    pal_ret_t    pal_ret;
+    sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
-    capri_cfg_t  capri_cfg;
-    sdk_ret_t    ret;
 
-    p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = PDS_PLATFORM "/capri_p4_table_map.json",
-        .p4pd_pgm_name       = PDS_PLATFORM "_p4",
-        .p4pd_rxdma_pgm_name = PDS_PLATFORM "_rxdma",
-        .p4pd_txdma_pgm_name = PDS_PLATFORM "_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-
-    p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = PDS_PLATFORM "/capri_rxdma_table_map.json",
-        .p4pd_pgm_name       = PDS_PLATFORM "_p4",
-        .p4pd_rxdma_pgm_name = PDS_PLATFORM "_rxdma",
-        .p4pd_txdma_pgm_name = PDS_PLATFORM "_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = PDS_PLATFORM "/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = PDS_PLATFORM "_p4",
-        .p4pd_rxdma_pgm_name = PDS_PLATFORM "_rxdma",
-        .p4pd_txdma_pgm_name = PDS_PLATFORM "_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-
-    platform_type_t platform_type = pds_get_platform_type();
-
-    /* initialize PAL */
-    pal_ret = sdk::lib::pal_init(platform_type);
-
-    SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
-
-    memset(&capri_cfg, 0, sizeof(capri_cfg_t));
-    capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    catalog *platform_catalog =  catalog::factory(capri_cfg.cfg_path,
-                                                  "",
-                                                  platform_type);
-    std::string mpart_json = capri_cfg.cfg_path + "/" +
-                             PDS_PLATFORM + "/" +
-                             platform_catalog->memory_capacity_str() +
-                             "/hbm_mem.json";
-
-    capri_cfg.mempartition =
-        sdk::platform::utils::mpartition::factory(mpart_json.c_str());
-
-    /* do capri_state_pd_init needed by sdk capri
-     * csr init is done inside capri_state_pd_init */
-    sdk::platform::capri::capri_state_pd_init(&capri_cfg);
-
-    /* do apollo specific initialization */
-    p4pd_ret = p4pd_init(&p4pd_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    p4pd_ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
+    ret = init_pds();
     SDK_ASSERT(ret == SDK_RET_OK);
-
-    capri::capri_table_csr_cache_inval_init();
 
     p4pd_ret = p4pd_table_properties_get(P4TBL_ID_SESSION, &g_session_tbl_ctx);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);

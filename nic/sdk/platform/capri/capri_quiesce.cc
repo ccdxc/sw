@@ -14,54 +14,62 @@ namespace capri {
 
 #define MAX_PORT10_FLOW_CTRL_ENTRIES    32
 #define MAX_PORT11_FLOW_CTRL_ENTRIES    32
-uint32_t    port_10_ref_credits[MAX_PORT10_FLOW_CTRL_ENTRIES] =
-{0xb4, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0xb4, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-uint32_t    port_11_ref_credits[MAX_PORT11_FLOW_CTRL_ENTRIES] =
-{0xb4, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0xb4, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x5a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+uint32_t port_10_ref_credits[MAX_PORT10_FLOW_CTRL_ENTRIES];
+uint32_t port_11_ref_credits[MAX_PORT11_FLOW_CTRL_ENTRIES];
 
 
-sdk_ret_t
-capri_quiesce_start(void) {
-    sdk_ret_t           ret = SDK_RET_OK;
-    int                 chip_id = 0;
-    int                 ret_val = 0;
+static inline void
+config_dump (void)
+{
+    cap_top_csr_t &top_csr= g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = top_csr.pb.pbc;
+    cap_ptd_csr_t &ptd_csr = top_csr.pt.pt.ptd;
+    cap_psp_csr_t &psp_csr = top_csr.pt.pt.psp;
+    stringstream data;
+    uint32_t tmp;
 
-    SDK_TRACE_DEBUG("%s: Start", __FUNCTION__);
+    data << hex << endl;
 
-	cap_top_quiesce_pb_start(chip_id);
-	cap_top_quiesce_txs_start(chip_id);
-	cap_top_quiesce_sw_phv_insert(chip_id);
-
-	ret_val = cap_top_quiesce_txs_poll(chip_id, 1000);
-    if (ret_val != 0) {
-        SDK_TRACE_DEBUG("Failed txs poll");
-        ret = SDK_RET_ERR;
-    }
-	ret_val = cap_top_quiesce_p4p_tx_poll(chip_id, 1000);
-    if (ret_val != 0) {
-        SDK_TRACE_DEBUG("Failed p4p tx poll");
-        ret = SDK_RET_ERR;
-    }
-	ret_val = cap_top_quiesce_pb_poll(chip_id, port_10_ref_credits, port_11_ref_credits, 100);
-    if (ret_val != 0) {
-        SDK_TRACE_DEBUG("Failed pb poll");
-        ret = SDK_RET_ERR;
-    }
-	ret_val = cap_top_quiesce_psp_poll(chip_id, 100);
-    if (ret_val != 0) {
-        SDK_TRACE_DEBUG("Failed psp poll");
-        ret = SDK_RET_ERR;
-    }
-	ret_val = cap_top_quiesce_p4p_prd_poll(chip_id, 100);
-    if (ret_val != 0) {
-        SDK_TRACE_DEBUG("Failed prd poll");
-        ret = SDK_RET_ERR;
+    for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
+        top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].read();
+        tmp = top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
+        SDK_TRACE_DEBUG("Port 11[%d] : 0x%x", i, tmp);
     }
 
-    // Debug prints
+    pbc_csr.port_11.cfg_account_credit_return.read();
+    pbc_csr.port_11.cfg_oq_queue.read();
+    pbc_csr.cfg_credits_max_growth_11.read();
+    pbc_csr.port_11.cfg_oq.read();
 
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_ptd_csr_t &ptd_csr = cap0.pt.pt.ptd;
+    data <<"pbc_csr.port_11.cfg_account_credit_return.all: 0x" << pbc_csr.port_11.cfg_account_credit_return.all() << endl;
+    data <<"pbc_csr.port_11.cfg_account_credit_return.enable: 0x" << pbc_csr.port_11.cfg_account_credit_return.enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.all: 0x" << pbc_csr.port_11.cfg_oq_queue.all() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.recirc: 0x" << pbc_csr.port_11.cfg_oq_queue.recirc() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.enable: 0x" << pbc_csr.port_11.cfg_oq_queue.enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.flush: 0x" << pbc_csr.port_11.cfg_oq_queue.flush() << endl;
+    data <<"pbc_csr.cfg_credits_max_growth_11.all: 0x" << pbc_csr.cfg_credits_max_growth_11.all() << endl;
+    data <<"pbc_csr.cfg_credits_max_growth_11.cells: 0x" << pbc_csr.cfg_credits_max_growth_11.cells() << endl;
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    data.str("");
+    data << hex << endl;
+
+    data <<"pbc_csr.port_11.cfg_oq.all: 0x" << pbc_csr.port_11.cfg_oq.all() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.enable: 0x" << pbc_csr.port_11.cfg_oq.enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.ecc_disable_cor: 0x" << pbc_csr.port_11.cfg_oq.ecc_disable_cor() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.packing_enable: 0x" << pbc_csr.port_11.cfg_oq.packing_enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.dhs_eccbypass: 0x" << pbc_csr.port_11.cfg_oq.dhs_eccbypass() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.ipg_bytes: 0x" << pbc_csr.port_11.cfg_oq.ipg_bytes() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.bist_run: 0x" << pbc_csr.port_11.cfg_oq.bist_run() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.flow_control_enable_xoff: 0x" << pbc_csr.port_11.cfg_oq.flow_control_enable_xoff() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.ecc_disable_det: 0x" << pbc_csr.port_11.cfg_oq.ecc_disable_det() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.packing_msb: 0x" << pbc_csr.port_11.cfg_oq.packing_msb() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.flush: 0x" << pbc_csr.port_11.cfg_oq.flush() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.flow_control_enable_credits: 0x" << pbc_csr.port_11.cfg_oq.flow_control_enable_credits() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.rewrite_enable: 0x" << pbc_csr.port_11.cfg_oq.rewrite_enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq.dhs_selection: 0x" << pbc_csr.port_11.cfg_oq.dhs_selection() << endl;
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     // pt_ptd_sta_fifo
     ptd_csr.sta_fifo.read();
@@ -113,7 +121,6 @@ capri_quiesce_start(void) {
                     ptd_csr.sta_xoff.numphv_counter().convert_to<int>(),
                     ptd_csr.sta_xoff.numphv_xoff().convert_to<int>());
     // pt_psp_sta_flow
-    cap_psp_csr_t &psp_csr = cap0.pt.pt.psp;
     // cap_psp_csr_t & psp0 = CAP_BLK_REG_MODEL_ACCESS(cap_psp_csr_t, 0, 0);
     psp_csr.sta_flow.read();
     SDK_TRACE_DEBUG("STA flow: ");
@@ -141,22 +148,66 @@ capri_quiesce_start(void) {
                     psp_csr.sta_flow.pr_pkt_ff_almost_full().convert_to<int>(),
                     psp_csr.sta_flow.ptd_npv_phv_full().convert_to<int>());
 
-    SDK_TRACE_DEBUG("%s: End ret: %d", __FUNCTION__, ret_val);
+
+}
+
+
+sdk_ret_t
+capri_quiesce_start (void)
+{
+    sdk_ret_t           ret = SDK_RET_OK;
+    int                 chip_id = 0;
+    int                 ret_val = 0;
+
+   // SDK_TRACE_DEBUG(" %s Start", __FUNCTION__);
+
+    cap_top_quiesce_pb_start(chip_id);
+    cap_top_quiesce_txs_start(chip_id);
+    cap_top_quiesce_sw_phv_insert(chip_id);
+
+    ret_val = cap_top_quiesce_txs_poll(chip_id, 1000);
+    if (ret_val != 0) {
+        SDK_TRACE_DEBUG("Failed txs poll");
+        ret = SDK_RET_ERR;
+    }
+    ret_val = cap_top_quiesce_p4p_tx_poll(chip_id, 1000);
+    if (ret_val != 0) {
+        SDK_TRACE_DEBUG("Failed p4p tx poll");
+        ret = SDK_RET_ERR;
+    }
+    ret_val = cap_top_quiesce_pb_poll(chip_id, port_10_ref_credits, port_11_ref_credits, 100);
+    if (ret_val != 0) {
+        SDK_TRACE_DEBUG("Failed pb poll");
+        ret = SDK_RET_ERR;
+    }
+    ret_val = cap_top_quiesce_psp_poll(chip_id, 100);
+    if (ret_val != 0) {
+        SDK_TRACE_DEBUG("Failed psp poll");
+        ret = SDK_RET_ERR;
+    }
+    ret_val = cap_top_quiesce_p4p_prd_poll(chip_id, 100);
+    if (ret_val != 0) {
+        SDK_TRACE_DEBUG("Failed prd poll");
+        ret = SDK_RET_ERR;
+    }
+
+   // SDK_TRACE_DEBUG(" %s End ret: %d", __FUNCTION__, ret_val);
     return ret;
 }
 
 
 sdk_ret_t
-capri_quiesce_stop(void) {
+capri_quiesce_stop (void)
+{
     sdk_ret_t           ret = SDK_RET_OK;
     int                 chip_id = 0;
 
-    SDK_TRACE_DEBUG("{}: Start", __FUNCTION__);
+    // SDK_TRACE_DEBUG(" %s Start", __FUNCTION__);
 
-	cap_top_quiesce_pb_stop(chip_id);
-	cap_top_quiesce_txs_stop(chip_id);
+    cap_top_quiesce_pb_stop(chip_id);
+    cap_top_quiesce_txs_stop(chip_id);
 
-    SDK_TRACE_DEBUG("{}: End", __FUNCTION__);
+    // SDK_TRACE_DEBUG(" %s End", __FUNCTION__);
     return ret;
 }
 
@@ -164,24 +215,28 @@ capri_quiesce_stop(void) {
 sdk_ret_t
 capri_quiesce_init(void) {
     sdk_ret_t           ret = SDK_RET_OK;
-	cap_top_csr_t       &top_csr= g_capri_state_pd->cap_top();
+    cap_top_csr_t       &top_csr= g_capri_state_pd->cap_top();
 
-    //SDK_TRACE_DEBUG("{}: Port10: {:x}", __FUNCTION__, top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
-    //SDK_TRACE_DEBUG("{}: Port11: {:x}", __FUNCTION__, top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());
+    //SDK_TRACE_DEBUG("Port10: 0x%x", top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
+    //SDK_TRACE_DEBUG("Port11: 0x%x", top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());
     SDK_ASSERT(top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry() == MAX_PORT10_FLOW_CTRL_ENTRIES);
     SDK_ASSERT(top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry() == MAX_PORT11_FLOW_CTRL_ENTRIES);
 
-	for (int i=0; i < top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry(); i++) {
+    for (int i=0; i < top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry(); i++) {
         top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].read();
 		port_10_ref_credits[i] = top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
-        //SDK_TRACE_DEBUG("{}: Port 10[{}] : {:x}", __FUNCTION__, i, port_10_ref_credits[i]);
-	}
+        //SDK_TRACE_DEBUG("Port 10[%d] : 0x%x", i, port_10_ref_credits[i]);
+    }
 
-	for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
+    for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
         top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].read();
 		port_11_ref_credits[i] = top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
-        //SDK_TRACE_DEBUG("{}: Port 11[{}] : {:x}", __FUNCTION__, i, port_11_ref_credits[i]);
-	}
+        //SDK_TRACE_DEBUG("Port 11[%d] : 0x%x", i, port_11_ref_credits[i]);
+    }
+
+    //Buffer configs
+    top_csr.pb.pbc.port_11.cfg_oq.read();
+    top_csr.txs.txs.cfg_sch.read();
 
     return ret;
 }

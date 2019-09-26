@@ -22,6 +22,7 @@ EdmaQ::EdmaQ(
     qtype(qtype), qid(qid), ring_size(ring_size)
 {
     this->loop = loop;
+    skip_hwinit = pd->is_queue_hwinit_done(lif, qtype, qid);
 
     if (ring_size & (ring_size - 1)) {
         NIC_LOG_ERR("{}: Ring size has to be power of 2", name);
@@ -35,7 +36,7 @@ EdmaQ::EdmaQ(
         NIC_LOG_ERR("{}: Failed to allocate edma ring!", name);
         throw;
     }
-    MEM_SET(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size), 0);
+    MEM_CLR(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size), skip_hwinit);
 
     comp_tail = 0;
     exp_color = 1;
@@ -44,7 +45,7 @@ EdmaQ::EdmaQ(
         NIC_LOG_ERR("{}: Failed to allocate edma completion ring!", name);
         throw;
     }
-    MEM_SET(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size), 0);
+    MEM_CLR(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size), skip_hwinit);
 
     NIC_LOG_INFO("{}: edma_ring_base {:#x} edma_comp_base {:#x}",
         name, ring_base, comp_base);

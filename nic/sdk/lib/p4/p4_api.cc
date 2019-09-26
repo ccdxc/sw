@@ -18,6 +18,10 @@
 #define P4PD_FREE    free
 
 // key strings used in table packing json file
+#define JSON_KEY_MAX                "global"
+#define JSON_KEY_MAX_INGRESS        "ingress"
+#define JSON_KEY_MAX_EGRESS         "egress"
+#define JSON_KEY_MAX_DEPTH          "depth"
 #define JSON_KEY_TABLES             "tables"
 #define JSON_KEY_TABLE_NAME         "name"
 #define JSON_KEY_MATCH_TYPE         "match_type"
@@ -46,7 +50,7 @@
 #define JSON_KEY_THREAD_TBL_IDS     "thread_tbl_ids"
 #define JSON_KEY_NUM_THREADS        "num_threads"
 
-
+static p4pd_table_max_cfg_t  p4table_max_cfg;
 /*
  * Based on table id call appropriate table routine.
  * For now this API is only called for p4pd and rxdma
@@ -290,6 +294,35 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
                     std::string(p4pd_cfg->table_map_cfg_file);
     std::ifstream tbl_json(full_path.c_str());
     read_json(tbl_json, json_pt);
+
+    boost::optional<pt::ptree&>table_gl =
+        json_pt.get_child_optional(JSON_KEY_MAX);
+    if (!table_gl) {
+        return P4PD_FAIL;
+    }
+
+    BOOST_FOREACH (pt::ptree::value_type &obj, json_pt.get_child(JSON_KEY_MAX)) {
+        if (obj.first == JSON_KEY_TCAM) {
+            boost::optional<pt::ptree&>ing = obj.second.get_child_optional(JSON_KEY_MAX_INGRESS);
+            boost::optional<pt::ptree&>egr = obj.second.get_child_optional(JSON_KEY_MAX_EGRESS);
+            if (ing) {
+                p4table_max_cfg.tcam_ingress_depth = ing.get().get<int>(JSON_KEY_MAX_DEPTH);
+            }
+            if (egr) {
+                p4table_max_cfg.tcam_egress_depth = egr.get().get<int>(JSON_KEY_MAX_DEPTH);
+            }
+        } else if (obj.first == JSON_KEY_SRAM) {
+            boost::optional<pt::ptree&>ing = obj.second.get_child_optional(JSON_KEY_MAX_INGRESS);
+            boost::optional<pt::ptree&>egr = obj.second.get_child_optional(JSON_KEY_MAX_EGRESS);
+            if (ing) {
+                p4table_max_cfg.sram_ingress_depth = ing.get().get<int>(JSON_KEY_MAX_DEPTH);
+            }
+            if (egr) {
+                p4table_max_cfg.sram_egress_depth = egr.get().get<int>(JSON_KEY_MAX_DEPTH);
+            }
+        }
+    }
+
     boost::optional<pt::ptree&>table_pt =
         json_pt.get_child_optional(JSON_KEY_TABLES);
     if (!table_pt) {
@@ -651,6 +684,117 @@ p4pd_global_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
                (tableid <= p4pd_txdma_tableid_max_get())) {
         p4pd_txdma_hbm_table_address_set(tableid, pa, va, cache);
     } else {
+        SDK_ASSERT(0);
+    }
+}
+
+// This is for upgrade where we reserve half of the table resources for upgrade
+// Right now it offsets only tcam and sram.
+//
+// Always the offsets points to the first partition. So this has to be
+// called only when the tables to be configured on the 2nd partition.
+//
+// TODO : See HBM tables
+p4pd_error_t
+p4pd_table_adjust_offsets (void)
+{
+    uint32_t                    tableid;
+    p4pd_table_properties_t     *tbl;
+    uint32_t tcam_offset, sram_offset;
+    uint32_t tcam_offset_index      = 8 * 8; // TODO , Remove the hardcoded values
+    uint32_t sram_offset_index      = 8 * 10;
+    uint32_t tcam_max_ingress_index = 0;
+    uint32_t sram_max_ingress_index = 0;
+    uint32_t tcam_max_egress_index  = 0;
+    uint32_t sram_max_egress_index  = 0;
+
+    // Get the max index allocated for tables in sram, tcam
+    for (tableid = p4pd_tableid_min_get(); tableid < p4pd_tableid_max_get();
+          tableid++) {
+        tbl = _p4tbls + tableid;
+        // Ignore if table is not used
+        if (!tbl->tablename) {
+            continue;
+        }
+        if (tbl->gress == P4_GRESS_INGRESS) {
+            if (tbl->tcam_layout.end_index > tcam_max_ingress_index) {
+                tcam_max_ingress_index = tbl->tcam_layout.end_index;
+            }
+            if (tbl->sram_layout.end_index > sram_max_ingress_index) {
+                sram_max_ingress_index = tbl->sram_layout.end_index;
+            }
+        } else {
+            if (tbl->tcam_layout.end_index > tcam_max_egress_index) {
+                tcam_max_egress_index = tbl->tcam_layout.end_index;
+            }
+            if (tbl->sram_layout.end_index > sram_max_egress_index) {
+                sram_max_egress_index = tbl->sram_layout.end_index;
+            }
+        }
+    }
+
+    // Compare max indexes
+    if ((tcam_max_ingress_index >= p4table_max_cfg.tcam_ingress_depth / 2) ||
+        (tcam_max_egress_index >= p4table_max_cfg.tcam_egress_depth / 2)) {
+        return P4PD_FAIL;
+    }
+
+    if ((sram_max_ingress_index >= p4table_max_cfg.sram_ingress_depth / 2) ||
+        (sram_max_egress_index >= p4table_max_cfg.sram_egress_depth / 2)) {
+        return P4PD_FAIL;
+    }
+
+    // Apply
+    for (tableid = p4pd_tableid_min_get(); tableid < p4pd_tableid_max_get();
+          tableid++) {
+        tbl = _p4tbls + tableid;
+        // Ignore if table is not used
+        if (!tbl->tablename) {
+            continue;
+        }
+        // Offsets to the other partition.
+        if (tbl->gress == P4_GRESS_INGRESS) {
+            tcam_offset = p4table_max_cfg.tcam_ingress_depth / 2;
+            sram_offset = p4table_max_cfg.sram_ingress_depth / 2;
+        } else {
+            tcam_offset = p4table_max_cfg.tcam_egress_depth / 2;
+            sram_offset = p4table_max_cfg.sram_egress_depth / 2;
+        }
+        tbl->tcam_layout.start_index += tcam_offset_index;
+        tbl->tcam_layout.end_index += tcam_offset_index;
+        tbl->tcam_layout.top_left_y += tcam_offset_index * tcam_offset;
+        tbl->tcam_layout.btm_right_y += tcam_offset_index * tcam_offset;
+
+        tbl->sram_layout.start_index += sram_offset_index;
+        tbl->sram_layout.end_index += sram_offset_index;
+        tbl->sram_layout.top_left_y += sram_offset_index * sram_offset;
+        tbl->sram_layout.btm_right_y += sram_offset_index * sram_offset;
+    }
+    return P4PD_SUCCESS;
+}
+
+uint32_t
+p4pd_sram_table_depth_get(p4pd_pipeline_t pipeline)
+{
+    if (pipeline == P4_PIPELINE_INGRESS) {
+        return p4table_max_cfg.sram_ingress_depth;
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
+        return p4table_max_cfg.sram_egress_depth;
+    } else  {
+        // TODO for RXDMA and TXDMA
+        SDK_ASSERT(0);
+    }
+}
+
+uint32_t
+p4pd_tcam_table_depth_get(p4pd_pipeline_t pipeline)
+{
+    if (pipeline == P4_PIPELINE_INGRESS) {
+        return p4table_max_cfg.tcam_ingress_depth;
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
+        return p4table_max_cfg.tcam_egress_depth;
+    } else  {
+        // No TCAM for RXDMA and TXDMA
         SDK_ASSERT(0);
     }
 }

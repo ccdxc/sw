@@ -211,8 +211,8 @@ pds_init (pds_init_params_t *params)
     asic_cfg.device_profile = &device_profile;
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
-    // ignore the threads if it is a slave initialization
-    if (sdk::asic::is_slave_init()) {
+    // skip the threads, ports and monitoring if it is soft initialization
+    if (sdk::asic::is_soft_init()) {
         return SDK_RET_OK;
     }
 
@@ -261,9 +261,9 @@ pds_teardown (void)
     // 5. bring asic down (scheduler etc.)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
-    if (!sdk::asic::is_slave_init()) {
-        core::threads_stop();
-        sdk::linkmgr::linkmgr_threads_stop();
+    core::threads_stop();
+    sdk::linkmgr::linkmgr_threads_stop();
+    if (!sdk::asic::is_soft_init()) {
         impl_base::destroy();
     }
     api::pds_state::destroy(&api::g_pds_state);
