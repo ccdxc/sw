@@ -125,17 +125,25 @@ typedef struct pipeline_ {
     uint8_t type;
     /* Types for dma_pipeline_type. */
 
+    /* PSP/NPV */
     uint64_t ma_cnt;
-    uint64_t pb_cnt;
+    uint64_t ma_drop_cnt;
+    uint64_t ma_recirc_cnt;
+    uint64_t sw_cnt;
+    uint64_t pb_pbus_cnt;
+    uint64_t pr_pbus_cnt;
+
+    /* DMA STATS */
+    uint64_t phv_cnt;
     uint64_t phv_drop;
     uint64_t phv_err;
     uint64_t phv_recirc;
+    uint64_t pb_cnt;
     uint64_t resub_cnt;
-    uint64_t num_phv;
-    uint64_t in_flight;
     uint64_t axi_reads;
     uint64_t axi_writes;
-    // uint8_t phvs_in_p4;
+
+    /* DMA FIFO */
     uint8_t rd_empty_fifos;
     uint8_t rd_full_fifos;
     uint8_t wr_empty_fifos;
@@ -143,22 +151,14 @@ typedef struct pipeline_ {
     uint8_t pkt_empty_fifos;
     uint8_t pkt_full_fifos;
     uint8_t ff_depth;
-    uint8_t xoff;
 
-    uint64_t phv; // ma_cnt
-    uint64_t pb_pbus_cnt;
-    uint64_t pr_pbus_cnt;
-    uint64_t sw_cnt;
-    uint64_t phv_drop_cnt;
-    uint64_t recirc_cnt;
-
-    /* RxDMA */
-    uint64_t hostq_xoff_cnt;
+    /* DMA XOFF */
+    uint8_t pkt_xoff;
     uint64_t pkt_xoff_cnt;
+    uint8_t phv_xoff;
     uint64_t phv_xoff_cnt;
     uint8_t host_xoff;
-    uint8_t phv_xoff;
-    uint8_t pb_xoff;
+    uint64_t host_xoff_cnt;
 
     /* Types for pipeline_type. */
     uint64_t pkt_from_pb;
@@ -218,6 +218,8 @@ typedef struct asic_data_ {
   atomic=0
     */
     uint32_t axi_wr_pend, axi_rd_pend;
+    uint8_t tags_pend[8];
+    uint8_t fifo_depth[16];
     uint64_t axi_wr, axi_wr64, axi_wr256, axi_wr_bytes;
     uint64_t axi_rd, axi_rd64, axi_rd256, axi_rd_bytes;
     uint64_t atomic_req;
@@ -297,13 +299,14 @@ void *captop(void *);
 void *fetch_data(void *);
 void *capmon_struct_init(void *);
 void capmon_pipeline_data_store1(uint8_t, uint64_t, uint64_t, uint64_t,
-                                 uint64_t, uint64_t, uint64_t, uint64_t,
-                                 uint64_t);
+                                 uint64_t, uint64_t, uint64_t);
 void capmon_pipeline_data_store2(uint8_t, uint64_t, uint64_t, uint64_t,
                                  uint64_t, uint64_t, uint64_t, uint64_t,
                                  uint64_t, uint64_t, uint64_t);
 void capmon_pipeline_data_store3(uint8_t, uint64_t, uint64_t, uint64_t,
                                  uint64_t, uint64_t, uint64_t);
+void capmon_pipeline_data_store4(int, uint8_t, uint64_t, uint8_t, uint64_t,
+                                 uint8_t, uint64_t, uint64_t);
 extern bool export_to_file;
 extern FILE *fp;
 void *captop_display_routine(void *);

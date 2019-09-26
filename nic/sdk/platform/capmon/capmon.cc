@@ -295,18 +295,17 @@ static inline void
 capmon_dma_pipeline_data_display2(pipeline_t *pipeline)
 {
     if (pipeline->type == TXDMA) {
-        CAPMON_REPORT(" NPV: phv=%lu pb_pbus=%lu pr_pbus=%lu sw=%lu "
-                      "phv_drop=%lu recirc=%lu\n",
-                      pipeline->phv, pipeline->pb_pbus_cnt,
-                      pipeline->pr_pbus_cnt, pipeline->sw_cnt,
-                      pipeline->phv_drop_cnt, pipeline->recirc_cnt);
+        CAPMON_REPORT(" NPV:");
     } else if (pipeline->type == RXDMA) {
-        CAPMON_REPORT(" PSP: phv=%lu pb_pbus=%lu pr_pbus=%lu sw=%lu "
-                      "phv_drop=%lu recirc=%lu\n",
-                      pipeline->phv, pipeline->pb_pbus_cnt,
-                      pipeline->pr_pbus_cnt, pipeline->sw_cnt,
-                      pipeline->phv_drop_cnt, pipeline->recirc_cnt);
+        CAPMON_REPORT(" PSP:");
     }
+
+    CAPMON_REPORT(" phv=%lu phv_drop=%lu phv_recirc=%lu sw=%lu"
+                  " pb_pbus=%lu pr_pbus=%lu\n",
+                    pipeline->ma_cnt, pipeline->ma_drop_cnt,
+                    pipeline->ma_recirc_cnt,
+                    pipeline->sw_cnt,
+                    pipeline->pb_pbus_cnt, pipeline->pr_pbus_cnt);
 }
 
 static inline void
@@ -355,12 +354,13 @@ capmon_dma_post_stage_display(pipeline_t *pipeline)
     } else if (pipeline->type == RXDMA) {
         CAPMON_REPORT(" RxDMA:");
     }
-    CAPMON_REPORT(" phv=%lu pkt=%lu drop=%lu(%lu%%) err=%lu recirc=%lu "
-                  "resub=%lu in_flight=%lu\n",
-                  pipeline->phv, pipeline->pb_cnt, pipeline->phv_drop,
-                  (pipeline->phv_drop * 100) / pipeline->phv, pipeline->phv_err,
-                  pipeline->phv_recirc, pipeline->resub_cnt,
-                  pipeline->in_flight);
+    CAPMON_REPORT(" phv=%lu drop=%lu(%lu%%) err=%lu recirc=%lu pkt=%lu"
+                  " resub=%lu\n",
+                  pipeline->phv_cnt,
+                  pipeline->phv_drop, (pipeline->phv_drop * 100) / pipeline->phv_cnt,
+                  pipeline->phv_err, pipeline->phv_recirc,
+                  pipeline->pb_cnt,
+                  pipeline->resub_cnt);
 
     CAPMON_REPORT("       AXI reads=%lu writes=%lu\n", pipeline->axi_reads,
                   pipeline->axi_writes);
@@ -379,11 +379,18 @@ capmon_dma_post_stage_display(pipeline_t *pipeline)
 static inline void
 capmon_rxdma_post_stage_display1(pipeline_t *pipeline)
 {
-    CAPMON_REPORT("       XOFF hostq=%lu pkt=%lu phv=%lu phv_xoff=%u%% "
-                  "pb_xoff=%u%% host_xoff=%u%%\n",
-                  pipeline->hostq_xoff_cnt, pipeline->pkt_xoff_cnt,
-                  pipeline->phv_xoff_cnt, pipeline->host_xoff,
-                  pipeline->phv_xoff, pipeline->pb_xoff);
+    CAPMON_REPORT("       XOFF phv_xoff=%u%% phv=%lu pkt_xoff=%u%% pkt=%lu"
+                  " host_xoff=%u%% host=%lu\n",
+                  pipeline->phv_xoff, pipeline->phv_xoff_cnt,
+                  pipeline->pkt_xoff, pipeline->pkt_xoff_cnt,
+                  pipeline->host_xoff, pipeline->host_xoff_cnt);
+}
+
+static inline void
+capmon_txdma_post_stage_display1(pipeline_t *pipeline)
+{
+    CAPMON_REPORT("       XOFF phv_xoff=%u%% phv=%lu\n",
+                  pipeline->phv_xoff, pipeline->phv_xoff_cnt);
 }
 
 static inline void
@@ -406,17 +413,16 @@ capmon_pipeline_post_stage_display(pipeline_t *pipeline)
     switch (type) {
         case TXDMA:
             capmon_txdma_post_stage_display(pipeline);
+            capmon_txdma_post_stage_display1(pipeline);
             break;
         case RXDMA:
             capmon_rxdma_post_stage_display(pipeline);
+            capmon_rxdma_post_stage_display1(pipeline);
             break;
         case P4IG:
         case P4EG:
             break;
             return;
-    }
-    if (type == RXDMA) {
-        capmon_rxdma_post_stage_display1(pipeline);
     }
 }
 
@@ -485,8 +491,10 @@ static inline void
 capmon_asic_display_initiator_status()
 {
     CAPMON_REPORT(
-        "  wr_pend=%u rd_pend=%u\n",
-        asic->axi_wr_pend, asic->axi_rd_pend);
+        "  wr_pend=%u rd_pend=%u tags_pend=%u wr_fifo=%u rd_fifo=%u\n",
+        asic->axi_wr_pend, asic->axi_rd_pend,
+        asic->tags_pend[0],
+        asic->fifo_depth[0], asic->fifo_depth[1]);
 
     CAPMON_REPORT(
         "  bandwidth (Gbps) write %3.2f read %3.2f\n",
@@ -494,10 +502,10 @@ capmon_asic_display_initiator_status()
 
     CAPMON_REPORT(
         "  rd_lat (clks) >%u=%3.2f%% >%u=%3.2f%% >%u=%3.2f%% >%u=%3.2f%%\n",
-        asic->cfg_rdlat[3], (asic->rd_lat3 * 100.0) / asic->rd_total,
-        asic->cfg_rdlat[2], (asic->rd_lat2 * 100.0) / asic->rd_total,
-        asic->cfg_rdlat[1], (asic->rd_lat1 * 100.0) / asic->rd_total,
-        asic->cfg_rdlat[0], (asic->rd_lat0 * 100.0) / asic->rd_total);
+        0, (asic->rd_lat0 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[2], (asic->rd_lat1 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[1], (asic->rd_lat2 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[0], (asic->rd_lat3 * 100.0) / asic->rd_total);
 
     CAPMON_REPORT(
         "  rd_dist rd/(rd+wr) %3.2f%% rd64/rd %3.2f%% rd256/rd %3.2f%%\n",

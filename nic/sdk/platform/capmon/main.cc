@@ -398,6 +398,7 @@ read_counters()
 
     if (bwmon) {
         bwmon_read_counters();
+        return;
     }
 
     if (crypto) {
@@ -468,6 +469,11 @@ void
 reset_counters()
 {
     uint8_t mpu, pipeline, stage;
+
+    if (bwmon) {
+        bwmon_reset_counters();
+        return;
+    }
 
     if (crypto) {
         crypto_reset_counters(verbose);

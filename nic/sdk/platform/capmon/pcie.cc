@@ -303,19 +303,22 @@ pxb_reset_initiator_counters()
 
 void
 capmon_asic_data_store2(uint32_t axi_wr_pending, uint32_t axi_rd_pending,
+                        uint64_t tags_pending, uint64_t fifo_depth[2],
                         uint64_t rd_lat0, uint64_t rd_lat1, uint64_t rd_lat2,
-                        uint64_t rd_lat3, uint64_t rd_total,
+                        uint64_t rd_lat3,
                         uint16_t *cfg_rdlat,
                         double wr_bw, double wr_pct, double wr64_pct, double wr256_pct,
                         double rd_bw, double rd_pct, double rd64_pct, double rd256_pct)
 {
     asic->axi_wr_pend = axi_wr_pending;
     asic->axi_rd_pend = axi_rd_pending;
+    memcpy(asic->tags_pend, &tags_pending, sizeof(tags_pending));
+    memcpy(asic->fifo_depth, &fifo_depth, sizeof(*fifo_depth));
     asic->rd_lat0 = rd_lat0;
     asic->rd_lat1 = rd_lat1;
     asic->rd_lat2 = rd_lat2;
     asic->rd_lat3 = rd_lat3;
-    asic->rd_total = rd_total;
+    asic->rd_total = rd_lat0 + rd_lat1 + rd_lat2 + rd_lat3;
 
     asic->cfg_rdlat[0] = cfg_rdlat[0];
     asic->cfg_rdlat[1] = cfg_rdlat[1];
@@ -378,6 +381,8 @@ pxb_read_initiator_status()
     uint16_t cfg_rdlat[4];
     uint64_t rd_lat0, rd_lat1, rd_lat2, rd_lat3;
     uint32_t axi_rd_pending, axi_wr_pending;
+    uint64_t tags_pending;
+    uint64_t fifo_depth[2] = {0};
 
     // Pending Transaction status
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
@@ -406,7 +411,16 @@ pxb_read_initiator_status()
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
                       CAP_PXB_CSR_SAT_ITR_RDLAT3_BYTE_OFFSET,
                   (uint32_t *)&rd_lat3, 2);
-    auto rd_total = rd_lat0 + rd_lat1 + rd_lat2 + rd_lat3;
+
+    // Tags pending
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_ITR_TAGS_PENDING_BYTE_ADDRESS,
+                  (uint32_t *)&tags_pending, 2);
+
+    // AXI fifo depth
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_ITR_TAGS_PENDING_BYTE_ADDRESS,
+                  (uint32_t *)&fifo_depth, 4);
 
     // Bandwidth
     uint64_t axi_wr, axi_wr64, axi_wr256, axi_wr_bytes;
@@ -441,8 +455,9 @@ pxb_read_initiator_status()
     double wr256_pct = ((next_axi_wr256 - axi_wr256) * 100.0) / delta_wr;
     double rd256_pct = ((next_axi_rd256 - axi_rd256) * 100.0) / delta_rd;
 
-    capmon_asic_data_store2(axi_wr_pending, axi_rd_pending, rd_lat0, rd_lat1,
-                            rd_lat2, rd_lat3, rd_total, cfg_rdlat,
+    capmon_asic_data_store2(axi_wr_pending, axi_rd_pending,
+                            tags_pending, fifo_depth,
+                            rd_lat0, rd_lat1, rd_lat2, rd_lat3, cfg_rdlat,
                             wr_bw, wr_pct, wr64_pct, wr256_pct,
                             rd_bw, rd_pct, rd64_pct, rd256_pct);
 }

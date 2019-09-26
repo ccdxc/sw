@@ -134,6 +134,60 @@ bwmon_read_counters()
 }
 
 void
+bwmon_reset_fn(uint32_t base_addr)
+{
+    uint32_t zero = 0;
+
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr + CAP_PICS_CSR_CNT_AXI_BW_MON_RD_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr + CAP_PICS_CSR_CNT_AXI_BW_MON_WR_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+    pal_reg_wr32w(base_addr +
+                      CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_BYTE_ADDRESS -
+                      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                  &zero, 1);
+}
+
+void
 bwmon_reset_counters()
 {
+    bwmon_reset_fn(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                       CAP_PXB_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+
+    bwmon_reset_fn(CAP_ADDR_BASE_RPC_PICS_OFFSET +
+                       CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+
+    bwmon_reset_fn(CAP_ADDR_BASE_TPC_PICS_OFFSET +
+                       CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+
+    bwmon_reset_fn(CAP_ADDR_BASE_SSI_PICS_OFFSET +
+                       CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+
+    bwmon_reset_fn(CAP_ADDR_BASE_SSE_PICS_OFFSET +
+                       CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+
+    bwmon_reset_fn(CAP_ADDR_BASE_MS_MS_OFFSET +
+                       CAP_MS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
 }
