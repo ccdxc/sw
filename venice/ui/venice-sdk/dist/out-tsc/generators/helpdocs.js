@@ -78,7 +78,7 @@ function generateHelpDocs(config) {
     // clean up tmp
     if (fs.existsSync(config.tempDir)) {
         // Delete all contents
-        rmdir.sync(config.tempDir);
+        rmdir(config.tempDir, { maxBusyTries: 20 }, function () { });
     }
 }
 exports.generateHelpDocs = generateHelpDocs;
