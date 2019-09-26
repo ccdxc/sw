@@ -484,16 +484,28 @@ capmon_asic_display_target_err_counters()
 static inline void
 capmon_asic_display_initiator_status()
 {
-    CAPMON_REPORT("  wr_pend=%u rd_pend=%u\n", asic->axi_wr_pend,
-                  asic->axi_rd_pend);
-    auto rd_total =
-        asic->rd_lat0 + asic->rd_lat1 + asic->rd_lat2 + asic->rd_lat3;
     CAPMON_REPORT(
-        "  read latency (clks) >%u=%.2f%% >%u=%.2f%% >%u=%.2f%% >%u=%.2f%%\n",
-        asic->cfg_rdlat[3], (asic->rd_lat0 * 100.0) / rd_total,
-        asic->cfg_rdlat[2], (asic->rd_lat1 * 100.0) / rd_total,
-        asic->cfg_rdlat[1], (asic->rd_lat2 * 100.0) / rd_total,
-        asic->cfg_rdlat[0], (asic->rd_lat3 * 100.0) / rd_total);
+        "  wr_pend=%u rd_pend=%u\n",
+        asic->axi_wr_pend, asic->axi_rd_pend);
+
+    CAPMON_REPORT(
+        "  bandwidth (Gbps) write %3.2f read %3.2f\n",
+        asic->wr_bw, asic->rd_bw);
+
+    CAPMON_REPORT(
+        "  rd_lat (clks) >%u=%3.2f%% >%u=%3.2f%% >%u=%3.2f%% >%u=%3.2f%%\n",
+        asic->cfg_rdlat[3], (asic->rd_lat3 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[2], (asic->rd_lat2 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[1], (asic->rd_lat1 * 100.0) / asic->rd_total,
+        asic->cfg_rdlat[0], (asic->rd_lat0 * 100.0) / asic->rd_total);
+
+    CAPMON_REPORT(
+        "  rd_dist rd/(rd+wr) %3.2f%% rd64/rd %3.2f%% rd256/rd %3.2f%%\n",
+        asic->rd_pct, asic->rd64_pct, asic->rd256_pct);
+
+    CAPMON_REPORT(
+        "  wr_dist wr/(rd+wr) %3.2f%% wr64/wr %3.2f%% wr256/wr %3.2f%%\n",
+        asic->wr_pct, asic->wr64_pct, asic->wr256_pct);
 }
 
 static inline void
@@ -645,6 +657,7 @@ capmon_asic_display_fn(void *)
     // Display bwmon data
     if (bwmon) {
         capmon_asic_all_bwmon_display();
+        return;
     }
     // Display crypto
     if (crypto) {

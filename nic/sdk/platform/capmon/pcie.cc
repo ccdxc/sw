@@ -234,6 +234,30 @@ pxb_read_initiator_counters()
 }
 
 void
+pxb_reset_initiator_status()
+{
+    uint64_t zero = 0;
+
+    // Latency counters
+    uint64_t val = (0ULL << 48) | (400ULL << 32) | (800ULL << 16) | (1200ULL << 0);
+    pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CFG_ITR_RDLAT_MEASURE_BYTE_ADDRESS,
+                  (uint32_t *)&val, 2);
+    pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_SAT_ITR_RDLAT0_BYTE_OFFSET,
+                  (uint32_t *)&zero, 2);
+    pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_SAT_ITR_RDLAT1_BYTE_OFFSET,
+                  (uint32_t *)&zero, 2);
+    pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_SAT_ITR_RDLAT2_BYTE_OFFSET,
+                  (uint32_t *)&zero, 2);
+    pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_SAT_ITR_RDLAT3_BYTE_OFFSET,
+                  (uint32_t *)&zero, 2);
+}
+
+void
 pxb_reset_initiator_counters()
 {
     uint64_t zero = 64;
@@ -281,7 +305,9 @@ void
 capmon_asic_data_store2(uint32_t axi_wr_pending, uint32_t axi_rd_pending,
                         uint64_t rd_lat0, uint64_t rd_lat1, uint64_t rd_lat2,
                         uint64_t rd_lat3, uint64_t rd_total,
-                        uint16_t *cfg_rdlat)
+                        uint16_t *cfg_rdlat,
+                        double wr_bw, double wr_pct, double wr64_pct, double wr256_pct,
+                        double rd_bw, double rd_pct, double rd64_pct, double rd256_pct)
 {
     asic->axi_wr_pend = axi_wr_pending;
     asic->axi_rd_pend = axi_rd_pending;
@@ -289,11 +315,61 @@ capmon_asic_data_store2(uint32_t axi_wr_pending, uint32_t axi_rd_pending,
     asic->rd_lat1 = rd_lat1;
     asic->rd_lat2 = rd_lat2;
     asic->rd_lat3 = rd_lat3;
+    asic->rd_total = rd_total;
 
     asic->cfg_rdlat[0] = cfg_rdlat[0];
     asic->cfg_rdlat[1] = cfg_rdlat[1];
     asic->cfg_rdlat[2] = cfg_rdlat[2];
     asic->cfg_rdlat[3] = cfg_rdlat[3];
+
+    asic->wr_bw = wr_bw;
+    asic->wr_pct = wr_pct;
+    asic->wr64_pct = wr64_pct;
+    asic->wr256_pct = wr256_pct;
+    asic->rd_bw = rd_bw;
+    asic->rd_pct = rd_pct;
+    asic->rd64_pct = rd64_pct;
+    asic->rd256_pct = rd256_pct;
+}
+
+void
+pxb_bwmon_initiator(
+    uint64_t *axi_wr_bytes, uint64_t *axi_wr, uint64_t *axi_wr64, uint64_t *axi_wr256,
+    uint64_t *axi_rd_bytes, uint64_t *axi_rd, uint64_t *axi_rd64, uint64_t *axi_rd256)
+{
+    // Write counters
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_ITR_TOT_AXI_WR_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr_bytes, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_TOT_AXI_WR_BYTE_OFFSET,
+                  (uint32_t *)axi_wr, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_AXI_WR64_BYTE_OFFSET,
+                  (uint32_t *)axi_wr64, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_AXI_WR256_BYTE_OFFSET,
+                  (uint32_t *)axi_wr256, 2);
+
+    // Read counters
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_ITR_TOT_AXI_RD_BYTE_ADDRESS,
+                  (uint32_t *)axi_rd_bytes, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_TOT_AXI_RD_BYTE_OFFSET,
+                  (uint32_t *)axi_rd, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_AXI_RD64_BYTE_OFFSET,
+                  (uint32_t *)axi_rd64, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_ITR_AXI_RD256_BYTE_OFFSET,
+                  (uint32_t *)axi_rd256, 2);
 }
 
 void
@@ -330,10 +406,45 @@ pxb_read_initiator_status()
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
                       CAP_PXB_CSR_SAT_ITR_RDLAT3_BYTE_OFFSET,
                   (uint32_t *)&rd_lat3, 2);
-
     auto rd_total = rd_lat0 + rd_lat1 + rd_lat2 + rd_lat3;
+
+    // Bandwidth
+    uint64_t axi_wr, axi_wr64, axi_wr256, axi_wr_bytes;
+    uint64_t axi_rd, axi_rd64, axi_rd256, axi_rd_bytes;
+    uint64_t next_axi_wr, next_axi_wr64, next_axi_wr256, next_axi_wr_bytes;
+    uint64_t next_axi_rd, next_axi_rd64, next_axi_rd256, next_axi_rd_bytes;
+
+#define INTVL       (10000)     // US
+
+    pxb_reset_initiator_counters();
+
+    pxb_bwmon_initiator(
+        &axi_wr_bytes, &axi_wr, &axi_wr64, &axi_wr256,
+        &axi_rd_bytes, &axi_rd, &axi_rd64, &axi_rd256);
+
+    usleep(INTVL);
+
+    pxb_bwmon_initiator(
+        &next_axi_wr_bytes, &next_axi_wr, &next_axi_wr64, &next_axi_wr256,
+        &next_axi_rd_bytes, &next_axi_rd, &next_axi_rd64, &next_axi_rd256);
+
+    double wr_bw = ((((next_axi_wr_bytes - axi_wr_bytes) / INTVL) * 1e6) * 8) / 1e9;
+    double rd_bw = ((((next_axi_rd_bytes - axi_rd_bytes) / INTVL) * 1e6) * 8) / 1e9;
+
+    double delta_wr = (next_axi_wr - axi_wr);
+    double delta_rd = (next_axi_rd - axi_rd);
+    double delta_rw = (delta_wr + delta_rd);
+    double wr_pct = (delta_wr * 100.0) / delta_rw;
+    double rd_pct = (delta_rd * 100.0) / delta_rw;
+    double wr64_pct = ((next_axi_wr64 - axi_wr64) * 100.0) / delta_wr;
+    double rd64_pct = ((next_axi_rd64 - axi_rd64) * 100.0) / delta_rd;
+    double wr256_pct = ((next_axi_wr256 - axi_wr256) * 100.0) / delta_wr;
+    double rd256_pct = ((next_axi_rd256 - axi_rd256) * 100.0) / delta_rd;
+
     capmon_asic_data_store2(axi_wr_pending, axi_rd_pending, rd_lat0, rd_lat1,
-                            rd_lat2, rd_lat3, rd_total, cfg_rdlat);
+                            rd_lat2, rd_lat3, rd_total, cfg_rdlat,
+                            wr_bw, wr_pct, wr64_pct, wr256_pct,
+                            rd_bw, rd_pct, rd64_pct, rd256_pct);
 }
 
 void
@@ -612,6 +723,7 @@ pxb_reset_counters(int verbose)
         pxb_reset_target_counters();
     }
 
+    pxb_reset_initiator_status();
     if (verbose) {
         pxb_reset_initiator_counters();
     }

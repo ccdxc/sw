@@ -221,8 +221,11 @@ typedef struct asic_data_ {
     uint64_t axi_wr, axi_wr64, axi_wr256, axi_wr_bytes;
     uint64_t axi_rd, axi_rd64, axi_rd256, axi_rd_bytes;
     uint64_t atomic_req;
-    uint64_t rd_lat0, rd_lat1, rd_lat2, rd_lat3;
+    uint64_t rd_lat0, rd_lat1, rd_lat2, rd_lat3, rd_total;
     uint16_t cfg_rdlat[4];
+    double wr_bw, wr_pct, wr64_pct, wr256_pct;
+    double rd_bw, rd_pct, rd64_pct, rd256_pct;
+
     /*
     Port 0
   rx_stl=0.00% tx_stl=0.00%
