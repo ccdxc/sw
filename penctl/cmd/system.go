@@ -5,14 +5,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	cluster "github.com/pensando/sw/api/generated/cluster"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 )
 
@@ -50,18 +48,10 @@ var getSystemQueueStatsCmd = &cobra.Command{
 	Run:   getSystemQueueStatsCmdHandler,
 }
 
-var getSmartNicCmd = &cobra.Command{
-	Use:   "dsc",
-	Short: "Shows the DSC object",
-	Long:  "\n-----------------------------------------\n Shows current Spec and Status of DSC object \n-----------------------------------------\n",
-	RunE:  getSmartNicCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(getSysMemCmd)
 	showCmd.AddCommand(getProcMemInfoCmd)
 	showCmd.AddCommand(getSystemCmd)
-	showCmd.AddCommand(getSmartNicCmd)
 	getSystemCmd.AddCommand(getSystemStatusCmd)
 	getSystemCmd.AddCommand(getSystemQueueStatsCmd)
 }
@@ -135,19 +125,4 @@ func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	return
-}
-
-func getSmartNicCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGet("api/v1/naples/info/")
-
-	if err != nil {
-		if verbose {
-			fmt.Println(err.Error())
-		}
-		return err
-	}
-	cfg := cluster.DistributedServiceCard{}
-	json.Unmarshal(resp, &cfg)
-	fmt.Println(cfg)
-	return nil
 }
