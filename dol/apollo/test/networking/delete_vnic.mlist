@@ -1,6 +1,6 @@
 feature:
     id          : networking
-    sub         : delete_cfg
+    sub         : delete_vnic
     package     : test.networking
     module      : networking
     enable      : True
@@ -9,7 +9,7 @@ feature:
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : WORKFLOW_START
+        name    : VNIC_WORKFLOW_START
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
@@ -38,7 +38,7 @@ modules:
         mlist   : igw2local.mlist
 
     - module:
-        name    : WORKFLOW_END
+        name    : VNIC_WORKFLOW_END
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
