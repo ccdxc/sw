@@ -16,6 +16,7 @@
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredEvents" [rows]="28" [virtualRowHeight]="36">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols"
+               [reorderableColumns]="true"
                dataKey="meta.name"
                [responsive]="true" sortField="meta.mod-time" [sortOrder]='-1'
                [loading]="eventsLoading"
@@ -79,7 +80,7 @@
         <ng-template pTemplate="header" let-columns>
           <tr>
             <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''"
-                [class]="col.class" pResizableColumn>
+                [class]="col.class" pResizableColumn pReorderableColumn>
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
               </app-sorticon>
             </th>
@@ -135,6 +136,7 @@
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols"
+               [reorderableColumns]="true"
                [rowTrackBy]='alertTrackBy'
                [(selection)]="selectedAlerts" sortField="meta.mod-time" [sortOrder]='-1'
                dataKey="meta.name"
@@ -218,7 +220,8 @@
               </p-tableHeaderCheckbox>
             </th>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''"
-                pResizableColumn
+                pResizableColumn pReorderableColumn
+
                 [class]="col.class"
                 [colSpan]=" col.isLast ? 2 : 1">
               <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}

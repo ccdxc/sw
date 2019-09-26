@@ -26,7 +26,7 @@
 <ng-template #DataTable>
   <app-lazyrender [data]="filteredNaples" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
     <p-table #naplesTable
-             class="global-primeng-table-lazyload" [columns]="cols"
+             class="global-primeng-table-lazyload" [columns]="cols" [reorderableColumns]="true"
              dataKey="meta.name" [responsive]="true"
              sortField="meta.mod-time" [sortOrder]='-1'
              [(selection)]="selectedNaples"
@@ -74,6 +74,7 @@
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''"
+              pReorderableColumn
               [class]="col.class">
             <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
             </app-sorticon>

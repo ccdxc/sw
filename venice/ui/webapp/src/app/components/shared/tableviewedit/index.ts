@@ -11,6 +11,7 @@ export interface TableCol {
   localSearch?: boolean;
   kind?: string;
   roleGuard?: string;
+  notReorderable?: boolean ;
 }
 
 export interface CustomExportFunctionOpts {

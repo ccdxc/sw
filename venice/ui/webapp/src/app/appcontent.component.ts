@@ -497,9 +497,13 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   }
 
   onRolloutComplete() {
+    let msg = 'Rollout completed'; // VS-849
+    if (this.currentRollout && this.currentRollout.status.state === RolloutRolloutStatus_state.scheduled) {
+      msg = 'Rollout suspended';
+    }
     this.currentRollout = null;
     Utility.getInstance().setCurrentRollout(null);
-    this._controllerService.invokeInfoToaster('Rollout', 'Rollout completed. Page will reload in 5 seconds.');
+    this._controllerService.invokeInfoToaster('Rollout', msg + '. Page will reload in 5 seconds.');
     setTimeout(() => {
       window.location.reload();
     }, 5000);

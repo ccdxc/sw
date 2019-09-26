@@ -17,6 +17,7 @@
                   (dataUpdate)='dataUpdated()'
                   (lazyLoadEvent)="lazyLoadEvent.emit($event)">
     <p-table [columns]="cols" [sortField]="sortField" [dataKey]="dataKey"
+             [reorderableColumns]="true"
              [sortOrder]="sortOrder"
              [compareSelectionBy]="compareSelectionBy"
              #primengTable
@@ -40,6 +41,7 @@
             <ng-container *roleGuard="col.roleGuard ? col.roleGuard : '' ">
               <th
                   [ngStyle]="{ 'padding-left': (first?'0.5em':'0'), 'padding-right' : (last?'0.5em':'0'), 'pointer-events': (pressed?'none':'inherit') }"
+                  pReorderableColumn [pReorderableColumnDisabled]="col.notReorderable? true: false"
                   [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
                   [fxFlex]="col.width"
                   [colSpan]="last && actionTemplate != null ? 2 : 1">
