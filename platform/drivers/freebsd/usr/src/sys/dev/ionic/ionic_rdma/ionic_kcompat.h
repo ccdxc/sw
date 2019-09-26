@@ -244,4 +244,14 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define local_irq_save(f) do { (f) = 0; } while (0)
 #define local_irq_restore(f) (void)(f)
 
+enum ib_port_phys_state {
+	IB_PORT_PHYS_STATE_SLEEP = 1,
+	IB_PORT_PHYS_STATE_POLLING = 2,
+	IB_PORT_PHYS_STATE_DISABLED = 3,
+	IB_PORT_PHYS_STATE_PORT_CONFIGURATION_TRAINING = 4,
+	IB_PORT_PHYS_STATE_LINK_UP = 5,
+	IB_PORT_PHYS_STATE_LINK_ERROR_RECOVERY = 6,
+	IB_PORT_PHYS_STATE_PHY_TEST = 7,
+};
+
 #endif /* IONIC_KCOMPAT */

@@ -105,7 +105,6 @@ struct ionic_ibdev {
 	int			lif_id;
 
 	u32			dbid;
-	phys_addr_t		xxx_dbpage_phys;
 	u64			__iomem *dbpage;
 	struct ionic_intr	__iomem *intr_ctrl;
 

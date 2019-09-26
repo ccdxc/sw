@@ -85,17 +85,11 @@ static void ionic_umem_show(struct seq_file *s, const char *w,
 {
 	seq_printf(s, "%sumem.length:\t%#lx\n", w, umem->length);
 	seq_printf(s, "%sumem.address:\t%#lx\n", w, umem->address);
-#ifdef HAVE_UMEM_PAGE_SHIFT
-	seq_printf(s, "%sumem.page_shift:\t%d\n", w, umem->page_shift);
-#else
-	seq_printf(s, "%sumem.page_size:\t%d\n", w, umem->page_size);
-#endif
+	seq_printf(s, "%sumem.page_size:\t%lu\n", w, PAGE_SIZE);
 	seq_printf(s, "%sumem.writable:\t%d\n", w, umem->writable);
 	seq_printf(s, "%sumem.nmap:\t%d\n", w, umem->nmap);
 
 	seq_printf(s, "%sumem.offset():\t%#x\n", w, ib_umem_offset(umem));
-	seq_printf(s, "%sumem.start():\t%#lx\n", w, ib_umem_start(umem));
-	seq_printf(s, "%sumem.end():\t%#lx\n", w, ib_umem_end(umem));
 	seq_printf(s, "%sumem.num_pages():\t%lu\n",
 		   w, ib_umem_num_pages(umem));
 	seq_printf(s, "%sumem.page_count():\t%d\n",
@@ -110,18 +104,10 @@ static void ionic_umem_dump(struct seq_file *s, struct ib_umem *umem)
 
 	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, sg_i) {
 		pagedma = sg_dma_address(sg);
-#ifdef HAVE_UMEM_PAGE_SHIFT
-		pg_end += sg_dma_len(sg) >> umem->page_shift;
-#else
-		pg_end += sg_dma_len(sg) * umem->page_size;
-#endif
+		pg_end += sg_dma_len(sg) * PAGE_SIZE;
 		for (; pg_i < pg_end; ++pg_i) {
 			seq_printf(s, "%#llx\n", pagedma);
-#ifdef HAVE_UMEM_PAGE_SHIFT
-			pagedma += BIT_ULL(umem->page_shift);
-#else
-			pagedma += umem->page_size;
-#endif
+			pagedma += PAGE_SIZE;
 		}
 	}
 }

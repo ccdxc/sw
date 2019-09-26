@@ -188,19 +188,12 @@ EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
 
 void ionic_api_kernel_dbpage(struct lif *lif,
 			     struct ionic_intr __iomem **intr_ctrl,
-			     u32 *dbid, u64 __iomem **dbpage,
-			     phys_addr_t *xxx_dbpage_phys)
+			     u32 *dbid, u64 __iomem **dbpage)
 {
-	int dbpage_num;
-
 	*intr_ctrl = lif->ionic->idev.intr_ctrl;
 
 	*dbid = lif->kern_pid;
 	*dbpage = lif->kern_dbpage;
-
-	/* XXX remove when rdma drops xxx_kdbid workaround */
-	dbpage_num = ionic_db_page_num(lif->ionic, lif->index, 0);
-	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
 EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
 

@@ -116,7 +116,6 @@ static inline void rdma_ah_set_dgid_raw(struct rdma_ah_attr *attr, void *dgid)
 
 #else /* 4.12.0 and later */
 #define HAVE_RDMA_AH_ATTR_TYPE_ROCE
-#define HAVE_UMEM_PAGE_SHIFT
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 4_14a)
@@ -547,6 +546,27 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_IB_ALLOC_SRQ_OBJ
 #define HAVE_IB_DESTROY_SRQ_VOID
 #define HAVE_IB_API_UDATA
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.3 and later */
+#define HAVE_RDMA_DEV_OPS_EXT
+#define HAVE_IB_ALLOC_CQ_OBJ
+#define HAVE_IB_DESTROY_CQ_VOID
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
+/* This is finally part of the stack in kernel 5.4 */
+enum ib_port_phys_state {
+	IB_PORT_PHYS_STATE_SLEEP = 1,
+	IB_PORT_PHYS_STATE_POLLING = 2,
+	IB_PORT_PHYS_STATE_DISABLED = 3,
+	IB_PORT_PHYS_STATE_PORT_CONFIGURATION_TRAINING = 4,
+	IB_PORT_PHYS_STATE_LINK_UP = 5,
+	IB_PORT_PHYS_STATE_LINK_ERROR_RECOVERY = 6,
+	IB_PORT_PHYS_STATE_PHY_TEST = 7,
+};
+#else /* 5.4 and later */
 #endif
 
 /* other compat for not yet upstream changes */

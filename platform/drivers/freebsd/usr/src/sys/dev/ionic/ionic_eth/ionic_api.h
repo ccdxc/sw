@@ -47,7 +47,7 @@
  * incompatible if compiled from different sources, or if some other driver
  * happens to be called "ionic".
  */
-#define IONIC_API_VERSION "4"
+#define IONIC_API_VERSION "5"
 
 struct sysctl_oid;
 struct lif;
@@ -192,7 +192,6 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
  * @intr_ctrl:		Interrupt control registers.
  * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
- * @xxx_dbpage_phys:	Phys address of doorbell page (to be removed).
  *
  * This also provides mapped interrupt control registers.
  *
@@ -202,8 +201,7 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
  */
 void ionic_api_kernel_dbpage(struct lif *lif,
 			     struct ionic_intr __iomem **intr_ctrl,
-			     u32 *dbid, u64 __iomem **dbpage,
-			     phys_addr_t *xxx_dbpage_phys);
+			     u32 *dbid, u64 __iomem **dbpage);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
  * @lif:		Handle to lif.
