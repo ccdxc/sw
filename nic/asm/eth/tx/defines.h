@@ -54,10 +54,10 @@
 
 // queue & descriptor error counters
 #define STAT_queue_disabled                 0
-#define STAT_queue_error                    1
-#define STAT_desc_fetch_error               2
-#define STAT_desc_data_error                3
-#define STAT_queue_empty                    4
+#define STAT_queue_empty                    1
+#define STAT_queue_error                    2
+#define STAT_desc_fetch_error               3
+#define STAT_desc_data_error                4
 // DEBUG: operation counters
 #define STAT_oper_csum_hw                   8
 #define STAT_oper_csum_hw_inner             9

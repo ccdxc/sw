@@ -35,27 +35,29 @@ eth_rx_stats:
     nop
 
 eth_rx_stats_incr_accept:
-    seq             c2, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_UNICAST
+    seq             c2, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_UNICAST
     addi.c2         _r_offset, _r_lif_offset, LIF_STATS_RX_UCAST_BYTES_OFFSET
-    seq             c3, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_MULTICAST
+    seq             c3, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_MULTICAST
     addi.c3         _r_offset, _r_lif_offset, LIF_STATS_RX_MCAST_BYTES_OFFSET
-    seq             c4, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_BROADCAST
+    seq             c4, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_BROADCAST
     addi.c4         _r_offset, _r_lif_offset, LIF_STATS_RX_BCAST_BYTES_OFFSET
 
-    ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_global_pkt_len, 1)
+    ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_t1_s2s_pkt_len, 1)
 
     b               eth_rx_stats_done
     nop
 
 eth_rx_stats_incr_drop:
-    seq             c2, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_UNICAST
+#if 0
+    seq             c2, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_UNICAST
     addi.c2         _r_offset, _r_lif_offset, LIF_STATS_RX_UCAST_DROP_BYTES_OFFSET
-    seq             c3, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_MULTICAST
+    seq             c3, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_MULTICAST
     addi.c3         _r_offset, _r_lif_offset, LIF_STATS_RX_MCAST_DROP_BYTES_OFFSET
-    seq             c4, k.eth_rx_global_l2_pkt_type, PACKET_TYPE_BROADCAST
+    seq             c4, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_BROADCAST
     addi.c4         _r_offset, _r_lif_offset, LIF_STATS_RX_BCAST_DROP_BYTES_OFFSET
 
-    ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_global_pkt_len, 1)
+    ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_t1_s2s_pkt_len, 1)
+#endif
 
     addi            _r_offset, _r_lif_offset, LIF_STATS_RX_QUEUE_DISABLED_OFFSET
     ATOMIC_INC_VAL_5(_r_base, _r_offset, _r_addr, _r_val,

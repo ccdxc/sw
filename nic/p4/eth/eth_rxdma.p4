@@ -107,21 +107,19 @@ header_type eth_sg_desc_d {
 header_type eth_rx_global_k {
     fields {
         dma_cur_index : 6;
-        qstate_addr : 34;
+        sg_desc_addr : 64;
         host_queue : 1;
         cpu_queue : 1;
         intr_enable : 1;
         lif : 11;
         stats : 32;
-        l2_pkt_type : 2;
-        pkt_type : 6;
-        pkt_len : 16;
         drop : 1;
     }
 }
 
 header_type eth_rx_t0_s2s_k {
     fields {
+        pkt_len : 16;
         cq_desc_addr : 64;
         intr_assert_index : 16;
         intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM
@@ -130,17 +128,18 @@ header_type eth_rx_t0_s2s_k {
 
 header_type eth_rx_t1_s2s_k {
     fields {
-        sg_desc_addr : 64;
+        l2_pkt_type : 2;
+        pkt_type : 6;
+        pkt_len : 16;
         rem_pkt_bytes : 14;
         rem_sg_elems : 4;
         sg_max_elems : 4;
     }
 }
 
-header_type eth_rx_to_s3_k {
+header_type eth_rx_to_s1_k {
     fields {
-        sg_desc_addr : 64;
-        sg_max_elems : 4;
+        qstate_addr : 64;
     }
 }
 
@@ -169,10 +168,10 @@ metadata eth_rx_global_k eth_rx_global;
 metadata eth_rx_global_k eth_rx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
-@pragma pa_header_union ingress to_stage_3
-metadata eth_rx_to_s3_k eth_rx_to_s3;
+@pragma pa_header_union ingress to_stage_1
+metadata eth_rx_to_s1_k eth_rx_to_s1;
 @pragma scratch_metadata
-metadata eth_rx_to_s3_k eth_rx_to_s3_scratch;
+metadata eth_rx_to_s1_k eth_rx_to_s1_scratch;
 
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s

@@ -33,7 +33,7 @@ eth_rx_rss_indir:
 
     // Pass RSS hash to the driver in the completion entry
     phvwr           p.eth_rx_cq_desc_rss_hash, r1.wx
-    phvwr           p.eth_rx_global_stats[STAT_oper_rss], 1
+    // phvwr           p.eth_rx_global_stats[STAT_oper_rss], 1
 
     // Lookup Qstate
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)

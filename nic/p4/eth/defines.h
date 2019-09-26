@@ -28,31 +28,30 @@
 
 #define MODIFY_ETH_RX_GLOBAL \
     modify_field(eth_rx_global_scratch.dma_cur_index, eth_rx_global.dma_cur_index); \
-    modify_field(eth_rx_global_scratch.qstate_addr, eth_rx_global.qstate_addr); \
+    modify_field(eth_rx_global_scratch.sg_desc_addr, eth_rx_global.sg_desc_addr); \
     modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue); \
     modify_field(eth_rx_global_scratch.cpu_queue, eth_rx_global.cpu_queue); \
     modify_field(eth_rx_global_scratch.intr_enable, eth_rx_global.intr_enable); \
     modify_field(eth_rx_global_scratch.lif, eth_rx_global.lif); \
     modify_field(eth_rx_global_scratch.stats, eth_rx_global.stats); \
-    modify_field(eth_rx_global_scratch.l2_pkt_type, eth_rx_global.l2_pkt_type); \
-    modify_field(eth_rx_global_scratch.pkt_type, eth_rx_global.pkt_type); \
-    modify_field(eth_rx_global_scratch.pkt_len, eth_rx_global.pkt_len); \
     modify_field(eth_rx_global_scratch.drop, eth_rx_global.drop);
 
 #define MODIFY_ETH_RX_T0_S2S \
+    modify_field(eth_rx_t0_s2s_scratch.pkt_len, eth_rx_t0_s2s.pkt_len); \
     modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_index, eth_rx_t0_s2s.intr_assert_index); \
-    modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data); \
+    modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data);
 
 #define MODIFY_ETH_RX_T1_S2S \
-    modify_field(eth_rx_t1_s2s_scratch.sg_desc_addr, eth_rx_t1_s2s.sg_desc_addr); \
+    modify_field(eth_rx_t1_s2s_scratch.l2_pkt_type, eth_rx_t1_s2s.l2_pkt_type); \
+    modify_field(eth_rx_t1_s2s_scratch.pkt_type, eth_rx_t1_s2s.pkt_type); \
+    modify_field(eth_rx_t1_s2s_scratch.pkt_len, eth_rx_t1_s2s.pkt_len); \
     modify_field(eth_rx_t1_s2s_scratch.rem_sg_elems, eth_rx_t1_s2s.rem_sg_elems); \
     modify_field(eth_rx_t1_s2s_scratch.rem_pkt_bytes, eth_rx_t1_s2s.rem_pkt_bytes); \
     modify_field(eth_rx_t1_s2s_scratch.sg_max_elems, eth_rx_t1_s2s_scratch.sg_max_elems);
 
-#define MODIFY_ETH_RX_TO_S3 \
-    modify_field(eth_rx_to_s3_scratch.sg_desc_addr, eth_rx_to_s3.sg_desc_addr); \
-    modify_field(eth_rx_to_s3_scratch.sg_max_elems, eth_rx_to_s3.sg_max_elems);
+#define MODIFY_ETH_RX_TO_S1 \
+    modify_field(eth_rx_to_s1_scratch.qstate_addr, eth_rx_to_s1.qstate_addr); \
 
 #define PARAMS_ETH_RX_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
@@ -112,8 +111,6 @@
     modify_field(eth_tx_global_scratch.drop, eth_tx_global.drop);
 
 #define MODIFY_ETH_TX_T0_S2S \
-    modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \
-    modify_field(eth_tx_t0_s2s_scratch.num_desc, eth_tx_t0_s2s.num_desc); \
     modify_field(eth_tx_t0_s2s_scratch.do_sg, eth_tx_t0_s2s.do_sg); \
     modify_field(eth_tx_t0_s2s_scratch.do_tso, eth_tx_t0_s2s.do_tso); \
     modify_field(eth_tx_t0_s2s_scratch.__pad, eth_tx_t0_s2s.__pad); \

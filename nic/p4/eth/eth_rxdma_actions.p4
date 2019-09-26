@@ -84,6 +84,7 @@ action eth_rx_rss_skip()
     // --- For K+I struct generation
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
+    MODIFY_ETH_RX_TO_S1
 
     // --- For D-struct generation
 }
@@ -104,7 +105,6 @@ action eth_rx_packet(PARAM_RX_DESC())
     // --- For K+I struct generation
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
-    MODIFY_ETH_RX_TO_S3
 
     // --- For D-struct generation
     MODIFY_RX_DESC()

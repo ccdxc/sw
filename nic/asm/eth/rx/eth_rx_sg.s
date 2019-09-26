@@ -112,10 +112,10 @@ eth_rx_sg_next:   // Continue SG in next stage
   //SET_STAT(_r_stats, c3, desc_data_error)
 
   // Calculate the next SG descriptor address
-  add             _r_addr, k.eth_rx_t1_s2s_sg_desc_addr, 1, LG2_RX_SG_MAX_READ_SIZE
+  add             _r_addr, k.eth_rx_global_sg_desc_addr, 1, LG2_RX_SG_MAX_READ_SIZE
 
   // Update the remaining number of pky bytes & SG descriptor address
-  phvwr           p.eth_rx_t1_s2s_sg_desc_addr, _r_addr
+  phvwr           p.eth_rx_global_sg_desc_addr, _r_addr
   phvwr           p.eth_rx_t1_s2s_rem_sg_elems, _r_rem_sg
   phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_rem_bytes
 

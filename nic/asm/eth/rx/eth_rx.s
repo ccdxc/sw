@@ -38,8 +38,8 @@ eth_rx:
     // if (buf.len < pkt.len && sg_desc_addr == 0)
     //      goto eth_rx_desc_data_error;
     //
-    slt             c1, d.{len}.hx, k.eth_rx_global_pkt_len     // c1 = buf.len < pkt.len
-    seq             c2, k.eth_rx_to_s3_sg_desc_addr, 0          // c2 = sg_desc_addr == 0
+    slt             c1, d.{len}.hx, k.eth_rx_t0_s2s_pkt_len     // c1 = buf.len < pkt.len
+    seq             c2, k.eth_rx_global_sg_desc_addr, 0          // c2 = sg_desc_addr == 0
     bcf             [c1 & c2], eth_rx_desc_data_error
     nop
 
@@ -49,7 +49,7 @@ eth_rx:
     // else
     //      dma.len = pkt.len
     //
-    cmov            _r_len, c1, d.{len}.hx, k.eth_rx_global_pkt_len
+    cmov            _r_len, c1, d.{len}.hx, k.eth_rx_t0_s2s_pkt_len
 
     // DMA packet
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
@@ -65,15 +65,12 @@ eth_rx:
     bcf            [!c1], eth_rx_done
 
     // rem_bytes = pkt.len - dma.len
-    sub            _r_len, k.eth_rx_global_pkt_len, _r_len      // branch-delay slot
+    sub            _r_len, k.eth_rx_t0_s2s_pkt_len, _r_len      // branch-delay slot
 
 eth_rx_sg:
     SAVE_STATS(_r_stats)
 
     // Launch eth_rx_sg in next stage
-    phvwr           p.eth_rx_t1_s2s_sg_desc_addr, k.eth_rx_to_s3_sg_desc_addr
-    phvwr           p.eth_rx_t1_s2s_rem_sg_elems, k.eth_rx_to_s3_sg_max_elems
-    phvwr           p.eth_rx_t1_s2s_sg_max_elems, k.eth_rx_to_s3_sg_max_elems
     phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_len
 
     // Save DMA command pointer
@@ -81,7 +78,7 @@ eth_rx_sg:
 
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
     phvwri          p.common_te1_phv_table_pc, eth_rx_sg_start[38:6]
-    phvwr.e         p.common_te1_phv_table_addr, k.eth_rx_to_s3_sg_desc_addr
+    phvwr.e         p.common_te1_phv_table_addr, k.eth_rx_global_sg_desc_addr
     phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
 
 eth_rx_desc_addr_error:
