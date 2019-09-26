@@ -53,7 +53,7 @@ vxlan_encap:
     phvwr.c1        p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.ethernet_0_dstAddr, d.nexthop_info_d.dmaco
     phvwr           p.ethernet_0_srcAddr, d.nexthop_info_d.smaco
-    or              r7, d.nexthop_info_d.vni, 0x8, 48
+    or              r7, k.rewrite_metadata_vni, 0x8, 48
     or              r7, r0, r7, 8
     phvwr           p.{vxlan_0_flags,vxlan_0_reserved,vxlan_0_vni, \
                         vxlan_0_reserved2}, r7

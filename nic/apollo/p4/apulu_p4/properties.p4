@@ -70,8 +70,9 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
     }
 
     // keys for mapping lookup
-    if ((ipv4_1.valid == TRUE) and
-        (scratch_metadata.mac == ethernet_1.dstAddr)) {
+    if ((control_metadata.l2_enabled == FALSE) or
+        ((ipv4_1.valid == TRUE) and
+        (scratch_metadata.mac == ethernet_1.dstAddr))) {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_IPV4);
         modify_field(p4i_i2e.mapping_lkp_addr, ipv4_1.dstAddr);
         modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.vpc_id);
@@ -121,8 +122,9 @@ action vni_info(vnic_id, bd_id, vpc_id, rmac) {
     }
 
     // keys for mapping lookup
-    if ((ipv4_2.valid == TRUE) and
-        (scratch_metadata.mac == ethernet_2.dstAddr)) {
+    if ((control_metadata.l2_enabled == FALSE) or
+        ((ipv4_2.valid == TRUE) and
+        (scratch_metadata.mac == ethernet_2.dstAddr))) {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_IPV4);
         modify_field(p4i_i2e.mapping_lkp_addr, ipv4_2.dstAddr);
         modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.vpc_id);

@@ -88,12 +88,8 @@ typedef struct cache_line_s {
 uint16_t g_vpc_id = 0x2FC;
 uint16_t g_bd_id = 0x2FD;
 uint16_t g_vnic_id = 0x2FE;
-
-uint16_t g_vpc_id1 = 0x2EC;
-uint16_t g_bd_id1 = 0x2ED;
-uint16_t g_vnic_id1 = 0x2EE;
-uint32_t g_session_id1 = 0x55E51;
-uint32_t g_nexthop_id1 = 0x2EF;
+uint32_t g_device_ipv4_addr = 0x64656667;
+uint64_t g_device_mac = 0x00AABBCCDDEEULL;
 
 uint64_t g_dmac1 = 0x000102030405ULL;
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
@@ -103,6 +99,18 @@ uint32_t g_dip1 = 0x0A0A0101;
 uint8_t  g_proto1 = 0x6;
 uint16_t g_sport1 = 0x1234;
 uint16_t g_dport1 = 0x5678;
+
+uint16_t g_vpc_id1 = 0x2EC;
+uint16_t g_bd_id1 = 0x2ED;
+uint16_t g_vnic_id1 = 0x2EE;
+uint16_t g_egress_bd_id1 = 0x2FE;
+uint32_t g_session_id1 = 0x55E51;
+uint32_t g_nexthop_id1 = 0x2EF;
+uint64_t g_dmaci1 = 0x001112131415ULL;
+uint64_t g_vrmac1 = 0x00D1D2D3D4D5ULL;
+uint64_t g_dmaco1 = 0x001234567890ULL;
+uint32_t g_vni1 = 0xABCDEF;
+uint32_t g_dipo1 = 0x0C0C0101;
 
 mpartition *g_mempartition;
 
@@ -306,8 +314,15 @@ txdma_symbols_init (void **p4plus_symbols,
 }
 
 static void
-table_constants_init (void)
+device_init (void)
 {
+    p4e_device_info_actiondata_t p4e_data;
+    p4e_device_info_p4e_device_info_t *p4e_info =
+        &p4e_data.action_u.p4e_device_info_p4e_device_info;
+
+    memset(&p4e_data, 0, sizeof(p4e_data));
+    p4e_info->device_ipv4_addr = g_device_ipv4_addr;
+    entry_write(P4TBL_ID_P4E_DEVICE_INFO, 0, NULL, NULL, &p4e_data, false, 0);
 }
 
 static void
@@ -442,13 +457,15 @@ mappings_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
-    key.txdma_to_p4e_mapping_lkp_id = g_bd_id1;
-    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dmac1, 6);
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.txdma_to_p4e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip1, 4);
     mapping_info->entry_valid = 1;
     mapping_info->nexthop_valid = 1;
     mapping_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     mapping_info->nexthop_id = g_nexthop_id1;
+    mapping_info->egress_bd_id = g_egress_bd_id1;
+    memcpy(mapping_info->dmaci, &g_dmaci1, 6);
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 
@@ -477,6 +494,36 @@ flows_init (void)
 }
 
 static void
+sessions_init (void)
+{
+    session_actiondata_t data;
+    session_session_info_t *session_info = &data.action_u.session_session_info;
+    uint16_t tbl_id = P4TBL_ID_SESSION;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = SESSION_SESSION_INFO_ID;
+    session_info->tx_rewrite_flags =
+        ((TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+         (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+         (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+    entry_write(tbl_id, g_session_id1, 0, 0, &data, false, 0);
+}
+
+static void
+egress_bd_init (void)
+{
+    bd_actiondata_t data;
+    bd_bd_info_t *bd_info = &data.action_u.bd_bd_info;
+    uint16_t tbl_id = P4TBL_ID_BD;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = BD_BD_INFO_ID;
+    bd_info->vni = g_vni1;
+    memcpy(bd_info->vrmac, &g_vrmac1, 6);
+    entry_write(tbl_id, g_egress_bd_id1, 0, 0, &data, false, 0);
+}
+
+static void
 nexthops_init (void)
 {
     nexthop_actiondata_t data;
@@ -486,6 +533,10 @@ nexthops_init (void)
     memset(&data, 0, sizeof(data));
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_1;
+    nexthop_info->ip_type = IPTYPE_IPV4;
+    memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
+    memcpy(nexthop_info->smaco, &g_device_mac, 6);
+    memcpy(nexthop_info->dipo, &g_dipo1, 4);
     entry_write(tbl_id, g_nexthop_id1, 0, 0, &data, false, 0);
 }
 
@@ -621,16 +672,17 @@ TEST_F(apulu_test, test1)
 #endif
 
     init_service_lif();
-    table_constants_init();
-    checksum_init();
-
-#ifdef SIM
+    device_init();
     input_properties_init();
     local_mappings_init();
     mappings_init();
     flows_init();
+    sessions_init();
+    egress_bd_init();
     nexthops_init();
+    checksum_init();
 
+#ifdef SIM
     uint32_t port = 0;
     uint32_t cos = 0;
     std::vector<uint8_t> ipkt;
@@ -654,9 +706,9 @@ TEST_F(apulu_test, test1)
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt1));
         memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-        epkt.resize(sizeof(g_snd_pkt1));
-        memcpy(epkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-        std::cout << "[TCID=" << tcid << "] Testing P4I-P4E" << std::endl;
+        epkt.resize(sizeof(g_rcv_pkt1));
+        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        std::cout << "[TCID=" << tcid << "] Tx:P4I-P4E" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);

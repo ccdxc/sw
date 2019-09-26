@@ -35,9 +35,11 @@ vni_local_mapping_key_non_ipv4:
     phvwr           p.key_metadata_local_mapping_lkp_id, r6
 
 vni_mapping_key:
+    seq             c1, k.control_metadata_l2_enabled, FALSE
     seq.c7          c7, d.vni_info_d.rmac, k.ethernet_2_dstAddr
-    bcf             [!c7], vni_mapping_key_non_ipv4
-    phvwr.c7        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
+    orcf            c1, [c7]
+    bcf             [!c1], vni_mapping_key_non_ipv4
+    phvwr.c1        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
     phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ipv4_2_dstAddr
     phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r7
 
