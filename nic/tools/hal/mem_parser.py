@@ -44,6 +44,12 @@ cache_pipes = {
 fd = sys.stdout
 pipeline = None
 
+cache_size = 6 # in powers of 2
+
+cache_size_roundoff_mask = 0
+for i in range(cache_size):
+    cache_size_roundoff_mask |= (1 << i)
+
 def size_str_to_bytes(size_str):
     if "G" in size_str:
         mf = 1024 * 1024 * 1024
@@ -61,7 +67,13 @@ def size_str_to_bytes(size_str):
         mv = long(size_str[:-1])
     else:
         return -1
-    return mf * mv
+
+    size = mf * mv
+
+    # roundoff size to nearest cache size
+    size = (size + pow(2, cache_size-1)) & (~cache_size_roundoff_mask)
+    return size
+
 
 def parse_inputs():
     global fd
