@@ -98,6 +98,8 @@ table vlan {
 /* VNI info                                                                   */
 /******************************************************************************/
 action vni_info(vnic_id, bd_id, vpc_id, rmac) {
+    // on miss, drop the packet
+
     if (vnic_id != 0) {
         modify_field(vnic_metadata.vnic_id, vnic_id);
     }
@@ -160,7 +162,9 @@ table vni_otcam {
 
 control input_properties {
     apply(lif);
-    if ((control_metadata.rx_packet == TRUE) and (vxlan_1.valid == TRUE)) {
+    if ((control_metadata.rx_packet == TRUE) and
+        (control_metadata.to_device_ip == TRUE) and
+        (vxlan_1.valid == TRUE)) {
         apply(vni);
         apply(vni_otcam);
     } else {

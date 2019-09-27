@@ -9,10 +9,6 @@ struct phv_     p;
 %%
 
 nacl_permit:
-    phvwr           p.capri_p4_intrinsic_valid, 1
-    phvwr           p.txdma_to_p4e_valid, 1
-    phvwr           p.p4i_i2e_valid, 1
-    phvwr           p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
     nop.e
     nop
 
@@ -24,7 +20,7 @@ nacl_redirect:
 .align
 nacl_drop:
     phvwr.e         p.capri_intrinsic_drop, 1
-    phvwr           p.control_metadata_p4i_drop_reason[P4I_DROP_NACL], 1
+    phvwr.f         p.control_metadata_p4i_drop_reason[P4I_DROP_NACL], 1
 
 /*****************************************************************************/
 /* error function                                                            */

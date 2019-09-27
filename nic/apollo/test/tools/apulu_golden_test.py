@@ -15,7 +15,7 @@ def dump_pkt(pkt, sname):
     print('};\n')
 
 ###############################################################################
-# begin golden/artemis.cc
+# begin golden/apulu.cc
 ###############################################################################
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
@@ -25,9 +25,23 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
-        UDP(sport=0xD097, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        UDP(sport=0xF162, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
         Ether(dst='00:11:12:13:14:15', src='00:D1:D2:D3:D4:D5') / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 dump_pkt(ipkt, 'g_snd_pkt1')
 dump_pkt(opkt, 'g_rcv_pkt1')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:AA:BB:CC:DD:EE', src='00:12:34:56:78:90') / \
+        IP(dst='100.101.102.103', src='12.1.1.1', id=0, ttl=64) / \
+        UDP(dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:D1:D2:D3:D4:D5', src='00:11:12:13:14:15') / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+opkt = Ether(dst='00:C1:C2:C3:C4:C5', src='00:11:12:13:14:15') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+dump_pkt(ipkt, 'g_snd_pkt2')
+dump_pkt(opkt, 'g_rcv_pkt2')

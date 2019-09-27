@@ -2,10 +2,6 @@
 /* Network ACL                                                               */
 /*****************************************************************************/
 action nacl_permit() {
-    add_header(capri_p4_intrinsic);
-    add_header(txdma_to_p4e);
-    add_header(p4i_i2e);
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
 }
 
 action nacl_drop() {

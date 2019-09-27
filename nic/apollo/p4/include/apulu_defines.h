@@ -23,8 +23,9 @@
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
 #define P4I_DROP_REASON_MIN             0
-#define P4I_DROP_NACL                   0
-#define P4I_DROP_REASON_MAX             0
+#define P4I_DROP_VNI_INVALID            0
+#define P4I_DROP_NACL                   1
+#define P4I_DROP_REASON_MAX             1
 
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_SESSION_INVALID        0
@@ -106,11 +107,11 @@
 #define RX_REWRITE_DPORT_FROM_NAT               1
 #define RX_REWRITE_DPORT_BITS                   4:4
 
-#define RX_REWRITE_ENCAP_START                  4
+#define RX_REWRITE_ENCAP_START                  5
 #define RX_REWRITE_ENCAP_MASK                   1
 #define RX_REWRITE_ENCAP_NONE                   0
 #define RX_REWRITE_ENCAP_VLAN                   1
-#define RX_REWRITE_ENCAP_BITS                   4:4
+#define RX_REWRITE_ENCAP_BITS                   5:5
 
 #define TX_REWRITE(a, attr, val) \
     ((((a) >> TX_REWRITE_ ## attr ## _START) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
@@ -139,7 +140,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APULU_PREDICATE_HDR_SZ          1
-#define APULU_P4_TO_RXDMA_HDR_SZ        0
+#define APULU_P4I_TO_RXDMA_HDR_SZ       0
 #define APULU_I2E_HDR_SZ                0
 #define APULU_TXDMA_TO_P4E_HDR_SZ       0
 

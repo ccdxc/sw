@@ -25,6 +25,7 @@
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -85,6 +86,8 @@ typedef struct cache_line_s {
     uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
 } cache_line_t;
 
+uint32_t g_lif0 = 0x1;
+uint32_t g_lif1 = 0x2;
 uint16_t g_vpc_id = 0x2FC;
 uint16_t g_bd_id = 0x2FD;
 uint16_t g_vnic_id = 0x2FE;
@@ -106,6 +109,7 @@ uint16_t g_vnic_id1 = 0x2EE;
 uint16_t g_egress_bd_id1 = 0x2FE;
 uint32_t g_session_id1 = 0x55E51;
 uint32_t g_nexthop_id1 = 0x2EF;
+uint32_t g_nexthop_id2 = 0x3EF;
 uint64_t g_dmaci1 = 0x001112131415ULL;
 uint64_t g_vrmac1 = 0x00D1D2D3D4D5ULL;
 uint64_t g_dmaco1 = 0x001234567890ULL;
@@ -316,13 +320,24 @@ txdma_symbols_init (void **p4plus_symbols,
 static void
 device_init (void)
 {
+    p4i_device_info_actiondata_t p4i_data;
+    p4i_device_info_p4i_device_info_t *p4i_info =
+        &p4i_data.action_u.p4i_device_info_p4i_device_info;
     p4e_device_info_actiondata_t p4e_data;
     p4e_device_info_p4e_device_info_t *p4e_info =
         &p4e_data.action_u.p4e_device_info_p4e_device_info;
 
+    memset(&p4i_data, 0, sizeof(p4i_data));
+    memcpy(p4i_info->device_mac_addr1, &g_device_mac, 6);
+    p4i_info->device_ipv4_addr = g_device_ipv4_addr;
+    entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0, NULL, NULL, &p4i_data, false, 0);
+
     memset(&p4e_data, 0, sizeof(p4e_data));
     p4e_info->device_ipv4_addr = g_device_ipv4_addr;
     entry_write(P4TBL_ID_P4E_DEVICE_INFO, 0, NULL, NULL, &p4e_data, false, 0);
+
+    capri_tm_uplink_lif_set(TM_PORT_UPLINK_0, g_lif0);
+    capri_tm_uplink_lif_set(TM_PORT_UPLINK_1, g_lif1);
 }
 
 static void
@@ -395,14 +410,22 @@ lif_table_init (void)
     lif_actiondata_t data;
     lif_lif_info_t *lif_info = &data.action_u.lif_lif_info;
     uint16_t tbl_id = P4TBL_ID_LIF;
-    uint16_t index = 0;
 
     memset(&data, 0, sizeof(data));
     data.action_id = LIF_LIF_INFO_ID;
     lif_info->vpc_id = g_vpc_id;
     lif_info->bd_id = g_bd_id;
     lif_info->vnic_id = g_vnic_id;
-    entry_write(tbl_id, index, 0, 0, &data, false, 0);
+    lif_info->lif_type = false;
+    entry_write(tbl_id, g_lif0, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = LIF_LIF_INFO_ID;
+    lif_info->vpc_id = g_vpc_id;
+    lif_info->bd_id = 0;
+    lif_info->vnic_id = 0;
+    lif_info->lif_type = true;
+    entry_write(tbl_id, g_lif1, 0, 0, &data, false, 0);
 }
 
 static void
@@ -422,10 +445,29 @@ vlan_table_init (void)
 }
 
 static void
+vni_table_init (void)
+{
+    vni_swkey_t key;
+    vni_actiondata_t data;
+    vni_vni_info_t *vni_info = &data.action_u.vni_vni_info;
+    uint16_t tbl_id = P4TBL_ID_VNI;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vxlan_1_vni = g_vni1;
+    data.action_id = VNI_VNI_INFO_ID;
+    vni_info->vpc_id = g_vpc_id1;
+    vni_info->bd_id = g_bd_id1;
+    vni_info->vnic_id = 0;
+    entry_write(tbl_id, 0, &key, 0, &data, true, VNI_HASH_TABLE_SIZE);
+}
+
+static void
 input_properties_init (void)
 {
     lif_table_init();
     vlan_table_init();
+    vni_table_init();
 }
 
 static void
@@ -467,6 +509,19 @@ mappings_init (void)
     mapping_info->egress_bd_id = g_egress_bd_id1;
     memcpy(mapping_info->dmaci, &g_dmaci1, 6);
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.txdma_to_p4e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_sip1, 4);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    mapping_info->nexthop_id = g_nexthop_id2;
+    mapping_info->egress_bd_id = g_bd_id1;
+    memcpy(mapping_info->dmaci, &g_smac1, 6);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 
 static void
@@ -491,6 +546,20 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_dip1;
+    key.key_metadata_ipv4_dst = g_sip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_dport1;
+    key.key_metadata_dport = g_sport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_id = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 }
 
 static void
@@ -506,6 +575,9 @@ sessions_init (void)
         ((TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
          (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
          (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+    session_info->rx_rewrite_flags =
+        ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+         (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
     entry_write(tbl_id, g_session_id1, 0, 0, &data, false, 0);
 }
 
@@ -524,6 +596,12 @@ egress_bd_init (void)
 }
 
 static void
+egress_properties_init (void)
+{
+    egress_bd_init();
+}
+
+static void
 nexthops_init (void)
 {
     nexthop_actiondata_t data;
@@ -538,6 +616,12 @@ nexthops_init (void)
     memcpy(nexthop_info->smaco, &g_device_mac, 6);
     memcpy(nexthop_info->dipo, &g_dipo1, 4);
     entry_write(tbl_id, g_nexthop_id1, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nexthop_info->port = TM_PORT_UPLINK_0;
+    memcpy(nexthop_info->vni, &g_ctag1, sizeof(g_ctag1));
+    entry_write(tbl_id, g_nexthop_id2, 0, 0, &data, false, 0);
 }
 
 class apulu_test : public ::testing::Test {
@@ -678,7 +762,7 @@ TEST_F(apulu_test, test1)
     mappings_init();
     flows_init();
     sessions_init();
-    egress_bd_init();
+    egress_properties_init();
     nexthops_init();
     checksum_init();
 
@@ -720,6 +804,26 @@ TEST_F(apulu_test, test1)
             testcase_end(tcid, i + 1);
         }
     }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt2));
+        memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
+        epkt.resize(sizeof(g_rcv_pkt2));
+        memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
+        std::cout << "[TCID=" << tcid << "] Rx:P4I-P4E" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
     exit_simulation();
 #endif
 

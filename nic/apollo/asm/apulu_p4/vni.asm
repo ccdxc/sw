@@ -10,6 +10,7 @@ struct phv_             p;
 %%
 
 vni_info:
+    bcf             [!c1], vni_miss
     sne             c1, d.vni_info_d.vnic_id, r0
     phvwr.c1        p.vnic_metadata_vnic_id, d.vni_info_d.vnic_id
     sne             c1, d.vni_info_d.bd_id, r0
@@ -47,6 +48,10 @@ vni_mapping_key_non_ipv4:
     phvwr           p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
     phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ethernet_2_dstAddr
     phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r6
+
+vni_miss:
+    phvwr.e         p.capri_intrinsic_drop, 1
+    phvwr.f         p.control_metadata_p4i_drop_reason[P4I_DROP_VNI_INVALID], 1
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -10,6 +10,9 @@ action native_ipv4_packet() {
     if (udp_1.valid == TRUE) {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
+    } else {
+        modify_field(key_metadata.sport, key_metadata.parsed_sport);
+        modify_field(key_metadata.dport, key_metadata.parsed_dport);
     }
     modify_field(key_metadata.proto, ipv4_1.protocol);
 }
@@ -21,6 +24,9 @@ action native_ipv6_packet() {
     if (udp_1.valid == TRUE) {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
+    } else {
+        modify_field(key_metadata.sport, key_metadata.parsed_sport);
+        modify_field(key_metadata.dport, key_metadata.parsed_dport);
     }
     modify_field(key_metadata.proto, ipv6_1.nextHdr);
 }
@@ -43,6 +49,8 @@ action tunneled_ipv4_packet() {
     modify_field(key_metadata.ipv4_src, ipv4_2.srcAddr);
     modify_field(key_metadata.ipv4_dst, ipv4_2.dstAddr);
     modify_field(key_metadata.proto, ipv4_2.protocol);
+    modify_field(key_metadata.sport, key_metadata.parsed_sport);
+    modify_field(key_metadata.dport, key_metadata.parsed_dport);
 }
 
 action tunneled_ipv6_packet() {
@@ -50,6 +58,8 @@ action tunneled_ipv6_packet() {
     modify_field(key_metadata.src, ipv6_2.srcAddr);
     modify_field(key_metadata.dst, ipv6_2.dstAddr);
     modify_field(key_metadata.proto, ipv6_2.nextHdr);
+    modify_field(key_metadata.sport, key_metadata.parsed_sport);
+    modify_field(key_metadata.dport, key_metadata.parsed_dport);
 }
 
 action tunneled_nonip_packet() {
@@ -97,37 +107,6 @@ table key_tunneled {
     }
 }
 
-/******************************************************************************/
-/* Ingress init                                                               */
-/******************************************************************************/
-action process_ingress_recirc() {
-    if (ingress_recirc.valid == TRUE) {
-        modify_field(control_metadata.local_mapping_ohash_lkp,
-                     ~ingress_recirc.local_mapping_done);
-        modify_field(control_metadata.flow_ohash_lkp,
-                     ~ingress_recirc.flow_done);
-        modify_field(capri_p4_intrinsic.recirc, FALSE);
-    }
-}
-
-action init_config() {
-    process_ingress_recirc();
-    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
-             offset_metadata.l2_1);
-    if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
-        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
-    } else {
-        modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_iq);
-    }
-}
-
-@pragma stage 1
-table init_config {
-    actions {
-        init_config;
-    }
-}
-
 control key_init {
     apply(key_native);
     if ((control_metadata.rx_packet == TRUE) and
@@ -135,5 +114,4 @@ control key_init {
         (vxlan_1.valid == TRUE)) {
         apply(key_tunneled);
     }
-    apply(init_config);
 }

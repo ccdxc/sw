@@ -1,6 +1,16 @@
 /*****************************************************************************/
 /* Device info                                                               */
 /*****************************************************************************/
+action p4i_recirc() {
+    if (ingress_recirc.valid == TRUE) {
+        modify_field(control_metadata.local_mapping_ohash_lkp,
+                     ~ingress_recirc.local_mapping_done);
+        modify_field(control_metadata.flow_ohash_lkp,
+                     ~ingress_recirc.flow_done);
+        modify_field(capri_p4_intrinsic.recirc, FALSE);
+    }
+}
+
 action p4i_device_info(device_mac_addr1, device_mac_addr2,
                        device_ipv4_addr, device_ipv6_addr,
                        l2_enabled, learn_enabled) {
@@ -17,6 +27,15 @@ action p4i_device_info(device_mac_addr1, device_mac_addr2,
     }
     modify_field(control_metadata.l2_enabled, l2_enabled);
     modify_field(control_metadata.learn_enabled, learn_enabled);
+
+    p4i_recirc();
+    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+             offset_metadata.l2_1);
+    if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
+        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    } else {
+        modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_iq);
+    }
 }
 
 @pragma stage 0

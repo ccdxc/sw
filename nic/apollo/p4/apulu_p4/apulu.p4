@@ -13,7 +13,6 @@
 #if 0
 #include "vnic.p4"
 #include "tunnel.p4"
-#include "inter_pipe.p4"
 #include "meter.p4"
 #endif
 
@@ -29,6 +28,7 @@
 #include "nexthops.p4"
 #include "checksum.p4"
 #include "stats.p4"
+#include "inter_pipe.p4"
 
 action nop() {
 }
@@ -54,6 +54,7 @@ control ingress {
     flow_lookup();
     nacl();
     ingress_stats();
+    ingress_inter_pipe();
 }
 
 /*****************************************************************************/

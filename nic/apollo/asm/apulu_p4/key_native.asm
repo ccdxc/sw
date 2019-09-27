@@ -26,7 +26,9 @@ native_ipv4_packet:
     phvwr           p.key_metadata_ipv4_dst, k.ipv4_1_dstAddr
     seq             c1, k.udp_1_valid, TRUE
     or.c1           r1, k.udp_1_srcPort, k.udp_1_dstPort, 16
-    phvwr.c1        p.{key_metadata_dport,key_metadata_sport}, r1
+    or.!c1          r1, k.key_metadata_parsed_sport, \
+                        k.key_metadata_parsed_dport, 16
+    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
     phvwr.e         p.key_metadata_proto, k.ipv4_1_protocol
     phvwr.f         p.key_metadata_ktype, KEY_TYPE_IPV4
 
@@ -36,7 +38,9 @@ native_ipv6_packet:
     phvwr           p.key_metadata_dst, k.ipv6_1_dstAddr
     seq             c1, k.udp_1_valid, TRUE
     or.c1           r1, k.udp_1_srcPort, k.udp_1_dstPort, 16
-    phvwr.c1        p.{key_metadata_dport,key_metadata_sport}, r1
+    or.!c1          r1, k.key_metadata_parsed_sport, \
+                        k.key_metadata_parsed_dport, 16
+    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
     phvwr.e         p.key_metadata_proto, k.ipv6_1_nextHdr
     phvwr.f         p.key_metadata_ktype, KEY_TYPE_IPV6
 

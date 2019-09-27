@@ -229,6 +229,8 @@ parser parse_ipv6_1 {
 
 parser parse_icmp {
     extract(icmp);
+    set_metadata(key_metadata.parsed_sport, latest.icmp_type);
+    set_metadata(key_metadata.parsed_dport, latest.icmp_code);
     set_metadata(offset_metadata.l4_2, current + 0);
     return ingress;
 }
@@ -236,8 +238,8 @@ parser parse_icmp {
 parser parse_tcp {
     extract(tcp);
     set_metadata(offset_metadata.l4_2, current + 0);
-    set_metadata(key_metadata.sport, latest.srcPort);
-    set_metadata(key_metadata.dport, latest.dstPort);
+    set_metadata(key_metadata.parsed_sport, latest.srcPort);
+    set_metadata(key_metadata.parsed_dport, latest.dstPort);
     return ingress;
 }
 
@@ -312,8 +314,8 @@ parser parse_udp_2 {
     extract(udp_2);
     set_metadata(offset_metadata.l4_2, current + 0);
     set_metadata(ohi.l4_2_len, udp_2.len + 0);
-    set_metadata(key_metadata.sport, latest.srcPort);
-    set_metadata(key_metadata.dport, latest.dstPort);
+    set_metadata(key_metadata.parsed_sport, latest.srcPort);
+    set_metadata(key_metadata.parsed_dport, latest.dstPort);
     return ingress;
 }
 
