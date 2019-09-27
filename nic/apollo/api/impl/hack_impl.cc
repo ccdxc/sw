@@ -54,7 +54,7 @@ typedef struct __attribute__((__packed__)) lifqstate_  {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-init_service_lif (const char *cfg_path)
+init_service_lif (uint32_t lif_id, const char *cfg_path)
 {
     uint8_t pgm_offset = 0;
     std::string prog_info_file;
@@ -79,7 +79,7 @@ init_service_lif (const char *cfg_path)
 */
 
     sdk::platform::utils::LIFQState qstate = { 0 };
-    qstate.lif_id = APOLLO_SERVICE_LIF;
+    qstate.lif_id = lif_id;
     qstate.hbm_address = api::g_pds_state.mempartition()->start_addr(JLIF2QSTATE_MAP_NAME);
     SDK_ASSERT(qstate.hbm_address != INVALID_MEM_ADDRESS);
     qstate.params_in.type[0].entries = 1;

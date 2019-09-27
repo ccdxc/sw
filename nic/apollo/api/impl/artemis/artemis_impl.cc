@@ -29,7 +29,7 @@
 #include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
 #include "gen/p4gen/artemis_rxdma/include/ingress_phv.h"
 
-extern sdk_ret_t init_service_lif(const char *cfg_path);
+extern sdk_ret_t init_service_lif(uint32_t lif_id, const char *cfg_path);
 
 #define MEM_REGION_RXDMA_PROGRAM_NAME        "rxdma_program"
 #define MEM_REGION_TXDMA_PROGRAM_NAME        "txdma_program"
@@ -891,7 +891,7 @@ artemis_impl::pipeline_init(void) {
     g_pds_impl_state.init(&api::g_pds_state);
     api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
 
-    ret = init_service_lif(p4pd_cfg.cfg_path);
+    ret = init_service_lif(ARTEMIS_SERVICE_LIF, p4pd_cfg.cfg_path);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
