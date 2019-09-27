@@ -515,6 +515,8 @@ port::port_serdes_an_link_train_check (void)
     int      training_done  = 0x0;
     int      all_lanes_mask = 0x0;
     int      o_core_status_arr[4] = {0};
+    int      tries = 0;
+    int      max_retries = 10000;   // timeout after 100usec * 10000 = 1 sec
 
     while (true) {
         for (lane = 0; lane < num_lanes_; ++lane) {
@@ -545,7 +547,8 @@ port::port_serdes_an_link_train_check (void)
             }
         }
 
-        if (training_done == all_lanes_mask) {
+        if ((training_done == all_lanes_mask) ||
+            (tries++ == max_retries)) {
             break;
         }
 
