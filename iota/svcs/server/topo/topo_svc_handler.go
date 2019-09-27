@@ -377,7 +377,7 @@ func (ts *TopologyService) DoSwitchOperation(ctx context.Context, req *iota.Swit
 	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | SwitchMsg Returned: %v", req)
 
-	if err := testbed.DoSwitchOperation(req.DataSwitches, req.GetOp()); err != nil {
+	if err := testbed.DoSwitchOperation(req); err != nil {
 		msg := fmt.Sprintf("TOPO SVC | SwitchMsg | Could not initialize switch Err: %v", err)
 		req.ApiResponse.ErrorMsg = msg
 		return req, nil

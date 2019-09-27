@@ -297,8 +297,6 @@ func (n *TestNode) StartAgent(command string, cfg *ssh.ClientConfig) error {
 func clearSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string) error {
 	for _, port := range ports {
 		dataSwitch.UnsetTrunkMode(port)
-		dataSwitch.UnsetNativeVlan(port)
-		dataSwitch.UnsetNativeVlan(port)
 	}
 	return nil
 }
@@ -400,24 +398,54 @@ func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed datas
 	return nil
 }
 
-// DoSwitchOperation allocates vlans based on the switch port ID
-func DoSwitchOperation(dsSwitches []*iota.DataSwitch, op iota.SwitchOp) (err error) {
+func doVlanConfiguration(dataSwitch dataswitch.Switch, ports []string, vlanConfig *iota.VlanConfig) error {
 
-	for _, ds := range dsSwitches {
+	for _, port := range ports {
+		if vlanConfig.Unset {
+			if err := dataSwitch.UnsetTrunkVlanRange(port, vlanConfig.GetVlanRange()); err != nil {
+				return errors.Wrap(err, "Setting Vlan trunk range failed")
+			}
+			if err := dataSwitch.UnsetNativeVlan(port,
+				int(vlanConfig.GetNativeVlan())); err != nil {
+				return errors.Wrap(err, "Setting Vlan trunk range failed")
+			}
+		} else {
+			if err := dataSwitch.SetTrunkVlanRange(port, vlanConfig.GetVlanRange()); err != nil {
+				return errors.Wrap(err, "Setting Vlan trunk range failed")
+			}
+			if err := dataSwitch.SetNativeVlan(port,
+				int(vlanConfig.GetNativeVlan())); err != nil {
+				return errors.Wrap(err, "Setting Vlan trunk range failed")
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// DoSwitchOperation allocates vlans based on the switch port ID
+func DoSwitchOperation(req *iota.SwitchMsg) (err error) {
+
+	for _, ds := range req.DataSwitches {
 		n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
 		if n3k == nil {
 			log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
 			return errors.New("Switch not found")
 		}
 
-		switch op {
+		switch req.GetOp() {
 		case iota.SwitchOp_SHUT_PORTS:
 			if err := portLinkOp(n3k, ds.GetPorts(), true); err != nil {
-				errors.Wrap(err, "Port shutdown operation failed")
+				return errors.Wrap(err, "Port shutdown operation failed")
 			}
 		case iota.SwitchOp_NO_SHUT_PORTS:
 			if err := portLinkOp(n3k, ds.GetPorts(), false); err != nil {
-				errors.Wrap(err, "Port up operation failed")
+				return errors.Wrap(err, "Port up operation failed")
+			}
+		case iota.SwitchOp_VLAN_CONFIG:
+			if err := doVlanConfiguration(n3k, ds.GetPorts(), req.GetVlanConfig()); err != nil {
+				return errors.Wrap(err, "Vlan config operation failed")
 			}
 		}
 	}

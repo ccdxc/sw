@@ -45,6 +45,7 @@
 		DataSwitch
 		TestBedMsg
 		TestNodesMsg
+		VlanConfig
 		SwitchMsg
 		TestBedNode
 		EntityCopyMsg

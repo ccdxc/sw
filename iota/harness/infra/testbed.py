@@ -170,6 +170,10 @@ class _Testbed:
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
+            else:
+                resp = self.SetupTestBedNetwork()
+                if resp != types.status.SUCCESS:
+                    assert(0)
 
         return msg
 
@@ -383,6 +387,96 @@ class _Testbed:
     def GetVlanBase(self):
         return self.__vlan_base
 
+
+    def UnsetVlansOnTestBed(self):
+        #First Unset the Switch
+        unsetMsg = topo_pb2.SwitchMsg()
+        unsetMsg.op = topo_pb2.VLAN_CONFIG
+        for instance in self.__tbspec.Instances:
+            switch_ips = {}
+            if instance.Type == "bm":
+                for nw in instance.DataNetworks:
+                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                    if not switch_ctx:
+                        switch_ctx = unsetMsg.data_switches.add()
+                        switch_ips[nw.SwitchIP] = switch_ctx
+                    switch_ctx.username = nw.SwitchUsername
+                    switch_ctx.password = nw.SwitchPassword
+                    switch_ctx.ip = nw.SwitchIP
+                    switch_ctx.ports.append(nw.Name)
+      
+        vlans = self.GetDataVlans()
+        for ip, switch in switch_ips.items():
+             unsetMsg.vlan_config.unset = True
+             unsetMsg.vlan_config.vlans.extend(vlans)
+             unsetMsg.vlan_config.native_vlan = vlans[0]
+
+        resp = api.DoSwitchOperation(unsetMsg)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+        return types.status.SUCCESS
+
+    def SetupTestBedNetwork(self):
+        #First Unset the Switch
+        setMsg = topo_pb2.SwitchMsg()
+        setMsg.op = topo_pb2.VLAN_CONFIG
+        for instance in self.__tbspec.Instances:
+            switch_ips = {}
+            if instance.Type == "bm":
+                for nw in instance.DataNetworks:
+                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                    if not switch_ctx:
+                        switch_ctx = setMsg.data_switches.add()
+                        switch_ips[nw.SwitchIP] = switch_ctx
+                    switch_ctx.username = nw.SwitchUsername
+                    switch_ctx.password = nw.SwitchPassword
+                    switch_ctx.ip = nw.SwitchIP
+                    switch_ctx.ports.append(nw.Name)
+      
+        vlans = self.GetDataVlans()
+        for ip, switch in switch_ips.items():
+             setMsg.vlan_config.unset = False
+             setMsg.vlan_config.vlans.extend(vlans)
+             setMsg.vlan_config.native_vlan = vlans[0]
+
+        resp = api.DoSwitchOperation(setMsg)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+        return types.status.SUCCESS
+
+    def SetUpTestBedInHostToHostNetworkMode(self):
+        resp = self.UnsetVlansOnTestBed()
+        if resp != types.status.SUCCESS:
+            return resp
+
+        msgs = []
+        switches = []
+        native_vlans = []
+        self.ResetVlanAlloc()
+        for instance in self.__tbspec.Instances:
+            if instance.Type == "bm":
+                for index, nw in enumerate(instance.DataNetworks):
+                    if len(switches) < index + 1:
+                        msg = topo_pb2.SwitchMsg()
+                        msg.op = topo_pb2.VLAN_CONFIG
+                        switch_ctx = msg.data_switches.add()
+                        switch_ctx.username = nw.SwitchUsername
+                        switch_ctx.password = nw.SwitchPassword
+                        switch_ctx.ip = nw.SwitchIP
+                        native_vlan.append(self.AllocateVlan())
+                        msgs.append(msg)
+                        msg.vlan_config.unset = False
+                        msg.vlan_config.vlans.append(native_vlans[index])
+                        msg.vlan_config.native_vlan = native_vlans[index]
+                    else:
+                        switch_ctx = switches[index]
+                    switch_ctx.ports.append(nw.Name)
+
+        for msg in msgs:
+            resp = api.DoSwitchOperation(msg)
+            if not api.IsApiResponseOk(resp):
+               return types.status.FAILURE
+        return types.status.SUCCESS
 
 __testbed = _Testbed()
 store.SetTestbed(__testbed)

@@ -81,7 +81,7 @@ type QosConfig struct {
 //Switch interface
 type Switch interface {
 	SetNativeVlan(port string, vlan int) error
-	UnsetNativeVlan(port string) error
+	UnsetNativeVlan(port string, vlan int) error
 	LinkOp(port string, shutdown bool) error
 	SetSpeed(port string, speed PortSpeed) error
 	SetFlowControlReceive(port string, enable bool) error
@@ -245,9 +245,9 @@ func (sw *nexus3k) SetMtu(port string, mtu uint32) error {
 	return sw.runConfigIFCommands(port, cmds)
 }
 
-func (sw *nexus3k) UnsetNativeVlan(port string) error {
+func (sw *nexus3k) UnsetNativeVlan(port string, vlan int) error {
 	cmds := []string{
-		"no switchport trunk native vlan",
+		"no switchport trunk native vlan " + strconv.Itoa(vlan),
 	}
 
 	return sw.runConfigIFCommands(port, cmds)

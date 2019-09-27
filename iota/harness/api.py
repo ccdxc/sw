@@ -176,6 +176,10 @@ def Trigger(req):
     return resp
 
 
+def DoSwitchOperation(req):
+    Logger.debug("Doing Switch operation:")
+    return __rpc(req, gl_topo_svc_stub.DoSwitchOperation)
+
 def EntityCopy(req):
     global gl_topo_svc_stub
     Logger.debug("Entity Copy Message:")

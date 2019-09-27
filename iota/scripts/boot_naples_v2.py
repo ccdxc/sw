@@ -321,7 +321,7 @@ class EntityManagement:
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
+        full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s %s" %\
                        (GlobalOptions.password, GlobalOptions.mnic_ip, command)
         return self.RunSshCmd(full_command, ignore_failure)
 
@@ -594,7 +594,7 @@ class HostManagement(EntityManagement):
         super(HostManagement, self).CopyIN(src_filename, entity_dir)
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.RunSshCmd("sshpass -p %s scp -o StrictHostKeyChecking=no %s %s@%s:%s" %\
+            ret = self.RunSshCmd("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
                            (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
             if ret:
                 raise Exception("Copy to Naples failed")
@@ -686,7 +686,7 @@ class EsxHostManagement(HostManagement):
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s vm@%s:%s" %\
+            ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s vm@%s:%s" %\
                            (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
             if ret:
                 raise Exception("Cmd failed : " + cmd)
@@ -696,7 +696,7 @@ class EsxHostManagement(HostManagement):
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no %s@%s %s" %\
+        full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s@%s %s" %\
                        (GlobalOptions.password, GlobalOptions.username, GlobalOptions.mnic_ip, command)
         return self.ctrl_vm_run(full_command, ignore_failure)
 
@@ -743,8 +743,8 @@ class EsxHostManagement(HostManagement):
             self.__esx_ctrl_vm_username = data["ctrlVMUsername"]
             self.__esx_ctrl_vm_password = data["ctrlVMPassword"]
         self.__ctr_vm_ssh_host = "%s@%s" % (self.__esx_ctrl_vm_username, self.__esx_ctrl_vm_ip)
-        self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
-        self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+        self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+        self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
 
     @_exceptionWrapper(_errCodes.HOST_ESX_INIT_FAILED, "Host init failed")
     def Init(self, driver_pkg = None, cleanup = True):

@@ -499,3 +499,9 @@ class Topology(object):
 
     def GetNodes(self):
         return list(self.__nodes.values())
+
+    def SetUpTestBedInHostToHostNetworkMode():
+        return store.GetTestbed().SetUpTestBedInHostToHostNetworkMode()
+
+    def SetupTestBedNetwork():
+        return store.GetTestbed().SetupTestBedNetwork()
