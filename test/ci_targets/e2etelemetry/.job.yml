@@ -4,7 +4,6 @@ image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2etelemetry"
 
-rebase: true
 warmd:
   target: [ "go", "run", "e2etelemetry.go" ]
   create:

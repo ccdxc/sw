@@ -79,7 +79,7 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/storage/offload"
-rebase: true
+
 
 warmd:
   target:

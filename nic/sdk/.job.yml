@@ -14,6 +14,6 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"
-rebase: true
+
 logfiles:
   - /sw/nic/sdk_sanity_logs.tar.gz

@@ -14,6 +14,6 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"
-rebase: true
+
 logfiles:
   - /usr/src/github.com/pensando/sw/nic/apollo/doc/gen/pdsdoc.tar.gz

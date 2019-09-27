@@ -4,7 +4,7 @@ version: 2.0
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw/iota/test/venice/iotadev"
-rebase: true
+
 
 warmd:
   target:

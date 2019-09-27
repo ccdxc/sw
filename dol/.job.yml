@@ -19,4 +19,4 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/dol"
-rebase: true
+

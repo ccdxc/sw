@@ -13,4 +13,4 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/platform"
-rebase: true
+

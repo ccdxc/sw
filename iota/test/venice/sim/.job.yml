@@ -10,7 +10,7 @@ targets:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"
-rebase: true
+
 
 #warmd:
 #  target:

@@ -29,9 +29,6 @@ if user != ""
   run "localedef -i en_US -f UTF-8 en_US.UTF-8"
 end
 
-copy "tools/test-build/dind", "/dind"
-run "chmod +x /dind"
-
 env GOPATH: "/usr"
 
 inside "/etc" do

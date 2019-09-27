@@ -4,7 +4,7 @@ targets:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2e"
-rebase: true
+
 
 warmd:
   #  TODO This needs to be ported to IOTA

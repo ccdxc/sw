@@ -25,7 +25,7 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/platform"
-rebase: true
+
 #warmd:
 #  target:
 #    commands: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin  test --topo-file 2_naples_qemu_node.yaml" ]

@@ -16,7 +16,7 @@ cache:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota"
-rebase: true
+
 logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
