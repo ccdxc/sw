@@ -54,6 +54,8 @@ const char *eth_dev_type_to_str(EthDevType type);
 struct eth_dev_res {
     uint32_t lif_base;
     uint32_t intr_base;
+    uint64_t rx_eq_base;
+    uint64_t tx_eq_base;
     // DEVCMD
     uint64_t regs_mem_addr;
     uint64_t port_info_addr;

@@ -12,7 +12,7 @@ queue_types:
         id          : TX
         type        : 1
         purpose     : LIF_QUEUE_PURPOSE_TX
-        size        : 64    # Size of Qstate
+        size        : 128    # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:
             - queue:
@@ -63,3 +63,18 @@ queue_types:
                     - ring:
                         id          : R1
                         desc        : ref://factory/templates/id=DESCR_ADMIN_CQ
+
+    # DOL ONLY: Nicmgr will NOT allocate Eth EQ qtype in the lif qstate map
+    - queue_type:
+        id          : EQ
+        type        : 3
+        purpose     : LIF_QUEUE_PURPOSE_EQ
+        size        : 64    # EQ is 16B, but min size in qstate map is 64B
+        count       : 1     # Number of queues of this type
+        queues:
+            - queue:
+                size        : 8    # Number of descriptors in each ring
+                rings:
+                    - ring:
+                        id          : R1
+                        desc        : ref://factory/templates/id=DESCR_ETH_EQ

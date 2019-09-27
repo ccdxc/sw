@@ -1,0 +1,46 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : txeq
+    package     : test.classic
+    module      : classic_eq
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : TXEQ_ARM_1
+        spec    : txeq_arm_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : TXEQ_ARM_2
+        spec    : txeq_arm_2.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : TXEQ_ARMED_1
+        spec    : txeq_armed_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : TXEQ_ARMED_2
+        spec    : txeq_armed_2.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : TXEQ_ARMED_3
+        spec    : txeq_armed_3.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : TXEQ_NOT_ARMED
+        spec    : txeq_not_armed.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False

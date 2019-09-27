@@ -1,0 +1,34 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : rxeq
+    package     : test.classic
+    module      : classic_eq
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : RXEQ_ARM_1
+        spec    : rxeq_arm_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : RXEQ_ARM_2
+        spec    : rxeq_arm_2.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : RXEQ_ARMED_1
+        spec    : rxeq_armed_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+    - module:
+        name    : RXEQ_NOT_ARMED
+        spec    : rxeq_not_armed.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False

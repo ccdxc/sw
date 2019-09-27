@@ -28,6 +28,16 @@ def ctypes_pformat(cstruct):
     return cstruct.__class__.__name__ + '\n' + pformat(to_dict(cstruct)) 
 
 
+class EthEqDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("code", c_uint16),
+        ("lif_index", c_uint16),
+        ("qid", c_uint32),
+        ("rsvd", c_uint8 * 7),
+        ("gen_color", c_uint8),
+    ]
+
+
 class EthRxDescriptor(LittleEndianStructure):
     _fields_ = [
         ("opcode", c_uint8),
@@ -232,7 +242,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         return self._buf
 
     def GetCompletionIndex(self):
-        return None
+        return 0
 
 
 class EthRxDescriptorObject(EthDescriptorObject):
@@ -255,7 +265,6 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
 
     def GetColor(self):
         return self._data.color
-
 
 class EthTxDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxDescriptor
@@ -281,6 +290,18 @@ class EthTxDescriptorObject(EthDescriptorObject):
         if buf is not None:
             return buf.spec.fields.data
         return None
+
+
+class EthEqDescriptorObject(EthDescriptorObject):
+    __data_class__ = EthEqDescriptor
+
+    def Write(self):
+        # This is a read-only descriptor type
+        return
+
+    def GetColor(self):
+        return self._data.gen_color & 1
+
 
 class EthTxSgDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxSgDescriptor

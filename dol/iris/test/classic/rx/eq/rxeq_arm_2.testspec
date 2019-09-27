@@ -1,0 +1,43 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SESSION
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=False,access=False
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
+
+queue: ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
+eq: ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=EQ
+
+packets: # no packets
+buffers: # no buffers
+
+descriptors:
+    - descriptor:
+        id      : EXP_EQDESC1
+        template: ref://factory/templates/id=DESCR_ETH_EQ
+        fields:
+            code: 1 # RX_COMP
+
+session:
+    - step:
+        trigger: # host is not caught up, should post an event instead
+            doorbell:
+                object: ref://testcase/pvtdata/queue/doorbell
+                fields:
+                    how: 'arm_index'
+                    index_plus: -1
+        expect:
+            armed: False
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQDESC1
+                    ring    : ref://testcase/pvtdata/eq

@@ -180,6 +180,8 @@ Eth::Eth(devapi *dev_api,
 
         lif_res->lif_id = lif_id;
         lif_res->intr_base = dev_resources.intr_base;
+        lif_res->rx_eq_base = dev_resources.rx_eq_base;
+        lif_res->tx_eq_base = dev_resources.tx_eq_base;
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
@@ -311,6 +313,14 @@ Eth::Eth(devapi *dev_api,
     NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
         dev_resources.intr_base, spec->intr_count);
 
+    // Allocate EQ states
+    dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+    dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+    if (dev_resources.rx_eq_base == 0 || dev_resources.tx_eq_base == 0) {
+        NIC_LOG_ERR("{}: Failed to allocate eq states", spec->name);
+        throw;
+    }
+
     // Allocate & Init Device registers
     dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union dev_regs));
     if (dev_resources.regs_mem_addr == 0) {
@@ -377,6 +387,8 @@ Eth::Eth(devapi *dev_api,
 
         lif_res->lif_id = lif_id;
         lif_res->intr_base = dev_resources.intr_base;
+        lif_res->rx_eq_base = dev_resources.rx_eq_base;
+        lif_res->tx_eq_base = dev_resources.tx_eq_base;
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
@@ -1030,20 +1042,21 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     union dev_identity *ident = (union dev_identity *)resp_data;
     struct dev_identify_cmd *cmd = (struct dev_identify_cmd *)req;
     struct dev_identify_comp *comp = (struct dev_identify_comp *)resp;
+    int mul, div;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
     memset(ident, 0, sizeof(union dev_identity));
 
+    intr_coal_get_params(&mul, &div);
+
     ident->nports = 1;
     ident->nlifs = spec->lif_count;
     ident->nintrs = spec->intr_count;
     ident->ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
-
-    int mul, div;
-    intr_coal_get_params(&mul, &div);
     ident->intr_coal_mult = mul;
     ident->intr_coal_div = div;
+    ident->eq_count = spec->eq_count;
 
     comp->ver = IONIC_IDENTITY_VERSION_1;
 
@@ -1535,7 +1548,7 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
     ident->eth.config.queue_count[IONIC_QTYPE_NOTIFYQ] = 1;
     ident->eth.config.queue_count[IONIC_QTYPE_TXQ] = spec->txq_count;
     ident->eth.config.queue_count[IONIC_QTYPE_RXQ] = spec->rxq_count;
-    ident->eth.config.queue_count[IONIC_QTYPE_EQ] = spec->eq_count;
+    ident->eth.config.queue_count[IONIC_QTYPE_EQ] = 0; //spec->eq_count in device identify
 
     if (spec->enable_rdma) {
         ident->capabilities |= IONIC_LIF_CAP_RDMA;
@@ -1570,7 +1583,7 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
         ident->rdma.eq_qtype.qtype = ETH_HW_QTYPE_EQ;
         ident->rdma.eq_qtype.qid_count = spec->rdma_eq_count;
-        ident->rdma.eq_qtype.qid_base = spec->eq_count;
+        ident->rdma.eq_qtype.qid_base = 0;
 
         ident->rdma.dcqcn_profiles = spec->rdma_num_dcqcn_profiles;
     }

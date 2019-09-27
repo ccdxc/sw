@@ -30,6 +30,7 @@ enum eth_hw_qtype {
     ETH_HW_QTYPE_CQ = 5,
     ETH_HW_QTYPE_EQ = 6,
     ETH_HW_QTYPE_SVC = 7,
+    ETH_HW_QTYPE_NONE = 15,
 };
 
 #define IONIC_IFNAMSIZ  16
@@ -74,6 +75,8 @@ enum eth_hw_qtype {
 typedef struct eth_lif_res_s {
     uint64_t lif_id;
     uint64_t intr_base;
+    uint64_t rx_eq_base;
+    uint64_t tx_eq_base;
     uint64_t cmb_mem_addr;
     uint64_t cmb_mem_size;
 } eth_lif_res_t;
@@ -206,6 +209,7 @@ private:
     status_code_t _CmdQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t NotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t EQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t TxQInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t RxQInit(void *req, void *req_data, void *resp, void *resp_data);
 

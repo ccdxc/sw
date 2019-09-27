@@ -16,6 +16,7 @@ class EthRingObject(ring.RingObject):
         self._sgmem = None  # Scatter Gather descriptor memory
         self.pi = 0     # Local PI
         self.ci = 0     # Local CI
+        self.alt_pi = 0 # Alternative PI
         self.exp_color = 1  # Expect this color until ring wrap, then toggle
 
     def Init(self, queue, spec):
@@ -32,6 +33,8 @@ class EthRingObject(ring.RingObject):
             self.desc_size = sizeof(EthRxDescriptor)
             self.sg_elem_size = sizeof(EthRxSgElement)
             self.sg_desc_size = sizeof(EthRxSgDescriptor)
+        elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_EQ":
+            self.desc_size = sizeof(EthEqDescriptor)
         elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
             self.desc_size = sizeof(AdminDescriptor)
 

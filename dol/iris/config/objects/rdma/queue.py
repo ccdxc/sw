@@ -889,7 +889,7 @@ class RdmaQueueObject(QueueObject):
         self.queue_type = queue_type
         self.id = queue_type.GetQid()
         # Start qid numbering from 1 for adminq, eq
-        if queue_type.GID() == "RDMA_AQ" or queue_type.GID() == "RDMA_EQ":
+        if queue_type.GID() == "RDMA_AQ":
             self.id = self.id + 1
         self.qp_e_psn   = 0      #Needed for rx multi QP scale tests to pick next psn
         self.GID(str(self.id))

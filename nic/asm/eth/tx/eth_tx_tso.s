@@ -1,13 +1,13 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_tx_table_s3_t2_k.h"
+#include "INGRESS_tx_table_s3_t1_k.h"
 
 #include "defines.h"
 
 struct phv_ p;
-struct tx_table_s3_t2_k_ k;
-struct tx_table_s3_t2_eth_tx_tso_d d;
+struct tx_table_s3_t1_k_ k;
+struct tx_table_s3_t1_eth_tx_tso_sg_d d;
 
 #define   _r_addr       r1        // Current buffer/descriptor address
 #define   _r_num_sg     r2        // Remaining number of SG elements
@@ -98,6 +98,9 @@ eth_tx_tso_cont:
 eth_tx_tso_next:   // Continue SG in next stage
   phvwri          p.eth_tx_global_sg_in_progress, 1
 
+  // Only this program should run again in the next stage (not eth_tx_event)
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
   // Calculate the next SG descriptor address
   add             _r_addr, k.eth_tx_global_sg_desc_addr, 1, LG2_TX_SG_MAX_READ_SIZE
 
@@ -108,7 +111,7 @@ eth_tx_tso_next:   // Continue SG in next stage
   phvwr.e         p.eth_tx_global_dma_cur_index, _r_index
 
   // Launch eth_tx_tso stage
-  phvwrpair       p.common_te2_phv_table_raw_table_size, LG2_TX_SG_MAX_READ_SIZE, p.common_te2_phv_table_addr, _r_addr
+  phvwrpair       p.common_te1_phv_table_raw_table_size, LG2_TX_SG_MAX_READ_SIZE, p.common_te1_phv_table_addr, _r_addr
 
 eth_tx_tso_done:   // We are done with SG
   phvwri          p.eth_tx_global_sg_in_progress, 0
@@ -116,7 +119,7 @@ eth_tx_tso_done:   // We are done with SG
   // Save DMA command pointer
   phvwr           p.eth_tx_global_dma_cur_index, _r_index
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
   // Launch eth_tx_stats action
   phvwri          p.common_te1_phv_table_pc, eth_tx_stats[38:6]
@@ -133,14 +136,14 @@ eth_tx_tso_error:
 
   // Don't drop the phv, because, we have claimed the completion entry.
   // Generate an error completion.
-  phvwr           p.eth_tx_global_cq_entry, 1
-  phvwr           p.eth_tx_cq_desc_status, ETH_TX_DESC_ADDR_ERROR
+  phvwr           p.eth_tx_global_do_cq, 1
+  phvwr           p.cq_desc_status, ETH_TX_DESC_ADDR_ERROR
   phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
 
   // Reset the DMA command stack to discard existing DMA commands.
   phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
   // Launch eth_tx_completion stage
   phvwri          p.common_te0_phv_table_pc, eth_tx_completion[38:6]

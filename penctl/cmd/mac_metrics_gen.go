@@ -36,8 +36,8 @@ func macmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 var mgmtmacmetricsShowCmd = &cobra.Command{
 
 	Use:   "mgmtmac",
-	Short: "Show MgmtMacMetrics from Naples",
-	Long:  "\n---------------------------------\n Show MgmtMacMetrics From Naples \n---------------------------------\n",
+	Short: "Show MgmtMacMetrics from Distributed Service Card",
+	Long:  "\n---------------------------------\n Show MgmtMacMetrics From Distributed Service Card \n---------------------------------\n",
 	RunE:  mgmtmacmetricsShowCmdHandler,
 }
 

@@ -75,6 +75,8 @@
 #define STAT_queue_error                    18
 #define STAT_desc_fetch_error               19
 #define STAT_desc_data_error                20
+#define STAT_event_disabled                 21
+#define STAT_event_error                    22
 // DEBUG: operation counters
 #define STAT_oper_rss                       24
 #define STAT_oper_csum_complete             25
@@ -82,7 +84,10 @@
 #define STAT_oper_csum_tcp_bad              27
 #define STAT_oper_csum_udp_bad              28
 #define STAT_oper_vlan_strip                29
-#define STAT_cqe                            30
+// DEBUG: completion, event, and intr counters (XXX not counted)
+#define STAT_arm                            31
+#define STAT_cqe                            31
+#define STAT_eqe                            31
 #define STAT_intr                           31
 
 /*

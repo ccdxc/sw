@@ -312,6 +312,9 @@
         ((((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
         + (offsetof(p, _field) / 512) * 512) >> 3) - 1)
 
+#define CAPRI_PHV_FIELDS_SIZE(_start_field, _end_field) \
+    (CAPRI_PHV_END_OFFSET(_end_field) - CAPRI_PHV_START_OFFSET(_start_field) + 1)
+
 #define CAPRI_QSTATE_HEADER_COMMON \
         pc                              : 8;\
         cos_a                           : 4;\

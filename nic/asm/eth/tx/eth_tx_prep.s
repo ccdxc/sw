@@ -13,11 +13,11 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 %%
 
 .param  eth_tx_commit
+.param  eth_tx_commit_tso
 .param  eth_tx_stats
 
-#define  _c_do_sg         c2  // SG
-#define  _c_do_tso        c3  // TSO
-#define  _c_do_cq         c4  // Create CQ entry
+#define  _c_sg            c2  // SG
+#define  _c_tso           c3  // TSO
 
 #define  _r_t1            r2  // Opcode processing register
 #define  _r_t2            r3  // Opcode processing register
@@ -57,19 +57,19 @@ eth_tx_prep:
   add         r7, r0, d.opcode
 .brbegin
   br          r7[1:0]
-  nop
+  seq         _c_tso, r7[1:0], TXQ_DESC_OPCODE_TSO
   .brcase TXQ_DESC_OPCODE_CSUM_NONE
       b             eth_tx_opcode_done
-      phvwri        p.eth_tx_global_cq_entry, 1
+      phvwri        p.eth_tx_global_do_cq, 1
   .brcase TXQ_DESC_OPCODE_CSUM_PARTIAL
       b             eth_tx_calc_csum
-      phvwri        p.eth_tx_global_cq_entry, 1
+      phvwri        p.eth_tx_global_do_cq, 1
   .brcase TXQ_DESC_OPCODE_CSUM_TCPUDP
       b             eth_tx_calc_csum_tcpudp
-      phvwri        p.eth_tx_global_cq_entry, 1
+      phvwri        p.eth_tx_global_do_cq, 1
   .brcase TXQ_DESC_OPCODE_TSO
       b             eth_tx_opcode_tso
-      phvwr         p.eth_tx_global_cq_entry, d.{csum_l4_or_eot}
+      phvwr         p.eth_tx_global_do_cq, d.{csum_l4_or_eot}
 .brend
   // SET_STAT(_r_stats, _C_TRUE, desc_opcode_invalid)
   b               eth_tx_opcode_done
@@ -129,11 +129,20 @@ eth_tx_opcode_done:
   // Set number of bytes to tx (for rate limiter)
   phvwr           p.p4_intr_packet_len, d.{len}.hx
 
+  // Launch tso commit stage if tso
+  b.!_c_tso       eth_tx_prep_done_no_tso
+  add._c_tso      r7, k.eth_tx_to_s1_qstate_addr, 1, LG2_TX_QSTATE_SIZE
+  phvwri          p.app_header_table1_valid, 1
+  phvwri          p.common_te1_phv_table_lock_en, 1
+  phvwrpair       p.common_te1_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te1_phv_table_addr, r7
+  phvwri          p.common_te1_phv_table_pc, eth_tx_commit_tso[38:6]
+
+eth_tx_prep_done_no_tso:
   // Set number of sg elements to process
-  sne             c1, d.num_sg_elems, 0
-  phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
-  phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems
-  // SET_STAT(_r_stats, c1, oper_sg)
+  sne             _c_sg, d.num_sg_elems, 0
+  phvwr._c_sg     p.eth_tx_t0_s2s_do_sg, 1
+  phvwr._c_sg     p.eth_tx_global_num_sg_elems, d.num_sg_elems
+  // SET_STAT(_r_stats, _c_sg, oper_sg)
 
   // SAVE_STATS(_r_stats)
 
@@ -149,8 +158,8 @@ eth_tx_prep_error:
 
   // Don't drop the phv, because, we have claimed a descriptor.
   // Generate an error completion.
-  phvwr           p.eth_tx_global_cq_entry, 1
-  phvwr           p.eth_tx_cq_desc_status, ETH_TX_DESC_ADDR_ERROR
+  phvwr           p.cq_desc_status, ETH_TX_DESC_ADDR_ERROR
+  phvwr           p.eth_tx_global_do_cq, 1
   phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
 
   // Launch commit stage

@@ -20,7 +20,7 @@ eth_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
     const u_int8_t upd[8] = {
     /* make this table a bit more compact */
 #define UPD(U)  PRT_UPD_##U
-    /* eth rxq */ [0] = UPD(SCHED_NONE) | UPD(PICI_PISET) | UPD(PID_CHECK),
+    /* eth rxq */ [0] = UPD(SCHED_SET) | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* eth txq */ [1] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* rdma sq */ [2] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* rdma rq */ [3] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),
@@ -51,7 +51,7 @@ eth_vfbars(pciehdev_t *pdev, const pciehdev_res_t *res)
     const u_int8_t upd[8] = {
     /* make this table a bit more compact */
 #define UPD(U)  PRT_UPD_##U
-    /* eth rxq */ [0] = UPD(SCHED_NONE) | UPD(PICI_PISET) | UPD(PID_CHECK),
+    /* eth rxq */ [0] = UPD(SCHED_SET) | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* eth txq */ [1] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* rdma sq */ [2] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),
     /* rdma rq */ [3] = UPD(SCHED_SET)  | UPD(PICI_PISET) | UPD(PID_CHECK),

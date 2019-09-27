@@ -16,9 +16,10 @@
 #define tx_table_s0_t0_action eth_tx_fetch_desc
 #define tx_table_s1_t0_action eth_tx_prep
 #define tx_table_s2_t0_action eth_tx_commit
+#define tx_table_s2_t1_action eth_tx_commit_tso
 #define tx_table_s3_t0_action eth_tx
-#define tx_table_s3_t1_action eth_tx_sg
-#define tx_table_s3_t2_action eth_tx_tso
+#define tx_table_s3_t1_action eth_tx_tso_sg
+#define tx_table_s3_t2_action eth_tx_event
 #define tx_table_s7_t0_action eth_tx_completion
 #define tx_table_s7_t1_action eth_tx_stats
 
@@ -37,7 +38,7 @@
  * Action functions
  *****************************************************************************/
 
-action eth_tx_fetch_desc(PARAMS_ETH_TX_QSTATE)
+action eth_tx_fetch_desc(PARAMS_ETH_TX_QSTATE_NOPC)
 {
     // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -47,7 +48,7 @@ action eth_tx_fetch_desc(PARAMS_ETH_TX_QSTATE)
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
 
     // D
-    MODIFY_ETH_TX_QSTATE
+    MODIFY_ETH_TX_QSTATE_NOPC
 }
 
 action eth_tx_prep(
@@ -71,8 +72,18 @@ action eth_tx_commit(PARAMS_ETH_TX_QSTATE)
     MODIFY_ETH_TX_TO_S2
 
     // D
-    modify_field(eth_tx_qstate.pc, pc);
     MODIFY_ETH_TX_QSTATE
+}
+
+action eth_tx_commit_tso(PARAMS_ETH_TX2_QSTATE)
+{
+    // K+I
+    MODIFY_ETH_TX_GLOBAL
+    MODIFY_ETH_TX_T1_S2S
+    MODIFY_ETH_TX_TO_S2
+
+    // D
+    MODIFY_ETH_TX2_QSTATE
 }
 
 action eth_tx()
@@ -83,7 +94,7 @@ action eth_tx()
     MODIFY_ETH_TX_TO_S3
 }
 
-action eth_tx_sg(
+action eth_tx_tso_sg(
     PARAM_SG_ELEM(0),
     PARAM_SG_ELEM(1),
     PARAM_SG_ELEM(2),
@@ -102,23 +113,13 @@ action eth_tx_sg(
     MODIFY_SG_ELEM(3)
 }
 
-action eth_tx_tso(
-    PARAM_SG_ELEM(0),
-    PARAM_SG_ELEM(1),
-    PARAM_SG_ELEM(2),
-    PARAM_SG_ELEM(3)
-)
+action eth_tx_event(PARAMS_ETH_EQ_QSTATE)
 {
     // K+I
     MODIFY_ETH_TX_GLOBAL
-    MODIFY_ETH_TX_T2_S2S
-    MODIFY_ETH_TX_TO_S3
 
     // D
-    MODIFY_SG_ELEM(0)
-    MODIFY_SG_ELEM(1)
-    MODIFY_SG_ELEM(2)
-    MODIFY_SG_ELEM(3)
+    MODIFY_ETH_EQ_QSTATE
 }
 
 action eth_tx_completion()

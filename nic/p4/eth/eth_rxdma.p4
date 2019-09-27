@@ -1,4 +1,5 @@
 
+#include "defines.h"
 
 /***
  *  Header Type Declarations
@@ -8,7 +9,7 @@
  *  P-vector Headers
  ***/
 
-header_type eth_rx_cq_desc_p {
+header_type eth_cq_desc_p {
     // RX Completion Descriptor
     fields {
         status : 8;
@@ -31,49 +32,65 @@ header_type eth_rx_cq_desc_p {
     }
 }
 
+header_type eth_eq_intr_desc_p {
+    // Event Descriptor + Intr Assert Data
+    fields {
+        // Event Descriptor
+        code : 16;
+        lif_index : 16;
+        qid : 32;
+        rsvd : 56;
+        gen_color : 8;
+
+        // Intr Assert Data (packed here for convenience)
+        intr_data : 32;
+    }
+}
+
 /***
  * D-vector Headers
  ***/
 
-header_type eth_rx_qstate_d {
-    // Max 512 bits
+header_type eth_eq_qstate_d {
     fields {
-        pc : 8;
-        rsvd : 8;
-        cosA : 4;
-        cosB : 4;
-        cos_sel : 8;
-        eval_last : 8;
-        host : 4;
-        total : 4;
-        pid : 16;
+        eq_ring_base : 64;
+        eq_ring_size : 8;
 
-        p_index0 : 16;
-        c_index0 : 16;
-        comp_index : 16;
+        // cfg
+        eq_enable : 1;
+        intr_enable : 1;
+        rsvd_cfg  : 6;
+
+        eq_index : 16;
+        eq_gen : 8;
+        rsvd : 8;
+
+        intr_index : 16;
+    }
+}
+
+header_type eth_rx_qstate_d {
+    fields {
+        FIELDS_ETH_TXRX_QSTATE_COMMON
+
+        comp_index : 16; // NIC RXQ index == NIC RXCQ index
 
         // sta
         color : 1;
-        rsvd1 : 7;
-
-        // cfg
-        enable : 1;
-        host_queue : 1;
-        cpu_queue : 1;
-        intr_enable : 1;
-        debug : 1;
-        rsvd2 : 3;
-
-        ring_base : 64;
-        ring_size : 8;
-        cq_ring_base : 64;
-        intr_assert_index : 16;
-        sg_ring_base : 64;
+        armed : 1;
+        rsvd_sta : 6;
 
         lg2_desc_sz : 4;
         lg2_cq_desc_sz : 4;
         lg2_sg_desc_sz : 4;
         sg_max_elems : 4;
+
+        __pad256 : 24;
+
+        ring_base : 64;
+        cq_ring_base : 64;
+        sg_ring_base : 64;
+        intr_index_or_eq_addr : 64;
     }
 }
 
@@ -110,7 +127,8 @@ header_type eth_rx_global_k {
         sg_desc_addr : 64;
         host_queue : 1;
         cpu_queue : 1;
-        intr_enable : 1;
+        do_eq : 1;
+        do_intr : 1;
         lif : 11;
         stats : 32;
         drop : 1;
@@ -119,10 +137,10 @@ header_type eth_rx_global_k {
 
 header_type eth_rx_t0_s2s_k {
     fields {
-        pkt_len : 16;
         cq_desc_addr : 64;
-        intr_assert_index : 16;
-        intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM
+        eq_desc_addr : 64;
+        intr_index : 16;
+        pkt_len : 16;
     }
 }
 
@@ -143,9 +161,18 @@ header_type eth_rx_to_s1_k {
     }
 }
 
+header_type eth_rx_to_s2_k {
+    fields {
+        qid : 24;
+    }
+}
+
 /*****************************************************************************
  *  D-vector
  *****************************************************************************/
+@pragma scratch_metadata
+metadata eth_eq_qstate_d eth_eq_qstate;
+
 @pragma scratch_metadata
 metadata eth_rx_qstate_d eth_rx_qstate;
 
@@ -168,10 +195,18 @@ metadata eth_rx_global_k eth_rx_global;
 metadata eth_rx_global_k eth_rx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
+
+// to_stage_0 used as P-vector for cq_desc
+
 @pragma pa_header_union ingress to_stage_1
 metadata eth_rx_to_s1_k eth_rx_to_s1;
 @pragma scratch_metadata
 metadata eth_rx_to_s1_k eth_rx_to_s1_scratch;
+
+@pragma pa_header_union ingress to_stage_2
+metadata eth_rx_to_s2_k eth_rx_to_s2;
+@pragma scratch_metadata
+metadata eth_rx_to_s2_k eth_rx_to_s2_scratch;
 
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
@@ -184,13 +219,21 @@ metadata eth_rx_t1_s2s_k eth_rx_t1_s2s;
 @pragma scratch_metadata
 metadata eth_rx_t1_s2s_k eth_rx_t1_s2s_scratch;
 
+// common_t2_s2s used as P-vector for eq_desc
+
 /*****************************************************************************
  *  P-vector
  *****************************************************************************/
 
-// Part of the PHV after K
+// Use to_stage_0 for cq_desc
+@pragma pa_header_union ingress to_stage_0
 @pragma dont_trim
-metadata eth_rx_cq_desc_p eth_rx_cq_desc;
+metadata eth_cq_desc_p cq_desc;
+
+// Use common_t2_s2s for eq_desc
+@pragma pa_header_union ingress common_t2_s2s
+@pragma dont_trim
+metadata eth_eq_intr_desc_p eq_desc;
 
 // DMA headers
 @pragma pa_align 512

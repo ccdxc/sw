@@ -16,10 +16,12 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 
 .align
 eth_rx_app_header:
-  // INIT_STATS(_r_stats)
-
-  tblwr.l.f       d.rsvd1, 0
+  tblwr.l.f       d.rsvd_cfg, 0
   // !!! No table updates after this point !!!
+
+  // Is this something other than normal rx?
+  bbeq            k.p4_to_p4plus_pad, 1, eth_rx_app_header_other
+  nop // INIT_STATS(_r_stats) // BD Slot
 
   // Save all required information from APP header
   phvwr           p.eth_rx_global_lif, k.p4_intr_global_lif
@@ -32,14 +34,14 @@ eth_rx_app_header:
   // Build completion entry in the PHV
 
   // Packet type information
-  phvwr           p.eth_rx_cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
+  phvwr           p.cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
 
   // L2/Complete checksum offload
   sne             c1, k.p4_to_p4plus_pkt_type, PKT_TYPE_NON_IP
   // SET_STAT(_r_stats, c1, oper_csum_complete)
-  phvwr.c1        p.eth_rx_cq_desc_csum_calc, 1
+  phvwr.c1        p.cq_desc_csum_calc, 1
   xor.c1          _r_csum, k.p4_to_p4plus_csum, -1
-  phvwr.c1        p.eth_rx_cq_desc_csum, _r_csum
+  phvwr.c1        p.cq_desc_csum, _r_csum
 
   // Checksum verification offload
   // seq             c1, k.p4_to_p4plus_csum_ip_bad, 1
@@ -48,15 +50,26 @@ eth_rx_app_header:
   // SET_STAT(_r_stats, c1, oper_csum_udp_bad)
   // seq             c1, k.p4_to_p4plus_csum_tcp_bad, 1
   // SET_STAT(_r_stats, c1, oper_csum_tcp_bad)
-  phvwr           p.{eth_rx_cq_desc_csum_ip_bad...eth_rx_cq_desc_csum_tcp_ok}, k.{p4_to_p4plus_csum_ip_bad...p4_to_p4plus_csum_tcp_ok}
+  phvwr           p.{cq_desc_csum_ip_bad...cq_desc_csum_tcp_ok}, k.{p4_to_p4plus_csum_ip_bad...p4_to_p4plus_csum_tcp_ok}
 
   // Vlan strip offload
   seq             c1, k.p4_to_p4plus_vlan_valid, 1
   // SET_STAT(_r_stats, c1, oper_vlan_strip)
-  phvwr.c1        p.eth_rx_cq_desc_vlan_strip, 1
-  phvwr.c1        p.eth_rx_cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid}.hx
+  phvwr.c1        p.cq_desc_vlan_strip, 1
+  phvwr.c1        p.cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid}.hx
 
   // SAVE_STATS(_r_stats)
 
-  phvwr.e.f       p.eth_rx_cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
+  phvwr.e.f       p.cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
   nop
+
+eth_rx_app_header_other:
+  // If there are other needs besides request to arm cq, we can branch here.
+
+eth_rx_app_header_arm:
+  // See eth_rx_rss_skip: from there we will launch arm instead of fetch
+  phvwr           p.eth_rx_to_s1_qstate_addr, k.p4_rxdma_intr_qstate_addr
+  // Using do_eq, indicate this is a request to arm
+  phvwri.e        p.eth_rx_global_do_eq, 1
+  // Arm index comes from txdma as csum, now pass it along as intr_index
+  phvwr.f         p.eth_rx_t0_s2s_intr_index, k.p4_to_p4plus_csum

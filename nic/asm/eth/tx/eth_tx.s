@@ -42,7 +42,7 @@ eth_tx_start:
 eth_tx_done:
   SAVE_STATS(_r_stats)
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
   // Launch eth_tx_stats action
   phvwri          p.common_te1_phv_table_pc, eth_tx_stats[38:6]
@@ -59,14 +59,14 @@ eth_tx_error:
 
   // Don't drop the phv, because, we have claimed the completion entry.
   // Generate an error completion.
-  phvwr           p.eth_tx_global_cq_entry, 1
-  phvwr           p.eth_tx_cq_desc_status, ETH_TX_DESC_ADDR_ERROR
+  phvwr           p.eth_tx_global_do_cq, 1
+  phvwr           p.cq_desc_status, ETH_TX_DESC_ADDR_ERROR
   phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
 
   // Reset the DMA command stack to discard existing DMA commands.
   phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
   // Launch eth_tx_completion stage
   phvwri          p.common_te0_phv_table_pc, eth_tx_completion[38:6]

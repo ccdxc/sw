@@ -20,6 +20,7 @@
 #define rx_table_s1_t0_action eth_rx_rss_skip
 #define rx_table_s2_t0_action eth_rx_fetch_desc
 #define rx_table_s3_t0_action eth_rx_packet
+#define rx_table_s3_t2_action eth_rx_event
 #define rx_table_s4_t1_action eth_rx_sg
 #define rx_table_s7_t0_action eth_rx_completion
 #define rx_table_s7_t1_action eth_rx_stats
@@ -41,7 +42,7 @@
  * - These action functions are used to generate k+i and d structures.
  *****************************************************************************/
 
-action eth_rx_app_header(PARAMS_ETH_RX_QSTATE)
+action eth_rx_app_header(PARAMS_ETH_RX_QSTATE_NOPC)
 {
     // --- For K+I struct generation
 
@@ -76,7 +77,7 @@ action eth_rx_app_header(PARAMS_ETH_RX_QSTATE)
     modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
 
     // --- For D-struct generation
-    MODIFY_ETH_RX_QSTATE
+    MODIFY_ETH_RX_QSTATE_NOPC
 }
 
 action eth_rx_rss_skip()
@@ -94,9 +95,9 @@ action eth_rx_fetch_desc(PARAMS_ETH_RX_QSTATE)
     // --- For K+I struct generation
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
+    MODIFY_ETH_RX_TO_S2
 
     // --- For D-struct generation
-    modify_field(eth_rx_qstate.pc, pc);
     MODIFY_ETH_RX_QSTATE
 }
 
@@ -126,6 +127,15 @@ action eth_rx_sg(
     MODIFY_SG_ELEM(1)
     MODIFY_SG_ELEM(2)
     MODIFY_SG_ELEM(3)
+}
+
+action eth_rx_event(PARAMS_ETH_EQ_QSTATE)
+{
+    // K+I
+    MODIFY_ETH_RX_GLOBAL
+
+    // D
+    MODIFY_ETH_EQ_QSTATE
 }
 
 action eth_rx_completion()

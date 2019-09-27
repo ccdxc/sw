@@ -138,7 +138,7 @@ get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
     for (uint8_t qtype = 0; qtype < 8 && size[qtype] != 0; qtype++) {
 
         qinfo[qtype].base = base;
-        qinfo[qtype].size = 32 * (1 << size[qtype]);
+        qinfo[qtype].size = 32 << size[qtype];
         qinfo[qtype].length = 1 << length[qtype];
 
         base += qinfo[qtype].size * qinfo[qtype].length;
@@ -147,7 +147,7 @@ get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
     return true;
 }
 
-#define NUM_POSTED(N, h, t) (h == t ? 0 : h > t ? h - t + 1 : ((N)-1) - (h - t + 1))
+#define NUM_POSTED(LogN, h, t) (((h) - (t)) & ((1u << LogN) - 1))
 
 void
 nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
@@ -446,8 +446,10 @@ virtio_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 void
 eth_qpoll(uint16_t lif, uint8_t qtype)
 {
-    struct eth_rx_qstate qstate_ethrx = {0};
-    struct eth_tx_qstate qstate_ethtx = {0};
+    union {
+        eth_rx_qstate_t ethrx;
+        eth_tx_co_qstate_t ethtx;
+    } qstate = {0};
     struct admin_qstate qstate_ethaq = {0};
     struct notify_qstate qstate_notifyq = {0};
     struct edma_qstate qstate_edmaq = {0};
@@ -470,24 +472,52 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
         uint32_t posted = 0;
         switch (qtype) {
         case 0:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-            posted = NUM_POSTED(1 << qstate_ethrx.ring_size, qstate_ethrx.p_index0,
-                                qstate_ethrx.c_index0);
-            printf(" rx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                   qstate_ethrx.p_index0, qstate_ethrx.c_index0, posted, qstate_ethrx.comp_index,
-                   qstate_ethrx.sta.color);
+            sdk::lib::pal_mem_read(addr,
+                                   (uint8_t *)&qstate.ethrx,
+                                   sizeof(qstate.ethrx));
+
+            posted = NUM_POSTED(qstate.ethrx.q.ring_size,
+                                qstate.ethrx.q.ring[0].p_index,
+                                qstate.ethrx.comp_index); // not c_index0
+
+            printf(" rx%3d: "
+                   "head %6u "
+                   "tail %6u "
+                   "posted %6d "
+                   "comp_index %6u "
+                   "color %d\n",
+                   qid,
+                   qstate.ethrx.q.ring[0].p_index,
+                   qstate.ethrx.comp_index, // not c_index0
+                   posted,
+                   qstate.ethrx.comp_index,
+                   qstate.ethrx.sta.color);
             break;
         case 1:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
-            posted = NUM_POSTED(1 << qstate_ethtx.ring_size, qstate_ethtx.p_index0,
-                                qstate_ethtx.c_index0);
-            printf(" tx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                   qstate_ethtx.p_index0, qstate_ethtx.c_index0, posted, qstate_ethtx.comp_index,
-                   qstate_ethtx.sta.color);
+            sdk::lib::pal_mem_read(addr,
+                                   (uint8_t *)&qstate.ethtx,
+                                   sizeof(qstate.ethtx));
+
+            posted = NUM_POSTED(qstate.ethtx.tx.q.ring_size,
+                                qstate.ethtx.tx.q.ring[0].p_index,
+                                qstate.ethtx.tx.q.ring[0].c_index);
+
+            printf(" tx%3d: "
+                   "head %6u "
+                   "tail %6u "
+                   "posted %6d "
+                   "comp_index %6u "
+                   "color %d\n",
+                   qid,
+                   qstate.ethtx.tx.q.ring[0].p_index,
+                   qstate.ethtx.tx.q.ring[0].c_index,
+                   posted,
+                   qstate.ethtx.tx.comp_index,
+                   qstate.ethtx.tx.sta.color);
             break;
         case 2:
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethaq, sizeof(qstate_ethaq));
-            posted = NUM_POSTED(1 << qstate_ethaq.ring_size, qstate_ethaq.p_index0,
+            posted = NUM_POSTED(qstate_ethaq.ring_size, qstate_ethaq.p_index0,
                                 qstate_ethaq.c_index0);
             printf(" aq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                    qstate_ethaq.p_index0, qstate_ethaq.c_index0, posted, qstate_ethaq.comp_index,
@@ -496,7 +526,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
         case 7:
             if (qid == 0) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
-                posted = NUM_POSTED(1 << qstate_notifyq.ring_size, qstate_notifyq.p_index0,
+                posted = NUM_POSTED(qstate_notifyq.ring_size, qstate_notifyq.p_index0,
                                     qstate_notifyq.c_index0);
                 printf(" nq%3d: head %6u tail %6u posted %6d host_pindex %6u\n", qid,
                         qstate_notifyq.p_index0, qstate_notifyq.c_index0, posted,
@@ -504,7 +534,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             }
             if (qid == 1) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
-                posted = NUM_POSTED(1 << qstate_edmaq.ring_size, qstate_edmaq.p_index0,
+                posted = NUM_POSTED(qstate_edmaq.ring_size, qstate_edmaq.p_index0,
                                     qstate_edmaq.c_index0);
                 printf(" dq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                         qstate_edmaq.p_index0, qstate_edmaq.c_index0, posted,
@@ -513,7 +543,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             if (qid == 2) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
                 posted =
-                    NUM_POSTED(1 << qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
+                    NUM_POSTED(qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
                 printf("req%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                     qstate_req.p_index0, qstate_req.c_index0, posted, qstate_req.comp_index,
                     qstate_req.sta.color);
@@ -521,7 +551,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             if (qid == 3) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
                 posted =
-                    NUM_POSTED(1 << qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
+                    NUM_POSTED(qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
                 printf("rsp%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                     qstate_resp.p_index0, qstate_resp.c_index0, posted, qstate_resp.comp_index,
                     qstate_resp.sta.color);
@@ -534,10 +564,123 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
 }
 
 void
+print_eth_qstate_intr(eth_qstate_intr_t *intr)
+{
+    printf("pc_offset=%#x\n"            "rsvd=%#x\n"
+           "cosA=%#x\n"                 "cosB=%#x\n"
+           "cos_sel=%#x\n"              "eval_last=%#x\n"
+           "host=%#x\n"                 "total=%#x\n"
+           "pid=%#x\n",
+           intr->pc_offset,             intr->rsvd,
+           intr->cosA,                  intr->cosB,
+           intr->cos_sel,               intr->eval_last,
+           intr->host,                  intr->total,
+           intr->pid);
+}
+
+void
+print_eth_qstate_ring(eth_qstate_ring_t *ring, int i)
+{
+    printf("p_index%d=%#x\n"            "c_index%d=%#x\n",
+           i, ring->p_index,            i, ring->c_index);
+}
+
+void
+print_eth_qstate_cfg(eth_qstate_cfg_t *cfg)
+{
+    printf("enable=%#x\n"               "debug=%#x\n"
+           "host_queue=%#x\n"           "cpu_queue=%#x\n"
+           "eq_enable=%#x\n"            "intr_enable=%#x\n"
+           "rsvd_cfg=%#x\n",
+           cfg->enable,                 cfg->debug,
+           cfg->host_queue,             cfg->cpu_queue,
+           cfg->eq_enable,              cfg->intr_enable,
+           cfg->rsvd_cfg);
+}
+
+void
+print_eth_qstate_common(eth_qstate_common_t *q)
+{
+    print_eth_qstate_intr(&q->intr);
+    print_eth_qstate_ring(&q->ring[0], 0);
+    print_eth_qstate_ring(&q->ring[1], 1);
+    print_eth_qstate_ring(&q->ring[2], 2);
+    print_eth_qstate_cfg(&q->cfg);
+
+    printf("rsvd_db_cnt=%#x\n"          "ring_size=%#x\n"
+           "lif_index=%#x\n",
+           q->rsvd_db_cnt,              q->ring_size,
+           q->lif_index);
+}
+
+void
+print_eth_tx_qstate(eth_tx_qstate_t *tx)
+{
+    print_eth_qstate_common(&tx->q);
+
+    printf(
+           "comp_index=%#x\n"           "color=%#x\n"
+           "armed=%#x\n"                "rsvd_sta=%#x\n"
+           "lg2_desc_sz=%#x\n"          "lg2_cq_desc_sz=%#x\n"
+           "ring_base=%#lx\n"           "cq_ring_base=%#lx\n"
+           "sg_ring_base=%#lx\n"        "intr_index_or_eq_addr=%#lx\n",
+           tx->comp_index,              tx->sta.color,
+           tx->sta.armed,               tx->sta.rsvd,
+           tx->lg2_desc_sz,             tx->lg2_cq_desc_sz,
+           tx->ring_base,               tx->cq_ring_base,
+           tx->sg_ring_base,            tx->intr_index_or_eq_addr);
+}
+
+void
+print_eth_tx2_qstate(eth_tx2_qstate_t *tx2)
+{
+    uint64_t tso0 = be64toh(tx2->tso_state[0]);
+    uint64_t tso1 = be64toh(tx2->tso_state[1]);
+
+    // BE bitfields not byte aligned, incompat with LE bitfields
+#define EXTRACT_FIELD(v, low, width) \
+    (((v) >> (low)) & ((1ul << (width)) - 1))
+
+    printf("tso_hdr_addr=%#lx\n"
+           "tso_hdr_len=%#lx\n"
+           "tso_hdr_rsvd=%#lx\n"
+           "tso_ipid_delta=%#lx\n"
+           "tso_seq_delta=%#lx\n"
+           "tso_rsvd=%#lx\n",
+           EXTRACT_FIELD(tso0, 12, 52), // tso_hdr_addr
+           EXTRACT_FIELD(tso0, 2, 10),  // tso_hdr_len
+           EXTRACT_FIELD(tso0, 0, 2),   // tso_hdr_rsvd
+           EXTRACT_FIELD(tso1, 48, 16), // tso_ipid_delta
+           EXTRACT_FIELD(tso1, 16, 32), // tso_seq_delta
+           EXTRACT_FIELD(tso1, 0, 16)); // tso_rsvd
+}
+
+void
+print_eth_rx_qstate(eth_rx_qstate_t *rx)
+{
+    print_eth_qstate_common(&rx->q);
+
+    printf("comp_index=%#x\n"           "color=%#x\n"
+           "armed=%#x\n"                "rsvd_sta=%#x\n"
+           "lg2_desc_sz=%#x\n"          "lg2_cq_desc_sz=%#x\n"
+           "lg2_sg_desc_sz=%#x\n"       "sg_max_elems=%#x\n"
+           "ring_base=%#lx\n"           "cq_ring_base=%#lx\n"
+           "sg_ring_base=%#lx\n"        "intr_index_or_eq_addr=%#lx\n",
+           rx->comp_index,              rx->sta.color,
+           rx->sta.armed,               rx->sta.rsvd,
+           rx->lg2_desc_sz,             rx->lg2_cq_desc_sz,
+           rx->lg2_sg_desc_sz,          rx->sg_max_elems,
+           rx->ring_base,               rx->cq_ring_base,
+           rx->sg_ring_base,            rx->intr_index_or_eq_addr);
+}
+
+void
 eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 {
-    struct eth_rx_qstate qstate_ethrx = {0};
-    struct eth_tx_qstate qstate_ethtx = {0};
+    union {
+        eth_rx_qstate_t ethrx;
+        eth_tx_co_qstate_t ethtx;
+    } qstate = {0};
     struct admin_qstate qstate_ethaq = {0};
     struct notify_qstate qstate_notifyq = {0};
     struct edma_qstate qstate_edmaq = {0};
@@ -565,61 +708,19 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 
     switch (qtype) {
     case 0:
-        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-        printf("pc_offset=0x%0x\n"
-               "rsvd0=0x%0x\n"
-               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
-               "eval_last=0x%0x\n"
-               "host=0x%0x\ntotal=0x%0x\n"
-               "pid=0x%0x\n"
-               "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
-               "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
-               "ring_base=0x%0lx\nring_size=0x%0x\n"
-               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
-               "sg_ring_base=0x%0lx\n"
-               "lg2_desc_sz=0x%x\nlg2_cq_desc_sz=0x%x\nlg2_sg_desc_sz=0x%x\n"
-               "sg_max_elems=0x%x\n",
-               qstate_ethrx.pc_offset, qstate_ethrx.rsvd0, qstate_ethrx.cosA, qstate_ethrx.cosB,
-               qstate_ethrx.cos_sel, qstate_ethrx.eval_last, qstate_ethrx.host, qstate_ethrx.total,
-               qstate_ethrx.pid, qstate_ethrx.p_index0, qstate_ethrx.c_index0,
-               qstate_ethrx.comp_index, qstate_ethrx.sta.color, qstate_ethrx.cfg.enable,
-               qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.cpu_queue,
-               qstate_ethrx.cfg.intr_enable, qstate_ethrx.cfg.debug,
-               qstate_ethrx.ring_base,
-               qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index,
-               qstate_ethrx.sg_ring_base,
-               qstate_ethrx.lg2_desc_sz, qstate_ethrx.lg2_cq_desc_sz, qstate_ethrx.lg2_sg_desc_sz,
-               qstate_ethrx.sg_max_elems);
+        sdk::lib::pal_mem_read(addr,
+                               (uint8_t *)&qstate.ethrx,
+                               sizeof(qstate.ethrx));
+
+        print_eth_rx_qstate(&qstate.ethrx);
         break;
     case 1:
-        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
-        printf("pc_offset=0x%0x\n"
-               "rsvd0=0x%0x\n"
-               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
-               "eval_last=0x%0x\n"
-               "host=0x%0x\ntotal=0x%0x\n"
-               "pid=0x%0x\n"
-               "p_index0=0x%0x\nc_index0=0x%0x\n"
-               "comp_index=0x%0x\nci_fetch=0x%0x\nci_miss=0x%0x\n"
-               "color=0x%0x\nspec_miss=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
-               "ring_base=0x%0lx\nring_size=0x%0x\n"
-               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
-               "sg_ring_base=0x%0lx\n"
-               "spurious_db_cnt=%d\n"
-               "lg2_desc_sz=0x%x\nlg2_cq_desc_sz=0x%x\nlg2_sg_desc_sz=0x%x\n",
-               qstate_ethtx.pc_offset, qstate_ethtx.rsvd0, qstate_ethtx.cosA, qstate_ethtx.cosB,
-               qstate_ethtx.cos_sel, qstate_ethtx.eval_last, qstate_ethtx.host, qstate_ethtx.total,
-               qstate_ethtx.pid, qstate_ethtx.p_index0, qstate_ethtx.c_index0,
-               qstate_ethtx.comp_index, qstate_ethtx.ci_fetch, qstate_ethtx.ci_miss,
-               qstate_ethtx.sta.color, qstate_ethtx.sta.spec_miss, qstate_ethtx.cfg.enable,
-               qstate_ethtx.cfg.host_queue, qstate_ethtx.cfg.cpu_queue,
-               qstate_ethtx.cfg.intr_enable, qstate_ethtx.cfg.debug,
-               qstate_ethtx.ring_base,
-               qstate_ethtx.ring_size, qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_index,
-               qstate_ethtx.sg_ring_base, qstate_ethtx.sta.spurious_db_cnt,
-               qstate_ethtx.lg2_desc_sz, qstate_ethtx.lg2_cq_desc_sz, qstate_ethtx.lg2_sg_desc_sz);
+        sdk::lib::pal_mem_read(addr,
+                               (uint8_t *)&qstate.ethtx,
+                               sizeof(qstate.ethtx));
+
+        print_eth_tx_qstate(&qstate.ethtx.tx);
+        print_eth_tx2_qstate(&qstate.ethtx.tx2);
         break;
     case 2:
         sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethaq, sizeof(qstate_ethaq));
@@ -868,8 +969,9 @@ eth_qdump(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring)
 void
 eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
 {
-    struct eth_rx_cfg_qstate qstate_ethrx = {0};
-    struct eth_tx_cfg_qstate qstate_ethtx = {0};
+    union {
+        eth_qstate_cfg_t eth = {0};
+    } cfg;
     struct admin_cfg_qstate qstate_aq = {0};
     struct edma_cfg_qstate qstate_edmaq = {0};
     struct notify_cfg_qstate qstate_notifyq = {0};
@@ -896,18 +998,11 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
 
     switch (qtype) {
         case 0:
-            sdk::lib::pal_mem_read(addr + offsetof(eth_rx_qstate_t, cfg),
-                (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-            qstate_ethrx.debug = enable;
-            sdk::lib::pal_mem_write(addr + offsetof(eth_rx_qstate_t, cfg),
-                (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-            break;
         case 1:
-            sdk::lib::pal_mem_read(addr + offsetof(eth_tx_qstate_t, cfg),
-                (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
-            qstate_ethtx.debug = enable;
-            sdk::lib::pal_mem_write(addr + offsetof(eth_tx_qstate_t, cfg),
-                (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
+            addr += offsetof(eth_qstate_common_t, cfg);
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&cfg.eth, sizeof(cfg.eth));
+            cfg.eth.debug = enable;
+            sdk::lib::pal_mem_write(addr, (uint8_t *)&cfg.eth, sizeof(cfg.eth));
             break;
         case 2:
             sdk::lib::pal_mem_read(addr + offsetof(admin_qstate_t, cfg),
@@ -956,6 +1051,18 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
         CAP_PICC_CSR_DHS_CACHE_INVALIDATE_BYTE_OFFSET, &val, 1);
 
     eth_qstate(lif, qtype, qid);
+}
+
+void
+eth_eqstate(uint64_t addr)
+{
+    struct eth_eq_qstate eqstate = {0};
+
+    sdk::lib::pal_mem_read(addr, (uint8_t *)&eqstate, sizeof(eqstate));
+    printf("eq_ring_base=0x%0lx\neq_ring_size=0x%0x\n"
+           "eq_gen=0x%0x\neq_index=0x%0x\nintr_index=0x%0x\n",
+           eqstate.eq_ring_base, eqstate.eq_ring_size,
+           eqstate.eq_gen, eqstate.eq_index, eqstate.intr_index);
 }
 
 std::string
@@ -1527,6 +1634,7 @@ usage()
     printf("Usage:\n");
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
+    printf("   eqstate        <addr>\n");
     printf("   qdump          <lif> <qtype> <qid> <ring>\n");
     printf("   debug          <lif> <qtype> <qid> <enable>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
@@ -1597,6 +1705,12 @@ main(int argc, char **argv)
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
         uint8_t enable = std::strtoul(argv[5], NULL, 0);
         eth_debug(lif, qtype, qid, enable);
+    } else if (strcmp(argv[1], "eqstate") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint64_t addr = std::strtoull(argv[2], NULL, 0);
+        eth_eqstate(addr);
     } else if (strcmp(argv[1], "nvme_qstate") == 0) {
         if (argc != 5) {
             usage();

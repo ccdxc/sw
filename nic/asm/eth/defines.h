@@ -1,7 +1,25 @@
 
+#define __ASSEMBLY__
 #include "platform/capri/capri_common.hpp"
 #include "nic/p4/common/defines.h"
 #include "nic/asm/common-p4+/include/capri-macros.h"
+#include "cap_top_csr_defines.h"
+#include "cap_intr_c_hdr.h"
+
+#define TABLE_VALID(n)          (1 << (3 - (n)))
+#define TABLE_VALID_0           TABLE_VALID(0)
+#define TABLE_VALID_1           TABLE_VALID(1)
+#define TABLE_VALID_2           TABLE_VALID(2)
+
+#define LG2_EQ_QSTATE_SIZE      4
+#define LG2_EQ_DESC_SIZE        4
+
+// event codes (hx: bytes swapped)
+#define EQ_CODE_RX_COMP_HX      0x0100
+#define EQ_CODE_TX_COMP_HX      0x0200
+
+#define INTR_ASSERT_BASE        (CAP_ADDR_BASE_INTR_INTR_OFFSET + CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET)
+#define LG2_INTR_ASSERT_STRIDE  2
 
 struct phv2pkt {
     rsvd: 41;

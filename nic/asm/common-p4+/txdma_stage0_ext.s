@@ -50,14 +50,14 @@ rdma_req_tx_stage0_ext:
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-eth_rx_stage0_dummy:
+eth_tx_arm_rx_stage0_ext:
     nop.e
     nop
 
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-eth_tx_stage0:
+eth_tx_stage0_ext:
     nop.e
     nop
 

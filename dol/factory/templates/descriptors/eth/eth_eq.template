@@ -1,0 +1,5 @@
+meta:
+    id      : DESCR_ETH_EQ
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthEqDescriptorObject

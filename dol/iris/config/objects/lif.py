@@ -73,7 +73,8 @@ class LifObject(base.ConfigObjectBase):
             self.hbm_barmap_entries = (int(spec.rdma.hbm_barmap_size / spec.rdma.hostmem_pg_size))
             self.rdma_tbl_pos = BitArray(length=self.rdma_max_pt_entries)
             self.hbm_tbl_pos = BitArray(length=self.hbm_barmap_entries)
-            self.rdma_async_eq_id = self.rdma_admin_eq_id = 1
+            self.rdma_async_eq_id = 0
+            self.rdma_admin_aq_id = 1
             self.rdma_admin_cq_id = 0
         else:
             self.enable_rdma = False
@@ -114,7 +115,7 @@ class LifObject(base.ConfigObjectBase):
             self.aqid_allocator = objects.TemplateFieldObject("range/1/" + str(spec.rdma.max_aq))
             # Reserve CQ 0, 1 for special QPs, AQ
             self.cqid_allocator = objects.TemplateFieldObject("range/2/" + str(spec.rdma.max_cq))
-            self.eqid_allocator = objects.TemplateFieldObject("range/1/" + str(spec.rdma.max_eq))
+            self.eqid_allocator = objects.TemplateFieldObject("range/0/" + str(spec.rdma.max_eq))
             self.pd_allocator = objects.TemplateFieldObject("range/0/" + str(spec.rdma.max_pd))
             self.mr_key_allocator = objects.TemplateFieldObject("range/1/" + str(spec.rdma.max_mr))
             self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
@@ -267,7 +268,7 @@ class LifObject(base.ConfigObjectBase):
 
     def ConfigureRdmaLifRes(self):
         if self.enable_rdma:
-            # EQID 1 on LIF is used for Async events/errors across all PDs
+            # EQID 0 on LIF is used for Async events/errors across all PDs
             self.async_eq = self.GetQ('RDMA_EQ', self.rdma_async_eq_id)
             fail = self.async_eq is None
             self.admin_eq = self.async_eq
@@ -276,7 +277,7 @@ class LifObject(base.ConfigObjectBase):
             self.admin_cq = self.GetQ('RDMA_CQ', self.rdma_admin_cq_id)
             fail = fail or self.admin_cq is None
             # AQ position in list is different from AQ qid
-            self.adminq = self.GetQ('RDMA_AQ', self.rdma_admin_eq_id)
+            self.adminq = self.GetQ('RDMA_AQ', self.rdma_admin_aq_id)
             fail = fail or self.adminq is None
             if (fail is True):
                 assert(0)

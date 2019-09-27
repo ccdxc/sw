@@ -52,7 +52,7 @@ queue_types:
         id          : TX
         type        : 1
         purpose     : LIF_QUEUE_PURPOSE_TX
-        size        : 64    # Size of Qstate
+        size        : 128    # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:
             - queue:

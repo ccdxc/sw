@@ -161,7 +161,7 @@ EthLif::EthLif(devapi *dev_api,
 
     qinfo[ETH_HW_QTYPE_TX] = {
         .type_num = ETH_HW_QTYPE_TX,
-        .size = 1,
+        .size = 2,
         .entries = (uint32_t)log2(spec->txq_count),
     };
 
@@ -192,7 +192,7 @@ EthLif::EthLif(devapi *dev_api,
     qinfo[ETH_HW_QTYPE_EQ] = {
         .type_num = ETH_HW_QTYPE_EQ,
         .size = 1,
-        .entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count),
+        .entries = (uint32_t)log2(spec->rdma_eq_count),
     };
 
     qinfo[ETH_HW_QTYPE_SVC] = {
@@ -412,7 +412,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, pc_offset), 0);
+        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
@@ -424,7 +424,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, pc_offset), 0);
+        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -594,7 +594,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, pc_offset), 0);
+        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
@@ -606,7 +606,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, pc_offset), 0);
+        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -1141,6 +1141,9 @@ EthLif::_CmdQInit(void *req, void *req_data, void *resp, void *resp_data)
         case IONIC_QTYPE_TXQ:
             ret = TxQInit(req, req_data, resp, resp_data);
             break;
+        case IONIC_QTYPE_EQ:
+            ret = EQInit(req, req_data, resp, resp_data);
+            break;
         default:
             ret = IONIC_RC_EINVAL;
             NIC_LOG_ERR("{}: Invalid qtype {} qid {}", hal_lif_info_.name,
@@ -1152,17 +1155,112 @@ EthLif::_CmdQInit(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
+EthLif::EQInit(void *req, void *req_data, void *resp, void *resp_data)
+{
+    int64_t addr;
+    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
+    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    eth_eq_qstate_t qstate = {0};
+
+    NIC_LOG_DEBUG("{}: {}: "
+        "type {} index {} cos {} "
+        "ring_base {:#x} cq_ring_base {:#x} ring_size {} "
+        "intr_index {} flags {}{}",
+        hal_lif_info_.name,
+        opcode_to_str((cmd_opcode_t)cmd->opcode),
+        cmd->type,
+        cmd->index,
+        cmd->cos,
+        cmd->ring_base,
+        cmd->cq_ring_base,
+        cmd->ring_size,
+        cmd->intr_index,
+        (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
+
+    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+        NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->index >= spec->eq_count) {
+        NIC_LOG_ERR("{}: Bad EQ qid {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_EQID);
+    }
+
+    if ((cmd->flags & IONIC_QINIT_F_IRQ) && (cmd->intr_index >= spec->intr_count)) {
+        NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad RX EQ ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad TX EQ ring base {:#x}", hal_lif_info_.name, cmd->cq_ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    /* common values for rx and tx eq */
+    qstate.eq_ring_size = cmd->ring_size;
+    qstate.eq_gen = 1;
+    if (cmd->flags & IONIC_QINIT_F_ENA) {
+        qstate.cfg.eq_enable = 1;
+    }
+    if (cmd->flags & IONIC_QINIT_F_IRQ) {
+        qstate.cfg.intr_enable = 1;
+        qstate.intr_index = res->intr_base + cmd->intr_index;
+    }
+
+    /* init rx eq */
+    if (spec->host_dev) {
+        qstate.eq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
+    } else {
+        qstate.eq_ring_base = cmd->ring_base;
+    }
+    addr = res->rx_eq_base + cmd->index * sizeof(qstate);
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+    PAL_barrier();
+    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_RXDMA);
+
+    /* init tx eq */
+    if (spec->host_dev) {
+        qstate.eq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
+    } else {
+        qstate.eq_ring_base = cmd->ring_base;
+    }
+    addr = res->tx_eq_base + cmd->index * sizeof(qstate);
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+    PAL_barrier();
+    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    comp->hw_index = cmd->index;
+    comp->hw_type = ETH_HW_QTYPE_NONE;
+
+    NIC_LOG_DEBUG("{}: qid {} qtype {}",
+                 hal_lif_info_.name, comp->hw_index, comp->hw_type);
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
 EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
     struct q_init_cmd *cmd = (struct q_init_cmd *)req;
     struct q_init_comp *comp = (struct q_init_comp *)resp;
-    eth_tx_qstate_t qstate = {0};
+    eth_tx_co_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
         "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {} "
-        "intr_index {} flags {}{}{}{}",
+        "intr_index {} flags {}{}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1176,6 +1274,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_EQ) ? 'Q' : '-',
         (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
@@ -1194,13 +1293,28 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EQID);
     }
 
-    if ((cmd->flags & IONIC_QINIT_F_IRQ) && cmd->intr_index >= spec->intr_count) {
-        NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (IONIC_RC_ERROR);
+    if (cmd->flags & IONIC_QINIT_F_EQ) {
+        if (cmd->flags & IONIC_QINIT_F_IRQ) {
+            NIC_LOG_ERR("{}: bad combination of EQ and IRQ flags");
+            return (IONIC_RC_EQID);
+        }
+        if (cmd->intr_index >= spec->eq_count) {
+            NIC_LOG_ERR("{}: bad EQ qid {}", hal_lif_info_.name, cmd->intr_index);
+            return (IONIC_RC_EQID);
+        }
+    } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
+        if (cmd->intr_index >= spec->intr_count) {
+            NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
+            return (IONIC_RC_ERROR);
+        }
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
+        return (IONIC_RC_ERROR);
+    }
+    if ((cmd->flags & IONIC_QINIT_F_EQ) && cmd->ring_size > 15) {
+        NIC_LOG_ERR("{}: bad ring_size {} for eq", hal_lif_info_.name, cmd->ring_size);
         return (IONIC_RC_ERROR);
     }
 
@@ -1233,55 +1347,56 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: eth_tx_stage0");
         return (IONIC_RC_ERROR);
     }
-    qstate.pc_offset = off;
-    qstate.cos_sel = 0;
-    qstate.cosA = cosA;
-    qstate.cosB = pd->get_iq(cmd->cos);
-    qstate.host = 1;
-    qstate.total = 1;
-    qstate.pid = cmd->pid;
-    qstate.p_index0 = 0;
-    qstate.c_index0 = 0;
-    qstate.comp_index = 0;
-    qstate.ci_fetch = 0;
-    qstate.ci_miss = 0;
-    qstate.sta.color = 1;
-    qstate.sta.spec_miss = 0;
-    qstate.sta.spurious_db_cnt = 0;
-    qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
-    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
-    qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
-    qstate.cfg.host_queue = spec->host_dev;
-    if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU) {
-        qstate.cfg.cpu_queue = 1;
+
+    qstate.tx.q.intr.pc_offset = off;
+    qstate.tx.q.intr.cosA = cosA;
+    qstate.tx.q.intr.cosB = pd->get_iq(cmd->cos);
+    qstate.tx.q.intr.host = (cmd->flags & IONIC_QINIT_F_EQ) ? 2 : 1;
+    qstate.tx.q.intr.total = 3;
+    qstate.tx.q.intr.pid = cmd->pid;
+
+    qstate.tx.q.ring[1].p_index = 0xffff;
+    qstate.tx.q.ring[1].c_index = 0xffff;
+
+    qstate.tx.q.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
+    qstate.tx.q.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
+    qstate.tx.q.cfg.cpu_queue =
+        hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU;
+
+    qstate.tx.q.ring_size = cmd->ring_size;
+    qstate.tx.q.lif_index = cmd->lif_index;
+
+    qstate.tx.sta.color = 1;
+
+    qstate.tx.lg2_desc_sz = log2(sizeof(struct txq_desc));
+    qstate.tx.lg2_cq_desc_sz = log2(sizeof(struct txq_comp));
+    if (cmd->ver == 1) {
+        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
     } else {
-        qstate.cfg.cpu_queue = 0;
+        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc));
     }
 
     if (spec->host_dev) {
-        qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
-        qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
+        qstate.tx.q.cfg.host_queue = 1;
+        qstate.tx.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
+        qstate.tx.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
         if (cmd->flags & IONIC_QINIT_F_SG) {
-            qstate.sg_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->sg_ring_base);
+            qstate.tx.sg_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->sg_ring_base);
         }
     } else {
-        qstate.ring_base = cmd->ring_base;
-        qstate.cq_ring_base = cmd->cq_ring_base;
+        qstate.tx.ring_base = cmd->ring_base;
+        qstate.tx.cq_ring_base = cmd->cq_ring_base;
         if (cmd->flags & IONIC_QINIT_F_SG) {
-            qstate.sg_ring_base = cmd->sg_ring_base;
+            qstate.tx.sg_ring_base = cmd->sg_ring_base;
         }
-    }
-    qstate.ring_size = cmd->ring_size;
-    if (cmd->flags & IONIC_QINIT_F_IRQ) {
-        qstate.intr_assert_index = res->intr_base + cmd->intr_index;
     }
 
-    qstate.lg2_desc_sz = log2(sizeof(struct txq_desc));
-    qstate.lg2_cq_desc_sz = log2(sizeof(struct txq_comp));
-    if (cmd->ver == 1) {
-        qstate.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
-    } else {
-        qstate.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc));
+    if (cmd->flags & IONIC_QINIT_F_EQ) {
+        qstate.tx.q.cfg.eq_enable = 1;
+        qstate.tx.intr_index_or_eq_addr = res->tx_eq_base + cmd->intr_index * sizeof(eth_eq_qstate_t);
+    } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
+        qstate.tx.q.cfg.intr_enable = 1;
+        qstate.tx.intr_index_or_eq_addr = res->intr_base + cmd->intr_index;
     }
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
@@ -1308,7 +1423,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: "
         "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
-        " intr_index {} flags {}{}{}{}",
+        " intr_index {} flags {}{}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1322,6 +1437,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_EQ) ? 'Q' : '-',
         (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
@@ -1340,13 +1456,28 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EQID);
     }
 
-    if ((cmd->flags & IONIC_QINIT_F_IRQ) && cmd->intr_index >= spec->intr_count) {
-        NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (IONIC_RC_ERROR);
+    if (cmd->flags & IONIC_QINIT_F_EQ) {
+        if (cmd->flags & IONIC_QINIT_F_IRQ) {
+            NIC_LOG_ERR("{}: bad combination of EQ and IRQ flags");
+            return (IONIC_RC_EQID);
+        }
+        if (cmd->intr_index >= spec->eq_count) {
+            NIC_LOG_ERR("{}: bad EQ qid {}", hal_lif_info_.name, cmd->intr_index);
+            return (IONIC_RC_EQID);
+        }
+    } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
+        if (cmd->intr_index >= spec->intr_count) {
+            NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
+            return (IONIC_RC_ERROR);
+        }
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
+        return (IONIC_RC_ERROR);
+    }
+    if ((cmd->flags & IONIC_QINIT_F_EQ) && cmd->ring_size > 15) {
+        NIC_LOG_ERR("{}: bad ring_size {} for eq", hal_lif_info_.name, cmd->ring_size);
         return (IONIC_RC_ERROR);
     }
 
@@ -1379,27 +1510,29 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("Failed to get PC offset of program: rxdma_stage0.bin label: eth_rx_stage0");
         return (IONIC_RC_ERROR);
     }
-    qstate.pc_offset = off;
-    qstate.cos_sel = 0;
-    qstate.cosA = cosA;
-    qstate.cosB = pd->get_iq(cmd->cos);
-    qstate.host = 1;
-    qstate.total = 1;
-    qstate.pid = cmd->pid;
-    qstate.p_index0 = 0;
-    qstate.c_index0 = 0;
-    qstate.comp_index = 0;
+
+    qstate.q.intr.pc_offset = off;
+    qstate.q.intr.cosA = cosA;
+    qstate.q.intr.cosB = pd->get_iq(cmd->cos);
+    qstate.q.intr.host = (cmd->flags & IONIC_QINIT_F_EQ) ? 2 : 1;
+    qstate.q.intr.total = 3;
+    qstate.q.intr.pid = cmd->pid;
+
+    qstate.q.ring[1].p_index = 0xffff;
+    qstate.q.ring[1].c_index = 0xffff;
+
+    qstate.q.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
+    qstate.q.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
+    qstate.q.cfg.cpu_queue =
+        hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU;
+
+    qstate.q.ring_size = cmd->ring_size;
+    qstate.q.lif_index = cmd->lif_index;
+
     qstate.sta.color = 1;
-    qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
-    qstate.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
-    qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
-    qstate.cfg.host_queue = spec->host_dev;
-    if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU)
-        qstate.cfg.cpu_queue = 1;
-    else
-        qstate.cfg.cpu_queue = 0;
 
     if (spec->host_dev) {
+        qstate.q.cfg.host_queue = 1;
         qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
         qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
         if (cmd->flags & IONIC_QINIT_F_SG)
@@ -1410,9 +1543,14 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->flags & IONIC_QINIT_F_SG)
             qstate.sg_ring_base = cmd->sg_ring_base;
     }
-    qstate.ring_size = cmd->ring_size;
-    if (cmd->flags & IONIC_QINIT_F_IRQ)
-        qstate.intr_assert_index = res->intr_base + cmd->intr_index;
+
+    if (cmd->flags & IONIC_QINIT_F_EQ) {
+        qstate.q.cfg.eq_enable = 1;
+        qstate.intr_index_or_eq_addr = res->rx_eq_base + cmd->intr_index * sizeof(eth_eq_qstate_t);
+    } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
+        qstate.q.cfg.intr_enable = 1;
+        qstate.intr_index_or_eq_addr = res->intr_base + cmd->intr_index;
+    }
 
     qstate.lg2_desc_sz = log2(sizeof(struct rxq_desc));
     qstate.lg2_cq_desc_sz = log2(sizeof(struct rxq_comp));
@@ -1765,9 +1903,10 @@ status_code_t
 EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
-    struct eth_rx_cfg_qstate rx_cfg = {0};
-    struct eth_tx_cfg_qstate tx_cfg = {0};
-    uint64_t addr;
+    union {
+        eth_qstate_cfg_t eth;
+    } cfg = {0};
+    uint64_t addr, off;
 
     NIC_LOG_DEBUG("{}: {}: attr {}",
         hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
@@ -1783,39 +1922,41 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         case IONIC_LIF_ATTR_STATE:
             for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
                 addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_RX, qid);
+                off = offsetof(eth_rx_qstate_t, q.cfg);
                 if (addr < 0) {
                     NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                         hal_lif_info_.name, qid);
                     return (IONIC_RC_ERROR);
                 }
-                READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+                READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
                 if (cmd->state == IONIC_Q_ENABLE) {
-                    rx_cfg.enable = 0x1;
+                    cfg.eth.enable = 0x1;
                     active_q_ref_cnt++;
                 } else if (cmd->state == IONIC_Q_DISABLE) {
-                    rx_cfg.enable = 0x0;
+                    cfg.eth.enable = 0x0;
                     active_q_ref_cnt--;
                 }
-                WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+                WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
                 PAL_barrier();
                 p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
             }
             for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
                 addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
+                off = offsetof(eth_tx_qstate_t, q.cfg);
                 if (addr < 0) {
                     NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                         hal_lif_info_.name, qid);
                     return (IONIC_RC_ERROR);
                 }
-                READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+                READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
                 if (cmd->state == IONIC_Q_ENABLE) {
-                    tx_cfg.enable = 0x1;
+                    cfg.eth.enable = 0x1;
                     active_q_ref_cnt++;
                 } else if (cmd->state == IONIC_Q_DISABLE) {
-                    tx_cfg.enable = 0x0;
+                    cfg.eth.enable = 0x0;
                     active_q_ref_cnt--;
                 }
-                WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+                WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
                 PAL_barrier();
                 p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
             }
@@ -1858,11 +1999,13 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 {
-    int64_t addr;
+    int64_t addr, off;
     struct q_control_cmd *cmd = (struct q_control_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
-    struct eth_rx_cfg_qstate rx_cfg = {0};
-    struct eth_tx_cfg_qstate tx_cfg = {0};
+    union {
+        eth_qstate_cfg_t eth;
+        eth_eq_qstate_cfg_t eq;
+    } cfg = {0};
     struct admin_cfg_qstate admin_cfg = {0};
     struct notify_cfg_qstate notify_cfg = {0};
 
@@ -1893,15 +2036,16 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->index);
             return (IONIC_RC_ERROR);
         }
-        READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+        off = offsetof(eth_rx_qstate_t, q.cfg);
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         if (cmd->oper == IONIC_Q_ENABLE) {
-            rx_cfg.enable = 0x1;
+            cfg.eth.enable = 0x1;
             active_q_ref_cnt++;
         } else if (cmd->oper == IONIC_Q_DISABLE) {
-            rx_cfg.enable = 0x0;
+            cfg.eth.enable = 0x0;
             active_q_ref_cnt--;
         }
-        WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
         /* TODO: Need to implement queue flushing */
@@ -1919,17 +2063,52 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->index);
             return (IONIC_RC_ERROR);
         }
-        READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+        off = offsetof(eth_tx_qstate_t, q.cfg);
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         if (cmd->oper == IONIC_Q_ENABLE) {
-            tx_cfg.enable = 0x1;
+            cfg.eth.enable = 0x1;
             active_q_ref_cnt++;
         } else if (cmd->oper == IONIC_Q_DISABLE) {
-            tx_cfg.enable = 0x0;
+            cfg.eth.enable = 0x0;
             active_q_ref_cnt--;
         }
-        WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        break;
+    case IONIC_QTYPE_EQ:
+        if (cmd->index >= spec->eq_count) {
+            NIC_LOG_ERR("{}: Bad EQ qid {}", hal_lif_info_.name, cmd->index);
+            return (IONIC_RC_EQID);
+        }
+
+        off = offsetof(eth_eq_qstate_t, cfg);
+
+        addr = res->rx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
+        READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+        if (cmd->oper == IONIC_Q_ENABLE) {
+            cfg.eq.eq_enable = 0x1;
+            active_q_ref_cnt++;
+        } else if (cmd->oper == IONIC_Q_DISABLE) {
+            cfg.eq.eq_enable = 0x0;
+            active_q_ref_cnt--;
+        }
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+
+        addr = res->tx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
+        READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+        if (cmd->oper == IONIC_Q_ENABLE) {
+            cfg.eq.eq_enable = 0x1;
+            active_q_ref_cnt++;
+        } else if (cmd->oper == IONIC_Q_DISABLE) {
+            cfg.eq.eq_enable = 0x0;
+            active_q_ref_cnt--;
+        }
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case IONIC_QTYPE_ADMINQ:
         if (cmd->index >= spec->adminq_count) {

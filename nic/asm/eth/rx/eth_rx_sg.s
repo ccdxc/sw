@@ -130,7 +130,7 @@ eth_rx_sg_done:   // We are done with SG
 
   // Update completion descriptor
   sub             r7, k.eth_rx_t1_s2s_sg_max_elems, _r_rem_sg
-  phvwr           p.eth_rx_cq_desc_num_sg_elems, r7
+  phvwr           p.cq_desc_num_sg_elems, r7
 
   // Save DMA command pointer
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
@@ -153,7 +153,7 @@ eth_rx_sg_data_error:
 
   // Don't drop the phv, because, we have claimed the completion entry.
   // Generate an error completion.
-  phvwr           p.eth_rx_cq_desc_status, ETH_RX_DESC_DATA_ERROR
+  phvwr           p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
   phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
 
   // Reset the DMA command stack to discard existing DMA commands.

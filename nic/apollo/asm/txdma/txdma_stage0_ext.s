@@ -30,7 +30,7 @@ tx_dummy_ext:
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-eth_rx_stage0_dummy_ext:
+eth_tx_arm_rx_stage0_ext:
     nop.e
     nop
 

@@ -1,0 +1,155 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SESSION
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
+
+queue: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+eq: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=EQ
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : 2048
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                flags   : ack
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : callback://eth/callbacks/GetPayload/size=2048
+
+    - packet:
+        id          : PKT1 # Base packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            tcp:
+                flags: ack
+
+    # Expect Packets
+    - callback: callback://eth/callbacks/InitEthTxTsoPackets/pkt=PKT1,mss=1448
+
+buffers:
+    - buffer:
+        id      : BUF1 # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields  :
+            bind: True
+            size : ref://testcase/packets/id=PKT1/size
+            data : ref://testcase/packets/id=PKT1/rawbytes
+
+descriptors:
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
+
+    - descriptor:
+        id      : EXP_DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status: 0
+
+    - descriptor:
+        id      : EXP_EQDESC1
+        template: ref://factory/templates/id=DESCR_ETH_EQ
+        fields:
+            code: 2 # TX_COMP
+
+session:
+    - step: # become armed at the same time as something completes
+        trigger:
+            doorbell:
+                object: ref://testcase/pvtdata/queue/doorbell
+                fields:
+                    how: 'arm_index'
+                    # Do not schedule for ringing this doorbell,
+                    #   want to see arm and tx at the same time
+                    sched: False
+        expect:
+            armed: False
+
+    - step: # First tso descriptor, no completion, no event (host is caught up)
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : ref://testcase/pvtdata/queue
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            armed: True
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+            descriptors:
+                - descriptor:
+                    negtest : True # There should be no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/pvtdata/queue
+                - descriptor:
+                    negtest : True # There should be no event (yet)
+                    object  : ref://testcase/descriptors/id=EXP_EQDESC1
+                    ring    : ref://testcase/pvtdata/eq
+
+    - step: # last tso descriptor, with completion, and event (if not before)
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : ref://testcase/pvtdata/queue
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            armed: False
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/pvtdata/queue
+                - descriptor:
+                    negtest : True # the cq is emptied
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/pvtdata/queue
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQDESC1
+                    ring    : ref://testcase/pvtdata/eq
+                - descriptor:
+                    negtest : True # the eq is empied
+                    object  : ref://testcase/descriptors/id=EXP_EQDESC1
+                    ring    : ref://testcase/pvtdata/eq

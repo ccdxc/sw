@@ -261,7 +261,7 @@ union drv_identity {
  *                    Scale user-supplied interrupt coalescing
  *                    value in usecs to device units using:
  *                    device units = usecs * mult / div
- *
+ * @eq_count:         Number of shared event queues.
  */
 union dev_identity {
 	struct {
@@ -275,6 +275,7 @@ union dev_identity {
 		__le32 ndbpgs_per_lif;
 		__le32 intr_coal_mult;
 		__le32 intr_coal_div;
+		__le32 eq_count;
 	};
 	__le32 words[478];
 };
@@ -534,7 +535,7 @@ union q_identity {
  * @ver:          queue revision
  * @lif_index:    LIF index
  * @index:        (lif, qtype) relative admin queue index
- * @intr_index:   Interrupt control register index
+ * @intr_index:   Interrupt control register index, or Event queue index
  * @pid:          Process ID
  * @flags:
  *    IRQ:        Interrupt requested on completion
@@ -557,7 +558,6 @@ union q_identity {
  * @ring_base:    Queue ring base address
  * @cq_ring_base: Completion queue ring base address
  * @sg_ring_base: Scatter/Gather ring base address
- * @eq_index:     Event queue index
  */
 struct q_init_cmd {
 	u8     opcode;
@@ -580,8 +580,7 @@ struct q_init_cmd {
 	__le64 ring_base;
 	__le64 cq_ring_base;
 	__le64 sg_ring_base;
-	__le32 eq_index;
-	u8     rsvd2[16];
+	u8     rsvd2[20];
 };
 
 /**
@@ -2649,6 +2648,28 @@ union notifyq_comp {
 	struct reset_event reset;
 	struct heartbeat_event heartbeat;
 	struct log_event log;
+};
+
+/**
+ * struct eq_comp - Event queue completion descriptor
+ *
+ * @code:  Event code, see enum eq_comp_code.
+ * @lif_index: To which lif the event pertains.
+ * @qid:   To which queue id the event pertains.
+ * @gen_color: Event queue wrap counter, init 1, incr each wrap.
+ */
+struct eq_comp {
+	__le16 code;
+	__le16 lif_index;
+	__le32 qid;
+	u8 rsvd[7];
+	u8 gen_color;
+};
+
+enum eq_comp_code {
+	EQ_COMP_CODE_NONE = 0,
+	EQ_COMP_CODE_RX_COMP = 1,
+	EQ_COMP_CODE_TX_COMP = 2,
 };
 
 /* Deprecate */

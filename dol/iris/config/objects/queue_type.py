@@ -14,7 +14,7 @@ from infra.common.defs          import status
 from infra.common.logging       import logger
 
 
-eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
+eth_queue_type_ids = {'RX', 'TX', 'ADMIN', 'EQ'}
 rdma_queue_type_ids = {'RDMA_AQ', 'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
 nvme_queue_type_ids = {'NVME_SQ', 'NVME_CQ', 'NVME_ARMQ', 'NVME_SESS'}
 
@@ -56,15 +56,15 @@ class QueueTypeObject(base.ConfigObjectBase):
                     self.upd = 0x0
             else:
                 if self.purpose == "LIF_QUEUE_PURPOSE_RX":
-                    # Ring the doorbell, increment the PI and don't set
-                    # the scheduler bit.
-                    self.upd = 0x8
+                    # Ring the doorbell, set PI=index and the scheduler bit.
+                    self.upd = 0x9
                 elif self.purpose == "LIF_QUEUE_PURPOSE_TX":
-                    # Ring the doorbell, increment the PI and set the scheduler bit.
-                    # The PI will be incremented by directly writing to QState.
+                    # Ring the doorbell, set PI=index and the scheduler bit.
                     self.upd = 0x9
                 else:
                     self.upd = 0x0
+            self.doorbell = doorbell.Doorbell()
+            self.doorbell.Init(self, self.spec)
         elif spec.id in rdma_queue_type_ids:
             self.obj_helper_q = rdma_queue.RdmaQueueObjectHelper()
         elif spec.id in nvme_queue_type_ids:
@@ -129,9 +129,6 @@ class QueueTypeObject(base.ConfigObjectBase):
 
     def ConfigureQueues(self):
         if self.need_type_specific_configure:
-            if self.id in eth_queue_type_ids:
-                self.doorbell = doorbell.Doorbell()
-                self.doorbell.Init(self, self.spec)
             self.obj_helper_q.Configure()
 
     def Post(self, descriptor, queue_id=0):
@@ -151,7 +148,7 @@ class QueueTypeObject(base.ConfigObjectBase):
                     queue.qstate.Read()
                 if GlobalOptions.rtl and not GlobalOptions.skipverify:
                     queue.qstate.set_pindex(ring_id, ring.pi)
-                self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
+                self.doorbell.RingDB(queue_id, ring_id, ring.pi, queue.pid)
                 if not GlobalOptions.skipverify:
                     queue.qstate.Read()
         return ret
@@ -160,10 +157,20 @@ class QueueTypeObject(base.ConfigObjectBase):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly or GlobalOptions.skipverify:
             return status.SUCCESS
 
-        ring_id = 1
         queue = self.obj_helper_q.queues[queue_id]
-        ring = queue.obj_helper_ring.rings[ring_id]
         return queue.Consume(descriptor)
+
+    def EnableEQ(self, eq, queue_id=0):
+        queue = self.obj_helper_q.queues[queue_id]
+        queue.EnableEQ(eq)
+
+    def DisableEQ(self, queue_id=0):
+        queue = self.obj_helper_q.queues[queue_id]
+        queue.DisableEQ()
+
+    def IsQstateArmed(self, queue_id=0):
+        queue = self.obj_helper_q.queues[queue_id]
+        return queue.IsQstateArmed()
 
     def __str__(self):
         return ("%s Lif:%s/Id:%s/Purpose:%s/QueueType:%s/Size:%s/Count:%s" %

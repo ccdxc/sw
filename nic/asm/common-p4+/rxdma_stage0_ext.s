@@ -52,7 +52,7 @@ rdma_req_rx_stage0_ext:
 //Do not change the order of this entry
 //This has to align with the txdma_stage0.s program
 .align
-eth_rx_stage0:
+eth_rx_stage0_ext:
     nop.e
     nop
 

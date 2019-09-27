@@ -84,6 +84,70 @@ const char tx_qstate[] = {
     0x00,
     0x00,
     0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
 };
 
 const char rx_qstate[] = {
@@ -165,62 +229,106 @@ static bool is_smart_nic_mode() {
 }
 
 void
+print_eth_qstate_intr(const eth_qstate_intr_t *intr)
+{
+    std::cout
+        << "pc_offset: " << intr->pc_offset << std::endl
+        << "rsvd:" << intr->rsvd << std::endl
+        << "cosA:" << intr->cosA << std::endl
+        << "cosB:" << intr->cosB << std::endl
+        << "cos_sel: " << intr->cos_sel << std::endl
+        << "eval_last: " << intr->eval_last << std::endl
+        << "host: " << intr->host << std::endl
+        << "total: " << intr->total << std::endl
+        << "pid: " << intr->pid  << std::endl;
+}
+
+void
+print_eth_qstate_ring(const eth_qstate_ring_t *ring, int i)
+{
+    std::cout
+        << "p_index" << i << ": " << ring->p_index << std::endl
+        << "c_index" << i << ": " << ring->c_index << std::endl;
+}
+
+void
+print_eth_qstate_cfg(const eth_qstate_cfg_t *cfg)
+{
+    std::cout
+        << "enable: " << cfg->enable << std::endl
+        << "debug: " << cfg->debug << std::endl
+        << "host_queue: " << cfg->host_queue << std::endl
+        << "cpu_queue: " << cfg->cpu_queue << std::endl
+        << "eq_enable: " << cfg->eq_enable << std::endl
+        << "intr_enable: " << cfg->intr_enable << std::endl
+        << "rsvd_cfg: " << cfg->rsvd_cfg << std::endl;
+}
+
+void
+print_eth_qstate_common(const eth_qstate_common_t *q)
+{
+    print_eth_qstate_intr(&q->intr);
+    print_eth_qstate_ring(&q->ring[0], 0);
+    print_eth_qstate_ring(&q->ring[1], 1);
+    print_eth_qstate_ring(&q->ring[2], 2);
+    print_eth_qstate_cfg(&q->cfg);
+
+    std::cout
+        << "rsvd_db_cnt: " << q->rsvd_db_cnt << std::endl
+        << "ring_size: " << q->ring_size << std::endl
+        << "lif_index: " << q->lif_index << std::endl;
+}
+
+void
 print_tx_qstate (const char *qstate)
 {
-   eth_tx_qstate_t *tx  = (eth_tx_qstate_t *)qstate;
-   std::cout  << "tx_qstate: "
-              << "pc offset: " << tx->pc_offset << "\n"
-              << "rsvd0:" << tx->rsvd0 << "\n"
-              << "cosA:" << tx->cosA << "\n"
-              << "cosB:" << tx->cosB << "\n"
-              << "cos_sel: " << tx->cos_sel << "\n"
-              << "eval_last: " << tx->eval_last << "\n"
-              << "host: " << tx->host << "\n"
-              << "total: " << tx->total << "\n"
-              << "pid: " << tx->pid  << "\n"
-              << "p_index0: " << tx->p_index0 << "\n"
-              << "c_index0: " << tx->c_index0  << "\n"
-              << "comp_index: " << tx->comp_index << "\n"
-              << "ci_fetch: " << tx->ci_fetch << "\n"
-              << "color: " << tx->sta.color << "\n"
-              << "spec_miss: " << tx->sta.spec_miss << "\n"
-              << "spurious_db_cnt: " << tx->sta.spurious_db_cnt << "\n"
-              << "enable: " << tx->cfg.enable << "\n"
-              << "host_queue: " << tx->cfg.host_queue << "\n"
-              << "ring_base: " << tx->ring_base << "\n"
-              << "ring_size: " << tx->ring_size << "\n"
-              << "cq_ring_base: " << tx->cq_ring_base << "\n"
-              << "intr_assert_index: " << tx->intr_assert_index << "\n"
-              << "sg_ring_base: " << tx->sg_ring_base << "\n"
-              << std::endl;
+    auto tx = reinterpret_cast<const eth_tx_co_qstate_t *>(qstate);
+
+    std::cout
+        << "tx_qstate: " << std::endl;
+
+    print_eth_qstate_common(&tx->tx.q);
+
+    std::cout
+        << "comp_index: " << tx->tx.comp_index << std::endl
+        << "color: " << tx->tx.sta.color << std::endl
+        << "armed: " << tx->tx.sta.armed << std::endl
+        << "rsvd_sta: " << tx->tx.sta.rsvd << std::endl
+        << "lg2_desc_sz: " << tx->tx.lg2_desc_sz << std::endl
+        << "lg2_cq_desc_sz: " << tx->tx.lg2_cq_desc_sz << std::endl
+        << "lg2_sg_desc_sz: " << tx->tx.lg2_sg_desc_sz << std::endl
+        << "ring_base: " << tx->tx.ring_base << std::endl
+        << "cq_ring_base: " << tx->tx.cq_ring_base << std::endl
+        << "sg_ring_base: " << tx->tx.sg_ring_base << std::endl
+        << "intr_index_or_eq_addr: " << tx->tx.intr_index_or_eq_addr << std::endl
+        << std::endl;
 }
 
 
 void
 print_rx_qstate (const char *qstate)
 {
-   eth_rx_qstate_t *rx  = (eth_rx_qstate_t *)qstate;
-   std::cout  << "rx_qstate: "
-              << "pc offset " << rx->pc_offset << "\n"
-              << "rsvd0" << rx->rsvd0 << "\n"
-              << "cosA" << rx->cosA << "\n"
-              << "cosB" << rx->cosB << "\n"
-              << "cos_sel" << rx->cos_sel << "\n"
-              << "eval_last" << rx->eval_last << "\n"
-              << "host" << rx->host << "\n"
-              << "total" << rx->total << "\n"
-              << "pid" << rx->pid << "\n"
-              << "p_index0" << rx->p_index0 << "\n"
-              << "c_index0" << rx->c_index0 << "\n"
-              << "comp_index" << rx->comp_index << "\n"
-              << "color" << rx->sta.color << "\n"
-              << "enable" << rx->cfg.enable << "\n"
-              << "host_queue: " << rx->cfg.host_queue << "\n"
-              << "ring_base" << rx->ring_base << "\n"
-              << "ring_size" << rx->ring_size << "\n"
-              << "cq_ring_base" << rx->cq_ring_base << "\n"
-              << "intr_assert_index" << rx->intr_assert_index << "\n"
-              << std::endl;
+    auto rx = reinterpret_cast<const eth_rx_qstate_t *>(qstate);
+
+    std::cout
+        << "rx_qstate: " << std::endl;
+
+    print_eth_qstate_common(&rx->q);
+
+    std::cout
+        << "comp_index: " << rx->comp_index << std::endl
+        << "color: " << rx->sta.color << std::endl
+        << "armed: " << rx->sta.armed << std::endl
+        << "rsvd_sta: " << rx->sta.rsvd << std::endl
+        << "lg2_desc_sz: " << rx->lg2_desc_sz << std::endl
+        << "lg2_cq_desc_sz: " << rx->lg2_cq_desc_sz << std::endl
+        << "lg2_sg_desc_sz: " << rx->lg2_sg_desc_sz << std::endl
+        << "sg_max_elems: " << rx->sg_max_elems << std::endl
+        << "ring_base: " << rx->ring_base << std::endl
+        << "cq_ring_base: " << rx->cq_ring_base << std::endl
+        << "sg_ring_base: " << rx->sg_ring_base << std::endl
+        << "intr_index_or_eq_addr: " << rx->intr_index_or_eq_addr << std::endl
+        << std::endl;
 }
 
 
@@ -337,7 +445,7 @@ public:
             spec->mutable_packet_filter()->set_receive_broadcast(true);
             lif_qstate_map = spec->add_lif_qstate_map();
             lif_qstate_map->set_type_num(1);
-            lif_qstate_map->set_size(1);
+            lif_qstate_map->set_size(2);
             lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_TX);
 
             lif_qstate_map = spec->add_lif_qstate_map();

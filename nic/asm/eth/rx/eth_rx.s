@@ -76,7 +76,7 @@ eth_rx_sg:
     // Save DMA command pointer
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
+    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
     phvwri          p.common_te1_phv_table_pc, eth_rx_sg_start[38:6]
     phvwr.e         p.common_te1_phv_table_addr, k.eth_rx_global_sg_desc_addr
     phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
@@ -90,7 +90,7 @@ eth_rx_desc_addr_error:
     DMA_CMD_NEXT(_r_index)
 
     b               eth_rx_done
-    phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_ADDR_ERROR
+    phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_desc_data_error:
     SET_STAT(_r_stats, _C_TRUE, desc_data_error)
@@ -101,7 +101,7 @@ eth_rx_desc_data_error:
     DMA_CMD_NEXT(_r_index)
 
     b               eth_rx_done
-    phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_DATA_ERROR
+    phvwri          p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
 
 eth_rx_done:
     SAVE_STATS(_r_stats)
@@ -109,7 +109,7 @@ eth_rx_done:
     // Save DMA command pointer
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
 
     // Launch eth_rx_stats action
     phvwri          p.common_te1_phv_table_pc, eth_rx_stats[38:6]

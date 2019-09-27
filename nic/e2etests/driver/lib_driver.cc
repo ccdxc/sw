@@ -155,23 +155,13 @@ static queue_info_t alloc_rxq(uint16_t lif, queue_type qtype, uint32_t qid,
   assert(qstate != NULL);
   qi.qstate = (void *)qstate;
 
-  // Read-Modify-Write Qstate
-  read_mem(qi.qstate_addr, (uint8_t *)qstate, sizeof(eth_rx_qstate_t));
-
-  // ring counts
-  qstate->host = 1;
-  qstate->total = 1;
-  // ring pointers
-  qstate->p_index0 = 0;
-  qstate->c_index0 = 0;
-  qstate->comp_index = 0;
-  // ring status
+  qstate->q.intr.host = 1;
+  qstate->q.intr.total = 3;
+  qstate->q.ring_size = (uint8_t)log2(qi.ring_size);
+  qstate->q.cfg.enable = 1;
+  qstate->q.cfg.host_queue = 1;
   qstate->sta.color = 1;
-  // ring cfg
-  qstate->cfg.enable = 1;
-  qstate->cfg.host_queue = 1;
   qstate->ring_base = (1ULL << 63) | qi.ring_base;
-  qstate->ring_size = (uint16_t)log2(qi.ring_size);
   qstate->cq_ring_base = (1ULL << 63) | qi.cq_ring_base;
 
   write_mem(qi.qstate_addr, (uint8_t *)qstate, sizeof(eth_rx_qstate_t));
@@ -187,7 +177,7 @@ static queue_info_t alloc_rxq(uint16_t lif, queue_type qtype, uint32_t qid,
 static queue_info_t alloc_txq(uint16_t lif, queue_type qtype, uint32_t qid,
                               uint16_t size) {
   queue_info_t qi;
-  eth_tx_qstate_t *qstate;
+  eth_tx_co_qstate_t *qstate;
 
   // Create TX descriptor ring in Host Memory
   qi.q = g_host_mem->Alloc(size * sizeof(struct tx_desc));
@@ -210,34 +200,20 @@ static queue_info_t alloc_txq(uint16_t lif, queue_type qtype, uint32_t qid,
   qi.qstate_addr = get_qstate_addr(lif, qtype, qid);
   assert(qi.qstate_addr != 0);
 
-  qstate = (eth_tx_qstate_t *)calloc(1, sizeof(eth_tx_qstate_t));
+  qstate = (eth_tx_co_qstate_t *)calloc(1, sizeof(*qstate));
   assert(qstate != NULL);
   qi.qstate = (void *)qstate;
 
-  // Read-Modify-Write Qstate
-  read_mem(qi.qstate_addr, (uint8_t *)qstate, sizeof(eth_tx_qstate_t));
+  qstate->tx.q.intr.host = 1;
+  qstate->tx.q.intr.total = 3;
+  qstate->tx.q.ring_size = (uint8_t)log2(qi.ring_size);
+  qstate->tx.q.cfg.enable = 1;
+  qstate->tx.q.cfg.host_queue = 1;
+  qstate->tx.sta.color = 1;
+  qstate->tx.ring_base = (1ULL << 63) | qi.ring_base;
+  qstate->tx.cq_ring_base = (1ULL << 63) | qi.cq_ring_base;
 
-  // ring counts
-  qstate->host = 1;
-  qstate->total = 1;
-  // ring pointers
-  qstate->p_index0 = 0;
-  qstate->c_index0 = 0;
-  qstate->comp_index = 0;
-  qstate->ci_fetch = 0;
-  qstate->ci_miss = 0;
-  // ring status
-  qstate->sta.color = 1;
-  qstate->sta.spec_miss = 0;
-  // ring cfg
-  qstate->cfg.enable = 1;
-  qstate->cfg.host_queue = 1;
-  // ring params
-  qstate->ring_base = (1ULL << 63) | qi.ring_base;
-  qstate->ring_size = (uint16_t)log2(qi.ring_size);
-  qstate->cq_ring_base = (1ULL << 63) | qi.cq_ring_base;
-
-  write_mem(qi.qstate_addr, (uint8_t *)qstate, sizeof(eth_tx_qstate_t));
+  write_mem(qi.qstate_addr, (uint8_t *)qstate, sizeof(*qstate));
 
   printf("[%s] lif%u/tx%u/q: qstate %lx"
          " ring_base pa 0x%lx va %p cq_ring_base pa 0x%lx va %p\n",

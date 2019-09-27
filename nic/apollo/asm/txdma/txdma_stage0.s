@@ -20,7 +20,7 @@ struct phv_ p;
 %%
 
     .param      eth_tx_fetch_desc
-    .param      eth_tx_drop
+    .param      eth_tx_arm_rx
     .param      adminq_fetch_desc
     .param      notify_fetch_desc
     .param      edma_fetch_desc
@@ -38,8 +38,8 @@ tx_dummy:
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-eth_rx_stage0_dummy:
-    j eth_tx_drop
+eth_tx_arm_rx_stage0:
+    j eth_tx_arm_rx
     nop
 
 //Do not change the order of this entry

@@ -44,7 +44,7 @@ header_type p4plus_to_p4_classic_header_t {
     }
 }
 
-header_type eth_tx_cq_desc_p {
+header_type eth_cq_desc_p {
     fields {
         status : 8;
         rsvd : 8;
@@ -55,59 +55,73 @@ header_type eth_tx_cq_desc_p {
     }
 }
 
+header_type eth_eq_intr_desc_p {
+    // Event Descriptor + Intr Assert Data
+    fields {
+        // Event Descriptor
+        code : 16;
+        lif_index : 16;
+        qid : 32;
+        rsvd : 56;
+        gen_color : 8;
+
+        // Intr Assert Data (packed here for convenience)
+        intr_data : 32;
+    }
+}
+
 /***
  *  D-vector Headers
  ***/
 
+header_type eth_eq_qstate_d {
+    fields {
+        eq_ring_base : 64;
+        eq_ring_size : 8;
+        eq_enable : 1;
+        intr_enable : 1;
+        rsvd_cfg  : 6;
+        eq_index : 16;
+        eq_gen : 8;
+        rsvd : 8;
+        intr_index : 16;
+    }
+}
+
 header_type eth_tx_qstate_d {
     fields {
-        pc : 8;
-        rsvd : 8;
-        cosA : 4;
-        cosB : 4;
-        cos_sel : 8;
-        eval_last : 8;
-        host : 4;
-        total : 4;
-        pid : 16;
+        FIELDS_ETH_TXRX_QSTATE_COMMON
 
-        p_index0 : 16;
-        c_index0 : 16;
         comp_index : 16;
-        ci_fetch : 16;
-        ci_miss : 16;
 
         // sta
         color : 1;
-        spec_miss : 1;
-        spurious_db_cnt : 4;
-        rsvd1 : 2;
-
-        // cfg
-        enable : 1;
-        host_queue : 1;
-        cpu_queue : 1;
-        intr_enable : 1;
-        debug : 1;
-        rsvd2 : 3;
-
-        ring_base : 64;
-        ring_size : 8;
-        cq_ring_base : 64;
-        intr_assert_index : 16;
-        sg_ring_base : 64;
-
-        tso_hdr_addr : 52;
-        tso_hdr_len : 10;
-        rsvd3 : 2;
-        tso_ipid_delta : 16;
-        tso_seq_delta : 32;
+        armed : 1;
+        rsvd_sta : 6;
 
         lg2_desc_sz : 4;
         lg2_cq_desc_sz : 4;
         lg2_sg_desc_sz : 4;
-        rsvd4 : 4;
-        rsvd5 : 8;
+
+        __pad256 : 28;
+
+        ring_base : 64;
+        cq_ring_base : 64;
+        sg_ring_base : 64;
+        intr_index_or_eq_addr : 64;
+    }
+}
+
+header_type eth_tx2_qstate_d {
+    fields {
+        tso_hdr_addr : 52;
+        tso_hdr_len : 10;
+        tso_hdr_rsvd : 2;
+        tso_ipid_delta : 16;
+        tso_seq_delta : 32;
+        tso_rsvd : 16;
+
+        //__pad512 : 384;
     }
 }
 
@@ -159,8 +173,9 @@ header_type eth_tx_global_k {
         tso_sot : 1;    // start of tso
         host_queue : 1;
         cpu_queue : 1;
-        intr_enable : 1;    // generate an interrupt
-        cq_entry : 1;   // generate a completion
+        do_cq : 1;
+        do_eq : 1; // do_eq is do_arm in fetch->commit stages
+        do_intr : 1;
         lif : 11;
         stats : 32;
         drop : 1;
@@ -169,22 +184,21 @@ header_type eth_tx_global_k {
 
 header_type eth_tx_t0_s2s_k {
     fields {
+        cq_desc_addr : 64;
+        eq_desc_addr : 64;
+        intr_index : 16; // intr_index is arm_index in fetch->commit stages
         num_todo : 4;
         num_desc : 4;
         do_sg : 1;
         do_tso : 1;
-        __pad : 6;
-        cq_desc_addr : 64;
-        intr_assert_index : 16;
-        intr_assert_data : 32;   // Should be byte-aligned for PHV2MEM
     }
 }
 
-header_type eth_tx_t2_s2s_k {
+header_type eth_tx_t1_s2s_k {
     fields {
         tso_hdr_addr : 52;
         tso_hdr_len : 10;
-        rsvd : 2;
+        tso_hdr_rsvd : 2;
         tso_ipid_delta : 16;
         tso_seq_delta : 32;
     }
@@ -198,12 +212,13 @@ header_type eth_tx_to_s1_k {
 
 header_type eth_tx_to_s2_k {
     fields {
-        qtype : 3;
         qid : 24;
+        qtype : 3;
+        pad : 5;
         my_ci : 16;
         tso_hdr_addr : 52;
         tso_hdr_len : 10;
-        rsvd : 2;
+        tso_hdr_rsvd : 2;
     }
 }
 
@@ -217,7 +232,13 @@ header_type eth_tx_to_s3_k {
  *  D-vector
  *****************************************************************************/
 @pragma scratch_metadata
+metadata eth_eq_qstate_d eth_eq_qstate;
+
+@pragma scratch_metadata
 metadata eth_tx_qstate_d eth_tx_qstate;
+
+@pragma scratch_metadata
+metadata eth_tx2_qstate_d eth_tx2_qstate;
 
 @pragma scratch_metadata
 metadata eth_tx_desc_d eth_tx_desc;
@@ -238,6 +259,9 @@ metadata eth_tx_global_k eth_tx_global;
 metadata eth_tx_global_k eth_tx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
+
+// to_stage_0 used as P-vector for eq_desc
+
 @pragma pa_header_union ingress to_stage_1
 metadata eth_tx_to_s1_k eth_tx_to_s1;
 @pragma scratch_metadata
@@ -259,20 +283,26 @@ metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s_scratch;
 
-@pragma pa_header_union ingress common_t2_s2s
-metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
+@pragma pa_header_union ingress common_t1_s2s
+metadata eth_tx_t1_s2s_k eth_tx_t1_s2s;
 @pragma scratch_metadata
-metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
+metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
 
+// common_t2_s2s used as P-vector for eq_desc
 
 /*****************************************************************************
  * P-vector
  *****************************************************************************/
 
-// Use to stage0 header from Flit1
-@pragma dont_trim
+// Use to_stage_0 for cq_desc
 @pragma pa_header_union ingress to_stage_0
-metadata eth_tx_cq_desc_p eth_tx_cq_desc;
+@pragma dont_trim
+metadata eth_cq_desc_p cq_desc;
+
+// Use common_t2_s2s for eq_desc
+@pragma pa_header_union ingress common_t2_s2s
+@pragma dont_trim
+metadata eth_eq_intr_desc_p eq_desc;
 
 // Use the App Header from Flit0
 @pragma dont_trim

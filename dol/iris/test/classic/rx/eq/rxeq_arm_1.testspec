@@ -1,0 +1,32 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SESSION
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
+        endpoint    : filter://remote=False,access=False
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 1
+
+queue: ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
+eq: ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=EQ
+
+packets: # no packets
+buffers: # no buffers
+descriptors: # no descriptors
+
+session:
+    - step: # host is caught up, fast arm is armed by the arm_index ring
+        trigger:
+            doorbell:
+                object: ref://testcase/pvtdata/queue/doorbell
+                fields:
+                    how: 'arm_index'
+        expect:
+            armed: True

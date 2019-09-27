@@ -32,7 +32,7 @@ eth_rx_rss_indir:
     phvwr           p.{toeplitz_input2_data...toeplitz_key2_data}, r0
 
     // Pass RSS hash to the driver in the completion entry
-    phvwr           p.eth_rx_cq_desc_rss_hash, r1.wx
+    phvwr           p.cq_desc_rss_hash, r1.wx
     // phvwr           p.eth_rx_global_stats[STAT_oper_rss], 1
 
     // Lookup Qstate

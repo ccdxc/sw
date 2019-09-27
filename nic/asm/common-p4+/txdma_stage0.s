@@ -26,7 +26,7 @@ struct phv_ p;
     .param      tcp_tx_read_rx2tx_shared_process
     .param      tls_stage0
     .param      eth_tx_fetch_desc
-    .param      eth_tx_drop
+    .param      eth_tx_arm_rx
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
 #ifndef GFT
@@ -89,8 +89,8 @@ rdma_req_tx_stage0:
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-eth_rx_stage0_dummy:
-    j eth_tx_drop
+eth_tx_arm_rx_stage0:
+    j eth_tx_arm_rx
     nop
 
 //Do not change the order of this entry

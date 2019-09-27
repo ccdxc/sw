@@ -49,7 +49,7 @@ class AqObject(base.ConfigObjectBase):
         if (self.cq is None):
                 assert(0)
     
-        self.eq = lif.GetQ('RDMA_EQ', lif.rdma_admin_eq_id)  # Sharing Async EQ with AQ
+        self.eq = lif.GetQ('RDMA_EQ', lif.rdma_async_eq_id)  # Sharing Async EQ with AQ
         if (self.eq is None):
             assert(0)
 

@@ -7,7 +7,6 @@
 
 // TX limits
 #define MAX_DESC_SPEC               (64)
-#define MAX_DESC_PER_PHV            (1)
 #define MAX_BYTES_PER_PHV           (16384)
 
 // TX Spurious Doorbell config
@@ -58,6 +57,8 @@
 #define STAT_queue_error                    2
 #define STAT_desc_fetch_error               3
 #define STAT_desc_data_error                4
+#define STAT_event_disabled                 5
+#define STAT_event_error                    6
 // DEBUG: operation counters
 #define STAT_oper_csum_hw                   8
 #define STAT_oper_csum_hw_inner             9
@@ -72,8 +73,11 @@
 #define STAT_desc_opcode_csum_partial       18
 #define STAT_desc_opcode_csum_hw            19
 #define STAT_desc_opcode_tso                20
-#define STAT_cqe                            21
-#define STAT_intr                           22
+// DEBUG: completion, event, and intr counters (XXX not counted)
+#define STAT_arm                            24
+#define STAT_cqe                            25
+#define STAT_eqe                            26
+#define STAT_intr                           27
 
 /*
  * Descriptor decode Macros
@@ -103,8 +107,8 @@
     DMA_MEM2PKT(_r_ptr, c7, k.eth_tx_global_host_queue, _r_addr, k.{eth_tx_##hdr##_len}.hx);
 
 #define DMA_TSO_HDR(_r_addr, _r_ptr, hdr) \
-    phvwr      p.{eth_tx_app_hdr_ip_id_delta,eth_tx_app_hdr_tcp_seq_delta}, k.{eth_tx_t2_s2s_tso_ipid_delta,eth_tx_t2_s2s_tso_seq_delta};\
-    DMA_MEM2PKT(_r_ptr, !c0, k.eth_tx_global_host_queue, k.eth_tx_t2_s2s_tso_hdr_addr, k.eth_tx_t2_s2s_tso_hdr_len);
+    phvwr      p.{eth_tx_app_hdr_ip_id_delta,eth_tx_app_hdr_tcp_seq_delta}, k.{eth_tx_t1_s2s_tso_ipid_delta,eth_tx_t1_s2s_tso_seq_delta};\
+    DMA_MEM2PKT(_r_ptr, !c0, k.eth_tx_global_host_queue, k.eth_tx_t1_s2s_tso_hdr_addr, k.eth_tx_t1_s2s_tso_hdr_len);
 
 #define DMA_FRAG(n, _c, _r_addr, _r_ptr) \
     DMA_MEM2PKT(_r_ptr, _c, k.eth_tx_global_host_queue, d.{addr##n}.dx, d.{len##n}.hx);
