@@ -14,9 +14,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-//#include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-//#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace api {
 namespace impl {
@@ -100,15 +98,18 @@ subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 #define vni_info    action_u.vni_vni_info
+#define bd_info     action_u.bd_bd_info
 sdk_ret_t
 subnet_impl::activate_subnet_create_(pds_epoch_t epoch,
                                      subnet_entry *subnet,
                                      pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
+    p4pd_error_t p4pd_ret;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
+    bd_actiondata_t bd_data { 0 };
 
     PDS_TRACE_DEBUG("Activating subnet %u, vpc %u, fabric encap (%u, %u)",
                     spec->key.id, spec->vpc.id, spec->fabric_encap.type,
@@ -133,6 +134,18 @@ subnet_impl::activate_subnet_create_(pds_epoch_t epoch,
         PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
                       spec->key.id, ret);
         return ret;
+    }
+
+    // program BD table in the egress pipe
+    bd_data.action_id = BD_BD_INFO_ID;
+    bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
+    memcpy(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_BD, subnet->hw_id(),
+                                       NULL, NULL, &bd_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program BD table at index %u",
+                      subnet->hw_id());
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return ret;
 }

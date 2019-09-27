@@ -99,12 +99,15 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 #define vni_info    action_u.vni_vni_info
+#define vpc_info    action_u.vpc_vpc_info
 sdk_ret_t
 vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
                                pds_vpc_spec_t *spec) {
     sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
+    vpc_actiondata_t vpc_data { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Activating vpc %u, type %u, fabric encap (%u, %u)",
@@ -123,6 +126,17 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
         PDS_TRACE_ERR("Programming of VNI table failed for vpc %u, err %u",
                       spec->key.id, ret);
         return ret;
+    }
+
+    // program VPC table in the egress pipe
+    vpc_data.action_id = VPC_VPC_INFO_ID;
+    vpc_data.vpc_info.vni = spec->fabric_encap.val.vnid;
+    memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, vpc->hw_id(),
+                                       NULL, NULL, &vpc_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program VPC table at index %u", vpc->hw_id());
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return ret;
 }
