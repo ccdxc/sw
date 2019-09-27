@@ -1,20 +1,130 @@
-gcc -std=c99 lzrw1-a.c main.c
+gcc -std=c99 lzrw1-a.c orig-lzrw1-a.c main.c
 
 Options:
 
--r  repetition count, default 100
--s  input buffer size, default 8K
--l  max random length, default 576
--f  read pattern from a file and use it (file expected to contain hex ascii digits)
--c  liveness count, default 0 (0 means no liveness reporting, otherwise print a line after this many reps to report liveness)
+-r                    repetition count, default 100
+-s                    input buffer size, default 8K
+-l                    max random length, default 576
+-f, --pattern-file    read pattern from a file and use it (file expected to contain hex ascii digits)
+-o, --output-file     name of file to output compressed or decompressed data
+-v, --liveness-count  default 0 (0 means no liveness reporting, otherwise print a line after this many reps to report liveness)
+--compress-only       do only compression and write to output file (only write once regardless of repetition count)
+--decompress-only     do only decompression and write to output file (only write once regardless of repetition count)
+--no-smooth           do not use smooth algorithm, i.e., use original algorithm from Ipcores.
+                      Note: original algorithm NEVER calculates adler32 checksum
+--no-adler32          do not calculate adler32 checksum
+--no-verify           skip data and checksum verification
 
-Example:
+Example 1: Normal run
 
-~/ipcores/new$ ./a.out -r 10000 -s 8192 -l 155
-rep_count 10000 buf_size 8192 rand_len_max 155
-min_cp_size 1003 max_cp_size 1837
-last cp_adler32 0xd72ae614 dc_adler32 0xd72ae614
-rep_count 10000 num_uncompressables 0 num_data_miscompares 0 num_chksum_mismatches 0
-
+./smooth-lzrw -r 10000 -s 8192  
 
 NOTE: Data are always randomized (except in the pattern file case) so last adler32 numbers above would be different after each run.
+
+
+Example 2: Compare compress-only execution time between original and smooth algorithms.
+  Note that original algorithm NEVER calculates adler32 checksum.
+
+- Original algorithm
+
+./smooth-lzrw -r 10000 -f patt8k.txt --no-smooth --compress-only 
+
+Summary:
+--------
+          Buffer size: 8192
+Number of repititions: 10000
+            successes: 10000
+      uncompressibles: 0
+    length mismatches: 0
+  checksum mismatches: 0
+     data miscompares: 0
+       execution time: 10989046 usecs
+
+
+Other info:
+-----------
+smallest CP result: 977 bytes
+ largest CP result: 977 bytes
+smallest DC result: 0 bytes
+ largest DC result: 0 bytes
+   last CP adler32: 0x0
+   last DC adler32: 0x0
+
+- Smooth algorithm, no adler32 checksum
+
+./smooth-lzrw -r 10000 -f patt8k.txt --no-adler32 --compress-only 
+
+Summary:
+--------
+          Buffer size: 8192
+Number of repititions: 10000
+            successes: 10000
+      uncompressibles: 0
+    length mismatches: 0
+  checksum mismatches: 0
+     data miscompares: 0
+       execution time: 12887425 usecs
+
+
+Other info:
+-----------
+smallest CP result: 1010 bytes
+ largest CP result: 1010 bytes
+smallest DC result: 0 bytes
+ largest DC result: 0 bytes
+   last CP adler32: 0x0
+
+
+Example 2: Compare decompress-only execution time between original and smooth algorithms.
+  Note that original algorithm NEVER calculates adler32 checksum.
+
+- Original algorithm
+
+./smooth-lzrw -r 10000 -f cp_of_patt8k.txt --no-smooth --decompress-only 
+
+Summary:
+--------
+          Buffer size: 8192
+Number of repititions: 10000
+            successes: 10000
+      uncompressibles: 0
+    length mismatches: 0
+  checksum mismatches: 0
+     data miscompares: 0
+       execution time: 527339 usecs
+
+
+Other info:
+-----------
+smallest CP result: 977 bytes
+ largest CP result: 977 bytes
+smallest DC result: 8192 bytes
+ largest DC result: 8192 bytes
+   last CP adler32: 0x0
+   last DC adler32: 0x0
+
+- Smooth algorithm, no adler32 checksum
+
+./smooth-lzrw -r 10000 -f cp_of_patt8k.txt --no-adler32 --decompress-only 
+
+Summary:
+--------
+          Buffer size: 8192
+Number of repititions: 10000
+            successes: 10000
+      uncompressibles: 0
+    length mismatches: 0
+  checksum mismatches: 0
+     data miscompares: 0
+       execution time: 641028 usecs
+
+
+Other info:
+-----------
+smallest CP result: 977 bytes
+ largest CP result: 977 bytes
+smallest DC result: 7936 bytes
+ largest DC result: 7936 bytes
+   last CP adler32: 0x0
+   last DC adler32: 0x0
+

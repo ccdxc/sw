@@ -3,12 +3,20 @@
 #include <string.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include "lzrw.h"
+#include "orig-lzrw.h"
+
+//typedef unsigned long long uint64_t;
+
+#ifndef USEC_PER_SEC
+#define USEC_PER_SEC    1000000L
+#endif
 
 #define BUF_SIZE_MAX    32768
 #define RAND_LEN_MIN    3
@@ -195,16 +203,32 @@ void usage_help(void)
              "--pattern-file or -f    read pattern from a hex ascii file and use it\n"
              "--compress-only         do only compression and write to output file\n"
              "--decompress-only       do only decompression and write to output file\n"
-             "--output-file or -o     name of output file, default 'output.txt'\n"
+             "--no-smooth             do not use smooth algorithm\n"
+             "--no-adler32            do not calculate adler32 checksum\n"
+             "--no-verify             skip data and checksum verification\n"
+             "--output-file or -o     name of output file\n"
              "--liveness-count or -v  liveness count, default 0 (0 means no liveness reporting)\n"
              "--help or -h            this help message\n\n");
 
 }
 
+static uint64_t elapsed_us(const struct timeval *start,
+                           const struct timeval *end)
+{
+    uint64_t start_us;
+    uint64_t end_us;
+
+    start_us = ((uint64_t)start->tv_sec * USEC_PER_SEC) + start->tv_usec;
+    end_us = ((uint64_t)end->tv_sec * USEC_PER_SEC) + end->tv_usec;
+
+    return end_us - start_us;
+}
+
 int main(int argc, char **argv)
 {
-    char *output_fname = "output.txt";
+    char *output_fname = NULL;
     struct timeval tv;
+    struct timeval last_tv;
     uint32_t buf_size = 8192;
     uint32_t rand_len_max = 576;
     uint32_t cp_size, dc_size;
@@ -214,6 +238,8 @@ int main(int argc, char **argv)
     uint32_t max_dc_size = 0;
     uint32_t cp_adler32 = 0;
     uint32_t dc_adler32 = 0;
+    uint32_t *cp_adler32_p;
+    uint32_t *dc_adler32_p;
     uint32_t pattern_size = 0;
     int num_data_miscompares = 0;
     int num_uncompressibles = 0;
@@ -226,6 +252,9 @@ int main(int argc, char **argv)
     int failure;
     int cp_only = 0;
     int dc_only = 0;
+    int no_smooth = 0;
+    int no_adler32 = 0;
+    int no_verify = 0;
     int cp_ret, dc_ret;
     int opt;
     int i;
@@ -233,6 +262,9 @@ int main(int argc, char **argv)
     struct option longopts[] = {
        { "compress-only",       no_argument,        &cp_only, 1 },
        { "decompress-only",     no_argument,        &dc_only, 1 },
+       { "no-smooth",           no_argument,        &no_smooth, 1 },
+       { "no-adler32",          no_argument,        &no_adler32, 1 },
+       { "no-verify",           no_argument,        &no_verify, 1 },
        { "pattern-file",        required_argument,  NULL, 'f' },
        { "output-file",         required_argument,  NULL, 'o' },
        { "liveness-count",      required_argument,  NULL, 'v' },
@@ -273,7 +305,7 @@ int main(int argc, char **argv)
         case 'f':
             pattern_size = input_hexascii_file_read(optarg);
             if (!pattern_size) {
-                printf("no patten to work with\n");
+                printf("no pattern to work with\n");
                 return 1;
             }
             use_pattern = 1;
@@ -301,6 +333,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    cp_adler32_p = no_adler32 ? NULL : &cp_adler32;
+    dc_adler32_p = no_adler32 ? NULL : &dc_adler32;
+
     gettimeofday(&tv, NULL);
     for (i = 0; i < rep_count; i++) {
 
@@ -322,8 +357,11 @@ int main(int argc, char **argv)
                 buf_size = pattern_size;
             }
             //dump(input_buf, buf_size);
-            cp_ret = lzrw1a_compress(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
-                                     buf_size, cp_buf, &cp_size, buf_size - 8, &cp_adler32);
+            cp_ret = no_smooth ?
+                     orig_lzrw1a_compress(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
+                                     buf_size, cp_buf, &cp_size, buf_size - 8) :
+                     lzrw1a_compress(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
+                                     buf_size, cp_buf, &cp_size, buf_size - 8, cp_adler32_p);
         }
         if (cp_ret) {
             failure = 0;
@@ -339,8 +377,11 @@ int main(int argc, char **argv)
                 }
 
             } else {
-                dc_ret = lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
-                                         cp_size, dc_buf, &dc_size, buf_size, &dc_adler32);
+                dc_ret = no_smooth ?
+                         orig_lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
+                                         cp_size, dc_buf, &dc_size, buf_size) :
+                         lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
+                                         cp_size, dc_buf, &dc_size, buf_size, dc_adler32_p);
                 min_dc_size = min(min_dc_size, dc_size);
                 max_dc_size = max(max_dc_size, dc_size);
 
@@ -353,7 +394,7 @@ int main(int argc, char **argv)
                         output_fname = NULL;
                     }
 
-                } else {
+                } else if (!no_verify) {
                     if (buf_size != dc_size) {
                         printf("cp_ret %d dc_ret %d buf_size %u dc_cize %u\n",
                                cp_ret, dc_ret, buf_size, dc_size);
@@ -389,6 +430,7 @@ int main(int argc, char **argv)
             printf("rep %d out of %d total\n", i, rep_count);
         }
     }
+    gettimeofday(&last_tv, NULL);
 
     printf("\nSummary:\n"
              "--------\n");
@@ -399,9 +441,11 @@ int main(int argc, char **argv)
            "      uncompressibles: %u\n"
            "    length mismatches: %u\n"
            "  checksum mismatches: %u\n"
-           "     data miscompares: %u\n\n",
+           "     data miscompares: %u\n"
+           "       execution time: %" PRIu64 " usecs\n\n",
            buf_size, rep_count, num_successes, num_uncompressibles,
-           num_len_mismatches, num_chksum_mismatches, num_data_miscompares);
+           num_len_mismatches, num_chksum_mismatches, num_data_miscompares,
+           elapsed_us(&tv, &last_tv));
 
     /*
      * If these values were never altered from their initial values,
