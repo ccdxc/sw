@@ -78,7 +78,8 @@ apulu_impl::rxdma_symbols_init_(void **p4plus_symbols,
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
-    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    symbols[i].val =
+        api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
     SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
     SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);
@@ -99,7 +100,8 @@ apulu_impl::txdma_symbols_init_(void **p4plus_symbols,
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
-    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    symbols[i].val =
+        api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
     SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
     SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
@@ -149,7 +151,7 @@ apulu_impl::destroy(apulu_impl *impl) {
 
 void
 apulu_impl::program_config_init(pds_init_params_t *init_params,
-                                 asic_cfg_t *asic_cfg) {
+                                asic_cfg_t *asic_cfg) {
     asic_cfg->num_pgm_cfgs = 3;
     memset(asic_cfg->pgm_cfg, 0, sizeof(asic_cfg->pgm_cfg));
     asic_cfg->pgm_cfg[0].path = std::string("p4_bin");
@@ -255,6 +257,93 @@ apulu_impl::nacl_init_(void) {
 
 sdk_ret_t
 apulu_impl::checksum_init_(void) {
+    uint64_t idx;
+    p4pd_error_t p4pd_ret;
+    checksum_swkey_t key;
+    checksum_actiondata_t data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
     return SDK_RET_OK;
 }
 
@@ -263,16 +352,6 @@ apulu_impl::table_init_(void) {
     sdk_ret_t     ret;
     mem_addr_t    addr;
 
-#if 0
-    ret = key_native_init_();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = key_tunneled_init_();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-#endif
     ret = inter_pipe_init_();
     if (ret != SDK_RET_OK) {
         return ret;
