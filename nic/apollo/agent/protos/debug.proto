@@ -10,6 +10,7 @@ package pds;
 import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
+import "mapping.proto";
 
 service DebugSvc {
   rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
@@ -216,7 +217,7 @@ message BufferStats {
   uint32          EopCountIn  = 2;    // Count of end-of-packets in
   uint32          SopCountOut = 3;    // Count of start-of-packets out
   uint32          EopCountOut = 4;    // Count of end-of-packets out
-  BufferDropStats DropCounts  = 5;    // Drop counts 
+  BufferDropStats DropCounts  = 5;    // Drop counts
 }
 
 enum PacketBufferPortType {
@@ -427,4 +428,25 @@ message PortQueueCredit {
 message QueueCreditsGetResponse {
   types.ApiStatus          ApiStatus       = 1;
   repeated PortQueueCredit PortQueueCredit = 2;
+}
+
+enum Command {
+  CMD_MAPPING_NONE = 0;
+  CMD_MAPPING_DUMP = 1;
+}
+
+message MappingDumpFilter {
+  pds.MappingKey Key = 1;
+}
+
+message CommandCtxt {
+  int64               Version           = 1;
+  Command             Cmd               = 2;
+  oneof CommandFilter {
+    MappingDumpFilter MappingDumpFilter = 3;
+  }
+}
+
+message CommandResponse {
+  types.ApiStatus ApiStatus = 1;
 }

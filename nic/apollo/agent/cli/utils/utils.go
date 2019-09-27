@@ -5,38 +5,41 @@
 package utils
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
 	"syscall"
-	"unsafe"
 )
 
-func FdSend(udsPath string, cid int64, fds ...int) error {
+func CmdSend(udsPath string, cmd []byte, fds ...int) ([]byte, error) {
 	c, err := net.Dial("unix", udsPath)
 	if err != nil {
 		fmt.Printf("Could not connect to unix domain socket\n")
-		return err
+		return nil, err
 	}
 	defer c.Close()
 
 	udsConn := c.(*net.UnixConn)
 	udsFile, err := udsConn.File()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	socket := int(udsFile.Fd())
 	defer udsFile.Close()
 
-	var p []byte
-	if cid != 0 {
-		p = make([]byte, unsafe.Sizeof(cid))
-		ucid := uint64(cid)
-		binary.LittleEndian.PutUint64(p, ucid)
-	} else {
-		p = nil
+	rights := syscall.UnixRights(fds...)
+	err = syscall.Sendmsg(socket, cmd, rights, nil, 0)
+	if err != nil {
+		fmt.Printf("Sendmsg failed with error %v\n", err)
+		return nil, err
 	}
 
-	rights := syscall.UnixRights(fds...)
-	return syscall.Sendmsg(socket, p, rights, nil, 0)
+	// wait for response
+	resp := make([]byte, 256)
+	n, _, _, _, err := syscall.Recvmsg(socket, resp, nil, 0)
+	if err != nil {
+		fmt.Printf("Recvmsg failed with error %v\n", err)
+		return nil, err
+	}
+
+	return resp[:n], nil
 }

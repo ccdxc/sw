@@ -161,7 +161,7 @@ public:
     /// \brief API to handle CLI calls
     /// \param[in]  ctxt    CLI command context
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t handle_cmd(debug::cmd_ctxt_t *ctxt) {
+    virtual sdk_ret_t handle_cmd(cmd_ctxt_t *ctxt) {
         return SDK_RET_ERR;
     }
 

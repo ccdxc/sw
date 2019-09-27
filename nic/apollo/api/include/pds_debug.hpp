@@ -70,6 +70,29 @@ typedef struct session_stats_entry_s {
     uint64_t rflow_packet_count;
 } pds_session_debug_stats_t;
 
+typedef struct mapping_dump_args_s {
+    pds_mapping_key_t key;
+} mapping_dump_args_t;
+
+typedef struct cmd_args_s {
+    bool valid;
+    union {
+        mapping_dump_args_t mapping_dump;
+    };
+} cmd_args_t;
+
+typedef enum cli_cmd_e {
+    CLI_CMD_START = 0,
+    CLI_CMD_MAPPING_DUMP = CLI_CMD_START,
+    CLI_CMD_MAX = 255,
+} cli_cmd_t;
+
+typedef struct cmd_ctxt_s {
+    int fd;           // File descriptor
+    cli_cmd_t cmd;    // CLI command
+    cmd_args_t args; // Command arguments
+} cmd_ctxt_t;
+
 namespace debug {
 
 typedef void (*table_stats_get_cb_t)(pds_table_stats_t *stats, void *ctxt);
@@ -85,7 +108,7 @@ sdk_ret_t pds_arm_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
 sdk_ret_t pds_get_system_power(pds_system_power_t *pow);
 sdk_ret_t pds_table_stats_get(table_stats_get_cb_t cb, void *ctxt);
-sdk_ret_t pds_mapping_dump(debug::cmd_ctxt_t *ctxt);
+sdk_ret_t pds_handle_cmd(cmd_ctxt_t *ctxt);
 sdk_ret_t pds_llc_setup(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_llc_get(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_pb_stats_get(debug::pb_stats_get_cb_t cb, void *ctxt);

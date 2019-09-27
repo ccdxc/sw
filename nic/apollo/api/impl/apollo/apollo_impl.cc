@@ -768,10 +768,11 @@ apollo_impl::flow_clear(uint32_t idx) {
 }
 
 sdk_ret_t
-apollo_impl::handle_cmd(debug::cmd_ctxt_t *ctxt) {
+apollo_impl::handle_cmd(cmd_ctxt_t *ctxt) {
     switch (ctxt->cmd) {
-    case debug::CLI_CMD_MAPPING_DUMP:
-        g_pds_impl_state.mapping_impl_db()->mapping_dump(ctxt->fd, ctxt->args);
+    case CLI_CMD_MAPPING_DUMP:
+        g_pds_impl_state.mapping_impl_db()->mapping_dump(ctxt->fd,
+                    (ctxt->args.valid == true) ? &ctxt->args : NULL);
         break;
     default:
         return SDK_RET_INVALID_ARG;

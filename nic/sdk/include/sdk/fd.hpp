@@ -39,15 +39,16 @@ fd_send (int sock, int fd)
 }
 
 int
-fd_recv (int sock, int *fd, int64_t *cid)
+fd_recv (int sock, int *fd, void *iov_data, int iov_len)
 {
     struct msghdr msghdr = {0};
     struct iovec io = {0};
     struct cmsghdr *cmsg;
     char   buffer[CMSG_SPACE(sizeof(int))];
+    int    bytes_read;
 
-    io.iov_base = cid;
-    io.iov_len = sizeof(cid);
+    io.iov_base = iov_data;
+    io.iov_len = iov_len;
 
     msghdr.msg_name = NULL;
     msghdr.msg_namelen = 0;
@@ -62,12 +63,12 @@ fd_recv (int sock, int *fd, int64_t *cid)
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
 
-    if (recvmsg(sock, &msghdr, 0) < 0) {
+    if ((bytes_read = recvmsg(sock, &msghdr, 0)) < 0) {
 	    return -1;
     }
 
     *fd = *((int *)CMSG_DATA(cmsg));
-    return 0;
+    return bytes_read;
 }
 
 #endif    // __SDK_FD_HPP__

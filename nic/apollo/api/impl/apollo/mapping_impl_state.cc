@@ -128,7 +128,7 @@ mapping_dump_cb(sdk_table_api_params_t *params)
 }
 
 sdk_ret_t
-mapping_impl_state::mapping_dump(int fd, debug::cmd_args_t *args) {
+mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
     sdk_table_api_params_t api_params = { 0 };
 
     dprintf(fd, "%s\n", std::string(44, '-').c_str());
@@ -141,7 +141,7 @@ mapping_impl_state::mapping_dump(int fd, debug::cmd_args_t *args) {
         api_params.cbdata = &fd;
         local_ip_mapping_tbl_->iterate(&api_params);
     } else {
-        debug::mapping_dump_args_t  *mapping_args = args->mapping_dump;
+        mapping_dump_args_t         *mapping_args = &args->mapping_dump;
         local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
         local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
         sdk_ret_t                   ret;

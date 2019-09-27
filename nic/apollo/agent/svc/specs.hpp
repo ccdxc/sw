@@ -55,10 +55,37 @@
 using sdk::asic::pd::port_queue_credit_t;
 using sdk::asic::pd::queue_credit_t;
 
+static inline cli_cmd_t
+pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
+{
+    switch (proto_cmd) {
+    case pds::CMD_MAPPING_DUMP:
+        return CLI_CMD_MAPPING_DUMP;
+    default:
+        return CLI_CMD_MAX;
+    }
+}
+
 static inline void
-pds_queue_credits_to_proto(uint32_t port_num,
-                           port_queue_credit_t *credit,
-                           void *ctxt)
+pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
+                           pds::CommandCtxt *proto_ctxt,
+                           int fd)
+{
+    cmd_ctxt->fd = fd;
+    cmd_ctxt->cmd = pds_proto_cmd_to_api_cmd(proto_ctxt->cmd());
+    if (proto_ctxt->has_mappingdumpfilter()) {
+        auto key = proto_ctxt->mappingdumpfilter().key();
+        cmd_ctxt->args.valid = true;
+        cmd_ctxt->args.mapping_dump.key.vpc.id = key.vpcid();
+        ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
+                                      key.ipaddr());
+    }
+}
+
+static inline void
+pds_queue_credits_to_proto (uint32_t port_num,
+                            port_queue_credit_t *credit,
+                            void *ctxt)
 {
     QueueCreditsGetResponse *proto = (QueueCreditsGetResponse *)ctxt;
     auto port_credit = proto->add_portqueuecredit();

@@ -23,8 +23,6 @@ public:
                          pds::MappingResponse *rsp) override;
     Status MappingUpdate(ServerContext *context, const pds::MappingRequest *req,
                          pds::MappingResponse *rsp) override;
-    Status MappingDump(ServerContext *context, const pds::MappingDumpRequest *req,
-                       types::Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__

@@ -5,16 +5,12 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
-
-	"os"
-	"time"
 )
 
 var (
@@ -54,36 +50,36 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Send FD of Stdout
-	cid := time.Now().Unix()
-	err = utils.FdSend("/var/run/fd_recv_sock", cid, int(os.Stdout.Fd()))
-	if err != nil {
-		fmt.Printf("FD send operation failed with error %v\n", err)
-		return
-	}
+	var cmdCtxt *pds.CommandCtxt
 
-	client := pds.NewMappingSvcClient(c)
-
-	var req *pds.MappingDumpRequest
 	if cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
-		// Dump specific Mapping
+		// dump specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
 			VPCId:  vpcID,
 			IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
 		}
-		req = &pds.MappingDumpRequest{
-			CId: cid,
-			Id:  []*pds.MappingKey{key},
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_MAPPING_DUMP,
+			CommandFilter: &pds.CommandCtxt_MappingDumpFilter{
+				MappingDumpFilter: &pds.MappingDumpFilter{
+					Key: key,
+				},
+			},
 		}
 	} else {
-		// Dump all Mappings
-		req = &pds.MappingDumpRequest{
-			CId: cid,
-			Id:  []*pds.MappingKey{},
+		// dump all Mappings
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_MAPPING_DUMP,
 		}
 	}
 
-	// PDS call
-	client.MappingDump(context.Background(), req)
+	// handle command
+	cmdResp, err := HandleCommand(cmdCtxt)
+	if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
+		return
+	}
 }

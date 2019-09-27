@@ -5,14 +5,19 @@
 #include <signal.h>
 #include <iostream>
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/core/core.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace core {
+
+sdk::lib::thread    *g_cmd_server_thread;
 
 #define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
@@ -213,6 +218,29 @@ device_profile_read (void)
 }
 
 //------------------------------------------------------------------------------
+// spawn command server thread
+//------------------------------------------------------------------------------
+sdk_ret_t
+thread_cmd_server_spawn (void)
+{
+    // spawn periodic thread that does background tasks
+    g_cmd_server_thread =
+        sdk::lib::thread::factory(std::string("cmd-server").c_str(),
+            THREAD_ID_FD_RECV,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            core::fd_recv_thread_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            true);
+    SDK_ASSERT_TRACE_RETURN((g_cmd_server_thread != NULL), SDK_RET_ERR,
+                            "Command server thread create failure");
+    g_cmd_server_thread->start(g_cmd_server_thread);
+
+    return SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
@@ -236,6 +264,13 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // spawn command server thread
+    ret = thread_cmd_server_spawn();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     if (std::getenv("PDS_MOCK_MODE")) {
         agent_state::state()->pds_mock_mode_set(true);
     }
