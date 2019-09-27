@@ -14,4 +14,6 @@ const (
 
 	// RootBucket is where we put our stuff
 	RootBucket = "sw-repository"
+	// BuildsBucket is for hourly build
+	BuildsBucket = "builds"
 )

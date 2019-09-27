@@ -1,0 +1,16 @@
+---
+version: 2.0
+targets:
+  copy-artifacts:
+    commands: ["sh", "-c", "cd asset-build/asset-push && go install && cd /sw && /asset-push.sh" ]
+    owners: ["email:test-infra@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-x86
+      - build-venice-image
+
+image:
+  bind_dir: "/go/src/github.com/pensando/sw"
+  work_dir: "/go/src/github.com/pensando/sw"

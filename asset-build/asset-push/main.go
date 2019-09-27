@@ -15,14 +15,14 @@ import (
 	"github.com/pensando/sw/asset-build/asset"
 )
 
-// TODO: this app is going to be replaced by asset-push
+// NOTE: This app is going to replace asset-upload, which limits to dedicated bucket name and file name
 
 func main() {
 	app := cli.NewApp()
-	app.Version = "2019-05-16"
-	app.Email = "erikh@pensando.io"
+	app.Version = "2019-09-26"
+	app.Email = "test-infra@pensando.io"
 	app.Usage = "asset uploader for pensando software team"
-	app.ArgsUsage = "[name] [version] [filename to upload]"
+	app.ArgsUsage = "[bucket-name] [dir-name] [version] [filename to upload]"
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -46,7 +46,7 @@ func main() {
 }
 
 func action(ctx *cli.Context) error {
-	if len(ctx.Args()) != 3 {
+	if len(ctx.Args()) != 4 {
 		return errors.New("invalid arguments: please seek help")
 	}
 
@@ -56,7 +56,8 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
-	name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
+	bucket := ctx.Args()[0]
+	dirName, version, filename := ctx.Args()[1], ctx.Args()[2], ctx.Args()[3]
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return err
@@ -79,43 +80,43 @@ func action(ctx *cli.Context) error {
 	defer f.Close()
 
 	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), ctx.GlobalString("assets-server-hq")} {
-		logrus.Infof("Uploading %f MB to %s, please be patient...", float64(size)/float64(1024*1024), ep)
+		logrus.Infof("Uploading %s %f MB to %s...", filename, float64(size>>10)/float64(1024), ep)
 
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		if err := upload(name, version, ep, f); err != nil {
+		if err := upload(bucket, dirName, version, filename, ep, f); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func upload(name, version, endpoint string, reader io.Reader) error {
+func upload(bucket, dirName, version, fileName, endpoint string, reader io.Reader) error {
 	mc, err := minio.New(endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
 	}
 
-	if ok, err := mc.BucketExists(asset.RootBucket); err != nil {
+	if ok, err := mc.BucketExists(bucket); err != nil {
 		return err
 	} else if !ok {
-		if err := mc.MakeBucket(asset.RootBucket, ""); err != nil {
+		if err := mc.MakeBucket(bucket, ""); err != nil {
 			return err
 		}
 	}
 
-	assetPath := path.Join(name, version, "asset.tgz")
+	assetPath := path.Join(dirName, version, fileName)
 
 	doneCh := make(chan struct{})
-	list := mc.ListObjects(asset.RootBucket, assetPath, false, doneCh)
+	list := mc.ListObjects(bucket, assetPath, false, doneCh)
 	_, ok := <-list
 	if ok {
-		return errors.New("cowardly refusing to overwrite an existing asset. pass -f if you really want to")
+		return errors.New("file exists, exiting")
 	}
 	close(doneCh)
 
-	n, err := mc.PutObject(asset.RootBucket, assetPath, reader, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
+	n, err := mc.PutObject(bucket, assetPath, reader, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {
 		return err
 	}
