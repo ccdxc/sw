@@ -18,6 +18,7 @@ class TunnelObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, local):
         super().__init__()
         self.__spec = spec
+        self.deleted = False
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
 
@@ -91,6 +92,11 @@ class TunnelObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.Id)
         return grpcmsg
 
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = tunnel_pb2.TunnelDeleteRequest()
+        grpcmsg.Id.append(self.Id)
+        return grpcmsg
+
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
             return True
@@ -111,10 +117,31 @@ class TunnelObject(base.ConfigObjectBase):
             return True
         return False
 
+    def Create(self, spec=None):
+        utils.CreateObject(self, api.ObjectTypes.TUNNEL)
+
+    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
+        return utils.ReadObject(self, api.ObjectTypes.TUNNEL, expRetCode)
+
+    def ReadAfterDelete(self, spec=None):
+        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+
+    def Delete(self, spec=None):
+        utils.DeleteObject(self, api.ObjectTypes.TUNNEL)
+
+    def Equals(self, obj, spec):
+        return True
+
     def Show(self):
         logger.info("Tunnel Object: %s" % self)
         logger.info("- %s" % repr(self))
         return
+
+    def MarkDeleted(self, flag=True):
+        self.deleted = flag
+
+    def IsDeleted(self):
+        return self.deleted
 
 class TunnelObjectClient:
     def __init__(self):

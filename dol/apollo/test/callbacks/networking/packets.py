@@ -228,7 +228,11 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
 
 def GetExpectedPacket(testcase, args):
     #add all the cases for checking packet and return expected packet on demand
-    if testcase.config.localmapping.VNIC.deleted == True:
+    deleted = False
+    deleted = deleted or testcase.config.localmapping.VNIC.deleted
+    if testcase.config.tunnel is not None:
+        deleted = deleted or testcase.config.tunnel.deleted
+    if deleted == True:
         return None
     return testcase.packets.Get(args.pkt)
 
