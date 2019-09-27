@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -117,19 +118,71 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return sdk::SDK_RET_OK;
 }
 
+#define p4i_device_info    action_u.p4i_device_info_p4i_device_info
+#define p4e_device_info    action_u.p4e_device_info_p4e_device_info
 sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
-    device_entry *device;
     ip_addr_t ip_addr;
+    p4pd_error_t p4pd_ret;
+    pds_device_spec_t *spec;
+    p4i_device_info_actiondata_t p4i_device_info_data = { 0 };
+    p4e_device_info_actiondata_t p4e_device_info_data = { 0 };
 
     switch (api_op) {
     case API_OP_CREATE:
     case API_OP_UPDATE:
-        device = (device_entry *)api_obj;
-        ip_addr = device->ip_addr();
+        spec = &obj_ctxt->api_params->device_spec;
         PDS_TRACE_DEBUG("Activating device IP %s, MAC %s as table constants",
-                        ipaddr2str(&ip_addr), macaddr2str(device->mac()));
+                        ipaddr2str(&ip_addr),
+                        macaddr2str(spec->device_mac_addr));
+
+        // set up the data for ingress and egress device info table entries
+        p4i_device_info_data.action_id = P4I_DEVICE_INFO_P4I_DEVICE_INFO_ID;
+        p4e_device_info_data.action_id = P4E_DEVICE_INFO_P4E_DEVICE_INFO_ID;
+
+        // program MyTEP mac, if provided
+        if (is_mac_set(spec->device_mac_addr)) {
+            memcpy(p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                   spec->device_mac_addr, ETH_ADDR_LEN);
+        }
+        // populate the MyTEP IP
+        if (spec->device_ip_addr.af == IP_AF_IPV4) {
+            p4i_device_info_data.p4i_device_info.device_ipv4_addr =
+                spec->device_ip_addr.addr.v4_addr;
+            p4e_device_info_data.p4e_device_info.device_ipv4_addr =
+                spec->device_ip_addr.addr.v4_addr;
+        } else {
+            sdk::lib::memrev(
+                          p4i_device_info_data.p4i_device_info.device_ipv6_addr,
+                          spec->device_ip_addr.addr.v6_addr.addr8,
+                          IP6_ADDR8_LEN);
+            sdk::lib::memrev(
+                          p4e_device_info_data.p4e_device_info.device_ipv6_addr,
+                          spec->device_ip_addr.addr.v6_addr.addr8,
+                          IP6_ADDR8_LEN);
+        }
+        if (spec->bridging_en) {
+            p4i_device_info_data.p4i_device_info.l2_enabled = TRUE;
+        }
+        if (spec->learning_en) {
+            p4i_device_info_data.p4i_device_info.learn_enabled = TRUE;
+        }
+        // program the P4I_DEVICE_INFO table
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+
+        // program the P4E_DEVICE_INFO table
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4E_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4e_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program P4E_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
         break;
 
     case API_OP_DELETE:
