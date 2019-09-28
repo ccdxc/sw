@@ -1082,7 +1082,7 @@ port::port_link_sm_process(bool start_en_timer)
                             timeout = rand() % 2 == 0? 500 : MIN_PORT_TIMER_INTERVAL;
                             this->bringup_timer_val_ += timeout;
                             this->link_bring_up_timer_ =
-                                sdk::lib::timer_schedule(
+                                sdk::linkmgr::timer_schedule(
                                         SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                         false);
