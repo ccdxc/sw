@@ -32,6 +32,14 @@ enum IPAF {
   IP_AF_INET6 = 2; // IPv6
 }
 
+// BGP address families
+enum BGPAF {
+  BGP_AF_NONE            = 0;
+  BGP_AF_IPV4_UNICAST    = 1;
+  BGP_AF_IPV6_UNICAST    = 2;
+  BGP_AF_L2VPN_EVPN      = 3;
+}
+
 // IP Address object
 message IPAddress {
   IPAF      Af     = 1 [(gogoproto.moretags) = "meta:mandatory"];
