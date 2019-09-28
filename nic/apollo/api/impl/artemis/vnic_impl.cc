@@ -146,7 +146,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // prepare VNIC_INFO_TXDMA entry
     txdma_vnic_info_data.action_id = VNIC_INFO_TXDMA_VNIC_INFO_TXDMA_ID;
 
-    // egress v4 & v6 policy roots are programmed in RX direction entry
+    // egress v4 & v6 policy roots are programmed in TX direction entry
     policy_key = subnet->egr_v4_policy();
     sec_policy = policy_db()->policy_find(&policy_key);
     if (sec_policy) {
@@ -238,7 +238,8 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                        VNIC_INFO_TABLE_SIZE + hw_id_,
                                        NULL, NULL, &tx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u", hw_id_);
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
+                      VNIC_INFO_TABLE_SIZE + hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -247,8 +248,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                        hw_id_, NULL, NULL,
                                        &rx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
-                      (1 << hw_id_));
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -257,8 +257,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                        hw_id_, NULL, NULL,
                                        &txdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u",
-                      (1 << hw_id_));
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -411,11 +410,6 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                      obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
-
-#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
-    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
-        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
-    }
 
 #define mapping_info_action    action_u.vnic_mapping_vnic_mapping_info
 sdk_ret_t

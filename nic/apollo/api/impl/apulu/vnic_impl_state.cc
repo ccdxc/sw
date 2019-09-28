@@ -24,7 +24,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     sdk_table_factory_params_t    table_params;
 
     // allocate indexer for vnic hw id allocation
-    vnic_idxr_ = indexer::factory(PDS_MAX_VNIC);
+    vnic_idxr_ = rte_indexer::factory(PDS_MAX_VNIC);
     SDK_ASSERT(vnic_idxr_ != NULL);
 
     // create a slab for vnic impl entries
@@ -35,19 +35,17 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
 }
 
 vnic_impl_state::~vnic_impl_state() {
-    indexer::destroy(vnic_idxr_);
+    rte_indexer::destroy(vnic_idxr_);
     slab::destroy(vnic_impl_slab_);
 }
 
 sdk_ret_t
 vnic_impl_state::table_transaction_begin(void) {
-    //vnic_idxr_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vnic_impl_state::table_transaction_end(void) {
-    //vnic_idxr_->txn_end();
     return SDK_RET_OK;
 }
 

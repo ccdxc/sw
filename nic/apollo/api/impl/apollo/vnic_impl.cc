@@ -295,11 +295,6 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
-#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
-    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
-        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
-    }
-
 sdk_ret_t
 vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
                                                   vpc_entry *vpc,

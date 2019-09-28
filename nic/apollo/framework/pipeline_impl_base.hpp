@@ -28,6 +28,11 @@
     (api_params)->handle = (hdl);                                            \
 }
 
+#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
+    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
+        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
+    }
+
 namespace api {
 namespace impl {
 

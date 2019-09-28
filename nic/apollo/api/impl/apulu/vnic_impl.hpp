@@ -21,6 +21,8 @@
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
+#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
 
 using sdk::table::handle_t;
 
@@ -148,6 +150,24 @@ private:
 
     /// \brief destructor
     ~vnic_impl() {}
+
+    /// \brief      populate rxdma vnic info table entry's policy tree root
+    ///             address
+    /// \param[in]  vnic_info_data    vnic info data to be programmed
+    /// \param[in]  idx               policy LPM root entry index
+    /// \param[in]  addr              policy tree root address
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t populate_rxdma_vnic_info_policy_root_(
+                  vnic_info_rxdma_actiondata_t *vnic_info_data,
+                  uint32_t idx, mem_addr_t addr);
+
+    /// \brief      program vnic info tables in rxdma and txdma
+    /// \param[in]  vpc       vpc of the vnic
+    /// \param[in]  subnet    subnet of the vnic
+    /// \param[in]  spec      vnic configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
+                                 pds_vnic_spec_t *spec);
 
     /// \brief     add an entry to LOCAL_MAPPING table
     /// \param[in] epoch epoch being activated

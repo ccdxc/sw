@@ -40,11 +40,6 @@
 #define PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX              0
 #define PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX     0
 
-#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
-    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
-        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
-    }
-
 #define nat_action action_u.nat_nat_rewrite
 #define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
 {                                                                            \

@@ -11,7 +11,7 @@
 #ifndef __VNIC_IMPL_STATE_HPP__
 #define __VNIC_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/indexer/indexer.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
@@ -55,7 +55,7 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    indexer *vnic_idxr(void) { return vnic_idxr_; }
+    rte_indexer *vnic_idxr(void) { return vnic_idxr_; }
     slab *vnic_impl_slab(void) { return vnic_impl_slab_; }
     ///< vnic_impl class is friend of vnic_impl_state
     friend class vnic_impl;
@@ -65,9 +65,9 @@ private:
 private:
     // NOTE: there is no explicit table mgmt for rx and tx stats, we directly
     //       index using hw_id_ of vnic and and bzero out when we create vnic
-    slab     *vnic_impl_slab_;
+    slab         *vnic_impl_slab_;
     ///< indexer to allocate hw vnic id
-    indexer  *vnic_idxr_;
+    rte_indexer  *vnic_idxr_;
 };
 
 /// \@}
