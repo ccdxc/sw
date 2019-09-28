@@ -99,6 +99,12 @@ lif_impl_db (void)
     return g_pds_impl_state.lif_impl_db();
 }
 
+static inline if_impl_state *
+if_impl_db (void)
+{
+    return g_pds_impl_state.if_impl_db();
+}
+
 static inline tep_impl_state *
 tep_impl_db (void)
 {

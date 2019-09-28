@@ -150,6 +150,10 @@ public:
     /// \return interface index
     pds_if_key_t key(void) const { return key_; }
 
+    /// \brief    return the interface type
+    /// \return interface type
+    pds_if_type_t type(void) const { return type_; }
+
     /// \brief    set the interface specific information
     /// \param[in] if_info    pointer to the interface specific information
     void set_if_info(void *if_info) { if_info_ = if_info; }
@@ -166,12 +170,13 @@ private:
     ~if_entry();
 
 private:
-    pds_if_key_t key_;                ///< interface key
-    ht_ctxt_t ht_ctxt_;               ///< hash table context
-    void *if_info_;                   ///< interface specific information
-    pds_ifindex_t ifindex_;           ///< interface index
-    ht_ctxt_t ifindex_ht_ctxt_;       ///< hash table context
-    friend class if_state;            ///< if_state is friend of if_entry
+    pds_if_key_t key_;             ///< interface key
+    ht_ctxt_t ht_ctxt_;            ///< hash table context
+    void *if_info_;                ///< interface specific information
+    pds_ifindex_t ifindex_;        ///< interface index
+    pds_if_type_t type_;           ///< interface type
+    ht_ctxt_t ifindex_ht_ctxt_;    ///< hash table context
+    friend class if_state;         ///< if_state is friend of if_entry
 } __PACK__;
 
 /// \@}    // end of PDS_IF_ENTRY
