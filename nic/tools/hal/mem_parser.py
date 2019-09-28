@@ -41,6 +41,9 @@ cache_pipes = {
     'p4plus-rxdma': "MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA",
     'p4plus-all': "MEM_REGION_CACHE_PIPE_P4PLUS_ALL" }
 
+# dictiionary of  key: cache_pipe_type, value: list of regions
+cache_regions = {}
+
 fd = sys.stdout
 pipeline = None
 
@@ -130,6 +133,62 @@ def convert_size(sz):
             v = v + "%d%s " %(res, u)
     return v[:-1]
 
+
+# parse a single region
+# returns the size of the region
+def parse_region(e, start_offset):
+    print >> fd, ""
+
+    n = e['name']
+    mf = long(1)
+    mv = long(0)
+    mem_type = e['size']
+
+    if e.get('base_region') is not None:
+        s = 0
+    else:
+        s = size_str_to_bytes(mem_type)
+
+    if s == -1:
+        print('Invalid size specified for region %s', n)
+        return -1
+
+    if e.get('block_size') is None:
+        bs = -1
+    else:
+        bs = size_str_to_bytes(e['block_size'])
+
+    # Derive the basename for the macros
+    nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
+
+    # Update name and size
+    print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
+    print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
+    print >> fd, "#define %-60s %ld" %(nbase + "BLOCK_SIZE", bs)
+
+    # Update start offset
+    print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", start_offset);
+
+    # Update cache pipe
+    cv = "MEM_REGION_CACHE_PIPE_NONE"
+    if 'cache' in e:
+        v = e['cache']
+        if v in cache_pipes:
+            cv = str(cache_pipes[v])
+        else:
+            print "Invalid cache pipe speciciation : " + v
+            return -1
+    print >> fd, "#define %-60s %s" %(nbase + "CACHE_PIPE", cv)
+
+    # Update reset
+    reset = 0
+    if 'reset' in e and str(e['reset']).lower() == "true":
+        reset = 1
+    print >> fd, "#define %-60s %d" %(nbase + "RESET", reset)
+
+    return s
+
+
 def parse_file():
 
     idx = 0
@@ -140,53 +199,33 @@ def parse_file():
     if True:
         off = 0
         for e in data['regions']:
-            print >> fd, ""
-            n = e['name']
-            mf = long(1)
-            mv = long(0)
-            mem_type = e['size']
-            if e.get('base_region') is not None:
-                s = 0
-            else:
-                s = size_str_to_bytes(mem_type)
-            if s == -1:
-                print('Invalid size specified for region %s', n)
-                return -1
-            if e.get('block_size') is None:
-                bs = -1
-            else:
-                bs = size_str_to_bytes(e['block_size'])
-
-            # Derive the basename for the macros
-            nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
-
-            # Update name and size
-            print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
-            print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
-            print >> fd, "#define %-60s %ld" %(nbase + "BLOCK_SIZE", bs)
-
-            # Update start offset
-            print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", off);
-            off = long(off) + s
-
-            # Update cache pipe
-            cv = "MEM_REGION_CACHE_PIPE_NONE"
+            # group all cache regions together
             if 'cache' in e:
-                v = e['cache']
-                if v in cache_pipes:
-                    cv = str(cache_pipes[v])
+                cache_pipe = e['cache']
+                if cache_pipe in cache_pipes:
+                    if cache_pipe in cache_regions:
+                        cache_regions[cache_pipe].append(e)
+                    else:
+                        cache_regions[cache_pipe] = [e]
                 else:
-                    print "Invalid cache pipe speciciation : " + v
+                    print "Invalid cache pipe speciciation : " + cache_pipe
                     return -1
-            print >> fd, "#define %-60s %s" %(nbase + "CACHE_PIPE", cv)
+                continue
 
-            # Update reset
-            reset = 0
-            if 'reset' in e and str(e['reset']).lower() == "true":
-                reset = 1
-            print >> fd, "#define %-60s %d" %(nbase + "RESET", reset)
-
+            s = parse_region(e, off)
+            if s == -1:
+                return s
+            off = long(off) + s
             idx = idx + 1
+
+        # walk through the cache regions
+        for key, regions in cache_regions.items():
+            for region in regions:
+                s = parse_region(region, off)
+                if s == -1:
+                    return s
+                off = long(off) + s
+                idx += 1
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
