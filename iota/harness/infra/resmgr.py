@@ -143,6 +143,16 @@ class TestbedVlanAllocator(object):
     def Count(self):
         return self.__count
 
+    def Vlans(self):
+        return copy.deepcopy(range(self.__start, self.__start + self.__count))
+
+    def VlanRange(self):
+        return str(self.__start) + "-" + str(self.__start + self.__count)
+
+    def VlanNative(self):
+        return self.__start
+
+
 class TestbedVlanManager(object):
     def __init__(self, vlans):
         self.__vlans = vlans

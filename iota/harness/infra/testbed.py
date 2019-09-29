@@ -173,7 +173,8 @@ class _Testbed:
             else:
                 resp = self.SetupTestBedNetwork()
                 if resp != types.status.SUCCESS:
-                    assert(0)
+                    Logger.info("Vlan programming failed, ignoring")
+                    #assert(0)
 
         return msg
 
@@ -317,7 +318,6 @@ class _Testbed:
     def __init_testbed(self):
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
-        self.__instpool = self.__tbspec.Instances
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
         self.__recover_testbed()
         if GlobalOptions.dryrun:
@@ -347,6 +347,7 @@ class _Testbed:
             for vlan in resp.allocated_vlans:
                 tbvlans.append(vlan)
             self.__vlan_allocator = resmgr.TestbedVlanManager(tbvlans)
+        self.__instpool = copy.deepcopy(self.__tbspec.Instances)
 
 
         return types.status.SUCCESS
@@ -372,8 +373,8 @@ class _Testbed:
     def GetProvisionParams(self):
         return getattr(self.__tbspec.Provision, "Vars", None)
 
-    def GetDataVlans(self):
-        return copy.deepcopy(self.__vlans)
+    def GetVlans(self):
+        return self.__vlan_allocator.Vlans()
 
     def AllocateVlan(self):
         return self.__vlan_allocator.Alloc()
@@ -387,6 +388,11 @@ class _Testbed:
     def GetVlanBase(self):
         return self.__vlan_base
 
+    def GetVlanRange(self):
+        return self.__vlan_allocator.VlanRange()
+
+    def GetNativeVlan(self):
+        return self.__vlan_allocator.VlanNative()
 
     def UnsetVlansOnTestBed(self):
         #First Unset the Switch
@@ -405,11 +411,11 @@ class _Testbed:
                     switch_ctx.ip = nw.SwitchIP
                     switch_ctx.ports.append(nw.Name)
       
-        vlans = self.GetDataVlans()
+        vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
              unsetMsg.vlan_config.unset = True
-             unsetMsg.vlan_config.vlans.extend(vlans)
-             unsetMsg.vlan_config.native_vlan = vlans[0]
+             setMsg.vlan_config.vlan_range = vlans
+             unsetMsg.vlan_config.native_vlan = self.GetNativeVlan()
 
         resp = api.DoSwitchOperation(unsetMsg)
         if not api.IsApiResponseOk(resp):
@@ -433,11 +439,11 @@ class _Testbed:
                     switch_ctx.ip = nw.SwitchIP
                     switch_ctx.ports.append(nw.Name)
       
-        vlans = self.GetDataVlans()
+        vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
              setMsg.vlan_config.unset = False
-             setMsg.vlan_config.vlans.extend(vlans)
-             setMsg.vlan_config.native_vlan = vlans[0]
+             setMsg.vlan_config.vlan_range = vlans
+             setMsg.vlan_config.native_vlan = self.GetNativeVlan()
 
         resp = api.DoSwitchOperation(setMsg)
         if not api.IsApiResponseOk(resp):
