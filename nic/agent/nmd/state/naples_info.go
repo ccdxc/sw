@@ -251,7 +251,7 @@ func updateCPUInfo() *cmd.CPUInfo {
 	cores, _ := strconv.Atoi(string(numProc))
 
 	return &cmd.CPUInfo{
-		Speed:    "2.0 Ghz",
+		Speed:    "1.67 GHz",
 		NumCores: int32(cores),
 	}
 }
@@ -272,7 +272,7 @@ func updateOSInfo() *cmd.OsInfo {
 	return &cmd.OsInfo{
 		Name:          strings.TrimSuffix(string(name), "\n"),
 		KernelRelease: strings.TrimSuffix(string(kernelRelease), "\n"),
-		Processor:     "ARMv7",
+		Processor:     "ARMv8",
 	}
 }
 
