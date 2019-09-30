@@ -64,6 +64,7 @@ var (
 
 type masterService struct {
 	sync.Mutex
+	nodeID               string
 	sysSvc               types.SystemdService
 	leaderSvc            types.LeaderService
 	ntpSvc               types.NtpService
@@ -214,8 +215,9 @@ func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInst
 }
 
 // NewMasterService returns a Master Service
-func NewMasterService(options ...MasterOption) types.MasterService {
+func NewMasterService(nodeID string, options ...MasterOption) types.MasterService {
 	m := masterService{
+		nodeID:              nodeID,
 		leaderSvc:           env.LeaderService,
 		sysSvc:              env.SystemdService,
 		ntpSvc:              env.NtpService,
@@ -331,7 +333,7 @@ func (m *masterService) Start() error {
 
 // caller holds the lock
 func (m *masterService) startLeaderServices() error {
-	if err := m.configs.GenerateKubeMasterConfig(globals.Localhost); err != nil {
+	if err := m.configs.GenerateKubeMasterConfig(m.nodeID, globals.Localhost); err != nil {
 		log.Errorf("Error generating Kubernetes Master config: %v", err)
 		return err
 	}

@@ -22,7 +22,9 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	n := NewNtpService(nil, []string{t.Name()}, t.Name())
 	cw := mock.CfgWatcherService{}
-	m := NewMasterService(WithLeaderSvcMasterOption(l),
+	m := NewMasterService(
+		"testNode",
+		WithLeaderSvcMasterOption(l),
 		WithSystemdSvcMasterOption(s),
 		WithConfigsMasterOption(&mock.Configs{}),
 		WithCfgWatcherMasterOption(&cw),

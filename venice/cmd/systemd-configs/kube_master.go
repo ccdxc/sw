@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"net"
 	"path"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
 
@@ -45,7 +47,7 @@ const (
 )
 
 // generateKubeAPIServerConfig generates the systemd configuration files for Kube API server.
-func generateKubeAPIServerConfig() error {
+func generateKubeAPIServerConfig(nodeID string) error {
 	const (
 		// Environment variables
 		insecurePortVar          = "INSECURE_PORT"
@@ -61,6 +63,7 @@ func generateKubeAPIServerConfig() error {
 		runtimeConfigVar         = "RUNTIME_CONFIG"
 		allowPrivilegedVar       = "ALLOW_PRIVILEGED"
 		admissionControlVar      = "ENABLE_ADMISSION_CONTROLLERS"
+		advertiseAddrVar         = "ADVERTISE_ADDR_VAR"
 
 		// Parameters
 		insecurePortParam          = "--insecure-port"
@@ -76,6 +79,7 @@ func generateKubeAPIServerConfig() error {
 		runtimeConfigParam         = "--runtime-config"
 		allowPrivilegedParam       = "--allow-privileged"
 		admissionControlParam      = "--admission-control"
+		advertiseAddrParam         = "--advertise-address" // ApiServer address as advertised to other cluster members
 	)
 
 	admissionControllers := []string{
@@ -115,6 +119,21 @@ func generateKubeAPIServerConfig() error {
 	cfgMap[runtimeConfigVar] = fmt.Sprintf("%s %s", runtimeConfigParam, enableDaemonSet)
 	cfgMap[allowPrivilegedVar] = allowPrivilegedParam
 	cfgMap[admissionControlVar] = fmt.Sprintf("%s %s", admissionControlParam, strings.Join(admissionControllers, ","))
+
+	// nodeID should be an IP address or resolve to a specific IP address (validated when cluster is formed).
+	// That is what we want K8s ApiServer to advertise to rest of the cluster.
+	// If we cannot resolve, we just leave advertise-addr empty and let K8s ApiServer pick a default interface, if it exists.
+	nodeIP := net.ParseIP(nodeID)
+	if nodeIP != nil && nodeIP.IsGlobalUnicast() {
+		cfgMap[advertiseAddrVar] = fmt.Sprintf("%s %s", advertiseAddrParam, nodeID)
+	} else { // try to resolve
+		addrs, err := net.LookupHost(nodeID)
+		if err == nil {
+			cfgMap[advertiseAddrVar] = fmt.Sprintf("%s %s", advertiseAddrParam, addrs[0])
+		} else {
+			log.Errorf("Unable to get an IP for nodeID %s, not setting param %s for K8s ApiServer", nodeID, advertiseAddrParam)
+		}
+	}
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubernetesAPIServerConfigDir, kubeAPIServerCfgFile))
 }
 
@@ -144,9 +163,9 @@ func generateKubeSchedulerConfig() error {
 }
 
 // GenerateKubeMasterConfig generates the systemd configuration files for Kubernetes master services.
-func GenerateKubeMasterConfig(apiServerAddr string) error {
+func GenerateKubeMasterConfig(nodeID, apiServerAddr string) error {
 	// systemd configs
-	err := generateKubeAPIServerConfig()
+	err := generateKubeAPIServerConfig(nodeID)
 	if err != nil {
 		return err
 	}

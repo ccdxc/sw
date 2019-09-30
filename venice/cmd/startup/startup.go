@@ -211,8 +211,11 @@ func StartQuorumServices(c utils.Cluster) {
 	}
 	env.K8sService = services.NewK8sService(&k8sConfig)
 	env.ResolverService = services.NewResolverService(env.K8sService)
-	env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
-		services.WithResolverSvcMasterOption(env.ResolverService), services.WithNtpSvcMasterOption(env.NtpService))
+	env.MasterService = services.NewMasterService(
+		c.NodeID,
+		services.WithK8sSvcMasterOption(env.K8sService),
+		services.WithResolverSvcMasterOption(env.ResolverService),
+		services.WithNtpSvcMasterOption(env.NtpService))
 	env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
 	env.LeaderService.Register(env.ServiceTracker) // call before starting leader service
 

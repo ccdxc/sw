@@ -143,6 +143,7 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr)
 	cmdenv.MasterService = NewMasterService(
+		"testNode",
 		WithLeaderSvcMasterOption(l),
 		WithSystemdSvcMasterOption(s),
 		WithConfigsMasterOption(&mock.Configs{}),

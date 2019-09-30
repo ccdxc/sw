@@ -334,7 +334,7 @@ func (c *Configs) RemoveElasticAuthConfig() {
 }
 
 // GenerateKubeMasterConfig is a mock implemenation for kube master config generation.
-func (c *Configs) GenerateKubeMasterConfig(virtualIP string) error {
+func (c *Configs) GenerateKubeMasterConfig(nodeID, virtualIP string) error {
 	return nil
 }
 

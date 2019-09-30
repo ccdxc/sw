@@ -280,8 +280,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.VipService = services.NewVIPService()
 
 		env.NtpService = services.NewNtpService(req.NTPServers, env.QuorumNodes, req.NodeId)
-		env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
-			services.WithResolverSvcMasterOption(env.ResolverService), services.WithNtpSvcMasterOption(env.NtpService))
+		env.MasterService = services.NewMasterService(req.NodeId,
+			services.WithK8sSvcMasterOption(env.K8sService),
+			services.WithResolverSvcMasterOption(env.ResolverService),
+			services.WithNtpSvcMasterOption(env.NtpService))
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)

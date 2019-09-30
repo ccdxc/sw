@@ -8,7 +8,7 @@ type Interface interface {
 	RemoveAPIServerConfig()
 	GenerateFilebeatConfig(elasticServerAddrs []string) error
 	RemoveFilebeatConfig()
-	GenerateKubeMasterConfig(apiServerAddr string) error
+	GenerateKubeMasterConfig(nodeID, apiServerAddr string) error
 	RemoveKubeMasterConfig()
 	GenerateElasticAuthConfig(nodeID string) error
 	RemoveElasticAuthConfig()
@@ -38,8 +38,8 @@ func (c *configs) GenerateFilebeatConfig(elasticServerAddrs []string) error {
 func (c *configs) RemoveFilebeatConfig() {
 	RemoveFilebeatConfig()
 }
-func (c *configs) GenerateKubeMasterConfig(apiServerAddr string) error {
-	return GenerateKubeMasterConfig(apiServerAddr)
+func (c *configs) GenerateKubeMasterConfig(nodeID, apiServerAddr string) error {
+	return GenerateKubeMasterConfig(nodeID, apiServerAddr)
 }
 func (c *configs) RemoveKubeMasterConfig() {
 	RemoveKubeMasterConfig()

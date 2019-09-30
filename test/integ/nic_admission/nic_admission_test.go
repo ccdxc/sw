@@ -241,6 +241,7 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, "localhost:"+tInfo.apiServerPort)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
+		"testNode",
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),

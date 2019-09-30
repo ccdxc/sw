@@ -322,6 +322,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	cmdenv.LeaderService = l
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cmdenv.MasterService = cmdsvc.NewMasterService(
+		"testMaster",
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
