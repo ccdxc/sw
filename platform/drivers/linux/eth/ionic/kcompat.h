@@ -247,10 +247,6 @@ struct msix_entry {
 #define node_online(node) ((node) == 0)
 #endif
 
-#ifndef num_online_cpus
-#define num_online_cpus() smp_num_cpus
-#endif
-
 #ifndef cpu_online
 #define cpu_online(cpuid) test_bit((cpuid), &cpu_online_map)
 #endif
