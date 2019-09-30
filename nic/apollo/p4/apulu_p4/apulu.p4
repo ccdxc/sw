@@ -29,6 +29,7 @@
 #include "checksum.p4"
 #include "stats.p4"
 #include "inter_pipe.p4"
+#include "offloads.p4"
 
 action nop() {
 }
@@ -53,6 +54,7 @@ control ingress {
     local_mapping();
     flow_lookup();
     nacl();
+    offloads();
     ingress_stats();
     ingress_inter_pipe();
 }

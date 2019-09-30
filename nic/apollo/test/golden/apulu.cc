@@ -55,8 +55,11 @@ using namespace sdk::platform::capri;
 #define MEM_REGION_IPV4_FLOW_OHASH_BASE "ipv4_flow_ohash"
 #define MEM_REGION_SESSION_STATS_BASE   "session_stats"
 
-#define RXDMA_SYMBOLS_MAX           1
-#define TXDMA_SYMBOLS_MAX           6
+#define RXDMA_SYMBOLS_MAX   1
+#define TXDMA_SYMBOLS_MAX   6
+
+#define UDP_SPORT_OFFSET    34
+#define UDP_SPORT_SIZE      2
 
 typedef struct __attribute__((__packed__)) lifqstate_ {
     uint64_t pc : 8;
@@ -159,6 +162,17 @@ sort_mpu_programs (std::vector<std::string> &programs)
         }
     }
     sort(programs.begin(), programs.end(), sort_compare);
+}
+static bool
+is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
+{
+    if (pkt1.size() != pkt2.size()) {
+       return false;
+    }
+
+    return (std::equal(pkt1.begin(), pkt1.begin() + UDP_SPORT_OFFSET, pkt2.begin()) &&
+            std::equal(pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE, pkt1.end(),
+                       pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE));
 }
 
 static void
@@ -798,7 +812,7 @@ TEST_F(apulu_test, test1)
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);

@@ -9,5 +9,7 @@ header_type apulu_i2e_metadata_t {
         vnic_id             : 16;
         bd_id               : 16;
         vpc_id              : 16;
+        pad0                : 7;
+        update_checksum     : 1;
     }
 }

@@ -102,8 +102,11 @@ header_type scratch_metadata_t {
         num_nexthops        : 4;
         nexthop_id          : 16;
         ip_totallen         : 16;
+        packet_len          : 16;
         ipv4_addr           : 32;
         ipv6_addr           : 128;
+        update_ip_chksum    : 1;
+        update_l4_chksum    : 1;
     }
 }
 
