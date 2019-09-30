@@ -63,6 +63,7 @@ class MyEncoder(json.JSONEncoder):
 
 
 # images which are not compiled every day
+# NB: If you update the Kubernetes version, make sure to package the correct pause container
 static_images = {
     'pen-kube-controller-manager': 'registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.15.3',
     'pen-kube-scheduler' : 'registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.15.3',
@@ -71,7 +72,7 @@ static_images = {
     'pen-filebeat' : 'registry.test.pensando.io:5000/pen-filebeat:v0.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.6',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.12',
-    'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0',
+    'pen-pause' : 'k8s.gcr.io/pause:3.1',
 }
 
 # images which are compiled every time
