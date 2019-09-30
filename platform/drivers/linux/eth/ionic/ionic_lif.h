@@ -179,7 +179,8 @@ struct lif {
 	u32 rss_ind_tbl_sz;
 
 	struct rx_filters rx_filters;
-	u32 rx_coalesce_usecs;
+	u32 rx_coalesce_usecs;		/* what the user asked for */
+	u32 rx_coalesce_hw;		/* what the hw is using */
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;

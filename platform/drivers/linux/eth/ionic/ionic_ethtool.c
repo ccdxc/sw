@@ -455,7 +455,6 @@ static int ionic_set_coalesce(struct net_device *netdev,
 	struct identity *ident;
 	struct qcq *qcq;
 	unsigned int i;
-	u32 usecs;
 	u32 coal;
 
 	if (coalesce->rx_max_coalesced_frames ||
@@ -493,26 +492,26 @@ static int ionic_set_coalesce(struct net_device *netdev,
 		return -EINVAL;
 	}
 
+	/* Convert the usec request to a HW useable value.  If they asked
+	 * for non-zero and it resolved to zero, bump it up
+	 */
 	coal = ionic_coal_usec_to_hw(lif->ionic, coalesce->rx_coalesce_usecs);
-
+	if (!coal && coalesce->rx_coalesce_usecs)
+		coal = 1;
 	if (coal > INTR_CTRL_COAL_MAX)
 		return -ERANGE;
 
-	/* If they asked for non-zero and it resolved to zero, bump it up */
-	if (!coal && coalesce->rx_coalesce_usecs)
-		coal = 1;
-
-	/* Convert it back to get device resolution */
-	usecs = ionic_coal_hw_to_usec(lif->ionic, coal);
-
-	if (usecs != lif->rx_coalesce_usecs) {
-		lif->rx_coalesce_usecs = usecs;
+	/* Save the new value */
+	lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
+	if (coal != lif->rx_coalesce_hw) {
+		lif->rx_coalesce_hw = coal;
 
 		if (test_bit(LIF_UP, lif->state)) {
 			for (i = 0; i < lif->nxqs; i++) {
 				qcq = lif->rxqcqs[i].qcq;
 				ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
-						     qcq->intr.index, coal);
+						     qcq->intr.index,
+						     lif->rx_coalesce_hw);
 			}
 		}
 	}
