@@ -671,6 +671,8 @@ void ionic_q_service(struct queue *q, struct cq_info *cq_info,
                         desc_info->cb(q, desc_info, cq_info,
                                       desc_info->cb_arg);
                 }
+                desc_info->cb = NULL;
+                desc_info->cb_arg = NULL;
                 q->tail = q->tail->next;
         } while (desc_info->index != stop_index);
 }

@@ -307,14 +307,21 @@ static bool ionic_adminq_service(struct cq *cq,
 	return VMK_TRUE;
 }
 
-void ionic_adminq_flush(struct cq *cq)
+void ionic_adminq_flush(struct lif *lif)
 {
-        unsigned int work_done;
+        struct queue *adminq = &lif->adminqcq->q;
 
-        work_done = ionic_cq_service(cq, cq->num_descs, ionic_adminq_service, NULL);
+        vmk_SpinlockLock(lif->adminq_lock);
 
-        if (work_done)
-                ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
+        while (adminq->tail != adminq->head) {
+                vmk_Memset(adminq->tail->desc, 0, sizeof(union adminq_cmd));
+                adminq->tail->cb = NULL;
+                adminq->tail->cb_arg = NULL;
+                adminq->tail = adminq->tail->next;
+        }
+
+        vmk_SpinlockUnlock(lif->adminq_lock);
+
 }
 
 static vmk_Bool
@@ -480,6 +487,7 @@ ionic_stop_control_path(struct lif *lif)
         adminqcq->is_netpoll_enabled = VMK_FALSE;
         vmk_NetPollFlushRx(adminqcq->netpoll);
         vmk_NetPollInterruptUnSet(adminqcq->netpoll);
+        ionic_adminq_flush(lif);
 
         vmk_IntrDisable(notifyqcq->intr.cookie);
         vmk_IntrSync(notifyqcq->intr.cookie);
