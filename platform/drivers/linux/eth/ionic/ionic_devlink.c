@@ -5,7 +5,6 @@
 #include <linux/netdevice.h>
 
 #include "ionic.h"
-#include "ionic_api.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_devlink.h"
@@ -20,7 +19,7 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 	int err = 0;
 	u32 val;
 
-	err = devlink_info_driver_name_put(req, DRV_NAME);
+	err = devlink_info_driver_name_put(req, IONIC_DRV_NAME);
 	if (err)
 		return err;
 

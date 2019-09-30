@@ -28,7 +28,7 @@
 #define IONIC_API_VERSION "5"
 
 struct dentry;
-struct lif;
+struct ionic_lif;
 
 /** struct ionic_devinfo - device information. */
 struct ionic_devinfo {
@@ -48,7 +48,7 @@ enum ionic_api_prsn {
  * @api_version:	IONIC_API_VERSION.
  * @prsn:		Personality to apply.
  *
- * This will return the opaque struct lif if and only if the netdev was created
+ * This will return the opaque struct ionic_lif if and only if the netdev was created
  * by the ionic driver, if the api version matches as described above for
  * IONIC_API_VERSION, and if the personality can be applied to the lif.
  *

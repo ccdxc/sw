@@ -10,9 +10,9 @@
 #include "ionic_dev.h"
 #include "ionic_devlink.h"
 
-#define DRV_NAME		"ionic"
-#define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.15.0"
+#define IONIC_DRV_NAME		"ionic"
+#define IONIC_DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
+#define IONIC_DRV_VERSION	"1.2.0"
 
 // TODO: register these with the official include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
@@ -39,7 +39,7 @@ struct ionic {
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
 	bool is_mgmt_nic;
-	struct lif *master_lif;
+	struct ionic_lif *master_lif;
 	struct list_head lifs;
 	struct identity ident;
 	unsigned int nnqs_per_lif;
@@ -66,8 +66,8 @@ struct ionic {
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
 
-int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
-int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);

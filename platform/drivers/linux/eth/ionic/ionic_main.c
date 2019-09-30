@@ -11,10 +11,10 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
-MODULE_DESCRIPTION(DRV_DESCRIPTION);
+MODULE_DESCRIPTION(IONIC_DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_LICENSE("GPL");
-MODULE_VERSION(DRV_VERSION);
+MODULE_VERSION(IONIC_DRV_VERSION);
 
 unsigned int max_slaves = 0;
 module_param(max_slaves, uint, 0);
@@ -181,9 +181,9 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 	}
 }
 
-static void ionic_adminq_flush(struct lif *lif)
+static void ionic_adminq_flush(struct ionic_lif *lif)
 {
-	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_queue *adminq = &lif->adminqcq->q;
 
 	spin_lock(&lif->adminq_lock);
 
@@ -196,7 +196,8 @@ static void ionic_adminq_flush(struct lif *lif)
 	spin_unlock(&lif->adminq_lock);
 }
 
-static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
+static int ionic_adminq_check_err(struct ionic_lif *lif,
+				  struct ionic_admin_ctx *ctx,
 				  bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
@@ -221,15 +222,19 @@ static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	return err;
 }
 
-static void ionic_adminq_cb(struct queue *q, struct desc_info *desc_info,
-			    struct cq_info *cq_info, void *cb_arg)
+static void ionic_adminq_cb(struct ionic_queue *q,
+			    struct ionic_desc_info *desc_info,
+			    struct ionic_cq_info *cq_info, void *cb_arg)
 {
 	struct ionic_admin_ctx *ctx = cb_arg;
-	struct admin_comp *comp = cq_info->cq_desc;
-	struct device *dev = &q->lif->netdev->dev;
+	struct admin_comp *comp;
+	struct device *dev;
 
 	if (!ctx)
 		return;
+
+	comp = cq_info->cq_desc;
+	dev = &q->lif->netdev->dev;
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
@@ -240,9 +245,9 @@ static void ionic_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	complete_all(&ctx->work);
 }
 
-int ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+int ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
-	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_queue *adminq = &lif->adminqcq->q;
 	int err = 0;
 
 	WARN_ON(in_interrupt());
@@ -271,7 +276,7 @@ err_out:
 	return err;
 }
 
-int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
+int ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct net_device *netdev = lif->netdev;
 	unsigned long remaining;
@@ -294,8 +299,8 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg)
 {
-	struct qcq *qcq = napi_to_qcq(napi);
-	struct cq *cq = &qcq->cq;
+	struct ionic_qcq *qcq = napi_to_qcq(napi);
+	struct ionic_cq *cq = &qcq->cq;
 	u32 work_done, flags = 0;
 
 	work_done = ionic_cq_service(cq, budget, cb, done_cb, done_arg);
@@ -328,7 +333,9 @@ static void ionic_dev_cmd_clean(struct ionic *ionic)
 int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_seconds)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	unsigned long max_wait, start_time, duration;
+	unsigned long start_time;
+	unsigned long max_wait;
+	unsigned long duration;
 	int opcode;
 	int done;
 	int err;
@@ -436,7 +443,7 @@ int ionic_identify(struct ionic *ionic)
 	ident->drv.kernel_ver = cpu_to_le32(LINUX_VERSION_CODE);
 	strncpy(ident->drv.kernel_ver_str, utsname()->version,
 		sizeof(ident->drv.kernel_ver_str) - 1);
-	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
+	strncpy(ident->drv.driver_ver_str, IONIC_DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 
 	mutex_lock(&ionic->dev_cmd_lock);
@@ -590,8 +597,9 @@ int ionic_port_reset(struct ionic *ionic)
 static int __init ionic_init_module(void)
 {
 	ionic_struct_size_checks();
+	pr_info("%s %s, ver %s\n",
+		IONIC_DRV_NAME, IONIC_DRV_DESCRIPTION, IONIC_DRV_VERSION);
 	ionic_debugfs_create();
-	pr_info("%s %s, ver %s\n", DRV_NAME, DRV_DESCRIPTION, DRV_VERSION);
 	return ionic_bus_register_driver();
 }
 
@@ -600,7 +608,7 @@ static void __exit ionic_cleanup_module(void)
 	ionic_bus_unregister_driver();
 	ionic_debugfs_destroy();
 
-	pr_info("%s removed\n", DRV_NAME);
+	pr_info("%s removed\n", IONIC_DRV_NAME);
 }
 
 module_init(ionic_init_module);

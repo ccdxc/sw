@@ -377,11 +377,11 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
+void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct ionic_qcq *qcq,
 			       u16 lif_index, u16 intr_index)
 {
-	struct queue *q = &qcq->q;
-	struct cq *cq = &qcq->cq;
+	struct ionic_queue *q = &qcq->q;
+	struct ionic_cq *cq = &qcq->cq;
 
 	union dev_cmd cmd = {
 		.q_init.opcode = CMD_OPCODE_Q_INIT,
@@ -410,16 +410,17 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-int ionic_db_page_num(struct lif *lif, int pid)
+int ionic_db_page_num(struct ionic_lif *lif, int pid)
 {
 	return (lif->hw_index * lif->dbid_count) + pid;
 }
 
-int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
+int ionic_cq_init(struct ionic_lif *lif, struct ionic_cq *cq,
+		  struct ionic_intr_info *intr,
 		  unsigned int num_descs, size_t desc_size)
 {
+	struct ionic_cq_info *cur;
 	unsigned int ring_size;
-	struct cq_info *cur;
 	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))
@@ -452,9 +453,9 @@ int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 	return 0;
 }
 
-void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa)
+void ionic_cq_map(struct ionic_cq *cq, void *base, dma_addr_t base_pa)
 {
-	struct cq_info *cur;
+	struct ionic_cq_info *cur;
 	unsigned int i;
 
 	cq->base = base;
@@ -464,12 +465,12 @@ void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa)
 		cur->cq_desc = base + (i * cq->desc_size);
 }
 
-void ionic_cq_bind(struct cq *cq, struct queue *q)
+void ionic_cq_bind(struct ionic_cq *cq, struct ionic_queue *q)
 {
 	cq->bound_q = q;
 }
 
-unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
+unsigned int ionic_cq_service(struct ionic_cq *cq, unsigned int work_to_do,
 			      ionic_cq_cb cb, ionic_cq_done_cb done_cb,
 			      void *done_arg)
 {
@@ -494,12 +495,13 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 	return work_done;
 }
 
-int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
-		 unsigned int index, const char *name, unsigned int num_descs,
-		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
+int ionic_q_init(struct ionic_lif *lif, struct ionic_dev *idev,
+		 struct ionic_queue *q, unsigned int index, const char *name,
+		 unsigned int num_descs, size_t desc_size,
+		 size_t sg_desc_size, unsigned int pid)
 {
+	struct ionic_desc_info *cur;
 	unsigned int ring_size;
-	struct desc_info *cur;
 	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))
@@ -536,9 +538,9 @@ int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 	return 0;
 }
 
-void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
+void ionic_q_map(struct ionic_queue *q, void *base, dma_addr_t base_pa)
 {
-	struct desc_info *cur;
+	struct ionic_desc_info *cur;
 	unsigned int i;
 
 	q->base = base;
@@ -548,9 +550,9 @@ void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 		cur->desc = base + (i * q->desc_size);
 }
 
-void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
+void ionic_q_sg_map(struct ionic_queue *q, void *base, dma_addr_t base_pa)
 {
-	struct desc_info *cur;
+	struct ionic_desc_info *cur;
 	unsigned int i;
 
 	q->sg_base = base;
@@ -560,11 +562,11 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
 		cur->sg_desc = base + (i * q->sg_desc_size);
 }
 
-void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
+void ionic_q_post(struct ionic_queue *q, bool ring_doorbell, ionic_desc_cb cb,
 		  void *cb_arg)
 {
 	struct device *dev = q->lif->ionic->dev;
-	struct lif *lif = q->lif;
+	struct ionic_lif *lif = q->lif;
 
 	q->head->cb = cb;
 	q->head->cb_arg = cb_arg;
@@ -579,7 +581,7 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 				 q->dbval | q->head->index);
 }
 
-static bool ionic_q_is_posted(struct queue *q, unsigned int pos)
+static bool ionic_q_is_posted(struct ionic_queue *q, unsigned int pos)
 {
 	unsigned int mask, tail, head;
 
@@ -590,12 +592,12 @@ static bool ionic_q_is_posted(struct queue *q, unsigned int pos)
 	return ((pos - tail) & mask) < ((head - tail) & mask);
 }
 
-void ionic_q_service(struct queue *q, struct cq_info *cq_info,
+void ionic_q_service(struct ionic_queue *q, struct ionic_cq_info *cq_info,
 		     unsigned int stop_index)
 {
-	struct desc_info *desc_info;
+	struct ionic_desc_info *desc_info;
+	ionic_desc_cb cb;
 	void *cb_arg;
-	desc_cb cb;
 
 	/* check for empty queue */
 	if (q->tail->index == q->head->index)

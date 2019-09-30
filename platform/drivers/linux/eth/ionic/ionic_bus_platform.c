@@ -14,36 +14,37 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
-#define DEV_BAR         0
-#define INTR_CTRL_BAR   1
-#define MSIX_CFG_BAR    2
-#define DOORBELL_BAR    3
-#define NUM_OF_BAR      4
+#define IONIC_DEV_BAR         0
+#define IONIC_INTR_CTRL_BAR   1
+#define IONIC_MSIX_CFG_BAR    2
+#define IONIC_DOORBELL_BAR    3
+#define IONIC_NUM_OF_BAR      4
 
-#define INTR_MSIXCFG_STRIDE     0x10
+#define IONIC_INTR_MSIXCFG_STRIDE     0x10
 
-struct intr_msixcfg {
+struct ionic_intr_msixcfg {
 	__le64 msgaddr;
 	__le32 msgdata;
 	__le32 vector_ctrl;
 };
 
-void *intr_msixcfg_addr(struct device *mnic_dev, const int intr)
+static void *ionic_intr_msixcfg_addr(struct device *mnic_dev, const int intr)
 {
 	struct ionic_dev *idev = (struct ionic_dev *) mnic_dev->platform_data;
 
 	dev_info(mnic_dev, "msix_cfg_base: %p\n", idev->msix_cfg_base);
-	return (idev->msix_cfg_base + (intr * INTR_MSIXCFG_STRIDE));
+	return (idev->msix_cfg_base + (intr * IONIC_INTR_MSIXCFG_STRIDE));
 }
 
-void intr_msixcfg(struct device *mnic_dev, const int intr, const u64 msgaddr,
-		  const u32 msgdata, const int vctrl)
+static void ionic_intr_msixcfg(struct device *mnic_dev,
+			       const int intr, const u64 msgaddr,
+			       const u32 msgdata, const int vctrl)
 {
-	volatile void *pa = intr_msixcfg_addr(mnic_dev, intr);
+	volatile void *pa = ionic_intr_msixcfg_addr(mnic_dev, intr);
 
-	writeq(msgaddr, (pa + offsetof(struct intr_msixcfg, msgaddr)));
-	writel(msgdata, (pa + offsetof(struct intr_msixcfg, msgdata)));
-	writel(vctrl, (pa + offsetof(struct intr_msixcfg, vector_ctrl)));
+	writeq(msgaddr, (pa + offsetof(struct ionic_intr_msixcfg, msgaddr)));
+	writel(msgdata, (pa + offsetof(struct ionic_intr_msixcfg, msgdata)));
+	writel(vctrl, (pa + offsetof(struct ionic_intr_msixcfg, vector_ctrl)));
 }
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
@@ -70,13 +71,13 @@ const char *ionic_bus_info(struct ionic *ionic)
 	return ionic->pfdev->name;
 }
 
-static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
+static void ionic_mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 {
 	dev_dbg(desc->dev, "msi_index: [%d] (msi_addr hi_lo): %x_%x msi_data: %x\n",
 		desc->platform.msi_index, msg->address_hi,
 		msg->address_lo, msg->data);
 
-	intr_msixcfg(desc->dev, desc->platform.msi_index,
+	ionic_intr_msixcfg(desc->dev, desc->platform.msi_index,
 		     (((u64)msg->address_hi << 32) | msg->address_lo),
 		     msg->data, 0/*vctrl*/);
 }
@@ -86,7 +87,7 @@ int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 	int err = 0;
 
 	err = platform_msi_domain_alloc_irqs(ionic->dev, nintrs,
-					     mnic_set_msi_msg);
+					     ionic_mnic_set_msi_msg);
 	if (err)
 		return err;
 
@@ -101,11 +102,11 @@ void ionic_bus_free_irq_vectors(struct ionic *ionic)
 struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 {
 	struct net_device *netdev = NULL;
-	struct lif *lif;
+	struct ionic_lif *lif;
 	int nqueues;
 
 	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
-	netdev = alloc_netdev_mqs(sizeof(struct lif), ionic->pfdev->name,
+	netdev = alloc_netdev_mqs(sizeof(struct ionic_lif), ionic->pfdev->name,
 				  NET_NAME_USER, ether_setup, nqueues, nqueues);
 	if (!netdev)
 		return netdev;
@@ -120,20 +121,20 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 	return netdev;
 }
 
-int ionic_mnic_dev_setup(struct ionic *ionic)
+static int ionic_mnic_dev_setup(struct ionic *ionic)
 {
 	unsigned int num_bars = ionic->num_bars;
 	struct ionic_dev *idev = &ionic->idev;
 	u32 sig;
 
-	if (num_bars < NUM_OF_BAR)
+	if (num_bars < IONIC_NUM_OF_BAR)
 		return -EFAULT;
 
-	idev->dev_info_regs = ionic->bars[DEV_BAR].vaddr;
-	idev->dev_cmd_regs = ionic->bars[DEV_BAR].vaddr +
+	idev->dev_info_regs = ionic->bars[IONIC_DEV_BAR].vaddr;
+	idev->dev_cmd_regs = ionic->bars[IONIC_DEV_BAR].vaddr +
 					offsetof(union dev_regs, devcmd);
-	idev->intr_ctrl = ionic->bars[INTR_CTRL_BAR].vaddr;
-	idev->msix_cfg_base = ionic->bars[MSIX_CFG_BAR].vaddr;
+	idev->intr_ctrl = ionic->bars[IONIC_INTR_CTRL_BAR].vaddr;
+	idev->msix_cfg_base = ionic->bars[IONIC_MSIX_CFG_BAR].vaddr;
 
 	/* save the idev into dev->platform_data so we can use it later */
 	ionic->dev->platform_data = idev;
@@ -144,10 +145,12 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 
 	ionic_init_devinfo(ionic);
 
-	idev->db_pages = ionic->bars[DOORBELL_BAR].vaddr;
-	idev->phy_db_pages = ionic->bars[DOORBELL_BAR].bus_addr;
+	idev->db_pages = ionic->bars[IONIC_DOORBELL_BAR].vaddr;
+	idev->phy_db_pages = ionic->bars[IONIC_DOORBELL_BAR].bus_addr;
 
-	return ionic_debugfs_add_dev_cmd(ionic);
+	ionic_debugfs_add_dev_cmd(ionic);
+
+	return 0;
 }
 
 static int ionic_map_bars(struct ionic *ionic)
@@ -176,7 +179,9 @@ static int ionic_map_bars(struct ionic *ionic)
 		j++;
 	}
 
-	return ionic_debugfs_add_bars(ionic);
+	ionic_debugfs_add_bars(ionic);
+
+	return 0;
 }
 
 static void ionic_unmap_bars(struct ionic *ionic)
@@ -187,7 +192,8 @@ static void ionic_unmap_bars(struct ionic *ionic)
 
 	for (i = 0; i < IONIC_BARS_MAX; i++)
 		if (bars[i].vaddr) {
-			dev_info(dev, "Unmapping BAR %d @%p, bus_addr: %llx, \n", i, bars[i].vaddr, bars[i].bus_addr);
+			dev_info(dev, "Unmapping BAR %d @%p, bus_addr: %llx\n",
+				 i, bars[i].vaddr, bars[i].bus_addr);
 			devm_iounmap(dev, bars[i].vaddr);
 			devm_release_mem_region(dev, bars[i].bus_addr, bars[i].len);
 		}
@@ -207,7 +213,7 @@ phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 	return 0;
 }
 
-int ionic_probe(struct platform_device *pfdev)
+static int ionic_probe(struct platform_device *pfdev)
 {
 	struct device *dev = &pfdev->dev;
 	struct ionic *ionic;
@@ -230,11 +236,7 @@ int ionic_probe(struct platform_device *pfdev)
 		return err;
 	}
 
-	err = ionic_debugfs_add_dev(ionic);
-	if (err) {
-		dev_err(dev, "Cannot add device debugfs, aborting\n");
-		return err;
-	}
+	ionic_debugfs_add_dev(ionic);
 
 	/* Setup platform device */
 	err = ionic_map_bars(ionic);
@@ -324,7 +326,7 @@ err_out_unmap_bars:
 }
 EXPORT_SYMBOL_GPL(ionic_probe);
 
-int ionic_remove(struct platform_device *pfdev)
+static int ionic_remove(struct platform_device *pfdev)
 {
 	struct ionic *ionic = platform_get_drvdata(pfdev);
 

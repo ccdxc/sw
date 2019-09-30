@@ -8,7 +8,7 @@
 #include "ionic_lif.h"
 #include "ionic_rx_filter.h"
 
-void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f)
+void ionic_rx_filter_free(struct ionic_lif *lif, struct ionic_rx_filter *f)
 {
 	struct device *dev = lif->ionic->dev;
 
@@ -17,7 +17,7 @@ void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f)
 	devm_kfree(dev, f);
 }
 
-int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
+int ionic_rx_filter_del(struct ionic_lif *lif, struct ionic_rx_filter *f)
 {
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -30,13 +30,13 @@ int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
 	return ionic_adminq_post_wait(lif, &ctx);
 }
 
-int ionic_rx_filters_init(struct lif *lif)
+int ionic_rx_filters_init(struct ionic_lif *lif)
 {
 	unsigned int i;
 
 	spin_lock_init(&lif->rx_filters.lock);
 
-	for (i = 0; i < RX_FILTER_HLISTS; i++) {
+	for (i = 0; i < IONIC_RX_FILTER_HLISTS; i++) {
 		INIT_HLIST_HEAD(&lif->rx_filters.by_hash[i]);
 		INIT_HLIST_HEAD(&lif->rx_filters.by_id[i]);
 	}
@@ -44,27 +44,27 @@ int ionic_rx_filters_init(struct lif *lif)
 	return 0;
 }
 
-void ionic_rx_filters_deinit(struct lif *lif)
+void ionic_rx_filters_deinit(struct ionic_lif *lif)
 {
+	struct ionic_rx_filter *f;
 	struct hlist_head *head;
 	struct hlist_node *tmp;
-	struct rx_filter *f;
 	unsigned int i;
 
-	for (i = 0; i < RX_FILTER_HLISTS; i++) {
+	for (i = 0; i < IONIC_RX_FILTER_HLISTS; i++) {
 		head = &lif->rx_filters.by_id[i];
 		hlist_for_each_entry_safe(f, tmp, head, by_id)
 			ionic_rx_filter_free(lif, f);
 	}
 }
 
-int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
+int ionic_rx_filter_save(struct ionic_lif *lif, u32 flow_id, u16 rxq_index,
 			 u32 hash, struct ionic_admin_ctx *ctx)
 {
 	struct device *dev = lif->ionic->dev;
 	struct rx_filter_add_cmd *ac;
+	struct ionic_rx_filter *f;
 	struct hlist_head *head;
-	struct rx_filter *f;
 	unsigned int key;
 
 	ac = &ctx->cmd.rx_filter_add;
@@ -97,11 +97,11 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 
 	spin_lock_bh(&lif->rx_filters.lock);
 
-	key = hash_32(key, RX_FILTER_HASH_BITS);
+	key = hash_32(key, IONIC_RX_FILTER_HASH_BITS);
 	head = &lif->rx_filters.by_hash[key];
 	hlist_add_head(&f->by_hash, head);
 
-	key = f->filter_id & RX_FILTER_HLISTS_MASK;
+	key = f->filter_id & IONIC_RX_FILTER_HLISTS_MASK;
 	head = &lif->rx_filters.by_id[key];
 	hlist_add_head(&f->by_id, head);
 
@@ -110,11 +110,14 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	return 0;
 }
 
-struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
+struct ionic_rx_filter *ionic_rx_filter_by_vlan(struct ionic_lif *lif, u16 vid)
 {
-	unsigned int key = hash_32(vid, RX_FILTER_HASH_BITS);
-	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f;
+	struct ionic_rx_filter *f;
+	struct hlist_head *head;
+	unsigned int key;
+
+	key = hash_32(vid, IONIC_RX_FILTER_HASH_BITS);
+	head = &lif->rx_filters.by_hash[key];
 
 	hlist_for_each_entry(f, head, by_hash) {
 		if (le16_to_cpu(f->cmd.match) != RX_FILTER_MATCH_VLAN)
@@ -126,11 +129,15 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 	return NULL;
 }
 
-struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
+struct ionic_rx_filter *ionic_rx_filter_by_addr(struct ionic_lif *lif,
+						const u8 *addr)
 {
-	unsigned int key = hash_32(*(u32 *)addr, RX_FILTER_HASH_BITS);
-	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f;
+	struct ionic_rx_filter *f;
+	struct hlist_head *head;
+	unsigned int key;
+
+	key = hash_32(*(u32 *)addr, IONIC_RX_FILTER_HASH_BITS);
+	head = &lif->rx_filters.by_hash[key];
 
 	hlist_for_each_entry(f, head, by_hash) {
 		if (le16_to_cpu(f->cmd.match) != RX_FILTER_MATCH_MAC)

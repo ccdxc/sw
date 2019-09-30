@@ -10,7 +10,6 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
-#include "ionic_devlink.h"
 
 /* Supported devices */
 static const struct pci_device_id ionic_id_table[] = {
@@ -76,7 +75,7 @@ void ionic_bus_free_irq_vectors(struct ionic *ionic)
 
 struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	int nqueues;
 
 	/* Create a netdev big enough to handle all the queues
@@ -124,7 +123,9 @@ static int ionic_map_bars(struct ionic *ionic)
 		j++;
 	}
 
-	return ionic_debugfs_add_bars(ionic);
+	ionic_debugfs_add_bars(ionic);
+
+	return 0;
 }
 
 static void ionic_unmap_bars(struct ionic *ionic)
@@ -202,7 +203,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_debugfs_del_dev;
 	}
 
-	err = pci_request_regions(pdev, DRV_NAME);
+	err = pci_request_regions(pdev, IONIC_DRV_NAME);
 	if (err) {
 		dev_err(dev, "Cannot request PCI regions: %d, aborting\n", err);
 		goto err_out_pci_disable_device;
@@ -358,7 +359,7 @@ static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)
 }
 
 static struct pci_driver ionic_driver = {
-	.name = DRV_NAME,
+	.name = IONIC_DRV_NAME,
 	.id_table = ionic_id_table,
 	.probe = ionic_probe,
 	.remove = ionic_remove,
