@@ -27,7 +27,7 @@ import { AuthService } from '@app/services/auth.service';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 import { ApiObjectMeta, IApiObjectMeta } from '@sdk/v1/models/generated/auth';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule } from '@angular/forms';
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
@@ -374,7 +374,8 @@ describe('TablevieweditComponent', () => {
         MaterialdesignModule,
         RouterTestingModule,
         HttpClientTestingModule,
-        FlexLayoutModule
+        FlexLayoutModule,
+        FormsModule
       ],
       providers: [
         ControllerService,

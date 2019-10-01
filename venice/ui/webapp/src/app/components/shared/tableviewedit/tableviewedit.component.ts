@@ -68,6 +68,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
   @Input() enableCheckbox: boolean = false;
   @Input() checkboxWidth: number = 40;
+  @Input() enableColumnSelect: boolean = true;
 
   // Lazyrender variables
   @Input() data: any[];
@@ -93,6 +94,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
   @Output() rowExpandAnimationComplete: EventEmitter<any> = new EventEmitter();
 
+  selectedcolumns: TableCol[];
+
   actionWidthPx: number = 50;
   actionWidth: number = 5;
   displayedItemCount: number = null;
@@ -113,6 +116,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.selectedcolumns = this.cols;
   }
 
   dataUpdated() {
@@ -149,21 +153,58 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
     if (tableWidth !== 0) {
       this.actionWidth = this.actionWidthPx / tableWidth; // now converted to percentage
-      let sum = 0;
+      let sum: number = 0;
       if (this.enableCheckbox) {
         sum += (this.checkboxWidth / tableWidth) * 100;
       }
       if (tableWidth !== 0) {
         const children = this.headerRow.nativeElement.children;
-        const startIndex  = (this.enableCheckbox) ? 1 : 0;  // check if checkbox is enabled.
+        const startIndex = (this.enableCheckbox) ? 1 : 0;  // check if checkbox is enabled.
         for (let i = startIndex; i < children.length - 1; i++) {
           const newWidth = ($(children[i]).outerWidth() * 100) / tableWidth;
-          this.cols[i - startIndex].width = newWidth;
+          if (this.selectedcolumns[i - startIndex]) {
+            this.selectedcolumns[i - startIndex].width = newWidth;
+          }
           sum += newWidth;
         }
-        this.cols[children.length - 1 - startIndex].width = 100 - sum; // TODO: double check (Per Rishabh)
+        if (this.cols.length === this.selectedcolumns.length) {
+          if (this.selectedcolumns[children.length - 1 - startIndex]) {
+            this.selectedcolumns[children.length - 1 - startIndex].width = 100 - sum; // TODO: double check (Per Rishabh)
+          }
+        } else {
+          if (this.selectedcolumns.length > 0) {
+            const w = parseFloat(String(this.selectedcolumns[this.selectedcolumns.length - 1].width));
+            this.selectedcolumns[this.selectedcolumns.length - 1].width = (w + 100 - sum);
+          }
+        }
       }
     }
+  }
+
+  /**
+   * This api serves html template
+   * @param $event
+   */
+  onColumnSelectChange($event) {
+    const selectedColumns = $event.value;
+    if (selectedColumns.length > 0) {
+      this.orderSelectedColumns();
+      this.updateWidthPercentages();
+    }
+  }
+
+  /**
+   * This API re-order selected table columns
+   * Table columns configuration can be [a, b, c, d, e]
+   * Current selected columns is [b, e, c, a]
+   * We want to change it to [a, b, c, e]. It follows the original config order.
+   */
+  orderSelectedColumns(fieldname: string = 'field') {
+    this.selectedcolumns = this.selectedcolumns.sort((a: TableCol, b: TableCol) => {
+      const aIndex = this.cols.findIndex((col: TableCol) => col[fieldname] === a[fieldname]);
+      const bIndex = this.cols.findIndex((col: TableCol) => col[fieldname] === b[fieldname]);
+      return aIndex - bIndex;
+    });
   }
 
   checkIfSelected(rowData: any): string {
@@ -197,23 +238,23 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
    * When the user release the click, we should stop the resizing, hence we reset the pressed flag and stop watching mousemove and mouseup.
   */
 
- onMouseDown(event, index) {
-  this.pressed = true;
-  this.headerIndex = index;
-  this.startX = event.x;
-  this.initResizableColumns();
-  this.headerRowHandler = $(event.target).parent().parent().parent();
-  const children = this.headerRowHandler.children();
-  if (this.enableCheckbox) {
-    this.leftCellWidth = $(children[this.headerIndex + 1]).outerWidth();
-    this.rightCellWidth = $(children[this.headerIndex + 2]).outerWidth();
-  } else {
-    this.leftCellWidth = $(children[this.headerIndex]).outerWidth();
-    this.rightCellWidth = $(children[this.headerIndex + 1]).outerWidth();
+  onMouseDown(event, index) {
+    this.pressed = true;
+    this.headerIndex = index;
+    this.startX = event.x;
+    this.initResizableColumns();
+    this.headerRowHandler = $(event.target).parent().parent().parent();
+    const children = this.headerRowHandler.children();
+    if (this.enableCheckbox) {
+      this.leftCellWidth = $(children[this.headerIndex + 1]).outerWidth();
+      this.rightCellWidth = $(children[this.headerIndex + 2]).outerWidth();
+    } else {
+      this.leftCellWidth = $(children[this.headerIndex]).outerWidth();
+      this.rightCellWidth = $(children[this.headerIndex + 1]).outerWidth();
+    }
   }
-}
 
-  getNumber(num: number | string ): number {
+  getNumber(num: number | string): number {
     return typeof num === 'number' ? num : null;
   }
 
@@ -222,24 +263,24 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
    */
   setNewWidths(displacement) {
     // check if there is a checkbox. If so, compute the width.
-    const tableWidth = $(this.headerRowHandler).width() ;
+    const tableWidth = $(this.headerRowHandler).width();
 
-    const leftMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
-    let rightMinWidth = (this.cols[this.headerIndex].minColumnWidth) ? this.cols[this.headerIndex + 1].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
+    const leftMinWidth = (this.selectedcolumns[this.headerIndex].minColumnWidth) ? this.selectedcolumns[this.headerIndex].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
+    let rightMinWidth = (this.selectedcolumns[this.headerIndex].minColumnWidth) ? this.selectedcolumns[this.headerIndex + 1].minColumnWidth : TablevieweditHTMLComponent.MIN_COLUMN_WIDTH;
 
     // If last two columns are being resized, we need to worry about actionWidth
-    if (this.headerIndex === this.cols.length - 2) {
+    if (this.headerIndex === this.selectedcolumns.length - 2) {
       rightMinWidth += this.actionWidthPx;
     }
-    if ( (displacement < 0 && this.leftCellWidth + displacement > leftMinWidth) || (displacement > 0 && this.rightCellWidth - displacement > rightMinWidth) ) {
+    if ((displacement < 0 && this.leftCellWidth + displacement > leftMinWidth) || (displacement > 0 && this.rightCellWidth - displacement > rightMinWidth)) {
       let sum = 0;
       // Incase width is defined using strings, we convert it to percentages first.
-      if (typeof this.cols[this.headerIndex].width === 'string' || typeof this.cols[this.headerIndex + 1].width === 'string') {
+      if (typeof this.selectedcolumns[this.headerIndex].width === 'string' || typeof this.selectedcolumns[this.headerIndex + 1].width === 'string') {
         this.updateWidthPercentages();
       }
-      sum = this.getNumber(this.cols[this.headerIndex].width) + this.getNumber(this.cols[this.headerIndex + 1].width);
-      this.cols[this.headerIndex].width = (this.leftCellWidth + displacement) * 100 / tableWidth;
-      this.cols[this.headerIndex + 1].width = sum - this.getNumber(this.cols[this.headerIndex].width);
+      sum = this.getNumber(this.selectedcolumns[this.headerIndex].width) + this.getNumber(this.selectedcolumns[this.headerIndex + 1].width);
+      this.selectedcolumns[this.headerIndex].width = (this.leftCellWidth + displacement) * 100 / tableWidth;
+      this.selectedcolumns[this.headerIndex + 1].width = sum - this.getNumber(this.selectedcolumns[this.headerIndex].width);
       // Rouding results in the widths not adding up to 100%, which causes issues.
       // Hence we maintain the sum of width-percentages of the two columns.
     }
@@ -248,19 +289,19 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   initResizableColumns() {
     this.mouseMovelistener = this.renderer.listen('body', 'mousemove', (event) => {
       if (this.pressed) {
-          const displacement = event.x - this.startX;
-          this.setNewWidths(displacement);
+        const displacement = event.x - this.startX;
+        this.setNewWidths(displacement);
       }
     });
 
     this.mouseUpListener = this.renderer.listen('body', 'mouseup', (event) => {
-    if (this.pressed) {
+      if (this.pressed) {
         this.pressed = false;
-    }
-    if (this.mouseMovelistener) {
-      this.mouseMovelistener(); // Stop listening to mousemove when user releases click.
-    }
-    this.mouseUpListener(); // Stop listening to mouseup when user releases click.
+      }
+      if (this.mouseMovelistener) {
+        this.mouseMovelistener(); // Stop listening to mousemove when user releases click.
+      }
+      this.mouseUpListener(); // Stop listening to mouseup when user releases click.
     });
   }
 }
@@ -308,7 +349,7 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
     protected uiconifgsService: UIConfigsService) {
-      super(controllerService, uiconifgsService);
+    super(controllerService, uiconifgsService);
   }
 
   ngOnInit() {
@@ -463,7 +504,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   }
 
   /** API hook for extended component to act after deleteRecord() is completed */
-  postDeleteRecord() {}
+  postDeleteRecord() { }
 
   onDeleteRecord(event, object: T) {
     if (event) {
@@ -519,7 +560,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       const observable = this.deleteRecord(selectedDataObjects[i]);
       observables.push(observable);
     }
-    this.invokeAPIonMultipleRecords(observables, summary, partialSuccessSummary, msg );
+    this.invokeAPIonMultipleRecords(observables, summary, partialSuccessSummary, msg);
   }
 
   /**
@@ -529,26 +570,26 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
    * @param partialSuccessSummary
    * @param msg
    */
-  invokeAPIonMultipleRecords( observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string
-    ) {
+  invokeAPIonMultipleRecords(observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string
+  ) {
     if (observables.length <= 0) {
       return;
     }
-    const sub  = forkJoin(observables).subscribe(
+    const sub = forkJoin(observables).subscribe(
       (results) => {
-      const isAllOK = Utility.isForkjoinResultAllOK(results);
-      if (isAllOK) {
-        this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
-      } else {
-        const error = Utility.joinErrors(results);
-        this._controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
-      }
-      // clear the selectedObjects array
-      if (this.tableContainer && this.tableContainer.selectedDataObjects) {
-       this.tableContainer.selectedDataObjects.length = 0;
-      }
-    },
-    this._controllerService.restErrorHandler(allSuccessSummary + ' Failed')
+        const isAllOK = Utility.isForkjoinResultAllOK(results);
+        if (isAllOK) {
+          this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
+        } else {
+          const error = Utility.joinErrors(results);
+          this._controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
+        }
+        // clear the selectedObjects array
+        if (this.tableContainer && this.tableContainer.selectedDataObjects) {
+          this.tableContainer.selectedDataObjects.length = 0;
+        }
+      },
+      this._controllerService.restErrorHandler(allSuccessSummary + ' Failed')
     );
     this.subscriptions.push(sub);
   }
@@ -560,14 +601,14 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   onDeleteSelectedRows($event) {
     const selectedDataObjects = this.getSelectedDataObjects();
     this.controllerService.invokeConfirm({
-      header: 'Delete selected ' + selectedDataObjects.length +  ' records?',
+      header: 'Delete selected ' + selectedDataObjects.length + ' records?',
       message: 'This action cannot be reversed',
       acceptLabel: 'Delete',
       accept: () => {
-       const allSuccessSummary = 'Delete';
-       const partialSuccessSummary = 'Partially delete';
-       const msg = 'Marked selected ' +  selectedDataObjects.length + ' deleted.';
-       this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, msg);
+        const allSuccessSummary = 'Delete';
+        const partialSuccessSummary = 'Partially delete';
+        const msg = 'Marked selected ' + selectedDataObjects.length + ' deleted.';
+        this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, msg);
       }
     });
   }
@@ -682,7 +723,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
       // the name is gone when we call getFormGroupValues
       // This is beacuse we disabled it in the form group to stop the user from editing it.
       // When you disable an angular control, in doesn't show up when you get the value of the group
-      (<any>policy).meta.name = (<any> this.objectData).meta.name;
+      (<any>policy).meta.name = (<any>this.objectData).meta.name;
       handler = this.updateObject(policy, this.objectData);
     } else {
       handler = this.createObject(policy);

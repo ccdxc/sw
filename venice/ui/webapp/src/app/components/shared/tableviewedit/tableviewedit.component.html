@@ -9,6 +9,16 @@
          class="tableviewedit-overlay"></div>
   </div>
 </div>
+<ng-template #TableColumnSelector>
+  <p-multiSelect *ngIf="enableColumnSelect" fxFlex="none" fxLayoutAlign="end center" appendTo="body"
+                 [options]="cols" [(ngModel)]="selectedcolumns" optionLabel="header"
+                 displaySelectedLabel="false" maxSelectedLabels="0"
+                 (onChange)="onColumnSelectChange($event)"
+                 selectedItemsLabel="{0} Columns"
+                 styleClass="tableviewedit-table-columns-selector" defaultLabel="Choose Columns">
+  </p-multiSelect>
+
+</ng-template>
 
 <ng-template #TableTemplate>
   <app-lazyrender fxFlex [data]="data" [rows]="28" [runDoCheck]="runDoCheck"
@@ -16,7 +26,7 @@
                   [isToFetchDataOnSort]="isToFetchDataOnSort"
                   (dataUpdate)='dataUpdated()'
                   (lazyLoadEvent)="lazyLoadEvent.emit($event)">
-    <p-table [columns]="cols" [sortField]="sortField" [dataKey]="dataKey"
+    <p-table [columns]="selectedcolumns" [sortField]="sortField" [dataKey]="dataKey"
              [reorderableColumns]="true"
              [sortOrder]="sortOrder"
              [compareSelectionBy]="compareSelectionBy"
@@ -26,18 +36,25 @@
              [loading]="tableLoading" [resizableColumns]="false" rowExpandMode="single">
 
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
-        <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}">
-        </ng-container>
+        <div fxLayout="row">
+          <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}">
+          </ng-container>
+          <div fxFlex></div>
+          <ng-container *ngTemplateOutlet="TableColumnSelector; ">
+          </ng-container>
+        </div>
+
       </ng-template>
 
       <ng-template pTemplate="header" let-columns>
         <tr fxLayout="row" #headerRow>
-          <th [style.width]="checkboxWidth + 'px'" *ngIf="enableCheckbox">
+          <th [style.width]="checkboxWidth + 'px'"
+              *ngIf="enableCheckbox && selectedcolumns.length > 0">
             <p-tableHeaderCheckbox matTooltip="Select/Deselect All Records In Current Page">
             </p-tableHeaderCheckbox>
           </th>
           <ng-container
-                        *ngFor="let col of cols; let index = index; let first = first; let last = last">
+                        *ngFor="let col of selectedcolumns; let index = index; let first = first; let last = last">
             <ng-container *roleGuard="col.roleGuard ? col.roleGuard : '' ">
               <th
                   [ngStyle]="{ 'padding-left': (first?'0.5em':'0'), 'padding-right' : (last?'0.5em':'0'), 'pointer-events': (pressed?'none':'inherit') }"
@@ -70,10 +87,11 @@
             [style.min-height]="virtualRowHeight + 'px'"
             fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
-          <td *ngIf="enableCheckbox">
+          <td *ngIf="enableCheckbox  && selectedcolumns.length > 0">
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
-          <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
+          <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"
+              [class]="col.class"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container
                           *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData}">
