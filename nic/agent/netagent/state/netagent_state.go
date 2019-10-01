@@ -259,15 +259,18 @@ func (na *Nagent) ReplayConfigs() error {
 	networks, err := na.Store.RawList("Network")
 	if err == nil {
 		for _, o := range networks {
-			log.Info("Replaying persisted Network objects")
-
 			var network netproto.Network
 			err := network.Unmarshal(o)
 			if err != nil {
 				log.Errorf("Failed to unmarshal object to Network. Err: %v", err)
+				continue
 			}
-			if err := na.CreateNetwork(&network); err != nil {
-				log.Errorf("Failed to recreate Network: %v. Err: %v", network.GetKey(), err)
+			creator, ok := network.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Network objects")
+				if err := na.CreateNetwork(&network); err != nil {
+					log.Errorf("Failed to recreate Network: %v. Err: %v", network.GetKey(), err)
+				}
 			}
 		}
 	}
@@ -276,15 +279,18 @@ func (na *Nagent) ReplayConfigs() error {
 	endpoints, err := na.Store.RawList("Endpoint")
 	if err == nil {
 		for _, o := range endpoints {
-			log.Info("Replaying persisted Endpoint objects")
-
 			var endpoint netproto.Endpoint
 			err := endpoint.Unmarshal(o)
 			if err != nil {
 				log.Errorf("Failed to unmarshal object to Endpoint. Err: %v", err)
+				continue
 			}
-			if err := na.CreateEndpoint(&endpoint); err != nil {
-				log.Errorf("Failed to recreate Endpoint: %v. Err: %v", endpoint.GetKey(), err)
+			creator, ok := endpoint.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Endpoint objects")
+				if err := na.CreateEndpoint(&endpoint); err != nil {
+					log.Errorf("Failed to recreate Endpoint: %v. Err: %v", endpoint.GetKey(), err)
+				}
 			}
 		}
 	}
@@ -293,14 +299,18 @@ func (na *Nagent) ReplayConfigs() error {
 	tunnels, err := na.Store.RawList("Tunnel")
 	if err == nil {
 		for _, o := range tunnels {
-			log.Info("Replaying persisted Tunnel objects")
 			var tunnel netproto.Tunnel
 			err := tunnel.Unmarshal(o)
 			if err != nil {
 				log.Errorf("Failed to unmarshal object to Tunnel. Err: %v", err)
+				continue
 			}
-			if err := na.CreateTunnel(&tunnel); err != nil {
-				log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
+			creator, ok := tunnel.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Tunnel objects")
+				if err := na.CreateTunnel(&tunnel); err != nil {
+					log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
+				}
 			}
 		}
 	}
@@ -309,15 +319,18 @@ func (na *Nagent) ReplayConfigs() error {
 	apps, err := na.Store.RawList("App")
 	if err == nil {
 		for _, o := range apps {
-			log.Info("Replaying persisted App objects")
-
 			var app netproto.App
 			err := app.Unmarshal(o)
 			if err != nil {
 				log.Errorf("Failed to unmarshal object to App. Err: %v", err)
+				continue
 			}
-			if err := na.CreateApp(&app); err != nil {
-				log.Errorf("Failed to recreate App: %v. Err: %v", app.GetKey(), err)
+			creator, ok := app.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted App objects")
+				if err := na.CreateApp(&app); err != nil {
+					log.Errorf("Failed to recreate App: %v. Err: %v", app.GetKey(), err)
+				}
 			}
 		}
 	}
@@ -326,15 +339,18 @@ func (na *Nagent) ReplayConfigs() error {
 	policies, err := na.Store.RawList("NetworkSecurityPolicy")
 	if err == nil {
 		for _, o := range policies {
-			log.Info("Replaying persisted NetworkSecurityPolicy objects")
-
 			var sgp netproto.NetworkSecurityPolicy
 			err := sgp.Unmarshal(o)
 			if err != nil {
 				log.Errorf("Failed to unmarshal object to NetworkSecurityPolicy. Err: %v", err)
+				continue
 			}
-			if err := na.CreateNetworkSecurityPolicy(&sgp); err != nil {
-				log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
+			creator, ok := sgp.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted NetworkSecurityPolicy objects")
+				if err := na.CreateNetworkSecurityPolicy(&sgp); err != nil {
+					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
+				}
 			}
 		}
 	}
