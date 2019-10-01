@@ -10,7 +10,11 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	struct ionic_admin_ctx *ctx = cb_arg;
 	struct admin_comp *comp = cq_info->cq_desc;
 
-	if (IONIC_WARN_ON(comp->comp_index != desc_info->index))
+        if (VMK_UNLIKELY(!ctx)) {
+                return;
+        }
+
+        if (IONIC_WARN_ON(comp->comp_index != desc_info->index))
 		return;
 
 	vmk_Memcpy(&ctx->comp, comp, sizeof(*comp));
