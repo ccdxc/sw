@@ -41,7 +41,13 @@ cache_pipes = {
     'p4plus-rxdma': "MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA",
     'p4plus-all': "MEM_REGION_CACHE_PIPE_P4PLUS_ALL" }
 
-# dictiionary of  key: cache_pipe_type, value: list of regions
+cc_region_key = 'cc'
+regular_region_key = 'regular'
+
+# Dictionary of:
+# key: cache_pipe,         value: list of regions for a cache pipe
+# key: cc_region_key,      value: list of cache coherent regions
+# key: regular_region_key, value: list of remaining regions
 cache_regions = {}
 
 fd = sys.stdout
@@ -189,6 +195,15 @@ def parse_region(e, start_offset):
     return s
 
 
+# if key is present, append to existing value
+# else add the value as a list
+def cache_regions_add(key, region):
+    if key in cache_regions:
+        cache_regions[key].append(region)
+    else:
+        cache_regions[key] = [region]
+
+
 def parse_file():
 
     idx = 0
@@ -198,39 +213,41 @@ def parse_file():
 
     if True:
         off = 0
-        for e in data['regions']:
+        for region in data['regions']:
             # group all cache regions together
-            if 'cache' in e:
-                cache_pipe = e['cache']
+            if 'cache' in region:
+                cache_pipe = region['cache']
                 if cache_pipe in cache_pipes:
-                    if cache_pipe in cache_regions:
-                        cache_regions[cache_pipe].append(e)
-                    else:
-                        cache_regions[cache_pipe] = [e]
+                    cache_regions_add(cache_pipe, region)
                 else:
                     print "Invalid cache pipe speciciation : " + cache_pipe
                     return -1
                 continue
 
-            s = parse_region(e, off)
-            if s == -1:
-                return s
-            off = long(off) + s
-            idx = idx + 1
+            # group all cache coherent regions
+            if cc_region_key in region and region[cc_region_key] == "true":
+                cache_regions_add(cc_region_key, region)
+                continue
 
-        # walk through the cache regions
-        for key, regions in cache_regions.items():
-            for region in regions:
-                s = parse_region(region, off)
-                if s == -1:
-                    return s
-                off = long(off) + s
-                idx += 1
+            # remaining regions
+            cache_regions_add(regular_region_key, region)
+
+        # list of region types to be generated in that order
+        region_types = [cc_region_key, regular_region_key]
+        region_types.extend(cache_pipes.keys())
+
+        for region_type in region_types:
+            if region_type in cache_regions:
+                for region in cache_regions[region_type]:
+                    s = parse_region(region, off)
+                    if s == -1:
+                        return s
+                    off = long(off) + s
+                    idx += 1
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
-
-   # Total regions count
+    # Total regions count
     print >> fd, "#define %-60s %d" %(name + "COUNT" , idx)
 
     # Max memory used
