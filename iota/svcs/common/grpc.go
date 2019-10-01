@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -27,7 +28,13 @@ type GRPCClient struct {
 func CreateNewGRPCServer(svcName, URL string, maxMsgSize int) (*GRPCServer, error) {
 	log.Infof("Creating a new GRPC Server for service: %v | Listening on %v", svcName, URL)
 
+	skp := keepalive.ServerParameters{
+		Time: GrpcServerTransportKeepaliveTimeSeconds,
+		Timeout: GrpcServerTransportKeepaliveTimeoutSeconds,
+	}
+
 	sopts := []grpc.ServerOption{}
+	sopts = append(sopts, grpc.KeepaliveParams(skp))
 
 	if maxMsgSize != 0 {
 		sopts = append(sopts, grpc.MaxRecvMsgSize(maxMsgSize))
@@ -57,9 +64,15 @@ func CreateNewGRPCServer(svcName, URL string, maxMsgSize int) (*GRPCServer, erro
 func CreateNewGRPCClient(svcName, URL string, maxMsgSize int) (*GRPCClient, error) {
 	log.Infof("Creating a new GRPC Client for service, %v. Dialing %v", svcName, URL)
 
+	ckp := keepalive.ClientParameters{
+		Time: GrpcClientTransportKeepaliveTimeSeconds,
+		Timeout: GrpcClientTransportKeepaliveTimeoutSeconds,
+	}
+
 	copts := []grpc.DialOption{}
 
 	copts = append(copts, grpc.WithInsecure())
+	copts = append(copts, grpc.WithKeepaliveParams(ckp))
 	copts = append(copts, grpc.WithTimeout(time.Minute*5))
 	copts = append(copts, grpc.WithBlock())
 
