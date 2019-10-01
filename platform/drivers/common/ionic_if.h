@@ -1901,7 +1901,6 @@ struct rdma_reset_cmd {
  * @depth_log2:    log base two of queue depth
  * @stride_log2:   log base two of queue stride
  * @dma_addr:      address of the queue memory
- * @xxx_table_index: temporary, but should not need pgtbl for contig. queues.
  *
  * The same command struct is used to create an rdma event queue, completion
  * queue, or rdma admin queue.  The cid is an interrupt number for an event
@@ -1930,8 +1929,7 @@ struct rdma_queue_cmd {
 	u8     depth_log2;
 	u8     stride_log2;
 	__le64 dma_addr;
-	u8     rsvd2[36];
-	__le32 xxx_table_index;
+	u8     rsvd2[40];
 };
 
 /******************************************************************

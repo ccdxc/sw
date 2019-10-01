@@ -2570,10 +2570,6 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     cqcb.ring_header.total_rings = MAX_CQ_RINGS;
     cqcb.ring_header.host_rings = MAX_CQ_HOST_RINGS;
 
-    int32_t cq_pt_index = cmd->xxx_table_index;
-    uint64_t  pt_table_base_addr = pd->rdma_get_pt_base_addr(lif_id);
-
-    cqcb.pt_base_addr = pt_table_base_addr >> PT_BASE_ADDR_SHIFT;
     cqcb.log_cq_page_size = cmd->stride_log2 + cmd->depth_log2;
     cqcb.log_wqe_size = log2(cqwqe_size);
     cqcb.log_num_wqes = log2(num_cq_wqes);
@@ -2607,7 +2603,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     // write to hardware
     NIC_LOG_DEBUG("{}: Writing initial CQCB State, "
                   "CQCB->PT: {:#x} cqcb_size: {}",
-                  lif_id, cqcb.pt_base_addr, sizeof(cqcb_t));
+                  lif_id, cqcb.pt_pa, sizeof(cqcb_t));
     // Convert data before writing to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
 
@@ -2618,14 +2614,6 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
         return IONIC_RC_ERROR;
     }
     WRITE_MEM(addr, (uint8_t *)&cqcb, sizeof(cqcb), 0);
-
-    uint64_t pt_table_addr = pt_table_base_addr+cq_pt_index*sizeof(uint64_t);
-
-    // There is only one page table entry for adminq CQ
-    WRITE_MEM(pt_table_addr, (uint8_t *)&cmd->dma_addr, sizeof(uint64_t), 0);
-    NIC_LOG_DEBUG("PT Entry Write: Lif {}: CQ PT Idx: {} PhyAddr: {:#x}",
-                  lif_id, cq_pt_index, cmd->dma_addr);
-    p4plus_invalidate_cache(pt_table_addr, sizeof(uint64_t), P4PLUS_CACHE_INVALIDATE_BOTH);
 
     return (IONIC_RC_SUCCESS);
 }

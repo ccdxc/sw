@@ -6426,8 +6426,7 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 
 static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 				   struct ionic_queue *q,
-				   u32 qid, u32 cid, u16 opcode,
-				   int xxx_table_index)
+				   u32 qid, u32 cid, u16 opcode)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -6440,7 +6439,6 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 			.depth_log2 = q->depth_log2,
 			.stride_log2 = q->stride_log2,
 			.dma_addr = cpu_to_le64(q->dma),
-			.xxx_table_index = cpu_to_le32(xxx_table_index),
 		},
 	};
 
@@ -6497,7 +6495,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 		goto err_irq;
 
 	rc = ionic_rdma_queue_devcmd(dev, &eq->q, eq->eqid, eq->intr,
-				     CMD_OPCODE_RDMA_CREATE_EQ, 0);
+				     CMD_OPCODE_RDMA_CREATE_EQ);
 	if (rc)
 		goto err_cmd;
 
@@ -6586,8 +6584,7 @@ static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
 		goto err_init;
 
 	rc = ionic_rdma_queue_devcmd(dev, &cq->q, cq->cqid, cq->eqid,
-				     CMD_OPCODE_RDMA_CREATE_CQ,
-				     cq->res.tbl_pos);
+				     CMD_OPCODE_RDMA_CREATE_CQ);
 	if (rc)
 		goto err_cmd;
 
@@ -6675,7 +6672,7 @@ static struct ionic_aq *ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 	}
 
 	rc = ionic_rdma_queue_devcmd(dev, &aq->q, aq->aqid, aq->cqid,
-				     CMD_OPCODE_RDMA_CREATE_ADMINQ, 0);
+				     CMD_OPCODE_RDMA_CREATE_ADMINQ);
 	if (rc)
 		goto err_cmd;
 
