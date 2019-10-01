@@ -25,6 +25,16 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
+func (m *IPAMPolicyList) MakeKey(prefix string) string {
+	obj := IPAMPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *IPAMPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *LbPolicyList) MakeKey(prefix string) string {
 	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
@@ -75,6 +85,12 @@ func (m *VirtualRouterList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AutoMsgIPAMPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := IPAMPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgLbPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
@@ -102,6 +118,48 @@ func (m *AutoMsgServiceWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgVirtualRouterWatchHelper) MakeKey(prefix string) string {
 	obj := VirtualRouter{}
 	return obj.MakeKey(prefix)
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgIPAMPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgIPAMPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgIPAMPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgIPAMPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgIPAMPolicyWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgIPAMPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgIPAMPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgIPAMPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgIPAMPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgIPAMPolicyWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -315,6 +373,27 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *IPAMPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *IPAMPolicyList
+	var ok bool
+	if into == nil {
+		out = &IPAMPolicyList{}
+	} else {
+		out, ok = into.(*IPAMPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*IPAMPolicyList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *IPAMPolicyList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *LbPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *LbPolicyList
 	var ok bool
@@ -420,6 +499,91 @@ func (m *VirtualRouterList) Defaults(ver string) bool {
 }
 
 // Validators and Requirements
+
+func (m *AutoMsgIPAMPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
 
 func (m *AutoMsgLbPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
@@ -717,6 +881,49 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
+	}
+
+}
+
+func (m *IPAMPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *IPAMPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *IPAMPolicyList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
 	}
 
 }

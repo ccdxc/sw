@@ -2,7 +2,7 @@
 
 /*
 Package network is a auto generated package.
-Input file: lb.proto
+Input file: ipam.proto
 */
 package network
 

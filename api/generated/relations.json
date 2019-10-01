@@ -38,5 +38,12 @@
       "To": "monitoring/AlertDestination",
       "Field": "Destinations"
     }
+  ],
+  "network.DHCPServer": [
+    {
+      "Type": "NamedRef",
+      "To": "network/VirtualRouter",
+      "Field": "VirtualRouter"
+    }
   ]
 }

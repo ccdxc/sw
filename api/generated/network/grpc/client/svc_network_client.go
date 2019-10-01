@@ -30,6 +30,20 @@ var _ kvstore.Interface
 // NewNetworkV1 sets up a new client for NetworkV1
 func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetworkV1Client {
 
+	var lAutoAddIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoAddIPAMPolicy",
+			network.EncodeGrpcReqIPAMPolicy,
+			network.DecodeGrpcRespIPAMPolicy,
+			&network.IPAMPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddIPAMPolicy")(lAutoAddIPAMPolicyEndpoint)
+	}
 	var lAutoAddLbPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddLbPolicyEndpoint = grpctransport.NewClient(
@@ -99,6 +113,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoAddVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddVirtualRouter")(lAutoAddVirtualRouterEndpoint)
+	}
+	var lAutoDeleteIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoDeleteIPAMPolicy",
+			network.EncodeGrpcReqIPAMPolicy,
+			network.DecodeGrpcRespIPAMPolicy,
+			&network.IPAMPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteIPAMPolicy")(lAutoDeleteIPAMPolicyEndpoint)
 	}
 	var lAutoDeleteLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -170,6 +198,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoDeleteVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteVirtualRouter")(lAutoDeleteVirtualRouterEndpoint)
 	}
+	var lAutoGetIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoGetIPAMPolicy",
+			network.EncodeGrpcReqIPAMPolicy,
+			network.DecodeGrpcRespIPAMPolicy,
+			&network.IPAMPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetIPAMPolicy")(lAutoGetIPAMPolicyEndpoint)
+	}
 	var lAutoGetLbPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetLbPolicyEndpoint = grpctransport.NewClient(
@@ -240,6 +282,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoGetVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetVirtualRouter")(lAutoGetVirtualRouterEndpoint)
 	}
+	var lAutoListIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoListIPAMPolicy",
+			network.EncodeGrpcReqListWatchOptions,
+			network.DecodeGrpcRespIPAMPolicyList,
+			&network.IPAMPolicyList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoListIPAMPolicy")(lAutoListIPAMPolicyEndpoint)
+	}
 	var lAutoListLbPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListLbPolicyEndpoint = grpctransport.NewClient(
@@ -309,6 +365,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoListVirtualRouter")(lAutoListVirtualRouterEndpoint)
+	}
+	var lAutoUpdateIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoUpdateIPAMPolicy",
+			network.EncodeGrpcReqIPAMPolicy,
+			network.DecodeGrpcRespIPAMPolicy,
+			&network.IPAMPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateIPAMPolicy")(lAutoUpdateIPAMPolicyEndpoint)
 	}
 	var lAutoUpdateLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -383,26 +453,31 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 	return network.EndpointsNetworkV1Client{
 		Client: network.NewNetworkV1Client(conn),
 
+		AutoAddIPAMPolicyEndpoint:          lAutoAddIPAMPolicyEndpoint,
 		AutoAddLbPolicyEndpoint:            lAutoAddLbPolicyEndpoint,
 		AutoAddNetworkEndpoint:             lAutoAddNetworkEndpoint,
 		AutoAddNetworkInterfaceEndpoint:    lAutoAddNetworkInterfaceEndpoint,
 		AutoAddServiceEndpoint:             lAutoAddServiceEndpoint,
 		AutoAddVirtualRouterEndpoint:       lAutoAddVirtualRouterEndpoint,
+		AutoDeleteIPAMPolicyEndpoint:       lAutoDeleteIPAMPolicyEndpoint,
 		AutoDeleteLbPolicyEndpoint:         lAutoDeleteLbPolicyEndpoint,
 		AutoDeleteNetworkEndpoint:          lAutoDeleteNetworkEndpoint,
 		AutoDeleteNetworkInterfaceEndpoint: lAutoDeleteNetworkInterfaceEndpoint,
 		AutoDeleteServiceEndpoint:          lAutoDeleteServiceEndpoint,
 		AutoDeleteVirtualRouterEndpoint:    lAutoDeleteVirtualRouterEndpoint,
+		AutoGetIPAMPolicyEndpoint:          lAutoGetIPAMPolicyEndpoint,
 		AutoGetLbPolicyEndpoint:            lAutoGetLbPolicyEndpoint,
 		AutoGetNetworkEndpoint:             lAutoGetNetworkEndpoint,
 		AutoGetNetworkInterfaceEndpoint:    lAutoGetNetworkInterfaceEndpoint,
 		AutoGetServiceEndpoint:             lAutoGetServiceEndpoint,
 		AutoGetVirtualRouterEndpoint:       lAutoGetVirtualRouterEndpoint,
+		AutoListIPAMPolicyEndpoint:         lAutoListIPAMPolicyEndpoint,
 		AutoListLbPolicyEndpoint:           lAutoListLbPolicyEndpoint,
 		AutoListNetworkEndpoint:            lAutoListNetworkEndpoint,
 		AutoListNetworkInterfaceEndpoint:   lAutoListNetworkInterfaceEndpoint,
 		AutoListServiceEndpoint:            lAutoListServiceEndpoint,
 		AutoListVirtualRouterEndpoint:      lAutoListVirtualRouterEndpoint,
+		AutoUpdateIPAMPolicyEndpoint:       lAutoUpdateIPAMPolicyEndpoint,
 		AutoUpdateLbPolicyEndpoint:         lAutoUpdateLbPolicyEndpoint,
 		AutoUpdateNetworkEndpoint:          lAutoUpdateNetworkEndpoint,
 		AutoUpdateNetworkInterfaceEndpoint: lAutoUpdateNetworkInterfaceEndpoint,
@@ -1375,6 +1450,198 @@ func (a *restObjNetworkV1NetworkInterface) Allowed(oper apiintf.APIOperType) boo
 	}
 }
 
+type grpcObjNetworkV1IPAMPolicy struct {
+	logger log.Logger
+	client network.ServiceNetworkV1Client
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Create(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddIPAMPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Update(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateIPAMPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) UpdateStatus(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateIPAMPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.IPAMPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetIPAMPolicy(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.IPAMPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteIPAMPolicy(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListIPAMPolicy(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchIPAMPolicy(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.NetworkV1_AutoWatchIPAMPolicyClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjNetworkV1IPAMPolicy struct {
+	endpoints network.EndpointsNetworkV1RestClient
+	instance  string
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Create(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddIPAMPolicy(ctx, in)
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Update(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateIPAMPolicy(ctx, in)
+}
+
+func (a *restObjNetworkV1IPAMPolicy) UpdateStatus(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.IPAMPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetIPAMPolicy(ctx, &in)
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.IPAMPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteIPAMPolicy(ctx, &in)
+}
+
+func (a *restObjNetworkV1IPAMPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.IPAMPolicy, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListIPAMPolicy(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchIPAMPolicy(ctx, options)
+}
+
+func (a *restObjNetworkV1IPAMPolicy) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return true
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientNetworkV1 struct {
 	logger log.Logger
 	client network.ServiceNetworkV1Client
@@ -1384,6 +1651,7 @@ type crudClientNetworkV1 struct {
 	grpcLbPolicy         network.NetworkV1LbPolicyInterface
 	grpcVirtualRouter    network.NetworkV1VirtualRouterInterface
 	grpcNetworkInterface network.NetworkV1NetworkInterfaceInterface
+	grpcIPAMPolicy       network.NetworkV1IPAMPolicyInterface
 }
 
 // NewGrpcCrudClientNetworkV1 creates a GRPC client for the service
@@ -1398,6 +1666,7 @@ func NewGrpcCrudClientNetworkV1(conn *grpc.ClientConn, logger log.Logger) networ
 		grpcLbPolicy:         &grpcObjNetworkV1LbPolicy{client: client, logger: logger},
 		grpcVirtualRouter:    &grpcObjNetworkV1VirtualRouter{client: client, logger: logger},
 		grpcNetworkInterface: &grpcObjNetworkV1NetworkInterface{client: client, logger: logger},
+		grpcIPAMPolicy:       &grpcObjNetworkV1IPAMPolicy{client: client, logger: logger},
 	}
 }
 
@@ -1419,6 +1688,10 @@ func (a *crudClientNetworkV1) VirtualRouter() network.NetworkV1VirtualRouterInte
 
 func (a *crudClientNetworkV1) NetworkInterface() network.NetworkV1NetworkInterfaceInterface {
 	return a.grpcNetworkInterface
+}
+
+func (a *crudClientNetworkV1) IPAMPolicy() network.NetworkV1IPAMPolicyInterface {
+	return a.grpcIPAMPolicy
 }
 
 func (a *crudClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -1469,6 +1742,7 @@ type crudRestClientNetworkV1 struct {
 	restLbPolicy         network.NetworkV1LbPolicyInterface
 	restVirtualRouter    network.NetworkV1VirtualRouterInterface
 	restNetworkInterface network.NetworkV1NetworkInterfaceInterface
+	restIPAMPolicy       network.NetworkV1IPAMPolicyInterface
 }
 
 // NewRestCrudClientNetworkV1 creates a REST client for the service.
@@ -1484,6 +1758,7 @@ func NewRestCrudClientNetworkV1(url string, httpClient *http.Client) network.Net
 		restLbPolicy:         &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
 		restVirtualRouter:    &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 		restNetworkInterface: &restObjNetworkV1NetworkInterface{endpoints: endpoints, instance: url},
+		restIPAMPolicy:       &restObjNetworkV1IPAMPolicy{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1500,6 +1775,7 @@ func NewStagedRestCrudClientNetworkV1(url string, id string, httpClient *http.Cl
 		restLbPolicy:         &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
 		restVirtualRouter:    &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 		restNetworkInterface: &restObjNetworkV1NetworkInterface{endpoints: endpoints, instance: url},
+		restIPAMPolicy:       &restObjNetworkV1IPAMPolicy{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1521,6 +1797,10 @@ func (a *crudRestClientNetworkV1) VirtualRouter() network.NetworkV1VirtualRouter
 
 func (a *crudRestClientNetworkV1) NetworkInterface() network.NetworkV1NetworkInterfaceInterface {
 	return a.restNetworkInterface
+}
+
+func (a *crudRestClientNetworkV1) IPAMPolicy() network.NetworkV1IPAMPolicyInterface {
+	return a.restIPAMPolicy
 }
 
 func (a *crudRestClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

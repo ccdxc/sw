@@ -3,14 +3,15 @@
 /*
 Package network is a auto generated package.
 
-Input file: lb.proto
+Input file: ipam.proto
 
 The following Messages are defined.
 
-  HealthCheckSpec
-  LbPolicy
-  LbPolicySpec
-  LbPolicyStatus
+  DHCPRelayPolicy
+  DHCPServer
+  IPAMPolicy
+  IPAMPolicySpec
+  IPAMPolicyStatus
 
 The following Services and Methods are defined.
 

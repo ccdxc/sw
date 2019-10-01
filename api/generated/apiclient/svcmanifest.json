@@ -486,9 +486,24 @@
           "Service",
           "LbPolicy",
           "VirtualRouter",
-          "NetworkInterface"
+          "NetworkInterface",
+          "IPAMPolicy"
         ],
         "Properties": {
+          "IPAMPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "post",
+              "put",
+              "delete",
+              "get",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/network/v1/ipam-policies"
+          },
           "LbPolicy": {
             "Scopes": [
               "tenant"

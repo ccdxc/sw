@@ -26,6 +26,7 @@ import { NetworkService } from './network';
 import { NetworkLbPolicy } from './network';
 import { NetworkVirtualRouter } from './network';
 import { NetworkNetworkInterface } from './network';
+import { NetworkIPAMPolicy } from './network';
 import { ObjstoreBucket } from './objstore';
 import { ObjstoreObject } from './objstore';
 import { OrchestrationOrchestrator } from './orchestration';
@@ -199,6 +200,11 @@ export const CategoryMapping: CatMap  = {
     "NetworkInterface" : {
       instance: new NetworkNetworkInterface(),
       scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "IPAMPolicy" : {
+      instance: new NetworkIPAMPolicy(),
+      scopes: [ 'tenant', ] ,
       actions:  [] ,
     },
   },

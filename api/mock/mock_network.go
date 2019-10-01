@@ -646,6 +646,132 @@ func (mr *MockNetworkV1NetworkInterfaceInterfaceMockRecorder) Allowed(oper inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1NetworkInterfaceInterface)(nil).Allowed), oper)
 }
 
+// MockNetworkV1IPAMPolicyInterface is a mock of NetworkV1IPAMPolicyInterface interface
+type MockNetworkV1IPAMPolicyInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockNetworkV1IPAMPolicyInterfaceMockRecorder
+}
+
+// MockNetworkV1IPAMPolicyInterfaceMockRecorder is the mock recorder for MockNetworkV1IPAMPolicyInterface
+type MockNetworkV1IPAMPolicyInterfaceMockRecorder struct {
+	mock *MockNetworkV1IPAMPolicyInterface
+}
+
+// NewMockNetworkV1IPAMPolicyInterface creates a new mock instance
+func NewMockNetworkV1IPAMPolicyInterface(ctrl *gomock.Controller) *MockNetworkV1IPAMPolicyInterface {
+	mock := &MockNetworkV1IPAMPolicyInterface{ctrl: ctrl}
+	mock.recorder = &MockNetworkV1IPAMPolicyInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockNetworkV1IPAMPolicyInterface) EXPECT() *MockNetworkV1IPAMPolicyInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Create(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Update(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) UpdateStatus(ctx context.Context, in *network.IPAMPolicy) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Allowed), oper)
+}
+
 // MockNetworkV1Interface is a mock of NetworkV1Interface interface
 type MockNetworkV1Interface struct {
 	ctrl     *gomock.Controller
@@ -727,6 +853,18 @@ func (m *MockNetworkV1Interface) NetworkInterface() network.NetworkV1NetworkInte
 // NetworkInterface indicates an expected call of NetworkInterface
 func (mr *MockNetworkV1InterfaceMockRecorder) NetworkInterface() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NetworkInterface", reflect.TypeOf((*MockNetworkV1Interface)(nil).NetworkInterface))
+}
+
+// IPAMPolicy mocks base method
+func (m *MockNetworkV1Interface) IPAMPolicy() network.NetworkV1IPAMPolicyInterface {
+	ret := m.ctrl.Call(m, "IPAMPolicy")
+	ret0, _ := ret[0].(network.NetworkV1IPAMPolicyInterface)
+	return ret0
+}
+
+// IPAMPolicy indicates an expected call of IPAMPolicy
+func (mr *MockNetworkV1InterfaceMockRecorder) IPAMPolicy() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IPAMPolicy", reflect.TypeOf((*MockNetworkV1Interface)(nil).IPAMPolicy))
 }
 
 // Watch mocks base method

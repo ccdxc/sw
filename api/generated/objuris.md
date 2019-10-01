@@ -16,6 +16,7 @@
 | FlowExportPolicy | /configs/monitoring/v1/flowExportPolicy |
 | FwlogPolicy | /configs/monitoring/v1/fwlogPolicy |
 | Host | /configs/cluster/v1/hosts |
+| IPAMPolicy | /configs/network/v1/ipam-policies |
 | LbPolicy | /configs/network/v1/lb-policy |
 | MirrorSession | /configs/monitoring/v1/MirrorSession |
 | Module | /configs/diagnostics/v1/modules |

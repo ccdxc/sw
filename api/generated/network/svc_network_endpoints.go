@@ -43,26 +43,31 @@ type EndpointsNetworkV1Client struct {
 	Client                        NetworkV1Client
 	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 
+	AutoAddIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
@@ -77,31 +82,37 @@ type EndpointsNetworkV1RestClient struct {
 	instance string
 	bufferId string
 
+	AutoAddIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
 	AutoUpdateServiceEndpoint          endpoint.Endpoint
 	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
+	AutoWatchIPAMPolicyEndpoint        endpoint.Endpoint
 	AutoWatchLbPolicyEndpoint          endpoint.Endpoint
 	AutoWatchNetworkEndpoint           endpoint.Endpoint
 	AutoWatchNetworkInterfaceEndpoint  endpoint.Endpoint
@@ -117,26 +128,31 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 type EndpointsNetworkV1Server struct {
 	svcWatchHandlerNetworkV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
+	AutoAddIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
+	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
+	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
+	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
@@ -148,6 +164,21 @@ type EndpointsNetworkV1Server struct {
 	watchHandlerLbPolicy         func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerVirtualRouter    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerNetworkInterface func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerIPAMPolicy       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AutoAddIPAMPolicy is endpoint for AutoAddIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoAddIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	resp, err := e.AutoAddIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicy{}, err
+	}
+	return resp.(*IPAMPolicy), nil
+}
+
+type respNetworkV1AutoAddIPAMPolicy struct {
+	V   IPAMPolicy
+	Err error
 }
 
 // AutoAddLbPolicy is endpoint for AutoAddLbPolicy
@@ -217,6 +248,20 @@ func (e EndpointsNetworkV1Client) AutoAddVirtualRouter(ctx context.Context, in *
 
 type respNetworkV1AutoAddVirtualRouter struct {
 	V   VirtualRouter
+	Err error
+}
+
+// AutoDeleteIPAMPolicy is endpoint for AutoDeleteIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoDeleteIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	resp, err := e.AutoDeleteIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicy{}, err
+	}
+	return resp.(*IPAMPolicy), nil
+}
+
+type respNetworkV1AutoDeleteIPAMPolicy struct {
+	V   IPAMPolicy
 	Err error
 }
 
@@ -290,6 +335,20 @@ type respNetworkV1AutoDeleteVirtualRouter struct {
 	Err error
 }
 
+// AutoGetIPAMPolicy is endpoint for AutoGetIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoGetIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	resp, err := e.AutoGetIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicy{}, err
+	}
+	return resp.(*IPAMPolicy), nil
+}
+
+type respNetworkV1AutoGetIPAMPolicy struct {
+	V   IPAMPolicy
+	Err error
+}
+
 // AutoGetLbPolicy is endpoint for AutoGetLbPolicy
 func (e EndpointsNetworkV1Client) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
 	resp, err := e.AutoGetLbPolicyEndpoint(ctx, in)
@@ -360,6 +419,20 @@ type respNetworkV1AutoGetVirtualRouter struct {
 	Err error
 }
 
+// AutoListIPAMPolicy is endpoint for AutoListIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoListIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (*IPAMPolicyList, error) {
+	resp, err := e.AutoListIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicyList{}, err
+	}
+	return resp.(*IPAMPolicyList), nil
+}
+
+type respNetworkV1AutoListIPAMPolicy struct {
+	V   IPAMPolicyList
+	Err error
+}
+
 // AutoListLbPolicy is endpoint for AutoListLbPolicy
 func (e EndpointsNetworkV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (*LbPolicyList, error) {
 	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
@@ -427,6 +500,20 @@ func (e EndpointsNetworkV1Client) AutoListVirtualRouter(ctx context.Context, in 
 
 type respNetworkV1AutoListVirtualRouter struct {
 	V   VirtualRouterList
+	Err error
+}
+
+// AutoUpdateIPAMPolicy is endpoint for AutoUpdateIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoUpdateIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	resp, err := e.AutoUpdateIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicy{}, err
+	}
+	return resp.(*IPAMPolicy), nil
+}
+
+type respNetworkV1AutoUpdateIPAMPolicy struct {
+	V   IPAMPolicy
 	Err error
 }
 
@@ -527,6 +614,33 @@ func (e EndpointsNetworkV1Client) AutoWatchVirtualRouter(ctx context.Context, in
 // AutoWatchNetworkInterface performs Watch for NetworkInterface
 func (e EndpointsNetworkV1Client) AutoWatchNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchNetworkInterfaceClient, error) {
 	return e.Client.AutoWatchNetworkInterface(ctx, in)
+}
+
+// AutoWatchIPAMPolicy performs Watch for IPAMPolicy
+func (e EndpointsNetworkV1Client) AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchIPAMPolicyClient, error) {
+	return e.Client.AutoWatchIPAMPolicy(ctx, in)
+}
+
+// AutoAddIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoAddIPAMPolicy(ctx context.Context, in IPAMPolicy) (IPAMPolicy, error) {
+	resp, err := e.AutoAddIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicy{}, err
+	}
+	return *resp.(*IPAMPolicy), nil
+}
+
+// MakeNetworkV1AutoAddIPAMPolicyEndpoint creates  AutoAddIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoAddIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*IPAMPolicy)
+		v, err := s.AutoAddIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoAddIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoAddIPAMPolicy")(f)
 }
 
 // AutoAddLbPolicy implementation on server Endpoint
@@ -639,6 +753,28 @@ func MakeNetworkV1AutoAddVirtualRouterEndpoint(s ServiceNetworkV1Server, logger 
 	return trace.ServerEndpoint("NetworkV1:AutoAddVirtualRouter")(f)
 }
 
+// AutoDeleteIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoDeleteIPAMPolicy(ctx context.Context, in IPAMPolicy) (IPAMPolicy, error) {
+	resp, err := e.AutoDeleteIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicy{}, err
+	}
+	return *resp.(*IPAMPolicy), nil
+}
+
+// MakeNetworkV1AutoDeleteIPAMPolicyEndpoint creates  AutoDeleteIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoDeleteIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*IPAMPolicy)
+		v, err := s.AutoDeleteIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoDeleteIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoDeleteIPAMPolicy")(f)
+}
+
 // AutoDeleteLbPolicy implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
 	resp, err := e.AutoDeleteLbPolicyEndpoint(ctx, in)
@@ -747,6 +883,28 @@ func MakeNetworkV1AutoDeleteVirtualRouterEndpoint(s ServiceNetworkV1Server, logg
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoDeleteVirtualRouter")(f)
+}
+
+// AutoGetIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoGetIPAMPolicy(ctx context.Context, in IPAMPolicy) (IPAMPolicy, error) {
+	resp, err := e.AutoGetIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicy{}, err
+	}
+	return *resp.(*IPAMPolicy), nil
+}
+
+// MakeNetworkV1AutoGetIPAMPolicyEndpoint creates  AutoGetIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoGetIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*IPAMPolicy)
+		v, err := s.AutoGetIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoGetIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoGetIPAMPolicy")(f)
 }
 
 // AutoGetLbPolicy implementation on server Endpoint
@@ -859,6 +1017,28 @@ func MakeNetworkV1AutoGetVirtualRouterEndpoint(s ServiceNetworkV1Server, logger 
 	return trace.ServerEndpoint("NetworkV1:AutoGetVirtualRouter")(f)
 }
 
+// AutoListIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoListIPAMPolicy(ctx context.Context, in api.ListWatchOptions) (IPAMPolicyList, error) {
+	resp, err := e.AutoListIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicyList{}, err
+	}
+	return *resp.(*IPAMPolicyList), nil
+}
+
+// MakeNetworkV1AutoListIPAMPolicyEndpoint creates  AutoListIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoListIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoListIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoListIPAMPolicy")(f)
+}
+
 // AutoListLbPolicy implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (LbPolicyList, error) {
 	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
@@ -967,6 +1147,28 @@ func MakeNetworkV1AutoListVirtualRouterEndpoint(s ServiceNetworkV1Server, logger
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoListVirtualRouter")(f)
+}
+
+// AutoUpdateIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoUpdateIPAMPolicy(ctx context.Context, in IPAMPolicy) (IPAMPolicy, error) {
+	resp, err := e.AutoUpdateIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicy{}, err
+	}
+	return *resp.(*IPAMPolicy), nil
+}
+
+// MakeNetworkV1AutoUpdateIPAMPolicyEndpoint creates  AutoUpdateIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoUpdateIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*IPAMPolicy)
+		v, err := s.AutoUpdateIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoUpdateIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoUpdateIPAMPolicy")(f)
 }
 
 // AutoUpdateLbPolicy implementation on server Endpoint
@@ -1156,31 +1358,49 @@ func MakeAutoWatchNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.
 	}
 }
 
+// AutoWatchIPAMPolicy is the watch handler for IPAMPolicy on the server side.
+func (e EndpointsNetworkV1Server) AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchIPAMPolicyServer) error {
+	return e.watchHandlerIPAMPolicy(in, stream)
+}
+
+// MakeAutoWatchIPAMPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchIPAMPolicyServer)
+		return s.AutoWatchIPAMPolicy(options, wstream)
+	}
+}
+
 // MakeNetworkV1ServerEndpoints creates server endpoints
 func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) EndpointsNetworkV1Server {
 	return EndpointsNetworkV1Server{
 		svcWatchHandlerNetworkV1: MakeAutoWatchSvcNetworkV1Endpoint(s, logger),
 
+		AutoAddIPAMPolicyEndpoint:          MakeNetworkV1AutoAddIPAMPolicyEndpoint(s, logger),
 		AutoAddLbPolicyEndpoint:            MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
 		AutoAddNetworkEndpoint:             MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
 		AutoAddNetworkInterfaceEndpoint:    MakeNetworkV1AutoAddNetworkInterfaceEndpoint(s, logger),
 		AutoAddServiceEndpoint:             MakeNetworkV1AutoAddServiceEndpoint(s, logger),
 		AutoAddVirtualRouterEndpoint:       MakeNetworkV1AutoAddVirtualRouterEndpoint(s, logger),
+		AutoDeleteIPAMPolicyEndpoint:       MakeNetworkV1AutoDeleteIPAMPolicyEndpoint(s, logger),
 		AutoDeleteLbPolicyEndpoint:         MakeNetworkV1AutoDeleteLbPolicyEndpoint(s, logger),
 		AutoDeleteNetworkEndpoint:          MakeNetworkV1AutoDeleteNetworkEndpoint(s, logger),
 		AutoDeleteNetworkInterfaceEndpoint: MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint(s, logger),
 		AutoDeleteServiceEndpoint:          MakeNetworkV1AutoDeleteServiceEndpoint(s, logger),
 		AutoDeleteVirtualRouterEndpoint:    MakeNetworkV1AutoDeleteVirtualRouterEndpoint(s, logger),
+		AutoGetIPAMPolicyEndpoint:          MakeNetworkV1AutoGetIPAMPolicyEndpoint(s, logger),
 		AutoGetLbPolicyEndpoint:            MakeNetworkV1AutoGetLbPolicyEndpoint(s, logger),
 		AutoGetNetworkEndpoint:             MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
 		AutoGetNetworkInterfaceEndpoint:    MakeNetworkV1AutoGetNetworkInterfaceEndpoint(s, logger),
 		AutoGetServiceEndpoint:             MakeNetworkV1AutoGetServiceEndpoint(s, logger),
 		AutoGetVirtualRouterEndpoint:       MakeNetworkV1AutoGetVirtualRouterEndpoint(s, logger),
+		AutoListIPAMPolicyEndpoint:         MakeNetworkV1AutoListIPAMPolicyEndpoint(s, logger),
 		AutoListLbPolicyEndpoint:           MakeNetworkV1AutoListLbPolicyEndpoint(s, logger),
 		AutoListNetworkEndpoint:            MakeNetworkV1AutoListNetworkEndpoint(s, logger),
 		AutoListNetworkInterfaceEndpoint:   MakeNetworkV1AutoListNetworkInterfaceEndpoint(s, logger),
 		AutoListServiceEndpoint:            MakeNetworkV1AutoListServiceEndpoint(s, logger),
 		AutoListVirtualRouterEndpoint:      MakeNetworkV1AutoListVirtualRouterEndpoint(s, logger),
+		AutoUpdateIPAMPolicyEndpoint:       MakeNetworkV1AutoUpdateIPAMPolicyEndpoint(s, logger),
 		AutoUpdateLbPolicyEndpoint:         MakeNetworkV1AutoUpdateLbPolicyEndpoint(s, logger),
 		AutoUpdateNetworkEndpoint:          MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
 		AutoUpdateNetworkInterfaceEndpoint: MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint(s, logger),
@@ -1192,6 +1412,7 @@ func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) E
 		watchHandlerLbPolicy:         MakeAutoWatchLbPolicyEndpoint(s, logger),
 		watchHandlerVirtualRouter:    MakeAutoWatchVirtualRouterEndpoint(s, logger),
 		watchHandlerNetworkInterface: MakeAutoWatchNetworkInterfaceEndpoint(s, logger),
+		watchHandlerIPAMPolicy:       MakeAutoWatchIPAMPolicyEndpoint(s, logger),
 	}
 }
 
@@ -1225,6 +1446,19 @@ type loggingNetworkV1MiddlewareServer struct {
 	next   ServiceNetworkV1Server
 }
 
+func (m loggingNetworkV1MiddlewareClient) AutoAddIPAMPolicy(ctx context.Context, in *IPAMPolicy) (resp *IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1288,6 +1522,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddVirtualRouter(ctx context.Conte
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddVirtualRouter", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddVirtualRouter(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoDeleteIPAMPolicy(ctx context.Context, in *IPAMPolicy) (resp *IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteIPAMPolicy(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
@@ -1355,6 +1602,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteVirtualRouter(ctx context.Co
 	resp, err = m.next.AutoDeleteVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoGetIPAMPolicy(ctx context.Context, in *IPAMPolicy) (resp *IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1420,6 +1680,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetVirtualRouter(ctx context.Conte
 	resp, err = m.next.AutoGetVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoListIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *IPAMPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *LbPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1483,6 +1756,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoListVirtualRouter(ctx context.Cont
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListVirtualRouter", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListVirtualRouter(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoUpdateIPAMPolicy(ctx context.Context, in *IPAMPolicy) (resp *IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateIPAMPolicy(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
@@ -1630,7 +1916,33 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchNetworkInterface(ctx context.
 	resp, err = m.next.AutoWatchNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchIPAMPolicyClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchIPAMPolicy(ctx, in)
+	return
+}
 
+func (m loggingNetworkV1MiddlewareServer) AutoAddIPAMPolicy(ctx context.Context, in IPAMPolicy) (resp IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1694,6 +2006,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoAddVirtualRouter(ctx context.Conte
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddVirtualRouter", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddVirtualRouter(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoDeleteIPAMPolicy(ctx context.Context, in IPAMPolicy) (resp IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteIPAMPolicy(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
@@ -1761,6 +2086,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoDeleteVirtualRouter(ctx context.Co
 	resp, err = m.next.AutoDeleteVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoGetIPAMPolicy(ctx context.Context, in IPAMPolicy) (resp IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoGetLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1826,6 +2164,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetVirtualRouter(ctx context.Conte
 	resp, err = m.next.AutoGetVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoListIPAMPolicy(ctx context.Context, in api.ListWatchOptions) (resp IPAMPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListIPAMPolicy(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (resp LbPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1889,6 +2240,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoListVirtualRouter(ctx context.Cont
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListVirtualRouter", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListVirtualRouter(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoUpdateIPAMPolicy(ctx context.Context, in IPAMPolicy) (resp IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateIPAMPolicy(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoUpdateLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
@@ -2036,6 +2400,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoWatchNetworkInterface(in *api.List
 	err = m.next.AutoWatchNetworkInterface(in, stream)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchIPAMPolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchIPAMPolicy(in, stream)
+	return
+}
 
 func (r *EndpointsNetworkV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -2058,6 +2435,11 @@ func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in in
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+//
+func makeURINetworkV1AutoAddIPAMPolicyCreateOper(in *IPAMPolicy) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies")
 }
 
 //
@@ -2091,6 +2473,11 @@ func makeURINetworkV1AutoAddVirtualRouterCreateOper(in *VirtualRouter) string {
 }
 
 //
+func makeURINetworkV1AutoDeleteIPAMPolicyDeleteOper(in *IPAMPolicy) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies/", in.Name)
+}
+
+//
 func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
 	return ""
 
@@ -2118,6 +2505,11 @@ func makeURINetworkV1AutoDeleteServiceDeleteOper(in *Service) string {
 func makeURINetworkV1AutoDeleteVirtualRouterDeleteOper(in *VirtualRouter) string {
 	return ""
 
+}
+
+//
+func makeURINetworkV1AutoGetIPAMPolicyGetOper(in *IPAMPolicy) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies/", in.Name)
 }
 
 //
@@ -2149,6 +2541,11 @@ func makeURINetworkV1AutoGetVirtualRouterGetOper(in *VirtualRouter) string {
 }
 
 //
+func makeURINetworkV1AutoListIPAMPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies")
+}
+
+//
 func makeURINetworkV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -2174,6 +2571,11 @@ func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
 func makeURINetworkV1AutoListVirtualRouterListOper(in *api.ListWatchOptions) string {
 	return ""
 
+}
+
+//
+func makeURINetworkV1AutoUpdateIPAMPolicyUpdateOper(in *IPAMPolicy) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies/", in.Name)
 }
 
 //
@@ -2204,6 +2606,11 @@ func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
 func makeURINetworkV1AutoUpdateVirtualRouterUpdateOper(in *VirtualRouter) string {
 	return ""
 
+}
+
+//
+func makeURINetworkV1AutoWatchIPAMPolicyWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/ipam-policies")
 }
 
 //
@@ -2645,6 +3052,164 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetworkInterface(ctx context.Con
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgNetworkInterfaceWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoAddIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	path := makeURINetworkV1AutoAddIPAMPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoAddIPAMPolicy(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicy), nil
+}
+
+// AutoUpdateIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoUpdateIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	path := makeURINetworkV1AutoUpdateIPAMPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoUpdateIPAMPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicy), err
+}
+
+// AutoGetIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoGetIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	path := makeURINetworkV1AutoGetIPAMPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoGetIPAMPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicy), err
+}
+
+// AutoDeleteIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoDeleteIPAMPolicy(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error) {
+	path := makeURINetworkV1AutoDeleteIPAMPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoDeleteIPAMPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicy), err
+}
+
+// AutoListIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoListIPAMPolicy(ctx context.Context, options *api.ListWatchOptions) (*IPAMPolicyList, error) {
+	path := makeURINetworkV1AutoListIPAMPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoListIPAMPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicyList), err
+}
+
+// AutoWatchIPAMPolicy CRUD method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoWatchIPAMPolicy(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURINetworkV1AutoWatchIPAMPolicyWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgIPAMPolicyWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

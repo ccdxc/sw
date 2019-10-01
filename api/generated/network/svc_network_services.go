@@ -19,26 +19,31 @@ var _ api.ObjectMeta
 type ServiceNetworkV1Client interface {
 	AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error)
 
+	AutoAddIPAMPolicy(ctx context.Context, t *IPAMPolicy) (*IPAMPolicy, error)
 	AutoAddLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoAddNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoAddNetworkInterface(ctx context.Context, t *NetworkInterface) (*NetworkInterface, error)
 	AutoAddService(ctx context.Context, t *Service) (*Service, error)
 	AutoAddVirtualRouter(ctx context.Context, t *VirtualRouter) (*VirtualRouter, error)
+	AutoDeleteIPAMPolicy(ctx context.Context, t *IPAMPolicy) (*IPAMPolicy, error)
 	AutoDeleteLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoDeleteNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoDeleteNetworkInterface(ctx context.Context, t *NetworkInterface) (*NetworkInterface, error)
 	AutoDeleteService(ctx context.Context, t *Service) (*Service, error)
 	AutoDeleteVirtualRouter(ctx context.Context, t *VirtualRouter) (*VirtualRouter, error)
+	AutoGetIPAMPolicy(ctx context.Context, t *IPAMPolicy) (*IPAMPolicy, error)
 	AutoGetLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoGetNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoGetNetworkInterface(ctx context.Context, t *NetworkInterface) (*NetworkInterface, error)
 	AutoGetService(ctx context.Context, t *Service) (*Service, error)
 	AutoGetVirtualRouter(ctx context.Context, t *VirtualRouter) (*VirtualRouter, error)
+	AutoListIPAMPolicy(ctx context.Context, t *api.ListWatchOptions) (*IPAMPolicyList, error)
 	AutoListLbPolicy(ctx context.Context, t *api.ListWatchOptions) (*LbPolicyList, error)
 	AutoListNetwork(ctx context.Context, t *api.ListWatchOptions) (*NetworkList, error)
 	AutoListNetworkInterface(ctx context.Context, t *api.ListWatchOptions) (*NetworkInterfaceList, error)
 	AutoListService(ctx context.Context, t *api.ListWatchOptions) (*ServiceList, error)
 	AutoListVirtualRouter(ctx context.Context, t *api.ListWatchOptions) (*VirtualRouterList, error)
+	AutoUpdateIPAMPolicy(ctx context.Context, t *IPAMPolicy) (*IPAMPolicy, error)
 	AutoUpdateLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoUpdateNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoUpdateNetworkInterface(ctx context.Context, t *NetworkInterface) (*NetworkInterface, error)
@@ -50,32 +55,38 @@ type ServiceNetworkV1Client interface {
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchLbPolicyClient, error)
 	AutoWatchVirtualRouter(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchVirtualRouterClient, error)
 	AutoWatchNetworkInterface(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchNetworkInterfaceClient, error)
+	AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchIPAMPolicyClient, error)
 }
 
 // ServiceNetworkV1Server is the server interface for the service.
 type ServiceNetworkV1Server interface {
 	AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error
 
+	AutoAddIPAMPolicy(ctx context.Context, t IPAMPolicy) (IPAMPolicy, error)
 	AutoAddLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoAddNetwork(ctx context.Context, t Network) (Network, error)
 	AutoAddNetworkInterface(ctx context.Context, t NetworkInterface) (NetworkInterface, error)
 	AutoAddService(ctx context.Context, t Service) (Service, error)
 	AutoAddVirtualRouter(ctx context.Context, t VirtualRouter) (VirtualRouter, error)
+	AutoDeleteIPAMPolicy(ctx context.Context, t IPAMPolicy) (IPAMPolicy, error)
 	AutoDeleteLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoDeleteNetwork(ctx context.Context, t Network) (Network, error)
 	AutoDeleteNetworkInterface(ctx context.Context, t NetworkInterface) (NetworkInterface, error)
 	AutoDeleteService(ctx context.Context, t Service) (Service, error)
 	AutoDeleteVirtualRouter(ctx context.Context, t VirtualRouter) (VirtualRouter, error)
+	AutoGetIPAMPolicy(ctx context.Context, t IPAMPolicy) (IPAMPolicy, error)
 	AutoGetLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoGetNetwork(ctx context.Context, t Network) (Network, error)
 	AutoGetNetworkInterface(ctx context.Context, t NetworkInterface) (NetworkInterface, error)
 	AutoGetService(ctx context.Context, t Service) (Service, error)
 	AutoGetVirtualRouter(ctx context.Context, t VirtualRouter) (VirtualRouter, error)
+	AutoListIPAMPolicy(ctx context.Context, t api.ListWatchOptions) (IPAMPolicyList, error)
 	AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (LbPolicyList, error)
 	AutoListNetwork(ctx context.Context, t api.ListWatchOptions) (NetworkList, error)
 	AutoListNetworkInterface(ctx context.Context, t api.ListWatchOptions) (NetworkInterfaceList, error)
 	AutoListService(ctx context.Context, t api.ListWatchOptions) (ServiceList, error)
 	AutoListVirtualRouter(ctx context.Context, t api.ListWatchOptions) (VirtualRouterList, error)
+	AutoUpdateIPAMPolicy(ctx context.Context, t IPAMPolicy) (IPAMPolicy, error)
 	AutoUpdateLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoUpdateNetwork(ctx context.Context, t Network) (Network, error)
 	AutoUpdateNetworkInterface(ctx context.Context, t NetworkInterface) (NetworkInterface, error)
@@ -87,4 +98,5 @@ type ServiceNetworkV1Server interface {
 	AutoWatchLbPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchLbPolicyServer) error
 	AutoWatchVirtualRouter(in *api.ListWatchOptions, stream NetworkV1_AutoWatchVirtualRouterServer) error
 	AutoWatchNetworkInterface(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkInterfaceServer) error
+	AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchIPAMPolicyServer) error
 }

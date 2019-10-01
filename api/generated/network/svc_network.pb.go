@@ -25,6 +25,53 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AutoMsgIPAMPolicyWatchHelper is a wrapper object for watch events for IPAMPolicy objects
+type AutoMsgIPAMPolicyWatchHelper struct {
+	Events []*AutoMsgIPAMPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) Reset()         { *m = AutoMsgIPAMPolicyWatchHelper{} }
+func (m *AutoMsgIPAMPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgIPAMPolicyWatchHelper) ProtoMessage()    {}
+func (*AutoMsgIPAMPolicyWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcNetwork, []int{0}
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) GetEvents() []*AutoMsgIPAMPolicyWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgIPAMPolicyWatchHelper_WatchEvent struct {
+	Type   string      `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	Object *IPAMPolicy `protobuf:"bytes,2,opt,name=Object" json:"object,omitempty"`
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Reset() {
+	*m = AutoMsgIPAMPolicyWatchHelper_WatchEvent{}
+}
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgIPAMPolicyWatchHelper_WatchEvent) ProtoMessage()    {}
+func (*AutoMsgIPAMPolicyWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcNetwork, []int{0, 0}
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) GetObject() *IPAMPolicy {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 // AutoMsgLbPolicyWatchHelper is a wrapper object for watch events for LbPolicy objects
 type AutoMsgLbPolicyWatchHelper struct {
 	Events []*AutoMsgLbPolicyWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
@@ -34,7 +81,7 @@ func (m *AutoMsgLbPolicyWatchHelper) Reset()         { *m = AutoMsgLbPolicyWatch
 func (m *AutoMsgLbPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgLbPolicyWatchHelper) ProtoMessage()    {}
 func (*AutoMsgLbPolicyWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{0}
+	return fileDescriptorSvcNetwork, []int{1}
 }
 
 func (m *AutoMsgLbPolicyWatchHelper) GetEvents() []*AutoMsgLbPolicyWatchHelper_WatchEvent {
@@ -53,7 +100,7 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Reset()         { *m = AutoMsgLb
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgLbPolicyWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgLbPolicyWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{0, 0}
+	return fileDescriptorSvcNetwork, []int{1, 0}
 }
 
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) GetType() string {
@@ -79,7 +126,7 @@ func (m *AutoMsgNetworkInterfaceWatchHelper) Reset()         { *m = AutoMsgNetwo
 func (m *AutoMsgNetworkInterfaceWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgNetworkInterfaceWatchHelper) ProtoMessage()    {}
 func (*AutoMsgNetworkInterfaceWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{1}
+	return fileDescriptorSvcNetwork, []int{2}
 }
 
 func (m *AutoMsgNetworkInterfaceWatchHelper) GetEvents() []*AutoMsgNetworkInterfaceWatchHelper_WatchEvent {
@@ -102,7 +149,7 @@ func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) String() string {
 }
 func (*AutoMsgNetworkInterfaceWatchHelper_WatchEvent) ProtoMessage() {}
 func (*AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{1, 0}
+	return fileDescriptorSvcNetwork, []int{2, 0}
 }
 
 func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) GetType() string {
@@ -128,7 +175,7 @@ func (m *AutoMsgNetworkWatchHelper) Reset()         { *m = AutoMsgNetworkWatchHe
 func (m *AutoMsgNetworkWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgNetworkWatchHelper) ProtoMessage()    {}
 func (*AutoMsgNetworkWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{2}
+	return fileDescriptorSvcNetwork, []int{3}
 }
 
 func (m *AutoMsgNetworkWatchHelper) GetEvents() []*AutoMsgNetworkWatchHelper_WatchEvent {
@@ -147,7 +194,7 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Reset()         { *m = AutoMsgNet
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgNetworkWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgNetworkWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{2, 0}
+	return fileDescriptorSvcNetwork, []int{3, 0}
 }
 
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) GetType() string {
@@ -173,7 +220,7 @@ func (m *AutoMsgServiceWatchHelper) Reset()         { *m = AutoMsgServiceWatchHe
 func (m *AutoMsgServiceWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgServiceWatchHelper) ProtoMessage()    {}
 func (*AutoMsgServiceWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{3}
+	return fileDescriptorSvcNetwork, []int{4}
 }
 
 func (m *AutoMsgServiceWatchHelper) GetEvents() []*AutoMsgServiceWatchHelper_WatchEvent {
@@ -192,7 +239,7 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Reset()         { *m = AutoMsgSer
 func (m *AutoMsgServiceWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgServiceWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgServiceWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{3, 0}
+	return fileDescriptorSvcNetwork, []int{4, 0}
 }
 
 func (m *AutoMsgServiceWatchHelper_WatchEvent) GetType() string {
@@ -218,7 +265,7 @@ func (m *AutoMsgVirtualRouterWatchHelper) Reset()         { *m = AutoMsgVirtualR
 func (m *AutoMsgVirtualRouterWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgVirtualRouterWatchHelper) ProtoMessage()    {}
 func (*AutoMsgVirtualRouterWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{4}
+	return fileDescriptorSvcNetwork, []int{5}
 }
 
 func (m *AutoMsgVirtualRouterWatchHelper) GetEvents() []*AutoMsgVirtualRouterWatchHelper_WatchEvent {
@@ -241,7 +288,7 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) String() string {
 }
 func (*AutoMsgVirtualRouterWatchHelper_WatchEvent) ProtoMessage() {}
 func (*AutoMsgVirtualRouterWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcNetwork, []int{4, 0}
+	return fileDescriptorSvcNetwork, []int{5, 0}
 }
 
 func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) GetType() string {
@@ -258,6 +305,26 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) GetObject() *VirtualRouter 
 	return nil
 }
 
+// IPAMPolicyList is a container object for list of IPAMPolicy objects
+type IPAMPolicyList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,json=list-meta,inline,embedded=ListMeta" json:"list-meta,inline"`
+	// List of IPAMPolicy objects
+	Items []*IPAMPolicy `protobuf:"bytes,4,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *IPAMPolicyList) Reset()                    { *m = IPAMPolicyList{} }
+func (m *IPAMPolicyList) String() string            { return proto.CompactTextString(m) }
+func (*IPAMPolicyList) ProtoMessage()               {}
+func (*IPAMPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{6} }
+
+func (m *IPAMPolicyList) GetItems() []*IPAMPolicy {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 // LbPolicyList is a container object for list of LbPolicy objects
 type LbPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -269,7 +336,7 @@ type LbPolicyList struct {
 func (m *LbPolicyList) Reset()                    { *m = LbPolicyList{} }
 func (m *LbPolicyList) String() string            { return proto.CompactTextString(m) }
 func (*LbPolicyList) ProtoMessage()               {}
-func (*LbPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{5} }
+func (*LbPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{7} }
 
 func (m *LbPolicyList) GetItems() []*LbPolicy {
 	if m != nil {
@@ -289,7 +356,7 @@ type NetworkInterfaceList struct {
 func (m *NetworkInterfaceList) Reset()                    { *m = NetworkInterfaceList{} }
 func (m *NetworkInterfaceList) String() string            { return proto.CompactTextString(m) }
 func (*NetworkInterfaceList) ProtoMessage()               {}
-func (*NetworkInterfaceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{6} }
+func (*NetworkInterfaceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{8} }
 
 func (m *NetworkInterfaceList) GetItems() []*NetworkInterface {
 	if m != nil {
@@ -309,7 +376,7 @@ type NetworkList struct {
 func (m *NetworkList) Reset()                    { *m = NetworkList{} }
 func (m *NetworkList) String() string            { return proto.CompactTextString(m) }
 func (*NetworkList) ProtoMessage()               {}
-func (*NetworkList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{7} }
+func (*NetworkList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{9} }
 
 func (m *NetworkList) GetItems() []*Network {
 	if m != nil {
@@ -329,7 +396,7 @@ type ServiceList struct {
 func (m *ServiceList) Reset()                    { *m = ServiceList{} }
 func (m *ServiceList) String() string            { return proto.CompactTextString(m) }
 func (*ServiceList) ProtoMessage()               {}
-func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{8} }
+func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{10} }
 
 func (m *ServiceList) GetItems() []*Service {
 	if m != nil {
@@ -349,7 +416,7 @@ type VirtualRouterList struct {
 func (m *VirtualRouterList) Reset()                    { *m = VirtualRouterList{} }
 func (m *VirtualRouterList) String() string            { return proto.CompactTextString(m) }
 func (*VirtualRouterList) ProtoMessage()               {}
-func (*VirtualRouterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{9} }
+func (*VirtualRouterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{11} }
 
 func (m *VirtualRouterList) GetItems() []*VirtualRouter {
 	if m != nil {
@@ -359,6 +426,8 @@ func (m *VirtualRouterList) GetItems() []*VirtualRouter {
 }
 
 func init() {
+	proto.RegisterType((*AutoMsgIPAMPolicyWatchHelper)(nil), "network.AutoMsgIPAMPolicyWatchHelper")
+	proto.RegisterType((*AutoMsgIPAMPolicyWatchHelper_WatchEvent)(nil), "network.AutoMsgIPAMPolicyWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgLbPolicyWatchHelper)(nil), "network.AutoMsgLbPolicyWatchHelper")
 	proto.RegisterType((*AutoMsgLbPolicyWatchHelper_WatchEvent)(nil), "network.AutoMsgLbPolicyWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgNetworkInterfaceWatchHelper)(nil), "network.AutoMsgNetworkInterfaceWatchHelper")
@@ -369,6 +438,7 @@ func init() {
 	proto.RegisterType((*AutoMsgServiceWatchHelper_WatchEvent)(nil), "network.AutoMsgServiceWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgVirtualRouterWatchHelper)(nil), "network.AutoMsgVirtualRouterWatchHelper")
 	proto.RegisterType((*AutoMsgVirtualRouterWatchHelper_WatchEvent)(nil), "network.AutoMsgVirtualRouterWatchHelper.WatchEvent")
+	proto.RegisterType((*IPAMPolicyList)(nil), "network.IPAMPolicyList")
 	proto.RegisterType((*LbPolicyList)(nil), "network.LbPolicyList")
 	proto.RegisterType((*NetworkInterfaceList)(nil), "network.NetworkInterfaceList")
 	proto.RegisterType((*NetworkList)(nil), "network.NetworkList")
@@ -387,6 +457,8 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for NetworkV1 service
 
 type NetworkV1Client interface {
+	// Create IPAMPolicy object
+	AutoAddIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error)
 	// Create LbPolicy object
 	AutoAddLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Create Network object
@@ -397,6 +469,8 @@ type NetworkV1Client interface {
 	AutoAddService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
 	// Create VirtualRouter object
 	AutoAddVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
+	// Delete IPAMPolicy object
+	AutoDeleteIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error)
 	// Delete LbPolicy object
 	AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Delete Network object
@@ -407,6 +481,8 @@ type NetworkV1Client interface {
 	AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
 	// Delete VirtualRouter object
 	AutoDeleteVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
+	// Get IPAMPolicy object
+	AutoGetIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error)
 	// Get LbPolicy object
 	AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Get Network object
@@ -417,6 +493,8 @@ type NetworkV1Client interface {
 	AutoGetService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
 	// Get VirtualRouter object
 	AutoGetVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
+	// List IPAMPolicy objects
+	AutoListIPAMPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*IPAMPolicyList, error)
 	// List LbPolicy objects
 	AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*LbPolicyList, error)
 	// List Network objects
@@ -427,6 +505,8 @@ type NetworkV1Client interface {
 	AutoListService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ServiceList, error)
 	// List VirtualRouter objects
 	AutoListVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*VirtualRouterList, error)
+	// Update IPAMPolicy object
+	AutoUpdateIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error)
 	// Update LbPolicy object
 	AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Update Network object
@@ -437,6 +517,8 @@ type NetworkV1Client interface {
 	AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
 	// Update VirtualRouter object
 	AutoUpdateVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
+	// Watch IPAMPolicy objects. Supports WebSockets or HTTP long poll
+	AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchIPAMPolicyClient, error)
 	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchLbPolicyClient, error)
 	// Watch Network objects. Supports WebSockets or HTTP long poll
@@ -456,6 +538,15 @@ type networkV1Client struct {
 
 func NewNetworkV1Client(cc *grpc.ClientConn) NetworkV1Client {
 	return &networkV1Client{cc}
+}
+
+func (c *networkV1Client) AutoAddIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error) {
+	out := new(IPAMPolicy)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoAddIPAMPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *networkV1Client) AutoAddLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
@@ -497,6 +588,15 @@ func (c *networkV1Client) AutoAddService(ctx context.Context, in *Service, opts 
 func (c *networkV1Client) AutoAddVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
 	out := new(VirtualRouter)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoAddVirtualRouter", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoDeleteIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error) {
+	out := new(IPAMPolicy)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoDeleteIPAMPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -548,6 +648,15 @@ func (c *networkV1Client) AutoDeleteVirtualRouter(ctx context.Context, in *Virtu
 	return out, nil
 }
 
+func (c *networkV1Client) AutoGetIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error) {
+	out := new(IPAMPolicy)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoGetIPAMPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkV1Client) AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
 	out := new(LbPolicy)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoGetLbPolicy", in, out, c.cc, opts...)
@@ -587,6 +696,15 @@ func (c *networkV1Client) AutoGetService(ctx context.Context, in *Service, opts 
 func (c *networkV1Client) AutoGetVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
 	out := new(VirtualRouter)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoGetVirtualRouter", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoListIPAMPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*IPAMPolicyList, error) {
+	out := new(IPAMPolicyList)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoListIPAMPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -638,6 +756,15 @@ func (c *networkV1Client) AutoListVirtualRouter(ctx context.Context, in *api.Lis
 	return out, nil
 }
 
+func (c *networkV1Client) AutoUpdateIPAMPolicy(ctx context.Context, in *IPAMPolicy, opts ...grpc.CallOption) (*IPAMPolicy, error) {
+	out := new(IPAMPolicy)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateIPAMPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkV1Client) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
 	out := new(LbPolicy)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateLbPolicy", in, out, c.cc, opts...)
@@ -683,8 +810,40 @@ func (c *networkV1Client) AutoUpdateVirtualRouter(ctx context.Context, in *Virtu
 	return out, nil
 }
 
+func (c *networkV1Client) AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchIPAMPolicyClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[0], c.cc, "/network.NetworkV1/AutoWatchIPAMPolicy", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &networkV1AutoWatchIPAMPolicyClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type NetworkV1_AutoWatchIPAMPolicyClient interface {
+	Recv() (*AutoMsgIPAMPolicyWatchHelper, error)
+	grpc.ClientStream
+}
+
+type networkV1AutoWatchIPAMPolicyClient struct {
+	grpc.ClientStream
+}
+
+func (x *networkV1AutoWatchIPAMPolicyClient) Recv() (*AutoMsgIPAMPolicyWatchHelper, error) {
+	m := new(AutoMsgIPAMPolicyWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *networkV1Client) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchLbPolicyClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[0], c.cc, "/network.NetworkV1/AutoWatchLbPolicy", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[1], c.cc, "/network.NetworkV1/AutoWatchLbPolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -716,7 +875,7 @@ func (x *networkV1AutoWatchLbPolicyClient) Recv() (*AutoMsgLbPolicyWatchHelper, 
 }
 
 func (c *networkV1Client) AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[1], c.cc, "/network.NetworkV1/AutoWatchNetwork", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[2], c.cc, "/network.NetworkV1/AutoWatchNetwork", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -748,7 +907,7 @@ func (x *networkV1AutoWatchNetworkClient) Recv() (*AutoMsgNetworkWatchHelper, er
 }
 
 func (c *networkV1Client) AutoWatchNetworkInterface(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkInterfaceClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[2], c.cc, "/network.NetworkV1/AutoWatchNetworkInterface", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[3], c.cc, "/network.NetworkV1/AutoWatchNetworkInterface", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -780,7 +939,7 @@ func (x *networkV1AutoWatchNetworkInterfaceClient) Recv() (*AutoMsgNetworkInterf
 }
 
 func (c *networkV1Client) AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchServiceClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[3], c.cc, "/network.NetworkV1/AutoWatchService", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[4], c.cc, "/network.NetworkV1/AutoWatchService", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -812,7 +971,7 @@ func (x *networkV1AutoWatchServiceClient) Recv() (*AutoMsgServiceWatchHelper, er
 }
 
 func (c *networkV1Client) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchSvcNetworkV1Client, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[4], c.cc, "/network.NetworkV1/AutoWatchSvcNetworkV1", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[5], c.cc, "/network.NetworkV1/AutoWatchSvcNetworkV1", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -844,7 +1003,7 @@ func (x *networkV1AutoWatchSvcNetworkV1Client) Recv() (*api.WatchEventList, erro
 }
 
 func (c *networkV1Client) AutoWatchVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchVirtualRouterClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[5], c.cc, "/network.NetworkV1/AutoWatchVirtualRouter", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[6], c.cc, "/network.NetworkV1/AutoWatchVirtualRouter", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -878,6 +1037,8 @@ func (x *networkV1AutoWatchVirtualRouterClient) Recv() (*AutoMsgVirtualRouterWat
 // Server API for NetworkV1 service
 
 type NetworkV1Server interface {
+	// Create IPAMPolicy object
+	AutoAddIPAMPolicy(context.Context, *IPAMPolicy) (*IPAMPolicy, error)
 	// Create LbPolicy object
 	AutoAddLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Create Network object
@@ -888,6 +1049,8 @@ type NetworkV1Server interface {
 	AutoAddService(context.Context, *Service) (*Service, error)
 	// Create VirtualRouter object
 	AutoAddVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
+	// Delete IPAMPolicy object
+	AutoDeleteIPAMPolicy(context.Context, *IPAMPolicy) (*IPAMPolicy, error)
 	// Delete LbPolicy object
 	AutoDeleteLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Delete Network object
@@ -898,6 +1061,8 @@ type NetworkV1Server interface {
 	AutoDeleteService(context.Context, *Service) (*Service, error)
 	// Delete VirtualRouter object
 	AutoDeleteVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
+	// Get IPAMPolicy object
+	AutoGetIPAMPolicy(context.Context, *IPAMPolicy) (*IPAMPolicy, error)
 	// Get LbPolicy object
 	AutoGetLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Get Network object
@@ -908,6 +1073,8 @@ type NetworkV1Server interface {
 	AutoGetService(context.Context, *Service) (*Service, error)
 	// Get VirtualRouter object
 	AutoGetVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
+	// List IPAMPolicy objects
+	AutoListIPAMPolicy(context.Context, *api.ListWatchOptions) (*IPAMPolicyList, error)
 	// List LbPolicy objects
 	AutoListLbPolicy(context.Context, *api.ListWatchOptions) (*LbPolicyList, error)
 	// List Network objects
@@ -918,6 +1085,8 @@ type NetworkV1Server interface {
 	AutoListService(context.Context, *api.ListWatchOptions) (*ServiceList, error)
 	// List VirtualRouter objects
 	AutoListVirtualRouter(context.Context, *api.ListWatchOptions) (*VirtualRouterList, error)
+	// Update IPAMPolicy object
+	AutoUpdateIPAMPolicy(context.Context, *IPAMPolicy) (*IPAMPolicy, error)
 	// Update LbPolicy object
 	AutoUpdateLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Update Network object
@@ -928,6 +1097,8 @@ type NetworkV1Server interface {
 	AutoUpdateService(context.Context, *Service) (*Service, error)
 	// Update VirtualRouter object
 	AutoUpdateVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
+	// Watch IPAMPolicy objects. Supports WebSockets or HTTP long poll
+	AutoWatchIPAMPolicy(*api.ListWatchOptions, NetworkV1_AutoWatchIPAMPolicyServer) error
 	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(*api.ListWatchOptions, NetworkV1_AutoWatchLbPolicyServer) error
 	// Watch Network objects. Supports WebSockets or HTTP long poll
@@ -943,6 +1114,24 @@ type NetworkV1Server interface {
 
 func RegisterNetworkV1Server(s *grpc.Server, srv NetworkV1Server) {
 	s.RegisterService(&_NetworkV1_serviceDesc, srv)
+}
+
+func _NetworkV1_AutoAddIPAMPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPAMPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoAddIPAMPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoAddIPAMPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoAddIPAMPolicy(ctx, req.(*IPAMPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _NetworkV1_AutoAddLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1031,6 +1220,24 @@ func _NetworkV1_AutoAddVirtualRouter_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NetworkV1Server).AutoAddVirtualRouter(ctx, req.(*VirtualRouter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoDeleteIPAMPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPAMPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoDeleteIPAMPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoDeleteIPAMPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoDeleteIPAMPolicy(ctx, req.(*IPAMPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1125,6 +1332,24 @@ func _NetworkV1_AutoDeleteVirtualRouter_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NetworkV1_AutoGetIPAMPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPAMPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoGetIPAMPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoGetIPAMPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoGetIPAMPolicy(ctx, req.(*IPAMPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NetworkV1_AutoGetLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LbPolicy)
 	if err := dec(in); err != nil {
@@ -1211,6 +1436,24 @@ func _NetworkV1_AutoGetVirtualRouter_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NetworkV1Server).AutoGetVirtualRouter(ctx, req.(*VirtualRouter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoListIPAMPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoListIPAMPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoListIPAMPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoListIPAMPolicy(ctx, req.(*api.ListWatchOptions))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1305,6 +1548,24 @@ func _NetworkV1_AutoListVirtualRouter_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NetworkV1_AutoUpdateIPAMPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IPAMPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoUpdateIPAMPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoUpdateIPAMPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoUpdateIPAMPolicy(ctx, req.(*IPAMPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NetworkV1_AutoUpdateLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LbPolicy)
 	if err := dec(in); err != nil {
@@ -1393,6 +1654,27 @@ func _NetworkV1_AutoUpdateVirtualRouter_Handler(srv interface{}, ctx context.Con
 		return srv.(NetworkV1Server).AutoUpdateVirtualRouter(ctx, req.(*VirtualRouter))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoWatchIPAMPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NetworkV1Server).AutoWatchIPAMPolicy(m, &networkV1AutoWatchIPAMPolicyServer{stream})
+}
+
+type NetworkV1_AutoWatchIPAMPolicyServer interface {
+	Send(*AutoMsgIPAMPolicyWatchHelper) error
+	grpc.ServerStream
+}
+
+type networkV1AutoWatchIPAMPolicyServer struct {
+	grpc.ServerStream
+}
+
+func (x *networkV1AutoWatchIPAMPolicyServer) Send(m *AutoMsgIPAMPolicyWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _NetworkV1_AutoWatchLbPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -1526,6 +1808,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*NetworkV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "AutoAddIPAMPolicy",
+			Handler:    _NetworkV1_AutoAddIPAMPolicy_Handler,
+		},
+		{
 			MethodName: "AutoAddLbPolicy",
 			Handler:    _NetworkV1_AutoAddLbPolicy_Handler,
 		},
@@ -1544,6 +1830,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoAddVirtualRouter",
 			Handler:    _NetworkV1_AutoAddVirtualRouter_Handler,
+		},
+		{
+			MethodName: "AutoDeleteIPAMPolicy",
+			Handler:    _NetworkV1_AutoDeleteIPAMPolicy_Handler,
 		},
 		{
 			MethodName: "AutoDeleteLbPolicy",
@@ -1566,6 +1856,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NetworkV1_AutoDeleteVirtualRouter_Handler,
 		},
 		{
+			MethodName: "AutoGetIPAMPolicy",
+			Handler:    _NetworkV1_AutoGetIPAMPolicy_Handler,
+		},
+		{
 			MethodName: "AutoGetLbPolicy",
 			Handler:    _NetworkV1_AutoGetLbPolicy_Handler,
 		},
@@ -1586,6 +1880,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NetworkV1_AutoGetVirtualRouter_Handler,
 		},
 		{
+			MethodName: "AutoListIPAMPolicy",
+			Handler:    _NetworkV1_AutoListIPAMPolicy_Handler,
+		},
+		{
 			MethodName: "AutoListLbPolicy",
 			Handler:    _NetworkV1_AutoListLbPolicy_Handler,
 		},
@@ -1604,6 +1902,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoListVirtualRouter",
 			Handler:    _NetworkV1_AutoListVirtualRouter_Handler,
+		},
+		{
+			MethodName: "AutoUpdateIPAMPolicy",
+			Handler:    _NetworkV1_AutoUpdateIPAMPolicy_Handler,
 		},
 		{
 			MethodName: "AutoUpdateLbPolicy",
@@ -1627,6 +1929,11 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchIPAMPolicy",
+			Handler:       _NetworkV1_AutoWatchIPAMPolicy_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "AutoWatchLbPolicy",
 			Handler:       _NetworkV1_AutoWatchLbPolicy_Handler,
@@ -1659,6 +1966,70 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Metadata: "svc_network.proto",
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
+		n1, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
 }
 
 func (m *AutoMsgLbPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
@@ -1716,11 +2087,11 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, err
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
-		n1, err := m.Object.MarshalTo(dAtA[i:])
+		n2, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n1
+		i += n2
 	}
 	return i, nil
 }
@@ -1780,11 +2151,11 @@ func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
-		n2, err := m.Object.MarshalTo(dAtA[i:])
+		n3, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n3
 	}
 	return i, nil
 }
@@ -1844,11 +2215,11 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
-		n3, err := m.Object.MarshalTo(dAtA[i:])
+		n4, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	return i, nil
 }
@@ -1908,11 +2279,11 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
-		n4, err := m.Object.MarshalTo(dAtA[i:])
+		n5, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	return i, nil
 }
@@ -1972,11 +2343,57 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
-		n5, err := m.Object.MarshalTo(dAtA[i:])
+		n6, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
+	}
+	return i, nil
+}
+
+func (m *IPAMPolicyList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IPAMPolicyList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -1999,19 +2416,19 @@ func (m *LbPolicyList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n9
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n7, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n10, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n10
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2045,19 +2462,19 @@ func (m *NetworkInterfaceList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n8
+	i += n11
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n9, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n12, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n12
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2091,19 +2508,19 @@ func (m *NetworkList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n13, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n13
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n11, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n14, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n14
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2137,19 +2554,19 @@ func (m *ServiceList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n12, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n15, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n12
+	i += n15
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n13, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n16, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n13
+	i += n16
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2183,19 +2600,19 @@ func (m *VirtualRouterList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n17, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n14
+	i += n17
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n15, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n18, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n15
+	i += n18
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2220,6 +2637,32 @@ func encodeVarintSvcNetwork(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *AutoMsgIPAMPolicyWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcNetwork(uint64(l))
+	}
+	return n
+}
+
 func (m *AutoMsgLbPolicyWatchHelper) Size() (n int) {
 	var l int
 	_ = l
@@ -2350,6 +2793,22 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Size() (n int) {
 	return n
 }
 
+func (m *IPAMPolicyList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *LbPolicyList) Size() (n int) {
 	var l int
 	_ = l
@@ -2442,6 +2901,199 @@ func sovSvcNetwork(x uint64) (n int) {
 }
 func sozSvcNetwork(x uint64) (n int) {
 	return sovSvcNetwork(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *AutoMsgIPAMPolicyWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgIPAMPolicyWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgIPAMPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgIPAMPolicyWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &IPAMPolicy{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *AutoMsgLbPolicyWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -3408,6 +4060,147 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Unmarshal(dAtA []byte) erro
 	}
 	return nil
 }
+func (m *IPAMPolicyList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IPAMPolicyList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IPAMPolicyList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &IPAMPolicy{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *LbPolicyList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4221,91 +5014,108 @@ var (
 func init() { proto.RegisterFile("svc_network.proto", fileDescriptorSvcNetwork) }
 
 var fileDescriptorSvcNetwork = []byte{
-	// 1364 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xcf, 0x6f, 0xdb, 0x54,
-	0x1c, 0xef, 0xeb, 0xb6, 0x6e, 0x7d, 0x65, 0x6d, 0xfa, 0xd6, 0x96, 0xd8, 0x1d, 0x4d, 0x17, 0x86,
-	0x54, 0x89, 0x35, 0x6e, 0x3b, 0xd1, 0x49, 0x15, 0x02, 0x2d, 0x5a, 0xd5, 0x4e, 0xdb, 0xda, 0x12,
-	0xba, 0x15, 0x2a, 0x10, 0x72, 0x9c, 0xd7, 0xd4, 0xe0, 0xd8, 0x51, 0xfc, 0x92, 0xaa, 0x42, 0x93,
-	0xd0, 0x92, 0x09, 0x6e, 0x48, 0x70, 0x41, 0x5c, 0x10, 0x3d, 0x70, 0xd8, 0xb1, 0x27, 0x8e, 0x1c,
-	0x77, 0x9c, 0xc4, 0x89, 0x21, 0x45, 0xa8, 0x02, 0x81, 0xc2, 0x5f, 0xc0, 0x0d, 0xf9, 0xf9, 0xd9,
-	0x8e, 0x9f, 0xe3, 0x38, 0xee, 0x2a, 0x54, 0x2e, 0xad, 0xfd, 0xfc, 0xfd, 0x7e, 0xde, 0xe7, 0xf3,
-	0xfd, 0x15, 0xfb, 0xc1, 0x51, 0xb3, 0xa6, 0x7c, 0xa4, 0x63, 0xb2, 0x67, 0x54, 0x3e, 0xc9, 0x94,
-	0x2b, 0x06, 0x31, 0xd0, 0x79, 0x76, 0x2b, 0x5e, 0x2e, 0x1a, 0x46, 0x51, 0xc3, 0x92, 0x5c, 0x56,
-	0x25, 0x59, 0xd7, 0x0d, 0x22, 0x13, 0xd5, 0xd0, 0x4d, 0xdb, 0x4c, 0x5c, 0x2e, 0xaa, 0x64, 0xb7,
-	0x9a, 0xcf, 0x28, 0x46, 0x49, 0x2a, 0x63, 0xdd, 0x94, 0xf5, 0x82, 0x21, 0x99, 0x7b, 0x52, 0x0d,
-	0xeb, 0xaa, 0x82, 0xa5, 0x2a, 0x51, 0x35, 0xd3, 0x72, 0x2d, 0x62, 0xbd, 0xdd, 0x5b, 0x52, 0x75,
-	0x45, 0xab, 0x16, 0xb0, 0x03, 0x33, 0xdb, 0x06, 0x53, 0x34, 0x8a, 0x86, 0x44, 0x97, 0xf3, 0xd5,
-	0x1d, 0x7a, 0x47, 0x6f, 0xe8, 0x15, 0x33, 0xcf, 0x84, 0xec, 0x6a, 0x71, 0xa4, 0x16, 0xa6, 0x44,
-	0xb0, 0x2e, 0xeb, 0x84, 0xd9, 0xcf, 0x75, 0xb1, 0xd7, 0xe4, 0x3c, 0xd6, 0x4c, 0xc9, 0xc4, 0x1a,
-	0x56, 0x88, 0x51, 0x61, 0x1e, 0x17, 0x7d, 0xd1, 0x10, 0x2f, 0x68, 0x79, 0xe7, 0x81, 0x89, 0x2b,
-	0x35, 0x55, 0xc1, 0xec, 0x76, 0xb0, 0x56, 0xd9, 0x61, 0x97, 0x13, 0xcc, 0x45, 0xd5, 0x09, 0xae,
-	0xec, 0xc8, 0xae, 0xc9, 0x6b, 0x5d, 0x36, 0x2f, 0x61, 0x22, 0xdb, 0x66, 0xe9, 0x16, 0x80, 0xe2,
-	0xcd, 0x2a, 0x31, 0xee, 0x99, 0xc5, 0xbb, 0xf9, 0x0d, 0x43, 0x53, 0x95, 0xfd, 0x2d, 0x99, 0x28,
-	0xbb, 0xab, 0x58, 0x2b, 0xe3, 0x0a, 0xca, 0xc1, 0x81, 0xe5, 0x1a, 0xd6, 0x89, 0x99, 0x04, 0xd3,
-	0x67, 0x66, 0x86, 0x16, 0x32, 0x19, 0x87, 0x61, 0xb8, 0x53, 0x86, 0x5e, 0x53, 0xb7, 0x2c, 0x6c,
-	0x35, 0x53, 0x03, 0x98, 0x22, 0xe4, 0xd8, 0x7f, 0xb1, 0x08, 0xa1, 0x67, 0x81, 0xa6, 0xe1, 0xd9,
-	0xcd, 0xfd, 0x32, 0x4e, 0x82, 0x69, 0x30, 0x33, 0x98, 0x45, 0xad, 0x66, 0x6a, 0x98, 0xec, 0x97,
-	0xf1, 0x35, 0xa3, 0xa4, 0x12, 0x5c, 0x2a, 0x93, 0x7d, 0x74, 0x03, 0x0e, 0xac, 0xe7, 0x3f, 0xc6,
-	0x0a, 0x49, 0xf6, 0x4f, 0x83, 0x99, 0xa1, 0x85, 0x51, 0x97, 0x83, 0xb3, 0x79, 0x76, 0xac, 0xd5,
-	0x4c, 0x25, 0x0c, 0x6a, 0xe4, 0x39, 0x2e, 0x8d, 0x3c, 0x7f, 0x2c, 0x0c, 0xed, 0x59, 0x5b, 0xed,
-	0x52, 0x62, 0xe9, 0x47, 0xfd, 0x30, 0xcd, 0x78, 0xaf, 0xd9, 0x10, 0xb7, 0x9d, 0xa8, 0xb5, 0x8b,
-	0xde, 0xe6, 0x44, 0x2f, 0xf2, 0xa2, 0xbb, 0x38, 0x47, 0x89, 0x37, 0x62, 0x8a, 0x7f, 0x9b, 0x13,
-	0x2f, 0xb8, 0x5c, 0x78, 0x12, 0xbd, 0x06, 0xe1, 0x4f, 0x00, 0x05, 0xbf, 0x8e, 0x76, 0xed, 0xef,
-	0x70, 0xda, 0x67, 0x43, 0xb4, 0xc7, 0x90, 0xbc, 0x13, 0x53, 0xf2, 0x22, 0x27, 0x39, 0xc1, 0x4b,
-	0x3e, 0x86, 0xd2, 0x77, 0xed, 0xf6, 0x89, 0xa5, 0x34, 0xe8, 0xf3, 0xdf, 0x29, 0x65, 0x7b, 0xf7,
-	0xaa, 0xf4, 0x1f, 0x00, 0x53, 0x8c, 0xf5, 0x03, 0xb5, 0x42, 0xaa, 0xb2, 0x96, 0x33, 0xaa, 0x04,
-	0x57, 0xda, 0xf5, 0x6e, 0x71, 0x7a, 0xaf, 0xf3, 0x7a, 0xc3, 0x3c, 0xa3, 0x54, 0x6b, 0x31, 0x55,
-	0xbf, 0xc9, 0xa9, 0x9e, 0x70, 0x89, 0xf8, 0x18, 0xf4, 0xaa, 0xfd, 0x57, 0x00, 0x5f, 0x72, 0x06,
-	0xc1, 0x5d, 0xd5, 0x24, 0x68, 0x11, 0x82, 0x4d, 0x06, 0x7d, 0x31, 0x23, 0x97, 0xd5, 0x8c, 0xc5,
-	0xe7, 0x1e, 0x26, 0x72, 0xf6, 0xd2, 0xd3, 0x66, 0xaa, 0xef, 0x59, 0x33, 0x05, 0x5a, 0xcd, 0xd4,
-	0xf9, 0x6b, 0xaa, 0xae, 0xa9, 0x3a, 0xce, 0x39, 0x17, 0x68, 0x1d, 0x5e, 0xb0, 0xfc, 0x2d, 0xcb,
-	0xe4, 0x99, 0x36, 0x77, 0x67, 0x31, 0x7b, 0xb9, 0xcd, 0x3d, 0xa1, 0xa9, 0x26, 0x99, 0xb5, 0x06,
-	0xa9, 0x83, 0x13, 0x58, 0x41, 0x0b, 0xf0, 0xdc, 0x6d, 0x82, 0x4b, 0x66, 0xf2, 0x2c, 0x0d, 0x78,
-	0x87, 0xb9, 0x35, 0xd8, 0x6a, 0xa6, 0xce, 0x59, 0xca, 0xcc, 0x9c, 0xfd, 0x6f, 0x69, 0xf8, 0xf9,
-	0x63, 0x01, 0x5a, 0x48, 0x4c, 0xdd, 0xdf, 0x00, 0x8e, 0xf1, 0x9d, 0x7e, 0xba, 0x54, 0x2e, 0xf9,
-	0x55, 0x76, 0x19, 0x50, 0xd1, 0x6a, 0x7f, 0x01, 0x70, 0x88, 0xb9, 0x9d, 0x2e, 0x91, 0xf3, 0x7e,
-	0x91, 0xc1, 0x91, 0xd4, 0x9b, 0x36, 0xd6, 0xd6, 0xff, 0x13, 0x6d, 0xce, 0x10, 0x8a, 0xd6, 0xf6,
-	0x07, 0x80, 0xa3, 0xbe, 0xe6, 0x3d, 0x5d, 0x0a, 0x6f, 0xf8, 0x15, 0x86, 0x0d, 0x9c, 0x48, 0x9d,
-	0x0b, 0xdf, 0x0b, 0x70, 0x90, 0x65, 0xfc, 0xc1, 0x3c, 0xba, 0x03, 0x47, 0xac, 0xd1, 0x79, 0xb3,
-	0x50, 0x70, 0x1a, 0x1a, 0x05, 0x7b, 0x5c, 0x0c, 0x2e, 0xa5, 0xd1, 0x61, 0x43, 0x18, 0x50, 0x2a,
-	0x58, 0x26, 0xf8, 0xc7, 0x86, 0x00, 0x7e, 0x6a, 0x08, 0x7d, 0x68, 0x15, 0x0e, 0x33, 0x30, 0xb6,
-	0x01, 0x0a, 0x14, 0x99, 0x18, 0x58, 0xe9, 0x88, 0xa4, 0xc0, 0x97, 0xfd, 0x48, 0x6e, 0x07, 0xa2,
-	0xf0, 0xe6, 0x14, 0xc3, 0x1f, 0x45, 0xd0, 0x65, 0x55, 0x82, 0x02, 0x75, 0x23, 0x06, 0x56, 0x3a,
-	0x22, 0x6d, 0xc3, 0x31, 0x86, 0xe4, 0xcb, 0x06, 0x0a, 0xc9, 0x92, 0x18, 0xb2, 0xde, 0x11, 0x7b,
-	0x0d, 0x22, 0x0b, 0xfb, 0x16, 0xd6, 0x30, 0xc1, 0xc7, 0x49, 0x52, 0x81, 0x7a, 0xba, 0x78, 0x77,
-	0xe0, 0xa8, 0x87, 0x17, 0x3b, 0x4f, 0x1c, 0xd8, 0x8e, 0xfd, 0xe6, 0xed, 0x03, 0x3b, 0x91, 0x54,
-	0x75, 0x23, 0x1d, 0x3b, 0x5b, 0x1c, 0xd8, 0x87, 0x76, 0x71, 0xd9, 0x60, 0x27, 0x90, 0x30, 0x0e,
-	0x7e, 0xd5, 0x6e, 0xa9, 0x15, 0x4c, 0x62, 0x66, 0x6b, 0xe4, 0xb0, 0x21, 0x9c, 0x29, 0x62, 0xe2,
-	0x22, 0x7d, 0x09, 0xec, 0x0a, 0x5d, 0xc1, 0x24, 0x4e, 0xa2, 0xde, 0xf7, 0xe3, 0x80, 0x47, 0x3f,
-	0xff, 0xfe, 0x75, 0xff, 0x2d, 0xd8, 0xb7, 0xd4, 0xb7, 0x9d, 0xb4, 0xfe, 0x22, 0x24, 0x31, 0x17,
-	0x53, 0xfa, 0x74, 0x3d, 0xb3, 0x26, 0x97, 0xf0, 0x43, 0x74, 0x95, 0x7d, 0xf7, 0x59, 0x2b, 0x9b,
-	0xf4, 0xea, 0x61, 0x07, 0xab, 0xcf, 0x81, 0x1d, 0x3b, 0x8f, 0xd1, 0x8b, 0x66, 0x7b, 0x91, 0x13,
-	0x4d, 0xc9, 0x5e, 0xa1, 0x34, 0x27, 0x25, 0xfe, 0xbb, 0xb0, 0x8d, 0xc9, 0xb2, 0x1b, 0x9a, 0x38,
-	0xe5, 0x10, 0x08, 0xf1, 0x96, 0xdd, 0xb9, 0x2b, 0x98, 0xbc, 0x58, 0x21, 0x04, 0x80, 0x73, 0x30,
-	0x61, 0x01, 0x5b, 0xf3, 0xde, 0x2d, 0x83, 0x71, 0xf7, 0x27, 0x80, 0xbe, 0x6c, 0xae, 0x97, 0xe9,
-	0x17, 0xbd, 0x38, 0x1e, 0x28, 0x05, 0xcb, 0x24, 0x9d, 0x38, 0x6c, 0x08, 0x67, 0xad, 0xc1, 0xed,
-	0x62, 0x7e, 0x01, 0xec, 0xd2, 0xb2, 0x1e, 0x3b, 0x05, 0x11, 0x82, 0x39, 0xc6, 0x47, 0x9c, 0x42,
-	0xae, 0x72, 0x90, 0x76, 0x69, 0x2c, 0xd0, 0xd2, 0x18, 0xa1, 0x31, 0x1f, 0x74, 0x93, 0x8e, 0x26,
-	0xbb, 0x54, 0x04, 0xfa, 0x0c, 0xc0, 0x24, 0x47, 0xc5, 0xab, 0x84, 0x10, 0x4e, 0xaf, 0x84, 0x56,
-	0x01, 0x25, 0x97, 0xe1, 0xf5, 0x52, 0x72, 0x5c, 0xc5, 0x7a, 0xa5, 0x80, 0x36, 0xbc, 0x60, 0x38,
-	0x25, 0x10, 0x19, 0x8c, 0xb6, 0x97, 0x97, 0x0e, 0xf1, 0xfd, 0x00, 0x8e, 0x3b, 0x88, 0xfe, 0x6a,
-	0x08, 0xc1, 0x15, 0x3b, 0x17, 0x43, 0x08, 0x3a, 0x1b, 0xe4, 0xf7, 0xcb, 0x05, 0xf9, 0x78, 0x83,
-	0xbc, 0x4a, 0x3d, 0xf9, 0x99, 0x68, 0xe3, 0xc5, 0x1e, 0xe4, 0x1c, 0x18, 0x1b, 0xe4, 0x3e, 0xb0,
-	0x13, 0x19, 0xe4, 0xdd, 0x48, 0xc7, 0x1e, 0xe4, 0x1c, 0x18, 0x1b, 0xe4, 0x36, 0xd8, 0x09, 0x0c,
-	0x72, 0x0e, 0xbe, 0x60, 0x73, 0xa5, 0x29, 0x8f, 0xea, 0xe1, 0x57, 0x7b, 0x38, 0x54, 0x4a, 0x8f,
-	0x1e, 0x36, 0x84, 0x73, 0xf4, 0xbb, 0xcf, 0xd9, 0x63, 0x0e, 0xa0, 0x1f, 0x80, 0x3d, 0x29, 0xa8,
-	0x61, 0x44, 0x57, 0xa7, 0xa3, 0x4f, 0x32, 0xd2, 0xf7, 0xf9, 0x4d, 0xec, 0x26, 0x7f, 0x8b, 0x36,
-	0xf9, 0x38, 0xed, 0xa6, 0x11, 0x89, 0x3e, 0xf7, 0xba, 0xf9, 0x0a, 0x5b, 0x08, 0x6f, 0xf8, 0x39,
-	0x80, 0xbe, 0x61, 0x47, 0x11, 0xed, 0x44, 0x23, 0x7b, 0xfe, 0xf5, 0x18, 0xe7, 0x4e, 0xe9, 0x37,
-	0x02, 0xf1, 0xa1, 0xd4, 0xa7, 0x28, 0xe9, 0xa4, 0x9f, 0xb4, 0x37, 0x08, 0xe6, 0x00, 0xca, 0xb7,
-	0x85, 0x30, 0x62, 0x16, 0xa4, 0xa3, 0x8f, 0x48, 0x3a, 0xe7, 0xe9, 0x3d, 0x7b, 0x38, 0xd8, 0x7b,
-	0xd4, 0x14, 0xef, 0x15, 0x3a, 0x64, 0xa3, 0x4b, 0x74, 0xd9, 0x3b, 0x55, 0xa0, 0x53, 0xa1, 0x23,
-	0xb2, 0x0e, 0x27, 0x5c, 0xe4, 0x9e, 0xe6, 0xce, 0x4c, 0xaf, 0xc7, 0x1e, 0x1d, 0xf7, 0x13, 0xbf,
-	0x03, 0x5f, 0xd5, 0x85, 0xfe, 0xda, 0xfc, 0xb7, 0x75, 0xc1, 0x39, 0xab, 0x3e, 0xa8, 0x0b, 0xe7,
-	0xd7, 0xbc, 0x4b, 0x16, 0x93, 0x83, 0xba, 0x70, 0xc1, 0xa9, 0xe3, 0x83, 0xba, 0x70, 0xd1, 0xb7,
-	0xcd, 0x41, 0x5d, 0x48, 0xf0, 0xc9, 0x7c, 0x52, 0x17, 0x26, 0xa1, 0x03, 0x84, 0xac, 0xdf, 0x43,
-	0x44, 0x67, 0x20, 0xb2, 0x39, 0x3c, 0xa9, 0x0b, 0x57, 0x61, 0xc0, 0x29, 0x68, 0x97, 0x4d, 0x3c,
-	0x3d, 0x9a, 0x02, 0xcf, 0x8e, 0xa6, 0xc0, 0x6f, 0x47, 0x53, 0xe0, 0xaf, 0xa3, 0xa9, 0xbe, 0x0d,
-	0x90, 0x1f, 0xa0, 0x87, 0xbd, 0xd7, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x86, 0xac, 0x05, 0x33,
-	0x72, 0x17, 0x00, 0x00,
+	// 1640 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0x4d, 0x6c, 0xdc, 0x44,
+	0x18, 0xdd, 0x49, 0xd2, 0xb4, 0x99, 0xd0, 0xfc, 0x4c, 0x92, 0x76, 0xed, 0xb6, 0xd9, 0xd4, 0xb4,
+	0x28, 0x94, 0x66, 0x9d, 0xa4, 0x90, 0x8a, 0xa8, 0x2a, 0x6a, 0xd4, 0x2a, 0xa9, 0xda, 0x26, 0x21,
+	0xa4, 0x2d, 0x44, 0xa0, 0xca, 0xbb, 0x99, 0x6c, 0x0c, 0x8e, 0x6d, 0xad, 0x67, 0x53, 0x45, 0xa8,
+	0x12, 0xea, 0xa6, 0x82, 0x1b, 0x12, 0x08, 0x09, 0x71, 0xcc, 0x01, 0xa1, 0x1e, 0x73, 0x40, 0x1c,
+	0x39, 0xf6, 0x82, 0x54, 0x89, 0x13, 0x45, 0x5a, 0x50, 0x04, 0x02, 0x85, 0x0b, 0x57, 0x6e, 0xc8,
+	0xe3, 0xb1, 0xbd, 0x1e, 0xdb, 0xeb, 0x75, 0x1a, 0xa1, 0x70, 0xc9, 0x7a, 0x67, 0xe7, 0x7b, 0xf3,
+	0xde, 0xf8, 0xf9, 0x7d, 0xbb, 0x13, 0xd8, 0x6b, 0xad, 0x17, 0xef, 0xe9, 0x98, 0xdc, 0x37, 0xca,
+	0x1f, 0xe4, 0xcd, 0xb2, 0x41, 0x0c, 0x74, 0x98, 0xbd, 0x15, 0x4f, 0x96, 0x0c, 0xa3, 0xa4, 0x61,
+	0x59, 0x31, 0x55, 0x59, 0xd1, 0x75, 0x83, 0x28, 0x44, 0x35, 0x74, 0xcb, 0x99, 0x26, 0x5e, 0x2b,
+	0xa9, 0x64, 0xb5, 0x52, 0xc8, 0x17, 0x8d, 0x35, 0xd9, 0xc4, 0xba, 0xa5, 0xe8, 0xcb, 0x86, 0x6c,
+	0xdd, 0x97, 0xd7, 0xb1, 0xae, 0x16, 0xb1, 0x5c, 0x21, 0xaa, 0x66, 0xd9, 0xa5, 0x25, 0xac, 0xd7,
+	0x57, 0xcb, 0xaa, 0x5e, 0xd4, 0x2a, 0xcb, 0xd8, 0x85, 0x19, 0xa9, 0x83, 0x29, 0x19, 0x25, 0x43,
+	0xa6, 0xc3, 0x85, 0xca, 0x0a, 0x7d, 0x47, 0xdf, 0xd0, 0x2b, 0x36, 0x3d, 0x1f, 0xb3, 0xaa, 0xcd,
+	0x91, 0xce, 0xb0, 0x64, 0x82, 0x75, 0x45, 0x27, 0x6c, 0xfe, 0x68, 0x83, 0xf9, 0x9a, 0x52, 0xc0,
+	0x9a, 0x25, 0x5b, 0x58, 0xc3, 0x45, 0x62, 0x94, 0x59, 0xc5, 0xd1, 0xc0, 0x6e, 0x88, 0x47, 0xb4,
+	0x82, 0xfb, 0x81, 0x85, 0xcb, 0xeb, 0x6a, 0x11, 0xb3, 0xb7, 0x1d, 0xeb, 0xe5, 0x15, 0x76, 0x79,
+	0x8c, 0x95, 0xa8, 0x3a, 0xc1, 0xe5, 0x15, 0xc5, 0x9b, 0x02, 0x55, 0x53, 0x59, 0x63, 0xd7, 0x67,
+	0x1b, 0x10, 0x59, 0xc3, 0x44, 0x71, 0xa6, 0x49, 0x7f, 0x03, 0x78, 0xf2, 0x4a, 0x85, 0x18, 0xb7,
+	0xac, 0xd2, 0xf5, 0xf9, 0x2b, 0xb7, 0xe6, 0x0d, 0x4d, 0x2d, 0x6e, 0xdc, 0x55, 0x48, 0x71, 0x75,
+	0x06, 0x6b, 0x26, 0x2e, 0xa3, 0x45, 0xd8, 0x7e, 0x6d, 0x1d, 0xeb, 0xc4, 0xca, 0x82, 0xa1, 0xd6,
+	0xe1, 0xce, 0xf1, 0xd1, 0xbc, 0xcb, 0xb7, 0x51, 0x59, 0x9e, 0x5e, 0xd3, 0xc2, 0x29, 0xb8, 0x5b,
+	0xcb, 0xb5, 0x63, 0x8a, 0xb1, 0xc0, 0x5e, 0x45, 0x15, 0x42, 0x7f, 0x06, 0x1a, 0x82, 0x6d, 0x8b,
+	0x1b, 0x26, 0xce, 0x82, 0x21, 0x30, 0xdc, 0x31, 0x85, 0x76, 0x6b, 0xb9, 0x2e, 0xb2, 0x61, 0xe2,
+	0xf3, 0xc6, 0x9a, 0x4a, 0xf0, 0x9a, 0x49, 0x36, 0xd0, 0xeb, 0xb0, 0x7d, 0xae, 0xf0, 0x3e, 0x2e,
+	0x92, 0x6c, 0xcb, 0x10, 0x18, 0xee, 0x1c, 0xef, 0xf3, 0x58, 0xf8, 0xcb, 0x4f, 0xf5, 0xef, 0xd6,
+	0x72, 0x3d, 0x06, 0x9d, 0xe6, 0x97, 0x4e, 0x76, 0x3f, 0x7b, 0x24, 0x74, 0xde, 0xb7, 0x17, 0x5b,
+	0xa5, 0xd4, 0xa4, 0x5d, 0x00, 0x45, 0xc6, 0xfd, 0x66, 0x21, 0x2c, 0x78, 0x81, 0x13, 0x9c, 0xe7,
+	0x05, 0x47, 0x14, 0x25, 0xc9, 0x2d, 0xa5, 0x94, 0x7b, 0x91, 0x93, 0xdb, 0xeb, 0x71, 0x70, 0x17,
+	0x6f, 0x56, 0xec, 0xc3, 0x16, 0x28, 0x31, 0xde, 0xb3, 0x0e, 0xc4, 0x75, 0xd7, 0x34, 0xf5, 0xa2,
+	0x97, 0x38, 0xd1, 0x13, 0xbc, 0xe8, 0x06, 0xc5, 0x49, 0xe2, 0x8d, 0x94, 0xe2, 0xdf, 0xe0, 0xc4,
+	0x0b, 0x1e, 0x17, 0x9e, 0x44, 0xb3, 0x9b, 0xf0, 0x07, 0x80, 0x42, 0x50, 0x47, 0xbd, 0xf6, 0x37,
+	0x39, 0xed, 0x23, 0x31, 0xda, 0x53, 0x48, 0x5e, 0x49, 0x29, 0x79, 0x82, 0x93, 0xdc, 0xc3, 0x4b,
+	0xde, 0x83, 0xd2, 0xb7, 0x9c, 0xf4, 0x48, 0xa5, 0x34, 0x5c, 0xf3, 0xdf, 0x29, 0x65, 0x6b, 0x37,
+	0xab, 0xf4, 0x1f, 0x00, 0x73, 0x8c, 0xf5, 0x1d, 0xb5, 0x4c, 0x2a, 0x8a, 0xb6, 0x60, 0x54, 0x08,
+	0x2e, 0xd7, 0xeb, 0xbd, 0xcb, 0xe9, 0xbd, 0xc0, 0xeb, 0x8d, 0xab, 0x4c, 0x52, 0xad, 0xa5, 0x54,
+	0x7d, 0x89, 0x53, 0x7d, 0xcc, 0x23, 0x12, 0x60, 0xd0, 0xac, 0xf6, 0x5f, 0x00, 0xec, 0xf2, 0x73,
+	0xef, 0xa6, 0x6a, 0x11, 0x34, 0x01, 0xc1, 0x22, 0x03, 0x3f, 0x9a, 0x57, 0x4c, 0x35, 0x6f, 0x33,
+	0xba, 0x85, 0x89, 0x32, 0xd5, 0xf7, 0xa4, 0x96, 0xcb, 0x3c, 0xad, 0xe5, 0xc0, 0x6e, 0x2d, 0x77,
+	0xf8, 0xbc, 0xaa, 0x6b, 0xaa, 0x8e, 0x17, 0xdc, 0x0b, 0x34, 0x07, 0x8f, 0xd8, 0xf5, 0xf6, 0xcc,
+	0x6c, 0x6b, 0x5d, 0xb9, 0x3b, 0x38, 0x75, 0xb2, 0xae, 0xbc, 0x47, 0x53, 0x2d, 0x32, 0x62, 0x77,
+	0x0f, 0x17, 0x27, 0x34, 0x82, 0x5e, 0x85, 0x87, 0xae, 0x13, 0xbc, 0x66, 0x65, 0xdb, 0xe8, 0x96,
+	0x47, 0x06, 0x75, 0xc7, 0x6e, 0x2d, 0x77, 0xc8, 0x56, 0x67, 0x2d, 0x38, 0x2f, 0x93, 0x5d, 0xcf,
+	0x1e, 0x09, 0xd0, 0xc6, 0x62, 0x0a, 0x7f, 0x06, 0xf0, 0x05, 0x37, 0xea, 0x0e, 0x96, 0xbe, 0xf1,
+	0xa0, 0xbe, 0x88, 0x64, 0x4e, 0x56, 0xf7, 0x17, 0x80, 0xfd, 0x7c, 0x96, 0x1d, 0x2c, 0x95, 0x93,
+	0x41, 0x95, 0x0d, 0x22, 0x38, 0x59, 0xed, 0x4f, 0x00, 0x76, 0xb2, 0xb2, 0x83, 0x25, 0x72, 0x2c,
+	0x28, 0x32, 0x1c, 0xba, 0xcd, 0x69, 0x63, 0xc1, 0xf5, 0x3f, 0xd1, 0xe6, 0xc6, 0x6c, 0xb2, 0xb6,
+	0xdf, 0x01, 0xec, 0x0d, 0xc4, 0xd3, 0xc1, 0x52, 0x78, 0x31, 0xa8, 0x30, 0x2e, 0x52, 0x13, 0x75,
+	0x8e, 0xff, 0x70, 0x1a, 0x76, 0xb0, 0x3b, 0x7e, 0x67, 0x0c, 0x7d, 0x01, 0x60, 0xaf, 0xdd, 0x1d,
+	0xae, 0x2c, 0x2f, 0xfb, 0x89, 0x85, 0xa2, 0x62, 0x4c, 0x8c, 0x1a, 0x94, 0xee, 0x6c, 0x6f, 0x0a,
+	0xed, 0xc5, 0x32, 0x56, 0x08, 0xfe, 0x6e, 0x53, 0x00, 0xdf, 0x6f, 0x0a, 0xe0, 0xe1, 0x8f, 0xbf,
+	0x7d, 0xde, 0x72, 0x19, 0x66, 0x26, 0xc1, 0xb9, 0xa5, 0x01, 0xfa, 0x22, 0x75, 0xc9, 0xf6, 0x57,
+	0xf5, 0x11, 0xd3, 0xae, 0x51, 0xb1, 0x25, 0x0d, 0xb1, 0x5f, 0x11, 0xf2, 0x87, 0x73, 0xf9, 0x45,
+	0x7a, 0xf5, 0x20, 0x38, 0x03, 0xdd, 0x80, 0xdd, 0x8c, 0x96, 0x1b, 0x34, 0x28, 0x9c, 0x3d, 0x62,
+	0x78, 0x48, 0x42, 0x21, 0x42, 0x19, 0x34, 0x03, 0xbb, 0x18, 0x18, 0x13, 0x8e, 0x42, 0xe6, 0x17,
+	0x43, 0x23, 0x91, 0x48, 0x45, 0x78, 0x3c, 0x88, 0xe4, 0x25, 0x03, 0x8a, 0x0f, 0x0d, 0x31, 0xfe,
+	0xa3, 0x04, 0xba, 0xcc, 0xbd, 0x28, 0xe4, 0x67, 0x31, 0x34, 0x12, 0x89, 0xb4, 0x04, 0xfb, 0x19,
+	0x52, 0xc0, 0x25, 0x28, 0xc6, 0x3d, 0x62, 0xcc, 0x78, 0x24, 0xf6, 0x37, 0xc0, 0x01, 0xbf, 0x8a,
+	0x35, 0x4c, 0xf0, 0x9e, 0xcc, 0xb3, 0x62, 0xc3, 0x2e, 0xd3, 0xfa, 0x80, 0x79, 0x66, 0x61, 0x66,
+	0x32, 0xb3, 0x74, 0xca, 0xfe, 0x7b, 0xee, 0x78, 0xd0, 0x18, 0xb6, 0x63, 0x66, 0x95, 0x35, 0xfc,
+	0xe0, 0xdc, 0xcb, 0x49, 0x1e, 0xf2, 0xa6, 0xa2, 0x59, 0x88, 0x7c, 0xa6, 0x7b, 0xf1, 0x53, 0x80,
+	0x63, 0x06, 0xdd, 0x70, 0x9e, 0x19, 0x07, 0x2f, 0xb5, 0xa5, 0x38, 0xb0, 0x15, 0xe7, 0xe7, 0x59,
+	0x00, 0x6c, 0x5f, 0x5c, 0xd5, 0x88, 0x74, 0x6a, 0x63, 0x71, 0x60, 0xef, 0x39, 0xcf, 0x81, 0x03,
+	0xb6, 0x0f, 0xde, 0xe2, 0xe0, 0xb7, 0x58, 0x2a, 0x4d, 0x63, 0xb2, 0x27, 0x63, 0x15, 0xb7, 0x37,
+	0x85, 0xd6, 0x12, 0x26, 0x71, 0xae, 0x42, 0x71, 0xae, 0x42, 0x29, 0x5c, 0x35, 0xe3, 0x44, 0xd4,
+	0x34, 0x26, 0x29, 0x2d, 0xd5, 0x1d, 0x64, 0x97, 0x41, 0x9f, 0x02, 0xe7, 0x89, 0x9f, 0xc6, 0x24,
+	0x8d, 0x9b, 0xde, 0x89, 0x52, 0x79, 0x95, 0xaa, 0xcc, 0x52, 0x95, 0x48, 0x66, 0x25, 0x75, 0xac,
+	0xcf, 0x44, 0x08, 0x0c, 0xcf, 0xfa, 0x18, 0x38, 0x37, 0xd8, 0x67, 0xf4, 0xbc, 0x96, 0x9c, 0xe0,
+	0x44, 0x53, 0xb2, 0xa7, 0x29, 0xcd, 0x13, 0x32, 0x7f, 0xc0, 0x53, 0xc7, 0xe4, 0x9a, 0xb7, 0x35,
+	0x69, 0x3c, 0x1b, 0xda, 0xe2, 0xbb, 0x4e, 0x58, 0x4d, 0x63, 0xf2, 0x7c, 0x6e, 0x0d, 0x01, 0x7f,
+	0x09, 0x9c, 0x70, 0xb1, 0x1b, 0x7b, 0x9d, 0x57, 0x07, 0xbc, 0x6e, 0x4f, 0x7f, 0x39, 0xcd, 0x99,
+	0xf4, 0x74, 0x4e, 0x3c, 0x1e, 0xe1, 0x56, 0x7b, 0x92, 0xb4, 0xb0, 0xbd, 0x29, 0xb4, 0xd9, 0x5d,
+	0x3a, 0x70, 0x33, 0x2f, 0xd1, 0x9b, 0xd9, 0x4f, 0x77, 0x89, 0xeb, 0xa1, 0x28, 0xb9, 0x87, 0x2e,
+	0xc0, 0x1e, 0x97, 0x99, 0xe7, 0xd0, 0x18, 0x5e, 0x03, 0x21, 0x97, 0x52, 0x56, 0x3d, 0x1c, 0xab,
+	0x0c, 0xfa, 0x04, 0x38, 0xae, 0xb7, 0x3f, 0x76, 0xbd, 0x1a, 0x83, 0xd9, 0xcf, 0x9b, 0x81, 0x42,
+	0xce, 0x44, 0x0a, 0x1d, 0xa7, 0x42, 0xbb, 0xa9, 0xd0, 0x0e, 0xcf, 0x8f, 0xe8, 0x44, 0x03, 0xb3,
+	0xa2, 0x8f, 0x00, 0xcc, 0x72, 0x54, 0x7c, 0x93, 0xc6, 0x70, 0x3a, 0x15, 0x6b, 0x50, 0x4a, 0x2e,
+	0xcf, 0xeb, 0xa5, 0xe4, 0xb8, 0x87, 0xc9, 0x77, 0x29, 0x9a, 0xf7, 0x37, 0xc3, 0x75, 0x67, 0xe2,
+	0x66, 0xd4, 0x7d, 0x7f, 0x8e, 0xd8, 0xdf, 0x77, 0xe1, 0x80, 0x8b, 0x18, 0x34, 0x6a, 0x0c, 0xae,
+	0x18, 0xed, 0xd3, 0x18, 0xf4, 0xc7, 0xac, 0x67, 0xdf, 0x36, 0x97, 0x95, 0x3d, 0xf6, 0xec, 0x55,
+	0x3b, 0xae, 0x2b, 0xb4, 0x3e, 0x70, 0x07, 0xe7, 0x9d, 0x2f, 0x7c, 0x83, 0xf4, 0x45, 0x8c, 0xcb,
+	0x57, 0x31, 0x7d, 0xd7, 0x76, 0xb8, 0xee, 0xa5, 0x6b, 0x07, 0x58, 0x7a, 0x0d, 0xd0, 0xc1, 0x4b,
+	0xdd, 0xb5, 0x39, 0x30, 0xd6, 0xb5, 0x03, 0x60, 0xfb, 0xd2, 0xb5, 0x1b, 0x91, 0x4e, 0xdd, 0xb5,
+	0x39, 0x30, 0xd6, 0xb5, 0x1d, 0xb0, 0x7d, 0xe8, 0xda, 0x1c, 0xfc, 0xb7, 0x00, 0xf6, 0xd9, 0xf8,
+	0xd4, 0xa0, 0xc9, 0x59, 0x78, 0xb6, 0xa9, 0xa3, 0x75, 0xe9, 0xde, 0xf6, 0xa6, 0x70, 0x88, 0x1e,
+	0x07, 0x05, 0xfc, 0x36, 0x43, 0x13, 0x43, 0xa4, 0x8f, 0x66, 0xbf, 0x4c, 0x3f, 0xe7, 0xe2, 0xef,
+	0x25, 0x36, 0x9a, 0x60, 0xb8, 0x51, 0x80, 0x96, 0x9d, 0x4d, 0xa6, 0xab, 0x26, 0x25, 0xe5, 0x8b,
+	0x4d, 0x9c, 0x8f, 0x4b, 0xbd, 0x3c, 0xe7, 0xcc, 0x28, 0x40, 0x5f, 0x03, 0x27, 0x8f, 0xe9, 0xc4,
+	0x84, 0xec, 0x94, 0x92, 0x0f, 0x65, 0xa5, 0xdb, 0xd1, 0x1b, 0x73, 0x99, 0x6e, 0xcc, 0x00, 0xdd,
+	0x98, 0x6e, 0xb6, 0x05, 0x5e, 0x66, 0x9e, 0x8e, 0xdd, 0x13, 0x77, 0xca, 0x28, 0xb0, 0x5b, 0x9a,
+	0xc0, 0x13, 0x4d, 0x4c, 0xd6, 0x57, 0x52, 0x1c, 0xa1, 0x4b, 0xaf, 0x85, 0xf6, 0x87, 0x52, 0x1f,
+	0xa4, 0xa4, 0xb3, 0x41, 0xd2, 0x7e, 0xdc, 0x8e, 0x02, 0x54, 0xa8, 0xdb, 0xc2, 0x84, 0xc4, 0x95,
+	0x92, 0x4f, 0x7b, 0xa3, 0xef, 0xd3, 0xdb, 0x4e, 0x04, 0x3b, 0x6b, 0xac, 0x17, 0xfd, 0xdf, 0xca,
+	0x31, 0x0b, 0xf5, 0xd1, 0x61, 0xff, 0x80, 0x94, 0x66, 0x6f, 0x24, 0xb2, 0x0e, 0x8f, 0x79, 0xc8,
+	0x4d, 0xa5, 0xfb, 0x70, 0xb3, 0x27, 0xb8, 0x91, 0xeb, 0x89, 0x3b, 0xe0, 0xb3, 0xaa, 0xd0, 0xb2,
+	0x3e, 0xf6, 0x55, 0x55, 0x70, 0xff, 0xeb, 0xb8, 0x55, 0x15, 0x0e, 0xcf, 0xfa, 0x97, 0x6c, 0x4f,
+	0xb6, 0xaa, 0xc2, 0x11, 0xd7, 0xc7, 0x5b, 0x55, 0xe1, 0x68, 0x60, 0x99, 0xad, 0xaa, 0xd0, 0xc3,
+	0xdf, 0xcc, 0xad, 0xaa, 0x00, 0xfd, 0xc7, 0xf5, 0x71, 0x55, 0x38, 0x01, 0x5d, 0x58, 0x64, 0x7f,
+	0x3d, 0x42, 0xb4, 0xef, 0x20, 0x87, 0xd1, 0xe3, 0xaa, 0x70, 0x06, 0x86, 0x20, 0x22, 0xe7, 0x8d,
+	0xc1, 0x3a, 0x58, 0xd4, 0x66, 0x1a, 0x16, 0x41, 0xad, 0x66, 0x85, 0x20, 0xf6, 0x0b, 0x21, 0x5c,
+	0x34, 0xd5, 0xf3, 0x64, 0x67, 0x10, 0x3c, 0xdd, 0x19, 0x04, 0xbf, 0xee, 0x0c, 0x82, 0x3f, 0x77,
+	0x06, 0x33, 0xf3, 0xa0, 0xd0, 0x4e, 0xff, 0xdb, 0x77, 0xe1, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0xfb, 0xaf, 0xd1, 0xac, 0x7f, 0x1d, 0x00, 0x00,
 }

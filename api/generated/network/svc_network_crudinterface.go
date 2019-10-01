@@ -75,6 +75,18 @@ type NetworkV1NetworkInterfaceInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// NetworkV1IPAMPolicyInterface exposes the CRUD methods for IPAMPolicy
+type NetworkV1IPAMPolicyInterface interface {
+	Create(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error)
+	Update(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error)
+	UpdateStatus(ctx context.Context, in *IPAMPolicy) (*IPAMPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*IPAMPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*IPAMPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*IPAMPolicy, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // NetworkV1Interface exposes objects with CRUD operations allowed by the service
 type NetworkV1Interface interface {
 	Network() NetworkV1NetworkInterface
@@ -82,5 +94,6 @@ type NetworkV1Interface interface {
 	LbPolicy() NetworkV1LbPolicyInterface
 	VirtualRouter() NetworkV1VirtualRouterInterface
 	NetworkInterface() NetworkV1NetworkInterfaceInterface
+	IPAMPolicy() NetworkV1IPAMPolicyInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

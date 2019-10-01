@@ -34,6 +34,339 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = apiutils.CtxKeyObjKind
 
+func request_NetworkV1_AutoAddIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoAddIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoDeleteIPAMPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_NetworkV1_AutoDeleteIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteIPAMPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoDeleteIPAMPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoDeleteIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteIPAMPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoGetIPAMPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_NetworkV1_AutoGetIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetIPAMPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoGetIPAMPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoGetIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetIPAMPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 var (
 	filter_NetworkV1_AutoGetNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
@@ -220,6 +553,101 @@ func request_NetworkV1_AutoGetNetworkInterface_0(ctx context.Context, marshaler 
 }
 
 var (
+	filter_NetworkV1_AutoListIPAMPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoListIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListIPAMPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoListIPAMPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoListIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListIPAMPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_NetworkV1_AutoListNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -348,6 +776,228 @@ func request_NetworkV1_AutoListNetworkInterface_0(ctx context.Context, marshaler
 
 	msg, err := client.AutoListNetworkInterface(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoUpdateIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoUpdateIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &IPAMPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateIPAMPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoWatchIPAMPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoWatchIPAMPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (NetworkV1_AutoWatchIPAMPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchIPAMPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchIPAMPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_NetworkV1_AutoWatchIPAMPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoWatchIPAMPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (NetworkV1_AutoWatchIPAMPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchIPAMPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchIPAMPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
 
 }
 
@@ -543,6 +1193,174 @@ func RegisterNetworkV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client NetworkV1Client) error {
 
+	mux.Handle("POST", pattern_NetworkV1_AutoAddIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoAddIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoAddIPAMPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_NetworkV1_AutoAddIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoAddIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoAddIPAMPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoDeleteIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoDeleteIPAMPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoDeleteIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoDeleteIPAMPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoGetIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoGetIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoGetIPAMPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoGetIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoGetIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoGetIPAMPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoGetNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -627,6 +1445,62 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoListIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoListIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoListIPAMPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoListIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoListIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoListIPAMPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoListNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -708,6 +1582,172 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoListNetworkInterface_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoUpdateIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoUpdateIPAMPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoUpdateIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoUpdateIPAMPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoWatchIPAMPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_NetworkV1_AutoWatchIPAMPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_NetworkV1_AutoWatchIPAMPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
+		}
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoWatchIPAMPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_NetworkV1_AutoWatchIPAMPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_NetworkV1_AutoWatchIPAMPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
+		}
 
 	})
 
@@ -880,17 +1920,41 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
+	pattern_NetworkV1_AutoAddIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "ipam-policies"}, ""))
+
+	pattern_NetworkV1_AutoAddIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ipam-policies"}, ""))
+
+	pattern_NetworkV1_AutoDeleteIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "ipam-policies", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoDeleteIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"ipam-policies", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoGetIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "ipam-policies", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoGetIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"ipam-policies", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoGetNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networks", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoGetNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networks", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoGetNetworkInterface_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networkinterfaces", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoListIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "ipam-policies"}, ""))
+
+	pattern_NetworkV1_AutoListIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ipam-policies"}, ""))
+
 	pattern_NetworkV1_AutoListNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "networks"}, ""))
 
 	pattern_NetworkV1_AutoListNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networks"}, ""))
 
 	pattern_NetworkV1_AutoListNetworkInterface_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networkinterfaces"}, ""))
+
+	pattern_NetworkV1_AutoUpdateIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "ipam-policies", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoUpdateIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"ipam-policies", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoWatchIPAMPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "ipam-policies"}, ""))
+
+	pattern_NetworkV1_AutoWatchIPAMPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "ipam-policies"}, ""))
 
 	pattern_NetworkV1_AutoWatchNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "networks"}, ""))
 
@@ -900,17 +1964,41 @@ var (
 )
 
 var (
+	forward_NetworkV1_AutoAddIPAMPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoAddIPAMPolicy_1 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoDeleteIPAMPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoDeleteIPAMPolicy_1 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoGetIPAMPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoGetIPAMPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoGetNetwork_0 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoGetNetwork_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoGetNetworkInterface_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoListIPAMPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoListIPAMPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoListNetwork_0 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoListNetwork_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoListNetworkInterface_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoUpdateIPAMPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoUpdateIPAMPolicy_1 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoWatchIPAMPolicy_0 = runtime.ForwardResponseStream
+
+	forward_NetworkV1_AutoWatchIPAMPolicy_1 = runtime.ForwardResponseStream
 
 	forward_NetworkV1_AutoWatchNetwork_0 = runtime.ForwardResponseStream
 

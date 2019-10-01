@@ -25,26 +25,31 @@ var _ api.ObjectMeta
 type grpcServerNetworkV1 struct {
 	Endpoints EndpointsNetworkV1Server
 
+	AutoAddIPAMPolicyHdlr          grpctransport.Handler
 	AutoAddLbPolicyHdlr            grpctransport.Handler
 	AutoAddNetworkHdlr             grpctransport.Handler
 	AutoAddNetworkInterfaceHdlr    grpctransport.Handler
 	AutoAddServiceHdlr             grpctransport.Handler
 	AutoAddVirtualRouterHdlr       grpctransport.Handler
+	AutoDeleteIPAMPolicyHdlr       grpctransport.Handler
 	AutoDeleteLbPolicyHdlr         grpctransport.Handler
 	AutoDeleteNetworkHdlr          grpctransport.Handler
 	AutoDeleteNetworkInterfaceHdlr grpctransport.Handler
 	AutoDeleteServiceHdlr          grpctransport.Handler
 	AutoDeleteVirtualRouterHdlr    grpctransport.Handler
+	AutoGetIPAMPolicyHdlr          grpctransport.Handler
 	AutoGetLbPolicyHdlr            grpctransport.Handler
 	AutoGetNetworkHdlr             grpctransport.Handler
 	AutoGetNetworkInterfaceHdlr    grpctransport.Handler
 	AutoGetServiceHdlr             grpctransport.Handler
 	AutoGetVirtualRouterHdlr       grpctransport.Handler
+	AutoListIPAMPolicyHdlr         grpctransport.Handler
 	AutoListLbPolicyHdlr           grpctransport.Handler
 	AutoListNetworkHdlr            grpctransport.Handler
 	AutoListNetworkInterfaceHdlr   grpctransport.Handler
 	AutoListServiceHdlr            grpctransport.Handler
 	AutoListVirtualRouterHdlr      grpctransport.Handler
+	AutoUpdateIPAMPolicyHdlr       grpctransport.Handler
 	AutoUpdateLbPolicyHdlr         grpctransport.Handler
 	AutoUpdateNetworkHdlr          grpctransport.Handler
 	AutoUpdateNetworkInterfaceHdlr grpctransport.Handler
@@ -60,6 +65,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 	}
 	return &grpcServerNetworkV1{
 		Endpoints: endpoints,
+		AutoAddIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddIPAMPolicyEndpoint,
+			DecodeGrpcReqIPAMPolicy,
+			EncodeGrpcRespIPAMPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddIPAMPolicy", logger)))...,
+		),
+
 		AutoAddLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
@@ -93,6 +105,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddVirtualRouter", logger)))...,
+		),
+
+		AutoDeleteIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteIPAMPolicyEndpoint,
+			DecodeGrpcReqIPAMPolicy,
+			EncodeGrpcRespIPAMPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteIPAMPolicy", logger)))...,
 		),
 
 		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
@@ -130,6 +149,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteVirtualRouter", logger)))...,
 		),
 
+		AutoGetIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetIPAMPolicyEndpoint,
+			DecodeGrpcReqIPAMPolicy,
+			EncodeGrpcRespIPAMPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetIPAMPolicy", logger)))...,
+		),
+
 		AutoGetLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
@@ -163,6 +189,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVirtualRouter", logger)))...,
+		),
+
+		AutoListIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListIPAMPolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespIPAMPolicyList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListIPAMPolicy", logger)))...,
 		),
 
 		AutoListLbPolicyHdlr: grpctransport.NewServer(
@@ -200,6 +233,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListVirtualRouter", logger)))...,
 		),
 
+		AutoUpdateIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateIPAMPolicyEndpoint,
+			DecodeGrpcReqIPAMPolicy,
+			EncodeGrpcRespIPAMPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateIPAMPolicy", logger)))...,
+		),
+
 		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
@@ -235,6 +275,24 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVirtualRouter", logger)))...,
 		),
 	}
+}
+
+func (s *grpcServerNetworkV1) AutoAddIPAMPolicy(ctx oldcontext.Context, req *IPAMPolicy) (*IPAMPolicy, error) {
+	_, resp, err := s.AutoAddIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoAddIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerNetworkV1) AutoAddLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
@@ -323,6 +381,24 @@ func decodeHTTPrespNetworkV1AutoAddVirtualRouter(_ context.Context, r *http.Resp
 		return nil, errorDecoder(r)
 	}
 	var resp VirtualRouter
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoDeleteIPAMPolicy(ctx oldcontext.Context, req *IPAMPolicy) (*IPAMPolicy, error) {
+	_, resp, err := s.AutoDeleteIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoDeleteIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -417,6 +493,24 @@ func decodeHTTPrespNetworkV1AutoDeleteVirtualRouter(_ context.Context, r *http.R
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoGetIPAMPolicy(ctx oldcontext.Context, req *IPAMPolicy) (*IPAMPolicy, error) {
+	_, resp, err := s.AutoGetIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoGetIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoGetLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
 	_, resp, err := s.AutoGetLbPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -507,6 +601,24 @@ func decodeHTTPrespNetworkV1AutoGetVirtualRouter(_ context.Context, r *http.Resp
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoListIPAMPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*IPAMPolicyList, error) {
+	_, resp, err := s.AutoListIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoListIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicyList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoListLbPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*LbPolicyList, error) {
 	_, resp, err := s.AutoListLbPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -593,6 +705,24 @@ func decodeHTTPrespNetworkV1AutoListVirtualRouter(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp VirtualRouterList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoUpdateIPAMPolicy(ctx oldcontext.Context, req *IPAMPolicy) (*IPAMPolicy, error) {
+	_, resp, err := s.AutoUpdateIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoUpdateIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -709,6 +839,44 @@ func (s *grpcServerNetworkV1) AutoWatchVirtualRouter(in *api.ListWatchOptions, s
 
 func (s *grpcServerNetworkV1) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkInterfaceServer) error {
 	return s.Endpoints.AutoWatchNetworkInterface(in, stream)
+}
+
+func (s *grpcServerNetworkV1) AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchIPAMPolicyServer) error {
+	return s.Endpoints.AutoWatchIPAMPolicy(in, stream)
+}
+
+func encodeHTTPIPAMPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPIPAMPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req IPAMPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqIPAMPolicyList encodes GRPC request
+func EncodeGrpcReqIPAMPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*IPAMPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqIPAMPolicyList decodes GRPC request
+func DecodeGrpcReqIPAMPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*IPAMPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespIPAMPolicyList endodes the GRPC response
+func EncodeGrpcRespIPAMPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespIPAMPolicyList decodes the GRPC response
+func DecodeGrpcRespIPAMPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
 }
 
 func encodeHTTPLbPolicyList(ctx context.Context, req *http.Request, request interface{}) error {

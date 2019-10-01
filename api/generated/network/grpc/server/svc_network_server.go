@@ -50,26 +50,31 @@ type eNetworkV1Endpoints struct {
 	Svc                     snetworkSvc_networkBackend
 	fnAutoWatchSvcNetworkV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
+	fnAutoAddIPAMPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddLbPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddNetwork             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddNetworkInterface    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddService             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddVirtualRouter       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteIPAMPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteNetworkInterface func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteService          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteVirtualRouter    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetIPAMPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetLbPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetNetwork             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetNetworkInterface    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetService             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetVirtualRouter       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListIPAMPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListLbPolicy           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListNetwork            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListNetworkInterface   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListService            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListVirtualRouter      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateIPAMPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateLbPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateNetwork          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateNetworkInterface func(ctx context.Context, t interface{}) (interface{}, error)
@@ -81,17 +86,51 @@ type eNetworkV1Endpoints struct {
 	fnAutoWatchLbPolicy         func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchVirtualRouter    func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchNetworkInterface func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchIPAMPolicy       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for snetworkSvc_networkBackend")
 	s.Messages = map[string]apiserver.Message{
 
+		"network.AutoMsgIPAMPolicyWatchHelper":       apisrvpkg.NewMessage("network.AutoMsgIPAMPolicyWatchHelper"),
 		"network.AutoMsgLbPolicyWatchHelper":         apisrvpkg.NewMessage("network.AutoMsgLbPolicyWatchHelper"),
 		"network.AutoMsgNetworkInterfaceWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkInterfaceWatchHelper"),
 		"network.AutoMsgNetworkWatchHelper":          apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
 		"network.AutoMsgServiceWatchHelper":          apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
 		"network.AutoMsgVirtualRouterWatchHelper":    apisrvpkg.NewMessage("network.AutoMsgVirtualRouterWatchHelper"),
+		"network.IPAMPolicyList": apisrvpkg.NewMessage("network.IPAMPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.IPAMPolicyList{}
+			into.Kind = "IPAMPolicyList"
+			r := network.IPAMPolicy{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "network.IPAMPolicy")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(network.IPAMPolicyList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(network.IPAMPolicyList)
+			return &r
+		}),
 		"network.LbPolicyList": apisrvpkg.NewMessage("network.LbPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.LbPolicyList{}
@@ -266,6 +305,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		srv := apisrvpkg.NewService("network.NetworkV1")
 		s.endpointsNetworkV1.fnAutoWatchSvcNetworkV1 = srv.WatchFromKv
 
+		s.endpointsNetworkV1.fnAutoAddIPAMPolicy = srv.AddMethod("AutoAddIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.IPAMPolicy"], pkgMessages["network.IPAMPolicy"], "network", "AutoAddIPAMPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(network.IPAMPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoAddLbPolicy = srv.AddMethod("AutoAddLbPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoAddLbPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -291,6 +339,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsNetworkV1.fnAutoDeleteIPAMPolicy = srv.AddMethod("AutoDeleteIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.IPAMPolicy"], pkgMessages["network.IPAMPolicy"], "network", "AutoDeleteIPAMPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(network.IPAMPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoDeleteLbPolicy = srv.AddMethod("AutoDeleteLbPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoDeleteLbPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -314,6 +371,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsNetworkV1.fnAutoDeleteVirtualRouter = srv.AddMethod("AutoDeleteVirtualRouter",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.VirtualRouter"], pkgMessages["network.VirtualRouter"], "network", "AutoDeleteVirtualRouter")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoGetIPAMPolicy = srv.AddMethod("AutoGetIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.IPAMPolicy"], pkgMessages["network.IPAMPolicy"], "network", "AutoGetIPAMPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(network.IPAMPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetLbPolicy = srv.AddMethod("AutoGetLbPolicy",
@@ -349,6 +415,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsNetworkV1.fnAutoListIPAMPolicy = srv.AddMethod("AutoListIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.IPAMPolicyList"], "network", "AutoListIPAMPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsNetworkV1.fnAutoListLbPolicy = srv.AddMethod("AutoListLbPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.LbPolicyList"], "network", "AutoListLbPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -380,6 +455,15 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsNetworkV1.fnAutoListVirtualRouter = srv.AddMethod("AutoListVirtualRouter",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.VirtualRouterList"], "network", "AutoListVirtualRouter")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoUpdateIPAMPolicy = srv.AddMethod("AutoUpdateIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["network.IPAMPolicy"], pkgMessages["network.IPAMPolicy"], "network", "AutoUpdateIPAMPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(network.IPAMPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateLbPolicy = srv.AddMethod("AutoUpdateLbPolicy",
@@ -417,6 +501,8 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoWatchNetworkInterface = pkgMessages["network.NetworkInterface"].WatchFromKv
 
+		s.endpointsNetworkV1.fnAutoWatchIPAMPolicy = pkgMessages["network.IPAMPolicy"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"network.NetworkV1": srv,
 		}
@@ -424,7 +510,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := network.MakeNetworkV1ServerEndpoints(s.endpointsNetworkV1, logger)
 		server := network.MakeGRPCServerNetworkV1(ctx, endpoints, logger)
 		network.RegisterNetworkV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Network", "Service", "LbPolicy", "VirtualRouter", "NetworkInterface"}
+		svcObjs := []string{"Network", "Service", "LbPolicy", "VirtualRouter", "NetworkInterface", "IPAMPolicy"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("network", "NetworkV1", svcObjs)
 	}
 }
@@ -951,6 +1037,106 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
+		pkgMessages["network.IPAMPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.IPAMPolicy{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(network.NetworkV1_AutoWatchIPAMPolicyServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "network.IPAMPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.IPAMPolicy")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "network.IPAMPolicy")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &network.AutoMsgIPAMPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "network.IPAMPolicy")
+					return err
+				}
+				events = &network.AutoMsgIPAMPolicyWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "network.IPAMPolicy")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "network.IPAMPolicy")
+						return nil
+					}
+					evin, ok := ev.Object.(*network.IPAMPolicy)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*network.IPAMPolicy)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
+
+					strEvent := &network.AutoMsgIPAMPolicyWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received IPAMPolicy watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "IPAMPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "network.IPAMPolicy")
+							break
+						}
+						strEvent.Object = i.(*network.IPAMPolicy)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "network.IPAMPolicy")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -970,6 +1156,14 @@ func (s *snetworkSvc_networkBackend) Reset() {
 	cleanupRegistration()
 }
 
+func (e *eNetworkV1Endpoints) AutoAddIPAMPolicy(ctx context.Context, t network.IPAMPolicy) (network.IPAMPolicy, error) {
+	r, err := e.fnAutoAddIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicy), err
+	}
+	return network.IPAMPolicy{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoAddLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
 	r, err := e.fnAutoAddLbPolicy(ctx, t)
 	if err == nil {
@@ -1008,6 +1202,14 @@ func (e *eNetworkV1Endpoints) AutoAddVirtualRouter(ctx context.Context, t networ
 		return r.(network.VirtualRouter), err
 	}
 	return network.VirtualRouter{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoDeleteIPAMPolicy(ctx context.Context, t network.IPAMPolicy) (network.IPAMPolicy, error) {
+	r, err := e.fnAutoDeleteIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicy), err
+	}
+	return network.IPAMPolicy{}, err
 
 }
 func (e *eNetworkV1Endpoints) AutoDeleteLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
@@ -1050,6 +1252,14 @@ func (e *eNetworkV1Endpoints) AutoDeleteVirtualRouter(ctx context.Context, t net
 	return network.VirtualRouter{}, err
 
 }
+func (e *eNetworkV1Endpoints) AutoGetIPAMPolicy(ctx context.Context, t network.IPAMPolicy) (network.IPAMPolicy, error) {
+	r, err := e.fnAutoGetIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicy), err
+	}
+	return network.IPAMPolicy{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoGetLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
 	r, err := e.fnAutoGetLbPolicy(ctx, t)
 	if err == nil {
@@ -1090,6 +1300,14 @@ func (e *eNetworkV1Endpoints) AutoGetVirtualRouter(ctx context.Context, t networ
 	return network.VirtualRouter{}, err
 
 }
+func (e *eNetworkV1Endpoints) AutoListIPAMPolicy(ctx context.Context, t api.ListWatchOptions) (network.IPAMPolicyList, error) {
+	r, err := e.fnAutoListIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicyList), err
+	}
+	return network.IPAMPolicyList{}, err
+
+}
 func (e *eNetworkV1Endpoints) AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (network.LbPolicyList, error) {
 	r, err := e.fnAutoListLbPolicy(ctx, t)
 	if err == nil {
@@ -1128,6 +1346,14 @@ func (e *eNetworkV1Endpoints) AutoListVirtualRouter(ctx context.Context, t api.L
 		return r.(network.VirtualRouterList), err
 	}
 	return network.VirtualRouterList{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoUpdateIPAMPolicy(ctx context.Context, t network.IPAMPolicy) (network.IPAMPolicy, error) {
+	r, err := e.fnAutoUpdateIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicy), err
+	}
+	return network.IPAMPolicy{}, err
 
 }
 func (e *eNetworkV1Endpoints) AutoUpdateLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
@@ -1185,6 +1411,9 @@ func (e *eNetworkV1Endpoints) AutoWatchVirtualRouter(in *api.ListWatchOptions, s
 }
 func (e *eNetworkV1Endpoints) AutoWatchNetworkInterface(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchNetworkInterfaceServer) error {
 	return e.fnAutoWatchNetworkInterface(in, stream, "network")
+}
+func (e *eNetworkV1Endpoints) AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchIPAMPolicyServer) error {
+	return e.fnAutoWatchIPAMPolicy(in, stream, "network")
 }
 func (e *eNetworkV1Endpoints) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return e.fnAutoWatchSvcNetworkV1(in, stream, "")

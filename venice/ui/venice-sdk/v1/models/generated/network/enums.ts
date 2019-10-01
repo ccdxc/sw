@@ -18,6 +18,10 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
+export enum NetworkIPAMPolicySpec_type {
+    'dhcp-relay' = "dhcp-relay",
+}
+
 export enum NetworkNetworkInterfaceStatus_type {
     'none' = "none",
     'host-pf' = "host-pf",
@@ -81,6 +85,7 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    NetworkIPAMPolicySpec_type = NetworkIPAMPolicySpec_type;
     NetworkNetworkInterfaceStatus_type = NetworkNetworkInterfaceStatus_type;
     NetworkNetworkInterfaceStatus_oper_status = NetworkNetworkInterfaceStatus_oper_status;
     NetworkTLSServerPolicySpec_client_authentication = NetworkTLSServerPolicySpec_client_authentication;

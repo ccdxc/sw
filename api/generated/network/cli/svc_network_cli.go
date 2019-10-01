@@ -147,6 +147,95 @@ func restPutNetworkInterface(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for NetworkInterface object")
 }
 
+func restGetIPAMPolicy(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*network.IPAMPolicy); ok {
+		nv, err := restcl.NetworkV1().IPAMPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*network.IPAMPolicyList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.NetworkV1().IPAMPolicy().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteIPAMPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*network.IPAMPolicy); ok {
+		nv, err := restcl.NetworkV1().IPAMPolicy().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostIPAMPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*network.IPAMPolicy); ok {
+		nv, err := restcl.NetworkV1().IPAMPolicy().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutIPAMPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*network.IPAMPolicy); ok {
+		nv, err := restcl.NetworkV1().IPAMPolicy().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -156,5 +245,10 @@ func init() {
 	cl.AddRestGetFunc("network.Network", "v1", restGetNetwork)
 
 	cl.AddRestGetFunc("network.NetworkInterface", "v1", restGetNetworkInterface)
+
+	cl.AddRestPostFunc("network.IPAMPolicy", "v1", restPostIPAMPolicy)
+	cl.AddRestDeleteFunc("network.IPAMPolicy", "v1", restDeleteIPAMPolicy)
+	cl.AddRestPutFunc("network.IPAMPolicy", "v1", restPutIPAMPolicy)
+	cl.AddRestGetFunc("network.IPAMPolicy", "v1", restGetIPAMPolicy)
 
 }

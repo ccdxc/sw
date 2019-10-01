@@ -92,6 +92,7 @@ type Controller interface {
 	LbPolicy() LbPolicyAPI                               // return LbPolicy API interface
 	VirtualRouter() VirtualRouterAPI                     // return VirtualRouter API interface
 	NetworkInterface() NetworkInterfaceAPI               // return NetworkInterface API interface
+	IPAMPolicy() IPAMPolicyAPI                           // return IPAMPolicy API interface
 	Bucket() BucketAPI                                   // return Bucket API interface
 	Object() ObjectAPI                                   // return Object API interface
 	Orchestrator() OrchestratorAPI                       // return Orchestrator API interface

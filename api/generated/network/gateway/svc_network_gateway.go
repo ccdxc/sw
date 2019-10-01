@@ -53,6 +53,33 @@ type adapterNetworkV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterNetworkV1) AutoAddIPAMPolicy(oldctx oldcontext.Context, t *network.IPAMPolicy, options ...grpc.CallOption) (*network.IPAMPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddIPAMPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "IPAMPolicy", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.IPAMPolicy)
+		return a.service.AutoAddIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.IPAMPolicy), err
+}
+
 func (a adapterNetworkV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -186,6 +213,33 @@ func (a adapterNetworkV1) AutoAddVirtualRouter(oldctx oldcontext.Context, t *net
 		return nil, err
 	}
 	return ret.(*network.VirtualRouter), err
+}
+
+func (a adapterNetworkV1) AutoDeleteIPAMPolicy(oldctx oldcontext.Context, t *network.IPAMPolicy, options ...grpc.CallOption) (*network.IPAMPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteIPAMPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "IPAMPolicy", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.IPAMPolicy)
+		return a.service.AutoDeleteIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.IPAMPolicy), err
 }
 
 func (a adapterNetworkV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
@@ -323,6 +377,33 @@ func (a adapterNetworkV1) AutoDeleteVirtualRouter(oldctx oldcontext.Context, t *
 	return ret.(*network.VirtualRouter), err
 }
 
+func (a adapterNetworkV1) AutoGetIPAMPolicy(oldctx oldcontext.Context, t *network.IPAMPolicy, options ...grpc.CallOption) (*network.IPAMPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetIPAMPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "IPAMPolicy", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.IPAMPolicy)
+		return a.service.AutoGetIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.IPAMPolicy), err
+}
+
 func (a adapterNetworkV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -456,6 +537,38 @@ func (a adapterNetworkV1) AutoGetVirtualRouter(oldctx oldcontext.Context, t *net
 		return nil, err
 	}
 	return ret.(*network.VirtualRouter), err
+}
+
+func (a adapterNetworkV1) AutoListIPAMPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.IPAMPolicyList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListIPAMPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "IPAMPolicy", t.Tenant, t.Namespace, "network", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.IPAMPolicyList), err
 }
 
 func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.LbPolicyList, error) {
@@ -614,6 +727,33 @@ func (a adapterNetworkV1) AutoListVirtualRouter(oldctx oldcontext.Context, t *ap
 		return nil, err
 	}
 	return ret.(*network.VirtualRouterList), err
+}
+
+func (a adapterNetworkV1) AutoUpdateIPAMPolicy(oldctx oldcontext.Context, t *network.IPAMPolicy, options ...grpc.CallOption) (*network.IPAMPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateIPAMPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "IPAMPolicy", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.IPAMPolicy)
+		return a.service.AutoUpdateIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.IPAMPolicy), err
 }
 
 func (a adapterNetworkV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
@@ -1098,18 +1238,89 @@ func (a adapterNetworkV1) AutoWatchNetworkInterface(oldctx oldcontext.Context, i
 	return ret.(network.NetworkV1_AutoWatchNetworkInterfaceClient), err
 }
 
+func (a adapterNetworkV1) AutoWatchIPAMPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchIPAMPolicyClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchIPAMPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if in.Tenant == "" {
+		in.Tenant = globals.DefaultTenant
+	}
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "IPAMPolicy", in.Tenant, in.Namespace, "network"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchIPAMPolicy] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchIPAMPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(network.NetworkV1_AutoWatchIPAMPolicyClient), err
+}
+
 func (e *sNetworkV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "network", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
+	e.svcProf["AutoAddIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoDeleteIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.DeleteOper)
+
+	e.svcProf["AutoGetIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.GetOper)
+
 	e.svcProf["AutoGetNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.GetOper)
 
 	e.svcProf["AutoGetNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.GetOper)
 
+	e.svcProf["AutoListIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicyList", "network", apiintf.ListOper)
+
 	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkList", "network", apiintf.ListOper)
 
 	e.svcProf["AutoListNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterfaceList", "network", apiintf.ListOper)
+
+	e.svcProf["AutoUpdateIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.UpdateOper)
+
+	e.svcProf["AutoWatchIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgIPAMPolicyWatchHelper", "network", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkWatchHelper", "network", apiintf.WatchOper)
 
