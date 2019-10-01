@@ -81,14 +81,13 @@
       <div *ngIf="isInline" class="newflowexportpolicy-buttoncontainer" fxFlex="nogrow"
            fxLayout="row wrap" fxLayoutAlign="start start">
         <div fxFlex="nogrow">
-          <span (click)="saveObject()"
-                class="global-button-primary newflowexportpolicy-save">SAVE</span>
-        </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelObject()"
-                class="global-button-neutral newflowexportpolicy-cancel">CANCEL</span>
+          <button [disabled]="!isFormValid()" (click)="saveObject()"
+                  class="global-button-primary newflowexportpolicy-save">SAVE</button>
+          <div fxFlex="nogrow">
+            <button (click)="cancelObject()"
+                    class="global-button-neutral newflowexportpolicy-cancel">CANCEL</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>

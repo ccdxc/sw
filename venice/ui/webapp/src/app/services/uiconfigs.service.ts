@@ -11,11 +11,8 @@ import { Utility } from '@app/common/Utility';
 import { AuthService } from './auth.service';
 
 export enum Features {
-  securityGroups = 'securityGroups',
   help = 'help',
   workloadWidgets = 'workloadWidgets',
-  createNetworkSecurityPolicy = 'createNetworkSecurityPolicy',
-  createWorkload = 'createWorkload',
   showDebugMetrics = 'showDebugMetrics',
 }
 
@@ -88,9 +85,6 @@ export class UIConfigsService {
     'security/securitygroups': {
       requiredPerm: [
         UIRolePermissions.securitysecuritygroup_read,
-      ],
-      requiredFeatures: [
-        Features.securityGroups,
       ]
     },
     'monitoring/alertsevents/': {

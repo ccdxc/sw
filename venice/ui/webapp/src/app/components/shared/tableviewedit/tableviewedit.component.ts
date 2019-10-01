@@ -694,6 +694,9 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
   }
 
   computeButtonClass() {
+    if (this.newObject.$formGroup.get('meta.name') && Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)) {
+      return 'global-button-disabled';
+    }
     if (this.newObject.$formGroup.get('meta.name').status === 'VALID' && this.isFormValid()) {
       return '';
     } else {

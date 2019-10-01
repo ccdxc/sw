@@ -48,6 +48,22 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
 
   // Empty Hook
   isFormValid(): boolean {
+    return this.areMatchRulesValid();
+  }
+
+  /**
+   * This API validate whether the match-rule input is valid
+   * VS-858
+   */
+  areMatchRulesValid(): boolean {
+    const obj = this.newObject.getFormGroupValues();
+    let rules = this.matchRulesComponent.getValues();
+    rules = Utility.TrimDefaultsAndEmptyFields(rules);
+    for (let i = 0; i < rules.length; i++ ) {
+      if (!rules[i]) {
+        return false;
+      }
+    }
     return true;
   }
 

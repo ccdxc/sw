@@ -64,7 +64,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) && this.uiconfigsService.isFeatureEnabled(Features.createNetworkSecurityPolicy)) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) ) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD POLICY',

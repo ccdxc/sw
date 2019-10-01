@@ -59,6 +59,11 @@ $vertical-gutter: 5px;
   padding: 4px 10px;
   line-height: 25px;
   margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
 }
 
 .newflowexportpolicy-buttoncontainer {
