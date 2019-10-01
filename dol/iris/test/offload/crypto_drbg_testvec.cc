@@ -417,14 +417,6 @@ drbg_testvec_t::push(drbg_testvec_push_params_t& push_params)
     hw_started = true;
 
     FOR_EACH_TEST_REPR(test_repr) {
-
-        /*
-         * skip test with certain unsupportable conditions.
-         */
-        if (!shall_execute(test_repr.get())) {
-            continue;
-        }
-
         FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
             trial_repr->push_failure = false;
 
@@ -457,16 +449,6 @@ drbg_testvec_t::push(drbg_testvec_push_params_t& push_params)
     } END_FOR_EACH_TEST_REPR(test_repr)
 
     return true;
-}
-
-/*
- * Execute test only if test does not involve AdditionalInput which
- * HW does not support.
- */
-bool
-drbg_testvec_t::shall_execute(drbg_test_repr_t *test_repr)
-{
-    return test_repr->add_input_nbits == 0;
 }
 
 /*
@@ -552,10 +534,6 @@ drbg_testvec_t::completion_check(void)
     num_test_failures = 0;
     if (hw_started) {
         FOR_EACH_TEST_REPR(test_repr) {
-
-            if (!shall_execute(test_repr.get())) {
-                continue;
-            }
             FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
 
                 /*
@@ -588,10 +566,6 @@ drbg_testvec_t::full_verify(void)
     num_test_failures = 0;
     if (hw_started) {
         FOR_EACH_TEST_REPR(test_repr) {
-
-            if (!shall_execute(test_repr.get())) {
-                continue;
-            }
             FOR_EACH_TRIAL_REPR(test_repr, trial_repr) {
 
                 /*

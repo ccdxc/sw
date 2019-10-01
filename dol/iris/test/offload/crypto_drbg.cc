@@ -149,7 +149,6 @@ drbg_t::push(drbg_push_inst_params_t& inst_params)
 
 /*
  * Uninstantiate operation
- * instantiate with default personalization string and entropy
  */
 bool
 drbg_t::push(drbg_push_uninst_params_t& uninst_params)
@@ -190,13 +189,11 @@ drbg_t::push(drbg_push_gen_params_t& gen_params)
     buf = gen_params.ret_bits_actual()->read();
     nbytes = gen_params.ret_bits_actual()->line_size_get();
 
-#ifdef HAS_NEW_DRBG_TESTVECTORS
     if (gen_params.add_input() &&
         gen_params.add_input()->content_size_get()) {
         OFFL_FUNC_ERR("drbg_t no HW support for AdditionalInput");
         return false;
     }
-#endif
 
     if (gen_params.predict_resist_req()) {
         entropy_input_reseed_set(gen_params.entropy_pr()->read(),
@@ -205,13 +202,11 @@ drbg_t::push(drbg_push_gen_params_t& gen_params)
 
     } else if (gen_params.entropy_reseed()) {
 
-#ifdef HAS_NEW_DRBG_TESTVECTORS
         if (gen_params.add_input_reseed() &&
             gen_params.add_input_reseed()->content_size_get()) {
             OFFL_FUNC_ERR("drbg_t no HW support for AdditionalInputReseed");
             return false;
         }
-#endif
         entropy_input_reseed_set(gen_params.entropy_reseed()->read(),
                                  gen_params.entropy_reseed()->content_size_get());
         reseed = !!gen_params.entropy_reseed()->content_size_get();
@@ -505,6 +500,14 @@ drbg_t::expected_actual_verify(const char *entity_name,
                                dp_mem_t *expected,
                                dp_mem_t *actual)
 {
+    /*
+     * Only HW implements a real DRBG for which expected/actual verification
+     * can be applied.
+     */
+#ifdef __x86_64__
+    return true;
+#endif
+
     /*
      * Verification is optional and is done only when 'expected' is present.
      */

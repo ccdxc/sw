@@ -235,6 +235,7 @@ sha_testvec_t::pre_push(sha_testvec_pre_push_params_t& pre_params)
              /*
               * Nothing useful to do with this token
               */
+            testvec_parser->line_consume_set();
             break;
 
         default:

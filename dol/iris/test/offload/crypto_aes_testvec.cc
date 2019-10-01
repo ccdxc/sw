@@ -177,19 +177,24 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
         case PARSE_TOKEN_ID_COUNT:
 
             /*
-             * Each Count section begins a new msg representative
+             * Each Count section begins a new msg representative except for
+             * a Montecarlo test where each count is just a sampled epoch.
              */
             if (!test_repr.use_count()) {
                 OFFL_FUNC_ERR("{} found without a test representative",
                               PARSE_TOKEN_STR_COUNT);
                 goto error;
             }
-            if (msg_repr.use_count()) {
-                test_repr->msg_repr_vec.push_back(move(msg_repr));
-                msg_repr.reset();
+            if (!is_montecarlo()) {
+                if (msg_repr.use_count()) {
+                    test_repr->msg_repr_vec.push_back(move(msg_repr));
+                    msg_repr.reset();
+                }
+            }
+            if (!msg_repr.get()) {
+                msg_repr = make_shared<aes_msg_repr_t>(*this);
             }
             testvec_parser->line_consume_set();
-            msg_repr = make_shared<aes_msg_repr_t>(*this);
             break;
 
         case PARSE_TOKEN_ID_KEY:
@@ -197,11 +202,21 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_KEY);
                 goto error;
             }
-            if (!testvec_parser->parse_hex_bn(msg_repr->key)) {
-                msg_repr->failed_parse_token = token_id;
-            }
             if (is_montecarlo()) {
-                msg_repr->mc_key_expected.push_back(msg_repr->key);
+                if (!testvec_parser->parse_hex_bn(msg_repr->msg_work)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
+                msg_repr->mc_key_expected.push_back(msg_repr->msg_work);
+                if (msg_repr->mc_key_expected.count() == 1) {
+                    if (!eng_if::dp_mem_to_dp_mem(msg_repr->key,
+                                                  msg_repr->msg_work)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
+                }
+            } else {
+                if (!testvec_parser->parse_hex_bn(msg_repr->key)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
             }
             break;
 
@@ -210,12 +225,22 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_IV);
                 goto error;
             }
-            if (!testvec_parser->parse_hex_bn(msg_repr->iv)) {
-                msg_repr->failed_parse_token = token_id;
-            }
 
             if (is_montecarlo()) {
-                msg_repr->mc_iv_expected.push_back(msg_repr->iv);
+                if (!testvec_parser->parse_hex_bn(msg_repr->msg_work)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
+                msg_repr->mc_iv_expected.push_back(msg_repr->msg_work);
+                if (msg_repr->mc_iv_expected.count() == 1) {
+                    if (!eng_if::dp_mem_to_dp_mem(msg_repr->iv,
+                                                  msg_repr->msg_work)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
+                }
+            } else {
+                if (!testvec_parser->parse_hex_bn(msg_repr->iv)) {
+                    msg_repr->failed_parse_token = token_id;
+                }
             }
             break;
 
@@ -224,9 +249,22 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_PT);
                 goto error;
             }
-            if (test_repr->op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT) {
-                if (!testvec_parser->parse_hex_bn(msg_repr->msg_input)) {
-                    msg_repr->failed_parse_token = token_id;
+            if (test_repr->is_encrypt()) {
+                if (is_montecarlo()) {
+                    if (!testvec_parser->parse_hex_bn(msg_repr->msg_work)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
+                    msg_repr->mc_input_expected.push_back(msg_repr->msg_work);
+                    if (msg_repr->mc_input_expected.count() == 1) {
+                        if (!eng_if::dp_mem_to_dp_mem(msg_repr->msg_input,
+                                                      msg_repr->msg_work)) {
+                            msg_repr->failed_parse_token = token_id;
+                        }
+                    }
+                } else {
+                    if (!testvec_parser->parse_hex_bn(msg_repr->msg_input)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
                 }
 
                 /*
@@ -235,14 +273,14 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                  */
                 msg_repr->msg_output_actual->content_size_set(
                           msg_repr->msg_input->content_size_get());
-                if (is_montecarlo()) {
-                }
 
             } else {
                 if (!testvec_parser->parse_hex_bn(msg_repr->msg_output_expected)) {
                     msg_repr->failed_parse_token = token_id;
                 }
                 if (is_montecarlo()) {
+                    msg_repr->mc_output_expected.push_back(
+                                        msg_repr->msg_output_expected);
                 }
             }
             break;
@@ -252,16 +290,32 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                 OFFL_FUNC_ERR("out of place {}", PARSE_TOKEN_STR_CT);
                 goto error;
             }
-            if (test_repr->op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT) {
+            if (test_repr->is_encrypt()) {
                 if (!testvec_parser->parse_hex_bn(msg_repr->msg_output_expected)) {
                     msg_repr->failed_parse_token = token_id;
                 }
                 if (is_montecarlo()) {
+                    msg_repr->mc_output_expected.push_back(
+                                        msg_repr->msg_output_expected);
                 }
 
             } else {
-                if (!testvec_parser->parse_hex_bn(msg_repr->msg_input)) {
-                    msg_repr->failed_parse_token = token_id;
+
+                if (is_montecarlo()) {
+                    if (!testvec_parser->parse_hex_bn(msg_repr->msg_work)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
+                    msg_repr->mc_input_expected.push_back(msg_repr->msg_work);
+                    if (msg_repr->mc_input_expected.count() == 1) {
+                        if (!eng_if::dp_mem_to_dp_mem(msg_repr->msg_input,
+                                                      msg_repr->msg_work)) {
+                            msg_repr->failed_parse_token = token_id;
+                        }
+                    }
+                } else {
+                    if (!testvec_parser->parse_hex_bn(msg_repr->msg_input)) {
+                        msg_repr->failed_parse_token = token_id;
+                    }
                 }
 
                 /*
@@ -270,8 +324,6 @@ aes_testvec_t::pre_push(aes_testvec_pre_push_params_t& pre_params)
                  */
                 msg_repr->msg_output_actual->content_size_set(
                           msg_repr->msg_input->content_size_get());
-                if (is_montecarlo()) {
-                }
             }
             break;
 
@@ -343,7 +395,7 @@ aes_testvec_t::push(aes_testvec_push_params_t& push_params)
             switch (testvec_params.montecarlo_type()) {
 
             case crypto_aes::CRYPTO_AES_MONTECARLO_CBC:
-                montecarlo_cbc_execute(msg_repr.get(), test_repr->op);
+                montecarlo_cbc_execute(test_repr.get(), msg_repr.get());
                 break;
 
             case crypto_aes::CRYPTO_AES_NOT_MONTECARLO:
@@ -397,8 +449,8 @@ aes_testvec_t::is_montecarlo(void)
  * Execute a Montecarlo CBC (cipher block chaining) test.
  */
 void
-aes_testvec_t::montecarlo_cbc_execute(aes_msg_repr_t *msg_repr,
-                                      crypto_symm::crypto_symm_op_t op)
+aes_testvec_t::montecarlo_cbc_execute(aes_test_repr_t *test_repr,
+                                      aes_msg_repr_t *msg_repr)
 {
     aes_pre_push_params_t aes_pre_params;
     aes_push_params_t   aes_push_params;
@@ -420,7 +472,7 @@ aes_testvec_t::montecarlo_cbc_execute(aes_msg_repr_t *msg_repr,
     }
 
     aes_pre_params.crypto_symm_type(testvec_params.crypto_symm_type()).
-                   op(op).
+                   op(test_repr->op).
                    key(msg_repr->key).
                    iv(msg_repr->iv);
     iters = testvec_params.montecarlo_iters_max() /
@@ -465,7 +517,7 @@ aes_testvec_t::montecarlo_cbc_execute(aes_msg_repr_t *msg_repr,
             }
 
             ret = true;
-            if (op == crypto_symm::CRYPTO_SYMM_OP_DECRYPT) {
+            if (!test_repr->is_encrypt()) {
                 ret &= eng_if::dp_mem_to_dp_mem(msg_repr->msg_input_tmp,
                                                 msg_repr->msg_input);
             }
@@ -487,7 +539,7 @@ aes_testvec_t::montecarlo_cbc_execute(aes_msg_repr_t *msg_repr,
              * state, which for CBC means each subsequent string should use
              * the cipher or plain text of the previous result as the IV.
              */
-            if (op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT) {
+            if (test_repr->is_encrypt()) {
                 ret &= eng_if::dp_mem_to_dp_mem(msg_repr->iv,
                                                 msg_repr->msg_output_actual);
             } else {
@@ -630,9 +682,21 @@ aes_testvec_t::completion_check(void)
 bool 
 aes_testvec_t::full_verify(void)
 {
+    const char  *input_name;
+    const char  *output_name;
+
     num_test_failures = 0;
     if (hw_started) {
         FOR_EACH_TEST_REPR(test_repr) {
+
+            if (test_repr->is_encrypt()) {
+                input_name = PARSE_TOKEN_STR_PT;
+                output_name = PARSE_TOKEN_STR_CT;
+            } else {
+                input_name = PARSE_TOKEN_STR_CT;
+                output_name = PARSE_TOKEN_STR_PT;
+            }
+                        
             FOR_EACH_MSG_REPR(test_repr, msg_repr) {
 
                 /*
@@ -652,11 +716,67 @@ aes_testvec_t::full_verify(void)
                         num_test_failures++;
                     }
                 }
-#if 0
+
                 /*
-                 * verify expected/actual Montecarlo results if any
+                 * verify expected/actual Montecarlo results, if any
                  */
-#endif
+                if (!is_montecarlo()) {
+                    continue;
+                }
+                for (uint32_t idx = 0; 
+                     idx < msg_repr->mc_output_actual.count();
+                     idx++) {
+
+                    /*
+                     * stop verification early if output not available
+                     */
+                    if (!msg_repr->mc_output_expected.result_to_dp_mem(idx,
+                                             msg_repr->msg_output_expected) ||
+                        !msg_repr->mc_output_actual.result_to_dp_mem(idx,
+                                             msg_repr->msg_output_actual)) {
+                        break;
+                    }
+                    if (!msg_repr->crypto_aes->expected_actual_verify(
+                                   output_name, msg_repr->msg_output_expected,
+                                   msg_repr->msg_output_actual)) {
+                        msg_repr->verify_failure = true;
+                    }
+
+                    /*
+                     * verify the rest opportunistically
+                     */
+                    if (msg_repr->mc_key_expected.result_to_dp_mem(idx,
+                                                  msg_repr->msg_work) &&
+                        msg_repr->mc_key_actual.result_to_dp_mem(idx,
+                                                msg_repr->key)) {
+                        if (!msg_repr->crypto_aes->expected_actual_verify(
+                             PARSE_TOKEN_STR_KEY, msg_repr->msg_work, msg_repr->key)) {
+                            msg_repr->verify_failure = true;
+                        }
+                    }
+                    if (msg_repr->mc_iv_expected.result_to_dp_mem(idx,
+                                                 msg_repr->msg_work) &&
+                        msg_repr->mc_iv_actual.result_to_dp_mem(idx,
+                                               msg_repr->iv)) {
+                        if (!msg_repr->crypto_aes->expected_actual_verify(
+                             PARSE_TOKEN_STR_IV, msg_repr->msg_work, msg_repr->iv)) {
+                            msg_repr->verify_failure = true;
+                        }
+                    }
+                    if (msg_repr->mc_input_expected.result_to_dp_mem(idx,
+                                                    msg_repr->msg_work) &&
+                        msg_repr->mc_input_actual.result_to_dp_mem(idx,
+                                                  msg_repr->msg_input)) {
+                        if (!msg_repr->crypto_aes->expected_actual_verify(
+                             input_name, msg_repr->msg_work, msg_repr->msg_input)) {
+                            msg_repr->verify_failure = true;
+                        }
+                    }
+                }
+                if (msg_repr->verify_failure && !msg_repr->failure_expected) {
+                    num_test_failures++;
+                }
+
             } END_FOR_EACH_MSG_REPR(test_repr, msg_repr)
         } END_FOR_EACH_TEST_REPR(test_repr)
     }
@@ -677,7 +797,7 @@ aes_testvec_t::rsp_file_output(void)
 {
     uint32_t    count;
 
-    auto output_one = [this] (crypto_symm::crypto_symm_op_t op,
+    auto output_one = [this] (aes_test_repr_t *test_repr,
                               uint32_t idx,
                               dp_mem_t *key,
                               dp_mem_t *iv,
@@ -687,7 +807,7 @@ aes_testvec_t::rsp_file_output(void)
         rsp_output->dec(PARSE_STR_COUNT_PREFIX, idx);
         rsp_output->hex_bn(PARSE_STR_KEY_PREFIX, key);
         rsp_output->hex_bn(PARSE_STR_IV_PREFIX, iv);
-        if (op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT) {
+        if (test_repr->is_encrypt()) {
             rsp_output->hex_bn(PARSE_TOKEN_STR_PT_PREFIX, msg_input);
             rsp_output->hex_bn(PARSE_TOKEN_STR_CT_PREFIX, msg_output,
                                PARSE_TOKEN_STR_CT_SUFFIX);
@@ -702,7 +822,7 @@ aes_testvec_t::rsp_file_output(void)
         FOR_EACH_TEST_REPR(test_repr) {
 
             count = 0;
-            if (test_repr->op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT) {
+            if (test_repr->is_encrypt()) {
                 rsp_output->str(PARSE_TOKEN_STR_ENCRYPT_PREFIX,
                                 PARSE_TOKEN_STR_ENCRYPT,
                                 PARSE_TOKEN_STR_ENCRYPT_SUFFIX);
@@ -728,13 +848,13 @@ aes_testvec_t::rsp_file_output(void)
                         ret &= msg_repr->mc_output_actual.result_to_dp_mem(idx,
                                                    msg_repr->msg_output_actual);
                         if (ret) {
-                            output_one(test_repr->op, idx, msg_repr->key,
+                            output_one(test_repr.get(), idx, msg_repr->key,
                                        msg_repr->iv, msg_repr->msg_input,
                                        msg_repr->msg_output_actual);
                         }
                     }
                 } else {
-                    output_one(test_repr->op, count++, msg_repr->key,
+                    output_one(test_repr.get(), count++, msg_repr->key,
                                msg_repr->iv, msg_repr->msg_input,
                                msg_repr->msg_output_actual);
                 }

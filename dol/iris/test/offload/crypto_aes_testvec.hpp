@@ -322,8 +322,8 @@ public:
 
 private:
     bool is_montecarlo(void);
-    void montecarlo_cbc_execute(aes_msg_repr_t *msg_repr,
-                                crypto_symm::crypto_symm_op_t op);
+    void montecarlo_cbc_execute(aes_test_repr_t *test_repr,
+                                aes_msg_repr_t *msg_repr);
 
     aes_testvec_params_t        testvec_params;
     aes_testvec_pre_push_params_t pre_params;
@@ -357,6 +357,11 @@ public:
             if (aes_testvec.test_success || !aes_testvec.hw_started) {
             }
         }
+    }
+
+    bool is_encrypt(void)
+    {
+        return op == crypto_symm::CRYPTO_SYMM_OP_ENCRYPT;
     }
 
     friend class aes_testvec_t;

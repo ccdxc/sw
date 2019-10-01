@@ -130,7 +130,6 @@ public:
     void rsp_file_output(void);
 
 private:
-    bool shall_execute(drbg_test_repr_t *test_repr);
     bool trial_execute(drbg_trial_repr_t *trial_repr,
                        drbg_t *drbg);
 

@@ -320,6 +320,7 @@ public:
                                DP_MEM_ALIGN_NONE, rsa_testvec.testvec_params.msg_mem_type(),
                                0, DP_MEM_ALLOC_FILL_ZERO);
         msg_expected = msg_vec->fragment_find(0, modulus_bytes_len);
+        msg_expected->content_size_set(0);
         msg_actual = msg_vec->fragment_find(modulus_bytes_len, modulus_bytes_len);
 
         // ensure the 2 fragments are contiguous in memory
@@ -329,6 +330,7 @@ public:
                                DP_MEM_ALIGN_NONE, rsa_testvec.testvec_params.sig_mem_type(),
                                0, DP_MEM_ALLOC_FILL_ZERO);
         sig_expected = sig_vec->fragment_find(0, modulus_bytes_len);
+        sig_expected->content_size_set(0);
         sig_actual = sig_vec->fragment_find(modulus_bytes_len, modulus_bytes_len);
 
         // ensure the 2 fragments are contiguous in memory

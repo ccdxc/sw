@@ -554,6 +554,12 @@ rsa_t::expected_actual_verify(const char *entity_name,
                               dp_mem_t *expected,
                               dp_mem_t *actual)
 {
+    /*
+     * Verification is optional and is done only when 'expected' is present.
+     */
+    if (!expected || !expected->content_size_get()) {
+        return true;
+    }
     if (expected->content_size_get() != actual->content_size_get()) {
         OFFL_FUNC_ERR("expected {} size {} actual size {}",
                       entity_name, expected->content_size_get(),

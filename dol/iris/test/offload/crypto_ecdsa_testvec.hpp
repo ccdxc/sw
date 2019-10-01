@@ -334,7 +334,9 @@ public:
                            DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.sig_mem_type(),
                            0, DP_MEM_ALLOC_NO_FILL);
         r_expected = sig_expected_vec->fragment_find(P_expanded_len * 0, P_expanded_len);
+        r_expected->content_size_set(0);
         s_expected = sig_expected_vec->fragment_find(P_expanded_len * 1, P_expanded_len);
+        s_expected->content_size_set(0);
 
         d = new dp_mem_t(1, P_expanded_len,
                          DP_MEM_ALIGN_NONE, ecdsa_testvec.testvec_params.d_mem_type(),
