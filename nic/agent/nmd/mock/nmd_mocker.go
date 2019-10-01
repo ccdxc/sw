@@ -282,3 +282,8 @@ func (ag *NMD) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, 
 func (ag *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []byte) ([]byte, []byte, error) {
 	return nil, nil, nil
 }
+
+// PersistState persists Naples object
+func (ag *NMD) PersistState(updateDelphi bool) error {
+	return nil
+}

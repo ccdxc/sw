@@ -289,6 +289,12 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	ipCfg := &cluster.IPConfig{
 		IPAddress: addr.String(),
 	}
+	curIPConfig := d.nmd.GetIPConfig()
+	if curIPConfig != nil && curIPConfig.IPAddress != ipCfg.IPAddress {
+		log.Infof("IP Address for Naples got updated. Pushing the new configs to processes.")
+		d.nmd.PersistState(true)
+	}
+
 	d.nmd.SetIPConfig(ipCfg)
 	return
 }

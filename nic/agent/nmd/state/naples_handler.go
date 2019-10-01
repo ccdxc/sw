@@ -217,7 +217,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 			isEmulation = true
 		}
 
-		if err := n.persistState(isEmulation); err != nil {
+		if err := n.PersistState(isEmulation); err != nil {
 			return errInternalServer(err)
 		}
 
@@ -261,7 +261,9 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 	return nil
 }
 
-func (n *NMD) persistState(updateDelphi bool) (err error) {
+// PersistState persists the naples object in nmd.db, appropriate parameters in device.conf and sends notification
+// about changes to other proceses by updating the NaplesStatus delphi object.
+func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	// Persist BoltDB
 	log.Info("Persisting state")
 	if err = n.store.Write(&n.config); err != nil {
@@ -355,7 +357,7 @@ func (n *NMD) handleHostModeTransition() error {
 			n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_REBOOT_PENDING.String()
 		}
 
-		if err := n.persistState(true); err != nil {
+		if err := n.PersistState(true); err != nil {
 			log.Errorf("Failed to persist Naples Config. Err : %v", err)
 			return err
 		}
@@ -374,7 +376,7 @@ func (n *NMD) runAdmissionControlLoop() {
 		isEmulation = true
 	}
 
-	if err := n.persistState(isEmulation); err != nil {
+	if err := n.PersistState(isEmulation); err != nil {
 		log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
 	}
 
@@ -743,7 +745,7 @@ func (n *NMD) AdmitNaples() {
 						log.Errorf("Failed to update naples config post updation")
 					}
 
-					if err = n.persistState(true); err != nil {
+					if err = n.PersistState(true); err != nil {
 						log.Errorf("Failed to persist naples state. Err: %v", err)
 					}
 

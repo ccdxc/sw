@@ -58,6 +58,7 @@ type NmdAPI interface {
 	SetIPConfig(cfg *cluster.IPConfig)
 	SetVeniceIPs(veniceIPs []string)
 	GetVeniceIPs() []string
+	PersistState(updateDelphi bool) error
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD

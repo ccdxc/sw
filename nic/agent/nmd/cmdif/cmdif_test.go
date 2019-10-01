@@ -142,6 +142,10 @@ func (ag *mockAgent) SetVeniceIPs(veniceIPs []string) {
 	return
 }
 
+func (ag *mockAgent) PersistState(update bool) error {
+	return nil
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.DistributedServiceCard
