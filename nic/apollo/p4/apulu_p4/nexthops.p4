@@ -151,11 +151,6 @@ action ipv6_vxlan_encap(vni, dipo, dmac, smac) {
 
 action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, smaco,
                     dmaci) {
-    if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
-        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
-    } else {
-        modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_iq);
-    }
     if (txdma_to_p4e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }

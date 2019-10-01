@@ -10,12 +10,6 @@ struct phv_         p;
 %%
 
 nexthop_info:
-    phvwrpair       p.p4e_i2e_valid, FALSE, p.txdma_to_p4e_valid, FALSE
-
-    sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
-    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
-    phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq
-
     seq             c1, k.txdma_to_p4e_nexthop_id, r0
     bcf             [c1], nexthop_invalid
     // r1 : packet length
@@ -163,5 +157,4 @@ nexthop_invalid:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nexthop_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
-    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+    nop

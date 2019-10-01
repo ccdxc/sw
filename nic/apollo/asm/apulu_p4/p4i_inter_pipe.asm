@@ -30,8 +30,8 @@ ingress_to_egress:
                         txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
-                        p4_to_p4plus_classic_nic_ip_valid, \
-                        p4_to_p4plus_classic_nic_valid, \
+                        p4i_to_p4plus_classic_nic_ip_valid, \
+                        p4i_to_p4plus_classic_nic_valid, \
                         ingress_recirc_valid, \
                         capri_rxdma_intrinsic_valid, \
                         capri_p4_intrinsic_valid, \
@@ -51,8 +51,8 @@ ingress_to_rxdma:
                         txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
-                        p4_to_p4plus_classic_nic_ip_valid, \
-                        p4_to_p4plus_classic_nic_valid, \
+                        p4i_to_p4plus_classic_nic_ip_valid, \
+                        p4i_to_p4plus_classic_nic_valid, \
                         ingress_recirc_valid, \
                         capri_rxdma_intrinsic_valid, \
                         capri_p4_intrinsic_valid, \
@@ -76,8 +76,8 @@ ingress_recirc:
                         txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
-                        p4_to_p4plus_classic_nic_ip_valid, \
-                        p4_to_p4plus_classic_nic_valid, \
+                        p4i_to_p4plus_classic_nic_ip_valid, \
+                        p4i_to_p4plus_classic_nic_valid, \
                         ingress_recirc_valid, \
                         capri_rxdma_intrinsic_valid, \
                         capri_p4_intrinsic_valid, \

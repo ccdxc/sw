@@ -33,13 +33,22 @@ header mirror_blob_t mirror_blob;
 header apulu_p4i_to_rxdma_header_t p4i_to_rxdma;
 
 @pragma synthetic_header
-header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
-@pragma pa_field_union ingress p4_to_p4plus_classic_nic.l4_sport    key_metadata.sport
-@pragma pa_field_union ingress p4_to_p4plus_classic_nic.l4_dport    key_metadata.dport
+@pragma pa_field_union ingress p4i_to_p4plus_classic_nic.l4_sport   key_metadata.sport
+@pragma pa_field_union ingress p4i_to_p4plus_classic_nic.l4_dport   key_metadata.dport
+header p4_to_p4plus_classic_nic_header_t p4i_to_p4plus_classic_nic;
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_p4plus_classic_nic_ip.ip_sa    key_metadata.src
-@pragma pa_field_union ingress p4_to_p4plus_classic_nic_ip.ip_da    key_metadata.dst
-header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_ip;
+@pragma pa_field_union ingress p4i_to_p4plus_classic_nic_ip.ip_sa   key_metadata.src
+@pragma pa_field_union ingress p4i_to_p4plus_classic_nic_ip.ip_da   key_metadata.dst
+header p4_to_p4plus_ip_addr_t p4i_to_p4plus_classic_nic_ip;
+@pragma synthetic_header
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_sport    key_metadata.sport
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_dport    key_metadata.dport
+header p4_to_p4plus_classic_nic_header_t p4e_to_p4plus_classic_nic;
+@pragma synthetic_header
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_sa    key_metadata.src
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_da    key_metadata.dst
+header p4_to_p4plus_ip_addr_t p4e_to_p4plus_classic_nic_ip;
+
 header p4plus_to_p4_s1_t p4plus_to_p4;
 @pragma pa_header_union ingress ctag_1
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
@@ -332,8 +341,8 @@ parser deparse_ingress {
 
     extract(ingress_recirc);
 
-    extract(p4_to_p4plus_classic_nic);
-    extract(p4_to_p4plus_classic_nic_ip);
+    extract(p4i_to_p4plus_classic_nic);
+    extract(p4i_to_p4plus_classic_nic_ip);
     extract(p4_to_arm);
     extract(p4i_to_rxdma);
 
@@ -468,8 +477,12 @@ parser parse_egress_ipv4_1 {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta key_metadata.src
+@pragma allow_set_meta key_metadata.dst
 parser parse_egress_ipv6_1 {
     extract(ipv6_1);
+    set_metadata(key_metadata.src, latest.srcAddr);
+    set_metadata(key_metadata.dst, latest.dstAddr);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_egress_icmp;
         IP_PROTO_TCP : parse_egress_tcp;
@@ -485,14 +498,22 @@ parser parse_egress_icmp {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta key_metadata.sport
+@pragma allow_set_meta key_metadata.dport
 parser parse_egress_tcp {
     extract(tcp);
+    set_metadata(key_metadata.sport, latest.srcPort);
+    set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
 }
 
 @pragma xgress egress
+@pragma allow_set_meta key_metadata.sport
+@pragma allow_set_meta key_metadata.dport
 parser parse_egress_udp {
     extract(udp_1);
+    set_metadata(key_metadata.sport, latest.srcPort);
+    set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
 }
 
@@ -506,6 +527,10 @@ parser deparse_egress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
+
+    // packet to classic NIC application
+    extract(p4e_to_p4plus_classic_nic);
+    extract(p4e_to_p4plus_classic_nic_ip);
 
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_recirc);

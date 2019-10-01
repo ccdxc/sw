@@ -77,4 +77,5 @@ control egress {
             egress_stats();
         }
     }
+    egress_inter_pipe();
 }
