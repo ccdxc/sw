@@ -17,7 +17,6 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	security "github.com/pensando/sw/api/generated/security"
 	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
@@ -286,7 +285,6 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 			} else {
 				return nil
 			}
-			dryRun := cache.IsDryRun(ctx)
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if oldObj == nil {
 					rete := &security.TrafficEncryptionPolicy{}
@@ -296,14 +294,12 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 				}
 				if ret, ok := oldObj.(*security.TrafficEncryptionPolicy); ok {
 					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
-					if !dryRun {
-						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
-						if err != nil {
-							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
-							ret.GenerationID = "2"
-						} else {
-							ret.GenerationID = fmt.Sprintf("%d", gen+1)
-						}
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
 					}
 					ret.Spec = n.Spec
 					return ret, nil

@@ -2082,6 +2082,7 @@ func TestStaging(t *testing.T) {
 			t.Fatalf("expecting 2 objects in list, got %d", len(lst))
 		}
 		names := []string{}
+		objmap := make(map[string]*bookstore.Customer)
 		for _, v := range lst {
 			v.Spec.Address = "not at " + v.Spec.Address
 			v.Spec.Password = []byte("Test123")
@@ -2090,6 +2091,7 @@ func TestStaging(t *testing.T) {
 				t.Fatalf("update of Order failed (%s)", err)
 			}
 			names = append(names, retcust.Name)
+			objmap[retcust.Name] = v
 		}
 		opts := api.ObjectMeta{
 			Tenant: tenantName,
@@ -2127,6 +2129,7 @@ func TestStaging(t *testing.T) {
 		}
 		// Get non-staged object
 		for _, v := range names {
+			obj := objmap[v]
 			objectMeta := api.ObjectMeta{Name: v}
 			retObj, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
 			if err != nil {
@@ -2134,6 +2137,11 @@ func TestStaging(t *testing.T) {
 			}
 			if !strings.Contains(retObj.Spec.Address, "not at") {
 				t.Fatalf("object not updated in kvstore [%s] [%+v]", v, retObj)
+			}
+			ver1, _ := strconv.ParseInt(obj.GenerationID, 10, 64)
+			ver2, _ := strconv.ParseInt(retObj.GenerationID, 10, 64)
+			if ver2 != ver1+1 {
+				t.Fatalf("GenerationID has not been incremented [%d/%d]", ver1, ver2)
 			}
 		}
 	}
