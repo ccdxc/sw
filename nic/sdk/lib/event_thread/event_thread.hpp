@@ -8,6 +8,7 @@
 #include <ev.h>
 
 #include "lib/thread/thread.hpp"
+#include "lib/ipc/ipc.hpp"
 
 #define EVENT_READ  0x1
 #define EVENT_WRITE 0x2
@@ -66,6 +67,15 @@ typedef void (*event_message_cb)(void *message, void *ctx);
 // Send a message to a thread
 void event_message_send(uint32_t thread_id, void *message);
 
+//
+// IPC
+//
+typedef void (*event_ipc_cb)(ipc::ipc_msg_ptr ipc_msg, void *ctx);
+
+// Send a reply to an ipc_msg(Must always send a reply!)
+void event_ipc_reply(ipc::ipc_msg_ptr ipc_msg, const void *data,
+                     size_t data_length);
+
 // Use this function to set the initial watchers
 typedef void (*loop_init_func_t)(void *ctx);
 
@@ -85,6 +95,7 @@ public:
                                  loop_init_func_t init_func,
                                  loop_exit_func_t exit_func,
                                  event_message_cb message_cb,
+                                 event_ipc_cb ipc_cb,
                                  uint32_t prio, int sched_policy,
                                  bool can_yield);
 
@@ -98,6 +109,9 @@ public:
 
     void message_send(void *message);
 
+    void ipc_reply(ipc::ipc_msg_ptr msg, const void *data,
+                   size_t data_legnth);
+
     virtual sdk_ret_t start(void *ctx) override;
     virtual sdk_ret_t stop(void) override;
     
@@ -105,28 +119,34 @@ protected:
     virtual int init(const char *name, uint32_t thread_id,
                      thread_role_t thread_role, uint64_t cores_mask,
                      loop_init_func_t init_func, loop_exit_func_t exit_func,
-                     event_message_cb message_cb, uint32_t prio,
-                     int sched_policy, bool can_yield);
+                     event_message_cb message_cb, event_ipc_cb ipc_cb,
+                     uint32_t prio, int sched_policy, bool can_yield);
     event_thread();
     ~event_thread();
 
 private:
     bool stop_ = false;
     struct ev_loop *loop_;
+    ipc::ipc_client *ipc_client_;
+    ev_io ipc_watcher_;
     ev_async async_watcher_;
     loop_init_func_t init_func_;
     loop_init_func_t exit_func_;
     event_message_cb message_cb_;
+    event_ipc_cb ipc_cb_;
     void *user_ctx_;
     void run_(void);
     void handle_async_(void);
     void process_lfq_(void);
+    void handle_ipc_(void);
 
 private:
     // Private static callback functions that are hooked to libev
     static void *event_thread_entry_(void *ctx);
     static void async_callback_(struct ev_loop *loop, ev_async *watcher,
                                 int revents);
+    static void ipc_callback_(struct ev_loop *loop, ev_io *watcher,
+                              int revents);
 };
 
 } // namespace sdk

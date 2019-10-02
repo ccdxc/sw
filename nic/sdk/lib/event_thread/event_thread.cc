@@ -20,12 +20,10 @@ int
 ev_to_event (int ev_value) {
     int event_value = 0;
 
-    if (EV_READ & ev_value)
-    {
+    if (EV_READ & ev_value) {
         event_value |= EVENT_READ;
     }
-    if (EV_WRITE & ev_value)
-    {
+    if (EV_WRITE & ev_value) {
         event_value |= EVENT_WRITE;
     }
 
@@ -38,12 +36,10 @@ int
 event_to_ev (int event_value) {
     int ev_value = 0;
 
-    if (EVENT_READ & event_value)
-    {
+    if (EVENT_READ & event_value) {
         ev_value |= EV_READ;
     }
-    if (EVENT_WRITE & event_value)
-    {
+    if (EVENT_WRITE & event_value) {
         ev_value |= EV_WRITE;
     }
 
@@ -54,8 +50,8 @@ event_thread *
 event_thread::factory(const char *name, uint32_t thread_id,
                       thread_role_t thread_role, uint64_t cores_mask,
                       loop_init_func_t init_func, loop_exit_func_t exit_func,
-                      event_message_cb message_cb, uint32_t prio,
-                      int sched_policy, bool can_yield) {
+                      event_message_cb message_cb, event_ipc_cb ipc_cb,
+                      uint32_t prio, int sched_policy, bool can_yield) {
     int          rv;
     void         *mem;
     event_thread *new_thread;
@@ -67,7 +63,7 @@ event_thread::factory(const char *name, uint32_t thread_id,
     
     new_thread = new (mem) event_thread();
     rv = new_thread->init(name, thread_id, thread_role, cores_mask,
-                          init_func, exit_func, message_cb, prio,
+                          init_func, exit_func, message_cb, ipc_cb, prio,
                           sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~event_thread();
@@ -82,8 +78,8 @@ int
 event_thread::init(const char *name, uint32_t thread_id,
                    thread_role_t thread_role, uint64_t cores_mask,
                    loop_init_func_t init_func, loop_exit_func_t exit_func,
-                   event_message_cb message_cb, uint32_t prio,
-                   int sched_policy, bool can_yield) {
+                   event_message_cb message_cb, event_ipc_cb ipc_cb,
+                   uint32_t prio, int sched_policy, bool can_yield) {
     int rc;
 
     if (thread_id > MAX_THREAD_ID) {
@@ -105,6 +101,7 @@ event_thread::init(const char *name, uint32_t thread_id,
     this->init_func_ = init_func;
     this->exit_func_ = exit_func;
     this->message_cb_ = message_cb;
+    this->ipc_cb_ = ipc_cb;
     this->user_ctx_ = NULL;
 
     // The async watcher is for getting messages from different threads
@@ -167,6 +164,14 @@ event_thread::run_(void) {
     if (this->init_func_) {
         this->init_func_(this->user_ctx_);
     }
+
+    // IPC
+    this->ipc_client_ = ipc::ipc_client::factory(this->thread_id());
+    ev_io_init(&this->ipc_watcher_, &this->ipc_callback_, this->ipc_client_->fd(),
+               EV_READ);
+    this->ipc_watcher_.data = this;
+
+    ev_io_start(this->loop_, &this->ipc_watcher_);
 
     ev_run(this->loop_, 0);
 
@@ -328,6 +333,40 @@ event_thread::message_send(void *message) {
     
     this->enqueue(message);
     ev_async_send(this->loop_, &this->async_watcher_);
+}
+
+void
+event_thread::handle_ipc_(void) {
+    while (1) {
+        ipc::ipc_msg_ptr msg = this->ipc_client_->recv();
+        if (msg == nullptr) {
+            return;
+        }
+        // We received an IPC message but don't have a handler
+        assert(this->ipc_cb_ != NULL);
+        this->ipc_cb_(msg, this->user_ctx_);
+    }
+}
+
+void
+event_ipc_reply (ipc::ipc_msg_ptr msg, const void *data, size_t data_length)
+{
+    assert(t_event_thread_ != NULL);
+    
+    t_event_thread_->ipc_reply(msg, data, data_length);
+}
+
+void
+event_thread::ipc_reply(ipc::ipc_msg_ptr msg, const void *data,
+                        size_t data_length) {
+    assert(t_event_thread_ == this);
+    this->ipc_client_->reply(msg, data, data_length);
+}
+
+
+void
+event_thread::ipc_callback_(struct ev_loop *loop, ev_io *watcher, int revents) {
+    ((event_thread *)watcher->data)->handle_ipc_();
 }
 
 } // namespace lib

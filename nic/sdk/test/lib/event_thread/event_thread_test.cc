@@ -5,12 +5,16 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 #include "lib/event_thread/event_thread.hpp"
+#include "lib/ipc/ipc.hpp"
 
 using namespace sdk::lib;
 
-#define THREAD_T1 0
-#define THREAD_T2 1
-#define THREAD_T3 2
+#define THREAD_T1 1
+#define THREAD_T2 2
+#define THREAD_T3 3
+#define THREAD_T4 4
+#define THREAD_T5 5
+#define THREAD_T6 6
 
 class event_thread_test : public ::testing::Test {
 public:
@@ -125,11 +129,14 @@ exit2 (void *ctx)
 
 TEST_F (event_thread_test, basic_functionality) {
     this->t1 = event_thread::factory("t1", THREAD_T1, THREAD_ROLE_CONTROL,
-        0x0, init1, exit1, msg1, 0, SCHED_OTHER, true);
+                                     0x0, init1, exit1, msg1, NULL, 0,
+                                     SCHED_OTHER, true);
     this->t2 = event_thread::factory("t2", THREAD_T2, THREAD_ROLE_CONTROL,
-        0x0, NULL, exit2, msg2, 0, SCHED_OTHER, true);
+                                     0x0, NULL, exit2, msg2, NULL, 0,
+                                     SCHED_OTHER, true);
     this->t3 = event_thread::factory("t3", THREAD_T3, THREAD_ROLE_CONTROL,
-        0x0, init3, NULL, NULL, 0, SCHED_OTHER, true);
+                                     0x0, init3, NULL, NULL, NULL, 0,
+                                     SCHED_OTHER, true);
     
     this->t1->start(this);
     this->t2->start(this);
@@ -151,6 +158,37 @@ TEST_F (event_thread_test, basic_functionality) {
 
     ASSERT_TRUE(this->t1_stopped);
     ASSERT_TRUE(this->t2_stopped);
+}
+
+void
+ipc_cb (ipc::ipc_msg_ptr msg, void *ctx)
+{
+    event_ipc_reply(msg, "ipc pong", 9);
+}
+
+TEST_F (event_thread_test, ipc_functionality) {
+    event_thread *t4 = event_thread::factory("t4", THREAD_T4,
+                                             THREAD_ROLE_CONTROL, 0x0,
+                                             NULL, NULL, NULL, ipc_cb,
+                                             0, SCHED_OTHER, true);
+    t4->start(NULL);
+
+    ipc::ipc_client *ipc = ipc::ipc_client::factory(THREAD_T5);
+
+    //
+    // IF WE SEND MESSAGE BEFORE THE LISTENER BINDS THE MESSAGE WILL BE LOST
+    //
+    sleep(2);
+    ipc::ipc_msg_ptr msg;
+    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    printf("%s\n", (char *)msg->data());
+    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    printf("%s\n", (char *)msg->data());
+    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    printf("%s\n", (char *)msg->data());
+    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    printf("%s\n", (char *)msg->data());
+    sleep(2);
 }
 
 int main (int argc, char **argv) {

@@ -1,8 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = libevent_thread.so
-MODULE_SOLIBS = lfq thread penipc
-MODULE_LDLIBS = ev
+MODULE_TARGET = libpenipc.so
+MODULE_SOLIBS = 
+MODULE_LDLIBS = zmq
 MODULE_FLAGS  = -Werror
 include ${MKDEFS}/post.mk
