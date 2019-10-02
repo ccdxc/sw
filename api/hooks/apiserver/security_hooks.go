@@ -189,15 +189,14 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 		for _, pp := range r.ProtoPorts {
 			protoNum, err := strconv.Atoi(pp.Protocol)
 			if err == nil {
-				// protocol number specified, check its between 0-255 range (0 is valid proto)
-				if protoNum < 0 || protoNum >= 255 {
-					return fmt.Errorf("Invalid protocol number %v in rule[%d]: %v", pp.Protocol, i, r)
+				// protocol number specified, check its supported in the curent release
+				if err := s.validateIANA(protoNum); err != nil {
+					return fmt.Errorf("unsupported IANA Protocol number. Supported values: 1, 6 and 17. Found: %d", protoNum)
 				}
 			} else {
 				found := false
 				for _, p := range supportedProtocols {
 					// check if any is specified in protocol
-
 					if strings.ToLower(pp.Protocol) == "any" {
 						if len(r.ProtoPorts) > 1 {
 							return fmt.Errorf("cannot specify more than one proto-ports if any is specified since this supersedes other proto-ports within a rule. Found %d proto-ports", len(r.ProtoPorts))
@@ -359,6 +358,9 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 		protoNum, err := strconv.Atoi(pp.Protocol)
 		if err == nil {
 			// protocol number specified, check its between 0-255 range (0 is valid proto)
+			if err := s.validateIANA(protoNum); err != nil {
+				ret = append(ret, fmt.Errorf("unsupported IANA Protocol number. Supported values: 1, 6 and 17. Found: %d", protoNum))
+			}
 			if protoNum < 0 || protoNum >= 255 {
 				ret = append(ret, fmt.Errorf("Invalid protocol number %v", pp.Protocol))
 			}
@@ -388,7 +390,7 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 
 		if len(pp.Ports) != 0 {
 			// you can not specify ports for icmp
-			if strings.ToLower(pp.Protocol) == "icmp" {
+			if strings.ToLower(pp.Protocol) == "icmp" || strings.ToLower(pp.Protocol) == "1" {
 				ret = append(ret, fmt.Errorf("Can not specify ports for ICMP protocol"))
 			}
 
@@ -522,4 +524,18 @@ func init() {
 
 func (s *securityHooks) isProtocolTCPorUDP(protocol string) bool {
 	return strings.ToLower(protocol) == "6" || strings.ToLower(protocol) == "tcp" || strings.ToLower(protocol) == "17" || strings.ToLower(protocol) == "udp"
+}
+
+func (s *securityHooks) validateIANA(protocolNumber int) (err error) {
+	switch protocolNumber {
+	case 1:
+		return
+	case 6:
+		return
+	case 17:
+		return
+	default:
+		err = fmt.Errorf("unsupported protocol number. Protocol: %d", protocolNumber)
+		return
+	}
 }

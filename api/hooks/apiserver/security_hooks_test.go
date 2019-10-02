@@ -908,6 +908,95 @@ func TestNetworkSecurityPolicyV6DstAnySrc(t *testing.T) {
 	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
+func TestProtocolNumbersValid(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "6",
+					Ports:    "80",
+				},
+				{
+					Protocol: "17",
+					Ports:    "53",
+				},
+				{
+					Protocol: "1", // icmp
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) == 0, "sg policy creates with protocol number should suceed")
+
+	// invalid protocol number
+	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "256"
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
+
+	// invalid protocol number
+	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "-1"
+	errs = s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
+}
+
+func TestProtocolNumbersValidWithApp(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "17",
+					Ports:    "53",
+				},
+				{
+					Protocol: "6",
+					Ports:    "1337",
+				},
+				{
+					Protocol: "1",
+				},
+			},
+		},
+	}
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) == 0, "failed to create app. Error: %v", errs)
+}
 
 // #################### Corner Case Tests ####################
 func TestBadNetworkSecurityPolicyV4V6EndIPSrcMixed(t *testing.T) {
@@ -1928,7 +2017,7 @@ func TestProtocolNumbers(t *testing.T) {
 					Ports:    "53",
 				},
 				{
-					Protocol: "2", // igmp
+					Protocol: "1", // icmp
 				},
 			},
 			Action:          "PERMIT",
@@ -3396,4 +3485,175 @@ func TestAppAlgConfig(t *testing.T) {
 
 	errs = s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "RSTP  with icmp config must fail.  Error: %v", errs)
+}
+
+func TestProtocolNumbersInValidInRange(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "42",
+					Ports:    "80",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "sg policy creates with unsupported protocol number must fail")
+}
+
+func TestProtocolNumbersInValidOutOfRange(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "1337",
+					Ports:    "80",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "sg policy creates with unsupported protocol number must fail")
+}
+
+func TestProtocolNumbersInValidInRangeWithApp(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "42",
+					Ports:    "",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "1337",
+				},
+			},
+		},
+	}
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "failed to create app. Error: %v", errs)
+}
+
+func TestProtocolNumbersInValidOutOfRangeWithApp(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "1337",
+					Ports:    "",
+				},
+			},
+		},
+	}
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "failed to create app. Error: %v", errs)
+}
+
+func TestProtocolNumbersICMPWithPorts(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "17",
+					Ports:    "53",
+				},
+				{
+					Protocol: "6",
+					Ports:    "1337",
+				},
+				{
+					Protocol: "1",
+					Ports:    "200",
+				},
+			},
+		},
+	}
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "ICMP App with ports must fail. Error: %v", errs)
 }

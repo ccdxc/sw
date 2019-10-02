@@ -484,6 +484,193 @@ func TestNetworkSecurityPolicyICMPProtoMatch(t *testing.T) {
 
 }
 
+func TestNetworkSecurityPolicyCreateIANA6_TCP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "6",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
+
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	AssertOk(t, err, "Error deleting sg policy")
+}
+
+func TestNetworkSecurityPolicyCreateIANA17_UDP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "53",
+								Protocol: "17",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
+
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	AssertOk(t, err, "Error deleting sg policy")
+}
+
+func TestNetworkSecurityPolicyCreateIANA1_ICMP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Protocol: "1",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
+
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	AssertOk(t, err, "Error deleting sg policy")
+}
+
+func TestNetworkSecurityPolicyCreatePort0(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Protocol: "tcp",
+								Port:     "0",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindNetworkSecurityPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testNetworkSecurityPolicy", "NetworkSecurityPolicy names did not match", sgp)
+
+	err = ag.DeleteNetworkSecurityPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
+	AssertOk(t, err, "Error deleting sg policy")
+}
+
 //--------------------- Corner Case Tests ---------------------//
 
 func TestInvalidNetworkSecurityPolicyICMPPortMatch(t *testing.T) {

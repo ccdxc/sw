@@ -115,7 +115,12 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			},
 		}
 		ruleMatch.AppMatch = &appMatch
-		ruleMatch.Protocol = hd.convertAppProtocol("icmp")
+		halProtocol, err := hd.convertAppProtocol("icmp")
+		if err != nil {
+			log.Errorf("Failed to convert rule. Err: %v", err)
+			return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
+		}
+		ruleMatch.Protocol = halProtocol
 		ruleMatches = append(ruleMatches, &ruleMatch)
 		return ruleMatches, nil
 
@@ -156,7 +161,13 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			}
 
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = hd.convertAppProtocol(protocol)
+			halProtocol, err := hd.convertAppProtocol(protocol)
+			if err != nil {
+				log.Errorf("Failed to convert rule. Err: %v", err)
+				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
+			}
+			ruleMatch.Protocol = halProtocol
+
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
 		}
@@ -199,7 +210,12 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			}
 
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = hd.convertAppProtocol(protocol)
+			halProtocol, err := hd.convertAppProtocol(protocol)
+			if err != nil {
+				log.Errorf("Failed to convert rule. Err: %v", err)
+				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
+			}
+			ruleMatch.Protocol = halProtocol
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
 		}
@@ -257,7 +273,12 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				}
 
 				ruleMatch.AppMatch = &appMatch
-				ruleMatch.Protocol = hd.convertAppProtocol(protocol)
+				halProtocol, err := hd.convertAppProtocol(protocol)
+				if err != nil {
+					log.Errorf("Failed to convert rule. Err: %v", err)
+					return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
+				}
+				ruleMatch.Protocol = halProtocol
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}
@@ -275,18 +296,19 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 	}
 }
 
-func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
+func (hd *Datapath) convertAppProtocol(protocol string) (halproto.IPProtocol, error) {
 	switch strings.ToLower(protocol) {
-	case "tcp":
-		return halproto.IPProtocol_IPPROTO_TCP
-	case "udp":
-		return halproto.IPProtocol_IPPROTO_UDP
-	case "icmp":
-		return halproto.IPProtocol_IPPROTO_ICMP
+	case "tcp", "6":
+		return halproto.IPProtocol_IPPROTO_TCP, nil
+	case "udp", "17":
+		return halproto.IPProtocol_IPPROTO_UDP, nil
+	case "icmp", "1":
+		return halproto.IPProtocol_IPPROTO_ICMP, nil
+	case "any":
+		return halproto.IPProtocol_IPPROTO_NONE, nil
 	default:
-		return halproto.IPProtocol_IPPROTO_NONE
+		return halproto.IPProtocol_IPPROTO_NONE, fmt.Errorf("unsupported protocol %v", protocol)
 	}
-
 }
 
 // ToDo Remove Mock code prior to FCS. This is needed only for UT
@@ -479,7 +501,7 @@ func (hd *Datapath) convertPort(port string) (*halproto.L4PortRange, error) {
 	// single port
 	case 1:
 		p, err := strconv.Atoi(port)
-		if err != nil || p <= 0 || p > 65535 {
+		if err != nil || p < 0 || p > 65535 {
 			log.Errorf("invalid port format. %v", port)
 			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
