@@ -1074,5 +1074,5 @@ func TestEndpointCreateIP(t *testing.T) {
 	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
 	foundEP, err := ag.FindEndpoint(epinfo.ObjectMeta)
 	AssertOk(t, err, "Failed to find the endpoint. Err: %v", err)
-	AssertEquals(t, "10.1.1.1/32", foundEP.Spec.IPv4Address, "Endpoints specifying just the IP Addresses must have a /32 prefix")
+	AssertEquals(t, "10.1.1.1", foundEP.Spec.IPv4Address, "Endpoints specifying just the IP Addresses must have a /32 prefix")
 }

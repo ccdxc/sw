@@ -122,6 +122,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 
 		sgs = append(sgs, sg)
 	}
+	origSpecIPAddress := ep.Spec.IPv4Address
 
 	// Validate EP IP.
 	if len(ep.Spec.IPv4Address) > 0 {
@@ -177,6 +178,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 			return err
 		}
 	}
+	ep.Spec.IPv4Address = origSpecIPAddress
 	err = na.Solver.Add(nw, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", nw, ep)
