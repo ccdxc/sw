@@ -294,16 +294,25 @@ class _Testbed:
             proc_hdls.append(proc_hdl)
 
         result = 0
-        for idx in range(len(proc_hdls)):
-            proc_hdl = proc_hdls[idx]
-            while proc_hdl.poll() is None:
-                time.sleep(5)
-                continue
-            if proc_hdl.returncode != 0:
-                result = proc_hdl.returncode
-                _, err = proc_hdl.communicate()
-                Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
-                Logger.error("Firmware upgrade failed : " + err.decode())
+        try:
+            for idx in range(len(proc_hdls)):
+                proc_hdl = proc_hdls[idx]
+                #TODO: why not run in parallel ?
+                while proc_hdl.poll() is None:
+                    time.sleep(5)
+                    continue
+                if proc_hdl.returncode != 0:
+                    result = proc_hdl.returncode
+                    _, err = proc_hdl.communicate()
+                    Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
+                    Logger.error("Firmware upgrade failed : " + err.decode())
+        except KeyboardInterrupt:
+            result=2
+            err="SIGINT detected. terminating boot_naples_v2 scripts" 
+            Logger.debug(err)
+            for proc in proc_hdls:
+                Logger.debug("sending SIGKILL to pid {0}".format(proc.pid))
+                proc.terminate()
 
         if result != 0:
             sys.exit(result)

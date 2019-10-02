@@ -3,6 +3,7 @@ import sys
 import os
 import pdb
 import atexit
+import signal
 import socket
 
 topdir = os.path.dirname(sys.argv[0]) + '/../'
@@ -62,6 +63,8 @@ def __find_free_port():
     return port
 
 def __start_server():
+    Logger.debug("setting default SIGINT handler")
+    signal.signal(signal.SIGINT, signal.default_int_handler)
     global gl_srv_process
     glopts.GlobalOptions.svcport = __find_free_port()
     srv_binary = "VENICE_DEV=1 %s/iota/bin/server/iota_server" % topdir
