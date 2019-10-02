@@ -1,12 +1,18 @@
 #! /usr/bin/python3
+import ipaddress
+import os
+import re
+
 import infra.common.objects as objects
 import apollo.config.utils as utils
 from apollo.config.store import Store
-import ipaddress
 
 # Start and End inclusive range
 def irange(start, end):
     return range(start, end+1)
+
+HostMemoryAllocator = None
+Lif2QstateMap = None
 
 EpochAllocator = iter(irange(1,4096))
 TunnelIdAllocator = iter(irange(1,1024))
@@ -176,3 +182,31 @@ VPC_V6_PREFIX_OVERLAP_DIST=128
 def GetVpcIPv6Prefix(vpcid):
     pfxstr = '%s:%04x::/48'%(VPC_V6_BASE, ((vpcid%VPC_V6_PREFIX_OVERLAP_DIST)+VPC_V6_PREFIX_BASE))
     return ipaddress.IPv6Network(pfxstr)
+
+def __hostmemmgr_init():
+    global HostMemoryAllocator
+    HostMemoryAllocator = objects.GetHostMemMgrObject()
+    assert HostMemoryAllocator is not None
+
+def __lif2qstatemap_init():
+    global Lif2QstateMap
+    Lif2QstateMap = dict()
+    nicmgrlog = os.path.join(os.environ['WS_TOP'], "nic/nicmgr.log")
+    pattern = ' lif-(\d{2}): qtype: (\d{1}), qstate_base: (\w+)'
+    f = open(nicmgrlog, "r")
+    for line in f:
+        match = re.search(pattern, line)
+        if match is None:
+            continue
+        lif_id = int(match.groups()[0])
+        q_type = int(match.groups()[1])
+        qstate_base  = int(match.groups()[2], base=16)
+        qstateaddr_list = Lif2QstateMap.get(lif_id, [])
+        qstateaddr_list.insert(q_type, qstate_base)
+        Lif2QstateMap.update({lif_id: qstateaddr_list})
+    f.close()
+    return
+
+def InitNicMgrObjects():
+    __hostmemmgr_init()
+    __lif2qstatemap_init()

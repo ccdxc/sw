@@ -5,6 +5,7 @@ from scapy.all import *
 import iris.config.resmgr as resmgr
 
 import infra.factory.base as base
+import infra.common.objects as objects
 from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
@@ -224,8 +225,7 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
                   for i in range(prp3_begin, prp3_end+1):
                       data += data_buffer.phy_pages[i].to_bytes(8, 'little')
                   print ("%s" % (data))
-                  mem_handle = resmgr.MemHandle(prp3_slab.address + prp3_offset,
-                                                resmgr.HostMemoryAllocator.v2p(prp3_slab.address + prp3_offset))
+                  mem_handle = objects.MemHandle(prp3_slab.address + prp3_offset, resmgr.HostMemoryAllocator.v2p(prp3_slab.address + prp3_offset))
                   resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
 
                prp2_slab = self.nvme_session.lif.GetNextSlab()
@@ -238,7 +238,7 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
                if prp3_required:
                    data += resmgr.HostMemoryAllocator.v2p(prp3_slab.address).to_bytes(8, "little")
                print ("%s" % (data))
-               mem_handle = resmgr.MemHandle(prp2_slab.address + prp2_offset,
+               mem_handle = objects.MemHandle(prp2_slab.address + prp2_offset,
                                              resmgr.HostMemoryAllocator.v2p(prp2_slab.address + prp2_offset))
                resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
     
@@ -272,7 +272,7 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         desc = NvmeSqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, 64))
 
         logger.ShowScapyObject(desc)
@@ -324,7 +324,7 @@ class NvmeCqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         desc = NvmeCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, 64))
 
         logger.ShowScapyObject(desc)
@@ -379,7 +379,7 @@ class NvmeArmqDescriptorObject(base.FactoryObjectBase):
         """
         if self.mem_handle:
             self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            mem_handle = objects.MemHandle(self.address, self.phy_address)
             desc = NvmeArmqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, 64))
         else:
             hbm_addr = self.address
@@ -437,7 +437,7 @@ class NvmeSessqDescriptorObject(base.FactoryObjectBase):
         """
         if self.mem_handle:
             self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            mem_handle = objects.MemHandle(self.address, self.phy_address)
             desc = NvmeSessqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, 64))
         else:
             hbm_addr = self.address
@@ -495,7 +495,7 @@ class NvmeTcprqDescriptorObject(base.FactoryObjectBase):
         """
         if self.mem_handle:
             self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            mem_handle = objects.MemHandle(self.address, self.phy_address)
             desc = NvmeTcprqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, 64))
         else:
             hbm_addr = self.address

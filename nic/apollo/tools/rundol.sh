@@ -27,6 +27,8 @@ cleanup() {
     fi
     pkill agent
     pkill cap_model
+    echo "===== Collecting logs ====="
+    ${NICDIR}/apollo/test/tools/savelogs.sh
 }
 
 trap cleanup EXIT

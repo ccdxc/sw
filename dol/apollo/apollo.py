@@ -12,16 +12,17 @@ from infra.common.glopts import GlobalOptions as GlobalOptions
 from infra.common.logging import logger as logger
 from apollo.config.store import Store as Store
 
-APOLLO_CONFIG_TEMPLATE_PATH = "apollo/config/templates/"
+APOLLO_CONFIG_TEMPLATE_PATH  = "apollo/config/templates/"
+APOLLO_CONFIG_SPEC_PATH      = "apollo/config/specs/"
 APOLLO_CONFIG_TOPO_SPEC_PATH = "apollo/config/topology/%s" % GlobalOptions.topology
-APOLLO_TEST_PATH = "apollo/test/"
-APOLLO_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/gen/proto/'
+APOLLO_TEST_PATH             = "apollo/test/"
+APOLLO_PROTO_PATH            = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/gen/proto/'
 sys.path.insert(0, APOLLO_PROTO_PATH)
 import apollo.config.generator    as generator
 
 def InitConfig():
     logger.info("Initializing APOLLO Config Templates and Specs")    
-    config.Init(Store, APOLLO_CONFIG_TEMPLATE_PATH, None, None)
+    config.Init(Store, APOLLO_CONFIG_TEMPLATE_PATH, APOLLO_CONFIG_SPEC_PATH, APOLLO_CONFIG_TOPO_SPEC_PATH)
     return
 
 def InitEngine():

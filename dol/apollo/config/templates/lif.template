@@ -1,0 +1,22 @@
+# LIF Object Template
+meta:
+    id      : LIF
+    package : config.objects
+    module  : lif
+    feature_set:
+        - apollo
+
+id      : None  # LIF ID
+
+num_types: None  # Number of Types
+types:
+    - type:
+        num_queues  : None # Number of queues
+        queues      : None # ref://store/object/id=Queue_xxx
+
+queues:
+    - queue: None # ref://store/object/id=Queue_xxx
+
+pds:
+    - pd:
+

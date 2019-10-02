@@ -93,7 +93,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
                 PacketCollector.SaveTx(descr.GetTxPacket(), ring.GetLif())
             else:
                 logger.info("Posting Descriptor:%s on Ring:%s" %\
-                        (ring.GID(), descr.GID()))
+                            (descr.GID(), ring.GID()))
                 ring.Post(descr)
         return
 

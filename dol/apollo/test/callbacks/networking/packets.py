@@ -251,3 +251,4 @@ def GetIPFromLocalMapping(testcase, packet, args=None):
     else:
         tunnel = None
     return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)
+

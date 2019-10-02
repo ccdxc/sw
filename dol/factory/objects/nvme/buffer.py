@@ -4,6 +4,7 @@ import binascii
 import iris.config.resmgr            as resmgr
 
 import infra.factory.base as base
+import infra.common.objects as objects
 from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
@@ -72,8 +73,7 @@ class NvmeBufferObject(base.FactoryObjectBase):
                 page_bytes = min(self.page_size, (self.size - data_begin)) - page_offset
                 start_addr = self.slabs[i].address + page_offset
                 page_offset = 0
-                mem_handle = resmgr.MemHandle(start_addr,
-                                              resmgr.HostMemoryAllocator.v2p(start_addr))
+                mem_handle = objects.MemHandle(start_addr, resmgr.HostMemoryAllocator.v2p(start_addr))
                 resmgr.HostMemoryAllocator.write(mem_handle,
                                                  (bytes(self.data))[data_begin:data_begin+page_bytes])
                 logger.info("Writing Buffer[%d] @0x%x = size: %d " %

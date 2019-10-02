@@ -1,0 +1,98 @@
+# Test Spec for local2remote scenarios from Host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 4
+    flow: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : ref://testcase/config/remotemapping/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : ref://testcase/config/remotemapping/TunIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            outermpls:
+                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                ttl     : 0
+            mpls:
+                label   : ref://testcase/config/remotemapping/MplsSlot
+                ttl     : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/Vnid
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+trigger:
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/devicecfg/lif/queue_types/id=TX
+
+expect:
+    delay    :    1
+
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
+            port    : ref://testcase/config/switchport
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/devicecfg/lif/queue_types/id=TX

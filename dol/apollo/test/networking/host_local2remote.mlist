@@ -1,0 +1,34 @@
+# Feature networking Modules List for Host Local to Remote scenario
+feature:
+    id          : networking
+    sub         : host_local2remote
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG
+        spec    : host_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG
+        spec    : host_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_TCP_QTAG
+        spec    : host_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_TCP_QTAG
+        spec    : host_local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING

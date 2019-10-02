@@ -5,6 +5,7 @@ from scapy.all import *
 import iris.config.resmgr as resmgr
 
 import infra.factory.base as base
+import infra.common.objects as objects
 from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
@@ -593,7 +594,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         """
         if self.mem_handle:
             self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            mem_handle = objects.MemHandle(self.address, self.phy_address)
             desc = RdmaSqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
         else:
             hbm_addr = self.address
@@ -697,11 +698,9 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             sge = self.sges[idx]
             logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
             if sge.l_key == 0: #ReservedLkey
-                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(sge.va),
-                                              sge.va)
+                mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(sge.va), sge.va)
             else:
-                mem_handle = resmgr.MemHandle(sge.va,
-                                              resmgr.HostMemoryAllocator.v2p(sge.va))
+                mem_handle = objects.MemHandle(sge.va, resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
@@ -800,7 +799,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
         if self.mem_handle:
             self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            mem_handle = objects.MemHandle(self.address, self.phy_address)
             desc = RdmaRqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
         else:
             hbm_addr = self.address
@@ -908,11 +907,9 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
             logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(va, sge.len, sge.l_key))
             if sge.l_key == 0: #ReservedLkey
-                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(va),
-                                              va)
+                mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(va), va)
             else:
-                mem_handle = resmgr.MemHandle(va,
-                                              resmgr.HostMemoryAllocator.v2p(va))
+                mem_handle = objects.MemHandle(va, resmgr.HostMemoryAllocator.v2p(va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
@@ -1192,7 +1189,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         if debug is True:
             logger.info("Reading AQ Desciptor @ 0x%x phy_address: 0x%x" % (self.address, self.phy_address))
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaAqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorBase()))))
 
         if self.desc.op == 10: # AQ_OP_TYPE_QUERY_QP
@@ -1264,19 +1261,19 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             page_size = 4096     # hostmem_pg_size
             logger.info("Reading query_qp content. len: %d hdr_dma_addr: 0x%x sq_dma_addr: 0x%x rq_dma_addr: 0x%x" %(len(self.queryQP), self.hdr_dma_addr, self.sq_dma_addr, self.rq_dma_addr))
 
-            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.sq_dma_addr), self.sq_dma_addr)
+            mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(self.sq_dma_addr), self.sq_dma_addr)
             sq_data = resmgr.HostMemoryAllocator.read(mem_handle, sq_data_len)
             total_data.extend(sq_data)
             total_size += sq_data_len
             logger.info("SQ data: %s" % sq_data)
 
-            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.rq_dma_addr), self.rq_dma_addr)
+            mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(self.rq_dma_addr), self.rq_dma_addr)
             rq_data = resmgr.HostMemoryAllocator.read(mem_handle, rq_data_len)
             total_data.extend(rq_data)
             total_size += rq_data_len
             logger.info("RQ data: %s" % rq_data)
 
-            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.hdr_dma_addr), self.hdr_dma_addr)
+            mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(self.hdr_dma_addr), self.hdr_dma_addr)
             hdr_data = resmgr.HostMemoryAllocator.read(mem_handle, page_size)
             pkt = Ether(hdr_data)
             total_data.extend(bytes(pkt))
@@ -1296,7 +1293,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             page_size = 4096    # hostmem_pg_size
             logger.info("Reading query_ah content. len: %d dma_addr: 0x%x" %(len(self.queryAH), self.dma_addr))
 
-            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.dma_addr), self.dma_addr)
+            mem_handle = objects.MemHandle(resmgr.HostMemoryAllocator.p2v(self.dma_addr), self.dma_addr)
             hdr_data = resmgr.HostMemoryAllocator.read(mem_handle, page_size)
             pkt = Ether(hdr_data)
             total_data.extend(bytes(pkt))
@@ -1376,7 +1373,7 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
         logger.info("Reading CQ(Recv) Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptorRecv(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorRecv()))))
 
     def Show(self):
@@ -1533,7 +1530,7 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
         logger.info("Reading CQ(Send) Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptorSend(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorSend()))))
 
     def Show(self):
@@ -1655,7 +1652,7 @@ class RdmaCqDescriptorAdminObject(base.FactoryObjectBase):
             logger.info("Reading CQ(Admin) Desciptor @0x%x = old_sq_cindex: %d " %
                        (self.address, self.old_sq_cindex))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptorAdmin(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorAdmin()))))
 
     def Show(self):
@@ -1765,7 +1762,7 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         """
         logger.info("Reading EQ Desciptor @ 0x%x " % (self.address))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        mem_handle = objects.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaEqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
 
     def Show(self):

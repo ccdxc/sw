@@ -1,9 +1,11 @@
 #! /usr/bin/python3
 import sys
+import os
 import pdb
 import random
 import ipaddress
 import copy
+from ctypes import *
 
 import infra.common.utils as utils
 import infra.common.loader as loader
@@ -12,6 +14,7 @@ import infra.common.timeprofiler as timeprofiler
 import infra.penscapy.penscapy as penscapy
 
 from collections import OrderedDict
+from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger
 
 
@@ -1124,3 +1127,113 @@ FrameworkInternalAttrs = ['meta', '__locked', '__readonly']
 
 def IsFrameworkObjectInternalAttr(attr):
     return attr in FrameworkInternalAttrs
+
+class MemHandle(object):
+
+    def __init__(self, va, pa):
+        self.va = va
+        self.pa = pa
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.va == other.va and self.pa == other.pa
+
+    def __str__(self):
+        if self.va is None or self.pa is None:
+            return '<None>'
+        return '<va=0x%x, pa=0x%x>' % (self.va, self.pa)
+
+    def __add__(self, other):
+        assert isinstance(other, int)
+        return MemHandle(self.va + other, self.pa + other)
+
+
+NullMemHandle = MemHandle(0, 0)
+
+
+class HostMemory(object):
+    def __init__(self, libpath):
+        if not GlobalOptions.dryrun and GlobalOptions.hostmem:
+            self.lib = CDLL(libpath, mode=RTLD_GLOBAL)
+            self.lib.alloc_host_mem.argtypes = [c_uint64]
+            self.lib.alloc_host_mem.restype = c_void_p
+            self.lib.alloc_page_aligned_host_mem.argtypes = [c_uint64]
+            self.lib.alloc_page_aligned_host_mem.restype = c_void_p
+            self.lib.host_mem_v2p.argtypes = [c_void_p]
+            self.lib.host_mem_v2p.restype = c_uint64
+            self.lib.host_mem_p2v.argtypes = [c_uint64]
+            self.lib.host_mem_p2v.restype = c_void_p
+            self.lib.free_host_mem.argtypes = [c_void_p]
+            self.lib.free_host_mem.restype = None
+            assert self.lib.init_host_mem() == 0
+
+    def get(self, size, page_aligned=True):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle
+        assert isinstance(size, int)
+        if page_aligned:
+            ptr = self.lib.alloc_page_aligned_host_mem(size)
+        else:
+            ptr = self.lib.alloc_host_mem(size)
+        return MemHandle(ptr, self.lib.host_mem_v2p(ptr))
+
+    def p2v(self, pa):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle.pa
+        assert isinstance(pa, int)
+        return self.lib.host_mem_p2v(pa)
+
+    def v2p(self, va):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return NullMemHandle.va
+        assert isinstance(va, int)
+        return self.lib.host_mem_v2p(va)
+
+    def write(self, memhandle, data):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(data, bytes)
+        va = memhandle.va
+        ba = bytearray(data)
+        arr = c_char * len(ba)
+        arr = arr.from_buffer(ba)
+        memmove(va, arr, sizeof(arr))
+
+    def read(self, memhandle, size):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return bytes()
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(size, int)
+        ba = bytearray([0x0]*size)
+        va = memhandle.va
+        arr = c_char * size
+        arr = arr.from_buffer(ba)
+        memmove(arr, va, sizeof(arr))
+        return bytes(ba)
+
+    def zero(self, memhandle, size):
+        if GlobalOptions.dryrun or not GlobalOptions.hostmem: return
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(size, int)
+        va = memhandle.va
+        memset(va, 0, c_uint64(size))
+
+    def __del__(self):
+        if not GlobalOptions or GlobalOptions.dryrun or not GlobalOptions.hostmem: return
+        self.lib.delete_host_mem()
+
+
+HostMemMgr = None
+
+def GetHostMemMgrObject():
+    global HostMemMgr
+
+    if HostMemMgr is not None:
+        return HostMemMgr
+    # initialize host memory manager
+    if GlobalOptions.gft:
+        pipeline_name = "gft"
+    else:
+        pipeline_name = GlobalOptions.pipeline
+    libpath = "nic/build/x86_64/%s/lib/libhost_mem.so" % (pipeline_name)
+    libpath = os.path.join(os.environ['WS_TOP'], libpath)
+    HostMemMgr = HostMemory(libpath)
+    return HostMemMgr
+

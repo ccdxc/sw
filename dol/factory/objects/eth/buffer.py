@@ -1,9 +1,9 @@
 #! /usr/bin/python3
 
-import iris.config.resmgr                as resmgr
 import infra.factory.scapyfactory   as scapyfactory
 import infra.factory.base           as base
 
+import infra.common.objects as objects
 from infra.common.logging import logger
 
 
@@ -17,13 +17,14 @@ class EthBufferObject(base.FactoryObjectBase):
         self.size = getattr(spec.fields, 'size', 0)
         self.data = getattr(spec.fields, 'data', None)
         self.bind = getattr(spec.fields, 'bind', False)
+        self.hostmemmgr = objects.GetHostMemMgrObject()
 
         # Bind the buffer if required by spec
         self._mem = None
         self.addr = None    # Required to fill the 'buf_addr' field of descriptor
         if self.bind:
             # Allocate Memory for the buffer
-            self._mem = resmgr.HostMemoryAllocator.get(self.size, page_aligned=False)
+            self._mem = self.hostmemmgr.get(self.size, page_aligned=False)
             self.addr = self._mem.pa
 
         logger.info("Init %s" % self)
@@ -37,11 +38,11 @@ class EthBufferObject(base.FactoryObjectBase):
 
         logger.info("Writing %s" % self)
         if self.data is None:
-            resmgr.HostMemoryAllocator.zero(self._mem, self.size)
+            self.hostmemmgr.zero(self._mem, self.size)
         else:
             logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
             scapyfactory.Parse(self.data).Show()
-            resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
+            self.hostmemmgr.write(self._mem, bytes(self.data))
             logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
@@ -52,7 +53,7 @@ class EthBufferObject(base.FactoryObjectBase):
         if not self._mem: return self.data
 
         logger.info("Read %s" % self)
-        self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
+        self.data = self.hostmemmgr.read(self._mem, self.size)
 
         logger.info("=" * 30, "READ BUFFER", "=" * 30)
         scapyfactory.Parse(self.data).Show()
@@ -61,7 +62,7 @@ class EthBufferObject(base.FactoryObjectBase):
         return self.data
 
     def Bind(self, mem):
-        assert(isinstance(mem, resmgr.MemHandle))
+        assert(isinstance(mem, objects.MemHandle))
         super().Bind(mem)
         self.addr = mem.pa
 

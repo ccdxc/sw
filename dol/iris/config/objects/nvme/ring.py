@@ -5,6 +5,7 @@ from iris.config.store               import Store
 import iris.config.resmgr            as resmgr
 import iris.config.objects.ring      as ring
 
+import infra.common.objects as objects
 from infra.common.logging   import logger
 from infra.factory.store    import FactoryStore
 import iris.config.objects.nvme.doorbell as doorbell
@@ -96,8 +97,7 @@ class NvmeRingObject(ring.RingObject):
         if self.nic_resident:
             descriptor.mem_handle = None
         else:
-            descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
-                                                     resmgr.HostMemoryAllocator.v2p(descriptor.address))
+            descriptor.mem_handle = objects.MemHandle(descriptor.address, resmgr.HostMemoryAllocator.v2p(descriptor.address))
 
         descriptor.Write()
         logger.info('incrementing pindex..')
@@ -110,8 +110,7 @@ class NvmeRingObject(ring.RingObject):
         if (self.nic_resident):
             descriptor.mem_handle = None 
         else:
-            descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
-                                                     resmgr.HostMemoryAllocator.v2p(descriptor.address))
+            descriptor.mem_handle = objects.MemHandle(descriptor.address, resmgr.HostMemoryAllocator.v2p(descriptor.address))
     
         descriptor.Read()
         self.queue.qstate.Read()

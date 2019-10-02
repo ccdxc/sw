@@ -15,6 +15,8 @@ import types_pb2 as types_pb2
 from infra.common.logging import logger
 from apollo.config.store import Store
 
+import apollo.config.objects.lif as lif
+
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
@@ -29,6 +31,12 @@ class DeviceObject(base.ConfigObjectBase):
 
         ################# PRIVATE ATTRIBUTES OF SWITCH OBJECT #####################
         self.__spec = spec
+        #TODO: Move LIF creation to appropriate interface once that is supported
+        self.lifns = getattr(spec, 'lifns', None)
+        if utils.IsHostLifSupported() and self.lifns:
+            # Process Host LIFs
+            self.obj_helper_lif = lif.LifObjectHelper()
+            self.__create_lifs()
 
         self.Show()
         tunnel.client.GenerateObjects(self, spec.tunnel)
@@ -38,6 +46,16 @@ class DeviceObject(base.ConfigObjectBase):
         return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s|Encap:%s" %\
                (self.IPAddr, self.GatewayAddr, self.MACAddr.get(),
                utils.GetEncapTypeString(self.EncapType))
+
+    def __create_lifs(self):
+        lif = self.__spec.lif.Get(Store)
+        self.obj_helper_lif.Generate(lif, self.lifns)
+        self.obj_helper_lif.Configure()
+        #TODO: Fix once interface.py is available
+        self.lif = self.obj_helper_lif.GetRandomHostLif()
+        logger.info(" Selecting %s for Test" % self.lif.GID())
+        self.lif.Show()
+        return
 
     def GetGrpcCreateMessage(self):
         grpcmsg = device_pb2.DeviceRequest()

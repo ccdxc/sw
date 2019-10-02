@@ -341,6 +341,11 @@ def IsPipelineArtemis():
         return True
     return False
 
+def IsHostLifSupported():
+    if IsPipelineArtemis():
+        return False
+    return True
+
 def GetVlanHeaderSize(packet):
     pkt = packet.GetScapyPacket()
     if Dot1Q in pkt:

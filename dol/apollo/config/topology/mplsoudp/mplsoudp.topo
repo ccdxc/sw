@@ -16,6 +16,9 @@ uplink:
         status  : UP
 
 device:
+    # host lif
+    lif         : ref://store/specs/id=LIF_ETH
+    lifns       : range/70/71
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
     macaddress  : macaddr/0002.0100.0001

@@ -2,8 +2,9 @@
 import pdb
 from pprint import pformat
 from scapy.all import *
-import iris.config.resmgr as resmgr
+
 from infra.common.logging import logger
+import infra.common.objects as objects
 from ctypes import *
 
 import infra.factory.base as base
@@ -159,6 +160,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self._data = None   # Set when self.Read/self.Write method is called
         self._buf = None    # Set when Init method is called
         self._more = None   # Set when Init method is called
+        self.hostmemmgr = objects.GetHostMemMgrObject()
 
     def Init(self, spec):
         super().Init(spec)
@@ -190,7 +192,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
 
         logger.info("Writing %s" % self)
         self._data = self.__data_class__(**self.fields)
-        resmgr.HostMemoryAllocator.write(self._mem, bytes(self._data))
+        self.hostmemmgr.write(self._mem, bytes(self._data))
         logger.info(ctypes_pformat(self._data))
 
     def Read(self):
@@ -201,7 +203,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         if self._mem is None: return
 
         logger.info("Reading %s" % self)
-        ba = resmgr.HostMemoryAllocator.read(self._mem, self.size)
+        ba = self.hostmemmgr.read(self._mem, self.size)
         self._data = self.__data_class__.from_buffer_copy(ba)
         # Fill in the fields from data
         self.fields = {k[0]: getattr(self._data, k[0])

@@ -161,11 +161,11 @@ jobd/dol/gft: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/mplsoudp
 jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
+	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
 
 .PHONY: jobd/dol/apollo/vxlan
 jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
+	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
 
 .PHONY: jobd/dol/apollo/lpm
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}

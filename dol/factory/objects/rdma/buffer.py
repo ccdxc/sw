@@ -4,6 +4,7 @@ import binascii
 import iris.config.resmgr            as resmgr
 
 import infra.factory.base as base
+import infra.common.objects as objects
 from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
@@ -70,8 +71,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
             self.address = spec.fields.slab.address if spec.fields.slab else 0
             self.address += self.offset
             if self.address:
-                self.mem_handle = resmgr.MemHandle(self.address,
-                                                  resmgr.HostMemoryAllocator.v2p(self.address))
+                self.mem_handle = objects.MemHandle(self.address, resmgr.HostMemoryAllocator.v2p(self.address))
                 self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
             logger.info("Creating Rdma Buffer @0x%x = phy_address: 0x%x size: %d offset: %d " %
                            (self.address, self.phy_address, self.size, self.offset))

@@ -3,6 +3,7 @@
 import binascii
 import iris.config.resmgr            as resmgr
 
+import infra.common.objects as objects
 import infra.factory.base as base
 from infra.common.logging   import logger
 
@@ -27,8 +28,7 @@ class RdmaXferObject(base.FactoryObjectBase):
         self.address = spec.fields.slab.address if spec.fields.slab else 0
         self.address += self.offset
         if self.address:
-            self.mem_handle = resmgr.MemHandle(self.address,
-                                               resmgr.HostMemoryAllocator.v2p(self.address))
+            self.mem_handle = objects.MemHandle(self.address, resmgr.HostMemoryAllocator.v2p(self.address))
         logger.info("Creating Rdma Xfer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
 
