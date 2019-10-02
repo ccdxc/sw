@@ -3,7 +3,7 @@
 penctl list core-dumps
 ----------------------
 
-Show core dumps from Naples
+Show core dumps from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -----------------------------
- Show Core Dumps From Naples 
+ Show Core Dumps From Distributed Service Card 
 -----------------------------
 
 

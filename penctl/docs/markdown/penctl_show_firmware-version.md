@@ -1,13 +1,13 @@
 ## penctl show firmware-version
 
-Get firmware version on Naples
+Get firmware version on Distributed Service Card
 
 ### Synopsis
 
 
 
 --------------------------------
- Get Firmware Version On Naples 
+ Get Firmware Version On Distributed Service Card 
 --------------------------------
 
 

@@ -29,5 +29,5 @@ List Objects
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl list core-dumps](penctl_list_core-dumps.md)	 - Show core dumps from Naples
+* [penctl list core-dumps](penctl_list_core-dumps.md)	 - Show core dumps from Distributed Service Card
 

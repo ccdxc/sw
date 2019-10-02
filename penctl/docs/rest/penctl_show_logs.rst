@@ -3,7 +3,7 @@
 penctl show logs
 ----------------
 
-Show logs from Naples
+Show logs from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ------------------------------
- Show Module Logs From Naples 
+ Show Module Logs From Distributed Service Card 
 ------------------------------
 
 

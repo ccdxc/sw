@@ -3,7 +3,7 @@
 penctl show events
 ------------------
 
-Show events from Naples
+Show events from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -------------------------
- Show Events From Naples 
+ Show Events From Distributed Service Card 
 -------------------------
 
 

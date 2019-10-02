@@ -1,13 +1,13 @@
 ## penctl show metrics drop
 
-Show DropMetrics from Naples
+Show DropMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show DropMetrics From Naples 
+ Show DropMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics drop [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

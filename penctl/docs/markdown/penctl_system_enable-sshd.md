@@ -1,13 +1,13 @@
 ## penctl system enable-sshd
 
-Enable sshd on Naples
+Enable sshd on Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------
- Enable sshd on Naples 
+ Enable sshd on Distributed Service Card 
 ------------------------------
 
 

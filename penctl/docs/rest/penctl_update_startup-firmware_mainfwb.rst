@@ -3,7 +3,7 @@
 penctl update startup-firmware mainfwb
 --------------------------------------
 
-Set startup firmware on Naples to mainfwb
+Set startup firmware on Distributed Service Card to mainfwb
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -------------------------------------------
- Set Startup Firmware on Naples to mainfwb 
+ Set Startup Firmware on Distributed Service Card to mainfwb 
 -------------------------------------------
 
 
@@ -40,5 +40,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl update startup-firmware <penctl_update_startup-firmware.rst>`_ 	 - Set startup firmware on Naples
+* `penctl update startup-firmware <penctl_update_startup-firmware.rst>`_ 	 - Set startup firmware on Distributed Service Card
 

@@ -3,7 +3,7 @@
 penctl show proc-meminfo
 ------------------------
 
-Check /proc/meminfo file on Naples
+Check /proc/meminfo file on Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ------------------------------------
- Check /proc/meminfo file on Naples 
+ Check /proc/meminfo file on Distributed Service Card 
 ------------------------------------
 
 

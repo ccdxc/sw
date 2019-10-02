@@ -1,13 +1,13 @@
 ## penctl show metrics ftelifq
 
-Show FteLifQMetrics from Naples
+Show FteLifQMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show FteLifQMetrics From Naples 
+ Show FteLifQMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics ftelifq [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

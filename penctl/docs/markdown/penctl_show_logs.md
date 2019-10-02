@@ -1,13 +1,13 @@
 ## penctl show logs
 
-Show logs from Naples
+Show logs from Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------
- Show Module Logs From Naples 
+ Show Module Logs From Distributed Service Card 
 ------------------------------
 
 

@@ -1,13 +1,13 @@
 ## penctl show metrics sessionsummary
 
-Show SessionSummaryMetrics from Naples
+Show SessionSummaryMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show SessionSummaryMetrics From Naples 
+ Show SessionSummaryMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics sessionsummary [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

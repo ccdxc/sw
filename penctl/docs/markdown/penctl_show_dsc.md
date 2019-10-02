@@ -1,14 +1,14 @@
 ## penctl show dsc
 
-Shows the DSC object
+Show Distributed Service Card Modes and Profiles
 
 ### Synopsis
 
 
 
------------------------------------------
- Shows current Spec and Status of DSC object 
------------------------------------------
+-------------------------------------------------------------------
+ Show Distributed Service Card configuration 
+-------------------------------------------------------------------
 
 
 ```

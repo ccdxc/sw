@@ -1,13 +1,13 @@
 ## penctl system erase-config
 
-Erase all local Naples configuration and revert to "host-managed" mode. (reboot required)
+Erase all local Distributed Service Card configuration and revert to "host-managed" mode. (reboot required)
 
 ### Synopsis
 
 
 
 ---------------------------------------------------------------------------------------------
- Erase all local Naples configuration and revert to "host-managed" mode. (reboot required) 
+ Erase all local Distributed Service Card configuration and revert to "host-managed" mode. (reboot required) 
 ---------------------------------------------------------------------------------------------
 
 

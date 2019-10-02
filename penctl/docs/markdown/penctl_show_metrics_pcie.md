@@ -28,7 +28,7 @@ Metrics for Pcie Subsystem
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 * [penctl show metrics pcie pciemgr](penctl_show_metrics_pcie_pciemgr.md)	 - Pcie Mgr Metrics information
 * [penctl show metrics pcie port](penctl_show_metrics_pcie_port.md)	 - Pcie Port Metrics information
 

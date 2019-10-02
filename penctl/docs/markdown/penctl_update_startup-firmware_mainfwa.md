@@ -1,13 +1,13 @@
 ## penctl update startup-firmware mainfwa
 
-Set startup firmware on Naples to mainfwa
+Set startup firmware on Distributed Service Card to mainfwa
 
 ### Synopsis
 
 
 
 -------------------------------------------
- Set Startup Firmware on Naples to mainfwa 
+ Set Startup Firmware on Distributed Service Card to mainfwa 
 -------------------------------------------
 
 
@@ -32,5 +32,5 @@ penctl update startup-firmware mainfwa [flags]
 ```
 
 ### SEE ALSO
-* [penctl update startup-firmware](penctl_update_startup-firmware.md)	 - Set startup firmware on Naples
+* [penctl update startup-firmware](penctl_update_startup-firmware.md)	 - Set startup firmware on Distributed Service Card
 

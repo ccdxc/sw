@@ -1,18 +1,18 @@
-## penctl update naples
+## penctl update dsc
 
-Set NAPLES Modes and Profiles
+Set Distributed Service Card Modes and Profiles
 
 ### Synopsis
 
 
 
 ----------------------------
- Set NAPLES configuration 
+ Set Distributed Service Card configuration 
 ----------------------------
 
 
 ```
-penctl update naples [flags]
+penctl update dsc [flags]
 ```
 
 ### Options
@@ -21,12 +21,13 @@ penctl update naples [flags]
   -c, --controllers stringSlice     List of controller IP addresses or ids
   -g, --default-gw string           Default GW for mgmt
   -d, --dns-servers stringSlice     List of DNS servers
-  -h, --help                        help for naples
-  -i, --id string                   Naples ID
-  -o, --managed-by string           NAPLES Management. host or network (default "host")
+  -s, --dsc-profile string          Active Distributed Service Card Profile (default "default")
+  -h, --help                        help for dsc
+  -i, --id string                   DSC ID
+  -o, --managed-by string           Distributed Service Card Management. host or network (default "host")
   -k, --management-network string   Management Network. inband or oob
   -m, --mgmt-ip string              Management IP in CIDR format
-  -f, --naples-profile string       Active NAPLES Profile (default "default")
+  -f, --naples-profile string       Active Distributed Service Card Profile (default "default")
   -p, --primary-mac string          Primary mac
 ```
 

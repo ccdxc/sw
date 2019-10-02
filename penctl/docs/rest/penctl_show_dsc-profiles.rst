@@ -1,9 +1,9 @@
-.. _penctl_delete_naples-profile:
+.. _penctl_show_dsc-profiles:
 
-penctl delete naples-profile
-----------------------------
+penctl show dsc-profiles
+------------------------
 
-naples profile object
+Show Available Distributed Service Card Profiles
 
 Synopsis
 ~~~~~~~~
@@ -11,21 +11,20 @@ Synopsis
 
 
 ----------------------------
- Delete NAPLES Profiles 
+ Show Distributed Service Card Profiles 
 ----------------------------
 
 
 ::
 
-  penctl delete naples-profile [flags]
+  penctl show dsc-profiles [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help          help for naples-profile
-  -n, --name string   Name of the NAPLES profile to be deleted
+  -h, --help   help for dsc-profiles
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,5 +40,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl delete <penctl_delete.rst>`_ 	 - Delete Object
+* `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
 

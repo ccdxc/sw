@@ -1,13 +1,13 @@
 ## penctl show metrics ftecps
 
-Show FteCPSMetrics from Naples
+Show FteCPSMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show FteCPSMetrics From Naples 
+ Show FteCPSMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics ftecps [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

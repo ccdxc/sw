@@ -3,7 +3,7 @@
 penctl show system-memory-usage
 -------------------------------
 
-Show free/used memory on Naples (in MB)
+Show free/used memory on Distributed Service Card (in MB)
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -----------------------------------------
- Show Free/Used Memory on Naples (in MB)
+ Show Free/Used Memory on Distributed Service Card (in MB)
 -----------------------------------------
 
 

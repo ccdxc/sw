@@ -1,29 +1,30 @@
-.. _penctl_show_naples-config:
+.. _penctl_show_metrics_mgmtmac:
 
-penctl show naples-config
--------------------------
+penctl show metrics mgmtmac
+---------------------------
 
-Show NAPLES Configuration
+Show MgmtMacMetrics from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
 
 
 
----------------------------
- Show NAPLES Configuration 
----------------------------n
+---------------------------------
+ Show MgmtMacMetrics From Distributed Service Card 
+---------------------------------
+
 
 ::
 
-  penctl show naples-config [flags]
+  penctl show metrics mgmtmac [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for naples-config
+  -h, --help   help for mgmtmac
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,5 +40,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
+* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Distributed Service Card
 

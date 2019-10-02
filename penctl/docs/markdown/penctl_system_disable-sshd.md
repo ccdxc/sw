@@ -1,13 +1,13 @@
 ## penctl system disable-sshd
 
-Disable sshd on Naples
+Disable sshd on Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------
- Disable sshd on Naples 
+ Disable sshd on Distributed Service Card 
 ------------------------------
 
 

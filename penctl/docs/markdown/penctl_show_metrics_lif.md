@@ -1,13 +1,13 @@
 ## penctl show metrics lif
 
-Show LifMetrics from Naples
+Show LifMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show LifMetrics From Naples 
+ Show LifMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics lif [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

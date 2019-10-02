@@ -1,13 +1,13 @@
 ## penctl show startup-firmware
 
-Show startup firmware from Naples
+Show startup firmware from Distributed Service Card
 
 ### Synopsis
 
 
 
 -----------------------------------
- Show Startup Firmware from Naples 
+ Show Startup Firmware from Distributed Service Card 
 -----------------------------------
 
 

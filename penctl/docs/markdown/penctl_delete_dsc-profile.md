@@ -1,25 +1,25 @@
-## penctl delete naples-profile
+## penctl delete dsc-profile
 
-naples profile object
+Distributed Service Card profile object
 
 ### Synopsis
 
 
 
 ----------------------------
- Delete NAPLES Profiles 
+ Delete Distributed Service Card Profiles 
 ----------------------------
 
 
 ```
-penctl delete naples-profile [flags]
+penctl delete dsc-profile [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help          help for naples-profile
-  -n, --name string   Name of the NAPLES profile to be deleted
+  -h, --help          help for dsc-profile
+  -n, --name string   Name of the Distributed Service Card profile to be deleted
 ```
 
 ### Options inherited from parent commands

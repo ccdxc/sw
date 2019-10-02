@@ -29,6 +29,6 @@ Create Object
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl create naples-profile](penctl_create_naples-profile.md)	 - naples profile object
+* [penctl create dsc-profile](penctl_create_dsc-profile.md)	 - Distributed Service Card profile object
 * [penctl create qos-class](penctl_create_qos-class.md)	 - qos-class object
 

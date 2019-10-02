@@ -1,24 +1,23 @@
-## penctl show naples
+## penctl show dsc-config
 
-Show NAPLES Modes and Profiles
+Show Distributed Service Card Configuration
 
 ### Synopsis
 
 
 
--------------------------------------------------------------------
- Show NAPLES configuration 
--------------------------------------------------------------------
-
+---------------------------
+ Show Distributed Service Card Configuration 
+---------------------------n
 
 ```
-penctl show naples [flags]
+penctl show dsc-config [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for naples
+  -h, --help   help for dsc-config
 ```
 
 ### Options inherited from parent commands

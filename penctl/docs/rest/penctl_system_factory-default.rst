@@ -3,7 +3,7 @@
 penctl system factory-default
 -----------------------------
 
-Perform "erase-config" plus remove all Naples internal databases and diagnostic failure logs (reboot required)
+Perform "erase-config" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required)
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ------------------------------------------------------------------------------------------------------------------
- Perform "erase-config" plus remove all Naples internal databases and diagnostic failure logs (reboot required) 
+ Perform "erase-config" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required) 
 ------------------------------------------------------------------------------------------------------------------
 
 

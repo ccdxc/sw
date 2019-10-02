@@ -28,7 +28,7 @@ Metrics for Storage Offload DSC
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 * [penctl show metrics sonic hw_ring](penctl_show_metrics_sonic_hw_ring.md)	 - Metrics for hardware rings
 * [penctl show metrics sonic sequencer_info](penctl_show_metrics_sonic_sequencer_info.md)	 - Sequencer queues information
 * [penctl show metrics sonic sequencer_metrics](penctl_show_metrics_sonic_sequencer_metrics.md)	 - Metrics for sequencer queues

@@ -1,13 +1,13 @@
 ## penctl delete core-dump
 
-Delete a core dump from Naples
+Delete a core dump from Distributed Service Card
 
 ### Synopsis
 
 
 
 --------------------------------
- Delete a Core Dump From Naples 
+ Delete a Core Dump From Distributed Service Card 
 --------------------------------
 
 

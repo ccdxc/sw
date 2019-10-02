@@ -3,7 +3,7 @@
 penctl show metrics egressdrop
 ------------------------------
 
-Show EgressDropMetrics from Naples
+Show EgressDropMetrics from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ---------------------------------
- Show EgressDropMetrics From Naples 
+ Show EgressDropMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -40,5 +40,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
+* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Distributed Service Card
 

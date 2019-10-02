@@ -1,13 +1,13 @@
 ## penctl show time
 
-Show system clock time from Naples
+Show system clock time from Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------------
- Show system clock time from Naples 
+ Show system clock time from Distributed Service Card 
 ------------------------------------
 
 

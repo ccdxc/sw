@@ -1,13 +1,13 @@
 ## penctl show metrics mac
 
-Show MacMetrics from Naples
+Show MacMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show MacMetrics From Naples 
+ Show MacMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics mac [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

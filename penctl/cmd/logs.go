@@ -37,6 +37,7 @@ func init() {
 
 func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	var moduleVal string
+	logDir := "monitoring/v1/naples/logs/pensando/"
 	switch module {
 	case strings.TrimPrefix(globals.Nmd, "pen-"):
 		moduleVal = globals.Nmd
@@ -46,9 +47,10 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		moduleVal = globals.Tmagent
 	case "pciemgrd":
 		moduleVal = "pciemgrd"
+		logDir = "monitoring/v1/naples/obfl/"
 	}
 	moduleVal += ".log"
-	resp, err := restGet("monitoring/v1/naples/logs/pensando/" + moduleVal)
+	resp, err := restGet(logDir + moduleVal)
 	if err != nil {
 		return err
 	}

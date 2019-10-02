@@ -3,7 +3,7 @@
 penctl update ssh-pub-key
 -------------------------
 
-Configure ssh pub-key on Naples
+Configure ssh pub-key on Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ---------------------------------
- Configure ssh pub-key on Naples 
+ Configure ssh pub-key on Distributed Service Card 
 ---------------------------------
 
 

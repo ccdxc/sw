@@ -3,7 +3,7 @@
 penctl show running-firmware
 ----------------------------
 
-Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)
+Show running firmware from Distributed Service Card (To be deprecated. Please use: penctl show firmware-version)
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -----------------------------------------------------------------------------------------------
- Show Running Firmware from Naples. (To be deprecated. Please use: penctl show firmware-version) 
+ Show Running Firmware from Distributed Service Card. (To be deprecated. Please use: penctl show firmware-version) 
 -----------------------------------------------------------------------------------------------
 
 

@@ -1,13 +1,13 @@
 ## penctl system firmware-install
 
-Copy and Install Firmware Image to Naples
+Copy and Install Firmware Image to Distributed Service Card
 
 ### Synopsis
 
 
 
 -------------------------------------------
- Copy and Install Firmware Image to Naples 
+ Copy and Install Firmware Image to Distributed Service Card 
 -------------------------------------------
 
 

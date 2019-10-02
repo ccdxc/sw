@@ -1,24 +1,24 @@
-## penctl show naples-profiles
+## penctl show dsc-profiles
 
-Show Available NAPLES Profiles
+Show Available Distributed Service Card Profiles
 
 ### Synopsis
 
 
 
 ----------------------------
- Show NAPLES Profiles 
+ Show Distributed Service Card Profiles 
 ----------------------------
 
 
 ```
-penctl show naples-profiles [flags]
+penctl show dsc-profiles [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for naples-profiles
+  -h, --help   help for dsc-profiles
 ```
 
 ### Options inherited from parent commands

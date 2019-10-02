@@ -1,13 +1,13 @@
 ## penctl show metrics egressdrop
 
-Show EgressDropMetrics from Naples
+Show EgressDropMetrics from Distributed Service Card
 
 ### Synopsis
 
 
 
 ---------------------------------
- Show EgressDropMetrics From Naples 
+ Show EgressDropMetrics From Distributed Service Card 
 ---------------------------------
 
 
@@ -32,5 +32,5 @@ penctl show metrics egressdrop [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 

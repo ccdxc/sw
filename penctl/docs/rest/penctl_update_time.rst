@@ -3,7 +3,7 @@
 penctl update time
 ------------------
 
-Set system clock time on Naples
+Set system clock time on Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ---------------------------------
- Set system clock time on Naples 
+ Set system clock time on Distributed Service Card 
 ---------------------------------
 
 

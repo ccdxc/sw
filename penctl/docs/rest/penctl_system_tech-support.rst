@@ -3,7 +3,7 @@
 penctl system tech-support
 --------------------------
 
-Get Tech Support from Naples
+Get Tech Support from Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ------------------------------
- Get Tech Support from Naples 
+ Get Tech Support from Distributed Service Card 
 ------------------------------
 
 

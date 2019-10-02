@@ -37,5 +37,5 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl list core-dumps <penctl_list_core-dumps.rst>`_ 	 - Show core dumps from Naples
+* `penctl list core-dumps <penctl_list_core-dumps.rst>`_ 	 - Show core dumps from Distributed Service Card
 

@@ -1,13 +1,13 @@
 ## penctl delete ssh-pub-key
 
-Delete ssh pub-key on Naples
+Delete ssh pub-key on Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------
- Delete ssh pub-key on Naples 
+ Delete ssh pub-key on Distributed Service Card 
 ------------------------------
 
 

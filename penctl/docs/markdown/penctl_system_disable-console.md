@@ -1,13 +1,13 @@
 ## penctl system disable-console
 
-Disable serial console on Naples
+Disable serial console on Distributed Service Card
 
 ### Synopsis
 
 
 
 ------------------------------
- Disable serial console on Naples 
+ Disable serial console on Distributed Service Card 
 ------------------------------
 
 

@@ -3,7 +3,7 @@
 penctl system enable-console
 ----------------------------
 
-Enable serial console on Naples
+Enable serial console on Distributed Service Card
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 ------------------------------
- Enable serial console on Naples 
+ Enable serial console on Distributed Service Card 
 ------------------------------
 
 

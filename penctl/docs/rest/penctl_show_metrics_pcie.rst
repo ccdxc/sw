@@ -36,7 +36,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
+* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Distributed Service Card
 * `penctl show metrics pcie pciemgr <penctl_show_metrics_pcie_pciemgr.rst>`_ 	 - Pcie Mgr Metrics information
 * `penctl show metrics pcie port <penctl_show_metrics_pcie_port.rst>`_ 	 - Pcie Port Metrics information
 

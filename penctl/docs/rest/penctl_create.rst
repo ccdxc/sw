@@ -37,6 +37,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl create naples-profile <penctl_create_naples-profile.rst>`_ 	 - naples profile object
+* `penctl create dsc-profile <penctl_create_dsc-profile.rst>`_ 	 - Distributed Service Card profile object
 * `penctl create qos-class <penctl_create_qos-class.rst>`_ 	 - qos-class object
 

@@ -29,21 +29,20 @@ Show Object and Information
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl show dsc](penctl_show_dsc.md)	 - Shows the DSC object
-* [penctl show events](penctl_show_events.md)	 - Show events from Naples
-* [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Naples
+* [penctl show dsc](penctl_show_dsc.md)	 - Show Distributed Service Card Modes and Profiles
+* [penctl show dsc-config](penctl_show_dsc-config.md)	 - Show Distributed Service Card Configuration
+* [penctl show dsc-profiles](penctl_show_dsc-profiles.md)	 - Show Available Distributed Service Card Profiles
+* [penctl show events](penctl_show_events.md)	 - Show events from Distributed Service Card
+* [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Distributed Service Card
 * [penctl show interface](penctl_show_interface.md)	 - Show interface
-* [penctl show logs](penctl_show_logs.md)	 - Show logs from Naples
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
-* [penctl show naples](penctl_show_naples.md)	 - Show NAPLES Modes and Profiles
-* [penctl show naples-config](penctl_show_naples-config.md)	 - Show NAPLES Configuration
-* [penctl show naples-profiles](penctl_show_naples-profiles.md)	 - Show Available NAPLES Profiles
+* [penctl show logs](penctl_show_logs.md)	 - Show logs from Distributed Service Card
+* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Distributed Service Card
 * [penctl show port](penctl_show_port.md)	 - show port object
-* [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Naples
+* [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Distributed Service Card
 * [penctl show qos-class](penctl_show_qos-class.md)	 - show qos-class object
-* [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)
-* [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples
+* [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Distributed Service Card (To be deprecated. Please use: penctl show firmware-version)
+* [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Distributed Service Card
 * [penctl show system](penctl_show_system.md)	 - show system information
-* [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples (in MB)
-* [penctl show time](penctl_show_time.md)	 - Show system clock time from Naples
+* [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Distributed Service Card (in MB)
+* [penctl show time](penctl_show_time.md)	 - Show system clock time from Distributed Service Card
 

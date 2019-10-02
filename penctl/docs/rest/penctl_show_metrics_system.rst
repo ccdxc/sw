@@ -36,7 +36,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
+* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Distributed Service Card
 * `penctl show metrics system frequency <penctl_show_metrics_system_frequency.rst>`_ 	 - System frequency information
 * `penctl show metrics system memory <penctl_show_metrics_system_memory.rst>`_ 	 - System memory information
 * `penctl show metrics system power <penctl_show_metrics_system_power.rst>`_ 	 - System power information
