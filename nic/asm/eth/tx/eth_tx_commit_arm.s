@@ -44,6 +44,7 @@ eth_tx_commit_arm_event:
   phvwri          p.eq_desc_code, EQ_CODE_TX_COMP_HX
   add             r7, r0, k.eth_tx_to_s2_qid
   phvwrpair       p.eq_desc_lif_index, d.lif_index, p.eq_desc_qid, r7.wx
+  phvwri          p.eq_desc_intr_data, 0x01000000
 
   // Launch eth_tx_event action
   phvwr           p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_2

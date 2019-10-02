@@ -59,11 +59,11 @@ eth_tx_commit_cq:
   tblwr.f         d.armed, 0
   // Table is flushed, no tblwr/etc past this point.
 
+eth_tx_commit_pkt:
   // Save cq & intr information for eth_tx_completion action
   phvwr           p.eth_tx_t0_s2s_intr_index, d.{intr_index_or_eq_addr}.dx
   phvwri          p.eq_desc_intr_data, 0x01000000
 
-eth_tx_commit_pkt:
   seq             c7, k.eth_tx_t0_s2s_do_tso, 1
   bbeq.c7         k.eth_tx_t0_s2s_do_sg, 1, eth_tx_commit_tso_sg
   bbeq.c7         k.eth_tx_t0_s2s_do_sg, 0, eth_tx_commit_tso_nonsg

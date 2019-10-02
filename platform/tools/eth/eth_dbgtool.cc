@@ -1059,10 +1059,15 @@ eth_eqstate(uint64_t addr)
     struct eth_eq_qstate eqstate = {0};
 
     sdk::lib::pal_mem_read(addr, (uint8_t *)&eqstate, sizeof(eqstate));
-    printf("eq_ring_base=0x%0lx\neq_ring_size=0x%0x\n"
-           "eq_gen=0x%0x\neq_index=0x%0x\nintr_index=0x%0x\n",
-           eqstate.eq_ring_base, eqstate.eq_ring_size,
-           eqstate.eq_gen, eqstate.eq_index, eqstate.intr_index);
+
+    printf("eq_ring_base=%#lx\n"        "eq_ring_size=%#x\n"
+           "eq_enable=%#x\n"            "intr_enable=%#x\n"
+           "eq_index=%#x\n"             "eq_gen=%#x\n"
+           "intr_index=%#x\n",
+           eqstate.eq_ring_base,        eqstate.eq_ring_size,
+           eqstate.cfg.eq_enable,       eqstate.cfg.intr_enable,
+           eqstate.eq_index,            eqstate.eq_gen,
+           eqstate.intr_index);
 }
 
 std::string
