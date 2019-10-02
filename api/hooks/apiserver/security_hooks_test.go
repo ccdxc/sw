@@ -825,89 +825,6 @@ func TestNetworkSecurityPolicyAnyFromIPSingletonWithAdditionalFromAndToIPAddress
 	Assert(t, len(errs) != 0, "Specifying more than one ip addresses with any must be rejected. Error: %v", errs)
 }
 
-func TestNetworkSecurityPolicyV6SrcAnyDst(t *testing.T) {
-	t.Parallel()
-	logConfig := log.GetDefaultConfig(t.Name())
-	s := &securityHooks{
-		svc:    mocks.NewFakeService(),
-		logger: log.GetNewLogger(logConfig),
-	}
-	// create sg policy
-	rules := []security.SGRule{
-		{
-			ProtoPorts: []security.ProtoPort{
-				{
-					Protocol: "tcp",
-					Ports:    "80",
-				},
-				{
-					Protocol: "udp",
-					Ports:    "53",
-				},
-			},
-			Action:          "PERMIT",
-			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
-			ToIPAddresses:   []string{"any"},
-		},
-	}
-	sgp := security.NetworkSecurityPolicy{
-		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testpolicy",
-		},
-		Spec: security.NetworkSecurityPolicySpec{
-			AttachTenant: true,
-			Rules:        rules,
-		},
-	}
-
-	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
-}
-
-func TestNetworkSecurityPolicyV6DstAnySrc(t *testing.T) {
-	t.Parallel()
-	logConfig := log.GetDefaultConfig(t.Name())
-	s := &securityHooks{
-		svc:    mocks.NewFakeService(),
-		logger: log.GetNewLogger(logConfig),
-	}
-	// create sg policy
-	rules := []security.SGRule{
-		{
-			ProtoPorts: []security.ProtoPort{
-				{
-					Protocol: "tcp",
-					Ports:    "80",
-				},
-				{
-					Protocol: "udp",
-					Ports:    "53",
-				},
-			},
-			Action:          "PERMIT",
-			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
-			ToIPAddresses:   []string{"any"},
-		},
-	}
-	sgp := security.NetworkSecurityPolicy{
-		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testpolicy",
-		},
-		Spec: security.NetworkSecurityPolicySpec{
-			AttachTenant: true,
-			Rules:        rules,
-		},
-	}
-
-	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
-}
 func TestProtocolNumbersValid(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig(t.Name())
@@ -3656,4 +3573,130 @@ func TestProtocolNumbersICMPWithPorts(t *testing.T) {
 	}
 	errs := s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "ICMP App with ports must fail. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyInvalidV6Src(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "network security policy with v6 addresses must fail Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyInvalidV6Dst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"any"},
+			ToIPAddresses:   []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "network security policy with v6 addresses must fail Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicyInvalidV6SrcDst(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"2002:1::1", "2001:1::2", "1001:1::3"},
+			ToIPAddresses:   []string{"1001:1::1", "1001:1::2", "1001:1::3"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "network security policy with v6 addresses must fail Error: %v", errs)
 }

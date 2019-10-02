@@ -307,23 +307,16 @@ func (s *securityHooks) validateIPAddresses(addresses []string) (int, error) {
 	return s.validateIPAddressFamily(ipAddresses)
 }
 
-// validates that the IP Addresses are in the same family
+// validates that the IP Addresses are in the same family. For FCS release we are allowing only v4 IPs in rules.
 func (s *securityHooks) validateIPAddressFamily(ipAddresses []*net.IP) (ipFamily int, err error) {
 	// First IP Address determines the family
 	for _, ip := range ipAddresses {
-		var ipType int
-		if ip.To4() != nil {
-			ipType = ipV4
-		} else if ip.To16() != nil {
-			ipType = ipV6
-		}
-
-		if ipType != ipFamily && ipFamily != ipNone {
+		if ip.To4() == nil {
 			// fail
-			err = errors.New("ip addresses must be homogeneous. Cannot specify both v4 and v6 addresses")
+			err = errors.New("v6 ip addresses are not supported")
 			return
 		}
-		ipFamily = ipType
+		ipFamily = ipV4
 	}
 	return
 }
