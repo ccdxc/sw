@@ -48,7 +48,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("localhost") {
 		naplesURL = "http://127.0.0.1"
 	} else {
-		return errors.New("Distributed Service Card unreachable. please set DSC_URL variable to http://<naples_ip>")
+		naplesURL = "http://169.254.0.1"
 	}
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.AgentProxyPort
@@ -67,32 +67,4 @@ func isNaplesReachable() error {
 		return err
 	}
 	return nil
-}
-
-func isNaplesReachableOverLocalHost() error {
-	seconds := 5
-	timeOut := time.Duration(seconds) * time.Second
-	_, err := net.DialTimeout("tcp", "127.0.0.1"+":"+revProxyPort, timeOut)
-
-	if err != nil {
-		fmt.Printf("Could not reach Distributed Service Card on %s\n", "127.0.0.1"+":"+revProxyPort)
-		return err
-	}
-	return nil
-}
-
-//TODO: Fix the username
-func getNaplesUser() string {
-	if mockMode {
-		return "penctltestuser"
-	}
-	return "root"
-}
-
-//TODO: Fix the password
-func getNaplesPwd() string {
-	if mockMode {
-		return "Pen%Ctl%Test%Pwd"
-	}
-	return "pen123"
 }
