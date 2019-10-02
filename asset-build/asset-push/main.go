@@ -56,8 +56,17 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
+	assetServerHQ := ctx.GlobalString("assets-server-hq")
 	bucket := ctx.Args()[0]
 	dirName, version, filename := ctx.Args()[1], ctx.Args()[2], ctx.Args()[3]
+	if bucket == "builds" {
+		// because builds is an NFS mount point at HQ, move one level up
+		// also use different minio server due to minio limitation
+		bucket = dirName
+		dirName = version
+		version = ""
+		assetServerHQ = "assets-hq.pensando.io:9001"
+	}
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return err
@@ -78,21 +87,22 @@ func action(ctx *cli.Context) error {
 		return err
 	}
 	defer f.Close()
+	assetPath := path.Join(dirName, version, filename)
 
-	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), ctx.GlobalString("assets-server-hq")} {
+	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), assetServerHQ} {
 		logrus.Infof("Uploading %s %f MB to %s...", filename, float64(size>>10)/float64(1024), ep)
 
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		if err := upload(bucket, dirName, version, filename, ep, f); err != nil {
-			return err
+		if err := upload(bucket, assetPath, ep, f); err != nil {
+			logrus.Errorf("Failed to push to %s: %v", ep, err)
 		}
 	}
 	return nil
 }
 
-func upload(bucket, dirName, version, fileName, endpoint string, reader io.Reader) error {
+func upload(bucket, assetPath, endpoint string, reader io.Reader) error {
 	mc, err := minio.New(endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
@@ -105,8 +115,6 @@ func upload(bucket, dirName, version, fileName, endpoint string, reader io.Reade
 			return err
 		}
 	}
-
-	assetPath := path.Join(dirName, version, fileName)
 
 	doneCh := make(chan struct{})
 	list := mc.ListObjects(bucket, assetPath, false, doneCh)
