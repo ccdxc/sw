@@ -899,3 +899,54 @@ calculated_field udp_2.checksum {
     verify ipv4_2_udp_checksum;
     verify ipv6_2_udp_checksum;
 }
+
+/******************************************************************************
+ * Checksums : L2 Complete Checksum                                           *
+ *****************************************************************************/
+field_list l2_checksum_ipv4_list {
+    ipv4_1.srcAddr;
+    payload;
+}
+
+field_list l2_checksum_ipv6_list {
+    ipv6_1.srcAddr;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l2_checksum_len
+field_list_calculation l2_checksum_ipv4 {
+    input {
+        l2_checksum_ipv4_list;
+    }
+    algorithm : l2_complete_csum;
+    output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.l2_checksum_len
+field_list_calculation l2_checksum_ipv6 {
+    input {
+        l2_checksum_ipv6_list;
+    }
+    algorithm : l2_complete_csum;
+    output_width : 16;
+}
+
+field_list l2_checksum_vlan {
+    ctag_1.pcp;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l2_checksum_len
+field_list_calculation l2_checksum_vlan {
+    input {
+        l2_checksum_vlan;
+    }
+    algorithm : l2_complete_csum;
+    output_width : 16;
+}
+
+calculated_field p4e_to_p4plus_classic_nic.csum {
+    update l2_checksum_vlan if (valid(ctag_1));
+    update l2_checksum_ipv4 if (valid(ipv4_1));
+    update l2_checksum_ipv6 if (valid(ipv6_1));
+}

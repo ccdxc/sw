@@ -30,6 +30,16 @@ egress_to_rxdma:
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
                          P4PLUS_CLASSIC_NIC_HDR_SZ)
+
+    // l2 checksum computation
+    phvwr           p.p4e_to_p4plus_classic_nic_l2csum, TRUE
+    seq             c1, k.ctag_1_valid, TRUE
+    phvwr.c1        p.ctag_1_l2csum, TRUE
+    phvwrpair.!c1   p.ipv4_1_l2csum, k.ipv4_1_valid, \
+                        p.ipv6_1_l2csum, k.ipv6_1_valid
+    sub             r6, r7, 14
+    phvwr           p.capri_deparser_len_l2_checksum_len, r6
+
     seq             c1, k.ipv4_1_valid, TRUE
     bcf             [c1], egress_to_rxdma_ipv4
     seq             c1, k.ipv6_1_valid, TRUE

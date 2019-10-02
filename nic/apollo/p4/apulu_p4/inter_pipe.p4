@@ -94,6 +94,9 @@ action egress_to_rxdma() {
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
 
+    if (ctag_1.valid == TRUE) {
+    }
+
     modify_field(key_metadata.sport, key_metadata.sport);
     modify_field(key_metadata.dport, key_metadata.dport);
     if (ipv4_1.valid == TRUE) {
