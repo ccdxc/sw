@@ -589,6 +589,7 @@ def GetPenctlFruJson(n):
 
 def CheckFruInfo(n):
     naples_fru = GetNaplesFruJson(n)
+    penctl_fru = GetPenctlFruJson(n)
 
     if penctl_fru["manufacturing-date"] != naples_fru["manufacturing-date"]:
         api.types.status.FAILURE
