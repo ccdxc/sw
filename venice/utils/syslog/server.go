@@ -55,13 +55,13 @@ func parseSyslog(logType string, buff []byte) (syslogparser.LogParts, error) {
 
 // Server starts a syslog server
 func Server(ctx context.Context, addr string, logType string, proto string) (string, chan syslogparser.LogParts, error) {
+	ch := make(chan syslogparser.LogParts, 5)
 	if proto == "udp" {
 		l, err := net.ListenPacket(proto, addr)
 		if err != nil {
 			return "", nil, err
 		}
 
-		ch := make(chan syslogparser.LogParts, 10)
 		// start reader goroutine
 		go func() {
 			// close the channel
@@ -69,23 +69,24 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 				l.Close()
 				close(ch)
 			}()
+
+			numMsg := map[string]int{} // updated by single goroutine
 			log.Infof("udp syslog server %s ready", l.LocalAddr().String())
 			for ctx.Err() == nil {
 				buff := make([]byte, 1024)
-				l.SetReadDeadline(time.Now().Add(time.Second))
-				n, _, err := l.ReadFrom(buff)
+				l.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
+				n, raddr, err := l.ReadFrom(buff)
 				if err != nil {
 					for _, s := range []string{"closed network connection", "EOF"} {
 						if strings.Contains(err.Error(), s) {
-							log.Infof("read %s from udp socket", s)
+							log.Infof("%s closed", l.LocalAddr().String())
 							return
 						}
 					}
-					log.Errorf("error %s from udp socket \n", err)
 					continue
 				}
-
-				log.Infof("server %v received: %v", l.LocalAddr().(*net.UDPAddr).String(), string(buff[:n]))
+				numMsg[raddr.String()]++
+				log.Infof("[%v] server %v received: %v", numMsg[raddr.String()], l.LocalAddr().(*net.UDPAddr).String(), string(buff[:n]))
 				lp, err := parseSyslog(logType, buff[:n])
 				if err != nil {
 					log.Errorf("stop syslog server %v", err)
@@ -95,42 +96,56 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 			}
 		}()
 		return l.LocalAddr().(*net.UDPAddr).String(), ch, nil
-
 	} else if proto == "tcp" {
 		l, err := net.Listen(proto, addr)
 		if err != nil {
 			return "", nil, err
 		}
 
-		ch := make(chan syslogparser.LogParts, 10)
 		// start reader goroutine
 		go func() {
-			conn, err := l.Accept()
-			if err != nil {
-				log.Errorf("failed to accept connection, %s", err)
-				return
-			}
-			log.Infof("tcp syslog server %s ready", l.Addr().String())
+			defer func() {
+				close(ch)
+				l.Close()
+			}()
+
 			for ctx.Err() == nil {
-				buff := make([]byte, 1024)
-				conn.SetReadDeadline(time.Now().Add(time.Second))
-				n, err := conn.Read(buff)
+				nc, err := l.Accept()
 				if err != nil {
-					for _, s := range []string{"closed network connection", "EOF"} {
-						if strings.Contains(err.Error(), s) {
-							log.Infof("read %s from tcp socket", s)
-							return
-						}
-					}
-					continue
-				}
-				log.Infof("server %s received :%v", l.Addr().String(), string(buff[:n]))
-				lp, err := parseSyslog(logType, buff[:n])
-				if err != nil {
-					log.Errorf("stop syslog server %v", err)
+					log.Errorf("failed to accept connection, %s", err)
 					return
 				}
-				ch <- lp
+
+				go func(conn net.Conn) {
+					defer func() { conn.Close() }()
+
+					numMsg := 0
+					log.Infof("tcp syslog server %s ready %v", l.Addr().String(), conn.RemoteAddr().String())
+					for ctx.Err() == nil {
+						buff := make([]byte, 1024)
+						conn.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
+						n, err := conn.Read(buff)
+						if err != nil {
+							for _, s := range []string{"closed network connection", "EOF"} {
+								if strings.Contains(err.Error(), s) {
+									log.Infof("%s closed", l.Addr().String())
+									return
+								}
+							}
+							continue
+						}
+
+						numMsg++
+						log.Infof("[%v] server %v received: %v", numMsg, l.Addr().String(), string(buff[:n]))
+						lp, err := parseSyslog(logType, buff[:n])
+						if err != nil {
+							log.Errorf("stop syslog server %v", err)
+							return
+						}
+						ch <- lp
+
+					}
+				}(nc)
 			}
 		}()
 		return l.Addr().(*net.TCPAddr).String(), ch, nil

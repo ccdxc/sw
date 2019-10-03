@@ -268,7 +268,6 @@ var _ = Describe("fwlog policy tests", func() {
 
 		// check collectors
 		It("Should receive syslog in Collector", func() {
-			Skip("skip to debug CI failures")
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
 
 			// use token api to get NAPLES access credentials
@@ -304,9 +303,12 @@ var _ = Describe("fwlog policy tests", func() {
 					By(fmt.Sprintf("received fwlog policy from venice %+v", pl))
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %v, %+v", len(pl), len(testFwSpecList), testFwSpecList)
 				}
+				return nil
+			}, "20s", "2s").Should(BeNil(), "failed to find fwlog policy")
 
-				for _, naples := range ts.tu.NaplesNodes {
-					By(fmt.Sprintf("verify fwlog policy in %v", naples))
+			for _, naples := range ts.tu.NaplesNodes {
+				By(fmt.Sprintf("verify fwlog policy in %v", naples))
+				Eventually(func() error {
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
@@ -318,45 +320,81 @@ var _ = Describe("fwlog policy tests", func() {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 					}
-				}
-				return nil
-			}, 120, 2).Should(BeNil(), "failed to find fwlog policy")
 
-			By(fmt.Sprintf("configured fwlog policy %+v", testFwSpecList))
+					// check syslog server status
+					cmd := "curl -s http://localhost:9013/debug/state"
+					o := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, cmd))
+					dbg := struct {
+						FwlogCollectors []string `json:"fwlog-collectors"`
+					}{}
 
-			// wait to connect to collectors
-			time.Sleep(time.Second * 60)
+					if err := json.Unmarshal([]byte(o), &dbg); err != nil {
+						return err
+					}
+
+					for _, d := range dbg.FwlogCollectors {
+						if !strings.Contains(d, "fd:true") {
+							return fmt.Errorf("socket is not ready %v", d)
+						}
+					}
+
+					return nil
+				}, "20s", "2s").Should(BeNil(), "failed to find fwlog policy")
+			}
+
 			for _, naples := range ts.tu.NaplesNodes {
-				st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/vrfs/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
-				var vrfs []netproto.Vrf
-				err := json.Unmarshal([]byte(st), &vrfs)
-				Expect(err).Should(BeNil())
-				// pick the vrf-id
-				vrf := vrfs[0].Status.VrfID
-				cmd := fwevent.Cmd(100, int(vrf))
-				By(fmt.Sprintf("generate fwlogs in %v, %s", naples, cmd))
-				st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, cmd))
-				Expect(st == "null").Should(BeTrue())
+				Eventually(func() error {
+					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/vrfs/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					var vrfs []netproto.Vrf
+					err := json.Unmarshal([]byte(st), &vrfs)
+					Expect(err).Should(BeNil())
+					// pick the vrf-id
+					vrf := vrfs[0].Status.VrfID
+					cmd := fwevent.Cmd(10, int(vrf))
+					By(fmt.Sprintf("generate fwlogs in %v, %s", naples, cmd))
+					st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, cmd))
+					Expect(st == "null").Should(BeTrue())
+
+					// check tx
+					cmd = "curl -s http://localhost:9013/debug/state"
+					o := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, cmd))
+					dbg := struct {
+						FwlogCollectors []string `json:"fwlog-collectors"`
+					}{}
+
+					if err := json.Unmarshal([]byte(o), &dbg); err != nil {
+						return err
+					}
+
+					for _, d := range dbg.FwlogCollectors {
+						if !strings.Contains(d, "fd:true") {
+							return fmt.Errorf("socket is not ready %v", d)
+						}
+
+						if !strings.Contains(d, "txCount:10") {
+							return fmt.Errorf("invalid tx count %v", d)
+						}
+					}
+					return nil
+				}, "20s", "2s").Should(BeNil(), "failed to send syslog")
 
 				// check collectors
 				for _, col := range syslogCollectors {
 					By(fmt.Sprintf("verify syslog from %v in collector :%+v", naples, col))
 					Eventually(func() error {
 						select {
-						case l := <-col.ch:
-							By(fmt.Sprintf("received syslog: %+v", l))
+						case <-col.ch:
 							return nil
 
 						case <-time.After(time.Second):
 							return fmt.Errorf("timed out")
 
 						}
-					}, "180s", "1s").Should(BeNil(), "failed to recv syslog")
+					}, "60s", "1s").Should(BeNil(), "failed to recv syslog")
 				}
 			}
 
 			// delete all
-			By("cleanup fwlog policy")
 			ctx = ts.tu.MustGetLoggedInContext(context.Background())
 			for i := range testFwSpecList {
 				objMeta := &api.ObjectMeta{
