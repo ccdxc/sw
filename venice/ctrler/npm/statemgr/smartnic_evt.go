@@ -65,9 +65,6 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 			policy.NetworkSecurityPolicy.Lock()
 			if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
 				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				policy.NetworkSecurityPolicy.Lock()
-				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				policy.NetworkSecurityPolicy.Unlock()
 				sm.PeriodicUpdaterPush(policy)
 			}
 			policy.NetworkSecurityPolicy.Unlock()
@@ -79,9 +76,6 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 			fwprofile.FirewallProfile.Lock()
 			if _, ok := fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
 				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				fwprofile.FirewallProfile.Lock()
-				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				fwprofile.FirewallProfile.Unlock()
 				sm.PeriodicUpdaterPush(fwprofile)
 			}
 			fwprofile.FirewallProfile.Unlock()
