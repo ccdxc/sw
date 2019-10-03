@@ -474,6 +474,18 @@
       },
       "title": "vrf watch event"
     },
+    "netprotoVrfEventList": {
+      "type": "object",
+      "properties": {
+        "VrfEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoVrfEvent"
+          }
+        }
+      },
+      "title": "vrf watch events batched"
+    },
     "netprotoVrfList": {
       "type": "object",
       "properties": {

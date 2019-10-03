@@ -25,7 +25,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 	}
 
 	if localEPManifest == nil || remoteEPManifest == nil {
-		log.Debug("Endpoint Manifest missing. Local: %v, Remote: %v", localEPManifest, remoteEPManifest)
+		log.Debugf("Endpoint Manifest missing. Local: %v, Remote: %v", localEPManifest, remoteEPManifest)
 		log.Info("Skipping Endpoints Generation")
 		return nil
 	}
@@ -161,4 +161,21 @@ func (c *CfgGen) GenerateEndpoints() error {
 	cfg.Objects = endpoints
 	c.Endpoints = cfg
 	return nil
+}
+
+//GetRemoteEndpointsIPs get remote IPs
+func (c *CfgGen) GetRemoteEndpointsIPs() []string {
+	eps, ok := c.Endpoints.Objects.([]*netproto.Endpoint)
+	if !ok {
+		log.Panicf("Failed to cast the object %v to endpoints.", c.Endpoints.Objects)
+
+	}
+	remoteEPs := []string{}
+	for _, ep := range eps {
+		if ep.Spec.NodeUUID == defaultRemoteUUIDName {
+			remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
+		}
+	}
+
+	return remoteEPs
 }

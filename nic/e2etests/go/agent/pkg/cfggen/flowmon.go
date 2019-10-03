@@ -32,24 +32,26 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 		return nil
 	}
 
+	// Get the namespaces object
+	ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+	if !ok {
+		log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+		return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+	}
 	rulesPerPolicy := flowMonManifest.Count / flowExportManifest.Count
+	namespace := ns[0]
+	policyRules := c.generateFlowMonRules(namespace.Name, 0)
 	log.Infof("Generating %v Flow Export Policies with %v Flow Monitor Rules.", flowExportManifest.Count, rulesPerPolicy)
 
 	for i := 0; i < flowExportManifest.Count; i++ {
-		// Get the namespaces object
-		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
-		if !ok {
-			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
-			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
-		}
-
 		nsIdx := i % len(ns)
 		namespace := ns[nsIdx]
 		policyName := fmt.Sprintf("%s-%d", flowExportManifest.Name, i)
 
-		policyRules := c.generateFlowMonRules(namespace.Name, rulesPerPolicy)[:rulesPerPolicy]
 		exportConfigs := c.generateExportConfigs(namespace.Name)
 
+		newPolicyRules := policyRules[:rulesPerPolicy]
+		policyRules = policyRules[rulesPerPolicy:]
 		fe := monitoring.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "FlowExportPolicy",
@@ -62,7 +64,7 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 			Spec: monitoring.FlowExportPolicySpec{
 				Interval:   c.Template.FlowMonInterval,
 				Format:     "IPFIX",
-				MatchRules: policyRules,
+				MatchRules: newPolicyRules,
 				Exports:    exportConfigs,
 			},
 		}
@@ -70,7 +72,7 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 	}
 	cfg.Type = "netagent"
 	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
-	cfg.RestEndpoint = "api/telemetry/flowexports"
+	cfg.RestEndpoint = "api/telemetry/flowexports/"
 	cfg.Objects = flowExportPolicies
 	c.FlowExportPolicies = cfg
 	return nil
@@ -83,17 +85,7 @@ func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []*mon
 		var protoPorts []string
 		// Pick up from APP Object
 		if len(s.Dst.AppConfigs) == 0 {
-			appName := s.AppName
-			// Get the apps object
-			apps, ok := c.Apps.Objects.([]*netproto.App)
-			if !ok {
-				log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
-			}
-			for _, a := range apps {
-				if a.Name == appName {
-					protoPorts = a.Spec.ProtoPorts
-				}
-			}
+			continue
 		} else {
 			protoPorts = convertProtoPort(s.Dst.AppConfigs[0])
 		}
@@ -122,7 +114,7 @@ func (c *CfgGen) generateExportConfigs(namespace string) (exportCfg []monitoring
 		log.Errorf("Failed to cast the object %v to endpoints.", c.Endpoints.Objects)
 	}
 	for _, ep := range eps {
-		if ep.Namespace == namespace && ep.Spec.NodeUUID == defaultRemoteUUIDName {
+		if ep.Namespace == namespace && ep.Spec.NodeUUID != defaultRemoteUUIDName {
 			ipAddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 			dst = ipAddr.String()
 			break

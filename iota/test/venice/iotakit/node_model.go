@@ -1,4 +1,4 @@
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+    // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
 package iotakit
 
@@ -7,14 +7,15 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -31,6 +32,7 @@ type Host struct {
 
 // Naples represents a smart-nic
 type Naples struct {
+	name     string
 	iotaNode *iota.Node
 	testNode *TestNode
 	smartNic *cluster.DistributedServiceCard
@@ -44,10 +46,10 @@ type Switch struct {
 }
 
 // SwitchPort represents a port in a data switch
-
 type SwitchPort struct {
-	sw   *Switch
-	port string
+	sw       *Switch
+	hostName string
+	port     string
 }
 
 // VeniceNode represents a venice node
@@ -58,8 +60,9 @@ type VeniceNode struct {
 
 // HostCollection is collection of hosts
 type HostCollection struct {
-	err   error
-	hosts []*Host
+	err       error
+	hosts     []*Host
+	fakeHosts []*Host
 }
 
 // SwitchPortCollection ports
@@ -77,8 +80,9 @@ type VeniceNodeCollection struct {
 
 // NaplesCollection contains a list of naples nodes
 type NaplesCollection struct {
-	err   error
-	nodes []*Naples
+	err       error
+	nodes     []*Naples
+	fakeNodes []*Naples
 }
 
 //  iterator functions
@@ -100,8 +104,23 @@ func (sm *SysModel) createSwitch(sw *iota.DataSwitch) (*Switch, error) {
 
 	smSw := &Switch{dataSwitch: sw}
 
+	getHostName := func(sw *SwitchPort) (string, error) {
+		for _, node := range sm.tb.Nodes {
+			for _, dn := range node.instParams.DataNetworks {
+				if dn.Name == sw.port && dn.SwitchIP == sw.sw.dataSwitch.Ip {
+					return node.NodeName, nil
+				}
+			}
+		}
+		return "", fmt.Errorf("Node name not found for switch %v %v", sw.port, sw.sw.dataSwitch.Ip)
+	}
+	var err error
 	for _, p := range sw.GetPorts() {
 		swPort := &SwitchPort{port: p, sw: smSw}
+		swPort.hostName, err = getHostName(swPort)
+		if err != nil {
+			return nil, err
+		}
 		sm.switchPorts = append(sm.switchPorts, swPort)
 	}
 	sm.switches[sw.GetIp()] = smSw
@@ -131,11 +150,11 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 	}
 
 	// create the host in venice
-	err := sm.tb.CreateHost(host)
+	err := sm.CreateHost(host)
 	if err != nil {
 		log.Errorf("Error creating host: %+v. Err: %v", host, err)
 		//Check whether host is already ADMITTED
-		hosts, _ := sm.tb.ListHost()
+		hosts, _ := sm.ListHost()
 		for _, curHost := range hosts {
 			if curHost.ObjectMeta.Name == n.NodeName {
 				host = curHost
@@ -170,6 +189,10 @@ func (sm *SysModel) Hosts() *HostCollection {
 	var hc HostCollection
 	for _, hst := range sm.hosts {
 		hc.hosts = append(hc.hosts, hst)
+	}
+
+	for _, hst := range sm.fakeHosts {
+		hc.fakeHosts = append(hc.fakeHosts, hst)
 	}
 
 	return &hc
@@ -223,7 +246,7 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 	for _, host := range hc.hosts {
 		for _, subnet := range snc.subnets {
 			name := fmt.Sprintf("%s_%s_%s", namePrefix, host.veniceHost.Name, subnet.Name)
-			w, err := host.sm.createWorkload(host.sm.tb.Topo.WorkloadType, host.sm.tb.Topo.WorkloadImage, name, host, subnet)
+			w, err := host.sm.createWorkload(host.sm.Topo.WorkloadType, host.sm.tb.Topo.WorkloadImage, name, host, subnet)
 			if err != nil {
 				return &WorkloadCollection{err: err}
 			}
@@ -246,9 +269,9 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 
 // createNaples creates a naples instance
 func (sm *SysModel) createNaples(node *TestNode) error {
-	snic, err := sm.tb.GetSmartNICByName(node.NodeName)
+	snic, err := sm.GetSmartNICByName(node.NodeName)
 	if sm.tb.mockMode {
-		snic, err = sm.tb.GetSmartNICInMacRange(node.NodeUUID)
+		snic, err = sm.GetSmartNICInMacRange(node.NodeUUID)
 	}
 	if err != nil {
 		err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
@@ -270,11 +293,19 @@ func (sm *SysModel) createNaples(node *TestNode) error {
 // createNaples creates a naples instance
 func (sm *SysModel) createMultiSimNaples(node *TestNode) error {
 
+	numInstances := node.NaplesMultSimConfig.GetNumInstances()
+	if len(node.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo()) != int(numInstances) {
+		err := fmt.Errorf("Number of instances mismatch in iota node and config expected (%v), actual (%v)",
+			numInstances, len(node.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo()))
+		log.Errorf("%v", err)
+		return err
+
+	}
 	log.Infof("Adding fake naples : %v", (node.NaplesMultSimConfig.GetNumInstances()))
-	for i := 0; i < int(node.NaplesMultSimConfig.GetNumInstances()); i++ {
+	for _, simInfo := range node.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo() {
 		//TODO: (iota agent is also following the same format.)
-		simName := node.NodeName + "-sim-" + strconv.Itoa(i)
-		snic, err := sm.tb.GetSmartNICByName(simName)
+		simName := simInfo.GetName()
+		snic, err := sm.GetSmartNICByName(simName)
 		if err != nil {
 			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
 			log.Errorf("%v", err)
@@ -286,6 +317,7 @@ func (sm *SysModel) createMultiSimNaples(node *TestNode) error {
 			testNode: node,
 			smartNic: snic,
 			sm:       sm,
+			name:     simName,
 		}
 
 		sm.fakeNaples[simName] = &naples
@@ -306,13 +338,31 @@ func (sm *SysModel) ForEachNaples(fn naplesIteratorFn) error {
 	return nil
 }
 
+// ForEachFakeNaples calls an iterator for each naples in the model
+func (sm *SysModel) ForEachFakeNaples(fn naplesIteratorFn) error {
+	fakeNaples := []*Naples{}
+	for _, node := range sm.fakeNaples {
+		fakeNaples = append(fakeNaples, node)
+	}
+	err := fn(&NaplesCollection{fakeNodes: fakeNaples})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Naples returns all naples in the model
 func (sm *SysModel) Naples() *NaplesCollection {
 	var naples []*Naples
+	var fakesNaples []*Naples
 	for _, np := range sm.naples {
 		naples = append(naples, np)
 	}
-	return &NaplesCollection{nodes: naples}
+
+	for _, np := range sm.fakeNaples {
+		fakesNaples = append(fakesNaples, np)
+	}
+	return &NaplesCollection{nodes: naples, fakeNodes: fakesNaples}
 }
 
 // Names retruns names of all naples in the collection
@@ -388,7 +438,7 @@ func (vnc *VeniceNodeCollection) Leader() *VeniceNodeCollection {
 		return vnc
 	}
 	// get the cluster from venice
-	cl, err := vnc.sm.tb.GetCluster()
+	cl, err := vnc.sm.GetCluster()
 	if err != nil {
 		return &VeniceNodeCollection{err: fmt.Errorf("Failed to get cluster. Err: %v", err)}
 	}
@@ -431,6 +481,106 @@ func (vnc *VeniceNodeCollection) CaptureGRETCPDump(ctx context.Context) (string,
 	}
 
 	return stopResp[0].GetStdout(), nil
+}
+
+// NonLeaders returns all nodes except leaders
+func (vnc *VeniceNodeCollection) NonLeaders() *VeniceNodeCollection {
+	if vnc.err != nil {
+		return vnc
+	}
+	// get the cluster from venice
+	cl, err := vnc.sm.GetCluster()
+	if err != nil {
+		return &VeniceNodeCollection{err: fmt.Errorf("Failed to get cluster. Err: %v", err)}
+	}
+
+	nonLeaders := VeniceNodeCollection{sm: vnc.sm}
+	for _, node := range vnc.nodes {
+		if cl.Status.Leader == node.iotaNode.Name || cl.Status.Leader == node.iotaNode.IpAddress {
+			continue
+		}
+		nonLeaders.nodes = append(nonLeaders.nodes, node)
+	}
+
+	if len(nonLeaders.nodes) == 0 {
+		nonLeaders.err = fmt.Errorf("Could not find a leader node")
+	}
+
+	return &nonLeaders
+}
+
+// Any returns the requested number of venice from collection in random
+func (vnc *VeniceNodeCollection) Any(num int) *VeniceNodeCollection {
+	if vnc.err != nil || len(vnc.nodes) <= num {
+		return vnc
+	}
+
+	newVnc := &VeniceNodeCollection{nodes: []*VeniceNode{}}
+	tmpArry := make([]*VeniceNode, len(vnc.nodes))
+	copy(tmpArry, vnc.nodes)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		sn := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newVnc.nodes = append(newVnc.nodes, sn)
+	}
+
+	return newVnc
+}
+
+//GetVeniceNodeWithService  Get nodes running service
+func (vnc *VeniceNodeCollection) GetVeniceNodeWithService(service string) (*VeniceNodeCollection, error) {
+	if vnc.err != nil {
+		return nil, vnc.err
+	}
+	srvVnc := VeniceNodeCollection{sm: vnc.sm}
+
+	leader := vnc.sm.VeniceNodes().Leader()
+
+	//There is any error
+	if leader.err != nil {
+		return nil, leader.err
+	}
+
+	trig := vnc.sm.tb.NewTrigger()
+
+	entity := leader.nodes[0].iotaNode.Name + "_venice"
+
+	cmd := `/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == ` + fmt.Sprintf("%q", service) +
+		` ) | .status.hostIP'`
+	trig.AddCommand(cmd, entity, leader.nodes[0].iotaNode.Name)
+
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to run command to get service node Err: %v", err)
+		srvVnc.err = fmt.Errorf("Failed to run command to get service node")
+		return nil, srvVnc.err
+	}
+
+	if triggerResp[0].ExitCode != 0 {
+		srvVnc.err = fmt.Errorf("Failed to run command to get service node : %v",
+			triggerResp[0].Stderr)
+		return nil, srvVnc.err
+	}
+
+	ret := triggerResp[0].Stdout
+	hostIP := strings.Split(ret, "\n")
+
+	for _, vn := range vnc.sm.veniceNodes {
+		for _, ip := range hostIP {
+			if vn.iotaNode.IpAddress == ip {
+				srvVnc.nodes = append(srvVnc.nodes, vn)
+			}
+		}
+	}
+
+	if len(srvVnc.nodes) == 0 {
+		log.Errorf("Did not find node running %v", service)
+		srvVnc.err = fmt.Errorf("Did not find node running %v", service)
+		return nil, srvVnc.err
+	}
+	return &srvVnc, nil
 }
 
 type selectParams struct {
@@ -545,7 +695,7 @@ func (sm *SysModel) ListRealHosts() ([]*Host, error) {
 
 // AssociateHosts gets all real hosts from venice cluster
 func (sm *SysModel) AssociateHosts() error {
-	objs, err := sm.tb.ListHost()
+	objs, err := sm.ListHost()
 	if err != nil {
 		return err
 	}
@@ -575,13 +725,14 @@ func (sm *SysModel) AssociateHosts() error {
 	}
 	//TOOD:Associate fake naples too
 	for _, n := range sm.naples {
+		n.smartNic.Labels = make(map[string]string)
 		nodeMac := strings.Replace(n.iotaNode.GetNodeUuid(), ":", "", -1)
 		for _, obj := range objs {
 			objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
 			if objMac == nodeMac {
 				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
 					n.iotaNode.GetIpAddress(), n.iotaNode.Name,
-					n.iotaNode.GetNaplesConfig().GetNaplesIpAddress())
+					n.smartNic.GetStatus().IPConfig.IPAddress)
 				bs := bitset.New(uint(4096))
 				bs.Set(0).Set(1).Set(4095)
 				h := Host{
@@ -593,18 +744,62 @@ func (sm *SysModel) AssociateHosts() error {
 					sm:          sm,
 				}
 				sm.hosts[obj.GetName()] = &h
+
+				//Add BM type to support upgrade
+				n.smartNic.Labels["type"] = "bm"
+				if err := sm.UpdateSmartNIC(n.smartNic); err != nil {
+					log.Infof("Error updating smart nic object %v", err)
+					return err
+				}
 				break
 			}
 		}
 	}
 
-	log.Infof("Total number of host associated %v\n", len(sm.hosts))
+	for k := range sm.fakeHosts {
+		delete(sm.fakeHosts, k)
+	}
+	sm.ListSmartNIC()
+	for simName, n := range sm.fakeNaples {
+		n.smartNic.Labels = make(map[string]string)
+		for _, simNaples := range n.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo() {
+			if simNaples.GetName() == simName {
+				nodeMac := strings.Replace(simNaples.GetNodeUuid(), ":", "", -1)
+				for _, obj := range objs {
+					objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
+					if objMac == nodeMac {
+						log.Infof("Associating host %v(ip:%v) with %v(%v on %v)\n", obj.GetName(),
+							n.iotaNode.GetIpAddress(), simName, simNaples.GetIpAddress(), n.iotaNode.Name)
+						bs := bitset.New(uint(4096))
+						bs.Set(0).Set(1).Set(4095)
+						h := Host{
+							iotaNode:    n.iotaNode,
+							veniceHost:  obj,
+							naples:      n,
+							maxVlans:    4094,
+							vlanBitmask: bs,
+							sm:          sm,
+						}
+						sm.fakeHosts[obj.GetName()] = &h
+						//Add BM type to support upgrade
+						n.smartNic.Labels["type"] = "sim"
+						if err := sm.UpdateSmartNIC(n.smartNic); err != nil {
+							log.Infof("Error updating smart nic object %v", err)
+							return err
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+	log.Infof("Total number of hosts associated %v\n", len(sm.hosts)+len(sm.fakeHosts))
 	return nil
 }
 
 // ListWorkloadsOnHost gets workloads on host
 func (sm *SysModel) ListWorkloadsOnHost(h *cluster.Host) (objs []*workload.Workload, err error) {
-	objs, err = sm.tb.ListWorkload()
+	objs, err = sm.ListWorkload()
 	if err != nil {
 		return nil, err
 	}
@@ -631,14 +826,21 @@ func (hc *HostCollection) SelectByPercentage(percent int) (*HostCollection, erro
 	}
 
 	ret := &HostCollection{}
-	for i, host := range hc.hosts {
+	for _, host := range hc.hosts {
 		ret.hosts = append(ret.hosts, host)
-		if (i + 1) >= len(hc.hosts)*percent/100 {
+		if (len(ret.hosts)) >= len(hc.hosts)*percent/100 {
 			break
 		}
 	}
 
-	if len(ret.hosts) == 0 {
+	for _, host := range hc.fakeHosts {
+		ret.fakeHosts = append(ret.fakeHosts, host)
+		if (len(ret.hosts) + len(ret.fakeHosts)) >= (len(hc.fakeHosts)+len(hc.hosts))*percent/100 {
+			break
+		}
+	}
+
+	if len(ret.hosts)+len(ret.fakeHosts) == 0 {
 		return nil, fmt.Errorf("Did not find hosts matching percentage (%v)", percent)
 	}
 	return ret, nil
@@ -654,10 +856,36 @@ func (pc *SwitchPortCollection) SelectByPercentage(percent int) (*SwitchPortColl
 		return nil, fmt.Errorf("switch port collection error (%s)", pc.err)
 	}
 
+	//Get equal share from each host to be fair
+	hostPortMap := make(map[string]*[]*SwitchPort)
+	for _, port := range pc.ports {
+		if _, ok := hostPortMap[port.hostName]; !ok {
+			hostPortMap[port.hostName] = &[]*SwitchPort{}
+		}
+		swPorts, _ := hostPortMap[port.hostName]
+		*swPorts = append(*swPorts, port)
+	}
+
 	ret := &SwitchPortCollection{}
-	for i, port := range pc.ports {
-		ret.ports = append(ret.ports, port)
-		if (i + 1) >= len(pc.ports)*percent/100 {
+	for _, ports := range hostPortMap {
+		for i, port := range *ports {
+			added := false
+			for _, addedPort := range ret.ports {
+				if addedPort == port {
+					added = true
+					break
+				}
+			}
+			if !added {
+				ret.ports = append(ret.ports, port)
+				//Break if reached limit for this host
+				if (i + 1) >= len(*ports)*percent/100 {
+					break
+				}
+			}
+		}
+		//If adding one more will execeed limit
+		if len(ret.ports) >= len(pc.ports)*percent/100 {
 			break
 		}
 	}
@@ -679,15 +907,45 @@ func (naples *NaplesCollection) SelectByPercentage(percent int) (*NaplesCollecti
 	}
 
 	ret := &NaplesCollection{}
-	for i, entry := range naples.nodes {
+	for _, entry := range naples.nodes {
 		ret.nodes = append(ret.nodes, entry)
-		if (i + 1) >= len(naples.nodes)*percent/100 {
+		if (len(ret.nodes)) >= (len(naples.nodes)+len(naples.fakeNodes))*percent/100 {
 			break
 		}
 	}
 
-	if len(ret.nodes) == 0 {
+	for _, entry := range naples.fakeNodes {
+
+		if (len(ret.nodes) + len(ret.fakeNodes)) >= (len(naples.nodes)+len(naples.fakeNodes))*percent/100 {
+			break
+		}
+		ret.fakeNodes = append(ret.fakeNodes, entry)
+	}
+
+	if (len(ret.nodes) + len(ret.fakeNodes)) == 0 {
 		return nil, fmt.Errorf("Did not find hosts matching percentage (%v)", percent)
 	}
 	return ret, nil
+}
+
+// ServiceStoppedEvents returns list of service stopped events.
+func (sm *SysModel) ServiceStoppedEvents(since time.Time, npc *NaplesCollection) *EventsCollection {
+	var naplesNames []string
+	for _, naples := range npc.nodes {
+		naplesNames = append(naplesNames, naples.iotaNode.Name)
+	}
+
+	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
+		eventtypes.SERVICE_STOPPED, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
+
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+		return &EventsCollection{err: err}
+	}
+
+	for _, ev := range eventsList.Items {
+		log.Errorf("Service stopped event %v %v", ev.Name, ev.Message)
+	}
+	return &EventsCollection{list: eventsList}
 }

@@ -19,6 +19,17 @@ var (
 	ErrIncorrectObjectType = errors.New("incorrect object type")
 )
 
+const (
+	// DefaultWatchBatchSize is the max batch size for watch events
+	DefaultWatchBatchSize = 100
+	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events
+	DefaultWatchHoldInterval = time.Millisecond * 10
+)
+
+type EventStatus struct {
+	LastObjectMeta *api.ObjectMeta
+}
+
 // MbusServer is the message bus server
 type MbusServer struct {
 	svcName    string              // service name

@@ -268,7 +268,7 @@ var _ = Describe("firewall policy model tests", func() {
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
-	Context("policy model tests", func() {
+	Context("tags:type=extensive;datapath=true;duration=long  policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {
 			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
 				Skip("Skipping policy model tests on PR tests")

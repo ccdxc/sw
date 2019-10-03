@@ -46,6 +46,11 @@ message TenantEvent {
     Tenant          Tenant      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "network,omitempty"];
 }
 
+// tenant watch events batched
+message TenantEventList {
+    repeated TenantEvent TenantEvents  = 1;
+}
+
 // Tenant controller api
 service TenantApi {
     // options for auto generating rest endpoints
@@ -58,7 +63,7 @@ service TenantApi {
 
     rpc GetTenant (api.ObjectMeta) returns (Tenant) {};
     rpc ListTenants (api.ObjectMeta) returns (TenantList) {};
-    rpc WatchTenants (api.ObjectMeta) returns (stream TenantEvent) {};
+    rpc WatchTenants (api.ObjectMeta) returns (stream TenantEventList) {};
     rpc UpdateTenant (Tenant) returns (Tenant) {};
     rpc TenantOperUpdate (stream TenantEvent) returns (api.TypeMeta) {};
 

@@ -57,8 +57,16 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 			c.NodeEPLUT[nodeUUID] = c.GenerateEPPairs(namespace.Name, nodeUUID, sgRuleManifest.Count)
 		}
 
-		policyRules := c.generatePolicyRules(namespace.Name, rulesPerPolicy)[:rulesPerPolicy]
+		policyRules := c.generatePolicyRules(namespace.Name, rulesPerPolicy)
 
+		if rulesPerPolicy < len(policyRules) {
+			policyRules = policyRules[:rulesPerPolicy]
+
+		}
+
+		log.Infof("Actual number of rules generated :%v", len(policyRules))
+		log.Infof("Actual number of HAL expansions : %v", len(policyRules)/2*c.Template.IPAddressesPerRule+
+			len(policyRules)/2*c.Template.IPAddressesPerRule*c.Template.L4MatchPerRule*c.Template.IPAddressesPerRule)
 		sgPolicy := netproto.NetworkSecurityPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "NetworkSecurityPolicy",
@@ -170,88 +178,148 @@ func (c *CfgGen) getRemoteEPs(nodeUUID string) []string {
 	return remoteEps
 }
 
+type srcDstPairs struct {
+	srcIPAddresses []string
+	dstIPAddresses []string
+}
+
+func (c *CfgGen) generateSrcDstPairs(epPairs []EPPair) []*srcDstPairs {
+
+	populatedPairs := []*srcDstPairs{}
+
+	srcDstBucket := make(map[string]*srcDstPairs)
+	srcDstKey := func(src, dst string) string {
+		return src + ":" + dst
+	}
+
+	for _, localEPPair := range epPairs {
+		added := false
+		key := srcDstKey(localEPPair.SrcEP, localEPPair.DstEP)
+
+		for _, pair := range populatedPairs {
+
+			srcPresent := false
+			dstPresent := false
+			otherComboPresent := false
+			for _, src := range pair.srcIPAddresses {
+				otherKey := srcDstKey(src, localEPPair.DstEP)
+				if otherPair, ok := srcDstBucket[otherKey]; ok && otherPair != pair {
+					otherComboPresent = true
+					break
+				}
+				if src == localEPPair.SrcEP {
+					srcPresent = true
+					break
+				}
+			}
+			for _, dst := range pair.dstIPAddresses {
+				otherKey := srcDstKey(localEPPair.SrcEP, dst)
+				if otherPair, ok := srcDstBucket[otherKey]; ok && otherPair != pair {
+					otherComboPresent = true
+					break
+				}
+				if dst == localEPPair.DstEP {
+					dstPresent = true
+					break
+				}
+			}
+
+			if otherComboPresent {
+				continue
+			}
+			//Both Src and Dst has been added already!
+			if srcPresent && dstPresent {
+				added = true
+				break
+			}
+
+			//If src, dst cannot be fitted continue
+			if (!dstPresent && len(pair.dstIPAddresses) == c.Template.IPAddressesPerRule) ||
+				(!srcPresent && len(pair.srcIPAddresses) == c.Template.IPAddressesPerRule) {
+				continue
+			}
+
+			if !srcPresent {
+				pair.srcIPAddresses = append(pair.srcIPAddresses, localEPPair.SrcEP)
+			}
+
+			if !dstPresent {
+				pair.dstIPAddresses = append(pair.dstIPAddresses, localEPPair.DstEP)
+			}
+			srcDstBucket[key] = pair
+
+			added = true
+		}
+		if !added {
+			pair := &srcDstPairs{srcIPAddresses: []string{localEPPair.SrcEP},
+				dstIPAddresses: []string{localEPPair.DstEP}}
+			srcDstBucket[key] = pair
+			populatedPairs = append(populatedPairs, pair)
+		}
+	}
+
+	return populatedPairs
+}
+
 func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules []netproto.PolicyRule) {
-	for j := 0; j < count; j++ {
-		rulesAdded := false
-		for _, nodeUUID := range c.NodeUUIDs {
-			// Get the apps object
-			apps, ok := c.Apps.Objects.([]*netproto.App)
-			if !ok {
-				log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
+	rulesAdded := false
+	for _, nodeUUID := range c.NodeUUIDs {
+		// Get the apps object
+		apps, ok := c.Apps.Objects.([]*netproto.App)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
+		}
+
+		// ensure that the apps are in the same namespace as the policy
+		var curApps []*netproto.App
+		for _, a := range apps {
+			if a.Namespace == namespace {
+				curApps = append(curApps, a)
 			}
+		}
+		ruleIndex := 0
+		for _, nwEpPair := range c.NodeEPLUT[nodeUUID].NwMap {
 
-			// ensure that the apps are in the same namespace as the policy
-			var curApps []*netproto.App
-			for _, a := range apps {
-				if a.Namespace == namespace {
-					curApps = append(curApps, a)
+			app := curApps[0]
+
+			appConfig := c.generateL4Match(ruleIndex % len(c.Template.FirewallPolicyRules))
+			ruleIndex++
+
+			totalPopulatePairs := c.generateSrcDstPairs(nwEpPair.LocalEPPairs)
+			remotePopulatePairs := c.generateSrcDstPairs(nwEpPair.RemoteEPPairs)
+			totalPopulatePairs = append(totalPopulatePairs, remotePopulatePairs...)
+
+			for _, populatedPair := range totalPopulatePairs {
+				rules := []netproto.PolicyRule{
+					{
+						Action:  "PERMIT",
+						AppName: app.Name,
+						Src: &netproto.MatchSelector{
+							Addresses: populatedPair.srcIPAddresses,
+						},
+						Dst: &netproto.MatchSelector{
+							Addresses: populatedPair.dstIPAddresses,
+						},
+					},
+					{
+						Action: "PERMIT",
+						Src: &netproto.MatchSelector{
+							Addresses: populatedPair.srcIPAddresses,
+						},
+						Dst: &netproto.MatchSelector{
+							Addresses:  populatedPair.dstIPAddresses,
+							AppConfigs: appConfig,
+						},
+					},
 				}
-			}
-			for nw, nwEpPair := range c.NodeEPLUT[nodeUUID].NwMap {
+				policyRules = append(policyRules, rules...)
 
-				app := curApps[j%len(curApps)]
-
-				appConfig := c.generateL4Match(j % len(c.Template.FirewallPolicyRules))
-
-				rulesAdded = true
-				for _, localEPPair := range nwEpPair.LocalEPPairs {
-					rules := []netproto.PolicyRule{
-						{
-							Action:  "PERMIT",
-							AppName: app.Name,
-							Src: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(localEPPair.SrcEP),
-							},
-							Dst: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(localEPPair.DstEP),
-							},
-						},
-						{
-							Action: "PERMIT",
-							Src: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(localEPPair.SrcEP),
-							},
-							Dst: &netproto.MatchSelector{
-								Addresses:  convertIPAddresses(localEPPair.DstEP),
-								AppConfigs: appConfig,
-							},
-						},
-					}
-					policyRules = append(policyRules, rules...)
-				}
-
-				for _, remoteEPPair := range nwEpPair.RemoteEPPairs {
-					rules := []netproto.PolicyRule{
-						{
-							Action:  "PERMIT",
-							AppName: app.Name,
-							Src: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(remoteEPPair.SrcEP),
-							},
-							Dst: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(remoteEPPair.DstEP),
-							},
-						},
-						{
-							Action: "PERMIT",
-							Src: &netproto.MatchSelector{
-								Addresses: convertIPAddresses(remoteEPPair.SrcEP),
-							},
-							Dst: &netproto.MatchSelector{
-								Addresses:  convertIPAddresses(remoteEPPair.DstEP),
-								AppConfigs: appConfig,
-							},
-						},
-					}
-					policyRules = append(policyRules, rules...)
+				if count > 0 && len(policyRules) > count {
+					return
 				}
 
-				delete(c.NodeEPLUT[nodeUUID].NwMap, nw)
 			}
-
-			if len(policyRules) > count {
-				return
-			}
+			//delete(c.NodeEPLUT[nodeUUID].NwMap, nw)
 		}
 
 		if !rulesAdded {

@@ -85,10 +85,27 @@ func (c *Copier) getSftp(ipPort string) (*sftp.Client, error) {
 	return nil, err
 }
 
+func isFileInfoSame(file os.FileInfo, otherFile os.FileInfo) bool {
+
+	year, month, day := file.ModTime().Date()
+	year1, month1, day1 := otherFile.ModTime().Date()
+
+	hour, min, sec := file.ModTime().Clock()
+	hour1, min1, sec1 := otherFile.ModTime().Clock()
+
+	if file.Size() == otherFile.Size() &&
+		(year == year1 && month == month1 && day == day1) &&
+		(hour == hour1 && min == min1 && sec == sec1) {
+		return true
+	}
+	return false
+}
+
 // CopyTo copies the source files to the remote destination
 func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 	var err error
 	var sftpClient *sftp.Client
+	var sInfo os.FileInfo
 
 	if sftpClient, err = c.getSftp(ipPort); err != nil {
 		return err
@@ -110,13 +127,21 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 		}
 		//
 		//pool.Go(func() error {
-		if _, err := os.Stat(absSrcFile); err != nil {
+		if sInfo, err = os.Stat(absSrcFile); err != nil {
 			log.Errorf("Copier | CopyTo could not find the file %v. Err: %v", absSrcFile, err)
 			return err
 		}
+
 		_, srcFile := filepath.Split(absSrcFile)
 		absDstFile := filepath.Join(dstDir, srcFile)
-		log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
+
+		if info, rerr := sftpClient.Lstat(absDstFile); rerr == nil {
+			//Check if file exists and size matches
+			if isFileInfoSame(info, sInfo) {
+				log.Infof("Copier | Skipping copy as it is same.. | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
+				continue
+			}
+		}
 
 		// Check for the validity of source file
 		out, err := ioutil.ReadFile(absSrcFile)
@@ -125,6 +150,7 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 			return err
 		}
 
+		log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
 		f, err := sftpClient.Create(absDstFile)
 		if err != nil {
 			log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
@@ -137,6 +163,7 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 			return err
 		}
 		f.Close()
+		sftpClient.Chtimes(absDstFile, sInfo.ModTime(), sInfo.ModTime())
 	}
 
 	return nil

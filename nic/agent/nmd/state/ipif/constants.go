@@ -10,9 +10,6 @@ const (
 	//NaplesInbandInterface is the inband interface
 	NaplesInbandInterface = "bond0"
 
-	// NaplesOOBInterface is the out of band interface
-	NaplesOOBInterface = "oob_mnic0"
-
 	// NaplesINB0Interface is inband interface 0
 	NaplesINB0Interface = "inb_mnic0"
 
@@ -36,6 +33,9 @@ const (
 )
 
 var (
+	// NaplesOOBInterface is the out of band interface
+	NaplesOOBInterface = "oob_mnic0"
+
 	// PensandoDHCPRequestOption constructs dhcp vendor option for pensando
 	PensandoDHCPRequestOption = dhcp4.Option{
 		Code:  dhcp4.OptionVendorClassIdentifier,

@@ -696,6 +696,18 @@
         }
       }
     },
+    "netprotoNatBindingEventList": {
+      "type": "object",
+      "properties": {
+        "NatBindingEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatBindingEvent"
+          }
+        }
+      },
+      "title": "NatBindingEvent watch events batched"
+    },
     "netprotoNatBindingList": {
       "type": "object",
       "properties": {
@@ -773,6 +785,18 @@
       },
       "title": "security group watch event"
     },
+    "netprotoNatPolicyEventList": {
+      "type": "object",
+      "properties": {
+        "NatPolicyEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatPolicyEvent"
+          }
+        }
+      },
+      "title": "NatPolicyEvent watch events batched"
+    },
     "netprotoNatPolicyList": {
       "type": "object",
       "properties": {
@@ -841,6 +865,18 @@
         }
       },
       "title": "nat pool watch event"
+    },
+    "netprotoNatPoolEventList": {
+      "type": "object",
+      "properties": {
+        "NatPoolEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNatPoolEvent"
+          }
+        }
+      },
+      "title": "NatPolicyEvent watch events batched"
     },
     "netprotoNatPoolList": {
       "type": "object",

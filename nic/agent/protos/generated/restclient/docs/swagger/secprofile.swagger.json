@@ -474,6 +474,18 @@
       },
       "title": "security profile watch event"
     },
+    "netprotoSecurityProfileEventList": {
+      "type": "object",
+      "properties": {
+        "SecurityProfileEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoSecurityProfileEvent"
+          }
+        }
+      },
+      "title": "secprofile watch events batched"
+    },
     "netprotoSecurityProfileList": {
       "type": "object",
       "properties": {

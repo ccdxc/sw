@@ -784,6 +784,11 @@ class EsxHostManagement(HostManagement):
             raise Exception("Driver install failed")
 
 
+    @_exceptionWrapper(_errCodes.ENTITY_NOT_UP, "Host not up")
+    def WaitForSsh(self, port = 22):
+        super().WaitForSsh(port)
+        super().WaitForSsh(443)
+        time.sleep(30)
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
@@ -938,6 +943,12 @@ def Main():
     else:
         host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server)
 
+    if GlobalOptions.only_mode_change:
+        # Case 2: Only change mode, reboot and install drivers
+        #naples.InitForUpgrade(goldfw = False)
+        host.Reboot()
+        host.WaitForSsh()
+        return
     host.SetNaples(naples)
     naples.SetHost(host)
 
@@ -978,32 +989,25 @@ def Main():
     #Read Naples Gold FW version.
     naples.ReadGoldFwVersion()
 
-    # Check if we need to switch to GoldFw or not.
-    if GlobalOptions.only_mode_change:
-        # Case 2: Only change mode, reboot and install drivers
-        #naples.InitForUpgrade(goldfw = False)
+    # Case 1: Main firmware upgrade.
+    naples.InitForUpgrade(goldfw = True)
+    if naples.IsSSHUP():
+        #OOb is present and up install right away,
+        naples.RebootGoldFw()
+        naples.InstallMainFirmware()
+        if not IsNaplesGoldFWLatest():
+            naples.InstallGoldFirmware()
         naples.Reboot()
-        naples.Close()
     else:
-        # Case 1: Main firmware upgrade.
-        naples.InitForUpgrade(goldfw = True)
-        if naples.IsSSHUP():
-            #OOb is present and up install right away,
-            naples.RebootGoldFw()
-            naples.InstallMainFirmware()
-            if not IsNaplesGoldFWLatest():
-                naples.InstallGoldFirmware()
-            naples.Reboot()
-        else:
-            host.InitForUpgrade()
-            host.Reboot()
-            naples.Close()
-            gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
-            host.Init(driver_pkg =  gold_pkg, cleanup = False)
-            host.InstallMainFirmware()
-            #Install gold fw if required.
-            if not IsNaplesGoldFWLatest():
-                host.InstallGoldFirmware()
+        host.InitForUpgrade()
+        host.Reboot()
+        naples.Close()
+        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
+        host.Init(driver_pkg =  gold_pkg, cleanup = False)
+        host.InstallMainFirmware()
+        #Install gold fw if required.
+        if not IsNaplesGoldFWLatest():
+            host.InstallGoldFirmware()
 
     #Script that might have to run just before reboot
     # ESX would require drivers to be installed here to avoid

@@ -20,9 +20,14 @@ def Trigger(tc):
 
     store_policy_objects = netagent_api.QueryConfigs(kind='NetworkSecurityPolicy')
 
+    wait = getattr(tc.args, "wait", 30)
+
+    time.sleep(int(wait))
     action = str(getattr(tc.args, "action"))
     __update_policy_actions(store_policy_objects, action)
-    netagent_api.UpdateConfigObjects(store_policy_objects)
+    ret = netagent_api.UpdateConfigObjects(store_policy_objects)
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 

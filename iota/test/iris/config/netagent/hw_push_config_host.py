@@ -48,6 +48,7 @@ def Main(args):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     for node in agent_nodes:
         api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug trace --level error")
+        api.Trigger_AddNaplesCommand(req, node, "touch /data/no_watchdog")
 
     api.Trigger(req)
 

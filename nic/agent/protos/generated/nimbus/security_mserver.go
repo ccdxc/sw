@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -57,11 +61,20 @@ type SecurityGroupStatusReactor interface {
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type SecurityGroupNodeStatus struct {
+	nodeID        string
+	watcher       *memdb.Watcher
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
 // SecurityGroupTopic is the SecurityGroup topic on message bus
 type SecurityGroupTopic struct {
+	sync.Mutex
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
 	statusReactor SecurityGroupStatusReactor // status event reactor
+	nodeStatus    map[string]*SecurityGroupNodeStatus
 }
 
 // AddSecurityGroupTopic returns a network RPC server
@@ -71,6 +84,7 @@ func AddSecurityGroupTopic(server *MbusServer, reactor SecurityGroupStatusReacto
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
+		nodeStatus:    make(map[string]*SecurityGroupNodeStatus),
 	}
 
 	// register the RPC handlers
@@ -80,6 +94,178 @@ func AddSecurityGroupTopic(server *MbusServer, reactor SecurityGroupStatusReacto
 
 	return &handler, nil
 }
+
+func (eh *SecurityGroupTopic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.nodeStatus[nodeID] = &SecurityGroupNodeStatus{nodeID: nodeID, watcher: watcher}
+	eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+	eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *SecurityGroupTopic) unRegisterWatcher(nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *SecurityGroupTopic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		nodeStatus.opAckedStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opAckedStatus[event]
+	}
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+"_"+"SecurityGroup", delta)
+	hdr.Record("SecurityGroup", delta)
+	hdr.Record(nodeID, delta)
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *SecurityGroupTopic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		nodeStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *SecurityGroupTopic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		return true
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "SecurityGroup", event)
+		return false
+	}
+
+	evAckStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "SecurityGroup", event)
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, "SecurityGroup", event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *SecurityGroupTopic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *SecurityGroupTopic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // CreateSecurityGroup creates SecurityGroup
 func (eh *SecurityGroupTopic) CreateSecurityGroup(ctx context.Context, objinfo *netproto.SecurityGroup) (*netproto.SecurityGroup, error) {
@@ -154,6 +340,7 @@ func (eh *SecurityGroupTopic) GetSecurityGroup(ctx context.Context, objmeta *api
 // ListSecurityGroups lists all SecurityGroups matching object selector
 func (eh *SecurityGroupTopic) ListSecurityGroups(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SecurityGroupList, error) {
 	var objlist netproto.SecurityGroupList
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	filterFn := func(memdb.Object) bool {
 		return true
@@ -165,10 +352,14 @@ func (eh *SecurityGroupTopic) ListSecurityGroups(ctx context.Context, objsel *ap
 
 	// walk all objects
 	objs := eh.server.memDB.ListObjects("SecurityGroup", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := SecurityGroupFromObj(oo)
 		if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
 			objlist.SecurityGroups = append(objlist.SecurityGroups, obj)
+			//record the last object sent to check config sync
+			eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
 		}
 	}
 
@@ -203,6 +394,9 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 		return err
 	}
 
+	eh.registerWatcher(nodeID, &watcher)
+	defer eh.unRegisterWatcher(nodeID)
+
 	// increment stats
 	eh.server.Stats("SecurityGroup", "ActiveWatch").Inc()
 	eh.server.Stats("SecurityGroup", "WatchConnect").Inc()
@@ -210,16 +404,36 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 	defer eh.server.Stats("SecurityGroup", "WatchDisconnect").Inc()
 
 	// walk all SecurityGroups and send it out
+	watchEvts := netproto.SecurityGroupEventList{}
 	for _, obj := range objlist.SecurityGroups {
 		watchEvt := netproto.SecurityGroupEvent{
 			EventType:     api.EventType_CreateEvent,
 			SecurityGroup: *obj,
 		}
-		err = stream.Send(&watchEvt)
+		watchEvts.SecurityGroupEvents = append(watchEvts.SecurityGroupEvents, &watchEvt)
+	}
+	if len(watchEvts.SecurityGroupEvents) > 0 {
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
 			return err
 		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.SecurityGroupEventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.SecurityGroupEventList{}
+		return nil
 	}
 
 	// loop forever on watch channel
@@ -254,10 +468,24 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 				EventType:     etype,
 				SecurityGroup: *obj,
 			}
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityGroup to stream. Err: %v", err)
+			watchEvts.SecurityGroupEvents = append(watchEvts.SecurityGroupEvents, &watchEvt)
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.SecurityGroupEvents) >= DefaultWatchBatchSize {
+				if err = sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+		case <-timer.C:
+			running = false
+			if err = sendToStream(); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -270,6 +498,7 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 
 // updateSecurityGroupOper triggers oper update callbacks
 func (eh *SecurityGroupTopic) updateSecurityGroupOper(oper *netproto.SecurityGroupEvent, nodeID string) error {
+	eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.SecurityGroup.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
@@ -301,10 +530,10 @@ func (eh *SecurityGroupTopic) SecurityGroupOperUpdate(stream netproto.SecurityGr
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("SecurityGroupOperUpdate stream ended. closing..")
+			log.Errorf("%v SecurityGroupOperUpdate stream ended. closing..", nodeID)
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from SecurityGroupOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from %v SecurityGroupOperUpdate stream. Err: %v", nodeID, err)
 			return err
 		}
 

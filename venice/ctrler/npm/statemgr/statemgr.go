@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -113,9 +114,6 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		o(statemgr)
 	}
 
-	//Remove state endpoints before we start watching.
-	statemgr.RemoveStaleEndpoints()
-
 	// newPeriodicUpdater creates a new go subroutines
 	// Given that objects returned by `NewStatemgr` should live for the duration
 	// of the process, we don't have to worry about leaked go subroutines
@@ -175,6 +173,11 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching network-interface")
 	}
+
+	//Remove state endpoints after we start the watch
+	//Start watch would synchronosly does diff of all workload and endpoints.
+	//Stale endpoints would then be deleted.
+	statemgr.RemoveStaleEndpoints()
 
 	// create all topics on the message bus
 	statemgr.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, statemgr)
@@ -289,4 +292,165 @@ func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memd
 	return func(memdb.Object) bool {
 		return true
 	}
+}
+
+//
+type evStatus struct {
+	Status map[string]bool
+}
+
+type nodeStatus struct {
+	NodeID     string
+	KindStatus map[string]*evStatus
+}
+
+type configPushStatus struct {
+	KindObjects map[string]int
+	NodesStatus []*nodeStatus
+}
+
+type stat struct {
+	MinMs, MaxMs, MeanMs float64
+}
+
+type nodeConfigHistogram struct {
+	NodeID    string
+	KindStats map[string]stat
+	AggrStats stat
+}
+
+type configPushHistogram struct {
+	KindHistogram       map[string]stat
+	NodeConfigHistogram []*nodeConfigHistogram
+}
+
+//ResetConfigPushStats for debugging
+func (sm *Statemgr) ResetConfigPushStats() {
+
+	hdr.Reset("App")
+	hdr.Reset("Endpoint")
+	hdr.Reset("NetworkSecurityPolicy")
+
+	objs := sm.ListObjects("DistributedServiceCard")
+	for _, obj := range objs {
+		snic, err := DistributedServiceCardStateFromObj(obj)
+		if err != nil {
+			continue
+		}
+
+		hdr.Reset(snic.DistributedServiceCard.Name)
+
+		resetKindStat := func(kind string) {
+			kind = snic.DistributedServiceCard.Name + "_" + kind
+			hdr.Reset(kind)
+		}
+
+		resetKindStat("App")
+		resetKindStat("Endpoint")
+		resetKindStat("NetworkSecurityPolicy")
+	}
+}
+
+//GetConfigPushStats for debugging
+func (sm *Statemgr) GetConfigPushStats() interface{} {
+	pushStats := &configPushHistogram{}
+	pushStats.KindHistogram = make(map[string]stat)
+	sm.logger.Info("Querying histogram stats....")
+	histStats := hdr.GetStats()
+	sm.logger.Info("Querying histogram stats complete....")
+
+	updateKindStat := func(kind string) {
+		if hstat, ok := histStats[kind]; ok {
+			pushStats.KindHistogram[kind] = stat{MaxMs: hstat.MaxMs,
+				MeanMs: hstat.MeanMs, MinMs: hstat.MinMs}
+		}
+	}
+
+	updateKindStat("App")
+	updateKindStat("Endpoint")
+	updateKindStat("NetworkSecurityPolicy")
+
+	objs := sm.ListObjects("DistributedServiceCard")
+	for _, obj := range objs {
+		snic, err := DistributedServiceCardStateFromObj(obj)
+		if err != nil || !sm.isDscAdmitted(&snic.DistributedServiceCard.DistributedServiceCard) {
+			continue
+		}
+
+		nodeStat, ok := histStats[snic.DistributedServiceCard.Name]
+		if !ok {
+			continue
+		}
+		nodeState := &nodeConfigHistogram{NodeID: snic.DistributedServiceCard.Name,
+			AggrStats: stat{MaxMs: nodeStat.MaxMs,
+				MeanMs: nodeStat.MeanMs, MinMs: nodeStat.MinMs}}
+		nodeState.KindStats = make(map[string]stat)
+		pushStats.NodeConfigHistogram = append(pushStats.NodeConfigHistogram, nodeState)
+
+		updateKindStat := func(kind string) {
+			kind = snic.DistributedServiceCard.Name + "_" + kind
+			if hstat, ok := histStats[kind]; ok {
+				nodeState.KindStats[kind] = stat{MaxMs: hstat.MaxMs,
+					MeanMs: hstat.MeanMs, MinMs: hstat.MinMs}
+			}
+		}
+
+		updateKindStat("App")
+		updateKindStat("Endpoint")
+		updateKindStat("NetworkSecurityPolicy")
+
+	}
+	return pushStats
+}
+
+//GetConfigPushStatus for debugging
+func (sm *Statemgr) GetConfigPushStatus() interface{} {
+	pushStatus := &configPushStatus{}
+	pushStatus.KindObjects = make(map[string]int)
+	objs := sm.ListObjects("DistributedServiceCard")
+	apps, _ := sm.ListApps()
+	pushStatus.KindObjects["App"] = len(apps)
+	eps, _ := sm.ListEndpoints()
+	pushStatus.KindObjects["Endpoint"] = len(eps)
+	policies, _ := sm.ListSgpolicies()
+	pushStatus.KindObjects["SgPolicy"] = len(policies)
+	events := []api.EventType{api.EventType_CreateEvent, api.EventType_DeleteEvent, api.EventType_UpdateEvent}
+	for _, obj := range objs {
+		snic, err := DistributedServiceCardStateFromObj(obj)
+		if err != nil || !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
+			continue
+		}
+
+		nodeState := &nodeStatus{NodeID: snic.DistributedServiceCard.Name}
+		nodeState.KindStatus = make(map[string]*evStatus)
+		pushStatus.NodesStatus = append(pushStatus.NodesStatus, nodeState)
+
+		nodeState.KindStatus["App"] = &evStatus{}
+		nodeState.KindStatus["Endpoint"] = &evStatus{}
+		nodeState.KindStatus["SgPolicy"] = &evStatus{}
+		nodeState.KindStatus["App"].Status = make(map[string]bool)
+		nodeState.KindStatus["Endpoint"].Status = make(map[string]bool)
+		nodeState.KindStatus["SgPolicy"].Status = make(map[string]bool)
+		for _, ev := range events {
+			if !sm.topics.AppTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
+				log.Infof("SmartNic %v, App not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+				nodeState.KindStatus["App"].Status[ev.String()] = false
+			} else {
+				nodeState.KindStatus["App"].Status[ev.String()] = true
+			}
+			if !sm.topics.EndpointTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
+				nodeState.KindStatus["Endpoint"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, Endpoint not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+			} else {
+				nodeState.KindStatus["Endpoint"].Status[ev.String()] = true
+			}
+			if !sm.topics.NetworkSecurityPolicyTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
+				nodeState.KindStatus["SgPolicy"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, SgPolicy not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+			} else {
+				nodeState.KindStatus["SgPolicy"].Status[ev.String()] = true
+			}
+		}
+	}
+	return pushStatus
 }

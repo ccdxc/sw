@@ -474,6 +474,18 @@
       },
       "title": "route watch event"
     },
+    "netprotoRouteEventList": {
+      "type": "object",
+      "properties": {
+        "RouteEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRouteEvent"
+          }
+        }
+      },
+      "title": "route watch events batched"
+    },
     "netprotoRouteList": {
       "type": "object",
       "properties": {

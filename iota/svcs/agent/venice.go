@@ -43,7 +43,7 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 
 	curDir, _ := os.Getwd()
 	defer os.Chdir(curDir)
-	os.Chdir(Common.DstIotaAgentDir)
+	os.Chdir(Common.ImageArtificatsDirectory)
 	venice.logger.Println("Untar image : " + image)
 	untar := []string{"tar", "-xvzf", image}
 	if _, stdout, err := utils.Run(untar, 0, false, false, nil); err != nil {

@@ -20,7 +20,7 @@ var _ = Describe("smartnic tests with venice cluster triggers", func() {
 		ts.tb.AfterTestCommon()
 	})
 
-	Context("Venice node reload tests", func() {
+	Context("tags:type=basic;datapath=false;duration=long Venice node reload tests", func() {
 		It("Should be able to reload venice nodes and cluster should come back to normal state", func() {
 			Skip("Skipping venice reload tests till we debug issues")
 			// reload each host

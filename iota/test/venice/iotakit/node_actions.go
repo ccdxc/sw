@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
-
 // ReloadHosts reloads a host
 func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 	if hc.err != nil {
@@ -28,6 +27,16 @@ func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 	}
 
 	for _, hst := range hc.hosts {
+		nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: hst.iotaNode.Name})
+		hostNames += hst.iotaNode.Name + " "
+	}
+
+	iotaNodes := make(map[string]bool)
+	for _, hst := range hc.fakeHosts {
+		if _, ok := iotaNodes[hst.iotaNode.Name]; ok {
+			continue
+		}
+		iotaNodes[hst.iotaNode.Name] = true
 		nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: hst.iotaNode.Name})
 		hostNames += hst.iotaNode.Name + " "
 	}
@@ -47,8 +56,7 @@ func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
-
-	return nil
+	return act.model.SetUpNaplesAuthenticationOnHosts(hc)
 }
 
 // ReloadVeniceNodes reloads a venice node
@@ -81,6 +89,218 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
+
+	return nil
+}
+
+//DisconnectVeniceNodesFromCluster disconnect venice nodes from cluster.
+func (act *ActionCtx) DisconnectVeniceNodesFromCluster(vnc *VeniceNodeCollection) error {
+
+	trig := act.model.tb.NewTrigger()
+
+	for _, venice := range vnc.nodes {
+
+		if _, ok := act.model.veniceNodesDisconnected[venice.iotaNode.Name]; ok {
+			log.Errorf("Venice node %v alreadt disconnected", venice.iotaNode.Name)
+			continue
+		}
+		for otherNode := range act.model.veniceNodes {
+			if venice.iotaNode.Name == otherNode {
+				continue
+			}
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP", otherNode)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+
+		for otherNode := range act.model.veniceNodesDisconnected {
+			if venice.iotaNode.Name == otherNode {
+				continue
+			}
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP", otherNode)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+	}
+
+	// run the trigger
+	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Error running disonnect command on venice. Err: %v", resp)
+		return fmt.Errorf("Error running disonnect command on venice. Err: %v", resp)
+	}
+
+	for _, cmd := range resp {
+		if cmd.ExitCode != 0 {
+			log.Errorf("Error running disonnect command on venice. Err: %v", cmd)
+			return fmt.Errorf("Error running disonnect command on venice. Err: %v", cmd)
+		}
+	}
+
+	for _, venice := range vnc.nodes {
+		for name, otherNode := range act.model.veniceNodes {
+			if venice.iotaNode.Name == name {
+				act.model.veniceNodesDisconnected[name] = otherNode
+				delete(act.model.veniceNodes, name)
+			}
+		}
+	}
+	return nil
+}
+
+//ConnectVeniceNodesToCluster  reconnect venice nodes to cluster.
+func (act *ActionCtx) ConnectVeniceNodesToCluster(vnc *VeniceNodeCollection) error {
+	trig := act.model.tb.NewTrigger()
+
+	for _, venice := range vnc.nodes {
+		if _, ok := act.model.veniceNodesDisconnected[venice.iotaNode.Name]; !ok {
+			log.Errorf("Venice node %v not disconnected to be connected", venice.iotaNode.Name)
+			continue
+		}
+		for otherNode := range act.model.veniceNodes {
+			if venice.iotaNode.Name == otherNode {
+				continue
+			}
+			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r | xargs -n 1 sudo iptables -D INPUT $1", otherNode)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+
+		//Make sure remove entry disonnected node too.
+		for otherNode := range act.model.veniceNodesDisconnected {
+			if venice.iotaNode.Name == otherNode {
+				continue
+			}
+			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep -w %v | grep -i drop | awk '{print $1}' | sort -n -r | xargs -n 1 sudo iptables -D INPUT $1", otherNode)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+	}
+
+	// run the trigger , iptables should be serial.
+	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Error running disonnect command on venice. Err: %v", resp)
+		//Ignore error as the rule may not be there.
+	}
+
+	for _, cmd := range resp {
+		if cmd.ExitCode != 0 {
+			log.Errorf("Error running connect venice. Err: %v", cmd)
+			return fmt.Errorf("Error running connect venice. Err: %v", cmd)
+		}
+	}
+
+	//Node is back to be connected.
+	for _, venice := range vnc.nodes {
+		for name, otherNode := range act.model.veniceNodesDisconnected {
+			if venice.iotaNode.Name == name {
+				act.model.veniceNodes[name] = otherNode
+				delete(act.model.veniceNodesDisconnected, name)
+			}
+		}
+	}
+	return nil
+}
+
+//DenyVeniceNodesFromNaples denies venice node from list of naples
+func (act *ActionCtx) DenyVeniceNodesFromNaples(vnc *VeniceNodeCollection,
+	naples *NaplesCollection) error {
+
+	trig := act.model.tb.NewTrigger()
+
+	for _, venice := range vnc.nodes {
+
+		for _, n := range naples.nodes {
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			trig.AddCommand(cmd, venice.iotaNode.Name+"_venice", venice.iotaNode.Name)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+		for _, n := range naples.fakeNodes {
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+	}
+
+	// run the trigger
+	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Error running disonnect naples command on venice. Err: %v", resp)
+		return fmt.Errorf("Error running disonnect  naples command on venice. Err: %v", resp)
+	}
+
+	for _, cmd := range resp {
+		if cmd.ExitCode != 0 {
+			log.Errorf("Error running deny on venice for naples . Err: %v", cmd)
+			return fmt.Errorf("Error running deny on venice naples . Err: %v", cmd)
+		}
+	}
+
+	return nil
+}
+
+//AllowVeniceNodesFromNaples allows venice to be connected from naples
+func (act *ActionCtx) AllowVeniceNodesFromNaples(vnc *VeniceNodeCollection,
+	naples *NaplesCollection) error {
+	trig := act.model.tb.NewTrigger()
+
+	for _, venice := range vnc.nodes {
+
+		for _, n := range naples.nodes {
+			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r | xargs -n 1 sudo iptables -D INPUT $1",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+
+		for _, n := range naples.fakeNodes {
+			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r  | xargs -n 1 sudo iptables -D INPUT $1",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+				venice.iotaNode.Name, 3)
+		}
+	}
+
+	// run the trigger should serial as we are modifying ipables.
+	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Error running disonnect command on venice. Err: %v", resp)
+		//Ignore error as the rule may not be there.
+	}
+
+	for _, cmd := range resp {
+		if cmd.ExitCode != 0 {
+			log.Errorf("Error running allow on venice for naples . Err: %v", cmd)
+			return fmt.Errorf("Error running allow on venice naples . Err: %v", cmd)
+		}
+	}
+
+	return nil
+}
+
+// RunCommandOnVeniceNodes runs given command on venice node, not output
+func (act *ActionCtx) RunCommandOnVeniceNodes(vnc *VeniceNodeCollection, cmd string) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
+	trig := act.model.tb.NewTrigger()
+	// add each node
+	for _, node := range vnc.nodes {
+		entity := node.iotaNode.Name + "_venice"
+		trig.AddCommand(cmd, entity, node.iotaNode.Name)
+	}
+
+	// trigger commands
+	_, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to check cmd/etcd service status. Err: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -193,6 +413,10 @@ func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]str
 		return nil, npc.err
 	}
 
+	if len(npc.nodes) == 0 {
+		return nil, nil
+	}
+
 	var stdout []string
 	trig := act.model.tb.NewTrigger()
 
@@ -202,6 +426,81 @@ func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]str
 
 	// run the trigger
 	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Error running command, Err: %v", err)
+		return []string{}, fmt.Errorf("Error running command, Err: %v", err)
+	}
+
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("command failed. %+v", cmdResp)
+			return []string{}, fmt.Errorf("command failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		}
+
+		stdout = append(stdout, cmdResp.Stdout)
+	}
+
+	return stdout, nil
+}
+
+// RunFakeNaplesBackgroundCommand runs the given fake naples command on the collection, return contxt
+func (act *ActionCtx) RunFakeNaplesBackgroundCommand(npc *NaplesCollection, cmd string) (interface{}, error) {
+	if npc.err != nil {
+		return nil, npc.err
+	}
+
+	trig := act.model.tb.NewTrigger()
+
+	for _, naples := range npc.fakeNodes {
+		trig.AddBackgroundCommand(cmd, naples.name, naples.iotaNode.Name)
+	}
+
+	// run the trigger
+	resp, err := trig.RunParallel()
+	if err != nil {
+		log.Errorf("Error running command, Err: %v", err)
+		return []string{}, fmt.Errorf("Error running command, Err: %v", err)
+	}
+
+	return resp, nil
+}
+
+// StopCommands stops commands
+func (act *ActionCtx) StopCommands(cmdCtx interface{}) ([]string, error) {
+
+	trig := act.model.tb.NewTrigger()
+
+	cmd, _ := cmdCtx.([]*iota.Command)
+	resp, _ := trig.StopCommands(cmd)
+
+	var stdout []string
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("command failed. %+v", cmdResp)
+			return []string{}, fmt.Errorf("command failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		}
+
+		stdout = append(stdout, cmdResp.Stdout)
+	}
+
+	return stdout, nil
+}
+
+// RunFakeNaplesCommand runs the given fake naples command on the collection, returns []stdout
+func (act *ActionCtx) RunFakeNaplesCommand(npc *NaplesCollection, cmd string) ([]string, error) {
+	if npc.err != nil {
+		return nil, npc.err
+	}
+
+	var stdout []string
+	trig := act.model.tb.NewTrigger()
+
+	for _, naples := range npc.fakeNodes {
+		trig.AddCommand(cmd, naples.name, naples.iotaNode.Name)
+	}
+
+	// run the trigger
+	resp, err := trig.RunParallel()
 	if err != nil {
 		log.Errorf("Error running command, Err: %v", err)
 		return []string{}, fmt.Errorf("Error running command, Err: %v", err)
@@ -338,7 +637,7 @@ func (act *ActionCtx) VeniceNodeLoggedInCtx(vnc *VeniceNodeCollection) error {
 	}
 
 	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
-	_, err := act.model.tb.VeniceNodeLoggedInCtx(nodeURL)
+	_, err := act.model.VeniceNodeLoggedInCtx(nodeURL)
 	if err != nil {
 		log.Errorf("error logging in to venice node (%s): %v", nodeURL, err)
 		return fmt.Errorf("error logging in to venice node (%s): %v", nodeURL, err)
@@ -353,11 +652,11 @@ func (act *ActionCtx) VeniceNodeGetCluster(vnc *VeniceNodeCollection) error {
 	}
 
 	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
-	restcl, err := act.model.tb.VeniceNodeRestClient(nodeURL)
+	restcl, err := act.model.VeniceNodeRestClient(nodeURL)
 	if err != nil {
 		return err
 	}
-	_, err = act.model.tb.GetClusterWithRestClient(restcl)
+	_, err = act.model.GetClusterWithRestClient(restcl)
 	if err != nil {
 		log.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
 		return fmt.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
@@ -388,6 +687,7 @@ func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime 
 		}
 	}
 
+	log.Infof("Flapping number of ports %v", switchMsg.DataSwitches[0].Ports)
 	switchMsg.Op = iota.SwitchOp_SHUT_PORTS
 
 	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
@@ -398,9 +698,9 @@ func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime 
 		return fmt.Errorf("Failed to shut ports  API Status: %+v | Err: %v", switchResp.ApiResponse, err)
 	}
 
-	log.Debugf("Got switch port shut resp: %+v", switchResp)
+	log.Infof("Got switch port shut resp: %+v", switchResp)
 
-	time.Sleep(downTime * time.Second)
+	time.Sleep(downTime)
 
 	switchMsg.Op = iota.SwitchOp_NO_SHUT_PORTS
 
@@ -413,6 +713,24 @@ func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime 
 	}
 
 	log.Debugf("Got switch port not shut resp: %+v", switchResp)
+
+	return nil
+}
+
+// FlapDataSwitchPortsPeriodically until context is cancelled or timeout
+func (act *ActionCtx) FlapDataSwitchPortsPeriodically(ctx context.Context, ports *SwitchPortCollection,
+	downTime time.Duration, flapInterval time.Duration, flapCount int) error {
+
+	for i := 0; i < int(flapCount); i++ {
+		//if cancelled
+		act.FlapDataSwitchPorts(ports, downTime)
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			time.Sleep(time.Duration(flapInterval))
+		}
+	}
 
 	return nil
 }
@@ -442,12 +760,77 @@ func (act *ActionCtx) RemoveAddNaples(naples *NaplesCollection) error {
 // FlapMgmtLinkNaples flap mgmt link for naples
 func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
 
-	cmd := "ifconfig oob_mnic0 down && sleep 300 ifconfig oob_mnic0 up && dhclient oob_mnic0"
+	cmd := "ifconfig oob_mnic0 down && sleep 300 && ifconfig oob_mnic0 up && dhclient oob_mnic0"
 	stdout, err := act.RunNaplesCommand(naples, cmd)
 	if err != nil {
 		log.Errorf("Failed to flap mgmt link node %v :%v", err, stdout)
 		return err
 	}
+
+	cmd = "ifconfig eth0 down && ifconfig eth1 down && sleep 600 && ifconfig eth0 up"
+	stdout, err = act.RunFakeNaplesCommand(naples, cmd)
+	if err != nil {
+		log.Errorf("Failed to flap mgmt link node %v :%v", err, stdout)
+		return err
+	}
+
+	return nil
+}
+
+// StartEventsGenOnNaples starts event loop on naples
+//For now only fake naples
+func (act *ActionCtx) StartEventsGenOnNaples(naples *NaplesCollection, rate, count string) error {
+
+	//Start events.
+	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
+		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/gen_events -r %v -t %v -s \"scale-testing\"",
+			rate, count)
+		act.model.Action().RunFakeNaplesBackgroundCommand(nc, cmd)
+		return nil
+	})
+
+	return nil
+}
+
+// StopEventsGenOnNaples starts event loop on naples
+//For now only fake naples
+func (act *ActionCtx) StopEventsGenOnNaples(naples *NaplesCollection) error {
+
+	//stop events.
+	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
+		act.model.Action().RunFakeNaplesBackgroundCommand(nc,
+			"pkill -9 gen_events")
+		return nil
+	})
+
+	return nil
+}
+
+// StartFWLogGenOnNaples starts fwlog gen loop on naples
+//For now only fake naples
+func (act *ActionCtx) StartFWLogGenOnNaples(naples *NaplesCollection, rate, count string) error {
+
+	//Start events.
+	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
+		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/fwloggen -metrics -rate %v -num  %v",
+			rate, count)
+		act.model.Action().RunFakeNaplesBackgroundCommand(nc, cmd)
+		return nil
+	})
+
+	return nil
+}
+
+// StopFWLogGenOnNaples stops fwlog gen on naples
+//For now only fake naples
+func (act *ActionCtx) StopFWLogGenOnNaples(naples *NaplesCollection) error {
+
+	//stop events.
+	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
+		act.model.Action().RunFakeNaplesBackgroundCommand(nc,
+			"pkill -9 fwloggen")
+		return nil
+	})
 
 	return nil
 }

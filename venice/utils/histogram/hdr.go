@@ -42,6 +42,17 @@ func (m *HistMap) Record(name string, d time.Duration) {
 	}
 }
 
+//Reset to original state
+func (m *HistMap) Reset(name string) {
+	//Remove the record
+	if h, ok := m.histmap.Load(name); ok {
+		sh := h.(*safeHistogram)
+		sh.Lock()
+		sh.Reset()
+		sh.Unlock()
+	}
+}
+
 func (m *HistMap) sprintone(key string, h *safeHistogram) string {
 	c, _ := m.histcount.Load(key)
 	cnt := c.(*uint64)
@@ -127,6 +138,11 @@ var defHistMap HistMap
 // Record records an measurement in the <name> histogram
 func Record(name string, d time.Duration) {
 	defHistMap.Record(name, d)
+}
+
+// Reset stat
+func Reset(name string) {
+	defHistMap.Reset(name)
 }
 
 // PrintAll prints all the hdrs in default histmap

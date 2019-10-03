@@ -3,13 +3,17 @@
 package firewall_test
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("firewall ALG tests", func() {
+	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
+		startTime = time.Now().UTC()
 		Eventually(func() error {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
@@ -19,6 +23,8 @@ var _ = Describe("firewall ALG tests", func() {
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.NetworkSecurityPolicy("test-policy").Delete()
@@ -27,8 +33,8 @@ var _ = Describe("firewall ALG tests", func() {
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
-	Context("ALG tests", func() {
-		It("Should be able to FTP get with FTP ALG policy", func() {
+	Context("tags:type=basic;datapath=true;duration=short  ALG tests", func() {
+		It("tags:sanity=true Should be able to FTP get with FTP ALG policy", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling FTP ALG test on naples sim till traffic issue is debugged")
 			}

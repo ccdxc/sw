@@ -493,6 +493,18 @@
       },
       "title": "TCPProxywatch event"
     },
+    "netprotoTCPProxyEventList": {
+      "type": "object",
+      "properties": {
+        "TCPProxyEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoTCPProxyEvent"
+          }
+        }
+      },
+      "title": "tcp-proxy watch events batched"
+    },
     "netprotoTCPProxyPolicy": {
       "type": "object",
       "properties": {

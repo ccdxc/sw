@@ -782,6 +782,18 @@
       },
       "title": "IPSecSADecrypt watch event"
     },
+    "netprotoIPSecSADecryptEventList": {
+      "type": "object",
+      "properties": {
+        "IPSecSADecryptEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPSecSADecryptEvent"
+          }
+        }
+      },
+      "title": "ipsec watch events batched"
+    },
     "netprotoIPSecSADecryptList": {
       "type": "object",
       "properties": {
@@ -931,18 +943,6 @@
         }
       },
       "title": "IPSecSAEncrypt object"
-    },
-    "netprotoIPSecSAEncryptEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "ipsec-sa-encrypt": {
-          "$ref": "#/definitions/netprotoIPSecSAEncrypt"
-        }
-      },
-      "title": "IPSecSAEncrypt watch event"
     },
     "netprotoIPSecSAEncryptList": {
       "type": "object",

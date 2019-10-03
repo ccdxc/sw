@@ -32,7 +32,7 @@ var _ = Describe("firewall scale tests", func() {
 		ts.tb.AfterTestCommon()
 	})
 
-	Context("Scale TCP connections tests", func() {
+	Context("tags:type=basic;datapath=true;duration=long Scale TCP connections tests", func() {
 		It("Should establish bulk TCP session between allowed workloads in scale config", func() {
 			log.Infof("scaleData = %v hasNaples = %v", ts.scaleData, ts.tb.HasNaplesSim())
 			if !ts.scaleData || ts.tb.HasNaplesSim() {
@@ -40,7 +40,7 @@ var _ = Describe("firewall scale tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "8000")).ShouldNot(HaveOccurred())
+			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "0")).ShouldNot(HaveOccurred())
 
 		})
 
@@ -51,7 +51,7 @@ var _ = Describe("firewall scale tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "8000")).Should(HaveOccurred())
+			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "0")).Should(HaveOccurred())
 
 		})
 	})

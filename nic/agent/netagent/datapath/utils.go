@@ -3,17 +3,25 @@ package datapath
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
+	"os/exec"
 	"strings"
 	"sync"
 
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	naplesHwUUIDFile = "/tmp/fru.json"
 )
 
 // objectKey returns object key from meta
@@ -642,9 +650,15 @@ func (hd *Datapath) parseProtocolPort(protoPort string) (protocol, port string, 
 	return
 }
 
-func (hd *Datapath) generateMockUUID() (string, error) {
+func (hd *Datapath) getDefaultUUID() (string, error) {
+
+	hwUUID, err := hd.getHwUUID()
+	if err == nil {
+		return hwUUID, nil
+	}
+
 	b := make([]byte, 8)
-	_, err := rand.Read(b)
+	_, err = rand.Read(b)
 	if err != nil {
 		return "", err
 	}
@@ -655,4 +669,23 @@ func (hd *Datapath) generateMockUUID() (string, error) {
 
 	return fakeMAC, nil
 
+}
+
+func (hd *Datapath) getHwUUID() (uuid string, err error) {
+
+	out, err := exec.Command("/bin/bash", "-c", "cat "+naplesHwUUIDFile).Output()
+	if err != nil {
+		return "", err
+	}
+
+	var deviceJSON map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &deviceJSON); err != nil {
+		return "", errors.Errorf("Error reading %s file", naplesHwUUIDFile)
+	}
+
+	if val, ok := deviceJSON["mac-address"]; ok {
+		return val.(string), nil
+	}
+
+	return "", errors.Errorf("Mac address not present in  %s file", naplesHwUUIDFile)
 }

@@ -25,7 +25,7 @@ service TCPProxyPolicyApi {
 
     rpc GetTCPProxyPolicy(api.ObjectMeta) returns (TCPProxyPolicy) {};
     rpc ListTCPProxyPolicies (api.ObjectMeta) returns (TCPProxyPolicyList) {};
-    rpc WatchTCPProxyPolicies (api.ObjectMeta) returns (stream TCPProxyEvent) {};
+    rpc WatchTCPProxyPolicies (api.ObjectMeta) returns (stream TCPProxyEventList) {};
 }
 
 // TCP Proxy Policy object
@@ -77,4 +77,10 @@ message TCPProxyPolicyList {
 message TCPProxyEvent {
     api.EventType EventType         = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     TCPProxyPolicy TCPProxyPolicy   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tcp-proxy-policy,omitempty"];
+}
+
+
+// tcp-proxy watch events batched
+message TCPProxyEventList {
+    repeated TCPProxyEvent TCPProxyEvents  = 1;
 }

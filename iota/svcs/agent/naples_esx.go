@@ -211,7 +211,7 @@ func (node *esxHwNode) getDataIntfs() ([]string, error) {
 		return nil, err
 	}
 	fullCmd := []string{cmd}
-	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, false, true)
+	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, 0, false, true)
 	node.logger.Printf("naples data intf find out %s", cmdResp.Stdout)
 	node.logger.Printf("naples data intf find err %s", cmdResp.Stderr)
 	node.logger.Printf("naples data intf find  exit code %d", cmdResp.ExitCode)

@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type SecurityProfileReactor interface {
 	UpdateSecurityProfile(securityprofileObj *netproto.SecurityProfile) error   // updates an SecurityProfile
 	DeleteSecurityProfile(securityprofileObj, ns, name string) error            // deletes an SecurityProfile
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type SecurityProfileOStream struct {
+	sync.Mutex
+	stream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient
 }
 
 // WatchSecurityProfiles runs SecurityProfile watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	}
 
 	// start oper update stream
-	ostream, err := securityprofileRPCClient.SecurityProfileOperUpdate(ctx)
+	opStream, err := securityprofileRPCClient.SecurityProfileOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting SecurityProfile oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &SecurityProfileOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.SecurityProfileEvent) {
+			client.debugStats.AddInt("SecurityProfileWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile.ObjectMeta)
+			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
+			go client.processSecurityProfileEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("SecurityProfile Watch channel closed. Exisint SecurityProfileWatch")
 				return
 			}
-			client.debugStats.AddInt("SecurityProfileWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got SecurityProfile watch event: Type: {%+v} SecurityProfile:{%+v}", client.clientName, evt.EventType, evt.SecurityProfile.ObjectMeta)
-
-			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-			go client.processSecurityProfileEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("SecurityProfile Watch channel closed. Exisint SecurityProfileWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchSecurityProfileRecvLoop(stream netproto.Securit
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting SecurityProfile watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.SecurityProfileEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffSecurityProfile diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor, ostream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient) {
+func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor, ostream *SecurityProfileOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SecurityProfile)
 	for _, obj := range objList.SecurityProfiles {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 	// add/update all new objects
 	for _, obj := range objList.SecurityProfiles {
 		evt := netproto.SecurityProfileEvent{
-			EventType:       api.EventType_CreateEvent,
+			EventType:       api.EventType_UpdateEvent,
 			SecurityProfile: *obj,
 		}
 		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 }
 
 // processSecurityProfileEvent handles SecurityProfile event
-func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor, ostream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient) {
+func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor, ostream *SecurityProfileOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.SecurityProfile.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send SecurityProfile oper Status, %s", err)
 				client.debugStats.AddInt("SecurityProfileOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("SecurityProfileOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

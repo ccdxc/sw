@@ -45,6 +45,10 @@ func Test_Copier(t *testing.T) {
 		log.Fatalf("Copy to failed : %v", err.Error())
 	}
 
+	if err := copier.CopyTo("127.0.0.1:22", "/tmp", tmpFiles); err != nil {
+		log.Fatalf("Copy to failed : %v", err.Error())
+	}
+
 	//Remove those files
 	for _, file := range tmpFiles {
 		os.Remove(file)

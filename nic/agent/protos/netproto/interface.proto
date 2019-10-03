@@ -28,7 +28,7 @@ service InterfaceApi {
     rpc GetInterface (api.ObjectMeta) returns (Interface) {};
     rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
     rpc DeleteInterface (Interface) returns (Interface) {};
-    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEvent) {};
+    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEventList) {};
     rpc UpdateInterface (Interface) returns (Interface) {};
     rpc InterfaceOperUpdate (stream InterfaceEvent) returns (api.TypeMeta) {};
 
@@ -91,3 +91,7 @@ message InterfaceEvent {
     Interface       Interface   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "interface,omitempty"];
 }
 
+// interface watch events batched
+message InterfaceEventList {
+    repeated InterfaceEvent InterfaceEvents  = 1;
+}

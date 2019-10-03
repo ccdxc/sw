@@ -369,3 +369,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/go-logfmt/logfmt"
   version = "0.3.0"
 
+
+[[constraint]]
+  name = "github.com/olekukonko/tablewriter"
+  version = "0.0.1"

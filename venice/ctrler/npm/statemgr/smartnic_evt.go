@@ -62,19 +62,29 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
+			policy.NetworkSecurityPolicy.Lock()
 			if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
 				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
+				policy.NetworkSecurityPolicy.Lock()
+				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
+				policy.NetworkSecurityPolicy.Unlock()
 				sm.PeriodicUpdaterPush(policy)
 			}
+			policy.NetworkSecurityPolicy.Unlock()
 		}
 
 		// Update FirewallProfiles
 		fwprofiles, _ := sm.ListFirewallProfiles()
 		for _, fwprofile := range fwprofiles {
+			fwprofile.FirewallProfile.Lock()
 			if _, ok := fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
 				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
+				fwprofile.FirewallProfile.Lock()
+				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
+				fwprofile.FirewallProfile.Unlock()
 				sm.PeriodicUpdaterPush(fwprofile)
 			}
+			fwprofile.FirewallProfile.Unlock()
 		}
 	}
 
@@ -126,6 +136,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
+		policy.NetworkSecurityPolicy.Lock()
 		if sm.isDscAdmitted(nsnic) {
 			if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
 				policy.NodeVersions[nsnic.Name] = ""
@@ -138,12 +149,14 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 				sm.PeriodicUpdaterPush(policy)
 			}
 		}
+		policy.NetworkSecurityPolicy.Unlock()
 	}
 
 	// update firewall profiles
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
 		if sm.isDscAdmitted(nsnic) {
+			fwprofile.FirewallProfile.Lock()
 			if _, ok := fwprofile.NodeVersions[nsnic.Name]; ok == false {
 				fwprofile.NodeVersions[nsnic.Name] = ""
 				sm.PeriodicUpdaterPush(fwprofile)
@@ -154,7 +167,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 					sm.PeriodicUpdaterPush(fwprofile)
 				}
 			}
-
+			fwprofile.FirewallProfile.Unlock()
 		}
 	}
 
@@ -175,20 +188,24 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
+		policy.NetworkSecurityPolicy.Lock()
 		_, ok := policy.NodeVersions[hs.DistributedServiceCard.Name]
 		if ok {
 			delete(policy.NodeVersions, hs.DistributedServiceCard.Name)
 			sm.PeriodicUpdaterPush(policy)
 		}
+		policy.NetworkSecurityPolicy.Unlock()
 	}
 
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
+		fwprofile.FirewallProfile.Lock()
 		_, ok := fwprofile.NodeVersions[hs.DistributedServiceCard.Name]
 		if ok {
 			delete(fwprofile.NodeVersions, hs.DistributedServiceCard.Name)
 			sm.PeriodicUpdaterPush(fwprofile)
 		}
+		fwprofile.FirewallProfile.Unlock()
 	}
 
 	// walk all hosts and see if they need to be dis-associated to this snic

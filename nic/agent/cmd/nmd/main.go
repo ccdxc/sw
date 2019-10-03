@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/pipeline"
 	"github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -29,6 +30,7 @@ func main() {
 		updInterval     = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		oobInterface    = flag.String("oob-interface", "", "naples oob interface")
 		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
 		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
 	)
@@ -95,6 +97,9 @@ func main() {
 	// init sysmgr
 	p.InitSysmgr()
 
+	if *oobInterface != "" {
+		ipif.NaplesOOBInterface = *oobInterface
+	}
 	nm, err := nmd.NewAgent(p,
 		*nmdDbPath,
 		globals.Localhost+":"+globals.NmdRESTPort,

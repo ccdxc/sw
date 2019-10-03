@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type SecurityGroupReactor interface {
 	UpdateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // updates an SecurityGroup
 	DeleteSecurityGroup(securitygroupObj, ns, name string) error            // deletes an SecurityGroup
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type SecurityGroupOStream struct {
+	sync.Mutex
+	stream netproto.SecurityGroupApi_SecurityGroupOperUpdateClient
 }
 
 // WatchSecurityGroups runs SecurityGroup watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 	}
 
 	// start oper update stream
-	ostream, err := securitygroupRPCClient.SecurityGroupOperUpdate(ctx)
+	opStream, err := securitygroupRPCClient.SecurityGroupOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting SecurityGroup oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &SecurityGroupOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.SecurityGroupEvent) {
+			client.debugStats.AddInt("SecurityGroupWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got SecurityGroup watch event: Type: {%+v} SecurityGroup:{%+v}", client.clientName, evt.EventType, evt.SecurityGroup.ObjectMeta)
+			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
+			go client.processSecurityGroupEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("SecurityGroup Watch channel closed. Exisint SecurityGroupWatch")
 				return
 			}
-			client.debugStats.AddInt("SecurityGroupWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got SecurityGroup watch event: Type: {%+v} SecurityGroup:{%+v}", client.clientName, evt.EventType, evt.SecurityGroup.ObjectMeta)
-
-			client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
-			go client.processSecurityGroupEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("SecurityGroup Watch channel closed. Exisint SecurityGroupWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchSecurityGroupRecvLoop(stream netproto.SecurityG
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting SecurityGroup watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.SecurityGroupEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffSecurityGroup diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupList, reactor SecurityGroupReactor, ostream netproto.SecurityGroupApi_SecurityGroupOperUpdateClient) {
+func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupList, reactor SecurityGroupReactor, ostream *SecurityGroupOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SecurityGroup)
 	for _, obj := range objList.SecurityGroups {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupLi
 	// add/update all new objects
 	for _, obj := range objList.SecurityGroups {
 		evt := netproto.SecurityGroupEvent{
-			EventType:     api.EventType_CreateEvent,
+			EventType:     api.EventType_UpdateEvent,
 			SecurityGroup: *obj,
 		}
 		client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupLi
 }
 
 // processSecurityGroupEvent handles SecurityGroup event
-func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroupEvent, reactor SecurityGroupReactor, ostream netproto.SecurityGroupApi_SecurityGroupOperUpdateClient) {
+func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroupEvent, reactor SecurityGroupReactor, ostream *SecurityGroupOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.SecurityGroup.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send SecurityGroup oper Status, %s", err)
 				client.debugStats.AddInt("SecurityGroupOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("SecurityGroupOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

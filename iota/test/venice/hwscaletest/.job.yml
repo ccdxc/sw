@@ -6,7 +6,7 @@ image:
 
 queue: builder
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal + vm test case
  e2e-venice-scalenaples:
@@ -17,8 +17,8 @@ e2e-targets:
    sub-area:
    feature:
    clusters:
-     - image: build-160
-       count: 1
+     - image: build-186
+       count: 3
        resources:
          cpus: 12
          memory: 32

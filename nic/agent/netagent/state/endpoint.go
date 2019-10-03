@@ -287,6 +287,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// check if endpoint contents are same
+	//if oldEp.ObjectMeta.ResourceVersion == ep.ObjectMeta.ResourceVersion {
 	if proto.Equal(&oldEp.Spec, &ep.Spec) {
 		log.Info("Nothing to update")
 		return nil

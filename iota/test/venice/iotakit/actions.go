@@ -3,6 +3,7 @@
 package iotakit
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,6 +22,11 @@ func (sm *SysModel) Action() *ActionCtx {
 	return &ActionCtx{model: sm}
 }
 
+//StartConsoleLogging start naples logging
+func (act *ActionCtx) StartConsoleLogging() error {
+	return act.model.tb.startNaplesConsoleLogging()
+}
+
 // VerifyClusterStatus verifies venice cluster status
 func (act *ActionCtx) VerifyClusterStatus() error {
 	log.Infof("Verifying cluster health..")
@@ -33,7 +39,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 	}
 
 	// check venice cluster status
-	cl, err := act.model.tb.GetCluster()
+	cl, err := act.model.GetCluster()
 	if err != nil {
 		log.Errorf("Could not get Venice cluster state: %v", err)
 		return err
@@ -66,7 +72,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 	// verify each venice node status
 	for _, node := range act.model.veniceNodes {
-		vn, err := act.model.tb.GetVeniceNode(node.iotaNode.IpAddress)
+		vn, err := act.model.GetVeniceNode(node.iotaNode.IpAddress)
 		if err != nil {
 			log.Errorf("Error getting venice node %s. Err: %v", node.iotaNode.IpAddress, err)
 			return err
@@ -89,7 +95,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 	// verify each naples health
 	for _, np := range act.model.naples {
 		// check naples status
-		err = act.model.tb.CheckNaplesHealth(np)
+		err = act.model.CheckNaplesHealth(np)
 		if err != nil {
 			log.Errorf("Naples health check failed. Err: %v", err)
 			return err
@@ -101,7 +107,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		}
 
 		// check smartnic status in Venice
-		snic, err := act.model.tb.GetSmartNICByName(np.iotaNode.Name)
+		snic, err := act.model.GetSmartNICByName(np.iotaNode.Name)
 		if err != nil {
 			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.iotaNode.Name, err)
 			log.Errorf("%v", err)
@@ -129,7 +135,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 	}
 
 	// check venice service status
-	_, err = act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
+	_, err = act.model.CheckVeniceServiceStatus(cl.Status.Leader)
 	if err != nil {
 		return err
 	}
@@ -147,12 +153,12 @@ func (act *ActionCtx) GetVeniceServices() (string, error) {
 	}
 
 	// check venice cluster status
-	cl, err := act.model.tb.GetCluster()
+	cl, err := act.model.GetCluster()
 	if err != nil {
 		log.Errorf("Could not get Venice cluster state: %v", err)
 		return "", err
 	}
-	return act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
+	return act.model.CheckVeniceServiceStatus(cl.Status.Leader)
 }
 
 // VerifyPolicyStatus verifies SG policy status
@@ -165,7 +171,7 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *NetworkSecurityPolicyCollection) e
 	}
 
 	for _, pol := range spc.policies {
-		pstat, err := act.model.tb.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
+		pstat, err := act.model.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
 		if err != nil {
 			log.Errorf("Error getting SG policy %+v. Err: %v", pol.venicePolicy.ObjectMeta, err)
 			return err
@@ -192,7 +198,7 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	err := act.VerifyClusterStatus()
 	if err != nil {
 		if collectLogOnErr {
-			act.model.tb.CollectLogs()
+			act.model.CollectLogs()
 		}
 		return err
 	}
@@ -201,8 +207,24 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	err = act.VerifyWorkloadStatus(act.model.Workloads())
 	if err != nil {
 		if collectLogOnErr {
-			act.model.tb.CollectLogs()
+			act.model.CollectLogs()
 		}
+		return err
+	}
+
+	//Verify Config is in sync
+
+	for i := 0; i < numRetries; i++ {
+		var done bool
+		done, err = act.model.IsConfigPushComplete()
+		if done && err == nil {
+			break
+		}
+		time.Sleep(5 * time.Second)
+
+		err = errors.New("Config push incomplete")
+	}
+	if err != nil {
 		return err
 	}
 
@@ -216,7 +238,7 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	}
 	if err != nil {
 		if collectLogOnErr {
-			act.model.tb.CollectLogs()
+			act.model.CollectLogs()
 		}
 		return err
 	}
@@ -230,7 +252,7 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	}
 	if err != nil {
 		if collectLogOnErr {
-			act.model.tb.CollectLogs()
+			act.model.CollectLogs()
 		}
 		return err
 	}

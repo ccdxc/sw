@@ -34,7 +34,7 @@ def Setup(tc):
         tc.skip = True
 
     wloads = set()
-    for w1, w2 in tc.workload_pairs:
+    for w1, w2, port in tc.workload_pairs:
         wloads.add(w1)
         wloads.add(w2)
 
@@ -68,9 +68,29 @@ def Trigger(tc):
     serverReq = api.Trigger_CreateAllParallelCommandsRequest()
     clientArp = defaultdict(lambda : {})
 
+    sip_dip_cache = dict()
+    server_key_cache = dict()
+    def __sip_dip_key(sip, dip):
+        return  sip + ":" + dip
+
+    def __server_key(server_ip, port):
+        return  server_ip + ":" + str(port)
+
     for idx, pairs in enumerate(tc.workload_pairs):
         client = pairs[0]
         server = pairs[1]
+        port = None
+        try:
+            port = int(pairs[2])
+        except:
+            port = api.AllocateTcpPort()
+
+        server_key = __server_key(server.ip_address, port)
+        sip_dip_key = __sip_dip_key(client.ip_address, server.ip_address)
+        if sip_dip_key  in sip_dip_cache:
+            #Already added, ignore for this workload pair
+            continue
+        sip_dip_cache[sip_dip_key] = True
 
         cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                        (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
@@ -78,11 +98,6 @@ def Trigger(tc):
         num_sessions = int(getattr(tc.args, "num_sessions", 1))
         api.Logger.info("Starting Fuz test from %s num-sessions %d" % (cmd_descr, num_sessions))
 
-        serverCmd = None
-
-
-        port = api.AllocateTcpPort()
-        tc.serverCmds.append(serverCmd)
 
         fuzClient = fuzClients.get(client.workload_name, None)
         if not fuzClient:
@@ -91,20 +106,23 @@ def Trigger(tc):
 
         fuzClient.AddServer(server.ip_address, port)
 
-        #Combine baremetal workloads
-        if api.IsBareMetalWorkloadType(server.node_name):
-            fuzServer = fuzServers.get(server.node_name, None)
-            if not fuzServer:
-                fuzServer = FuzContext(server.workload_name, server.interface, server.node_name)
-                fuzServers[server.node_name] = fuzServer
+        #Just start once instance of server for the combination
+        if server_key not in server_key_cache:
+            server_key_cache[server_key] = True
+            #Combine baremetal workloads
+            if api.IsBareMetalWorkloadType(server.node_name):
+                fuzServer = fuzServers.get(server.node_name, None)
+                if not fuzServer:
+                    fuzServer = FuzContext(server.workload_name, server.interface, server.node_name)
+                    fuzServers[server.node_name] = fuzServer
+                else:
+                    fuzServer.AddInterface(server.interface)
+                fuzServer.AddServer(server.ip_address, port)
             else:
-                fuzServer.AddInterface(server.interface)
-            fuzServer.AddServer(server.ip_address, port)
-        else:
-            serverCmd = FUZ_EXEC[server.workload_name]  + " -port " + str(port)
-            api.Trigger_AddCommand(serverReq, server.node_name, server.workload_name,
-                                   serverCmd, background = True,
-                                   stdout_on_err = True, stderr_on_err = True)
+                serverCmd = FUZ_EXEC[server.workload_name]  + " -port " + str(port)
+                api.Trigger_AddCommand(serverReq, server.node_name, server.workload_name,
+                                       serverCmd, background = True,
+                                       stdout_on_err = True, stderr_on_err = True)
 
         #For now add static arp
         if api.IsBareMetalWorkloadType(client.node_name):

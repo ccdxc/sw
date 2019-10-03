@@ -173,91 +173,112 @@ def UpdateTestBedVlans(objects):
         obj.spec.vlan_id = vlan
 
 __config_pushed = False
-def PushBaseConfig(ignore_error = True):
+def PushBaseConfig(ignore_error = True, kinds=None):
     api.Testbed_ResetVlanAlloc()
     vlan = api.Testbed_AllocateVlan()
     api.Logger.info("Ignoring first vlan as it is native ", vlan)
-    objects = QueryConfigs(kind='Namespace')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Network')
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    UpdateTestBedVlans(objects)
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Endpoint')
-    UpdateNodeUuidEndpoints(objects)
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='App')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='NetworkSecurityPolicy')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='SecurityProfile')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    # objects = QueryConfigs(kind='Tunnel')
-    # ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    # if not ignore_error and ret != api.types.status.SUCCESS:
-    #     return api.types.status.FAILURE
-    objects = QueryConfigs(kind='MirrorSession')
-    ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    #objects = QueryConfigs(kind='FlowExportPolicy')
-    #ret = PushConfigObjects(objects, ignore_error=ignore_error)
-    #if not ignore_error and ret != api.types.status.SUCCESS:
-    #    return api.types.status.FAILURE
+    if not kinds or 'Namespace' in kinds:
+        objects = QueryConfigs(kind='Namespace')
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Network' in kinds:
+        objects = QueryConfigs(kind='Network')
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        UpdateTestBedVlans(objects)
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Endpoint' in kinds:
+        objects = QueryConfigs(kind='Endpoint')
+        UpdateNodeUuidEndpoints(objects)
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'App' in kinds:
+        objects = QueryConfigs(kind='App')
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'NetworkSecurityPolicy' in kinds:
+        objects = QueryConfigs(kind='NetworkSecurityPolicy')
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'SecurityProfile' in kinds:
+        objects = QueryConfigs(kind='SecurityProfile')
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Tunnel' in kinds:
+        objects = QueryConfigs(kind='Tunnel')
+        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'MirrorSession' in kinds:
+        objects = QueryConfigs(kind='MirrorSession')
+        if objects:
+            ret = PushConfigObjects(objects, ignore_error=ignore_error)
+            if not ignore_error and ret != api.types.status.SUCCESS:
+                return api.types.status.FAILURE
+    #if not kinds or 'FlowExportPolicy' in kinds:
+    #    objects = QueryConfigs(kind='FlowExportPolicy')
+    #    if objects:
+    #        ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    #        if not ignore_error and ret != api.types.status.SUCCESS:
+    #            return api.types.status.FAILURE
     global __config_pushed
     __config_pushed = True
     return api.types.status.SUCCESS
 
-def DeleteBaseConfig(ignore_error = True):
-    objects = QueryConfigs(kind='SecurityProfile')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='FlowExportPolicy')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='NetworkSecurityPolicy')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='App')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='MirrorSession')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Tunnel')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Endpoint')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Network')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    objects = QueryConfigs(kind='Namespace')
-    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-    if not ignore_error and ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
+def DeleteBaseConfig(ignore_error = True, kinds=None):
+
+    if not kinds or 'SecurityProfile' in kinds:
+        objects = QueryConfigs(kind='SecurityProfile')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'FlowExportPolicy' in kinds:
+        objects = QueryConfigs(kind='FlowExportPolicy')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'NetworkSecurityPolicy' in kinds:
+        objects = QueryConfigs(kind='NetworkSecurityPolicy')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'App' in kinds:
+        objects = QueryConfigs(kind='App')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'MirrorSession' in kinds:
+        objects = QueryConfigs(kind='MirrorSession')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Tunnel' in kinds:
+        objects = QueryConfigs(kind='Tunnel')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Endpoint' in kinds:
+        objects = QueryConfigs(kind='Endpoint')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Network' in kinds:
+        objects = QueryConfigs(kind='Network')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if not kinds or 'Namespace' in kinds:
+        objects = QueryConfigs(kind='Namespace')
+        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 
@@ -320,31 +341,31 @@ def __wl_pair_type_matched(wl_pair, match):
 
     return True
 
-def __sip_dip_key(sip, dip):
-    return sip + ":" + dip
+def __sip_dip_key(sip, dip, port):
+    return sip + ":" + dip + ":" + port
 
-def __sip_dip_in_match_cache(sip, dip, match_cache):
+def __sip_dip_in_match_cache(sip, dip, port, match_cache):
     for _, sip_dip_keys in match_cache.items():
-        if __sip_dip_key(sip, dip) in sip_dip_keys:
+        if __sip_dip_key(sip, dip, port) in sip_dip_keys:
             return True
     return False
 
-def __add_sip_dip_to_match_cache(action, sip, dip, match_cache):
-    match_cache[action][__sip_dip_key(sip, dip)] = True
+def __add_sip_dip_to_match_cache(action, sip, dip, port, match_cache):
+    match_cache[action][__sip_dip_key(sip, dip, port)] = True
 
-def __get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache):
+def __get_wl_pairs_of_rule(rule, port, action, wl_pair_type, match_cache):
     wl_pairs = []
     for sip in rule.source.addresses:
         src = __findWorkloadsByIP(sip)
         if src:
             for dip in rule.destination.addresses:
                 #Check if this combo already matched in our cache
-                if sip == dip or __sip_dip_in_match_cache(sip, dip, match_cache):
+                if sip == dip or __sip_dip_in_match_cache(sip, dip, port, match_cache):
                     continue
                 dst = __findWorkloadsByIP(dip)
                 if dst and __wl_pair_type_matched((src,dst), wl_pair_type):
-                    wl_pairs.append((src,dst))
-                    __add_sip_dip_to_match_cache(action, sip, dip, match_cache)
+                    wl_pairs.append((src,dst,port))
+                    __add_sip_dip_to_match_cache(action, sip, dip, port, match_cache)
     return wl_pairs
 
 
@@ -368,7 +389,7 @@ def __GetAppWorkloadWorkloadPairs(afilter, action, wl_pair_type):
         for rule in p_object.spec.policy_rules:
             if (getattr(rule, "app_name", None) == ping_app_name and rule.action == action
                 and getattr(rule, "source", None) and getattr(rule, "destination", None)):
-                wl_pairs.extend(__get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache))
+                wl_pairs.extend(__get_wl_pairs_of_rule(rule, None, action, wl_pair_type, match_cache))
 
 
     return wl_pairs
@@ -396,8 +417,8 @@ def __getWorkloadPairsBy(protocol, port, action, wl_pair_type=WORKLOAD_PAIR_TYPE
                 continue
             for app_config in app_configs:
                 if  app_config.protocol == protocol and \
-                    app_config.port == port and getattr(rule, "source", None):
-                    wl_pairs.extend(__get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache))
+                    (port == None or app_config.port == port) and getattr(rule, "source", None):
+                    wl_pairs.extend(__get_wl_pairs_of_rule(rule, app_config.port, action, wl_pair_type, match_cache))
 
     return wl_pairs
 
@@ -418,6 +439,12 @@ def GetTcpDenyAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
 def GetUdpDenyAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
     return __getWorkloadPairsBy('udp', '1-65535', 'DENY', wl_pair_type=wl_pair_type)
 
+
+def GetTcpAllowAllWorkloadPairsWithPort(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('tcp', None, 'PERMIT', wl_pair_type=wl_pair_type)
+
+def GetTcpDenyAllWorkloadPairsWithPort(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('tcp', None, 'DENY', wl_pair_type=wl_pair_type)
 
 def __get_default_workloads(wl_pair_type):
     if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY:

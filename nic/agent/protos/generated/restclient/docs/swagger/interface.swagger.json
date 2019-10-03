@@ -487,6 +487,18 @@
       },
       "title": "interaface watch event"
     },
+    "netprotoInterfaceEventList": {
+      "type": "object",
+      "properties": {
+        "InterfaceEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoInterfaceEvent"
+          }
+        }
+      },
+      "title": "interface watch events batched"
+    },
     "netprotoInterfaceList": {
       "type": "object",
       "properties": {

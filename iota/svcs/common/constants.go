@@ -94,6 +94,9 @@ const (
 	// BuildItURL
 	BuildItURL = "buildit.test.pensando.io"
 
+	// ImageArtificatsDirectory
+	ImageArtificatsDirectory = "/pensando/iota/images"
+
 	// ControlVmImageDirectory
 	ControlVMImageDirectory = "/tmp"
 
@@ -141,6 +144,9 @@ const (
 	//that the connection is closed.
 	GrpcClientTransportKeepaliveTimeoutSeconds = time.Second*300
 
+	DefaultCimcUserName = "admin"
+
+	DefaultCimcPassword = "N0isystem$"
 )
 
 // incrementing constants. List all constants whose value you don't care here
@@ -179,7 +185,12 @@ var (
 		`sudo pkill iota*`,
 		`sudo pkill bootstrap`,
 		`sudo pkill python`,
-		`sudo rm -rf /pensando/iota*`,
+		`mv /pensando/iota/images /tmp`,
+		`sudo rm -rf /pensando/*`,
+		`sudo mkdir -p /pensando/iota `,
+		`sudo chown vm:vm /pensando/iota`,
+		`mv /tmp/images /pensando/iota`,
+		`mkdir -p /pensando/iota/images`,
 		`sudo docker ps`,
 		`sudo docker rmi -f \$(docker images -aq)`,
 		`sudo rm -rf /pensando/run/naples`,

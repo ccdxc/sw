@@ -11,15 +11,47 @@ import (
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
+func (c *CfgGen) generateMirrorRules(namespace string, count int) (rules []tsproto.MatchRule) {
+	sgpRules := c.generatePolicyRules(namespace, count)
+
+	for _, s := range sgpRules {
+		var protoPorts []string
+		// Pick up from APP Object
+		if len(s.Dst.AppConfigs) == 0 {
+			continue
+		} else {
+			protoPorts = convertProtoPort(s.Dst.AppConfigs[0])
+		}
+
+		r := tsproto.MatchRule{
+			Src: &tsproto.MatchSelector{
+				IPAddresses: s.Src.Addresses,
+			},
+			Dst: &tsproto.MatchSelector{
+				IPAddresses: s.Dst.Addresses,
+			},
+			AppProtoSel: &tsproto.AppProtoSelector{
+				Ports: protoPorts,
+			},
+		}
+
+		rules = append(rules, r)
+	}
+
+	return
+}
+
 func (c *CfgGen) GenerateMirrorSessions() error {
 	var cfg pkg.IOTAConfig
 	var mirrors []*tsproto.MirrorSession
-	var mirrorManifest *pkg.Object
+	var mirrorManifest, mirrorRuleMaifest *pkg.Object
 	for _, o := range c.Config.Objects {
 		o := o
 		if o.Kind == "MirrorSession" {
 			mirrorManifest = &o
-			break
+		}
+		if o.Kind == "MirrorSessionRule" {
+			mirrorRuleMaifest = &o
 		}
 	}
 	if mirrorManifest == nil {
@@ -30,14 +62,17 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 
 	log.Infof("Generating %v Mirror Sessions.", mirrorManifest.Count)
 
+	ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+	if !ok {
+		log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+		return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+	}
+
+	rulesPerPolicy := mirrorRuleMaifest.Count / mirrorManifest.Count
+	namespace := ns[0]
+	policyRules := c.generateMirrorRules(namespace.Name, 0)
 	for i := 0; i < mirrorManifest.Count; i++ {
 		// Get the namespaces object
-		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
-		if !ok {
-			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
-			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
-		}
-		namespace := ns[i%len(ns)]
 		mirrorSessionName := fmt.Sprintf("%s-%d", mirrorManifest.Name, i)
 
 		tuns, ok := c.Tunnels.Objects.([]*netproto.Tunnel)
@@ -47,6 +82,8 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 		}
 		t := tuns[i%len(tuns)]
 
+		newPolicyRules := policyRules[:rulesPerPolicy]
+		policyRules = policyRules[rulesPerPolicy:]
 		ms := tsproto.MirrorSession{
 			TypeMeta: api.TypeMeta{
 				Kind: "MirrorSession",
@@ -61,36 +98,13 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 				PacketSize: 128,
 				Collectors: []tsproto.MirrorCollector{
 					{
-						Type: "ERSPAN",
+						Type: "erspan",
 						ExportCfg: tsproto.MirrorExportConfig{
 							Destination: t.Spec.Dst,
 						},
 					},
 				},
-				MatchRules: []tsproto.MatchRule{
-					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
-						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
-						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"ICMP/0/0"},
-						},
-					},
-					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
-						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
-						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"TCP/0/0"},
-						},
-					},
-				},
+				MatchRules: newPolicyRules,
 			},
 		}
 		mirrors = append(mirrors, &ms)

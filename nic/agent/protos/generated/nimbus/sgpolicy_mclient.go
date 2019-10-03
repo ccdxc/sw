@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type NetworkSecurityPolicyReactor interface {
 	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
 	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type NetworkSecurityPolicyOStream struct {
+	sync.Mutex
+	stream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient
 }
 
 // WatchNetworkSecurityPolicys runs NetworkSecurityPolicy watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 	}
 
 	// start oper update stream
-	ostream, err := networksecuritypolicyRPCClient.NetworkSecurityPolicyOperUpdate(ctx)
+	opStream, err := networksecuritypolicyRPCClient.NetworkSecurityPolicyOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting NetworkSecurityPolicy oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &NetworkSecurityPolicyOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.NetworkSecurityPolicyEvent) {
+			client.debugStats.AddInt("NetworkSecurityPolicyWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got NetworkSecurityPolicy watch event: Type: {%+v} NetworkSecurityPolicy:{%+v}", client.clientName, evt.EventType, evt.NetworkSecurityPolicy.ObjectMeta)
+			client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+			go client.processNetworkSecurityPolicyEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
 				return
 			}
-			client.debugStats.AddInt("NetworkSecurityPolicyWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got NetworkSecurityPolicy watch event: Type: {%+v} NetworkSecurityPolicy:{%+v}", client.clientName, evt.EventType, evt.NetworkSecurityPolicy.ObjectMeta)
-
-			client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
-			go client.processNetworkSecurityPolicyEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchNetworkSecurityPolicyRecvLoop(stream netproto.N
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting NetworkSecurityPolicy watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.NetworkSecurityPolicyEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffNetworkSecurityPolicy diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.NetworkSecurityPolicyList, reactor NetworkSecurityPolicyReactor, ostream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient) {
+func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.NetworkSecurityPolicyList, reactor NetworkSecurityPolicyReactor, ostream *NetworkSecurityPolicyOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.NetworkSecurityPolicy)
 	for _, obj := range objList.NetworkSecurityPolicys {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 	// add/update all new objects
 	for _, obj := range objList.NetworkSecurityPolicys {
 		evt := netproto.NetworkSecurityPolicyEvent{
-			EventType:             api.EventType_CreateEvent,
+			EventType:             api.EventType_UpdateEvent,
 			NetworkSecurityPolicy: *obj,
 		}
 		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 }
 
 // processNetworkSecurityPolicyEvent handles NetworkSecurityPolicy event
-func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.NetworkSecurityPolicyEvent, reactor NetworkSecurityPolicyReactor, ostream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient) {
+func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.NetworkSecurityPolicyEvent, reactor NetworkSecurityPolicyReactor, ostream *NetworkSecurityPolicyOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.NetworkSecurityPolicy.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send NetworkSecurityPolicy oper Status, %s", err)
 				client.debugStats.AddInt("NetworkSecurityPolicyOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("NetworkSecurityPolicyOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

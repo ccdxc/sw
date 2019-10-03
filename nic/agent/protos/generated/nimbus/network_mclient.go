@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type NetworkReactor interface {
 	UpdateNetwork(networkObj *netproto.Network) error           // updates an Network
 	DeleteNetwork(networkObj, ns, name string) error            // deletes an Network
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type NetworkOStream struct {
+	sync.Mutex
+	stream netproto.NetworkApi_NetworkOperUpdateClient
 }
 
 // WatchNetworks runs Network watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	}
 
 	// start oper update stream
-	ostream, err := networkRPCClient.NetworkOperUpdate(ctx)
+	opStream, err := networkRPCClient.NetworkOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting Network oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &NetworkOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.NetworkEvent) {
+			client.debugStats.AddInt("NetworkWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network.ObjectMeta)
+			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
+			go client.processNetworkEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("Network Watch channel closed. Exisint NetworkWatch")
 				return
 			}
-			client.debugStats.AddInt("NetworkWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got Network watch event: Type: {%+v} Network:{%+v}", client.clientName, evt.EventType, evt.Network.ObjectMeta)
-
-			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-			go client.processNetworkEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Network Watch channel closed. Exisint NetworkWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchNetworkRecvLoop(stream netproto.NetworkApi_Watc
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting Network watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.NetworkEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffNetwork diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor NetworkReactor, ostream netproto.NetworkApi_NetworkOperUpdateClient) {
+func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor NetworkReactor, ostream *NetworkOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Network)
 	for _, obj := range objList.Networks {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 	// add/update all new objects
 	for _, obj := range objList.Networks {
 		evt := netproto.NetworkEvent{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			Network:   *obj,
 		}
 		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 }
 
 // processNetworkEvent handles Network event
-func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor, ostream netproto.NetworkApi_NetworkOperUpdateClient) {
+func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor, ostream *NetworkOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.Network.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send Network oper Status, %s", err)
 				client.debugStats.AddInt("NetworkOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("NetworkOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

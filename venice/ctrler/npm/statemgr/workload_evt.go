@@ -456,7 +456,12 @@ func (sm *Statemgr) RemoveStaleEndpoints() error {
 
 	for _, ep := range endpoints {
 		splitString := strings.Split(ep.Name, "-")
-		if len(splitString) != 2 || !workloadMacPresent(splitString[0], splitString[1]) {
+		if len(splitString) < 2 {
+			continue
+		}
+		workloadName := strings.Join(splitString[0:len(splitString)-1], "-")
+		macAddress := splitString[len(splitString)-1]
+		if !workloadMacPresent(workloadName, macAddress) {
 			// delete the endpoint in api server
 			epInfo := workload.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},

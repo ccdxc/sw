@@ -436,19 +436,24 @@ func (ctr *Container) SetUpCommand(cmd []string, dir string, background bool, sh
 	cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
 
 	fmt.Println("CMD ", strings.Join(cmd, " "))
-	resp, err := ctr.client.ContainerExecCreate(context.Background(), ctr.ContainerName, types.ExecConfig{
-		AttachStdout: true,
-		AttachStderr: true,
-		Tty:          true,
-		Detach:       background,
-		Cmd:          cmd,
-	})
-
-	if err != nil {
-		return "", err
+	maxRetries := 3
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		resp, rerr := ctr.client.ContainerExecCreate(context.Background(), ctr.ContainerName, types.ExecConfig{
+			AttachStdout: true,
+			AttachStderr: true,
+			Tty:          true,
+			Detach:       background,
+			Cmd:          cmd,
+		})
+		if rerr == nil {
+			return (CommandHandle)(resp.ID), nil
+		}
+		err = rerr
 	}
 
-	return (CommandHandle)(resp.ID), nil
+	return "", err
+
 }
 
 //StopCommand stop a command started
@@ -479,12 +484,21 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 	stdout := io.MultiWriter(&stdoutBuf)
 	stderr := io.MultiWriter(&stderrBuf)
 
-	hResp, err := ctr.client.ContainerExecAttach(context.Background(), (string)(cmdHandle),
-		types.ExecConfig{})
-
-	defer hResp.Close()
-	if err != nil {
-		return CommandResp{RetCode: -1}, err
+	maxAttempts := 3
+	i := 0
+	var hResp types.HijackedResponse
+	var err error
+	for true {
+		hResp, err = ctr.client.ContainerExecAttach(context.Background(), (string)(cmdHandle),
+			types.ExecConfig{})
+		if err == nil {
+			defer hResp.Close()
+			break
+		}
+		i++
+		if i == maxAttempts {
+			return CommandResp{RetCode: -1}, err
+		}
 	}
 
 	err = ctr.client.ContainerExecStart(context.Background(), (string)(cmdHandle), types.ExecStartCheck{})

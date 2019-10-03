@@ -5,6 +5,9 @@ package statemgr
 import (
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
@@ -54,6 +57,7 @@ func NewFirewallProfileState(fwProfile *ctkit.FirewallProfile, stateMgr *Statemg
 // convertFirewallProfile converts fw profile state to security profile
 func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile {
 	// build sg message
+	creationTime, _ := types.TimestampProto(time.Now())
 	fwp := netproto.SecurityProfile{
 		TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
 		ObjectMeta: agentObjectMeta(fps.FirewallProfile.ObjectMeta),
@@ -73,6 +77,7 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 			},
 		},
 	}
+	fwp.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	return &fwp
 }

@@ -12,16 +12,24 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 	"time"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfgen"
+	"github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+//ConfigPushStatsFile
+const ConfigPushStatsFile = "/tmp/scale-cfg-push-stats.json"
+const ConfigStatsFile = "/tmp/scale-cfg-stats.json"
 
 // default number of workloads per host
 const defaultWorkloadPerHost = 4
@@ -31,58 +39,173 @@ const defaultNumNetworks = 2
 
 // SysModel represents a model of the system under test
 type SysModel struct {
-	hosts             map[string]*Host          // hosts
-	switches          map[string]*Switch        // switches in test
-	switchPorts       []*SwitchPort             // switches in test
-	naples            map[string]*Naples        // Naples instances
-	workloads         map[string]*Workload      // workloads
-	subnets           []*Network                // subnets
-	sgpolicies        map[string]*NetworkSecurityPolicy      // security policies
-	msessions         map[string]*MirrorSession // mirror sessions
-	veniceNodes       map[string]*VeniceNode    // Venice nodes
-	fakeHosts         map[string]*Host          // simulated hosts
-	fakeNaples        map[string]*Naples        // simulated Naples instances
-	fakeWorkloads     map[string]*Workload      // simulated workloads
-	fakeSubnets       map[string]*Network       // simulated subnets
-	fakeApps          map[string]*App           // simulated apps
-	fakeSGPolicies    map[string]*NetworkSecurityPolicy      // simulated security policies
-	defaultSgPolicies []*NetworkSecurityPolicyCollection     //default sg policy pushed
+	hosts                   map[string]*Host                   // hosts
+	switches                map[string]*Switch                 // switches in test
+	switchPorts             []*SwitchPort                      // switches in test
+	naples                  map[string]*Naples                 // Naples instances
+	workloads               map[string]*Workload               // workloads
+	subnets                 []*Network                         // subnets
+	sgpolicies              map[string]*NetworkSecurityPolicy  // security policies
+	msessions               map[string]*MirrorSession          // mirror sessions
+	veniceNodes             map[string]*VeniceNode             // Venice nodes
+	veniceNodesDisconnected map[string]*VeniceNode             // Venice which are not part of cluster
+	fakeHosts               map[string]*Host                   // simulated hosts
+	fakeNaples              map[string]*Naples                 // simulated Naples instances
+	fakeWorkloads           map[string]*Workload               // simulated workloads
+	fakeSubnets             map[string]*Network                // simulated subnets
+	fakeApps                map[string]*App                    // simulated apps
+	fakeSGPolicies          map[string]*NetworkSecurityPolicy  // simulated security policies
+	defaultSgPolicies       []*NetworkSecurityPolicyCollection //default sg policy pushed
+	authToken               string                             // authToken obtained after logging in
 
 	tb *TestBed // testbed
 
 	allocatedMac map[string]bool // allocated mac addresses
 }
 
+//ConfigPushTime keep track of config push time
+type ConfigPushTime struct {
+	Config string `json:"Config"`
+	Object struct {
+		SgPolicy string `json:"SgPolicy"`
+	} `json:"Object"`
+}
+
+//ConfigPushStats keep track of config push stats
+type ConfigPushStats struct {
+	Stats []ConfigPushTime `json:"Stats"`
+}
+
+type veniceRawData struct {
+	Diagnostics struct {
+		String string `json:"string"`
+	} `json:"diagnostics"`
+}
+
+type veniceConfigStatus struct {
+	KindObjects struct {
+		App      int `json:"App"`
+		Endpoint int `json:"Endpoint"`
+		SgPolicy int `json:"SgPolicy"`
+	} `json:"KindObjects"`
+	NodesStatus []struct {
+		NodeID     string `json:"NodeID"`
+		KindStatus struct {
+			App struct {
+				Status struct {
+					Create bool `json:"create-event"`
+					Update bool `json:"update-event"`
+					Delete bool `json:"delete-event"`
+				} `json:"Status"`
+			} `json:"App"`
+			Endpoint struct {
+				Status struct {
+					Create bool `json:"create-event"`
+					Update bool `json:"update-event"`
+					Delete bool `json:"delete-event"`
+				} `json:"Status"`
+			} `json:"Endpoint"`
+			SgPolicy struct {
+				Status struct {
+					Create bool `json:"create-event"`
+					Update bool `json:"update-event"`
+					Delete bool `json:"delete-event"`
+				} `json:"Status"`
+			} `json:"SgPolicy"`
+		} `json:"KindStatus"`
+	} `json:"NodesStatus"`
+}
+
+type veniceConfigStat struct {
+	KindHistogram struct {
+		App struct {
+			MinMs  float64 `json:"MinMs"`
+			MaxMs  float64 `json:"MaxMs"`
+			MeanMs float64 `json:"MeanMs"`
+		} `json:"App"`
+		Endpoint struct {
+			MinMs  float64 `json:"MinMs"`
+			MaxMs  float64 `json:"MaxMs"`
+			MeanMs float64 `json:"MeanMs"`
+		} `json:"Endpoint"`
+		NetworkSecurityPolicy struct {
+			MinMs  float64 `json:"MinMs"`
+			MaxMs  float64 `json:"MaxMs"`
+			MeanMs float64 `json:"MeanMs"`
+		} `json:"NetworkSecurityPolicy"`
+	} `json:"KindHistogram"`
+	NodeConfigHistogram []struct {
+		NodeID    string `json:"NodeID"`
+		KindStats struct {
+			App struct {
+				MinMs  float64 `json:"MinMs"`
+				MaxMs  float64 `json:"MaxMs"`
+				MeanMs float64 `json:"MeanMs"`
+			} `json:"App"`
+			Endpoint struct {
+				MinMs  float64 `json:"MinMs"`
+				MaxMs  float64 `json:"MaxMs"`
+				MeanMs float64 `json:"MeanMs"`
+			} `json:"Endpoint"`
+			NetworkSecurityPolicy struct {
+				MinMs  float64 `json:"MinMs"`
+				MaxMs  float64 `json:"MaxMs"`
+				MeanMs float64 `json:"MeanMs"`
+			} `json:"NetworkSecurityPolicy"`
+		} `json:"KindStats"`
+		AggrStats struct {
+			MinMs  float64 `json:"MinMs"`
+			MaxMs  float64 `json:"MaxMs"`
+			MeanMs float64 `json:"MeanMs"`
+		} `json:"AggrStats"`
+	} `json:"NodeConfigHistogram"`
+}
+
 // NewSysModel creates a sysmodel for a testbed
 func NewSysModel(tb *TestBed) (*SysModel, error) {
 	sm := SysModel{
-		tb:             tb,
-		hosts:          make(map[string]*Host),
-		switches:       make(map[string]*Switch),
-		naples:         make(map[string]*Naples),
-		veniceNodes:    make(map[string]*VeniceNode),
-		workloads:      make(map[string]*Workload),
-		sgpolicies:     make(map[string]*NetworkSecurityPolicy),
-		msessions:      make(map[string]*MirrorSession),
-		fakeHosts:      make(map[string]*Host),
-		fakeNaples:     make(map[string]*Naples),
-		fakeWorkloads:  make(map[string]*Workload),
-		fakeSubnets:    make(map[string]*Network),
-		fakeApps:       make(map[string]*App),
-		fakeSGPolicies: make(map[string]*NetworkSecurityPolicy),
-		allocatedMac:   make(map[string]bool),
+		tb:                      tb,
+		hosts:                   make(map[string]*Host),
+		switches:                make(map[string]*Switch),
+		naples:                  make(map[string]*Naples),
+		veniceNodes:             make(map[string]*VeniceNode),
+		veniceNodesDisconnected: make(map[string]*VeniceNode),
+		workloads:               make(map[string]*Workload),
+		sgpolicies:              make(map[string]*NetworkSecurityPolicy),
+		msessions:               make(map[string]*MirrorSession),
+		fakeHosts:               make(map[string]*Host),
+		fakeNaples:              make(map[string]*Naples),
+		fakeWorkloads:           make(map[string]*Workload),
+		fakeSubnets:             make(map[string]*Network),
+		fakeApps:                make(map[string]*App),
+		fakeSGPolicies:          make(map[string]*NetworkSecurityPolicy),
+		allocatedMac:            make(map[string]bool),
 	}
 
-	// build naples and venice nodes
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	defer cancel()
+
+	// build venice nodes
 	for _, nr := range sm.tb.Nodes {
-		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			err := sm.createNaples(nr)
+		if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			// create
+			err := sm.createVeniceNode(nr.iotaNode)
 			if err != nil {
 				return nil, err
 			}
-		} else if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-			// create
-			err := sm.createVeniceNode(nr.iotaNode)
+		}
+	}
+
+	// make cluster & setup auth
+	err := sm.SetupConfig(ctx)
+	if err != nil {
+		sm.tb.CollectLogs()
+		return nil, err
+	}
+	// build naples nodes
+	for _, nr := range sm.tb.Nodes {
+		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			err := sm.createNaples(nr)
 			if err != nil {
 				return nil, err
 			}
@@ -97,38 +220,50 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 	return &sm, nil
 }
 
+// GetVeniceURL returns venice URL for the sysmodel
+func (sm *SysModel) GetVeniceURL() []string {
+	var veniceURL []string
+
+	if sm.tb.mockMode {
+		return []string{mockVeniceURL}
+	}
+
+	// walk all venice nodes
+	for _, node := range sm.veniceNodes {
+		veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.iotaNode.IpAddress, globals.APIGwRESTPort))
+	}
+
+	return veniceURL
+}
+
 // CleanupAllConfig cleans up any configuration present in the system
 // this function would query all Venice objects and delete them from Venice
 // - it does not clean up any state left out in Naples or inernal components of Venice
 func (sm *SysModel) CleanupAllConfig() error {
 	var err error
 
-	if !sm.tb.skipSetup {
-		return nil
-	}
-
 	// get all venice configs
-	veniceHosts, err := sm.tb.ListHost()
+	veniceHosts, err := sm.ListHost()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceSGPolicies, err := sm.tb.ListNetworkSecurityPolicy()
+	veniceSGPolicies, err := sm.ListNetworkSecurityPolicy()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceNetworks, err := sm.tb.ListNetwork()
+	veniceNetworks, err := sm.ListNetwork()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceApps, err := sm.tb.ListApp()
+	veniceApps, err := sm.ListApp()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceWorkloads, err := sm.tb.ListWorkload()
+	veniceWorkloads, err := sm.ListWorkload()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
@@ -139,28 +274,26 @@ func (sm *SysModel) CleanupAllConfig() error {
 
 	// delete venice objects
 	for _, obj := range veniceSGPolicies {
-		if err := sm.tb.DeleteNetworkSecurityPolicy(obj); err != nil {
+		if err := sm.DeleteNetworkSecurityPolicy(obj); err != nil {
 			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
 			log.Errorf("%s", err)
 			return err
 		}
 	}
 	for _, obj := range veniceApps {
-		if err := sm.tb.DeleteApp(obj); err != nil {
+		if err := sm.DeleteApp(obj); err != nil {
 			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
 			log.Errorf("%s", err)
 			return err
 		}
 	}
-	for _, obj := range veniceWorkloads {
-		if err := sm.tb.DeleteWorkload(obj); err != nil {
-			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
-			log.Errorf("%s", err)
-			return err
-		}
+	if err := sm.DeleteWorkloads(veniceWorkloads); err != nil {
+		err = fmt.Errorf("Error deleting workloads Err: %v", err)
+		log.Errorf("%s", err)
+		return err
 	}
 	for _, obj := range veniceHosts {
-		if err := sm.tb.DeleteHost(obj); err != nil {
+		if err := sm.DeleteHost(obj); err != nil {
 			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
 			log.Errorf("%s", err)
 			return err
@@ -348,7 +481,7 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	// update workload with management ip in the meta
 	for _, wr := range wc.workloads {
 		wr.veniceWorkload.ObjectMeta.Labels = map[string]string{"MgmtIp": wr.iotaWorkload.MgmtIp}
-		if err := sm.tb.CreateWorkload(wr.veniceWorkload); err != nil {
+		if err := sm.CreateWorkload(wr.veniceWorkload); err != nil {
 			log.Errorf("unable to update the workload label")
 		}
 	}
@@ -377,9 +510,107 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	return nil
 }
 
-func timeTrack(start time.Time, name string) {
+func timeTrack(start time.Time, name string) time.Duration {
 	elapsed := time.Since(start)
 	log.Infof("%s took %s\n", name, elapsed)
+	return elapsed
+}
+
+//ResetConfigStats Config Stats
+func (sm *SysModel) ResetConfigStats() {
+	var rawData veniceRawData
+	sm.resetConfigStats(&rawData)
+}
+
+//ReadConfigStats read config stats
+func (sm *SysModel) ReadConfigStats() {
+
+	writeMeasuredStat := func() error {
+
+		var configStat veniceConfigStat
+		var rawData veniceRawData
+		err := sm.PullConfigStats(&rawData)
+		if err != nil {
+			log.Infof("Config  stat Failed %v", err)
+			return err
+		}
+
+		err = json.Unmarshal([]byte(rawData.Diagnostics.String), &configStat)
+		if err != nil {
+			log.Infof("Config state marshalling Failed %v", err)
+			return err
+		}
+
+		ofile, err := os.OpenFile(ConfigStatsFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.MarshalIndent(&configStat, "", "  ")
+		ofile.Write(j)
+		ofile.Close()
+
+		return nil
+	}
+
+	writeMeasuredStat()
+}
+
+func (sm *SysModel) ClearConfigPushStat() {
+	os.Remove(ConfigPushStatsFile)
+}
+
+//PrintConfigPushStat Print Push Stats
+func (sm *SysModel) PrintConfigPushStat() {
+
+	cfgPushStats := ConfigPushStats{}
+	readStatConfig := func() {
+		jsonFile, err := os.OpenFile(ConfigPushStatsFile, os.O_RDONLY, 0755)
+		if err != nil {
+			panic(err)
+		}
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		err = json.Unmarshal(byteValue, &cfgPushStats)
+		if err != nil {
+			panic(err)
+		}
+		jsonFile.Close()
+	}
+
+	readStatConfig()
+
+	var totalCfgDuration time.Duration
+	maxDuration := time.Duration(0)
+	minDuration := time.Duration(math.MaxInt64)
+	for _, stat := range cfgPushStats.Stats {
+		cfgDuration, err := time.ParseDuration(stat.Config)
+		if err != nil {
+			fmt.Printf("Invalid duration value %v", stat.Config)
+			return
+		}
+		if maxDuration < cfgDuration {
+			maxDuration = cfgDuration
+		}
+		if minDuration > cfgDuration {
+			minDuration = cfgDuration
+		}
+		totalCfgDuration += cfgDuration
+	}
+
+	averageDuration := time.Duration(int64(totalCfgDuration) / int64(len(cfgPushStats.Stats)))
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"MinDuration", "MaxDuration", "Average"})
+	table.SetAutoMergeCells(true)
+	table.SetBorder(false) // Set Border to false
+	table.SetRowLine(true) // Enable row line
+	// Change table lines
+	table.SetCenterSeparator("*")
+	table.SetColumnSeparator("╪")
+	table.SetRowSeparator("-")
+	table.Append([]string{minDuration.String(),
+		maxDuration.String(), averageDuration.String()})
+	table.Render()
 }
 
 // populateConfig creates scale configuration based on some predetermined parameters
@@ -388,13 +619,20 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	cfg := cfgen.DefaultCfgenParams
 	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
 
+	//Reset config stats so that we can start fresh
+
 	if scale {
-		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 50000
-		cfg.WorkloadParams.WorkloadsPerHost = 100
-		cfg.AppParams.NumApps = 5000
+		/* 10K * 4*4 * 3 == 640K hal rules */
+		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 10000
+		cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4
+		cfg.NetworkSecurityPolicyParams.NumAppsPerRules = 2 //1 rule added by gen
+		cfg.WorkloadParams.WorkloadsPerHost = 32
+		cfg.AppParams.NumApps = 1200
 	} else {
-		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 5
-		cfg.WorkloadParams.WorkloadsPerHost = 50
+		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 10
+		cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4
+		cfg.NetworkSecurityPolicyParams.NumAppsPerRules = 3
+		cfg.WorkloadParams.WorkloadsPerHost = 16
 		cfg.AppParams.NumApps = 4
 	}
 	// TBD - override default-policy
@@ -423,7 +661,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	configFile := "/tmp/scale-cfg.json"
 
 	writeConfig := func() {
-		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE, 0755)
+		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 		if err != nil {
 			panic(err)
 		}
@@ -459,31 +697,51 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		sm.fakeSubnets[o.ObjectMeta.Name] = &Network{veniceNetwork: o}
 	}
 
-	createHosts := func() error {
-		defer timeTrack(time.Now(), "Creating hosts")
-		for _, o := range cfg.ConfigItems.Hosts {
-			h := &Host{veniceHost: o}
-			sm.fakeHosts[o.ObjectMeta.Name] = h
+	cfgPushTime := ConfigPushTime{}
+	cfgPushStats := ConfigPushStats{}
 
-			err := sm.tb.CreateHost(h.veniceHost)
-			if err != nil {
-				log.Errorf("Error creating host: %+v. Err: %v", h, err)
-				return err
-			}
-			// TBD: push the workloads and host when we simulate Naples
+	readStatConfig := func() {
+		jsonFile, err := os.OpenFile(ConfigPushStatsFile, os.O_RDONLY, 0755)
+		if err != nil {
+			//file not created yet. ignore.
+			return
 		}
+		byteValue, _ := ioutil.ReadAll(jsonFile)
 
-		return nil
-
+		err = json.Unmarshal(byteValue, &cfgPushStats)
+		if err != nil {
+			panic(err)
+		}
+		jsonFile.Close()
 	}
 
-	if err := createHosts(); err != nil {
-		return err
+	writeStatConfig := func() {
+		ofile, err := os.OpenFile(ConfigPushStatsFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.MarshalIndent(&cfgPushStats, "", "  ")
+		ofile.Write(j)
+		ofile.Close()
 	}
 
-	createWorkloads := func() error {
+	configPushCheck := func(done chan error) {
+		startTime := time.Now()
+		iter := 1
+		for ; iter <= 2000 && ctx.Err() == nil; iter++ {
+			//Check every second
+			time.Sleep(time.Second * time.Duration(iter))
+			complete, err := sm.IsConfigPushComplete()
+			if complete && err == nil {
+				cfgPushTime.Config = timeTrack(startTime, "Config Push").String()
+				done <- nil
+				return
+			}
+		}
+		done <- fmt.Errorf("Config push incomplete")
+	}
 
-		defer timeTrack(time.Now(), "Create workloads")
+	setupWorkloads := func() {
 		nwMap := make(map[uint32]uint32)
 
 		tbVlans := make([]uint32, len(sm.tb.allocatedVlans))
@@ -502,85 +760,181 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 				w.veniceWorkload.Spec.Interfaces[0].ExternalVlan = wireVlan
 			} else {
 				if len(tbVlans) == 0 {
-					continue
+					//continue
 					//return errors.New("Not enough vlans in the testbed for the config")
+				} else {
+					nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan] = tbVlans[0]
+					tbVlans = tbVlans[1:]
 				}
-				nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan] = tbVlans[0]
-				tbVlans = tbVlans[1:]
 			}
-			err := sm.tb.CreateWorkload(w.veniceWorkload)
+		}
+	}
+
+	setupWorkloads()
+
+	pushConfigUsingStagingBuffer := func() error {
+		defer timeTrack(time.Now(), "Committing Via Config buffer")
+		stagingBuf, err := sm.NewStagingBuffer()
+		if err != nil {
+			return err
+		}
+
+		for _, o := range cfg.ConfigItems.Hosts {
+			h := &Host{veniceHost: o}
+			sm.fakeHosts[o.ObjectMeta.Name] = h
+
+			err := stagingBuf.AddHost(h.veniceHost)
 			if err != nil {
+				log.Errorf("Error creating host: %+v. Err: %v", h, err)
+				return err
+			}
+		}
+
+		for _, w := range cfg.ConfigItems.Workloads {
+			err := stagingBuf.AddWorkload(w)
+			if err != nil {
+				log.Errorf("Error creating workload Err: %v", err)
+				return err
+			}
+		}
+
+		for _, app := range cfg.ConfigItems.Apps {
+			err := stagingBuf.AddApp(app)
+			if err != nil {
+				log.Errorf("Error creating app Err: %v", err)
+				return err
+			}
+		}
+
+		for _, pol := range cfg.ConfigItems.SGPolicies {
+			sm.fakeSGPolicies[pol.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: pol}
+			err := stagingBuf.AddNetowrkSecurityPolicy(pol)
+			if err != nil {
+				log.Errorf("Error creating app Err: %v", err)
+				return err
+			}
+		}
+
+		//Finally commit it
+		return stagingBuf.Commit()
+	}
+
+	pushConfig := func() error {
+		createHosts := func() error {
+			defer timeTrack(time.Now(), "Creating hosts")
+			for _, o := range cfg.ConfigItems.Hosts {
+				h := &Host{veniceHost: o}
+				sm.fakeHosts[o.ObjectMeta.Name] = h
+
+				err := sm.CreateHost(h.veniceHost)
+				if err != nil {
+					log.Errorf("Error creating host: %+v. Err: %v", h, err)
+					return err
+				}
+				// TBD: push the workloads and host when we simulate Naples
+			}
+			return nil
+		}
+
+		if err := createHosts(); err != nil {
+			return err
+		}
+
+		createWorkloads := func() error {
+			defer timeTrack(time.Now(), "Create workloads")
+			err := sm.CreateWorkloads(cfg.ConfigItems.Workloads)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		if err := createWorkloads(); err != nil {
+			return err
+		}
+
+		for _, o := range cfg.ConfigItems.Apps {
+			sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
+			if err := sm.CreateApp(o); err != nil {
+				return fmt.Errorf("error creating app: %s", err)
+			}
+		}
+
+		if len(cfg.ConfigItems.SGPolicies) > 1 {
+			panic("can't have more than one sgpolicy")
+		}
+		for _, o := range cfg.ConfigItems.SGPolicies {
+			createSgPolicy := func() error {
+				defer timeTrack(time.Now(), "Create Sg Policy")
+				sm.fakeSGPolicies[o.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: o}
+				if err := sm.CreateNetworkSecurityPolicy(o); err != nil {
+					return fmt.Errorf("error creating sgpolicy: %s", err)
+				}
+				return nil
+			}
+			if err := createSgPolicy(); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
 
-	if err := createWorkloads(); err != nil {
+	var err error
+	if os.Getenv("USE_STAGING_BUFFER") != "" {
+		err = pushConfigUsingStagingBuffer()
+	} else {
+		err = pushConfig()
+	}
+	if err != nil {
 		return err
 	}
-
-	for _, o := range cfg.ConfigItems.Apps {
-
-		sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
-		if err := sm.tb.CreateApp(o); err != nil {
-			return fmt.Errorf("error creating app: %s", err)
-		}
-	}
-
-	if len(cfg.ConfigItems.SGPolicies) > 1 {
-		panic("can't have more than one sgpolicy")
-	}
-
-	for _, o := range cfg.ConfigItems.SGPolicies {
-
-		createSgPolicy := func() error {
-			defer timeTrack(time.Now(), "Create Sg Policy")
-
-			sm.fakeSGPolicies[o.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: o}
-			if err := sm.tb.CreateNetworkSecurityPolicy(o); err != nil {
-				return fmt.Errorf("error creating sgpolicy: %s", err)
-			}
-
-			return nil
-		}
-
-		if err := createSgPolicy(); err != nil {
-			return err
-		}
-
-		// verify that sgpolicy object has reached all naples
-		policyPushCheck := func() error {
-			defer timeTrack(time.Now(), "Sg Policy Push")
+	policyPushCheck := func(done chan error) {
+		for _, o := range cfg.ConfigItems.SGPolicies {
+			// verify that sgpolicy object has reached all naples
+			startTime := time.Now()
 			iter := 1
 			for ; iter <= 2000 && ctx.Err() == nil; iter++ {
 				time.Sleep(time.Second * time.Duration(iter))
-				retSgp, err := sm.tb.GetNetworkSecurityPolicy(&o.ObjectMeta)
+				retSgp, err := sm.GetNetworkSecurityPolicy(&o.ObjectMeta)
 				if err != nil {
-					return fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
+					done <- fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
+					return
 				} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
 					log.Infof("got back policy satus %+v", retSgp.Status.PropagationStatus)
-					return nil
+					duration := timeTrack(startTime, "Sg Policy Push").String()
+					cfgPushTime.Object.SgPolicy = duration
+					done <- nil
+					return
 				}
 				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus)
 			}
-			return fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
+			done <- fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
 				o.ObjectMeta.Name, o.Status.PropagationStatus, ctx.Err())
 		}
+	}
+	doneChan := make(chan error, 2)
+	go policyPushCheck(doneChan)
+	go configPushCheck(doneChan)
 
-		if err := policyPushCheck(); err != nil {
-			return err
+	for i := 0; i < 2; i++ {
+		retErr := <-doneChan
+		if retErr != nil {
+			err = retErr
 		}
-
 	}
 
+	if scale {
+		readStatConfig()
+		cfgPushStats.Stats = append(cfgPushStats.Stats, cfgPushTime)
+		writeStatConfig()
+	}
 	//Append default Sg polcies
 	for _, sgPolicy := range sm.fakeSGPolicies {
 		sgPolicy.sm = sm
 		sm.defaultSgPolicies = append(sm.defaultSgPolicies, sm.NewVeniceNetworkSecurityPolicy(sgPolicy))
 	}
 
-	return nil
+	return err
 }
 
 // allocMacAddress allocates a unique mac address
@@ -631,7 +985,7 @@ func (sm *SysModel) updateDefaultFwprofile() error {
 		},
 	}
 
-	return sm.tb.UpdateFirewallProfile(&fwp)
+	return sm.UpdateFirewallProfile(&fwp)
 }
 
 // createDefaultAlgs creates some algs
@@ -661,7 +1015,7 @@ func (sm *SysModel) createDefaultAlgs() error {
 	}
 
 	// create FTP app
-	err := sm.tb.CreateApp(&ftpApp)
+	err := sm.CreateApp(&ftpApp)
 	if err != nil {
 		return fmt.Errorf("Error creating FTP app. Err: %v", err)
 	}
@@ -690,7 +1044,7 @@ func (sm *SysModel) createDefaultAlgs() error {
 		},
 	}
 	// create ICMP app
-	err = sm.tb.CreateApp(&icmpApp)
+	err = sm.CreateApp(&icmpApp)
 	if err != nil {
 		return fmt.Errorf("Error creating ICMP req app. Err: %v", err)
 	}
@@ -718,7 +1072,7 @@ func (sm *SysModel) createDefaultAlgs() error {
 		},
 	}
 	// create ICMP app
-	err = sm.tb.CreateApp(&icmpApp)
+	err = sm.CreateApp(&icmpApp)
 	if err != nil {
 		return fmt.Errorf("Error creating ICMP resp app. Err: %v", err)
 	}
@@ -753,7 +1107,7 @@ func (sm *SysModel) createDefaultAlgs() error {
 	}
 
 	// create DNS app
-	err = sm.tb.CreateApp(&dnsApp)
+	err = sm.CreateApp(&dnsApp)
 	if err != nil {
 		return fmt.Errorf("Error creating DNS app. Err: %v", err)
 	}
@@ -767,6 +1121,20 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 	log.Infof("Adding naples nodes : %v", names)
 	nodes, err := sm.tb.AddNodes(iota.PersonalityType_PERSONALITY_NAPLES, names)
 	if err != nil {
+		return err
+	}
+
+	// move naples to managed mode
+	err = sm.doModeSwitchOfNaples(nodes)
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
+		return err
+	}
+
+	// add venice node to naples
+	err = sm.joinNaplesToVenice(nodes)
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err
 	}
 
@@ -805,14 +1173,24 @@ func (sm *SysModel) DeleteNaplesNodes(names []string) error {
 	//First add to testbed.
 
 	nodes := []*TestNode{}
+	naplesMap := make(map[string]bool)
 	for _, name := range names {
 		log.Infof("Deleting naples node : %v", name)
 		naples, ok := sm.naples[name]
 
 		if !ok {
+			naples, ok = sm.fakeNaples[name]
+		}
+
+		if !ok {
 			return errors.New("naples not found to delete")
 		}
 
+		if _, ok := naplesMap[naples.testNode.iotaNode.Name]; ok {
+			//Node already added
+			continue
+		}
+		naplesMap[naples.testNode.iotaNode.Name] = true
 		nodes = append(nodes, naples.testNode)
 	}
 
@@ -827,4 +1205,162 @@ func (sm *SysModel) DeleteNaplesNodes(names []string) error {
 	}
 	//Reassociate hosts as new naples is added now.
 	return sm.AssociateHosts()
+}
+
+//IsConfigPushComplete checks whether config push is complete.
+func (sm *SysModel) IsConfigPushComplete() (bool, error) {
+
+	var configStatus veniceConfigStatus
+	var rawData veniceRawData
+	err := sm.PullConfigStatus(&rawData)
+	if err != nil {
+		log.Infof("Config  Failed %v", err)
+		return false, err
+	}
+
+	err = json.Unmarshal([]byte(rawData.Diagnostics.String), &configStatus)
+	if err != nil {
+		log.Infof("Config marshalling Failed %v", err)
+		return false, err
+	}
+
+	workloads, err := sm.ListWorkload()
+	if err != nil {
+		return false, err
+	}
+	if configStatus.KindObjects.Endpoint != len(workloads) {
+		log.Infof("Endpoints not synced with NPM yet. %v %v", configStatus.KindObjects.Endpoint, len(workloads))
+		return false, nil
+	}
+
+	policies, err := sm.ListNetworkSecurityPolicy()
+	if err != nil {
+		return false, err
+	}
+	if configStatus.KindObjects.SgPolicy != len(policies) {
+		log.Infof("policies not synced with NPM yet.")
+		return false, nil
+	}
+
+	for _, node := range configStatus.NodesStatus {
+		if !node.KindStatus.App.Status.Create {
+			log.Infof("App Creates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.App.Status.Update {
+			log.Infof("App updates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.App.Status.Delete {
+			log.Infof("App deletes not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.Endpoint.Status.Create {
+			log.Infof("Endpoint Creates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.Endpoint.Status.Update {
+			log.Infof("Endpoint updates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.Endpoint.Status.Delete {
+			log.Infof("Endpoint deletes not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.SgPolicy.Status.Create {
+			log.Infof("SgPolicy Creates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.SgPolicy.Status.Update {
+			log.Infof("SgPolicy updates not synced for node %v", node.NodeID)
+			return false, nil
+		}
+
+		if !node.KindStatus.SgPolicy.Status.Delete {
+			log.Infof("SgPolicy deletes not synced for node %v", node.NodeID)
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+// CollectLogs collects all logs files from the testbed
+func (sm *SysModel) CollectLogs() error {
+
+	sm.tb.CollectLogs()
+
+	if sm.tb.mockMode {
+		return nil
+	}
+
+	// get token ao authenticate to agent
+	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
+	// get token ao authenticate to agent
+	trig := sm.tb.NewTrigger()
+	if err == nil {
+		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+		defer cancel()
+		token, err := utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
+		if err == nil {
+			// collect tech-support on
+			for _, node := range sm.tb.Nodes {
+				switch node.Personality {
+				case iota.PersonalityType_PERSONALITY_NAPLES:
+					cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
+					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
+					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				}
+			}
+			resp, err := trig.Run()
+			if err != nil {
+				log.Errorf("Error collecting logs. Err: %v", err)
+			}
+			// check the response
+			for _, cmdResp := range resp {
+				if cmdResp.ExitCode != 0 {
+					log.Errorf("collecting logs failed. %+v", cmdResp)
+				}
+			}
+			for _, node := range sm.tb.Nodes {
+				switch node.Personality {
+				case iota.PersonalityType_PERSONALITY_NAPLES:
+					sm.tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
+				}
+			}
+		} else {
+			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+			log.Errorf("%v", nerr)
+		}
+	} else {
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+	}
+
+	// create a tar.gz from all log files
+	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("tar command out:\n%s\n", string(out))
+		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
+		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		}
+	}
+
+	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+	return nil
 }

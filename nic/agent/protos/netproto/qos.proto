@@ -29,7 +29,7 @@ service QosClassApi {
 
     rpc GetQosClass (api.ObjectMeta) returns (QosClass) {};
     rpc ListQosClasses (api.ObjectMeta) returns (QosClassList) {};
-    rpc WatchQosClasses (api.ObjectMeta) returns (stream QosClassEvent) {};
+    rpc WatchQosClasses (api.ObjectMeta) returns (stream QosClassEventList) {};
 }
 
 // QosClass object
@@ -124,4 +124,10 @@ message QosClassList {
 message QosClassEvent {
     api.EventType       EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     QosClass            QosClass    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "qos-class,omitempty"];
+}
+
+
+// qos watch events batched
+message QosClassEventList {
+    repeated QosClassEvent QosClassEvents = 1;
 }

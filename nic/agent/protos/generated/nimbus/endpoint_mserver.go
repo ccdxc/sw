@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -57,11 +61,20 @@ type EndpointStatusReactor interface {
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type EndpointNodeStatus struct {
+	nodeID        string
+	watcher       *memdb.Watcher
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
 // EndpointTopic is the Endpoint topic on message bus
 type EndpointTopic struct {
+	sync.Mutex
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
 	statusReactor EndpointStatusReactor // status event reactor
+	nodeStatus    map[string]*EndpointNodeStatus
 }
 
 // AddEndpointTopic returns a network RPC server
@@ -71,6 +84,7 @@ func AddEndpointTopic(server *MbusServer, reactor EndpointStatusReactor) (*Endpo
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
+		nodeStatus:    make(map[string]*EndpointNodeStatus),
 	}
 
 	// register the RPC handlers
@@ -80,6 +94,178 @@ func AddEndpointTopic(server *MbusServer, reactor EndpointStatusReactor) (*Endpo
 
 	return &handler, nil
 }
+
+func (eh *EndpointTopic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.nodeStatus[nodeID] = &EndpointNodeStatus{nodeID: nodeID, watcher: watcher}
+	eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+	eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *EndpointTopic) unRegisterWatcher(nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *EndpointTopic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		nodeStatus.opAckedStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opAckedStatus[event]
+	}
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+"_"+"Endpoint", delta)
+	hdr.Record("Endpoint", delta)
+	hdr.Record(nodeID, delta)
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *EndpointTopic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		nodeStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *EndpointTopic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		return true
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "Endpoint", event)
+		return false
+	}
+
+	evAckStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "Endpoint", event)
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, "Endpoint", event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *EndpointTopic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *EndpointTopic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // CreateEndpoint creates Endpoint
 func (eh *EndpointTopic) CreateEndpoint(ctx context.Context, objinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
@@ -154,6 +340,7 @@ func (eh *EndpointTopic) GetEndpoint(ctx context.Context, objmeta *api.ObjectMet
 // ListEndpoints lists all Endpoints matching object selector
 func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMeta) (*netproto.EndpointList, error) {
 	var objlist netproto.EndpointList
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	filterFn := func(memdb.Object) bool {
 		return true
@@ -165,10 +352,14 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMe
 
 	// walk all objects
 	objs := eh.server.memDB.ListObjects("Endpoint", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
 		if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
 			objlist.Endpoints = append(objlist.Endpoints, obj)
+			//record the last object sent to check config sync
+			eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
 		}
 	}
 
@@ -203,6 +394,9 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 		return err
 	}
 
+	eh.registerWatcher(nodeID, &watcher)
+	defer eh.unRegisterWatcher(nodeID)
+
 	// increment stats
 	eh.server.Stats("Endpoint", "ActiveWatch").Inc()
 	eh.server.Stats("Endpoint", "WatchConnect").Inc()
@@ -210,16 +404,36 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 	defer eh.server.Stats("Endpoint", "WatchDisconnect").Inc()
 
 	// walk all Endpoints and send it out
+	watchEvts := netproto.EndpointEventList{}
 	for _, obj := range objlist.Endpoints {
 		watchEvt := netproto.EndpointEvent{
 			EventType: api.EventType_CreateEvent,
 			Endpoint:  *obj,
 		}
-		err = stream.Send(&watchEvt)
+		watchEvts.EndpointEvents = append(watchEvts.EndpointEvents, &watchEvt)
+	}
+	if len(watchEvts.EndpointEvents) > 0 {
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending Endpoint to stream. Err: %v", err)
 			return err
 		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.EndpointEventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Endpoint to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.EndpointEventList{}
+		return nil
 	}
 
 	// loop forever on watch channel
@@ -254,10 +468,24 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 				EventType: etype,
 				Endpoint:  *obj,
 			}
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Endpoint to stream. Err: %v", err)
+			watchEvts.EndpointEvents = append(watchEvts.EndpointEvents, &watchEvt)
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.EndpointEvents) >= DefaultWatchBatchSize {
+				if err = sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+		case <-timer.C:
+			running = false
+			if err = sendToStream(); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -270,6 +498,7 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 
 // updateEndpointOper triggers oper update callbacks
 func (eh *EndpointTopic) updateEndpointOper(oper *netproto.EndpointEvent, nodeID string) error {
+	eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.Endpoint.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
@@ -301,10 +530,10 @@ func (eh *EndpointTopic) EndpointOperUpdate(stream netproto.EndpointApi_Endpoint
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("EndpointOperUpdate stream ended. closing..")
+			log.Errorf("%v EndpointOperUpdate stream ended. closing..", nodeID)
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from EndpointOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from %v EndpointOperUpdate stream. Err: %v", nodeID, err)
 			return err
 		}
 

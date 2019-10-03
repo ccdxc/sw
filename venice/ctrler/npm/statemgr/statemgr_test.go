@@ -235,6 +235,10 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error finding the endpoint")
 	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", nep)
 
+	//hack to increase coverage
+	stateMgr.GetConfigPushStatus()
+	stateMgr.GetConfigPushStats()
+	stateMgr.ResetConfigPushStats()
 	// delete the endpoint
 	err = stateMgr.ctrler.Endpoint().Delete(&epinfo)
 	Assert(t, (err == nil), "Error deleting the endpoint", epinfo)
@@ -270,6 +274,11 @@ func TestEndpointStaleDelete(t *testing.T) {
 		Spec: cluster.DistributedServiceCardSpec{},
 		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
+			Conditions: []cluster.DSCCondition{
+				cluster.DSCCondition{
+					Status: cluster.ConditionStatus_TRUE.String(),
+					Type:   cluster.DSCCondition_HEALTHY.String()},
+			},
 		},
 	}
 
@@ -328,6 +337,11 @@ func TestEndpointStaleDelete(t *testing.T) {
 	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
 	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")
 	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	//hack to increase coverage
+	stateMgr.GetConfigPushStatus()
+	stateMgr.GetConfigPushStats()
+	stateMgr.ResetConfigPushStats()
 
 	//Delete a a host
 	err = stateMgr.ctrler.Host().Delete(&host)

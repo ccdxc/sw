@@ -9,8 +9,14 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
+	loginctx "github.com/pensando/sw/api/login/context"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
+	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -20,6 +26,7 @@ const mockVeniceURL = "localhost:9443"
 type mockIotaServer struct {
 	listenURL string
 	tb        *TestBed
+	authToken string // authToken obtained after logging in
 }
 
 // newMockIotaServer creates a mock iota server
@@ -109,17 +116,120 @@ func (ms *mockIotaServer) CleanNodes(ctx context.Context, req *iota.TestNodesMsg
 	return nil, nil
 }
 
+// VeniceRestClient returns the REST client for venice
+func (ms *mockIotaServer) VeniceRestClient() ([]apiclient.Services, error) {
+	var restcls []apiclient.Services
+	// connect to Venice
+	restcl, err := apiclient.NewRestAPIClient(mockVeniceURL)
+	if err != nil {
+		log.Errorf("Error connecting to Venice %v. Err: %v", mockVeniceURL, err)
+		return nil, err
+	}
+
+	restcls = append(restcls, restcl)
+
+	return restcls, nil
+}
+
+// VeniceNodeLoggedInCtx logs in to a specified node and returns loggedin context
+func (ms *mockIotaServer) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error) {
+	// local user credentials
+	userCred := auth.PasswordCredential{
+		Username: "test",
+		Password: common.UserPassword,
+		Tenant:   "default",
+	}
+
+	// try to login
+	ctx, err := authntestutils.NewLoggedInContext(context.Background(), nodeURL, &userCred)
+	if err != nil {
+		log.Errorf("Error logging into Venice URL %v. Err: %v", nodeURL, err)
+		return nil, err
+	}
+	authToken, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		ms.authToken = authToken
+	} else {
+		return nil, fmt.Errorf("auth token not available in logged-in context")
+	}
+
+	return ctx, nil
+}
+
+// VeniceLoggedInCtx returns loggedin context for venice taking a context
+func (ms *mockIotaServer) VeniceLoggedInCtx(ctx context.Context) (context.Context, error) {
+	var err error
+
+	if ms.authToken == "" {
+		_, err = ms.VeniceNodeLoggedInCtx(mockVeniceURL)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return loginctx.NewContextWithAuthzHeader(ctx, ms.authToken), nil
+}
+
+// WaitForVeniceClusterUp wait for venice cluster to come up
+func (ms *mockIotaServer) WaitForVeniceClusterUp(ctx context.Context) error {
+	// wait for cluster to come up
+	for i := 0; i < maxVeniceUpWait; i++ {
+		restcls, err := ms.VeniceRestClient()
+		if err == nil {
+			ctx2, err := ms.VeniceLoggedInCtx(ctx)
+			if err == nil {
+				for _, restcl := range restcls {
+					_, err = restcl.ClusterV1().Cluster().Get(ctx2, &api.ObjectMeta{Name: "iota-cluster"})
+					if err == nil {
+						return nil
+					}
+				}
+			}
+		}
+
+		time.Sleep(time.Second)
+		if e := ctx.Err(); e != nil {
+			return e
+		}
+	}
+
+	// if we reached here, it means we werent able to connect to Venice API GW
+	return fmt.Errorf("Failed to connect to Venice")
+}
+
+// ListSmartNIC gets a list of smartnics
+func (ms *mockIotaServer) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error) {
+	ctx, err := ms.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := ms.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{}
+
+	for _, restcl := range restcls {
+		snl, err = restcl.ClusterV1().DistributedServiceCard().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return snl, err
+}
+
 func (ms *mockIotaServer) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Debugf("AddNodes(): Received Request Msg: %v", req)
 
 	// wait for venice to come up
-	err := ms.tb.WaitForVeniceClusterUp(ctx)
+	err := ms.WaitForVeniceClusterUp(ctx)
 	if err != nil {
 		return req, err
 	}
 
 	// get smart nics from palazzo
-	snicList, err := ms.tb.ListSmartNIC()
+	snicList, err := ms.ListSmartNIC()
 	if err != nil {
 		return req, err
 	}

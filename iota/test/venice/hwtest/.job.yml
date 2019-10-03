@@ -10,8 +10,8 @@ queue_name: baremetal
 e2e-targets:
   # baremetal + vm test case
  e2e-venice-2naples:
-   commands: ["make", "-C", "iota/test/venice/hwtest", "jobd"]
-   # commands: [ "cat /warmd.json && sleep 30000000"]
+         #commands: ["make", "-C", "iota/test/venice/hwtest", "jobd"]
+   commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:venice-dev@pensando.io"]
    area:
    sub-area:
@@ -20,11 +20,11 @@ e2e-targets:
      - build-iris-arm
      - build-venice-image
    clusters:
-     - image: build-160
+     - image: build-186
        count: 3
        resources:
-         cpus: 4
-         memory: 8
+         cpus: 12
+         memory: 32
          pvt-networks:
          - control-1
          - control-2

@@ -12,17 +12,21 @@ import (
 )
 
 var _ = Describe("mirror tests", func() {
+	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
+		startTime = time.Now().UTC()
 		Eventually(func() error {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 	})
 	Context("Mirror tests", func() {
-		It("Mirror packets to collector and check TCPDUMP", func() {
+		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}

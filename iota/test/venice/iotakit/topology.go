@@ -42,6 +42,7 @@ var Topologies = map[string]*Topology{
 	"3Venice_2Naples_3SimScale100Naples":  &topo3Venice2Naples3NaplesSim100Scale,
 	"1Venice_2Naples_3SimScale200Naples":  &topo1Venice2Naples3NaplesSim200Scale,
 	"1Venice_15Naples_3SimScale200Naples": &topo1Venice2Naples15NaplesSim200Scale,
+	"3Venice_9Naples_3SimScale100Naples":  &topo3Venice9Naples3NaplesSim100Scale,
 	"3Venice_3SimScale200Naples":          &topo3Venice3NaplesSim200Scale,
 	"3Venice_1SimScale200Naples":          &topo3Venice1NaplesSim200Scale,
 	"1Venice_1SimScale200Naples":          &topo1Venice1NaplesSim200Scale,
@@ -482,12 +483,24 @@ var topo1Venice2Naples15NaplesSim200Scale = Topology{
 			HostOS:      "esx",
 		},
 		{
+			NodeName:    "naples8",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples9",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
 			NodeName:    "naplesSimScale1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
 			//This should be linux
 			HostOS:       "linux",
-			NumInstances: 200,
+			NumInstances: 100,
 		},
 		{
 			NodeName:    "naplesSimScale2",
@@ -495,7 +508,7 @@ var topo1Venice2Naples15NaplesSim200Scale = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
 			//This should be linux
 			HostOS:       "linux",
-			NumInstances: 200,
+			NumInstances: 100,
 		},
 		{
 			NodeName:    "naplesSimScale3",
@@ -503,10 +516,118 @@ var topo1Venice2Naples15NaplesSim200Scale = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
 			//This should be linux
 			HostOS:       "linux",
-			NumInstances: 200,
+			NumInstances: 100,
 		},
 		{
 			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+// one  venice node and 15 Naples baremetal nodes and naples sim scale with 100 instances
+var topo3Venice9Naples3NaplesSim100Scale = Topology{
+	NaplesImage:    "../nic/naples_fw.tar",
+	VeniceImage:    "../bin/venice.tgz",
+	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
+	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage:  "build-160",
+	NumVlans:       10, // FIXME: what should this be??
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		/*{
+			NodeName:    "naples3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples4",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples5",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples6",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples7",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples8",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples9",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},*/
+		{
+			NodeName:    "naplesSimScale1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 100,
+		},
+		{
+			NodeName:    "naplesSimScale2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 100,
+		},
+		/*{
+			NodeName:    "naplesSimScale3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 100,
+		},*/
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",

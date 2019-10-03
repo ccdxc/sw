@@ -509,6 +509,18 @@
       },
       "title": "app watch event"
     },
+    "netprotoAppEventList": {
+      "type": "object",
+      "properties": {
+        "AppEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoAppEvent"
+          }
+        }
+      },
+      "title": "app watch events batched"
+    },
     "netprotoAppList": {
       "type": "object",
       "properties": {

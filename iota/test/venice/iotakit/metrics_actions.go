@@ -25,7 +25,7 @@ func checkIPAddrInFwlog(ips []string, res []*telemetry_query.FwlogsQueryResult) 
 
 // FindFwlogForWorkloadPairs finds workload ip addresses in firewall log
 func (act *ActionCtx) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *WorkloadPairCollection) error {
-	res, err := act.model.tb.QueryFwlog(protocol, fwaction, timestr, port)
+	res, err := act.model.QueryFwlog(protocol, fwaction, timestr, port)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (act *ActionCtx) VerifyRuleStats(timestr string, spc *NetworkSecurityPolicy
 
 		// walk each rule
 		for idx, rule := range sts.RuleStatus {
-			res, err := act.model.tb.QueryMetrics("RuleMetrics", rule.RuleHash, timestr, int32(len(act.model.naples)))
+			res, err := act.model.QueryMetrics("RuleMetrics", rule.RuleHash, timestr, int32(len(act.model.naples)))
 			if err != nil {
 				log.Errorf("Error during metrics query %v", err)
 				continue

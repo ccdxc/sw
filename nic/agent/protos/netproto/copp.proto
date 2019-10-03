@@ -29,7 +29,7 @@ service ControlPlanePolicerApi {
 
     rpc GetControlPlanePolicer (api.ObjectMeta) returns (ControlPlanePolicer) {};
     rpc ListControlPlanePoliceres (api.ObjectMeta) returns (ControlPlanePolicerList) {};
-    rpc WatchControlPlanePoliceres (api.ObjectMeta) returns (stream ControlPlanePolicerEvent) {};
+    rpc WatchControlPlanePoliceres (api.ObjectMeta) returns (stream ControlPlanePolicerEventList) {};
 }
 
 // ControlPlanePolicer object
@@ -77,4 +77,9 @@ message ControlPlanePolicerList {
 message ControlPlanePolicerEvent {
     api.EventType           EventType           = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     ControlPlanePolicer     ControlPlanePolicer = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "copp,omitempty"];
+}
+
+// endpoint watch events batched
+message ControlPlanePolicerEventList {
+    repeated ControlPlanePolicerEvent ControlPlanePolicerEvents  = 1;
 }

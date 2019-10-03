@@ -4,7 +4,11 @@ package statemgr
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
@@ -150,6 +154,7 @@ func NewSecurityGroupState(sg *ctkit.SecurityGroup, stateMgr *Statemgr) (*Securi
 }
 
 func convertSecurityGroup(sgs *SecurityGroupState) *netproto.SecurityGroup {
+	creationTime, _ := types.TimestampProto(time.Now())
 	sg := netproto.SecurityGroup{
 		TypeMeta:   sgs.SecurityGroup.TypeMeta,
 		ObjectMeta: agentObjectMeta(sgs.SecurityGroup.ObjectMeta),
@@ -157,6 +162,7 @@ func convertSecurityGroup(sgs *SecurityGroupState) *netproto.SecurityGroup {
 			SecurityProfile: "", // FIXME: fill in security profile
 		},
 	}
+	sg.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	return &sg
 }

@@ -158,6 +158,7 @@ class TestcaseData:
         self.__instid = ""
         self.iterators = TestcaseDataIters()
         self.selected = None
+        self.__package = None
         return
 
     def SetTestCount(self, count):
@@ -215,6 +216,12 @@ class TestcaseData:
     def Name(self):
         return self.__instid
 
+    def GetPackage(self):
+        return self.__package
+
+    def SetPackage(self, package):
+        self.__package = package
+
 class Testcase:
     def __init__(self, spec, parent):
         self.__spec = spec
@@ -229,6 +236,7 @@ class Testcase:
         self.__enable = getattr(self.__spec, 'enable', True)
         self.__ignored = getattr(self.__spec, "ignore", False)
         self.__stress = getattr(self.__spec, "stress", GlobalOptions.stress)
+        self.__package = self.__spec.packages
 
 
         self.__timer = timeprofiler.TimeProfiler()
@@ -272,6 +280,7 @@ class Testcase:
             td.SetStatus(types.status.DISABLED)
         elif self.__ignored:
             td.SetStatus(types.status.IGNORED)
+        td.SetPackage(self.GetPackage())
         return td
 
     def SetSelected(self, selected):
@@ -282,6 +291,9 @@ class Testcase:
 
     def GetBundleStore(self):
         return self.bundle_store
+
+    def GetPackage(self):
+        return self.__package
 
     def __setup_simple_iters(self, spec):
         Logger.debug("Setting up simple iterators.")

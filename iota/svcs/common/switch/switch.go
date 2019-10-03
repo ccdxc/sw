@@ -80,6 +80,7 @@ type QosConfig struct {
 
 //Switch interface
 type Switch interface {
+	Disconnect()
 	SetNativeVlan(port string, vlan int) error
 	UnsetNativeVlan(port string, vlan int) error
 	LinkOp(port string, shutdown bool) error
@@ -335,6 +336,10 @@ func (sw *nexus3k) DoQosConfig(qosConfig *QosConfig) error {
 	}
 	_, err := n3k.ConfigureQos(sw.ctx, &n3kQos, 5*time.Second)
 	return err
+}
+
+func (sw *nexus3k) Disconnect() {
+	n3k.Disconnect(sw.ctx)
 }
 
 //NewSwitch Create a new switch handler

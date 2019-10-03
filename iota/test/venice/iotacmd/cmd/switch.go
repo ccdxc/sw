@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit"
@@ -30,7 +33,7 @@ func flapPorts(percent int) error {
 	if err != nil {
 		return err
 	}
-	return setupModel.Action().FlapDataSwitchPorts(sc, 10)
+	return setupModel.Action().FlapDataSwitchPorts(sc, 10*time.Second)
 }
 
 func switchFlapAction(cmd *cobra.Command, args []string) {
@@ -46,4 +49,34 @@ func switchFlapAction(cmd *cobra.Command, args []string) {
 		errorExit("Flapping ports failed", err)
 	}
 
+}
+
+var (
+	flapPortCancel context.CancelFunc
+)
+
+func startFlapPortsPeriodically(rate int, flapCount int, percent int) error {
+
+	stopFlapPortsPeriodically()
+
+	sc, err := setupModel.SwitchPorts().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	flapPortCancel = cancel
+	go setupModel.Action().FlapDataSwitchPortsPeriodically(ctx, sc,
+		10*time.Second, time.Duration(rate)*time.Second, flapCount)
+
+	return nil
+
+}
+
+func stopFlapPortsPeriodically() error {
+	if flapPortCancel != nil {
+		flapPortCancel()
+		flapPortCancel = nil
+	}
+	return nil
 }

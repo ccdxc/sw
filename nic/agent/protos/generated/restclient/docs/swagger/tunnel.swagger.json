@@ -474,6 +474,18 @@
       },
       "title": "tunnel watch event"
     },
+    "netprotoTunnelEventList": {
+      "type": "object",
+      "properties": {
+        "TunnelEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoTunnelEvent"
+          }
+        }
+      },
+      "title": "tunnel watch events batched"
+    },
     "netprotoTunnelList": {
       "type": "object",
       "properties": {

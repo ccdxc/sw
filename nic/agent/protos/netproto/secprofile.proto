@@ -26,7 +26,7 @@ service SecurityProfileApi {
 
     rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};
     rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
-    rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEvent) {};
+    rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEventList) {};
     rpc UpdateSecurityProfile (SecurityProfile) returns (SecurityProfile) {};
     rpc SecurityProfileOperUpdate (stream SecurityProfileEvent) returns (api.TypeMeta) {};
 
@@ -100,4 +100,11 @@ message SecurityProfileList {
 message SecurityProfileEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     SecurityProfile        SecurityProfile    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-profile,omitempty"];
+}
+
+
+
+// secprofile watch events batched
+message SecurityProfileEventList {
+    repeated SecurityProfileEvent SecurityProfileEvents  = 1;
 }

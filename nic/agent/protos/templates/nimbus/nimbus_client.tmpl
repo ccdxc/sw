@@ -10,8 +10,11 @@ package nimbus
 import (
 	"context"
 	"errors"
+	"sync"
+        "time"
 
 	"github.com/pensando/sw/api"
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -40,6 +43,11 @@ type {{$crudObject}}Reactor interface {
 	Delete{{$crudObject}}({{lower $crudObject}}Obj, ns, name string) error               // deletes an {{$crudObject}}
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
 }
+type {{$crudObject}}OStream struct {
+	sync.Mutex
+	stream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateClient
+}
+
 
 // Watch{{$crudObject}}s runs {{$crudObject}} watcher loop
 func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {{$crudObject}}Reactor) {
@@ -64,11 +72,13 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 	}
 
 	// start oper update stream
-	ostream, err := {{lower $crudObject}}RPCClient.{{$crudObject}}OperUpdate(ctx)
+	opStream, err := {{lower $crudObject}}RPCClient.{{$crudObject}}OperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting {{$crudObject}} oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &{{$crudObject}}OStream{stream : opStream}
 
 	// get a list of objects
 	objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &ometa)
@@ -91,22 +101,37 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.{{$crudObject}}Event)  {
+			client.debugStats.AddInt("{{$crudObject}}WatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got {{$crudObject}} watch event: Type: {%+v} {{$crudObject}}:{%+v}", client.clientName, evt.EventType, evt.{{$crudObject}}.ObjectMeta)
+			client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
+			go client.process{{$crudObject}}Event(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("{{$crudObject}} Watch channel closed. Exisint {{$crudObject}}Watch")
 				return
 			}
-			client.debugStats.AddInt("{{$crudObject}}WatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got {{$crudObject}} watch event: Type: {%+v} {{$crudObject}}:{%+v}", client.clientName, evt.EventType, evt.{{$crudObject}}.ObjectMeta)
-
-			client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
-			go client.process{{$crudObject}}Event(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+            //Give priority to evt work
+            //Wait for batch interval for inflight work
+            time.Sleep(DefaultWatchHoldInterval)
+            select {
+            case evt, ok := <-recvCh:
+                if !ok {
+                    log.Warnf("{{$crudObject}} Watch channel closed. Exisint {{$crudObject}}Watch")
+                    return
+                }
+                evtWork(evt)
+				continue
+            default:
+            }
 			// get a list of objects
 			objList, err := {{lower $crudObject}}RPCClient.List{{$crudObject}}s(ctx, &ometa)
 			if err != nil {
@@ -134,19 +159,20 @@ func (client *NimbusClient) watch{{$crudObject}}RecvLoop(stream netproto.{{$crud
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting {{$crudObject}} watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.{{$crudObject}}Events {
+			recvch <- evt
+		}
 	}
 }
 
 // diff{{$crudObject}} diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject}}List, reactor {{$crudObject}}Reactor, ostream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateClient) {
+func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject}}List, reactor {{$crudObject}}Reactor, ostream *{{$crudObject}}OStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.{{$crudObject}})
 	for _, obj := range objList.{{$crudObject}}s {
@@ -177,7 +203,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 	// add/update all new objects
 	for _, obj := range objList.{{$crudObject}}s {
 		evt := netproto.{{$crudObject}}Event{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			{{$crudObject}}:       *obj,
 		}
 		client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
@@ -186,7 +212,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 }
 
 // process{{$crudObject}}Event handles {{$crudObject}} event
-func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObject}}Event, reactor {{$crudObject}}Reactor, ostream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateClient) {
+func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObject}}Event, reactor {{$crudObject}}Reactor, ostream *{{$crudObject}}OStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -252,13 +278,17 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.{{$crudObject}}.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send {{$crudObject}} oper Status, %s", err)
 				client.debugStats.AddInt("{{$crudObject}}OperSendError", 1)
 			} else {
 				client.debugStats.AddInt("{{$crudObject}}OperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

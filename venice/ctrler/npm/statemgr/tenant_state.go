@@ -1,6 +1,11 @@
 package statemgr
 
 import (
+	"time"
+
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,11 +32,13 @@ func newTenantState(tn *ctkit.Tenant, stateMgr *Statemgr) (*TenantState, error) 
 }
 
 func convertTenant(tns *TenantState) *netproto.Tenant {
+	creationTime, _ := types.TimestampProto(time.Now())
 	ntn := netproto.Tenant{
 		TypeMeta:   tns.Tenant.TypeMeta,
 		ObjectMeta: tns.Tenant.ObjectMeta,
 	}
 
+	ntn.CreationTime = api.Timestamp{Timestamp: *creationTime}
 	return &ntn
 }
 

@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type AppReactor interface {
 	UpdateApp(appObj *netproto.App) error               // updates an App
 	DeleteApp(appObj, ns, name string) error            // deletes an App
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type AppOStream struct {
+	sync.Mutex
+	stream netproto.AppApi_AppOperUpdateClient
 }
 
 // WatchApps runs App watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	}
 
 	// start oper update stream
-	ostream, err := appRPCClient.AppOperUpdate(ctx)
+	opStream, err := appRPCClient.AppOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting App oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &AppOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := appRPCClient.ListApps(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.AppEvent) {
+			client.debugStats.AddInt("AppWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} App:{%+v}", client.clientName, evt.EventType, evt.App.ObjectMeta)
+			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
+			go client.processAppEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("App Watch channel closed. Exisint AppWatch")
 				return
 			}
-			client.debugStats.AddInt("AppWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} App:{%+v}", client.clientName, evt.EventType, evt.App.ObjectMeta)
-
-			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-			go client.processAppEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("App Watch channel closed. Exisint AppWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := appRPCClient.ListApps(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchAppRecvLoop(stream netproto.AppApi_WatchAppsCli
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting App watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.AppEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReactor, ostream netproto.AppApi_AppOperUpdateClient) {
+func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReactor, ostream *AppOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.App)
 	for _, obj := range objList.Apps {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 	// add/update all new objects
 	for _, obj := range objList.Apps {
 		evt := netproto.AppEvent{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			App:       *obj,
 		}
 		client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 }
 
 // processAppEvent handles App event
-func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor, ostream netproto.AppApi_AppOperUpdateClient) {
+func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor, ostream *AppOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.App.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send App oper Status, %s", err)
 				client.debugStats.AddInt("AppOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("AppOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

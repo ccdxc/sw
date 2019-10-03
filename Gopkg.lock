@@ -1678,6 +1678,14 @@
   version = "v1.0.7"
 
 [[projects]]
+  digest = "1:a37f6e86e990987d8b1b7642dd1b9763d914cb9bc862d493bae7b53158ac4b27"
+  name = "github.com/olekukonko/tablewriter"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:1207a31f08a3cb94a1b02f03a70c4d2a57ed850d8c30ba85e47f8fa3d0271c90"
   name = "github.com/olivere/elastic"
   packages = [
@@ -2936,6 +2944,7 @@
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",
+    "github.com/olekukonko/tablewriter",
     "github.com/olivere/elastic",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/config",

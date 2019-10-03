@@ -57,6 +57,7 @@ func (n *TestNode) AddNode() error {
 		log.Errorf("Adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 	}
+	n.RespNode.Name = n.Node.Name
 	n.Node.NodeUuid = resp.NodeUuid
 	return nil
 }
@@ -65,15 +66,24 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	cTimeout := time.After(time.Second * time.Duration(timeout))
 	for {
 		addr := n.Node.GetIpAddress()
+		sshCfg := n.SSHCfg
 		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 			addr = n.Node.EsxConfig.GetIpAddress()
 		}
 
-		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(addr, "22"), 2*time.Second)
+		addr = net.JoinHostPort(addr, "22")
+		conn, _ := net.DialTimeout("tcp", addr, 2*time.Second)
 		if conn != nil {
 			log.Infof("Connected to host : %s", addr)
 			conn.Close()
-			break
+			//Make sure ssh also works
+			nrunner := runner.NewRunner(sshCfg)
+			command := fmt.Sprintf("date")
+			err := nrunner.Run(addr, command, constants.RunCommandForeground)
+			if err == nil {
+				break
+			}
 		}
 		select {
 		case <-cTimeout:
@@ -130,6 +140,10 @@ func (n *TestNode) GetNodeIP() (string, error) {
 			return "", err
 		}
 
+		if on, _ := host.PoweredOn(constants.EsxControlVMName); !on {
+			log.Errorf("TOPO SVC | GetNodeIP | Control VM not powered on")
+			return "", errors.New("Control VM not powered on ")
+		}
 		ip, err = host.GetVMIP(constants.EsxControlVMName)
 		if err != nil {
 			log.Errorf("TOPO SVC | GetNodeIP | Failed to get IP address for control VM  %v", err.Error())
@@ -165,14 +179,15 @@ func (n *TestNode) RestartNode() error {
 
 	} else {
 
-		sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 			//First shutdown control node
+			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 			nrunner = runner.NewRunner(n.SSHCfg)
-			ip, _ = n.GetNodeIP()
-			addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-			command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
-			nrunner.Run(addr, command, constants.RunCommandForeground)
+			if ip, err = n.GetNodeIP(); err == nil {
+				addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+				command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+				nrunner.Run(addr, command, constants.RunCommandForeground)
+			}
 			addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
 			command = fmt.Sprintf("reboot && sleep 30")
 			nrunner = runner.NewRunner(sshCfg)
@@ -180,11 +195,15 @@ func (n *TestNode) RestartNode() error {
 			addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 			command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
 			nrunner = runner.NewRunner(n.SSHCfg)
-
 		}
 
 		nrunner.Run(addr, command, constants.RunCommandForeground)
 
+	}
+
+	if n.GrpcClient != nil {
+		n.GrpcClient.Client.Close()
+		n.GrpcClient = nil
 	}
 
 	time.Sleep(3 * time.Second)
@@ -224,7 +243,6 @@ func (n *TestNode) ReloadNode(restoreState bool) error {
 	var agentBinary string
 
 	resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
-	n.RespNode = resp
 	log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v", n.Node.GetName(), n.Node.IpAddress, resp)
 	if err != nil {
 		log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
@@ -257,12 +275,12 @@ func (n *TestNode) ReloadNode(restoreState bool) error {
 		return err
 	}
 
+	n.GrpcClient = c
 	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	if restoreState {
 		resp, err = n.AgentClient.ReloadNode(ctx, n.Node)
-		n.RespNode = resp
 		log.Infof("TOPO SVC | ReloadNode | ReloadNode Agent . Received Response Msg: %v", resp)
 		if err != nil {
 			log.Errorf("Reload node %v failed. Err: %v", n.Node.Name, err)

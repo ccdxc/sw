@@ -68,6 +68,7 @@ func TestMain(m *testing.M) {
 
 	os.Mkdir(common.DstIotaAgentDir, 0777)
 	os.Mkdir(common.DstIotaEntitiesDir, 0777)
+	os.Mkdir(common.ImageArtificatsDirectory, 0777)
 
 	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL, 0)
 	if err != nil {

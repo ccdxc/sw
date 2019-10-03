@@ -514,6 +514,18 @@
       },
       "title": "sg policy watch event"
     },
+    "netprotoNetworkSecurityPolicyEventList": {
+      "type": "object",
+      "properties": {
+        "NetworkSecurityPolicyEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNetworkSecurityPolicyEvent"
+          }
+        }
+      },
+      "title": "sg policy watch events batched"
+    },
     "netprotoNetworkSecurityPolicyList": {
       "type": "object",
       "properties": {

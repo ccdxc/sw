@@ -39,6 +39,7 @@ func CreateNewGRPCServer(svcName, URL string, maxMsgSize int) (*GRPCServer, erro
 	if maxMsgSize != 0 {
 		sopts = append(sopts, grpc.MaxRecvMsgSize(maxMsgSize))
 	}
+	sopts = append(sopts, grpc.KeepaliveParams(keepalive.ServerParameters{MaxConnectionIdle: 120 * time.Minute}))
 	s := GRPCServer{
 		SvcName: svcName,
 		Srv:     grpc.NewServer(sopts...),

@@ -5,14 +5,17 @@ package firewall_test
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("firewall whitelist tests", func() {
+	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
+		startTime = time.Now().UTC()
 		Eventually(func() error {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
@@ -22,6 +25,8 @@ var _ = Describe("firewall whitelist tests", func() {
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.NetworkSecurityPolicy("test-policy").Delete()
@@ -30,21 +35,21 @@ var _ = Describe("firewall whitelist tests", func() {
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
-	Context("basic whitelist tests", func() {
-		It("Should not ping between any workload without permit rules", func() {
+	Context("tags:type=basic;datapath=true;duration=short basic whitelist tests", func() {
+		It("tags:sanity=true Should not ping between any workload without permit rules", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			Eventually(func() error {
 				return ts.model.Action().PingFails(workloadPairs)
 			}).Should(Succeed())
 		})
 
-		It("Should allow TCP connections with specific permit rules", func() {
+		It("tags:sanity=true Should allow TCP connections with specific permit rules", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
@@ -74,7 +79,7 @@ var _ = Describe("firewall whitelist tests", func() {
 				Skip("Disabling UDP test on naples sim till traffic issue is debugged")
 			}
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "udp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
@@ -101,7 +106,7 @@ var _ = Describe("firewall whitelist tests", func() {
 
 		It("Ping should work with specific permit rules", func() {
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
 			spc.AddRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
@@ -121,6 +126,8 @@ var _ = Describe("firewall whitelist tests", func() {
 				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)
 			}).Should(Succeed())
 		})
+	})
+	Context("tags:type=basic;datapath=true;duration=long basic whitelist tests", func() {
 		It("Should be able to update policy and verify it takes effect", func() {
 			const maxRules = 5000
 			const numIter = 10

@@ -5,7 +5,9 @@ package iotakit
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -15,38 +17,46 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
-	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/workfarm"
 )
 
 const maxVeniceUpWait = 300
 
 // VeniceLoggedInCtx returns loggedin context for venice taking a context
-func (tb *TestBed) VeniceLoggedInCtx(ctx context.Context) (context.Context, error) {
+func (sm *SysModel) VeniceLoggedInCtx(ctx context.Context) (context.Context, error) {
 	var err error
 
-	if tb.authToken == "" {
-		_, err = tb.VeniceNodeLoggedInCtx(tb.GetVeniceURL()[0])
+	for _, url := range sm.tb.GetVeniceURL() {
+		if sm.authToken == "" {
+			_, err = sm.VeniceNodeLoggedInCtx(url)
+		}
+		if err == nil {
+			break
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	return loginctx.NewContextWithAuthzHeader(ctx, tb.authToken), nil
+	return loginctx.NewContextWithAuthzHeader(ctx, sm.authToken), nil
+
 }
 
 // VeniceNodeLoggedInCtx logs in to a specified node and returns loggedin context
-func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error) {
+func (sm *SysModel) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error) {
 	// local user credentials
 	userCred := auth.PasswordCredential{
 		Username: "admin",
@@ -55,7 +65,7 @@ func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error
 	}
 
 	// overwrite user-id/password in mock mode to match venice integ user cred
-	if tb.mockMode {
+	if sm.tb.mockMode {
 		userCred.Username = "test"
 		userCred.Password = common.UserPassword
 	}
@@ -68,7 +78,7 @@ func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error
 	}
 	authToken, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if ok {
-		tb.authToken = authToken
+		sm.authToken = authToken
 	} else {
 		return nil, fmt.Errorf("auth token not available in logged-in context")
 	}
@@ -77,8 +87,8 @@ func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error
 }
 
 // GetAuthorizationHeader gets and returns the authorization header from login context
-func (tb *TestBed) GetAuthorizationHeader() (string, error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetAuthorizationHeader() (string, error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return "", err
 	}
@@ -93,14 +103,28 @@ func (tb *TestBed) GetAuthorizationHeader() (string, error) {
 }
 
 // VeniceRestClient returns the REST client for venice
-func (tb *TestBed) VeniceRestClient() ([]apiclient.Services, error) {
-	// if we are already connected, just return the client
-	if tb.veniceRestClient != nil {
-		return tb.veniceRestClient, nil
+func (sm *SysModel) VeniceRestClient() ([]apiclient.Services, error) {
+	var restcls []apiclient.Services
+	for _, url := range sm.GetVeniceURL() {
+		// connect to Venice
+		restcl, err := apiclient.NewRestAPIClient(url)
+		if err != nil {
+			log.Errorf("Error connecting to Venice %v. Err: %v", url, err)
+			return nil, err
+		}
+
+		restcls = append(restcls, restcl)
 	}
 
+	return restcls, nil
+}
+
+// NewVeniceRestClient returns the REST client for venice
+func (sm *SysModel) NewVeniceRestClient() ([]apiclient.Services, error) {
+	// if we are already connected, just return the client
+
 	var restcls []apiclient.Services
-	for _, url := range tb.GetVeniceURL() {
+	for _, url := range sm.GetVeniceURL() {
 		// connect to Venice
 		restcl, err := apiclient.NewRestAPIClient(url)
 		if err != nil {
@@ -115,7 +139,7 @@ func (tb *TestBed) VeniceRestClient() ([]apiclient.Services, error) {
 }
 
 // VeniceNodeRestClient returns the REST client for venice node
-func (tb *TestBed) VeniceNodeRestClient(nodeURL string) (apiclient.Services, error) {
+func (sm *SysModel) VeniceNodeRestClient(nodeURL string) (apiclient.Services, error) {
 	// connect to Venice
 	restcl, err := apiclient.NewRestAPIClient(nodeURL)
 	if err != nil {
@@ -126,12 +150,12 @@ func (tb *TestBed) VeniceNodeRestClient(nodeURL string) (apiclient.Services, err
 }
 
 // WaitForVeniceClusterUp wait for venice cluster to come up
-func (tb *TestBed) WaitForVeniceClusterUp(ctx context.Context) error {
+func (sm *SysModel) WaitForVeniceClusterUp(ctx context.Context) error {
 	// wait for cluster to come up
 	for i := 0; i < maxVeniceUpWait; i++ {
-		restcls, err := tb.VeniceRestClient()
+		restcls, err := sm.VeniceRestClient()
 		if err == nil {
-			ctx2, err := tb.VeniceLoggedInCtx(ctx)
+			ctx2, err := sm.VeniceLoggedInCtx(ctx)
 			if err == nil {
 				for _, restcl := range restcls {
 					_, err = restcl.ClusterV1().Cluster().Get(ctx2, &api.ObjectMeta{Name: "iota-cluster"})
@@ -153,28 +177,29 @@ func (tb *TestBed) WaitForVeniceClusterUp(ctx context.Context) error {
 }
 
 // InitVeniceConfig initializes base configuration for venice
-func (tb *TestBed) InitVeniceConfig(ctx context.Context) error {
+func (sm *SysModel) InitVeniceConfig(ctx context.Context) error {
 	// base configs
-	cfgMsg := &iota.InitConfigMsg{
+	/*cfgMsg := &iota.InitConfigMsg{
 		ApiResponse:    &iota.IotaAPIResponse{},
 		EntryPointType: iota.EntrypointType_VENICE_REST,
-		Endpoints:      tb.GetVeniceURL(),
-		Vlans:          tb.allocatedVlans,
+		Endpoints:      sm.GetVeniceURL(),
+		Vlans:          sm.tb.allocatedVlans,
 	}
 
 	// Push base configs
-	cfgClient := iota.NewConfigMgmtApiClient(tb.iotaClient.Client)
+	cfgClient := iota.NewConfigMgmtApiClient(sm.tb.iotaClient.Client)
 	cfgInitResp, err := cfgClient.InitCfgService(ctx, cfgMsg)
 	if err != nil || cfgInitResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Config service Init failed. API Status: %v , Err: %v", cfgInitResp.ApiResponse.ApiStatus, err)
 		return fmt.Errorf("Config service init failed")
 	}
-	log.Debugf("Got init config Resp: %+v", cfgInitResp)
+	log.Debugf("Got init config Resp: %+v", cfgInitResp)*/
 
 	log.Infof("Setting up Auth on Venice cluster...")
 
+	var err error
 	for i := 0; i < maxVeniceUpWait; i++ {
-		err = tb.SetupAuth("admin", common.UserPassword)
+		err = sm.SetupAuth("admin", common.UserPassword)
 		if err == nil {
 			break
 		}
@@ -191,17 +216,17 @@ func (tb *TestBed) InitVeniceConfig(ctx context.Context) error {
 	log.Infof("Auth setup complete...")
 
 	// wait for venice cluster to come up
-	return tb.WaitForVeniceClusterUp(ctx)
+	return sm.WaitForVeniceClusterUp(ctx)
 }
 
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
-func (tb *TestBed) SetupAuth(userID, password string) error {
+func (sm *SysModel) SetupAuth(userID, password string) error {
 	// no need to setup auth in mock mode
-	if tb.mockMode {
+	if sm.tb.mockMode {
 		return nil
 	}
 
-	apicl, err := apiclient.NewRestAPIClient(tb.GetVeniceURL()[0])
+	apicl, err := apiclient.NewRestAPIClient(sm.GetVeniceURL()[0])
 	if err != nil {
 		return fmt.Errorf("cannot create rest client, err: %v", err)
 	}
@@ -255,13 +280,13 @@ func (tb *TestBed) SetupAuth(userID, password string) error {
 }
 
 // CreateHost creates host object in venice
-func (tb *TestBed) CreateHost(host *cluster.Host) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateHost(host *cluster.Host) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
 
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -281,12 +306,12 @@ func (tb *TestBed) CreateHost(host *cluster.Host) error {
 }
 
 // ListHost gets all hosts from venice cluster
-func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListHost() (objs []*cluster.Host, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -304,12 +329,12 @@ func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
 }
 
 //DeleteHost deletes host object
-func (tb *TestBed) DeleteHost(wrkld *cluster.Host) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteHost(wrkld *cluster.Host) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -318,18 +343,72 @@ func (tb *TestBed) DeleteHost(wrkld *cluster.Host) error {
 		_, err = restcl.ClusterV1().Host().Delete(ctx, &wrkld.ObjectMeta)
 		if err == nil {
 			break
+		} else {
+			log.Errorf("Error deleting object %v", err)
 		}
 	}
 	return err
 }
 
+func (sm *SysModel) workloadOPer(wrklds []*workload.Workload, opFunc workfarm.WorkFunc) error {
+
+	numOfWorkers := 50
+
+	wctx := &workCtx{
+		workloads: wrklds,
+		sm:        sm,
+	}
+
+	wctx.restCls = make(map[int][]apiclient.Services)
+	for i := 0; i < numOfWorkers; i++ {
+		restcls, err := wctx.sm.NewVeniceRestClient()
+		if err != nil {
+			return err
+		}
+		wctx.restCls[i] = restcls
+	}
+
+	defer func() {
+		for _, restClients := range wctx.restCls {
+			for _, restClient := range restClients {
+				go restClient.Close()
+			}
+		}
+	}()
+
+	farm := workfarm.New(int(numOfWorkers), time.Minute*20, opFunc)
+
+	log.Infof("Number of workers %v", numOfWorkers)
+	ch, err := farm.Run(context.Background(), len(wrklds), 0, math.MaxUint32, wctx)
+	if err != nil {
+		fmt.Printf("failed to start work (%s)\n", err)
+	}
+
+	rslts := <-ch
+
+	if rslts.WorkerErrors != 0 {
+		return fmt.Errorf("Workload create failed stats %+v", rslts)
+	}
+	return nil
+}
+
+// CreateWorkloads creates workloads
+func (sm *SysModel) CreateWorkloads(wrklds []*workload.Workload) error {
+	return sm.workloadOPer(wrklds, workloadWork)
+}
+
+// DeleteWorkloads deletes workload
+func (sm *SysModel) DeleteWorkloads(wrklds []*workload.Workload) error {
+	return sm.workloadOPer(wrklds, workloadDeleteWork)
+}
+
 // CreateWorkload creates workload
-func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateWorkload(wrkld *workload.Workload) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -349,12 +428,12 @@ func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
 }
 
 // GetWorkload returns venice workload by object meta
-func (tb *TestBed) GetWorkload(meta *api.ObjectMeta) (w *workload.Workload, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetWorkload(meta *api.ObjectMeta) (w *workload.Workload, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -370,12 +449,12 @@ func (tb *TestBed) GetWorkload(meta *api.ObjectMeta) (w *workload.Workload, err 
 }
 
 //DeleteWorkload deletes workload
-func (tb *TestBed) DeleteWorkload(wrkld *workload.Workload) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteWorkload(wrkld *workload.Workload) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -390,12 +469,12 @@ func (tb *TestBed) DeleteWorkload(wrkld *workload.Workload) error {
 }
 
 // ListWorkload gets all workloads from venice cluster
-func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListWorkload() (objs []*workload.Workload, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -413,12 +492,12 @@ func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
 }
 
 // CreateMirrorSession creates Mirror policy
-func (tb *TestBed) CreateMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -439,12 +518,12 @@ func (tb *TestBed) CreateMirrorSession(msp *monitoring.MirrorSession) error {
 }
 
 // UpdateMirrorSession updates an Mirror policy
-func (tb *TestBed) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -458,13 +537,33 @@ func (tb *TestBed) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
 	return err
 }
 
+// UpdateSmartNIC updates an SmartNIC object
+func (sm *SysModel) UpdateSmartNIC(sn *cluster.DistributedServiceCard) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.ClusterV1().DistributedServiceCard().Update(ctx, sn)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
 // GetMirrorSession gets MirrorSession from venice cluster
-func (tb *TestBed) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.MirrorSession, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.MirrorSession, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -480,12 +579,12 @@ func (tb *TestBed) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.Mirro
 }
 
 // ListMirrorSession gets all MirrorPolicies from venice cluster
-func (tb *TestBed) ListMirrorSession() (objs []*monitoring.MirrorSession, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListMirrorSession() (objs []*monitoring.MirrorSession, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -503,12 +602,12 @@ func (tb *TestBed) ListMirrorSession() (objs []*monitoring.MirrorSession, err er
 }
 
 // DeleteMirrorSession deletes Mirror policy
-func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -524,12 +623,12 @@ func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 }
 
 // CreateNetworkSecurityPolicy creates SG policy
-func (tb *TestBed) CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -550,12 +649,12 @@ func (tb *TestBed) CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPoli
 }
 
 // UpdateNetworkSecurityPolicy updates an SG policy
-func (tb *TestBed) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -570,12 +669,12 @@ func (tb *TestBed) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPoli
 }
 
 // GetNetworkSecurityPolicy gets NetworkSecurityPolicy from venice cluster
-func (tb *TestBed) GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security.NetworkSecurityPolicy, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security.NetworkSecurityPolicy, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -590,13 +689,100 @@ func (tb *TestBed) GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security
 	return sgp, err
 }
 
-// ListNetworkSecurityPolicy gets all SGPolicies from venice cluster
-func (tb *TestBed) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurityPolicy, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+//GetNpmDebugModuleURLs gets npm debug module
+func (sm *SysModel) GetNpmDebugModuleURLs() (urls []string, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, restcl := range restcls {
+		data, err := restcl.DiagnosticsV1().Module().List(ctx, &api.ListWatchOptions{})
+		if err == nil {
+			for _, module := range data {
+				if strings.Contains(module.ObjectMeta.Name, "pen-npm") {
+					for _, veniceURL := range sm.GetVeniceURL() {
+						urls = append(urls, "https://"+veniceURL+module.GetSelfLink()+"/Debug")
+					}
+				}
+			}
+		}
+	}
+
+	if len(urls) == 0 {
+		return nil, errors.New("Could not find NPM debug URL")
+	}
+	return urls, nil
+}
+
+func (sm *SysModel) doConfigPostAction(action string, configStatus interface{}) error {
+
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+
+	npmURLs, err := sm.GetNpmDebugModuleURLs()
+	if err != nil {
+		return errors.New("Npm debug URL not found")
+	}
+
+	req := &diagnostics.DiagnosticsRequest{
+		Query:      "action",
+		Parameters: map[string]string{"action": action}}
+
+	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("no authorization header in context")
+	}
+	restcl.SetHeader("Authorization", authzHeader)
+	for _, url := range npmURLs {
+		_, err = restcl.Req("POST", url, req, configStatus)
+		if err == nil {
+			return nil
+		}
+		fmt.Printf("Error in request %+v\n", err)
+
+	}
+
+	return fmt.Errorf("Failed Request for config push : %v", err)
+}
+
+//PullConfigStatus pulls config status
+func (sm *SysModel) PullConfigStatus(configStatus interface{}) error {
+
+	return sm.doConfigPostAction("config-status", configStatus)
+}
+
+//PullConfigStats pulls config stats
+func (sm *SysModel) PullConfigStats(configStats interface{}) error {
+
+	return sm.doConfigPostAction("config-stats", configStats)
+}
+
+//ResetConfigStats reset config stats
+func (sm *SysModel) resetConfigStats(configReset interface{}) error {
+
+	return sm.doConfigPostAction("reset-stats", configReset)
+}
+
+// ListNetworkSecurityPolicy gets all SGPolicies from venice cluster
+func (sm *SysModel) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurityPolicy, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -614,12 +800,12 @@ func (tb *TestBed) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurity
 }
 
 // DeleteNetworkSecurityPolicy deletes SG policy
-func (tb *TestBed) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -628,6 +814,8 @@ func (tb *TestBed) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPoli
 		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 		if err == nil {
 			break
+		} else {
+			log.Errorf("Error deleting object %v", err)
 		}
 	}
 
@@ -635,12 +823,12 @@ func (tb *TestBed) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPoli
 }
 
 // GetCluster gets the venice cluster object
-func (tb *TestBed) GetCluster() (cl *cluster.Cluster, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetCluster() (cl *cluster.Cluster, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -656,8 +844,8 @@ func (tb *TestBed) GetCluster() (cl *cluster.Cluster, err error) {
 }
 
 // GetClusterWithRestClient gets the venice cluster object
-func (tb *TestBed) GetClusterWithRestClient(restcl apiclient.Services) (cl *cluster.Cluster, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetClusterWithRestClient(restcl apiclient.Services) (cl *cluster.Cluster, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -665,12 +853,12 @@ func (tb *TestBed) GetClusterWithRestClient(restcl apiclient.Services) (cl *clus
 }
 
 // GetVeniceNode gets venice node state from venice cluster
-func (tb *TestBed) GetVeniceNode(name string) (n *cluster.Node, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetVeniceNode(name string) (n *cluster.Node, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -692,12 +880,12 @@ func (tb *TestBed) GetVeniceNode(name string) (n *cluster.Node, err error) {
 }
 
 // GetSmartNIC returns venice smartnic object
-func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.DistributedServiceCard, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetSmartNIC(name string) (sn *cluster.DistributedServiceCard, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -716,13 +904,69 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.DistributedServiceCard,
 	return sn, err
 }
 
+type workCtx struct {
+	workloads []*workload.Workload
+	sm        *SysModel
+	restCls   map[int][]apiclient.Services
+}
+
+func workloadWork(ctx context.Context, id, iter int, userCtx interface{}) error {
+
+	wctx := userCtx.(*workCtx)
+	ctx, err := wctx.sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+
+	if restcls, ok := wctx.restCls[id]; ok {
+		for _, restcl := range restcls {
+			_, err = restcl.WorkloadV1().Workload().Create(ctx, wctx.workloads[iter])
+			if err == nil {
+				break
+			} else if strings.Contains(err.Error(), "already exists") {
+				_, err = restcl.WorkloadV1().Workload().Update(ctx, wctx.workloads[iter])
+				if err == nil {
+					break
+				}
+			}
+		}
+	}
+
+	if err != nil {
+		log.Errorf("Workload create %v failed  with error %v", wctx.workloads[iter], err.Error())
+	}
+	return err
+}
+
+func workloadDeleteWork(ctx context.Context, id, iter int, userCtx interface{}) error {
+
+	wctx := userCtx.(*workCtx)
+	ctx, err := wctx.sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+	if restcls, ok := wctx.restCls[id]; ok {
+		for _, restcl := range restcls {
+			_, err = restcl.WorkloadV1().Workload().Delete(ctx, &wctx.workloads[iter].ObjectMeta)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			log.Errorf("Workload  delete %v failed  with error %v", wctx.workloads[iter], err.Error())
+			return err
+		}
+	}
+	return err
+}
+
 // ListSmartNIC gets a list of smartnics
-func (tb *TestBed) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -740,9 +984,9 @@ func (tb *TestBed) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err er
 }
 
 // GetSmartNICInMacRange returns a smartnic object in mac address range
-func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.DistributedServiceCard, err error) {
+func (sm *SysModel) GetSmartNICInMacRange(macAddr string) (sn *cluster.DistributedServiceCard, err error) {
 	const maxMacDiff = 24
-	snicList, err := tb.ListSmartNIC()
+	snicList, err := sm.ListSmartNIC()
 	if err != nil {
 		return nil, err
 	}
@@ -759,9 +1003,8 @@ func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.Distribute
 	return nil, fmt.Errorf("Could not find smartnic with mac addr %s", macAddr)
 }
 
-// GetSmartNICByName returns a smartnic object by its name
-func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.DistributedServiceCard, err error) {
-	snicList, err := tb.ListSmartNIC()
+func (sm *SysModel) GetSmartNICByName(snicName string) (sn *cluster.DistributedServiceCard, err error) {
+	snicList, err := sm.ListSmartNIC()
 	if err != nil {
 		return nil, err
 	}
@@ -777,12 +1020,12 @@ func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.DistributedSe
 }
 
 // GetEndpoint returns the endpoint
-func (tb *TestBed) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -797,12 +1040,12 @@ func (tb *TestBed) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err
 }
 
 // ListEndpoints returns list of endpoints known to Venice
-func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListEndpoints(tenant string) (eps []*workload.Endpoint, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -819,12 +1062,12 @@ func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err e
 }
 
 // UpdateFirewallProfile updates firewall profile
-func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -845,12 +1088,12 @@ func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
 }
 
 // ListFirewallProfile gets all fw profile apps from venice cluster
-func (tb *TestBed) ListFirewallProfile() (objs []*security.FirewallProfile, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListFirewallProfile() (objs []*security.FirewallProfile, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -868,12 +1111,12 @@ func (tb *TestBed) ListFirewallProfile() (objs []*security.FirewallProfile, err 
 }
 
 // DeleteFirewallProfile deletes FirewallProfile object
-func (tb *TestBed) DeleteFirewallProfile(fwprofile *security.FirewallProfile) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteFirewallProfile(fwprofile *security.FirewallProfile) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -889,12 +1132,12 @@ func (tb *TestBed) DeleteFirewallProfile(fwprofile *security.FirewallProfile) er
 }
 
 // CreateApp creates an app in venice
-func (tb *TestBed) CreateApp(app *security.App) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateApp(app *security.App) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -915,12 +1158,12 @@ func (tb *TestBed) CreateApp(app *security.App) error {
 }
 
 // ListApp gets all apps from venice cluster
-func (tb *TestBed) ListApp() (objs []*security.App, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListApp() (objs []*security.App, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -938,12 +1181,12 @@ func (tb *TestBed) ListApp() (objs []*security.App, err error) {
 }
 
 // DeleteApp deletes App object
-func (tb *TestBed) DeleteApp(app *security.App) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteApp(app *security.App) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -952,6 +1195,8 @@ func (tb *TestBed) DeleteApp(app *security.App) error {
 		_, err = restcl.SecurityV1().App().Delete(ctx, &app.ObjectMeta)
 		if err == nil {
 			break
+		} else {
+			log.Errorf("Error deleting object %v", err)
 		}
 	}
 
@@ -959,12 +1204,12 @@ func (tb *TestBed) DeleteApp(app *security.App) error {
 }
 
 // CreateNetwork creates an Network in venice
-func (tb *TestBed) CreateNetwork(obj *network.Network) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) CreateNetwork(obj *network.Network) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -980,12 +1225,12 @@ func (tb *TestBed) CreateNetwork(obj *network.Network) error {
 }
 
 // ListNetwork gets all networks from venice cluster
-func (tb *TestBed) ListNetwork() (objs []*network.Network, err error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) ListNetwork() (objs []*network.Network, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
 	}
@@ -1003,12 +1248,12 @@ func (tb *TestBed) ListNetwork() (objs []*network.Network, err error) {
 }
 
 // DeleteNetwork deletes Network object
-func (tb *TestBed) DeleteNetwork(net *network.Network) error {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) DeleteNetwork(net *network.Network) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
-	restcls, err := tb.VeniceRestClient()
+	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -1024,9 +1269,9 @@ func (tb *TestBed) DeleteNetwork(net *network.Network) error {
 }
 
 // ListEvents makes a http request to the APIGw with the given list watch options and returns the response
-func (tb *TestBed) ListEvents(listWatchOptions *api.ListWatchOptions) (evtsapi.EventList, error) {
+func (sm *SysModel) ListEvents(listWatchOptions *api.ListWatchOptions) (evtsapi.EventList, error) {
 	resp := evtsapi.EventList{}
-	authzHdr, err := tb.GetAuthorizationHeader()
+	authzHdr, err := sm.GetAuthorizationHeader()
 	if err != nil {
 		return resp, err
 	}
@@ -1036,7 +1281,108 @@ func (tb *TestBed) ListEvents(listWatchOptions *api.ListWatchOptions) (evtsapi.E
 	httpClient.DisableKeepAlives()
 	defer httpClient.CloseIdleConnections()
 
-	URL := fmt.Sprintf("https://%s/events/v1/events", tb.GetVeniceURL()[0])
+	URL := fmt.Sprintf("https://%s/events/v1/events", sm.GetVeniceURL()[0])
 	_, err = httpClient.Req("GET", URL, *listWatchOptions, &resp)
 	return resp, err
+}
+
+//StagingBuffer
+type StagingBuffer struct {
+	sm      *SysModel
+	name    string
+	tenant  string
+	ctx     context.Context
+	stagecl apiclient.Services
+}
+
+//NewStagingBuffer buffer handle
+func (sm *SysModel) NewStagingBuffer() (*StagingBuffer, error) {
+	buffer := &StagingBuffer{name: "TestBuffer", tenant: "default"}
+
+	urls := sm.GetVeniceURL()
+
+	restcl, err := apiclient.NewRestAPIClient(urls[0])
+	if err != nil {
+		return nil, err
+	}
+
+	ctx2, err := sm.VeniceLoggedInCtx(context.Background())
+	{ // Cleanup existing
+		objMeta := api.ObjectMeta{Name: buffer.name, Tenant: buffer.tenant}
+		restcl.StagingV1().Buffer().Delete(ctx2, &objMeta)
+	}
+	fmt.Printf("creating Staging Buffer\n")
+	{ // Create a buffer
+		buf := staging.Buffer{}
+		buf.Name = buffer.name
+		buf.Tenant = buffer.tenant
+		_, err := restcl.StagingV1().Buffer().Create(ctx2, &buf)
+		if err != nil {
+			fmt.Printf("*** Failed to create Staging Buffer(%s)\n", err)
+			return nil, err
+		}
+	}
+
+	// Staging Client
+	stagecl, err := apiclient.NewStagedRestAPIClient(urls[0], buffer.name)
+	if err != nil {
+		return nil, err
+	}
+
+	buffer.stagecl = stagecl
+	buffer.sm = sm
+	buffer.ctx = ctx2
+
+	return buffer, nil
+}
+
+//AddHost to statging buffer
+func (buf *StagingBuffer) AddHost(host *cluster.Host) error {
+
+	_, err := buf.stagecl.ClusterV1().Host().Create(buf.ctx, host)
+	return err
+}
+
+//AddApp to statging buffer
+func (buf *StagingBuffer) AddApp(app *security.App) error {
+
+	_, err := buf.stagecl.SecurityV1().App().Create(buf.ctx, app)
+	return err
+}
+
+//AddWorkload to statging buffer
+func (buf *StagingBuffer) AddWorkload(workload *workload.Workload) error {
+
+	_, err := buf.stagecl.WorkloadV1().Workload().Create(buf.ctx, workload)
+	return err
+}
+
+//AddNetowrkSecurityPolicy to statging buffer
+func (buf *StagingBuffer) AddNetowrkSecurityPolicy(policy *security.NetworkSecurityPolicy) error {
+
+	_, err := buf.stagecl.SecurityV1().NetworkSecurityPolicy().Create(buf.ctx, policy)
+	return err
+}
+
+//Commit the buffer
+func (buf *StagingBuffer) Commit() error {
+
+	urls := buf.sm.GetVeniceURL()
+
+	restcl, err := apiclient.NewRestAPIClient(urls[0])
+	if err != nil {
+		return err
+	}
+
+	ctx2, err := buf.sm.VeniceLoggedInCtx(context.Background())
+
+	action := &staging.CommitAction{}
+	action.Name = buf.name
+	action.Tenant = buf.tenant
+	_, err = restcl.StagingV1().Buffer().Commit(ctx2, action)
+	if err != nil {
+		fmt.Printf("*** Failed to commit Staging Buffer(%s)\n", err)
+		return err
+	}
+	return nil
 }

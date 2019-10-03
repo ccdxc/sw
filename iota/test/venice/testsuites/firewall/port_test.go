@@ -18,7 +18,7 @@ var _ = Describe("Port tests", func() {
 		ts.tb.AfterTestCommon()
 	})
 
-	Context("Basic port flap tests", func() {
+	Context("tags:type=basic;datapath=true;duration=short Basic port flap tests", func() {
 		It("Link flap should not result in traffic failure", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("link flap cannot be run on NAPLES sim")

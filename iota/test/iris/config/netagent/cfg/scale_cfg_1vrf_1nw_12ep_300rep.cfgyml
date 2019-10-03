@@ -32,14 +32,16 @@ objects:
 #  name: scale-sec-profile
 #  count: 1
 
-#- kind: Tunnel
-#  name: scale-tunnel
-#  count: 8
-#- kind: MirrorSession
-#  name: scale-mirror
-#  count: 8
-#- kind: FlowExportPolicy
-#  name: scale-flow-mon
-#  count: 1
-#- kind: FlowMonitorRule
-#  count: 1000
+- kind: Tunnel
+  name: scale-tunnel
+  count: 8
+- kind: MirrorSession
+  name: scale-mirror
+  count: 8
+- kind: MirrorSessionRule
+  count: 300
+- kind: FlowExportPolicy
+  name: scale-flow-mon
+  count: 1
+- kind: FlowMonitorRule
+  count: 300

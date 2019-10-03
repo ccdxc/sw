@@ -20,7 +20,7 @@ type EventsCollection struct {
 
 // Events returns all the events from the default tenant and namespace. Max of 1000 events will be returned
 func (sm *SysModel) Events() *EventsCollection {
-	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{
 		ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace}})
 	if err != nil {
 		log.Errorf("failed to list events, err: %v", err)
@@ -40,7 +40,7 @@ func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *NaplesCollection) *E
 	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
 		eventtypes.LINK_UP, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
 
-	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
 		return &EventsCollection{err: err}
@@ -59,7 +59,7 @@ func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *NaplesCollection) 
 	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
 		eventtypes.LINK_DOWN, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
 
-	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
 		return &EventsCollection{err: err}

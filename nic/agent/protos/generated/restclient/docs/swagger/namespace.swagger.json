@@ -474,6 +474,18 @@
       },
       "title": "namespace watch event"
     },
+    "netprotoNamespaceEventList": {
+      "type": "object",
+      "properties": {
+        "NamespaceEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNamespaceEvent"
+          }
+        }
+      },
+      "title": "namespace watch events batched"
+    },
     "netprotoNamespaceList": {
       "type": "object",
       "properties": {

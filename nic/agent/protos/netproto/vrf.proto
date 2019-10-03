@@ -27,7 +27,7 @@ service VrfApi {
 
     rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
     rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
-    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEvent) {};
+    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEventList) {};
     rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
 
 }
@@ -71,4 +71,10 @@ message VrfList {
 message VrfEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Vrf       Vrf   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "vrf,omitempty"];
+}
+
+
+// vrf watch events batched
+message VrfEventList {
+    repeated VrfEvent VrfEvents  = 1;
 }

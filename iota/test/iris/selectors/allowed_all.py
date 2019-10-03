@@ -11,13 +11,13 @@ def Main(args):
 
     wl_pair_type = getattr(args, "type", None)
     if wl_pair_type == 'local_only':
-        workload_pairs = netagent_api.GetAllowAllWorkloadPairs(
+        workload_pairs = netagent_api.GetTcpAllowAllWorkloadPairsWithPort(
             wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY)
     elif wl_pair_type == 'remote_only':
-        workload_pairs = netagent_api.GetAllowAllWorkloadPairs(
+        workload_pairs = netagent_api.GetTcpAllowAllWorkloadPairsWithPort(
             wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
     else:
-        workload_pairs = netagent_api.GetAllowAllWorkloadPairs(
+        workload_pairs = netagent_api.GetTcpAllowAllWorkloadPairsWithPort(
             wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
 
 

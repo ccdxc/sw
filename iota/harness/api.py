@@ -4,6 +4,7 @@ import pdb
 import os
 import sys
 import time
+import threading
 from collections import defaultdict
 
 from iota.harness.infra.utils.logger import Logger as Logger
@@ -17,6 +18,7 @@ import iota.harness.infra.store as store
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.utils as utils
 import iota.harness.infra.utils.parser as parser
+import iota.harness.infra.utils.loader as loader
 
 from iota.harness.infra.glopts import GlobalOptions
 
@@ -103,6 +105,10 @@ def AddNodes(req):
 def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
+
+def DoSwitchOperation(req):
+    Logger.debug("Doing Switch operation:")
+    return __rpc(req, gl_topo_svc_stub.DoSwitchOperation)
 
 def IsWorkloadRunning(wl):
     return store.IsWorkloadRunning(wl)
@@ -315,6 +321,12 @@ def Testbed_GetVlanBase():
 def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
 
+def FlapDataPorts(nodes, num_ports_per_node = 1, down_time = 5,
+    flap_count = 1, interval = 5):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().FlapDataPorts(nodes,
+        num_ports_per_node, down_time, flap_count, interval)
+
+
 def PrintCommandResults(cmd):
     Logger.SetNode(cmd.node_name)
     Logger.header('COMMAND')
@@ -512,6 +524,26 @@ def ReAddWorkloads(wloads):
 
     return ret
 
+def ReSetupWorkoads(wloads):
+    if len(wloads) == 0:
+        return types.status.SUCCESS
+
+    req = None
+    if not IsSimulation():
+        req = Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = Trigger_CreateAllParallelCommandsRequest()
+
+    for wl in wloads:
+        Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                               "arping -c  5 -U %s -I %s" % (wl.ip_address, wl.interface))
+
+    resp = Trigger(req)
+    result = types.status.SUCCESS
+    for cmd in resp.commands:
+        if cmd.exit_code != 0:
+            result = types.status.FAILURE
+    return result
 
 # ================================
 # Wrappers for Workload bring up and teardown APIs
@@ -763,3 +795,57 @@ def AllocateTcpPort():
 
 def AllocateUdpPort():
     return resmgr.UdpPortAllocator.Alloc()
+
+
+def RunSubTestCase(tc, sub_testcase, parallel=False):
+    testcase = loader.Import(sub_testcase, tc.GetPackage())
+
+    if not testcase:
+        Logger.error("Subtest case not found")
+        assert(0)
+
+    if not getattr(tc, "subtests", None):
+        tc.subtests = dict()
+
+    tc.subtests[sub_testcase] = testcase
+    testcase.done = False
+
+    def run_testcase():
+        result = types.status.SUCCESS
+        setup_result = loader.RunCallback(testcase, 'Setup', False, tc)
+        if setup_result != types.status.SUCCESS:
+            Logger.error("Setup callback failed, Cannot continue, switching to Teardown")
+            loader.RunCallback(testcase, 'Teardown', False, tc)
+            result = setup_result
+        else:
+            trigger_result = loader.RunCallback(testcase, 'Trigger', True, tc)
+            if trigger_result != types.status.SUCCESS:
+                result = trigger_result
+
+            verify_result = loader.RunCallback(testcase, 'Verify', True, tc)
+            if verify_result != types.status.SUCCESS:
+                result = verify_result
+
+        testcase.result = result
+        testcase.done = True
+        return result
+
+    if parallel:
+        t = threading.Thread(target=run_testcase)
+        t.start()
+        return types.status.SUCCESS
+    return run_testcase()
+
+def WaitForTestCase(tc, sub_testcase):
+    subtests = getattr(tc, "subtests")
+    if not subtests:
+        Logger.error("No subtests initiated")
+        assert(0)
+    while True:
+        testcase = subtests.get(sub_testcase)
+        if not testcase:
+            Logger.error("Testcase not started")
+            assert(0)
+        if testcase.done:
+            return testcase.result
+        time.sleep(1)

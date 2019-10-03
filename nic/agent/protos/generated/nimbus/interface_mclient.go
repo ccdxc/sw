@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type InterfaceReactor interface {
 	UpdateInterface(interfaceObj *netproto.Interface) error         // updates an Interface
 	DeleteInterface(interfaceObj, ns, name string) error            // deletes an Interface
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type InterfaceOStream struct {
+	sync.Mutex
+	stream netproto.InterfaceApi_InterfaceOperUpdateClient
 }
 
 // WatchInterfaces runs Interface watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 	}
 
 	// start oper update stream
-	ostream, err := interfaceRPCClient.InterfaceOperUpdate(ctx)
+	opStream, err := interfaceRPCClient.InterfaceOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting Interface oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &InterfaceOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.InterfaceEvent) {
+			client.debugStats.AddInt("InterfaceWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface.ObjectMeta)
+			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+			go client.processInterfaceEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("Interface Watch channel closed. Exisint InterfaceWatch")
 				return
 			}
-			client.debugStats.AddInt("InterfaceWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got Interface watch event: Type: {%+v} Interface:{%+v}", client.clientName, evt.EventType, evt.Interface.ObjectMeta)
-
-			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-			go client.processInterfaceEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Interface Watch channel closed. Exisint InterfaceWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchInterfaceRecvLoop(stream netproto.InterfaceApi_
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting Interface watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.InterfaceEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffInterface diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reactor InterfaceReactor, ostream netproto.InterfaceApi_InterfaceOperUpdateClient) {
+func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reactor InterfaceReactor, ostream *InterfaceOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Interface)
 	for _, obj := range objList.Interfaces {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 	// add/update all new objects
 	for _, obj := range objList.Interfaces {
 		evt := netproto.InterfaceEvent{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			Interface: *obj,
 		}
 		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 }
 
 // processInterfaceEvent handles Interface event
-func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor, ostream netproto.InterfaceApi_InterfaceOperUpdateClient) {
+func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor, ostream *InterfaceOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.Interface.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send Interface oper Status, %s", err)
 				client.debugStats.AddInt("InterfaceOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("InterfaceOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

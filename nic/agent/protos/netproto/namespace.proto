@@ -27,7 +27,7 @@ service NamespaceApi {
 
     rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};
     rpc ListNamespaces (api.ObjectMeta) returns (NamespaceList) {};
-    rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEvent) {};
+    rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEventList) {};
     rpc UpdateNamespace (Namespace) returns (Namespace) {};
     rpc NamespaceOperUpdate (stream NamespaceEvent) returns (api.TypeMeta) {};
 }
@@ -71,4 +71,9 @@ message NamespaceList {
 message NamespaceEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Namespace       Namespace   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "namespace,omitempty"];
+}
+
+// namespace watch events batched
+message NamespaceEventList {
+    repeated NamespaceEvent NamespaceEvents = 1;
 }

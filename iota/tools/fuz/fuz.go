@@ -491,6 +491,7 @@ func runClient(connDatas []*fuze.ConnectionData, conns, rate, cps, duration, con
 								done = true
 							}
 						}
+						duration = ticks
 					}
 					//Conection successful
 					if msg == nil {

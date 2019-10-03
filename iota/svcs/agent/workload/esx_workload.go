@@ -78,7 +78,7 @@ func (vm *vmESXWorkload) startVMAgent(args ...string) error {
 
 	sudoAgtCmd := []string{vm.baseDir + "/" + filepath.Base(agentBinary)}
 
-	if ctx, _, err := vm.RunCommand(sudoAgtCmd, "", 0, true, true); ctx.ExitCode != 0 {
+	if ctx, _, err := vm.RunCommand(sudoAgtCmd, "", 0, 0, true, true); ctx.ExitCode != 0 {
 		vm.logger.Errorf("Starting VM agent on node %s failed", vm.Name())
 		return errors.Wrap(err, ctx.Stdout)
 	}
@@ -182,11 +182,11 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	}
 
 	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
-	vm.RunCommand(cmd, "", 0, false, true)
+	vm.RunCommand(cmd, "", 0, 0, false, true)
 	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh2=2048"}
-	vm.RunCommand(cmd, "", 0, false, true)
+	vm.RunCommand(cmd, "", 0, 0, false, true)
 	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh3=4096"}
-	vm.RunCommand(cmd, "", 0, false, true)
+	vm.RunCommand(cmd, "", 0, 0, false, true)
 
 	return vm.startVMAgent()
 }
@@ -221,27 +221,27 @@ func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, mac
 		var setMacAddrCmd []string
 		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
 		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", macAddress}
-		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, false, true); ctx.ExitCode != 0 {
+		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if ipaddress != "" {
 		cmd := []string{"ifconfig", constants.EsxDataVMInterface, ipaddress}
-		if ctx, _, err := vm.RunCommand(cmd, "", 0, false, true); ctx.ExitCode != 0 {
+		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if ipaddress != "" {
 		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", ipv6address}
-		if ctx, _, err := vm.RunCommand(cmd, "", 0, false, true); ctx.ExitCode != 0 {
+		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterface + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
-	if ctx, _, err := vm.RunCommand(cmd, "", 0, false, true); ctx.ExitCode != 0 {
+	if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 		return "", errors.Wrap(err, "ARP retrans timeout set failed")
 	}
 
@@ -253,7 +253,7 @@ func (vm *vmESXWorkload) MoveInterface(name string) error {
 	return errors.New("move interface not supported for esx workloads")
 }
 
-func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
+func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, retries, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
 
 	var runCmd string
 	if dir != "" {
@@ -263,7 +263,16 @@ func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, ba
 	}
 
 	if !background {
-		cmdInfo, _ := Cmd.RunSSHCommand(vm.sshHandle, runCmd, timeout, true, false, vm.logger)
+		var cmdInfo *Cmd.CmdInfo
+		for i := (uint32)(0); i <= retries; i++ {
+			cmdInfo, _ = Cmd.RunSSHCommand(vm.sshHandle, runCmd, timeout, true, false, vm.logger)
+			//Comand got executed on remote node, break up
+			if cmdInfo.Ctx.ExitCode == 0 {
+				break
+			}
+			vm.logger.Info("Command failed, retrying")
+			time.Sleep(500 * time.Millisecond)
+		}
 		return cmdInfo.Ctx, "", nil
 	}
 

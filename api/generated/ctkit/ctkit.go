@@ -175,7 +175,9 @@ func (ct *ctrlerCtx) Stop() error {
 func (ct *ctrlerCtx) startWorkerPool(kind string) {
 	workerPool := shardworkers.NewWorkerPool(numberOfShardWorkers)
 	workerPool.Start()
+	ct.Lock()
 	ct.workPools[kind] = workerPool
+	ct.Unlock()
 	return
 }
 
@@ -225,6 +227,8 @@ func (ct *ctrlerCtx) addObject(kind, key string, obj runtime.Object) error {
 }
 
 func (ct *ctrlerCtx) runJob(pool string, workObj shardworkers.WorkObj, work shardworkers.WorkFunc) error {
+	ct.Lock()
+	defer ct.Unlock()
 	return ct.workPools[pool].RunJob(workObj, work)
 }
 

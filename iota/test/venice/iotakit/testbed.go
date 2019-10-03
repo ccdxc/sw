@@ -21,13 +21,11 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 
-	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 const defaultIotaServerURL = "localhost:60000"
@@ -102,24 +100,21 @@ type naplesData struct {
 
 // TestBed is the state of the testbed
 type TestBed struct {
-	Topo                 Topology                           // testbed topology
-	Params               TestBedParams                      // testbed params - provided by warmd
-	Nodes                []*TestNode                        // nodes in the testbed
-	mockMode             bool                               // mock iota server and venice node for testing purposes
-	mockIota             *mockIotaServer                    // mock iota server
-	skipSetup            bool                               // skip setting up the cluster
-	hasNaplesSim         bool                               // has Naples sim nodes in the topology
-	hasNaplesHW          bool                               // testbed has Naples HW in the topology
-	allocatedVlans       []uint32                           // VLANs allocated for this testbed
-	authToken            string                             // authToken obtained after logging in
-	veniceRestClient     []apiclient.Services               // Venice REST API client
-	telemetryClient      []*telemetryclient.TelemetryClient // venice telemetry client
-	unallocatedInstances []*InstanceParams                  // currently unallocated instances
-	testResult           map[string]bool                    // test result
-	taskResult           map[string]error                   // sub task result
-	caseResult           map[string]*TestCaseResult         // test case result counts
-	DataSwitches         []*iota.DataSwitch                 // data switches associated to this testbed
-	naplesDataMap        map[string]naplesData              //naples name data map
+	Topo                 Topology                   // testbed topology
+	Params               TestBedParams              // testbed params - provided by warmd
+	Nodes                []*TestNode                // nodes in the testbed
+	mockMode             bool                       // mock iota server and venice node for testing purposes
+	mockIota             *mockIotaServer            // mock iota server
+	skipSetup            bool                       // skip setting up the cluster
+	hasNaplesSim         bool                       // has Naples sim nodes in the topology
+	hasNaplesHW          bool                       // testbed has Naples HW in the topology
+	allocatedVlans       []uint32                   // VLANs allocated for this testbed
+	unallocatedInstances []*InstanceParams          // currently unallocated instances
+	testResult           map[string]bool            // test result
+	taskResult           map[string]error           // sub task result
+	caseResult           map[string]*TestCaseResult // test case result counts
+	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
+	naplesDataMap        map[string]naplesData      //naples name data map
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -261,6 +256,11 @@ func (tb *TestBed) HasNaplesSim() bool {
 	return tb.hasNaplesSim
 }
 
+//DoSkipSetup skip setup
+func (tb *TestBed) DoSkipSetup() {
+	tb.skipSetup = true
+}
+
 // HasNaplesHW returns true if testbed has Naples HW
 func (tb *TestBed) HasNaplesHW() bool {
 	return tb.hasNaplesHW
@@ -295,7 +295,7 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 				return inst
 			}
 		case iota.TestBedNodeType_TESTBED_NODE_TYPE_HW:
-			if inst.Type == "bm" {
+			if inst.Type == "bm" && inst.Resource.Network.Address == "" {
 				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
 				return inst
 			}
@@ -350,7 +350,7 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			return fmt.Errorf("Incompatible testbed node")
 		}
 
-		tb.hasNaplesSim = true
+		//tb.hasNaplesSim = true
 		node.NaplesMultSimConfig = iota.NaplesMultiSimConfig{
 			Network:      node.instParams.Resource.Network.Address,
 			Gateway:      node.instParams.Resource.Network.Gateway,
@@ -443,8 +443,11 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 				veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
 			}
 		}
-		node.NaplesConfig.VeniceIps = veniceIps
-		node.NaplesMultSimConfig.VeniceIps = veniceIps
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
+			node.NaplesMultSimConfig.VeniceIps = veniceIps
+		} else {
+			node.NaplesConfig.VeniceIps = veniceIps
+		}
 	case iota.PersonalityType_PERSONALITY_VENICE:
 		if tb.hasNaplesSim {
 			for _, vn := range tb.Nodes {
@@ -483,6 +486,8 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 		NicIpAddress:        node.instParams.NicMgmtIP,
 		CimcIpAddress:       node.instParams.NodeCimcIP,
 		ServerType:          node.instParams.NodeServer,
+		CimcUsername:        common.DefaultCimcUserName,
+		CimcPassword:        common.DefaultCimcPassword,
 		NicUuid:             node.instParams.Resource.NICUuid,
 		NodeName:            node.NodeName,
 	}
@@ -570,6 +575,8 @@ func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 			NicConsolePort:      node.instParams.NicConsolePort,
 			NicIpAddress:        node.instParams.NicMgmtIP,
 			CimcIpAddress:       node.instParams.NodeCimcIP,
+			CimcUsername:        common.DefaultCimcUserName,
+			CimcPassword:        common.DefaultCimcPassword,
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
 		}
@@ -679,19 +686,6 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 
 	//Save the context
 	tb.saveNaplesCache()
-	// move naples to managed mode
-	err = tb.doModeSwitchOfNaples(newNodes)
-	if err != nil {
-		log.Errorf("Setting up naples failed. Err: %v", err)
-		return nil, err
-	}
-
-	// add venice node to naples
-	err = tb.joinNaplesToVenice(newNodes)
-	if err != nil {
-		log.Errorf("Setting up naples failed. Err: %v", err)
-		return nil, err
-	}
 
 	return newNodes, nil
 }
@@ -762,6 +756,70 @@ func (tb *TestBed) initNodeState() error {
 		if inst.ID != 0 {
 			baseVlan += inst.ID
 			break
+		}
+	}
+
+	return nil
+}
+
+// Start logging naples
+func (tb *TestBed) startNaplesConsoleLogging() error {
+
+	if os.Getenv("NO_CONSOLE_LOG") != "" {
+		log.Infof("Skipping console log capturing.")
+		return nil
+	}
+	naplesNodes := 0
+	for _, node := range tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			naplesNodes++
+		}
+	}
+
+	if naplesNodes != 0 {
+		waitCh := make(chan error, naplesNodes)
+
+		startNaplesLogging := func(name, consoleIP, consolePort string) {
+			// create logs directory if it doesnt exists
+			cmdStr := fmt.Sprintf("PYTHONPATH=%s/src/github.com/pensando/sw/iota  %s/src/github.com/pensando/sw/iota/scripts/lab_tools/console_clear.py --console-ip %s --console-port %s",
+				os.Getenv("GOPATH"), os.Getenv("GOPATH"), consoleIP, consolePort)
+			command := exec.Command("sh", "-c", cmdStr)
+			err := command.Start()
+			if err != nil {
+				log.Errorf("Error running command %s. Err: %v", cmdStr, err)
+				waitCh <- err
+				return
+			}
+			command.Wait()
+			logFile := fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs/%s_console.log", os.Getenv("GOPATH"), name)
+			cmdStr = fmt.Sprintf("telnet %s %s | tee %s ", consoleIP, consolePort, logFile)
+
+			command = exec.Command("sh", "-c", cmdStr)
+			command.StdinPipe()
+			err = command.Start()
+			if err != nil {
+				log.Errorf("Error starting loggin %s\n", err)
+				waitCh <- err
+				return
+			}
+			waitCh <- nil
+			go func() {
+				command.Wait()
+				log.Infof("Exiting consile log for %v:%v", consoleIP, consolePort)
+			}()
+		}
+
+		for _, node := range tb.Nodes {
+			if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+				go startNaplesLogging(node.NodeName, node.instParams.NicConsoleIP, node.instParams.NicConsolePort)
+			}
+		}
+
+		for i := 0; i < naplesNodes; i++ {
+			err := <-waitCh
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -900,6 +958,8 @@ func (tb *TestBed) setupTestBed() error {
 			NicIpAddress:        node.instParams.NicMgmtIP,
 			CimcIpAddress:       node.instParams.NodeCimcIP,
 			ServerType:          node.instParams.NodeServer,
+			CimcUsername:        common.DefaultCimcUserName,
+			CimcPassword:        common.DefaultCimcPassword,
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
 		}
@@ -943,10 +1003,10 @@ func (tb *TestBed) setupTestBed() error {
 		tb.DataSwitches = append(tb.DataSwitches, ds)
 	}
 
+	skipInstall := os.Getenv("SKIP_INSTALL") != ""
 	if !tb.skipSetup {
 		// install image if required
-		skipInstall := os.Getenv("SKIP_INSTALL")
-		if skipInstall == "" && tb.hasNaplesHW {
+		if !skipInstall && tb.hasNaplesHW {
 			//we are reinstalling, reset current mapping
 			tb.resetNaplesCache()
 			log.Infof("Installing images on testbed. This may take 10s of minutes...")
@@ -966,19 +1026,19 @@ func (tb *TestBed) setupTestBed() error {
 			os.Setenv("SKIP_INSTALL", "1")
 		}
 
-		// first cleanup testbed
-		client.CleanUpTestBed(context.Background(), testBedMsg)
-
 		// then, init testbed
 		log.Debugf("Initializing testbed with params: %+v", testBedMsg)
 		testBedMsg.RebootNodes = (os.Getenv("REBOOT_ONLY") != "")
 		if testBedMsg.RebootNodes {
-			log.Infof("Initializing testbed with reboot...")
+			log.Infof("Cleaning testbed with reboot...")
 		} else {
-
-			log.Infof("Initializing testbed without reboot...")
-
+			log.Infof("Cleaning testbed without reboot...")
 		}
+
+		// first cleanup testbed
+		client.CleanUpTestBed(context.Background(), testBedMsg)
+
+		testBedMsg.RebootNodes = false
 		resp, err := client.InitTestBed(context.Background(), testBedMsg)
 		if err != nil {
 			log.Errorf("Error during InitTestBed(). Err: %v", err)
@@ -1113,7 +1173,7 @@ func (tb *TestBed) setupTestBed() error {
 			return fmt.Errorf("Error while getting nodes from testbed")
 		}
 
-		log.Infof("Got get node resp: %+v", getNodeResp)
+		log.Debugf("Got node resp: %+v", getNodeResp)
 		tb.addNodeResp = getNodeResp
 	}
 
@@ -1124,9 +1184,9 @@ func (tb *TestBed) setupTestBed() error {
 		nodeAdded := false
 		node := tb.Nodes[i]
 		for _, nr := range tb.addNodeResp.Nodes {
-			log.Infof("Checking %v %v", node.NodeName, nr.Name)
+			log.Debugf("Checking %v %v", node.NodeName, nr.Name)
 			if node.NodeName == nr.Name {
-				log.Infof("Adding node %v as used", node.topoNode.NodeName)
+				log.Debugf("Adding node %v as used", node.topoNode.NodeName)
 				node.NodeUUID = nr.NodeUuid
 				node.iotaNode = nr
 				nodeAdded = true
@@ -1150,14 +1210,30 @@ func (tb *TestBed) setupTestBed() error {
 
 	tb.Nodes = addedNodes
 
-	return nil
+	//Start naples console logging for debugging
+	return tb.startNaplesConsoleLogging()
 }
 
-// joinNaplesToVenice join naples to venice node
-func (tb *TestBed) joinNaplesToVenice(nodes []*TestNode) error {
+// SetUpNaplesAuthenticationOnHosts changes naples to managed mode
+func (sm *SysModel) SetUpNaplesAuthenticationOnHosts(hc *HostCollection) error {
+
+	testNodes := []*TestNode{}
+
+	for _, node := range hc.hosts {
+		for _, testNode := range sm.tb.Nodes {
+			if node.iotaNode.Name == testNode.iotaNode.Name {
+				testNodes = append(testNodes, testNode)
+			}
+		}
+	}
+
+	return sm.joinNaplesToVenice(testNodes)
+}
+
+func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 
 	// get token ao authenticate to agent
-	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
+	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
 	if err != nil {
 		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
 		log.Errorf("%v", nerr)
@@ -1166,7 +1242,7 @@ func (tb *TestBed) joinNaplesToVenice(nodes []*TestNode) error {
 
 	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
 	defer cancel()
-	token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
+	token, err := utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
 	if err != nil {
 		nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
 		log.Errorf("%v", nerr)
@@ -1174,7 +1250,7 @@ func (tb *TestBed) joinNaplesToVenice(nodes []*TestNode) error {
 	}
 
 	//After reloading make sure we setup the host
-	trig := tb.NewTrigger()
+	trig := sm.tb.NewTrigger()
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
@@ -1204,7 +1280,7 @@ func (tb *TestBed) joinNaplesToVenice(nodes []*TestNode) error {
 		}
 	}
 
-	trig = tb.NewTrigger()
+	trig = sm.tb.NewTrigger()
 	//Make sure we can run command on naples
 
 	for _, node := range nodes {
@@ -1227,8 +1303,7 @@ func (tb *TestBed) joinNaplesToVenice(nodes []*TestNode) error {
 	return nil
 }
 
-// doModeSwitchOfNaples changes naples to managed mode
-func (tb *TestBed) doModeSwitchOfNaples(nodes []*TestNode) error {
+func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 
 	if os.Getenv("REBOOT_ONLY") != "" {
 		log.Infof("Skipping naples setup as it is just reboot")
@@ -1236,21 +1311,16 @@ func (tb *TestBed) doModeSwitchOfNaples(nodes []*TestNode) error {
 	}
 
 	log.Infof("Setting up Naples in network managed mode")
-	// copy penctl to host if required
-	for _, node := range nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			err := tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
-			if err != nil {
-				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
-			}
-		}
-	}
 
 	// set date, untar penctl and trigger mode switch
-	trig := tb.NewTrigger()
+	trig := sm.tb.NewTrigger()
 	for _, node := range nodes {
 		veniceIPs := strings.Join(node.NaplesConfig.VeniceIps, ",")
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			err := sm.tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
+			if err != nil {
+				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
+			}
 			// untar the package
 			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1306,15 +1376,13 @@ func (tb *TestBed) doModeSwitchOfNaples(nodes []*TestNode) error {
 		NodeMsg: nodeMsg,
 	}
 	// Trigger App
-	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
 	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
 	if err != nil {
 		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	}
-
-	log.Debugf("Got reload resp: %+v", reloadResp)
 
 	return nil
 }
@@ -1350,7 +1418,6 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 		if cmdResp.ExitCode != 0 {
 			log.Errorf("Cleaning naples mode failed. %+v", cmdResp)
 			return fmt.Errorf("Cleaning naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
 		}
 	}
 
@@ -1386,15 +1453,81 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 	return nil
 }
 
-// SetupConfig sets up the venice cluster and basic config (like auth etc)
-func (tb *TestBed) SetupConfig(ctx context.Context) error {
-	if tb.skipSetup {
+// reassociateNaplestoVenice reassociated by removing cert
+func (sm *SysModel) reassociateNaplestoVenice(nodes []*TestNode) error {
+
+	// copy penctl to host if required
+	cmds := 0
+	trig := sm.tb.NewTrigger()
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			err := sm.tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
+			if err != nil {
+				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
+			}
+			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
+			cmds++
+		}
+	}
+	//No naples, return
+	if cmds == 0 {
 		return nil
 	}
+	resp, err := trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error running command on naples Err: %v", err)
+	}
+	log.Debugf("Got trigger resp: %+v", resp)
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Cleaning naples mode failed. %+v", cmdResp)
+			return fmt.Errorf("Cleaning naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		}
+	}
+
+	var hostNames string
+	nodeMsg := &iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+	}
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+			hostNames += node.iotaNode.Name + ", "
+
+		}
+	}
+
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
+	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
+	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	return nil
+}
+
+// SetupConfig sets up the venice cluster and basic config (like auth etc)
+func (sm *SysModel) SetupConfig(ctx context.Context) error {
+
+       if sm.tb.skipSetup {
+               return nil
+       }
+
 
 	// make venice cluster
 	setupVenice := func(done chan error) {
-		err := tb.MakeVeniceCluster(ctx)
+		err := sm.MakeVeniceCluster(ctx)
 		if err != nil {
 			log.Errorf("Error creating venice cluster. Err: %v", err)
 			done <- err
@@ -1402,7 +1535,7 @@ func (tb *TestBed) SetupConfig(ctx context.Context) error {
 		}
 
 		// setup auth and wait for venice cluster to come up
-		err = tb.InitVeniceConfig(ctx)
+		err = sm.InitVeniceConfig(ctx)
 		if err != nil {
 			log.Errorf("Error configuring cluster. Err: %v", err)
 			done <- err
@@ -1410,7 +1543,7 @@ func (tb *TestBed) SetupConfig(ctx context.Context) error {
 		}
 
 		// setup some tooling on venice nodes
-		err = tb.SetupVeniceNodes()
+		err = sm.SetupVeniceNodes()
 		if err != nil {
 			log.Errorf("Error setting up venice nodes. Err: %v", err)
 			done <- err
@@ -1421,7 +1554,7 @@ func (tb *TestBed) SetupConfig(ctx context.Context) error {
 
 	doModeSwitch := func(done chan error) {
 		// move naples to managed mode
-		err := tb.doModeSwitchOfNaples(tb.Nodes)
+		err := sm.doModeSwitchOfNaples(sm.tb.Nodes)
 		if err != nil {
 			log.Errorf("Setting up naples failed. Err: %v", err)
 			done <- err
@@ -1442,7 +1575,7 @@ func (tb *TestBed) SetupConfig(ctx context.Context) error {
 	}
 
 	// connect naples nodes to venice
-	return tb.joinNaplesToVenice(tb.Nodes)
+	return sm.joinNaplesToVenice(sm.tb.Nodes)
 
 }
 
@@ -1535,6 +1668,59 @@ func (tb *TestBed) PrintResult() {
 	fmt.Print("==================================================================\n")
 }
 
+// Cleanup cleans up the testbed
+func (tb *TestBed) Cleanup() error {
+	// collect all log files
+	tb.CollectLogs()
+	return nil
+}
+
+// InitSuite initializes test suite
+func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *SysModel, error) {
+	// create testbed
+
+	// setup test params
+	if scale {
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 20)
+		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
+	} else {
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
+		gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
+	}
+
+	tb, err := NewTestBed(topoName, paramsFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// create sysmodel
+	model, err := NewSysModel(tb)
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
+
+	// fully clean up venice/iota config before starting the tests
+	if tb.skipSetup {
+		err = model.CleanupAllConfig()
+		if err != nil {
+			model.CollectLogs()
+			return nil, nil, err
+		}
+	}
+
+	// setup default config for the sysmodel
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	defer cancel()
+	err = model.SetupDefaultConfig(ctx, scale, scaleData)
+	if err != nil {
+		model.CollectLogs()
+		return nil, nil, err
+	}
+
+	return tb, model, nil
+}
+
 // CollectLogs collects all logs files from the testbed
 func (tb *TestBed) CollectLogs() error {
 
@@ -1561,35 +1747,7 @@ func (tb *TestBed) CollectLogs() error {
 		return nil
 	}
 
-	// get token ao authenticate to agent
-	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
-	addedTechSupport := false
 	trig := tb.NewTrigger()
-	if err == nil {
-		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
-		defer cancel()
-		token, err := utils.GetNodeAuthToken(ctx, tb.GetVeniceURL()[0], []string{"*"})
-		if err == nil {
-			addedTechSupport = true
-			// collect tech-support on
-			for _, node := range tb.Nodes {
-				switch node.Personality {
-				case iota.PersonalityType_PERSONALITY_NAPLES:
-					cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
-					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
-					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-				}
-			}
-		} else {
-			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-			log.Errorf("%v", nerr)
-		}
-	} else {
-		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-		log.Errorf("%v", nerr)
-	}
-
 	// collect reset of venice logs
 	for _, node := range tb.Nodes {
 		switch node.Personality {
@@ -1614,16 +1772,13 @@ func (tb *TestBed) CollectLogs() error {
 			log.Errorf("collecting logs failed. %+v", cmdResp)
 		}
 	}
-	log.Infof("Collected Venice/Naples logs")
+	log.Infof("Collected Iota Venice/Naples logs")
 
 	// copy the files out
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
 			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName)}, "logs")
-			if addedTechSupport {
-				tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
-			}
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName), fmt.Sprintf("%s_naples.tar", node.NodeName)}, "logs")
 		case iota.PersonalityType_PERSONALITY_VENICE:
@@ -1632,87 +1787,7 @@ func (tb *TestBed) CollectLogs() error {
 
 	}
 
-	log.Infof("Copied Venice/Naples logs to iota server")
-	// create a tar.gz from all log files
-	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
-	cmd = exec.Command("bash", "-c", cmdStr)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("tar command out:\n%s\n", string(out))
-		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
-		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
-		cmd = exec.Command("bash", "-c", cmdStr)
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			fmt.Printf("tar command out:\n%s\n", string(out))
-			log.Errorf("Collecting server log files failed with: %s.\n", err)
-		}
-	}
-
-	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+	log.Infof("Copied  Iota Venice/Naples logs to iota server")
 	return nil
 }
 
-// Cleanup cleans up the testbed
-func (tb *TestBed) Cleanup() error {
-	// collect all log files
-	tb.CollectLogs()
-	return nil
-}
-
-// InitSuite initializes test suite
-func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *SysModel, error) {
-	// create testbed
-
-	// setup test params
-	if scale {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 15)
-		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
-	} else {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
-		gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
-	}
-
-	tb, err := NewTestBed(topoName, paramsFile)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
-	defer cancel()
-	// make cluster & setup auth
-	err = tb.SetupConfig(ctx)
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	// create sysmodel
-	model, err := NewSysModel(tb)
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	err = model.Action().VerifyClusterStatus()
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	// fully clean up venice/iota config before starting the tests
-	err = model.CleanupAllConfig()
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	// setup default config for the sysmodel
-	err = model.SetupDefaultConfig(ctx, scale, scaleData)
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	return tb, model, nil
-}

@@ -3,6 +3,7 @@ package cfgen
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/auth"
@@ -54,6 +55,8 @@ type WPair struct {
 type NetworkSecurityPolicyParams struct {
 	NumPolicies        int    // specifies number of policies
 	NumRulesPerPolicy  int    // specifies number of rules per policy
+	NumIPPairsPerRule  int    // specfifies number of IP pairs per rule
+	NumAppsPerRules    int    // specfifies number of Apps per rule
 	DefaultAllowPolicy string // creates default policy to allow all traffic
 	NetworkSecurityPolicyTemplate   *security.NetworkSecurityPolicy
 	SGRuleTemplate     *security.SGRule
@@ -222,14 +225,20 @@ func (cfgen *Cfgen) genSGPolicies() []*security.NetworkSecurityPolicy {
 		for jj := 0; jj < cfgen.NetworkSecurityPolicyParams.NumRulesPerPolicy; jj++ {
 			tRule := ruleCtx.transform(rule).(*security.SGRule)
 
-			fromIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
-			toIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
-			fromW := cfgen.ConfigItems.Workloads[fromIPIdx]
-			toW := cfgen.ConfigItems.Workloads[toIPIdx]
-			tRule.FromIPAddresses = []string{fromW.Spec.Interfaces[0].IpAddresses[0]}
-			tRule.ToIPAddresses = []string{toW.Spec.Interfaces[0].IpAddresses[0]}
-			tRule.ProtoPorts = []security.ProtoPort{security.ProtoPort{Protocol: "tcp", Ports: "1000-65000"}}
-			cfgen.WPairs = append(cfgen.WPairs, &WPair{From: fromW, To: toW})
+			for kk := 0; kk < cfgen.NetworkSecurityPolicyParams.NumIPPairsPerRule; kk++ {
+				fromIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+				toIPIdx := rand.Intn(len(cfgen.ConfigItems.Workloads))
+				fromW := cfgen.ConfigItems.Workloads[fromIPIdx]
+				toW := cfgen.ConfigItems.Workloads[toIPIdx]
+				tRule.FromIPAddresses = append(tRule.FromIPAddresses, fromW.Spec.Interfaces[0].IpAddresses[0])
+				tRule.ToIPAddresses = append(tRule.ToIPAddresses, toW.Spec.Interfaces[0].IpAddresses[0])
+				cfgen.WPairs = append(cfgen.WPairs, &WPair{From: fromW, To: toW})
+			}
+			for ll := 0; ll < cfgen.NetworkSecurityPolicyParams.NumAppsPerRules; ll++ {
+				port := strconv.Itoa(10000 + ll)
+				tRule.ProtoPorts = append(tRule.ProtoPorts,
+					security.ProtoPort{Protocol: "tcp", Ports: port})
+			}
 			rules = append(rules, *tRule)
 		}
 		tSgp.Spec.Rules = rules

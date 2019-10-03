@@ -98,6 +98,8 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 			// TODO: too slow agent and watcher events are greater than channel capacity..
 			// come up with a policy.. either close the connection or drop the events or something else
 		}
+		//log.Infof("Sending  Event %v kind %v, object %+v to watcher %v",
+		//	ev.EventType, ev.Obj.GetObjectKind(), ev.Obj.GetObjectMeta(), watcher.Name)
 	}
 	od.WatchLock.RUnlock()
 

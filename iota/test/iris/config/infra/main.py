@@ -298,6 +298,9 @@ class CfgNode:
             data = json.loads(jsonData)
         except:
             api.Logger.error("API error %s" % jsonData)
+            #HACK FOR now, for some reason delete/add, curl does not return json out
+            if len(jsonData) == 0 and oper != CfgOper.GET:
+                return ""
             assert(0)
         return data
 

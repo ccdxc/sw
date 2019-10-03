@@ -129,7 +129,7 @@ func main() {
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
 
-	log.Infof("=== %s is starting", globals.Citadel)
+	log.Infof("=== %s is starting with resolver %v", globals.Citadel, *resolverURLs)
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{

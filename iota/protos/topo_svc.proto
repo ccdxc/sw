@@ -152,6 +152,15 @@ message VmwareESXConfig {
     string ip_address = 3;
 }
 
+message NaplesSimInfo {
+
+    string              node_uuid       = 1;
+
+    string              name            = 2;
+
+    string              ip_address         = 3;
+}
+
 // Node captures personality details of an E2E node
 message Node {
     // PersonalityType captures the node personality. naples node, venice node or qemu
@@ -221,6 +230,9 @@ message NaplesMultiSimConfig {
 
     // Venice IPs to use, if specified agent will come up im managed mode.
     repeated string venice_ips    = 7;
+
+    // Sim infos
+    repeated NaplesSimInfo sims_info = 8;
 }
 
 message NaplesConfig {
@@ -465,6 +477,9 @@ message Command {
 
     // Copy Stderr on error only
     bool            stderr_on_err       = 13;
+
+    //retries on failure, for unreliable commands
+    uint32          retries_on_failure  = 14;
 }
 
 // Captures the overall health of the e2e cluster
@@ -613,7 +628,8 @@ enum SwitchOp {
     OP_NONE             = 0;
     SHUT_PORTS          = 1;
     NO_SHUT_PORTS       = 2;
-    VLAN_CONFIG         = 3;
+    FLAP_PORTS          = 4;
+    VLAN_CONFIG         = 5;
 }
 
 message VlanConfig {
@@ -626,18 +642,35 @@ message VlanConfig {
     uint32           native_vlan = 3;
 }
 
+message SwitchFlapInfo {
+
+    //how many times to flap
+    uint32 count     = 1;
+
+    //flap interval
+    uint32  interval = 2;
+
+    //how long link should be down
+    uint32  down_time = 3;
+}
+
 message SwitchMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
 
     SwitchOp            op              = 2;
+
+    // operation info
+    oneof op_info {
+        SwitchFlapInfo flap_info          = 3;
+    }
     // DataSwitch
-    repeated DataSwitch data_switches   = 3;
+    repeated DataSwitch data_switches    = 4;
 
     // Node specific configs
     oneof switch_info {
         // naples
-        VlanConfig    vlan_config       = 4;
+        VlanConfig    vlan_config        = 5;
     }
 
 }

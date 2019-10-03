@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -57,11 +61,20 @@ type InterfaceStatusReactor interface {
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type InterfaceNodeStatus struct {
+	nodeID        string
+	watcher       *memdb.Watcher
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
 // InterfaceTopic is the Interface topic on message bus
 type InterfaceTopic struct {
+	sync.Mutex
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
 	statusReactor InterfaceStatusReactor // status event reactor
+	nodeStatus    map[string]*InterfaceNodeStatus
 }
 
 // AddInterfaceTopic returns a network RPC server
@@ -71,6 +84,7 @@ func AddInterfaceTopic(server *MbusServer, reactor InterfaceStatusReactor) (*Int
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
+		nodeStatus:    make(map[string]*InterfaceNodeStatus),
 	}
 
 	// register the RPC handlers
@@ -80,6 +94,178 @@ func AddInterfaceTopic(server *MbusServer, reactor InterfaceStatusReactor) (*Int
 
 	return &handler, nil
 }
+
+func (eh *InterfaceTopic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.nodeStatus[nodeID] = &InterfaceNodeStatus{nodeID: nodeID, watcher: watcher}
+	eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+	eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *InterfaceTopic) unRegisterWatcher(nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *InterfaceTopic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		nodeStatus.opAckedStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opAckedStatus[event]
+	}
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+"_"+"Interface", delta)
+	hdr.Record("Interface", delta)
+	hdr.Record(nodeID, delta)
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *InterfaceTopic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		nodeStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *InterfaceTopic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		return true
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "Interface", event)
+		return false
+	}
+
+	evAckStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "Interface", event)
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, "Interface", event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *InterfaceTopic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *InterfaceTopic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // CreateInterface creates Interface
 func (eh *InterfaceTopic) CreateInterface(ctx context.Context, objinfo *netproto.Interface) (*netproto.Interface, error) {
@@ -154,6 +340,7 @@ func (eh *InterfaceTopic) GetInterface(ctx context.Context, objmeta *api.ObjectM
 // ListInterfaces lists all Interfaces matching object selector
 func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ObjectMeta) (*netproto.InterfaceList, error) {
 	var objlist netproto.InterfaceList
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	filterFn := func(memdb.Object) bool {
 		return true
@@ -165,10 +352,14 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.Object
 
 	// walk all objects
 	objs := eh.server.memDB.ListObjects("Interface", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
 		if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
 			objlist.Interfaces = append(objlist.Interfaces, obj)
+			//record the last object sent to check config sync
+			eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
 		}
 	}
 
@@ -203,6 +394,9 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 		return err
 	}
 
+	eh.registerWatcher(nodeID, &watcher)
+	defer eh.unRegisterWatcher(nodeID)
+
 	// increment stats
 	eh.server.Stats("Interface", "ActiveWatch").Inc()
 	eh.server.Stats("Interface", "WatchConnect").Inc()
@@ -210,16 +404,36 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 	defer eh.server.Stats("Interface", "WatchDisconnect").Inc()
 
 	// walk all Interfaces and send it out
+	watchEvts := netproto.InterfaceEventList{}
 	for _, obj := range objlist.Interfaces {
 		watchEvt := netproto.InterfaceEvent{
 			EventType: api.EventType_CreateEvent,
 			Interface: *obj,
 		}
-		err = stream.Send(&watchEvt)
+		watchEvts.InterfaceEvents = append(watchEvts.InterfaceEvents, &watchEvt)
+	}
+	if len(watchEvts.InterfaceEvents) > 0 {
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending Interface to stream. Err: %v", err)
 			return err
 		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.InterfaceEventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Interface to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.InterfaceEventList{}
+		return nil
 	}
 
 	// loop forever on watch channel
@@ -254,10 +468,24 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 				EventType: etype,
 				Interface: *obj,
 			}
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Interface to stream. Err: %v", err)
+			watchEvts.InterfaceEvents = append(watchEvts.InterfaceEvents, &watchEvt)
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.InterfaceEvents) >= DefaultWatchBatchSize {
+				if err = sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+		case <-timer.C:
+			running = false
+			if err = sendToStream(); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -270,6 +498,7 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 
 // updateInterfaceOper triggers oper update callbacks
 func (eh *InterfaceTopic) updateInterfaceOper(oper *netproto.InterfaceEvent, nodeID string) error {
+	eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.Interface.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
@@ -301,10 +530,10 @@ func (eh *InterfaceTopic) InterfaceOperUpdate(stream netproto.InterfaceApi_Inter
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("InterfaceOperUpdate stream ended. closing..")
+			log.Errorf("%v InterfaceOperUpdate stream ended. closing..", nodeID)
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from InterfaceOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from %v InterfaceOperUpdate stream. Err: %v", nodeID, err)
 			return err
 		}
 

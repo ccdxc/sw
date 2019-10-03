@@ -41,7 +41,7 @@ type epInfo struct {
 }
 
 func verifyEndpointsAction(cmd *cobra.Command, args []string) {
-	eps, err := setupTb.ListEndpoints("default")
+	eps, err := setupModel.ListEndpoints("default")
 	if err != nil {
 		errorExit("could not get endpoints", err)
 	}

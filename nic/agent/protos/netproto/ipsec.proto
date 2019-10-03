@@ -97,7 +97,7 @@ service IPSecSAEncryptApi {
 
     rpc GetIPSecSAEncrypt (api.ObjectMeta) returns (IPSecSAEncrypt) {};
     rpc ListIPSecPolicies (api.ObjectMeta) returns (IPSecSAEncryptList) {};
-    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecSAEncryptEvent) {};
+    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecSADecryptEventList) {};
 }
 
 // IPSecSAEncrypt object
@@ -280,4 +280,10 @@ message IPSecSADecryptList {
 message IPSecSADecryptEvent {
     api.EventType EventType         = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     IPSecSADecrypt IPSecSADecrypt   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec-sa-encrypt,omitempty"];
+}
+
+
+// ipsec watch events batched
+message IPSecSADecryptEventList {
+    repeated IPSecSADecryptEvent IPSecSADecryptEvents  = 1;
 }

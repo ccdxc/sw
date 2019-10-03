@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -57,11 +61,20 @@ type NamespaceStatusReactor interface {
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type NamespaceNodeStatus struct {
+	nodeID        string
+	watcher       *memdb.Watcher
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
 // NamespaceTopic is the Namespace topic on message bus
 type NamespaceTopic struct {
+	sync.Mutex
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
 	statusReactor NamespaceStatusReactor // status event reactor
+	nodeStatus    map[string]*NamespaceNodeStatus
 }
 
 // AddNamespaceTopic returns a network RPC server
@@ -71,6 +84,7 @@ func AddNamespaceTopic(server *MbusServer, reactor NamespaceStatusReactor) (*Nam
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
+		nodeStatus:    make(map[string]*NamespaceNodeStatus),
 	}
 
 	// register the RPC handlers
@@ -80,6 +94,178 @@ func AddNamespaceTopic(server *MbusServer, reactor NamespaceStatusReactor) (*Nam
 
 	return &handler, nil
 }
+
+func (eh *NamespaceTopic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.nodeStatus[nodeID] = &NamespaceNodeStatus{nodeID: nodeID, watcher: watcher}
+	eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+	eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *NamespaceTopic) unRegisterWatcher(nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *NamespaceTopic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		nodeStatus.opAckedStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opAckedStatus[event]
+	}
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+"_"+"Namespace", delta)
+	hdr.Record("Namespace", delta)
+	hdr.Record(nodeID, delta)
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *NamespaceTopic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		nodeStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *NamespaceTopic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		return true
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "Namespace", event)
+		return false
+	}
+
+	evAckStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "Namespace", event)
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, "Namespace", event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *NamespaceTopic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *NamespaceTopic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // CreateNamespace creates Namespace
 func (eh *NamespaceTopic) CreateNamespace(ctx context.Context, objinfo *netproto.Namespace) (*netproto.Namespace, error) {
@@ -154,6 +340,7 @@ func (eh *NamespaceTopic) GetNamespace(ctx context.Context, objmeta *api.ObjectM
 // ListNamespaces lists all Namespaces matching object selector
 func (eh *NamespaceTopic) ListNamespaces(ctx context.Context, objsel *api.ObjectMeta) (*netproto.NamespaceList, error) {
 	var objlist netproto.NamespaceList
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	filterFn := func(memdb.Object) bool {
 		return true
@@ -165,10 +352,14 @@ func (eh *NamespaceTopic) ListNamespaces(ctx context.Context, objsel *api.Object
 
 	// walk all objects
 	objs := eh.server.memDB.ListObjects("Namespace", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := NamespaceFromObj(oo)
 		if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
 			objlist.Namespaces = append(objlist.Namespaces, obj)
+			//record the last object sent to check config sync
+			eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
 		}
 	}
 
@@ -203,6 +394,9 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 		return err
 	}
 
+	eh.registerWatcher(nodeID, &watcher)
+	defer eh.unRegisterWatcher(nodeID)
+
 	// increment stats
 	eh.server.Stats("Namespace", "ActiveWatch").Inc()
 	eh.server.Stats("Namespace", "WatchConnect").Inc()
@@ -210,16 +404,36 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 	defer eh.server.Stats("Namespace", "WatchDisconnect").Inc()
 
 	// walk all Namespaces and send it out
+	watchEvts := netproto.NamespaceEventList{}
 	for _, obj := range objlist.Namespaces {
 		watchEvt := netproto.NamespaceEvent{
 			EventType: api.EventType_CreateEvent,
 			Namespace: *obj,
 		}
-		err = stream.Send(&watchEvt)
+		watchEvts.NamespaceEvents = append(watchEvts.NamespaceEvents, &watchEvt)
+	}
+	if len(watchEvts.NamespaceEvents) > 0 {
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending Namespace to stream. Err: %v", err)
 			return err
 		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.NamespaceEventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Namespace to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.NamespaceEventList{}
+		return nil
 	}
 
 	// loop forever on watch channel
@@ -254,10 +468,24 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 				EventType: etype,
 				Namespace: *obj,
 			}
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending Namespace to stream. Err: %v", err)
+			watchEvts.NamespaceEvents = append(watchEvts.NamespaceEvents, &watchEvt)
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.NamespaceEvents) >= DefaultWatchBatchSize {
+				if err = sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+		case <-timer.C:
+			running = false
+			if err = sendToStream(); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -270,6 +498,7 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 
 // updateNamespaceOper triggers oper update callbacks
 func (eh *NamespaceTopic) updateNamespaceOper(oper *netproto.NamespaceEvent, nodeID string) error {
+	eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.Namespace.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
@@ -301,10 +530,10 @@ func (eh *NamespaceTopic) NamespaceOperUpdate(stream netproto.NamespaceApi_Names
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("NamespaceOperUpdate stream ended. closing..")
+			log.Errorf("%v NamespaceOperUpdate stream ended. closing..", nodeID)
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from NamespaceOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from %v NamespaceOperUpdate stream. Err: %v", nodeID, err)
 			return err
 		}
 

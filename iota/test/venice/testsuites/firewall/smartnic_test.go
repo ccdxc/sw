@@ -22,7 +22,7 @@ var _ = Describe("smartnic tests", func() {
 		ts.tb.AfterTestCommon()
 	})
 
-	Context("Basic smartnic tests", func() {
+	Context("tags:type=basic;datapath=true;duration=long  Basic smartnic tests", func() {
 		It("Should be able to reload hosts and smartnic should come back up", func() {
 			Skip("Disable  till we debug forwarding issues with reload")
 

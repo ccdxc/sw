@@ -25,6 +25,7 @@
 		ReloadMsg
 		Entity
 		VmwareESXConfig
+		NaplesSimInfo
 		Node
 		NaplesMultiSimConfig
 		NaplesConfig
@@ -46,6 +47,7 @@
 		TestBedMsg
 		TestNodesMsg
 		VlanConfig
+		SwitchFlapInfo
 		SwitchMsg
 		TestBedNode
 		EntityCopyMsg

@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api/generated/rollout"
+	"github.com/pensando/sw/api/labels"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
@@ -42,9 +44,7 @@ func processMetadataFile(metadata string) map[string]map[string]string {
 	return versionMap
 }
 
-// GetCmdGitVersion reads config file and returns a map of ContainerInfo indexed by name
-func GetCmdGitVersion() string {
-	metadataFile := "/tmp/metadata.json"
+func getCmdGitVersion(metadataFile string) string {
 	versionMap := processMetadataFile(metadataFile)
 	if versionMap != nil {
 		return versionMap["Venice"]["Version"]
@@ -81,7 +81,20 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 	}*/
 	//TODO hardcoding it for now to make asset-pull work
 
-	version := "0.12.0-53"
+	metafile := fmt.Sprintf("%s/src/github.com/pensando/sw/bin/upgrade-bundle/metadata.json", os.Getenv("GOPATH"))
+
+	version := getCmdGitVersion(metafile)
+
+	var req labels.Requirement
+	req.Key = "type"
+	req.Operator = "in"
+	req.Values = append(req.Values, "bm")
+
+	var orderelem labels.Selector
+	orderelem.Requirements = append(orderelem.Requirements, &req)
+
+	var order []*labels.Selector
+	order = append(order, &orderelem)
 
 	return &rollout.Rollout{
 		TypeMeta: api.TypeMeta{
@@ -91,16 +104,16 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                   version,
-			ScheduledStartTime:        scheduledStartTime,
-			Duration:                  "",
-			Strategy:                  "LINEAR",
-			MaxParallel:               1,
-			MaxNICFailuresBeforeAbort: 0,
-			OrderConstraints:          nil,
-			Suspend:                   false,
-			DSCsOnly:             false,
-			//DSCMustMatchConstraint: true, // hence venice upgrade only
+			Version:                     version,
+			ScheduledStartTime:          scheduledStartTime,
+			Duration:                    "",
+			Strategy:                    "LINEAR",
+			MaxParallel:                 9,
+			MaxNICFailuresBeforeAbort:   0,
+			OrderConstraints:            order,
+			Suspend:                     false,
+			DSCsOnly:                    true,
+			DSCMustMatchConstraint:      true, // hence venice upgrade only
 			UpgradeType: "Disruptive",
 		},
 	}, nil

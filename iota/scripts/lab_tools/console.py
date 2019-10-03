@@ -51,7 +51,7 @@ class Console(object):
         if ret == 1: self.__sendline_expect("", "#",  hdl = self.hdl)
 
     def __get_handle(self):
-        self.hdl = self.__spawn("telnet %s %d" % (self.console_ip, self.console_port))
+        self.hdl = self.__spawn("telnet %s %s" % (self.console_ip, self.console_port))
         self.__login(self.hdl)
         return self.hdl
 

@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type TenantReactor interface {
 	UpdateTenant(tenantObj *netproto.Tenant) error            // updates an Tenant
 	DeleteTenant(tenantObj, ns, name string) error            // deletes an Tenant
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type TenantOStream struct {
+	sync.Mutex
+	stream netproto.TenantApi_TenantOperUpdateClient
 }
 
 // WatchTenants runs Tenant watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 	}
 
 	// start oper update stream
-	ostream, err := tenantRPCClient.TenantOperUpdate(ctx)
+	opStream, err := tenantRPCClient.TenantOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting Tenant oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &TenantOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.TenantEvent) {
+			client.debugStats.AddInt("TenantWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant.ObjectMeta)
+			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
+			go client.processTenantEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
 				return
 			}
-			client.debugStats.AddInt("TenantWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got Tenant watch event: Type: {%+v} Tenant:{%+v}", client.clientName, evt.EventType, evt.Tenant.ObjectMeta)
-
-			client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
-			go client.processTenantEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchTenantRecvLoop(stream netproto.TenantApi_WatchT
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting Tenant watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.TenantEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffTenant diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor TenantReactor, ostream netproto.TenantApi_TenantOperUpdateClient) {
+func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor TenantReactor, ostream *TenantOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Tenant)
 	for _, obj := range objList.Tenants {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 	// add/update all new objects
 	for _, obj := range objList.Tenants {
 		evt := netproto.TenantEvent{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			Tenant:    *obj,
 		}
 		client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 }
 
 // processTenantEvent handles Tenant event
-func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor, ostream netproto.TenantApi_TenantOperUpdateClient) {
+func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor, ostream *TenantOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.Tenant.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send Tenant oper Status, %s", err)
 				client.debugStats.AddInt("TenantOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("TenantOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

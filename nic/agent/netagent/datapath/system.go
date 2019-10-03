@@ -26,5 +26,5 @@ func (hd *Datapath) GetUUID() (string, error) {
 	}
 
 	// Mock HAL
-	return hd.generateMockUUID()
+	return hd.getDefaultUUID()
 }

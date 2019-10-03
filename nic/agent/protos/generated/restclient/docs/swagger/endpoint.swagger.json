@@ -474,6 +474,18 @@
       },
       "title": "endpoint watch event"
     },
+    "netprotoEndpointEventList": {
+      "type": "object",
+      "properties": {
+        "EndpointEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoEndpointEvent"
+          }
+        }
+      },
+      "title": "endpoint watch events batched"
+    },
     "netprotoEndpointList": {
       "type": "object",
       "properties": {

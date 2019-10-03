@@ -5,7 +5,11 @@ package statemgr
 import (
 	"fmt"
 	"net"
+	"time"
 
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
@@ -45,6 +49,7 @@ func EndpointStateFromObj(obj runtime.Object) (*EndpointState, error) {
 
 func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 	// build endpoint
+	creationTime, _ := types.TimestampProto(time.Now())
 	nep := netproto.Endpoint{
 		TypeMeta:   eps.TypeMeta,
 		ObjectMeta: agentObjectMeta(eps.ObjectMeta),
@@ -62,6 +67,7 @@ func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 			NodeUUID:           eps.Status.NodeUUID,
 		},
 	}
+	nep.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	return &nep
 }
@@ -241,8 +247,13 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 	// find network
 	ns, err := sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
 	if err != nil {
-		log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
-		return err
+		//Retry again, Create network may be lagging.
+		time.Sleep(time.Second)
+		ns, err = sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
+		if err != nil {
+			log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
+			return err
+		}
 	}
 
 	if ns.Network.Spec.IPv4Subnet != "" {

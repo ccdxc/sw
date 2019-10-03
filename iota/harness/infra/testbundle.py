@@ -127,28 +127,28 @@ class TestBundle:
 
     def __execute_testcases(self):
         result = types.status.SUCCESS
-        selected_list = [None]
-        if self.__sel_module:
-            selected_list = loader.RunCallback(self.__sel_module, 'Main', False, self.__sel_module_args)
-            if self.__max_select:
-                selected_list = selected_list[:int(self.__max_select)]
-
-        for selected in selected_list:
-            if self.__sel_entry:
-                selected_list = loader.RunCallback(self.__sel_entry, 'Main', False, selected)
-            for tc in self.__testcases:
-                api.CurrentTestcase = tc
-                tc.SetSelected(selected)
-                tc.SetBundleStore(self.GetStore())
-                ret = tc.Main()
-                if ret != types.status.SUCCESS:
-                    result = ret
-                    if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:
-                        return ret
-                    if GlobalOptions.no_keep_going:
-                        return ret
-                if self.__aborted:
-                    return types.status.FAILURE
+        for _ in range(GlobalOptions.bundle_stress):
+            selected_list = [None]
+            if self.__sel_module:
+                selected_list = loader.RunCallback(self.__sel_module, 'Main', False, self.__sel_module_args)
+                if self.__max_select:
+                    selected_list = selected_list[:int(self.__max_select)]
+            for selected in selected_list:
+                if self.__sel_entry:
+                    selected_list = loader.RunCallback(self.__sel_entry, 'Main', False, selected)
+                for tc in self.__testcases:
+                    api.CurrentTestcase = tc
+                    tc.SetSelected(selected)
+                    tc.SetBundleStore(self.GetStore())
+                    ret = tc.Main()
+                    if ret != types.status.SUCCESS:
+                        result = ret
+                        if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:
+                            return ret
+                        if GlobalOptions.no_keep_going:
+                            return ret
+                    if self.__aborted:
+                        return types.status.FAILURE
         return result
 
     def __update_stats(self):

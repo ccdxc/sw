@@ -474,6 +474,17 @@
       },
       "title": "network watch event"
     },
+    "netprotoNetworkEventList": {
+      "type": "object",
+      "properties": {
+        "networkEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoNetworkEvent"
+          }
+        }
+      }
+    },
     "netprotoNetworkList": {
       "type": "object",
       "properties": {

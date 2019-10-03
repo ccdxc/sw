@@ -135,6 +135,9 @@ class Node(object):
         #Simenv does not have nic type
         return ""
 
+    def GetDataNetworks(self):
+        return self.__inst.DataNetworks
+
     def GetNicMgmtIP(self):
         return self.__nic_mgmt_ip
 
@@ -361,6 +364,42 @@ class Topology(object):
 
 
         resp = api.ReloadNodes(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
+
+    def FlapDataPorts(self, node_names, num_ports_per_node = 1, down_time = 5,
+        flap_count = 1, interval = 5):
+        req = topo_pb2.SwitchMsg()
+
+        req.op = topo_pb2.FLAP_PORTS
+        req.flap_info.count = flap_count
+        req.flap_info.interval = interval
+        req.flap_info.down_time = down_time
+        switch_ips = {}
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found to flap port" % node_name)
+                return types.status.FAILURE
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            ports_added = 0
+            for nw in data_networks:
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+                #This should from testsuite eventually or each testcase should be able to set
+                ports_added = ports_added +  1
+                if ports_added >= num_ports_per_node:
+                    break
+
+        resp = api.DoSwitchOperation(req)
         if not api.IsApiResponseOk(resp):
             return types.status.FAILURE
 

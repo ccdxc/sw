@@ -106,10 +106,10 @@ func (msc *MirrorSessionCollection) Commit() error {
 		return msc.err
 	}
 	for _, sess := range msc.sessions {
-		err := sess.sm.tb.CreateMirrorSession(sess.veniceMirrorSess)
+		err := sess.sm.CreateMirrorSession(sess.veniceMirrorSess)
 		if err != nil {
 			// try updating it
-			err = sess.sm.tb.UpdateMirrorSession(sess.veniceMirrorSess)
+			err = sess.sm.UpdateMirrorSession(sess.veniceMirrorSess)
 			if err != nil {
 				msc.err = err
 				return err
@@ -174,7 +174,7 @@ func (msc *MirrorSessionCollection) Delete() error {
 
 	// walk all sessions and delete them
 	for _, sess := range msc.sessions {
-		err := sess.sm.tb.DeleteMirrorSession(sess.veniceMirrorSess)
+		err := sess.sm.DeleteMirrorSession(sess.veniceMirrorSess)
 		if err != nil {
 			return err
 		}

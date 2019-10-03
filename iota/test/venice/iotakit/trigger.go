@@ -43,6 +43,19 @@ func (tr *Trigger) AddCommand(command, entity, node string) error {
 	return nil
 }
 
+// AddCommandWithRetriesOnFailures adds a command to trigger
+func (tr *Trigger) AddCommandWithRetriesOnFailures(command, entity, node string, retries uint32) error {
+	cmd := iota.Command{
+		Mode:             iota.CommandMode_COMMAND_FOREGROUND,
+		Command:          command,
+		EntityName:       entity,
+		NodeName:         node,
+		RetriesOnFailure: retries,
+	}
+	tr.cmds = append(tr.cmds, &cmd)
+	return nil
+}
+
 // AddBackgroundCommand adds a background command
 func (tr *Trigger) AddBackgroundCommand(command, entity, node string) error {
 	cmd := iota.Command{

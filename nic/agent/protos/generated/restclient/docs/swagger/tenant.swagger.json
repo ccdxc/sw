@@ -474,6 +474,18 @@
       },
       "title": "network watch event"
     },
+    "netprotoTenantEventList": {
+      "type": "object",
+      "properties": {
+        "TenantEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoTenantEvent"
+          }
+        }
+      },
+      "title": "tenant watch events batched"
+    },
     "netprotoTenantList": {
       "type": "object",
       "properties": {

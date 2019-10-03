@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -23,22 +24,24 @@ import (
 // PerformImageUpload triggers image upgrade
 func (act *ActionCtx) PerformImageUpload() error {
 
-	fileBuf, err := ioutil.ReadFile("/go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar")
+	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
+
+	fileBuf, err := ioutil.ReadFile(rolloutFile)
 	if err != nil {
 		log.Infof("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
 		return fmt.Errorf("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
 	}
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
-	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
+	ctx, err := act.model.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
 		return err
 	}
 	_, err = act.UploadBundle(ctx, "bundle.tar", fileBuf)
 	if err != nil {
+		log.Infof("Error (%+v) uploading bundle.", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -60,7 +63,7 @@ func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content
 	if err != nil {
 		return 0, fmt.Errorf("closing writer %v", err)
 	}
-	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", act.model.tb.GetVeniceURL()[0])
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", act.model.GetVeniceURL()[0])
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
 		return 0, fmt.Errorf("http.newRequest failed %v", err)
@@ -92,13 +95,13 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	var numRetries int
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancelFunc()
-	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
+	ctx, err := act.model.VeniceLoggedInCtx(bkCtx)
 
 	if err != nil {
 		return err
 	}
 
-	restcls, err := act.model.tb.VeniceRestClient()
+	restcls, err := act.model.VeniceRestClient()
 	if err != nil {
 		return err
 	}
@@ -120,7 +123,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("Failed to create rollout object")
 	}
 
-	// Verify pre-install rollout Node status
+	/*// Verify pre-install rollout Node status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
@@ -161,17 +164,16 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 
 		for i := 0; i < len(status); i++ {
-			if status[i].Phase == "PROGRESSING" {
+			log.Errorf("ts:%s Controller node status %+v", time.Now().String(), status[i])
+			if status[i].Phase == "PROGRESSING" || status[i].Phase == "progressing" {
 				log.Errorf("ts:%s Controller node Pre-install Complete", time.Now().String())
 				numNodes = len(act.model.VeniceNodes().nodes)
 				break
 			}
-			if status[i].Phase != "WAITING_FOR_TURN" {
-				log.Errorf("ts:%s Controller node Pre-install Failed", time.Now().String())
-				time.Sleep(time.Second * 5)
+			if status[i].Phase == "waiting-for-turn" {
+				numNodes++
 				continue
 			}
-			numNodes++
 		}
 
 		if numNodes != len(act.model.VeniceNodes().nodes) {
@@ -186,8 +188,9 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	if numRetries != 0 {
 		return fmt.Errorf("rollout pre-check not completed for all nodes")
 	}
-
+	*/
 	// Verify pre-install of Naples
+outerLoop:
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
@@ -206,13 +209,27 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 
 		for i := 0; i < len(status); i++ {
-
-			if status[i].Phase != "WAITING_FOR_TURN" {
-				log.Errorf("ts:%s Naples Pre-install Failed. Naples Pre Install %+v", time.Now().String(), status[i])
-				time.Sleep(time.Second * 5)
-				continue
+			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
+			if status[i].Phase == "fail" {
+				log.Errorf("ts:%. Naples Pre Install Failed %+v", time.Now().String(), status[i])
+				break outerLoop
 			}
-			numNodes++
+		}
+
+		for i := 0; i < len(status); i++ {
+			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
+			if status[i].Phase == "progressing" || status[i].Phase == "complete" {
+				log.Errorf("ts:%. Naples Pre Install Complete %+v", time.Now().String(), status[i])
+				numRetries = 0
+				break outerLoop
+			}
+		}
+
+		for i := 0; i < len(status); i++ {
+			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
+			if status[i].Phase == "waiting-for-turn" {
+				numNodes++
+			}
 		}
 
 		if numNodes != len(act.model.Naples().nodes) {
@@ -222,7 +239,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 		log.Infof("ts:%s Naples Pre-install Status: Complete", time.Now().String())
 		numRetries = 0
-		break
+		break outerLoop
 	}
 
 	if numRetries != 0 {
@@ -239,7 +256,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 			continue
 		}
 		if r1.Status.StartTime == nil || r1.Spec.ScheduledStartTime.Seconds > r1.Status.StartTime.Seconds {
-			log.Infof("ts:%s Waiting for pre-install to complete and to schedule rollout : %s", time.Now().String(), rolloutName)
+			log.Infof("ts:%s Waiting for pre-install to complete and to schedule rollout : %s status %+v", time.Now().String(), rolloutName, r1.Status)
 			time.Sleep(time.Second * 5)
 			continue
 		}
@@ -251,7 +268,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("rollout failed to trigger")
 	}
 
-	// Verify rollout Node status
+	/*// Verify rollout Node status
 	for numRetries = 0; numRetries < 120; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
 		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
@@ -270,7 +287,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 
 		for i := 0; i < len(status); i++ {
-			if status[i].Phase == "COMPLETE" {
+			if status[i].Phase == "complete" {
 				numNodes++
 			}
 		}
@@ -302,7 +319,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		if status[0].Phase != "COMPLETE" {
+		if status[0].Phase != "complete" {
 			log.Infof("ts:%s Rollout controller services status: : %+v", time.Now().String(), status[0].Phase)
 			time.Sleep(time.Second * 5)
 			continue
@@ -314,10 +331,10 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	if numRetries != 0 {
 		return fmt.Errorf("rollout services failed on some nodes")
 	}
-
+	*/
 	// Verify rollout smartNIC status
 	for numRetries = 0; numRetries < 180; numRetries++ {
-		restcls, err := act.model.tb.VeniceRestClient()
+		restcls, err := act.model.VeniceRestClient()
 		if err != nil {
 			log.Infof("ts:%s Failed to get restclient err %+v", time.Now().String(), err)
 			time.Sleep(time.Second * 5)
@@ -341,7 +358,7 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 
 		for i := 0; i < len(status); i++ {
 			log.Infof("ts:%s SmartNIC Rollout status %s", time.Now().String(), status[i].Phase)
-			if status[i].Phase == "COMPLETE" {
+			if status[i].Phase == "complete" {
 				numNodes++
 			}
 		}
@@ -369,18 +386,18 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		}
 		opState := rollout.Status.OperationalState
 
-		if opState == "PROGRESSING" || opState == "SUSPEND_IN_PROGRESS" {
+		if opState == "progressing" || opState == "PROGRESSING" || opState == "SUSPEND_IN_PROGRESS" {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
 			time.Sleep(time.Second * 5)
 			continue
 		}
 
-		if opState == "FAILURE" || opState == "DEADLINE_EXCEEDED" {
+		if opState == "failure" || opState == "FAILURE" || opState == "DEADLINE_EXCEEDED" {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
 			return fmt.Errorf("rollout smartNIC node failed")
 		}
 
-		if opState == "SUCCESS" || opState == "SUSPENDED" {
+		if opState == "success" || opState == "SUCCESS" || opState == "SUSPENDED" {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
 			break
 		}
@@ -434,12 +451,12 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
-	ctx, err := act.model.tb.VeniceLoggedInCtx(bkCtx)
+	ctx, err := act.model.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
 		return err
 	}
 
-	restcls, err := act.model.tb.VeniceRestClient()
+	restcls, err := act.model.VeniceRestClient()
 	if err != nil {
 		return err
 	}

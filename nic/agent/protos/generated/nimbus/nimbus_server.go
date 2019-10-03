@@ -4,6 +4,7 @@ package nimbus
 
 import (
 	"errors"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
@@ -16,6 +17,17 @@ var (
 	// ErrIncorrectObjectType is returned when type deferencing from memdb.Object is of invalid type
 	ErrIncorrectObjectType = errors.New("incorrect object type")
 )
+
+const (
+	// DefaultWatchBatchSize is the max batch size for watch events
+	DefaultWatchBatchSize = 100
+	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events
+	DefaultWatchHoldInterval = time.Millisecond * 10
+)
+
+type EventStatus struct {
+	LastObjectMeta *api.ObjectMeta
+}
 
 // MbusServer is the message bus server
 type MbusServer struct {

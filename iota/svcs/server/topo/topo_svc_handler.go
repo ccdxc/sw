@@ -25,10 +25,18 @@ import (
 // TopologyService implements topology service API
 type TopologyService struct {
 	SSHConfig        *ssh.ClientConfig
-	TestBedInfo      *iota.TestBedMsg //server
+	tbInfo           testBedInfo
 	Nodes            []*testbed.TestNode
 	Workloads        map[string]*iota.Workload // list of workloads
 	ProvisionedNodes map[string]*testbed.TestNode
+	downloadedImages bool
+}
+
+type testBedInfo struct {
+	resp           *iota.TestBedMsg //server
+	allocatedVlans []uint32
+	id             uint32
+	switches       []*iota.DataSwitch
 }
 
 // NewTopologyServiceHandler Topo service handle
@@ -42,6 +50,9 @@ func NewTopologyServiceHandler() *TopologyService {
 // downloadImages downloads image
 func (ts *TopologyService) downloadImages() error {
 
+	if ts.downloadedImages {
+		return nil
+	}
 	ctrlVMDir := common.ControlVMImageDirectory + "/" + common.EsxControlVMImage
 	imageName := common.EsxControlVMImage + ".ova"
 	cwd, _ := os.Getwd()
@@ -63,6 +74,7 @@ func (ts *TopologyService) downloadImages() error {
 		return errors.Wrap(err, string(stdout))
 	}
 
+	ts.downloadedImages = true
 	return nil
 }
 
@@ -184,13 +196,49 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 	return req, nil
 }
 
+func (ts *TopologyService) switchProgrammingRequired(req *iota.TestBedMsg) bool {
+
+	if ts.tbInfo.id != req.TestbedId || len(ts.tbInfo.allocatedVlans) == 0 {
+		return true
+	}
+	sliceEqual := func(X, Y []string) bool {
+		m := make(map[string]int)
+
+		for _, y := range Y {
+			m[y]++
+		}
+
+		for _, x := range X {
+			if m[x] > 0 {
+				m[x]--
+				continue
+			}
+			//not present or execess
+			return false
+		}
+
+		return len(m) == 0
+	}
+
+	for _, reqSw := range req.DataSwitches {
+		for _, sw := range ts.tbInfo.switches {
+			if sw.GetIp() != reqSw.GetIp() || reqSw.GetSpeed() != sw.GetSpeed() ||
+				!sliceEqual(reqSw.Ports, sw.Ports) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // InitTestBed does initiates a test bed
 func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | InitTestBed Returned: %v", req)
 	var vlans []uint32
 	var err error
-	ts.TestBedInfo = req
+	ts.tbInfo.resp = req
 	ts.Nodes = []*testbed.TestNode{}
 
 	if err := ts.downloadImages(); err != nil {
@@ -215,17 +263,21 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		return req, nil
 	}
 
-	if ts.TestBedInfo.DataSwitches != nil && ts.TestBedInfo.TestbedId != 0 {
-		// Allocate VLANs for the test bed
-		if vlans, err = testbed.SetUpTestbedSwitch(ts.TestBedInfo.DataSwitches, ts.TestBedInfo.TestbedId); err != nil {
-			log.Errorf("TOPO SVC | InitTestBed | Could not initialize switch id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("Switch configuration failed %d. Err: %v", ts.TestBedInfo.TestbedId, err)
-			return req, nil
+	if req.DataSwitches != nil && req.TestbedId != 0 {
+		//Allocate only if TB ID chabged or vlan not allocated
+		if ts.switchProgrammingRequired(req) {
+			if vlans, err = testbed.SetUpTestbedSwitch(req.DataSwitches, req.TestbedId); err != nil {
+				log.Errorf("TOPO SVC | InitTestBed | Could not initialize switch id: %d, Err: %v", req.TestbedId, err)
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Switch configuration failed %d. Err: %v", req.TestbedId, err)
+				return req, nil
+			}
+			ts.tbInfo.allocatedVlans = vlans
 		}
-		ts.TestBedInfo.AllocatedVlans = vlans
+		ts.tbInfo.resp.AllocatedVlans = ts.tbInfo.allocatedVlans
+		ts.tbInfo.id = req.TestbedId
 	}
 
-	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
+	ts.SSHConfig = testbed.InitSSHConfig(ts.tbInfo.resp.Username, ts.tbInfo.resp.Password)
 
 	// Run init
 	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
@@ -260,14 +312,14 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 			ts.Nodes = append(ts.Nodes, &n)
 			commonCopyArtifacts := []string{
-				ts.TestBedInfo.VeniceImage,
-				ts.TestBedInfo.NaplesImage,
-				ts.TestBedInfo.NaplesSimImage,
+				ts.tbInfo.resp.VeniceImage,
+				ts.tbInfo.resp.NaplesImage,
+				ts.tbInfo.resp.NaplesSimImage,
 			}
 
 			pool.Go(func() error {
 				n := n
-				return n.InitNode(req.RebootNodes, ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+				return n.InitNode(req.RebootNodes, ts.SSHConfig, commonCopyArtifacts)
 			})
 		}
 		err = pool.Wait()
@@ -277,9 +329,9 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	}
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
-		ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-		ts.TestBedInfo.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitTestBed | Init Test Bed Call Failed. %s", err.Error())
-		return ts.TestBedInfo, nil
+		ts.tbInfo.resp.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		ts.tbInfo.resp.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitTestBed | Init Test Bed Call Failed. %s", err.Error())
+		return ts.tbInfo.resp, nil
 	}
 	for index, node := range ts.Nodes {
 		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
@@ -288,21 +340,21 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	}
 
 	log.Infof("Init testbed successful")
-	ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-	return ts.TestBedInfo, nil
+	ts.tbInfo.resp.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return ts.tbInfo.resp, nil
 }
 
 // GetTestBed gets testbed state
 func (ts *TopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 
-	if ts.TestBedInfo == nil {
+	if ts.tbInfo.resp == nil {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Testbed not initialized")
 		return req, nil
 
 	}
 
-	return ts.TestBedInfo, nil
+	return ts.tbInfo.resp, nil
 }
 
 func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
@@ -327,13 +379,13 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 
 		ts.Nodes = append(ts.Nodes, &n)
 		commonCopyArtifacts := []string{
-			ts.TestBedInfo.VeniceImage,
-			ts.TestBedInfo.NaplesImage,
+			ts.tbInfo.resp.VeniceImage,
+			ts.tbInfo.resp.NaplesImage,
 		}
 
 		pool.Go(func() error {
 			n := n
-			return n.InitNode(reboot, ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+			return n.InitNode(reboot, ts.SSHConfig, commonCopyArtifacts)
 		})
 	}
 	if err := pool.Wait(); err != nil {
@@ -361,7 +413,11 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 					Password:  node.EsxPassword,
 				},
 			},
-			Os: node.GetOs(),
+			Os:           node.GetOs(),
+			CimcIP:       node.CimcIpAddress,
+			CimcPassword: node.CimcPassword,
+			CimcUserName: node.CimcUsername,
+			SSHCfg:       cfg,
 		}
 		n.Node.Os = node.GetOs()
 		pool.Go(func() error {
@@ -377,7 +433,7 @@ func (ts *TopologyService) DoSwitchOperation(ctx context.Context, req *iota.Swit
 	log.Infof("TOPO SVC | DEBUG | SwitchMsg. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | SwitchMsg Returned: %v", req)
 
-	if err := testbed.DoSwitchOperation(req); err != nil {
+	if err := testbed.DoSwitchOperation(ctx, req); err != nil {
 		msg := fmt.Sprintf("TOPO SVC | SwitchMsg | Could not initialize switch Err: %v", err)
 		req.ApiResponse.ErrorMsg = msg
 		return req, nil
@@ -515,6 +571,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		}
 
 		ts.ProvisionedNodes[n.Name] = tbNode
+		log.Infof("Adding provisioned node %v : %v\n", n.Name, tbNode.Node.Name)
 		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
 
@@ -561,7 +618,6 @@ func (ts *TopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (
 // GetNodes returns the current topology information
 func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | GetNodes. Received Request Msg: %v", req)
-	defer log.Infof("TOPO SVC | DEBUG | GetNodes Returned: %v", req)
 
 	resp := iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{
@@ -569,10 +625,12 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		},
 	}
 
-	for _, node := range ts.ProvisionedNodes {
-		resp.Nodes = append(resp.Nodes, node.Node)
+	for name, node := range ts.ProvisionedNodes {
+		log.Infof("Returning provisioned node %v : %v\n", name, node.RespNode.Name)
+		resp.Nodes = append(resp.Nodes, node.RespNode)
 	}
 
+	log.Infof("TOPO SVC | DEBUG | GetNodes Returned: %v", resp)
 	return &resp, nil
 }
 

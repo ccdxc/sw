@@ -15,6 +15,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/ovf"
+
 	//"github.com/vmware/govmomi/ovf"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -444,6 +445,33 @@ func (h *Host) GetVMIP(name string) (string, error) {
 	}
 
 	return vm.WaitForIP(h.context.context)
+}
+
+//PoweredOn VM powered on
+func (h *Host) PoweredOn(name string) (bool, error) {
+
+	finder, _, err := h.client.finder()
+	if err != nil {
+		return false, err
+	}
+
+	vm, err := finder.VirtualMachine(h.context.context, name)
+
+	if err != nil {
+		return false, err
+	}
+
+	state, err := vm.PowerState(h.context.context)
+	if err != nil {
+		return false, err
+	}
+
+	if state == types.VirtualMachinePowerStatePoweredOn {
+		return true, nil
+
+	}
+
+	return false, nil
 }
 
 // Datastore returns a *Datastore which allows you to perform operations on it.

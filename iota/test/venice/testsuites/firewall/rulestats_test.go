@@ -31,8 +31,8 @@ var _ = Describe("rulestats tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 
-	Context("Verify rulestats on traffic ", func() {
-		It("TCP Rule stats should increment for default allow all policy", func() {
+	Context("tags:type=basic;datapath=true;duration=short  Verify rulestats on traffic ", func() {
+		It("tags:sanity=true TCP Rule stats should increment for default allow all policy", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling rule stats test on naples sim")
 			}

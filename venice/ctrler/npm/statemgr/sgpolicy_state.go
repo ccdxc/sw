@@ -7,7 +7,11 @@ import (
 	"hash/fnv"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -121,6 +125,7 @@ func generateRuleHash(r security.SGRule, key string) uint64 {
 
 func convertNetworkSecurityPolicy(sgp *SgpolicyState) *netproto.NetworkSecurityPolicy {
 	// build sg message
+	creationTime, _ := types.TimestampProto(time.Now())
 	nsg := netproto.NetworkSecurityPolicy{
 		TypeMeta:   sgp.NetworkSecurityPolicy.TypeMeta,
 		ObjectMeta: agentObjectMeta(sgp.NetworkSecurityPolicy.ObjectMeta),
@@ -130,6 +135,7 @@ func convertNetworkSecurityPolicy(sgp *SgpolicyState) *netproto.NetworkSecurityP
 			Rules:        convertRules(sgp, sgp.GetKey()),
 		},
 	}
+	nsg.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	return &nsg
 }

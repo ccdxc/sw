@@ -21,11 +21,10 @@ def Trigger(tc):
     store = tc.GetBundleStore()
     serverResp = store["server_resp"]
 
-    serverReq = api.Trigger_CreateAllParallelCommandsRequest()
 
     kill_cmd = "pkill -9 iperf3"
     server_nodes = set()
-    for cmd in serverReq.commands:
+    for cmd in serverResp.commands:
         server_nodes.add(cmd.node_name)
 
     serverReq = api.Trigger_CreateAllParallelCommandsRequest()

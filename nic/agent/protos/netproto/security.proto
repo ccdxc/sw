@@ -23,7 +23,7 @@ service SecurityGroupApi {
 
     rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};
     rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
-    rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};
+    rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEventList) {};
     rpc UpdateSecurityGroup (SecurityGroup) returns (SecurityGroup) {};
     rpc SecurityGroupOperUpdate (stream SecurityGroupEvent) returns (api.TypeMeta) {};
 
@@ -57,3 +57,9 @@ message SecurityGroupEvent {
     api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     SecurityGroup SecurityGroup   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-group,omitempty"];
 }
+
+// security group watch events batched
+message SecurityGroupEventList {
+    repeated SecurityGroupEvent SecurityGroupEvents  = 1;
+}
+

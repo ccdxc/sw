@@ -51,7 +51,7 @@ def Trigger(tc):
         api.CopyToWorkload(client.node_name, client.workload_name, [outfile], "")
         api.Trigger_AddCommand(clientPcapReq, client.node_name, client.workload_name,
                                "tcpdump -i eth1 -w %s.pcap" % (client.workload_name),  background=True)
-        clientCmd = fuz_init.FUZ_EXEC[client.workload_name]  + " -duration " + session_time + " -conns " + str(sessions) + " -cps " + str(cps_per_node) + " -talk  --jsonOut --jsonInput " + os.path.basename(outfile)
+        clientCmd = fuz_init.FUZ_EXEC[client.workload_name]  + " -attempts 6  -duration " + session_time + " -conns " + str(sessions) + " -cps " + str(cps_per_node) + " -talk  --jsonOut --jsonInput " + os.path.basename(outfile)
         api.Trigger_AddCommand(clientReq, client.node_name, client.workload_name,
                                clientCmd, timeout = 0)
 

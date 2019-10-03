@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -57,11 +61,20 @@ type SecurityProfileStatusReactor interface {
 	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type SecurityProfileNodeStatus struct {
+	nodeID        string
+	watcher       *memdb.Watcher
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
 // SecurityProfileTopic is the SecurityProfile topic on message bus
 type SecurityProfileTopic struct {
+	sync.Mutex
 	grpcServer    *rpckit.RPCServer // gRPC server instance
 	server        *MbusServer
 	statusReactor SecurityProfileStatusReactor // status event reactor
+	nodeStatus    map[string]*SecurityProfileNodeStatus
 }
 
 // AddSecurityProfileTopic returns a network RPC server
@@ -71,6 +84,7 @@ func AddSecurityProfileTopic(server *MbusServer, reactor SecurityProfileStatusRe
 		grpcServer:    server.grpcServer,
 		server:        server,
 		statusReactor: reactor,
+		nodeStatus:    make(map[string]*SecurityProfileNodeStatus),
 	}
 
 	// register the RPC handlers
@@ -80,6 +94,178 @@ func AddSecurityProfileTopic(server *MbusServer, reactor SecurityProfileStatusRe
 
 	return &handler, nil
 }
+
+func (eh *SecurityProfileTopic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.nodeStatus[nodeID] = &SecurityProfileNodeStatus{nodeID: nodeID, watcher: watcher}
+	eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+	eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *SecurityProfileTopic) unRegisterWatcher(nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *SecurityProfileTopic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		nodeStatus.opAckedStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opAckedStatus[event]
+	}
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+"_"+"SecurityProfile", delta)
+	hdr.Record("SecurityProfile", delta)
+	hdr.Record(nodeID, delta)
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *SecurityProfileTopic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		nodeStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = nodeStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *SecurityProfileTopic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	nodeStatus, ok := eh.nodeStatus[nodeID]
+	if !ok {
+		return true
+	}
+
+	evStatus, ok = nodeStatus.opSentStatus[event]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "SecurityProfile", event)
+		return false
+	}
+
+	evAckStatus, ok = nodeStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "SecurityProfile", event)
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, "SecurityProfile", event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *SecurityProfileTopic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *SecurityProfileTopic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // CreateSecurityProfile creates SecurityProfile
 func (eh *SecurityProfileTopic) CreateSecurityProfile(ctx context.Context, objinfo *netproto.SecurityProfile) (*netproto.SecurityProfile, error) {
@@ -154,6 +340,7 @@ func (eh *SecurityProfileTopic) GetSecurityProfile(ctx context.Context, objmeta 
 // ListSecurityProfiles lists all SecurityProfiles matching object selector
 func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
 	var objlist netproto.SecurityProfileList
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	filterFn := func(memdb.Object) bool {
 		return true
@@ -165,10 +352,14 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 
 	// walk all objects
 	objs := eh.server.memDB.ListObjects("SecurityProfile", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
 		if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
 			objlist.SecurityProfiles = append(objlist.SecurityProfiles, obj)
+			//record the last object sent to check config sync
+			eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
 		}
 	}
 
@@ -203,6 +394,9 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 		return err
 	}
 
+	eh.registerWatcher(nodeID, &watcher)
+	defer eh.unRegisterWatcher(nodeID)
+
 	// increment stats
 	eh.server.Stats("SecurityProfile", "ActiveWatch").Inc()
 	eh.server.Stats("SecurityProfile", "WatchConnect").Inc()
@@ -210,16 +404,36 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	defer eh.server.Stats("SecurityProfile", "WatchDisconnect").Inc()
 
 	// walk all SecurityProfiles and send it out
+	watchEvts := netproto.SecurityProfileEventList{}
 	for _, obj := range objlist.SecurityProfiles {
 		watchEvt := netproto.SecurityProfileEvent{
 			EventType:       api.EventType_CreateEvent,
 			SecurityProfile: *obj,
 		}
-		err = stream.Send(&watchEvt)
+		watchEvts.SecurityProfileEvents = append(watchEvts.SecurityProfileEvents, &watchEvt)
+	}
+	if len(watchEvts.SecurityProfileEvents) > 0 {
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
 			return err
 		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.SecurityProfileEventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.SecurityProfileEventList{}
+		return nil
 	}
 
 	// loop forever on watch channel
@@ -254,10 +468,24 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 				EventType:       etype,
 				SecurityProfile: *obj,
 			}
-			// streaming send
-			err = stream.Send(&watchEvt)
-			if err != nil {
-				log.Errorf("Error sending SecurityProfile to stream. Err: %v", err)
+			watchEvts.SecurityProfileEvents = append(watchEvts.SecurityProfileEvents, &watchEvt)
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.SecurityProfileEvents) >= DefaultWatchBatchSize {
+				if err = sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+		case <-timer.C:
+			running = false
+			if err = sendToStream(); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -270,6 +498,7 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 
 // updateSecurityProfileOper triggers oper update callbacks
 func (eh *SecurityProfileTopic) updateSecurityProfileOper(oper *netproto.SecurityProfileEvent, nodeID string) error {
+	eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.SecurityProfile.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough
@@ -301,10 +530,10 @@ func (eh *SecurityProfileTopic) SecurityProfileOperUpdate(stream netproto.Securi
 	for {
 		oper, err := stream.Recv()
 		if err == io.EOF {
-			log.Errorf("SecurityProfileOperUpdate stream ended. closing..")
+			log.Errorf("%v SecurityProfileOperUpdate stream ended. closing..", nodeID)
 			return stream.SendAndClose(&api.TypeMeta{})
 		} else if err != nil {
-			log.Errorf("Error receiving from SecurityProfileOperUpdate stream. Err: %v", err)
+			log.Errorf("Error receiving from %v SecurityProfileOperUpdate stream. Err: %v", nodeID, err)
 			return err
 		}
 

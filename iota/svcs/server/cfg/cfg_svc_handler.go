@@ -88,10 +88,10 @@ func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfig
 	defer log.Infof("CFG SVC | DEBUG | InitCfgService Returned: %v", req)
 
 	if len(req.Vlans) == 0 {
-		log.Errorf("CFG SVC | InitCfgService call failed. | Missing allocated VLANs")
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		req.ApiResponse.ErrorMsg = "CFG SVC | InitCfgService call failed. | Missing allocated VLANs"
-		return req, nil
+		//log.Errorf("CFG SVC | InitCfgService call failed. | Missing allocated VLANs")
+		//req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		//req.ApiResponse.ErrorMsg = "CFG SVC | InitCfgService call failed. | Missing allocated VLANs"
+		//return req, nil
 	}
 
 	if req.EntryPointType != iota.EntrypointType_VENICE_REST && req.EntryPointType != iota.EntrypointType_NAPLES_REST {

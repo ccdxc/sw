@@ -6,12 +6,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"net"
 	"sync"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/willf/bitset"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -69,6 +72,7 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 }
 
 func convertNetwork(nw *NetworkState) *netproto.Network {
+	creationTime, _ := types.TimestampProto(time.Now())
 	nt := netproto.Network{
 		TypeMeta:   nw.Network.TypeMeta,
 		ObjectMeta: agentObjectMeta(nw.Network.ObjectMeta),
@@ -83,6 +87,7 @@ func convertNetwork(nw *NetworkState) *netproto.Network {
 			AllocatedVlanID: nw.Network.Spec.VlanID,
 		},
 	}
+	nt.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	return &nt
 }

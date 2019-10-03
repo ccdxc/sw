@@ -5,30 +5,55 @@ meta:
 config:
     #Run a particular testcase
     #Number of iterations
-    iterations: 3
+    iterations: 50
     #Run lineraly or randomize suites
     run-type: linear
     #Scale data run
     scale-data: True
     stop-on-failure: True
+    #Max run time for stree in hours
+    max-run-time: 24h
 
 testsuites:
-    - suite: firewall
-      focus: ""
+    #- suite: firewall
+    #  focus: "sanity=true"
+    #- suite: monitor
+    #  focus: "sanity=true"
+    - suite: cluster
+    #  focus: "sanity=true"
 
 triggers:
-    - trigger: FlapDataPorts
+    - trigger: VenicePartition
+      percent: 50
+      skip-setup: True
+    - trigger: NaplesUpgrade
+      percent: 50
+      reinstall-on-failure: True
+      skip-setup: True
+    - trigger: VeniceReboot
       percent: 50
       skip-setup: True
     - trigger: HostReboot
       percent: 50
       skip-setup: True
-    - trigger: VeniceReboot
+    - trigger: NaplesRemoveAdd
       percent: 50
       skip-setup: True
-    - trigger: NaplesRemoveAdd
+    - trigger: FlapDataPorts
       percent: 50
       skip-setup: True
     - trigger: NaplesMgmtLinkFlap
       percent: 50
       skip-setup: True
+
+noises:
+   # - noise: GenEvents
+   #   rate: 5
+   #   count: 50000
+    - noise: GenFWLogs
+      rate: 25
+      count: 1000000
+    #- noise: FlapPorts
+    #  #Flap every 30 seconds
+    #  rate: 30
+    #  count: 1000000

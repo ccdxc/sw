@@ -36,9 +36,17 @@ def Trigger(tc):
     iperfClients = []
     serverReq = api.Trigger_CreateAllParallelCommandsRequest()
 
+    dip_port_cache = dict()
+    def __dip_port_key(dip, port):
+        return  dip + ":" + str(port)
+
     for idx, pairs in enumerate(tc.workload_pairs):
         client = pairs[0]
         server = pairs[1]
+        port = int(pairs[2])
+
+        server_key = __dip_port_key(server.ip_address, port)
+
 
         cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                        (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
@@ -49,15 +57,18 @@ def Trigger(tc):
         serverCmd = None
 
         #if tc.iterators.proto == 'udp':
-        port = api.AllocateTcpPort()
-        serverCmd = iperf.ServerCmd(port)
-        tc.serverCmds.append(serverCmd)
+        #port = api.AllocateTcpPort()
+        if server_key not in dip_port_cache:
+            dip_port_cache[server_key] = True
+
+            serverCmd = iperf.ServerCmd(port)
+            tc.serverCmds.append(serverCmd)
+            api.Trigger_AddCommand(serverReq, server.node_name, server.workload_name,
+                                   serverCmd, background = True,
+                                   stdout_on_err = True, stderr_on_err = True)
+
         iperfClients.append(IperfClient(server.ip_address, port,
                     client.node_name, client.workload_name))
-
-        api.Trigger_AddCommand(serverReq, server.node_name, server.workload_name,
-                               serverCmd, background = True,
-                               stdout_on_err = True, stderr_on_err = True)
 
 
     store = tc.GetBundleStore()

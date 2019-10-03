@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -43,6 +44,37 @@ func rebootVeniceNodes(percent int) error {
 	return setupModel.Action().ReloadVeniceNodes(vnc)
 }
 
+func cleanUpVeniceNodes() {
+
+	vnc := setupModel.VeniceNodes()
+
+	setupModel.Action().RunCommandOnVeniceNodes(vnc, "curl -i -XDELETE http://localhost:7086/db?db=default")
+	setupModel.Action().RunCommandOnVeniceNodes(vnc,
+		"if [[ $(curl -s localhost:7086/info  | jq .tstore.NodeMap.$HOSTNAME.NumShards) -gt 0 ]]; then  for i in  $(ls /var/lib/pensando/citadel/tstore); do curl -s localhost:7086/info  | jq .tstore.NodeMap.$HOSTNAME.Replicas | grep -w ${i}  || rm -rf /var/lib/pensando/citadel/tstore/${i} ; done;fi")
+}
+
+func partitionVeniceNode(percent int) error {
+	//dis
+
+	vnc, err := setupModel.VeniceNodes().SelectByPercentage(percent)
+
+	if err != nil {
+		return err
+	}
+
+	err = setupModel.Action().DisconnectVeniceNodesFromCluster(vnc)
+	if err != nil {
+		return err
+	}
+	time.Sleep(120 * time.Second)
+	err = setupModel.Action().ConnectVeniceNodesToCluster(vnc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func veniceRebootAction(cmd *cobra.Command, args []string) {
 	all := false
 	for _, v := range args {
@@ -77,6 +109,9 @@ func veniceRebootAction(cmd *cobra.Command, args []string) {
 	if err != nil {
 		errorExit("rebooting nodes", err)
 	}
+
+	//Give it 10 minutes before we start anything.
+	time.Sleep(10 * time.Minute)
 }
 
 func veniceServicesAction(cmd *cobra.Command, args []string) {
@@ -86,7 +121,7 @@ func veniceServicesAction(cmd *cobra.Command, args []string) {
 	}
 
 	log.Infof("getting cluster information")
-	cl, err := setupTb.GetCluster()
+	cl, err := setupModel.GetCluster()
 	if err != nil {
 		errorExit("could not retrieve cluster information", err)
 	}

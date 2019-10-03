@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/workload"
@@ -35,7 +36,8 @@ type WorkloadCollection struct {
 type WorkloadPair struct {
 	first  *Workload
 	second *Workload
-	port   string
+	proto  string
+	ports  []int
 }
 
 // WorkloadPairCollection is collection of workload pairs
@@ -100,7 +102,7 @@ func (sm *SysModel) deleteWorkload(wr *Workload) error {
 	// FIXME: free ip address for the workload
 
 	// delete venice workload
-	err := sm.tb.DeleteWorkload(wr.veniceWorkload)
+	err := sm.DeleteWorkload(wr.veniceWorkload)
 	if err != nil {
 		return err
 	}
@@ -291,6 +293,7 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurit
 		sip   string
 		dip   string
 		proto string
+		ports string
 	}
 	actionCache := make(map[string][]ipPair)
 
@@ -309,12 +312,13 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurit
 			for _, sip := range rule.FromIPAddresses {
 				for _, dip := range rule.ToIPAddresses {
 					for _, proto := range rule.ProtoPorts {
-						pair := ipPair{sip: sip, dip: dip, proto: proto.Protocol}
+						pair := ipPair{sip: sip, dip: dip, proto: proto.Protocol, ports: proto.Ports}
 						if _, ok := actionCache[rule.Action]; !ok {
 							actionCache[rule.Action] = []ipPair{}
 						}
 						//if this IP pair was already added, then don't pick it as precedence is based on order
 						if !ipPairPresent(pair) {
+							//Copy ports
 							actionCache[rule.Action] = append(actionCache[rule.Action], pair)
 						}
 					}
@@ -323,14 +327,33 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurit
 		}
 	}
 
+	getPortsFromRange := func(ports string) []int {
+		if ports == "any" {
+			//Random port if any
+			return []int{5555}
+		}
+		values := strings.Split(ports, "-")
+		start, _ := strconv.Atoi(values[0])
+		if len(values) == 1 {
+			return []int{start}
+		}
+		end, _ := strconv.Atoi(values[1])
+		portValues := []int{}
+		for i := start; i <= end; i++ {
+			portValues = append(portValues, i)
+		}
+		return portValues
+	}
 	for _, pair := range wpc.pairs {
 		cache, ok := actionCache[action]
 		if ok {
 			for _, ippair := range cache {
-				if ippair.dip == strings.Split(pair.first.iotaWorkload.GetIpPrefix(), "/")[0] &&
-					ippair.sip == strings.Split(pair.second.iotaWorkload.GetIpPrefix(), "/")[0] &&
+				if ((ippair.dip == "any") || ippair.dip == strings.Split(pair.first.iotaWorkload.GetIpPrefix(), "/")[0]) &&
+					((ippair.sip == "any") || ippair.sip == strings.Split(pair.second.iotaWorkload.GetIpPrefix(), "/")[0]) &&
 					ippair.proto == proto &&
 					pair.first.iotaWorkload.UplinkVlan == pair.second.iotaWorkload.UplinkVlan {
+					pair.ports = getPortsFromRange(ippair.ports)
+					pair.proto = ippair.proto
 					newCollection.pairs = append(newCollection.pairs, pair)
 				}
 			}

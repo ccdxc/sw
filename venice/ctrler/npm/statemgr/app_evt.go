@@ -5,7 +5,11 @@ package statemgr
 import (
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -61,6 +65,7 @@ func convertApp(aps *AppState) *netproto.App {
 	}
 
 	// build sg message
+	creationTime, _ := types.TimestampProto(time.Now())
 	app := netproto.App{
 		TypeMeta:   aps.App.TypeMeta,
 		ObjectMeta: agentObjectMeta(aps.App.ObjectMeta),
@@ -70,6 +75,7 @@ func convertApp(aps *AppState) *netproto.App {
 			ALG:            &netproto.ALG{},
 		},
 	}
+	app.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	if aps.App.Spec.ALG != nil {
 		app.Spec.ALGType = aps.App.Spec.ALG.Type

@@ -9,3 +9,4 @@ images/*
 *.log
 logs
 EP.json
+test/iris/config/netagent/gen_cfg/

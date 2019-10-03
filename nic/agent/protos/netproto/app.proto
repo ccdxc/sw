@@ -23,7 +23,7 @@ service AppApi {
 
     rpc GetApp (api.ObjectMeta) returns (App) {};
     rpc ListApps (api.ObjectMeta) returns (AppList) {};
-    rpc WatchApps (api.ObjectMeta) returns (stream AppEvent) {};
+    rpc WatchApps (api.ObjectMeta) returns (stream AppEventList) {};
     rpc UpdateApp (App) returns (App) {};
     rpc AppOperUpdate (stream AppEvent) returns (api.TypeMeta) {};
 
@@ -152,4 +152,10 @@ message AppList {
 message AppEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     App             App         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "app,omitempty"];
+}
+
+
+// app watch events batched
+message AppEventList {
+    repeated AppEvent AppEvents = 1;
 }

@@ -55,6 +55,8 @@ parser.add_argument('--skip-sanity', dest='skip_sanity',
                     action='store_true', help='Skip sanity testbundles.')
 parser.add_argument('--stress', dest='stress',
                     action='store_true', help='Enable stress test mode.')
+parser.add_argument('--bundle-stress', dest='bundle_stress',type=int, default=1,
+                    help='Number of iterations to run testbundle')
 parser.add_argument('--stress-factor', dest='stress_factor', type=int, default=1,
                     help='Stress factor - Control # of iterations in stress test.')
 parser.add_argument('--logdir', dest='logdir', default=None,

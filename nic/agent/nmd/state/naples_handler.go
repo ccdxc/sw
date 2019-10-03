@@ -342,6 +342,8 @@ func (n *NMD) handleHostModeTransition() error {
 	}
 	// restart rev proxy so that it can go back to HTTP and no client auth
 
+	//Revproxy clean up may take a while
+	time.Sleep(1 * time.Second)
 	err = n.RestartRevProxyWithRetries()
 	if err != nil {
 		return err

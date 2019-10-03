@@ -57,7 +57,8 @@ type Workload interface {
 	BringUp(args ...string) error
 	Reinit() error
 	SetBaseDir(dir string) error
-	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error)
+	RunCommand(cmd []string, dir string, retries uint32, timeout uint32,
+		background bool, shell bool) (*cmd.CmdCtx, string, error)
 	StopCommand(commandHandle string) (*cmd.CmdCtx, error)
 	WaitCommand(commandHandle string) (*cmd.CmdCtx, error)
 	AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
@@ -200,7 +201,8 @@ func (app *workloadBase) AddSecondaryIpv6Addresses(intf string, ipaddresses []st
 	return nil
 }
 
-func (app *workloadBase) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
+func (app *workloadBase) RunCommand(cmd []string, dir string, timeout uint32,
+	retries uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 	return nil, "", nil
 }
 
@@ -278,7 +280,7 @@ func (app *containerWorkload) MoveInterface(name string) error {
 //RunArpCmd runs arp command on workload
 var RunArpCmd = func(app Workload, ip string, intf string) error {
 	arpCmd := []string{"arping", "-c", "5", "-U", ip, "-I", intf}
-	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, false, false)
+	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, 0, false, false)
 	if cmdResp.ExitCode != 0 {
 		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
 		return nil
@@ -368,7 +370,8 @@ func (app *containerWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses
 	return nil
 }
 
-func (app *containerWorkload) RunCommand(cmds []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
+func (app *containerWorkload) RunCommand(cmds []string, dir string, retries uint32,
+	timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 
 	fixUtf := func(r rune) rune {
 		if r == utf8.RuneError {
@@ -383,7 +386,15 @@ func (app *containerWorkload) RunCommand(cmds []string, dir string, timeout uint
 	}
 
 	if !background {
-		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle, timeout)
+		var cmdResp utils.CommandResp
+		for i := (uint32)(0); i <= retries; i++ {
+			cmdResp, _ = app.containerHandle.RunCommand(containerCmdHandle, timeout)
+			if cmdResp.RetCode == 0 {
+				break
+			}
+			app.logger.Info("Command failed, retrying")
+			time.Sleep(500 * time.Millisecond)
+		}
 		cmdCtx.Done = true
 		cmdCtx.Stdout = strings.Map(fixUtf, cmdResp.Stdout)
 		cmdCtx.Stderr = strings.Map(fixUtf, cmdResp.Stderr)
@@ -460,7 +471,7 @@ func (app *containerWorkload) TearDown() {
 	if app.containerHandle != nil {
 		app.logger.Println("Deleting sub interface : " + app.subIF)
 		delIntfCmd := []string{"ip", "link", "del", app.subIF}
-		app.RunCommand(delIntfCmd, "", 0, false, false)
+		app.RunCommand(delIntfCmd, "", 0, 0, false, false)
 		app.logger.Println("Stopping container....")
 		app.containerHandle.Stop()
 		app.logger.Println("Stopped container....")
@@ -728,7 +739,8 @@ func (app *bareMetalWorkload) BringUp(args ...string) error {
 	return nil
 }
 
-func (app *bareMetalWorkload) RunCommand(cmds []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
+func (app *bareMetalWorkload) RunCommand(cmds []string, dir string, retries uint32,
+	timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 	handleKey := ""
 
 	runDir := app.baseDir
@@ -739,7 +751,16 @@ func (app *bareMetalWorkload) RunCommand(cmds []string, dir string, timeout uint
 	fmt.Println("base dir ", runDir, dir)
 
 	app.logger.Println("Running cmd ", strings.Join(cmds, " "))
-	cmdInfo, _ := cmd.ExecCmd(cmds, runDir, (int)(timeout), background, shell, nil)
+
+	var cmdInfo *cmd.CmdInfo
+	for i := (uint32)(0); i <= retries; i++ {
+		cmdInfo, _ = cmd.ExecCmd(cmds, runDir, (int)(timeout), background, shell, nil)
+		if cmdInfo.Ctx.ExitCode == 0 {
+			break
+		}
+		app.logger.Info("Command failed, retrying")
+		time.Sleep(500 * time.Millisecond)
+	}
 
 	if background && cmdInfo.Ctx.ExitCode == 0 {
 		handleKey = app.genBgCmdHandle()
@@ -781,7 +802,8 @@ func (app *bareMetalWorkload) WaitCommand(commandHandle string) (*cmd.CmdCtx, er
 	return cmdInfo.Ctx, nil
 }
 
-func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
+func (app *remoteWorkload) RunCommand(cmds []string, dir string,
+	retries uint32, timeout uint32, background bool, shell bool) (*cmd.CmdCtx, string, error) {
 	var cmdInfo *cmd.CmdInfo
 	runCmd := strings.Join(cmds, " ")
 	if app.sshHandle == nil {
@@ -795,20 +817,27 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32,
 	}
 
 	if !background {
-		for i := 0; i < 2; i++ {
-			cmdInfo, _ = cmd.RunSSHCommand(app.sshHandle, runCmd, timeout, false, false, app.logger)
-			if cmdInfo.Ctx.ExitCode == cmd.SSHCreationFailedExitCode {
-				cmdInfo.Ctx.Stderr = "SSH connection failed"
-				//Try it again.
-				if err := app.Reinit(); err != nil {
-					//Make sure we don't crash next time
-					app.sshHandle = nil
-					return cmdInfo.Ctx, "", nil
+	Loop:
+		for i := (uint32)(0); i <= retries; i++ {
+			for i := 0; i < 2; i++ {
+				cmdInfo, _ = cmd.RunSSHCommand(app.sshHandle, runCmd, timeout, false, false, app.logger)
+				if cmdInfo.Ctx.ExitCode == cmd.SSHCreationFailedExitCode {
+					cmdInfo.Ctx.Stderr = "SSH connection failed"
+					//Try it again.
+					if err := app.Reinit(); err != nil {
+						//Make sure we don't crash next time
+						app.sshHandle = nil
+						return cmdInfo.Ctx, "", nil
+					}
+					continue
 				}
-				continue
+				//Comand got executed on remote node, break up
+				if cmdInfo.Ctx.ExitCode == 0 {
+					break Loop
+				}
+				app.logger.Info("Command failed, retrying")
+				time.Sleep(500 * time.Millisecond)
 			}
-			//Comand got executed on remote node, break up
-			break
 		}
 		return cmdInfo.Ctx, "", nil
 	}
@@ -837,13 +866,13 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string, timeout uint32,
 func (app *remoteWorkload) mountDirectory(userName string, password string, srcDir string, dstDir string) error {
 
 	mkdir := []string{"mkdir", "-p", dstDir}
-	cmdInfo, _, _ := app.RunCommand(mkdir, "", 0, false, false)
+	cmdInfo, _, _ := app.RunCommand(mkdir, "", 0, 0, false, false)
 	if cmdInfo.ExitCode != 0 {
 		return errors.New("mkdir command failed " + cmdInfo.Stderr)
 	}
 
 	sshKeygen := []string{"ssh-keygen", "-f", "~/.ssh/id_rsa", "-t", "rsa", "-N", "''"}
-	cmdInfo, _, _ = app.RunCommand(sshKeygen, "", 0, false, false)
+	cmdInfo, _, _ = app.RunCommand(sshKeygen, "", 0, 0, false, false)
 	if cmdInfo.ExitCode != 0 {
 		return errors.New("ssh-keygen command failed " + cmdInfo.Stderr)
 	}
@@ -854,13 +883,13 @@ func (app *remoteWorkload) mountDirectory(userName string, password string, srcD
 	}
 
 	sshCopyID := []string{"sshpass", "-v", "-p", password, "ssh-copy-id", "-o", "StrictHostKeyChecking=no", userName + "@" + myIP}
-	cmdInfo, _, _ = app.RunCommand(sshCopyID, "", 0, false, false)
+	cmdInfo, _, _ = app.RunCommand(sshCopyID, "", 0, 0, false, false)
 	if cmdInfo.ExitCode != 0 {
 		return errors.New("ssh-copy-id command failed " + cmdInfo.Stderr)
 	}
 
 	sshFS := []string{"sudo", "nohup", "sshfs", "-o", "allow_other,IdentityFile=/home/" + userName + "/.ssh/id_rsa,StrictHostKeyChecking=no", userName + "@" + myIP + ":" + srcDir, dstDir}
-	cmdInfo, _, _ = app.RunCommand(sshFS, "", 0, false, false)
+	cmdInfo, _, _ = app.RunCommand(sshFS, "", 0, 0, false, false)
 	if cmdInfo.ExitCode != 0 {
 		return errors.New("sshfs command failed " + cmdInfo.Stderr)
 	}

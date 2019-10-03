@@ -27,7 +27,7 @@ service TunnelApi {
 
     rpc GetTunnel (api.ObjectMeta) returns (Tunnel) {};
     rpc ListTunnels (api.ObjectMeta) returns (TunnelList) {};
-    rpc WatchTunnels (api.ObjectMeta) returns (stream TunnelEvent) {};
+    rpc WatchTunnels (api.ObjectMeta) returns (stream TunnelEventList) {};
 }
 
 // Tunnel object
@@ -84,4 +84,9 @@ message TunnelList {
 message TunnelEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Tunnel          Tunnel      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tunnel,omitempty"];
+}
+
+// tunnel watch events batched
+message TunnelEventList {
+    repeated TunnelEvent TunnelEvents  = 1;
 }

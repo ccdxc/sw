@@ -819,8 +819,10 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 			Network:   *net,
 		}
 
+		watchEvts := netproto.NetworkEventList{}
+		watchEvts.NetworkEvents = append(watchEvts.NetworkEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -828,7 +830,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -836,7 +838,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -879,8 +881,10 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 			Endpoint:  *ep,
 		}
 
+		watchEvts := netproto.EndpointEventList{}
+		watchEvts.EndpointEvents = append(watchEvts.EndpointEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -888,7 +892,7 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -896,7 +900,7 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -931,8 +935,10 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 			SecurityGroup: *sg,
 		}
 
+		watchEvts := netproto.SecurityGroupEventList{}
+		watchEvts.SecurityGroupEvents = append(watchEvts.SecurityGroupEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -940,7 +946,7 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -948,7 +954,7 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -990,8 +996,10 @@ func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ObjectMeta, strea
 			NetworkSecurityPolicy: *sgp,
 		}
 
+		watchEvts := netproto.NetworkSecurityPolicyEventList{}
+		watchEvts.NetworkSecurityPolicyEvents = append(watchEvts.NetworkSecurityPolicyEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -999,7 +1007,7 @@ func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ObjectMeta, strea
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1007,7 +1015,7 @@ func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ObjectMeta, strea
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1051,8 +1059,10 @@ func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netp
 			SecurityProfile: *sp,
 		}
 
+		watchEvts := netproto.SecurityProfileEventList{}
+		watchEvts.SecurityProfileEvents = append(watchEvts.SecurityProfileEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1060,7 +1070,7 @@ func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netp
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1068,7 +1078,7 @@ func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netp
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1103,8 +1113,10 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 			App:       *app,
 		}
 
+		watchEvts := netproto.AppEventList{}
+		watchEvts.AppEvents = append(watchEvts.AppEvents, &watchEvt)
 		// send create event
-		err := stream.Send(&watchEvt)
+		err := stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1112,7 +1124,7 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -1120,7 +1132,7 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		err = stream.Send(&watchEvt)
+		err = stream.Send(&watchEvts)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err

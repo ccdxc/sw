@@ -206,6 +206,28 @@ func (d *diagHandler) HandleRequest(ctx context.Context, req *diagapi.Diagnostic
 		} else {
 			ret.Content = fmt.Sprintf("dump db returned error (%s)", err)
 		}
+	case "config-status":
+		cfgPushStatus := d.stateMgr.GetConfigPushStatus()
+		str, err := json.Marshal(cfgPushStatus)
+		if err != nil {
+			ret.Content = fmt.Sprintf("marshall returned error (%s)", err)
+		} else {
+			ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
+		}
+
+	case "config-stats":
+		cfgPushStats := d.stateMgr.GetConfigPushStats()
+		str, err := json.Marshal(cfgPushStats)
+		if err != nil {
+			ret.Content = fmt.Sprintf("marshall returned error (%s)", err)
+		} else {
+			ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
+		}
+
+	case "reset-stats":
+		d.stateMgr.ResetConfigPushStats()
+		ret.Content = fmt.Sprintf("Reset complete")
+
 	default:
 		ret.Content = fmt.Sprintf("Unknown action [%v]. valid actions (list-objects, dump-nimbus-db)", action)
 	}

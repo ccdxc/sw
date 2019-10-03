@@ -11,8 +11,10 @@ import (
 )
 
 var _ = Describe("fwlog tests", func() {
+	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
+		startTime = time.Now().UTC()
 		Eventually(func() error {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
@@ -21,6 +23,8 @@ var _ = Describe("fwlog tests", func() {
 
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
 		// delete test policy if its left over. we can ignore thes error here
 		ts.model.NetworkSecurityPolicy("test-policy").Delete()
@@ -35,8 +39,8 @@ var _ = Describe("fwlog tests", func() {
 		}).Should(Succeed())
 	})
 
-	Context("verify fwlog on traffic ", func() {
-		It("should log ICMP allow in fwlog", func() {
+	Context("tags:type=basic;datapath=true;duration=short verify fwlog on traffic ", func() {
+		It("tags:sanity=true should log ICMP allow in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -67,7 +71,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("should log TCP/8000 allow in fwlog", func() {
+		It("tags:sanity=true should log TCP/8000 allow in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -76,7 +80,6 @@ var _ = Describe("fwlog tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			//Naples time is set in UTC
 			startTime := time.Now().UTC()
-
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
@@ -160,7 +163,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("should log TCP/8100 deny in fwlog", func() {
+		It("tags:sanity=true should log TCP/8100 deny in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}

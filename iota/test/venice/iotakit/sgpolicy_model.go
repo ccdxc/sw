@@ -114,7 +114,7 @@ func (spc *NetworkSecurityPolicyCollection) Status() ([]*security.NetworkSecurit
 
 	var vsts []*security.NetworkSecurityPolicyStatus
 	for _, pol := range spc.policies {
-		sgp, err := pol.sm.tb.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
+		sgp, err := pol.sm.GetNetworkSecurityPolicy(&pol.venicePolicy.ObjectMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -354,10 +354,10 @@ func (spc *NetworkSecurityPolicyCollection) Commit() error {
 		return spc.err
 	}
 	for _, pol := range spc.policies {
-		err := pol.sm.tb.CreateNetworkSecurityPolicy(pol.venicePolicy)
+		err := pol.sm.CreateNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			// try updating it
-			err = pol.sm.tb.UpdateNetworkSecurityPolicy(pol.venicePolicy)
+			err = pol.sm.UpdateNetworkSecurityPolicy(pol.venicePolicy)
 			if err != nil {
 				spc.err = err
 				return err
@@ -380,7 +380,7 @@ func (spc *NetworkSecurityPolicyCollection) Delete() error {
 
 	// walk all policies and delete them
 	for _, pol := range spc.policies {
-		err := pol.sm.tb.DeleteNetworkSecurityPolicy(pol.venicePolicy)
+		err := pol.sm.DeleteNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			return err
 		}
@@ -458,7 +458,7 @@ func (rc *SGRuleCollection) Commit() error {
 	}
 
 	for _, pol := range policyMap {
-		err := pol.sm.tb.UpdateNetworkSecurityPolicy(pol.venicePolicy)
+		err := pol.sm.UpdateNetworkSecurityPolicy(pol.venicePolicy)
 		if err != nil {
 			return err
 		}

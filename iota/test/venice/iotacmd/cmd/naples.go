@@ -3,7 +3,9 @@ package cmd
 import (
 	"errors"
 	"strings"
+	"time"
 
+	"github.com/pensando/sw/iota/test/venice/iotakit"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +17,7 @@ func init() {
 	rootCmd.AddCommand(naplesCmd)
 	naplesCmd.AddCommand(naplesAddCmd)
 	naplesCmd.AddCommand(naplesDelCmd)
+	naplesCmd.AddCommand(naplesUpgradeCmd)
 	naplesAddCmd.Flags().StringVarP(&nodeNames, "names", "", "", "Node names")
 	naplesDelCmd.Flags().StringVarP(&nodeNames, "names", "", "", "Node names")
 }
@@ -34,6 +37,12 @@ var naplesDelCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a node with naples personality",
 	Run:   naplesDeleteAction,
+}
+
+var naplesUpgradeCmd = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Upgrade naples",
+	Run:   naplesUpgradeAction,
 }
 
 func naplesAddAction(cmd *cobra.Command, args []string) {
@@ -62,6 +71,20 @@ func naplesDeleteAction(cmd *cobra.Command, args []string) {
 	}
 }
 
+func naplesUpgradeAction(cmd *cobra.Command, args []string) {
+
+	setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+		setupModel.Action().RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
+		return nil
+	})
+
+	//For now upgrade all naples is the only option.
+	err := doNaplesUpgrade(0)
+	if err != nil {
+		errorExit("Naples upgrade failed", err)
+	}
+}
+
 func doNaplesRemoveAdd(percent int) error {
 
 	naples, err := setupModel.Naples().SelectByPercentage(percent)
@@ -82,4 +105,60 @@ func doNaplesMgmtLinkFlap(percent int) error {
 	}
 
 	return setupModel.Action().FlapMgmtLinkNaples(naples)
+}
+
+func doNaplesUpgrade(percent int) error {
+
+	setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+		_, err := setupModel.Action().RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
+		return err
+	})
+
+	defer setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+		_, err := setupModel.Action().RunNaplesCommand(nc, "rm /update/upgrade_to_same_firmware_allowed")
+		return err
+	})
+
+	rollout, err := setupModel.GetRolloutObject()
+	if err != nil {
+		return err
+	}
+
+	err = setupModel.Action().PerformRollout(rollout)
+	if err != nil {
+		return err
+	}
+
+	TimedOutEvent := time.After(time.Duration(300) * time.Second)
+	for true {
+		select {
+		case <-TimedOutEvent:
+			return errors.New("Error waiting for upgrade, timed out")
+		default:
+			err = setupModel.Action().VerifyRolloutStatus(rollout.Name)
+			if err == nil {
+				//Sleep for while to make sure all naples are connected
+				time.Sleep(60 * time.Second)
+				return nil
+			}
+		}
+	}
+
+	return nil
+}
+
+func generateEvents(rate, count string) error {
+
+	setupModel.Action().StopEventsGenOnNaples(setupModel.Naples())
+
+	return setupModel.Action().StartEventsGenOnNaples(setupModel.Naples(),
+		rate, count)
+}
+
+func generateFWLogs(rate, count string) error {
+
+	setupModel.Action().StopFWLogGenOnNaples(setupModel.Naples())
+
+	return setupModel.Action().StartFWLogGenOnNaples(setupModel.Naples(),
+		rate, count)
 }

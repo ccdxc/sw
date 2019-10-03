@@ -426,6 +426,6 @@ func Connect(ip, user, password string) (*ConnectCtx, error) {
 	return &ConnectCtx{sshClt: sshClt}, nil
 }
 
-func disconnect(n3k *ConnectCtx) {
+func Disconnect(n3k *ConnectCtx) {
 	n3k.sshClt.Close()
 }

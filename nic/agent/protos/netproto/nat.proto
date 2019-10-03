@@ -25,7 +25,7 @@ service NatPoolApi {
 
     rpc GetNatPool (api.ObjectMeta) returns (NatPool) {};
     rpc ListNatPools (api.ObjectMeta) returns (NatPoolList) {};
-    rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEvent) {};
+    rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEventList) {};
 }
 
 // Nat Pool Object.
@@ -69,6 +69,10 @@ message NatPoolEvent {
 }
 
 
+// NatPolicyEvent watch events batched
+message NatPoolEventList {
+    repeated NatPoolEvent NatPoolEvents  = 1;
+}
 
 // ---------------------------- Nat Binding API ----------------------------
 
@@ -85,7 +89,7 @@ service NatBindingApi {
 
     rpc GetNatBinding (api.ObjectMeta) returns (NatBinding) {};
     rpc ListNatBindings (api.ObjectMeta) returns (NatBindingList) {};
-    rpc WatchNatBindings (api.ObjectMeta) returns (stream NatBindingEvent) {};
+    rpc WatchNatBindings (api.ObjectMeta) returns (stream NatBindingEventList) {};
 }
 
 message NatBinding {
@@ -126,6 +130,11 @@ message NatBindingEvent {
     NatBinding NatBinding         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nat-binding,omitempty"];
 }
 
+// NatBindingEvent watch events batched
+message NatBindingEventList {
+    repeated NatBindingEvent NatBindingEvents  = 1;
+}
+
 // ---------------------------- Nat Policy API ----------------------------
 
 // Nat policy rpc service
@@ -141,7 +150,7 @@ service NatPolicyApi {
 
     rpc GetNatPolicy (api.ObjectMeta) returns (NatPolicy) {};
     rpc ListNatPolicies (api.ObjectMeta) returns (NatPolicyList) {};
-    rpc WatchNatPolicies (api.ObjectMeta) returns (stream NatPolicyEvent) {};
+    rpc WatchNatPolicies (api.ObjectMeta) returns (stream NatPolicyEventList) {};
 }
 
 // nat policy object
@@ -209,3 +218,7 @@ message NatPolicyEvent {
     NatPolicy NatPolicy   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nat-policy,omitempty"];
 }
 
+// NatPolicyEvent watch events batched
+message NatPolicyEventList {
+    repeated NatPolicyEvent NatPolicyEvents  = 1;
+}

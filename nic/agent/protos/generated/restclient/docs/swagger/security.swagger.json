@@ -474,6 +474,18 @@
       },
       "title": "security group watch event"
     },
+    "netprotoSecurityGroupEventList": {
+      "type": "object",
+      "properties": {
+        "SecurityGroupEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoSecurityGroupEvent"
+          }
+        }
+      },
+      "title": "security group watch events batched"
+    },
     "netprotoSecurityGroupList": {
       "type": "object",
       "properties": {

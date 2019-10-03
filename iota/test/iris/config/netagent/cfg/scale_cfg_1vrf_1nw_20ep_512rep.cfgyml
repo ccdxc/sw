@@ -32,14 +32,18 @@ objects:
 #  name: scale-sec-profile
 #  count: 1
 
-#- kind: Tunnel
-#  name: scale-tunnel
-#  count: 8
-#- kind: MirrorSession
-#  name: scale-mirror
-#  count: 8
-#- kind: FlowExportPolicy
-#  name: scale-flow-mon
-#  count: 1
-#- kind: FlowMonitorRule
-#  count: 1000
+- kind: Tunnel
+  name: scale-tunnel
+  count: 8
+- kind: MirrorSession
+  name: scale-mirror
+  count: 8
+ #Number of IPs per rule is 4. So, total is 4 (src) * 4 (dst) * 80 = 960
+- kind: MirrorSessionRule
+  count: 80
+- kind: FlowExportPolicy
+  name: scale-flow-mon
+  count: 1
+ #Number of IPs per rule is 4. So, total is 4 (src) * 4 (dst) * 80 = 960
+- kind: FlowMonitorRule
+  count: 80

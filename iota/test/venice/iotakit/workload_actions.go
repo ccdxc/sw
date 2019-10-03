@@ -22,6 +22,11 @@ import (
 // number of times to retry netcat client command
 const maxNetcatRetries = 3
 
+type workloadPort struct {
+	w    *iota.Workload
+	port int
+}
+
 // PingAndCapturePackets packets runs tcpdump and gets the output on the workload
 func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *WorkloadCollection, wlnum int) error {
 	if wpc.HasError() {
@@ -213,23 +218,33 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	if wpc.err != nil {
 		return wpc.err
 	}
-	srvWorkloads := make(map[string]*iota.Workload)
+
+	srvWorkloads := make(map[string]*workloadPort)
 	for _, pair := range wpc.pairs {
-		srvWorkloads[pair.first.iotaWorkload.WorkloadName] = pair.first.iotaWorkload
+		key := ""
+		actualPort := port
+		if port == 0 {
+			key = pair.first.iotaWorkload.WorkloadName + "-" + strconv.Itoa(pair.ports[0])
+			actualPort = pair.ports[0]
+		} else {
+			key = pair.first.iotaWorkload.WorkloadName + "-" + strconv.Itoa(port)
+		}
+		srvWorkloads[key] =
+			&workloadPort{w: pair.first.iotaWorkload, port: actualPort}
 	}
 
 	// stop old netcat servers if its running
 	trig := act.model.tb.NewTrigger()
 	for _, srvWrkld := range srvWorkloads {
-		trig.AddCommand("pkill nc", srvWrkld.WorkloadName, srvWrkld.NodeName)
-		trig.AddCommand("pkill fuz", srvWrkld.WorkloadName, srvWrkld.NodeName)
+		trig.AddCommand("pkill nc", srvWrkld.w.WorkloadName, srvWrkld.w.NodeName)
+		trig.AddCommand("pkill fuz", srvWrkld.w.WorkloadName, srvWrkld.w.NodeName)
 	}
 	trig.Run()
 
 	// run netcat servers on first workload
 	trig = act.model.tb.NewTrigger()
 	for _, srvWrkld := range srvWorkloads {
-		trig.AddBackgroundCommand(fmt.Sprintf("nc -lk %s -p %d", serverOpt, port), srvWrkld.WorkloadName, srvWrkld.NodeName)
+		trig.AddBackgroundCommand(fmt.Sprintf("nc -lk %s -p %d", serverOpt, srvWrkld.port), srvWrkld.w.WorkloadName, srvWrkld.w.NodeName)
 	}
 	srvResp, err := trig.Run()
 	if err != nil {
@@ -254,7 +269,11 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 		var pairNames []string
 		for _, pair := range wpc.pairs {
 			toIP := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
-			trig.AddCommand(fmt.Sprintf("nc -z %s %s %d", clientOpt, toIP, port), pair.second.iotaWorkload.WorkloadName, pair.second.iotaWorkload.NodeName)
+			actualPort := port
+			if port == 0 {
+				actualPort = pair.ports[0]
+			}
+			trig.AddCommand(fmt.Sprintf("nc -z %s %s %d", clientOpt, toIP, actualPort), pair.second.iotaWorkload.WorkloadName, pair.second.iotaWorkload.NodeName)
 			pairNames = append(pairNames, fmt.Sprintf("%s -> %s", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
 		}
 
@@ -313,6 +332,16 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	}
 
 	return clientErr
+}
+
+// TCPSessionWithOptions runs TCP session between pair of workloads with options
+func (act *ActionCtx) TCPSessionWithOptions(wpc *WorkloadPairCollection, port int,
+	duration string, reconnectAttempts int) error {
+	if wpc.err != nil {
+		return wpc.err
+	}
+
+	return act.FuzItWithOptions(wpc, 1, "tcp", strconv.Itoa(port), duration, reconnectAttempts)
 }
 
 // TCPSession runs TCP session between pair of workloads
@@ -416,7 +445,7 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 	}
 
 	for _, wr := range wc.workloads {
-		wsts, err := act.model.tb.GetWorkload(&wr.veniceWorkload.ObjectMeta)
+		wsts, err := act.model.GetWorkload(&wr.veniceWorkload.ObjectMeta)
 		if err != nil {
 			log.Errorf("Could not get workload %v. Err: %v", wr.veniceWorkload.Name, err)
 			return err
@@ -442,7 +471,7 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 		}
 
 		// get the endpoints for the workload
-		ep, err := act.model.tb.GetEndpoint(&epMeta)
+		ep, err := act.model.GetEndpoint(&epMeta)
 		if err != nil {
 			log.Errorf("Could not get endpoint %v. Err: %v", epMeta.Name, err)
 			return err
@@ -592,12 +621,18 @@ func (act *ActionCtx) FTPGetFails(wpc *WorkloadPairCollection) error {
 
 // FuzIt Establish large number (numConns) of connections from client workload to server workload
 func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, port string) error {
+	return act.FuzItWithOptions(wpc, numConns, proto, port, "10s", 5)
+}
+
+// FuzItWithOptions Establish large number (numConns) of connections from client workload to server workload with some options
+func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int, proto, port string, duration string, reconnectAttempts int) error {
 	var pairNames []string
 	// no need to perform connection scale in sim run
 	if act.model.tb.HasNaplesSim() {
 		return nil
 	}
 
+	srvWorkloads := make(map[string]*workloadPort)
 	workloads := make(map[string]*Workload)
 	serverInput := make(map[string]fuze.Input)
 	clientInput := make(map[string]fuze.Input)
@@ -606,7 +641,27 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 	for _, pair := range wpc.pairs {
 		wfName := pair.first.iotaWorkload.WorkloadName
 		workloads[wfName] = pair.first
-		serverInput[wfName] = fuze.Input{Connections: []*fuze.Connection{{ServerIPPort: ":" + port, Proto: proto}}}
+
+		key := ""
+		actualPort := port
+
+		if port == "0" {
+			key = wfName + "-" + strconv.Itoa(pair.ports[0])
+			actualPort = strconv.Itoa(pair.ports[0])
+		} else {
+			key = wfName + "-" + port
+		}
+
+		//Add only if added before
+		if _, ok := srvWorkloads[key]; !ok {
+			srvWorkloads[key] = &workloadPort{w: pair.first.iotaWorkload}
+			conns := []*fuze.Connection{}
+			if _, ok := serverInput[wfName]; ok {
+				conns = serverInput[wfName].Connections
+			}
+			conns = append(conns, &fuze.Connection{ServerIPPort: ":" + actualPort, Proto: proto})
+			serverInput[wfName] = fuze.Input{Connections: conns}
+		}
 
 		wfName = pair.second.iotaWorkload.WorkloadName
 		conns := []*fuze.Connection{}
@@ -615,7 +670,7 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 		}
 		destIPAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
 		for ii := 0; ii < numConns; ii++ {
-			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + port, Proto: proto})
+			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + actualPort, Proto: proto})
 		}
 		workloads[wfName] = pair.second
 		clientInput[wfName] = fuze.Input{Connections: conns}
@@ -686,7 +741,6 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -jsonInput %s -jsonOut", filename),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			} else {
-
 				trig.AddBackgroundCommand(fmt.Sprintf("./fuz -proto %v %v", serverInput[wsName].Connections[0].Proto,
 					serverInput[wsName].Connections[0].ServerIPPort),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
@@ -710,10 +764,16 @@ func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, po
 			if len(clientInput[wsName].Connections) > 1 {
 				filename := fmt.Sprintf("%s_fuz_client.json", ws.iotaWorkload.WorkloadName)
 				outfilename := fmt.Sprintf("%s_fuz_client_out.json", ws.iotaWorkload.WorkloadName)
-				trig.AddCommand(fmt.Sprintf("./fuz  -attempts 5 -talk -jsonInput %s -jsonOut > %s", filename, outfilename),
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -talk -jsonInput %s -jsonOut > %s",
+					reconnectAttempts,
+					duration,
+					filename, outfilename),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			} else {
-				trig.AddCommand(fmt.Sprintf("./fuz  -attempts 5 -talk -proto %v %v", clientInput[wsName].Connections[0].Proto,
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -talk -proto %v %v",
+					reconnectAttempts,
+					duration,
+					clientInput[wsName].Connections[0].Proto,
 					clientInput[wsName].Connections[0].ServerIPPort),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			}

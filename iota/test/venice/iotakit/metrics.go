@@ -15,14 +15,11 @@ import (
 )
 
 // TelemetryClient returns an array of telemetry clients for each venice node
-func (tb *TestBed) TelemetryClient() ([]*telemetryclient.TelemetryClient, error) {
+func (sm *SysModel) TelemetryClient() ([]*telemetryclient.TelemetryClient, error) {
 	// if we are already connected, just return the client
-	if tb.telemetryClient != nil {
-		return tb.telemetryClient, nil
-	}
 
 	var telemecls []*telemetryclient.TelemetryClient
-	for _, url := range tb.GetVeniceURL() {
+	for _, url := range sm.GetVeniceURL() {
 		// connect to Venice
 		tmc, err := telemetryclient.NewTelemetryClient(url)
 		if err != nil {
@@ -32,13 +29,12 @@ func (tb *TestBed) TelemetryClient() ([]*telemetryclient.TelemetryClient, error)
 
 		telemecls = append(telemecls, tmc)
 	}
-	tb.telemetryClient = telemecls
 
 	return telemecls, nil
 }
 
 // QueryFwlog queries firewall log
-func (tb *TestBed) QueryFwlog(protocol, fwaction, timestr string, port uint32) (*telemetry_query.FwlogsQueryResponse, error) {
+func (sm *SysModel) QueryFwlog(protocol, fwaction, timestr string, port uint32) (*telemetry_query.FwlogsQueryResponse, error) {
 	// validate parameters
 	_, ok := telemetry_query.FwlogActions_value[fwaction]
 	if !ok {
@@ -62,13 +58,13 @@ func (tb *TestBed) QueryFwlog(protocol, fwaction, timestr string, port uint32) (
 		},
 	}
 
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 
 	// telemetry client
-	tmcs, err := tb.TelemetryClient()
+	tmcs, err := sm.TelemetryClient()
 	if err != nil {
 		return nil, err
 	}
@@ -85,14 +81,14 @@ func (tb *TestBed) QueryFwlog(protocol, fwaction, timestr string, port uint32) (
 }
 
 // QueryMetrics queries venice metrics
-func (tb *TestBed) QueryMetrics(kind, name, timestr string, count int32) (*telemetryclient.MetricsQueryResponse, error) {
-	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
+func (sm *SysModel) QueryMetrics(kind, name, timestr string, count int32) (*telemetryclient.MetricsQueryResponse, error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 
 	// telemetry client
-	tmcs, err := tb.TelemetryClient()
+	tmcs, err := sm.TelemetryClient()
 	if err != nil {
 		return nil, err
 	}

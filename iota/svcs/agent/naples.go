@@ -40,6 +40,7 @@ const (
 	intelPciDevicePrefix    = "Ethernet"
 	maxStdoutSize           = 1024 * 1024 * 2
 	naplesStatusURL         = "http://localhost:9008/api/v1/naples/"
+	naplesSimBaseMacFile    = Common.DstIotaDBDir + "/sim-base-mac.ini"
 )
 
 var (
@@ -123,7 +124,7 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 
 	curDir, _ := os.Getwd()
 	defer os.Chdir(curDir)
-	if err := os.Chdir(Common.DstIotaAgentDir); err != nil {
+	if err := os.Chdir(Common.ImageArtificatsDirectory); err != nil {
 		return err
 	}
 	dir, _ := os.Getwd()
@@ -676,7 +677,7 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		item, _ := dnode.entityMap.Load(wloadKey)
 		if in.TriggerOp == iota.TriggerOp_EXEC_CMDS {
 			cmdResp, cmdKey, err = item.(iotaWorkload).workload.RunCommand(strings.Split(cmd.GetCommand(), " "),
-				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
+				cmd.GetRunningDir(), cmd.GetRetriesOnFailure(), cmd.GetForegroundTimeout(),
 				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
 		} else if in.TriggerOp == iota.TriggerOp_WAIT_FOR_CMDS {
 			cmdResp, err = item.(iotaWorkload).workload.WaitCommand(cmd.Handle)
@@ -685,7 +686,12 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 			cmdKey = cmd.Handle
 		}
 
-		cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
+		if cmdResp != nil {
+			cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
+		} else {
+			cmd.ExitCode = 1
+			cmd.Stderr = fmt.Sprintf("Failed to run command (Infra error %v)", err)
+		}
 
 		if cmd.StderrOnErr && cmd.ExitCode == 0 {
 			cmd.Stderr = ""
@@ -884,7 +890,7 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 	}
 
 	cmd := []string{"cat", naplesHwUUIDFile}
-	cmdResp, _, _ := naplesEntity.(iotaWorkload).workload.RunCommand(cmd, "", 0, false, true)
+	cmdResp, _, _ := naplesEntity.(iotaWorkload).workload.RunCommand(cmd, "", 0, 0, false, true)
 	naples.logger.Printf("naples hw uuid out %s", cmdResp.Stdout)
 	naples.logger.Printf("naples hw uuid err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples hw uuid exit code %d", cmdResp.ExitCode)
@@ -1315,7 +1321,7 @@ func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) 
 
 		if in.TriggerOp == iota.TriggerOp_EXEC_CMDS {
 			cmdResp, cmdKey, err = node.RunCommand(strings.Split(cmd.GetCommand(), " "),
-				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
+				cmd.GetRunningDir(), cmd.GetRetriesOnFailure(), cmd.GetForegroundTimeout(),
 				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
 
 		} else if in.TriggerOp == iota.TriggerOp_WAIT_FOR_CMDS {
@@ -1421,7 +1427,7 @@ func (node *commandNode) GetWorkloadMsgs() []*iota.Workload {
 }
 
 // RunCommand runs a command on node nodes
-func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
+func (node *commandNode) RunCommand(cmd []string, dir string, retries, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
 	handleKey := ""
 
 	runDir := Common.DstIotaEntitiesDir + "/" + node.name
@@ -1432,7 +1438,15 @@ func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, ba
 	node.logger.Println("base dir ", runDir, dir)
 
 	node.logger.Println("Running cmd ", strings.Join(cmd, " "))
-	cmdInfo, _ := Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
+	var cmdInfo *Cmd.CmdInfo
+
+	for i := (uint32)(0); i <= retries; i++ {
+		cmdInfo, _ = Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
+		if cmdInfo.Ctx.ExitCode == 0 {
+			break
+		}
+		node.logger.Info("Command failed, retrying")
+	}
 
 	if background {
 		handleKey = fmt.Sprintf("node-bg-cmd-%v", node.bgCmdIndex)
@@ -1498,19 +1512,23 @@ func incrementMacAddress(mac string, offset int) (string, error) {
 }
 
 func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAddress string,
-	image string, dockerNW string, veniceIPs []string) error {
+	image string, dockerNW string, veniceIPs []string, defaultGW string) (string, error) {
 
+	maxAttempts := 3
 	var naplesContainer *Utils.Container
 	var err error
 
 	naplesHome := Common.DstIotaAgentDir + "/" + name
 	naplesData := naplesHome + "/" + "data"
 
+	os.RemoveAll(naplesHome)
+	os.RemoveAll(naplesData)
+
 	os.Mkdir(naplesHome, 0755)
 	os.Mkdir(naplesData, 0755)
 
-	env := []string{"NAPLES_IMAGE_DIR=" + Common.DstIotaAgentDir, "NAPLES_HOME=" + naplesHome, "NAPLES_DATA_DIR=" + naplesData}
-	cmd := []string{"sudo", "-E", "python", Common.DstIotaAgentDir + "/" + naplesVMBringUpScript,
+	env := []string{"NAPLES_IMAGE_DIR=" + Common.ImageArtificatsDirectory, "NAPLES_HOME=" + naplesHome, "NAPLES_DATA_DIR=" + naplesData}
+	cmd := []string{"sudo", "-E", "python", Common.ImageArtificatsDirectory + "/" + naplesVMBringUpScript,
 		"--name", name, "--sysuuid", macAddress}
 
 	cmd = append(cmd, "--disable-portmap")
@@ -1523,11 +1541,19 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 	naples.logger.Println("Bringing up naples : ", name)
 
-	if retCode, stdout, err := Utils.Run(cmd, nodeAddTimeout, false, false, env); err != nil || retCode != 0 {
-		naples.logger.Println(stdout)
-		msg := "Naples bring script up failed."
-		naples.logger.Error(msg)
-		return errors.Wrap(err, msg)
+	i := 0
+	for true {
+		if retCode, stdout, err := Utils.Run(cmd, nodeAddTimeout, false, false, env); err != nil || retCode != 0 {
+			naples.logger.Println(stdout)
+			msg := "Naples bring script up failed."
+			naples.logger.Error(msg)
+			if i+1 <= maxAttempts {
+				i++
+				continue
+			}
+			return "", errors.Wrap(err, msg)
+		}
+		break
 	}
 
 	naples.logger.Println("Naples bring script up succesfull.")
@@ -1535,17 +1561,23 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 	time.Sleep(5 * time.Second)
 
 	if naplesContainer, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged); err != nil {
-		return errors.Wrap(err, "Naples sim not running!")
+		return "", errors.Wrap(err, "Naples sim not running!")
 	}
 
 	naples.logger.Println("Successfull naples bring up : ", name)
 
-	/*if err := naplesContainer.WaitForHealthy(naplesHealthyTimeout); err != nil {
-		return errors.Wrap(err, "Naples healthy timeout exceeded")
-	}*/
+	i = 0
+	for true {
+		if err := Utils.ConnectToDockerNetwork(naplesContainer, dockerNW); err == nil {
+			break
+		}
+		if i+1 <= maxAttempts {
+			i++
+			time.Sleep(time.Second)
+			continue
+		}
 
-	if err := Utils.ConnectToDockerNetwork(naplesContainer, dockerNW); err != nil {
-		return errors.Wrap(err, "Failed to connect to docker network")
+		return "", errors.Wrap(err, "Failed to connect to docker network")
 	}
 
 	wload := Workload.NewWorkload(Workload.WorkloadTypeContainer, name, name, naples.logger)
@@ -1554,30 +1586,68 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 	wload.SetBaseDir(wDir)
 	if err := wload.BringUp(name, ""); err != nil {
 		naples.logger.Errorf("Naples sim entity type add failed")
-		return err
+		return "", err
 	}
 	naples.dataNode.entityMap.Store(name, iotaWorkload{workload: wload, name: name})
 
-	cmd = []string{"LD_LIBRARY_PATH=/naples/nic/lib64", "/naples/nic/bin/penctl", "update", "naples",
-		"--managed-by", "network", "--management-network", "oob"}
+	getIPAddr := func() (string, error) {
+		cmd = []string{"ip", "-o", "-f", "inet", "addr", "show", "|", "grep", "eth1", "|", "grep", "-v",
+			"secondary", "|", "awk", "'/scope global/ {print $4}'"}
 
-	if len(veniceIPs) != 0 {
-		cmd = append(cmd, "--controllers")
-		cmd = append(cmd, strings.Join(veniceIPs, ","))
-	}
-	cmd = append(cmd, "--localhost")
-	cmd = append(cmd, "--id")
-	cmd = append(cmd, name)
-	cmdResp, _, rerr := wload.RunCommand(cmd, "", 0, false, false)
-	if rerr != nil || cmdResp.ExitCode != 0 {
-		msg := fmt.Sprintf("Error running mode switch command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
-		naples.logger.Println(msg)
-		return err
+		cmdResp, _, rerr := wload.RunCommand(cmd, "", 0, 0, false, false)
+		if rerr != nil || cmdResp.ExitCode != 0 {
+			msg := fmt.Sprintf("error getting the ip address of the interface %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
+			naples.logger.Println(msg)
+			return "", errors.New(msg)
+		}
+		return strings.TrimSuffix(strings.Split(cmdResp.Stdout, " ")[0], "\r\n"), nil
+
 	}
 
-	naples.logger.Println("Mode switch complete on : ", name)
+	modeSwitch := func(mgmtIP string) error {
+		cmd = []string{"NAPLES_URL=http://localhost LD_LIBRARY_PATH=/naples/nic/lib64", "/naples/nic/bin/penctl", "update", "naples",
+			"--managed-by", "network", "--management-network", "oob"}
 
-	return nil
+		if len(veniceIPs) != 0 {
+			cmd = append(cmd, "--controllers")
+			cmd = append(cmd, strings.Join(veniceIPs, ","))
+		}
+
+		if defaultGW != "" {
+			cmd = append(cmd, "--default-gw")
+			cmd = append(cmd, defaultGW)
+
+		}
+
+		cmd = append(cmd, "--mgmt-ip")
+		cmd = append(cmd, mgmtIP)
+		cmd = append(cmd, "--id")
+		cmd = append(cmd, name)
+		cmdResp, _, rerr := wload.RunCommand(cmd, "", 0, 0, false, false)
+		if rerr != nil || cmdResp.ExitCode != 0 || cmdResp.Stderr != "" {
+			msg := fmt.Sprintf("Error running mode switch command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
+			naples.logger.Println(msg)
+			return errors.New(msg)
+		}
+
+		naples.logger.Println("Mode switch complete on : ", name)
+		return nil
+	}
+
+	for i := 0; i < 3; i++ {
+		ipAddress, err := getIPAddr()
+		if err != nil {
+			return "", err
+		}
+
+		err = modeSwitch(ipAddress)
+		if err == nil {
+			return ipAddress, nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return "", errors.New("Mode Switch failed")
 }
 
 func (naples *naplesMultiSimNode) addNodeEntities(in *iota.Node) error {
@@ -1600,6 +1670,25 @@ func (naples *naplesMultiSimNode) addNodeEntities(in *iota.Node) error {
 			naples.entityMap.Store(entityEntry.GetName(), iotaWorkload{workload: wload, name: entityEntry.GetName()})
 		}
 	}
+
+	//HACK, add all multisim nodes
+
+	for i := 0; i < int(in.GetNaplesMultiSimConfig().NumInstances); i++ {
+
+		wloadName := in.GetName() + "-sim-" + strconv.Itoa(i)
+		wload := Workload.NewWorkload(Workload.WorkloadTypeContainer, wloadName, naples.name, naples.logger)
+		wDir := Common.DstIotaEntitiesDir + "/" + wloadName
+		wload.SetBaseDir(wDir)
+
+		if err := wload.BringUp(wloadName, ""); err != nil {
+			naples.logger.Errorf("Naples sim entity type add failed %v", err)
+			return err
+		}
+		if wload != nil {
+			naples.entityMap.Store(wloadName, iotaWorkload{workload: wload, name: wloadName})
+		}
+	}
+
 	return nil
 }
 
@@ -1607,6 +1696,30 @@ type simInstance struct {
 	id         uint32
 	name       string
 	macAddress string
+}
+
+func (naples *naplesMultiSimNode) getBaseMacAddresss() (string, error) {
+
+	b, err := ioutil.ReadFile(naplesSimBaseMacFile)
+	if err != nil {
+		intfs, _ := net.Interfaces()
+		for _, intf := range intfs {
+			if intf.Name != "lo" && intf.Name != "docker0" &&
+				!strings.Contains(intf.Name, "veth") {
+				macAddress, err := Utils.GetIntfMacAddress(intf.Name)
+				if err != nil {
+					return "", err
+				}
+				//Write to file as mac might change
+				err = ioutil.WriteFile(naplesSimBaseMacFile, []byte(macAddress), 0644)
+				if err != nil {
+					return "", err
+				}
+				return macAddress, nil
+			}
+		}
+	}
+	return string(b), nil
 }
 
 func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err error) {
@@ -1650,7 +1763,7 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 
 		curDir, _ := os.Getwd()
 		defer os.Chdir(curDir)
-		if err = os.Chdir(Common.DstIotaAgentDir); err != nil {
+		if err = os.Chdir(Common.ImageArtificatsDirectory); err != nil {
 			return nil
 		}
 		dir, _ := os.Getwd()
@@ -1698,18 +1811,11 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 
 	}
 
-	macAddress := ""
-	intfs, _ := net.Interfaces()
-	for _, intf := range intfs {
-		if intf.Name != "lo" {
-			macAddress, err = Utils.GetIntfMacAddress(intf.Name)
-			if err != nil {
-				resp := "Could get Mac address of interface"
-				naples.logger.Error(resp)
-				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: resp}}, err
-			}
-			break
-		}
+	macAddress, err := naples.getBaseMacAddresss()
+	if err != nil {
+		resp := "Could get Mac address of interface"
+		naples.logger.Error(resp)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: resp}}, err
 	}
 
 	pool, _ := errgroup.WithContext(context.Background())
@@ -1717,6 +1823,14 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 	currThreads := 0
 	scheduleInstances := []*simInstance{}
 
+	simConfig := &iota.Node_NaplesMultiSimConfig{
+		NaplesMultiSimConfig: &iota.NaplesMultiSimConfig{
+			VeniceIps:    in.GetNaplesMultiSimConfig().VeniceIps,
+			NumInstances: in.GetNaplesMultiSimConfig().NumInstances,
+			IpAddrRange:  in.GetNaplesMultiSimConfig().GetIpAddrRange(),
+			NicType:      in.GetNaplesMultiSimConfig().NicType,
+			Gateway:      in.GetNaplesMultiSimConfig().Gateway}}
+	simConfig.NaplesMultiSimConfig.SimsInfo = []*iota.NaplesSimInfo{}
 	for i := 0; i < (int)(in.GetNaplesMultiSimConfig().GetNumInstances()); i++ {
 		currThreads++
 		macAddress, err = incrementMacAddress(macAddress, 1)
@@ -1731,10 +1845,17 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 		if currThreads == maxParallelThreads-1 || i+1 == (int)(in.GetNaplesMultiSimConfig().GetNumInstances()) {
 			for _, instance := range scheduleInstances {
 				instance := instance
+				simInfo := &iota.NaplesSimInfo{Name: instance.name, NodeUuid: instance.macAddress}
+				simConfig.NaplesMultiSimConfig.SimsInfo = append(simConfig.NaplesMultiSimConfig.SimsInfo,
+					simInfo)
 				pool.Go(func() error {
-					return naples.bringUpNaples(instance.id, instance.name, instance.macAddress,
+					simInfo := simInfo
+					ip, err := naples.bringUpNaples(instance.id, instance.name, instance.macAddress,
 						in.GetImage(), dockerNW,
-						in.GetNaplesMultiSimConfig().GetVeniceIps())
+						in.GetNaplesMultiSimConfig().GetVeniceIps(),
+						in.GetNaplesMultiSimConfig().Gateway)
+					simInfo.IpAddress = ip
+					return err
 				})
 			}
 			if err := pool.Wait(); err != nil {
@@ -1757,7 +1878,7 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 
 	return &iota.Node{NodeStatus: apiSuccess,
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: in.NodeInfo}, nil
+		NodeInfo: simConfig}, nil
 }
 
 // Make sure all containers are admitted
@@ -1782,7 +1903,7 @@ func (naples *naplesMultiSimNode) checkAdmitted() error {
 
 			go func(wl iotaWorkload) {
 				cmd := []string{"curl", naplesStatusURL}
-				cmdResp, _, rerr := wl.workload.RunCommand(cmd, "", 0, false, false)
+				cmdResp, _, rerr := wl.workload.RunCommand(cmd, "", 0, 0, false, false)
 				if rerr != nil || cmdResp.ExitCode != 0 {
 					msg := fmt.Sprintf("Error getting naples status %v", cmdResp.Stderr)
 					naples.logger.Println(msg)
@@ -1804,11 +1925,11 @@ func (naples *naplesMultiSimNode) checkAdmitted() error {
 					return
 				}
 
-				if status["phase"] != "ADMITTED" {
+				if status["phase"] != "REBOOT_PENDING" {
 					msg := fmt.Sprintf("Naples %v not admitted \n", wl.name)
 					naples.logger.Println(msg)
-					waitCh <- errors.New(msg)
-					return
+					//waitCh <- errors.New(msg)
+					//return
 				}
 
 				waitCh <- nil

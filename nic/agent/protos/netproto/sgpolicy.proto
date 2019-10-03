@@ -27,7 +27,7 @@ service NetworkSecurityPolicyApi {
 
     rpc GetNetworkSecurityPolicy (api.ObjectMeta) returns (NetworkSecurityPolicy) {};
     rpc ListNetworkSecurityPolicys (api.ObjectMeta) returns (NetworkSecurityPolicyList) {};
-    rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEvent) {};
+    rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEventList) {};
     rpc UpdateNetworkSecurityPolicy (NetworkSecurityPolicy) returns (NetworkSecurityPolicy) {};
     rpc NetworkSecurityPolicyOperUpdate (stream NetworkSecurityPolicyEvent) returns (api.TypeMeta) {};
 
@@ -100,4 +100,9 @@ message NetworkSecurityPolicyList {
 message NetworkSecurityPolicyEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     NetworkSecurityPolicy        NetworkSecurityPolicy    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
+}
+
+// sg policy watch events batched
+message NetworkSecurityPolicyEventList {
+    repeated NetworkSecurityPolicyEvent NetworkSecurityPolicyEvents  = 1;
 }

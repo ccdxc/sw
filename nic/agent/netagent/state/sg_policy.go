@@ -334,7 +334,7 @@ func (na *Nagent) DeleteNetworkSecurityPolicy(tn, namespace, name string) error 
 	existingNetworkSecurityPolicy, err := na.FindNetworkSecurityPolicy(sgp.ObjectMeta)
 	if err != nil {
 		log.Errorf("NetworkSecurityPolicy %+v not found", sgp.ObjectMeta)
-		return ErrNetworkSecurityPolicyNotFound
+		return ErrObjectNotFound
 	}
 
 	// find the corresponding vrf for the sg policy

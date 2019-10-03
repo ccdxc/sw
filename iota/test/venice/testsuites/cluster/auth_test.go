@@ -17,7 +17,7 @@ var _ = Describe("auth tests", func() {
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 	})
-	It("same token works on all nodes", func() {
+	It("tags:type=basic;datapath=false;duration=short same token works on all nodes", func() {
 		// get token by logging in to leader
 		Expect(ts.model.Action().VeniceNodeLoggedInCtx(ts.model.VeniceNodes().Leader())).Should(Succeed())
 		ts.model.ForEachVeniceNode(func(vnc *iotakit.VeniceNodeCollection) error {

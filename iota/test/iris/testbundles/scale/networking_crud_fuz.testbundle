@@ -16,7 +16,117 @@ testcases:
     -   name    : fuz_server_start
         testcase: testcases.scale.fuz.server_start
 
-    -   name    : fuz_client_run
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 120
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : flap_switch_ports
+        testcase: testcases.triggers.switch_flap
+        args    :
+            flap_count : 5
+            num_ports : 1
+            interval : 30
+            down_time : 20
+
+    -   name    : fuz_wait_client_run_selected_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 2
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : LinkFlapWithUpdatePolicy
+        testcase: testcases.multiplex.update_config_with_link_flap
+        args    :
+            flap_count : 5
+            num_ports : 1
+            interval : 30
+            down_time : 20
+            action : DENY
+
+    -   name    : fuz_wait_client_run_selected_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        args    :
+            action : DENY
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 20
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : LinkFlapWithUpdatePolicy
+        testcase: testcases.multiplex.update_config_with_link_flap
+        args    :
+            flap_count : 5
+            num_ports : 1
+            interval : 30
+            down_time : 20
+            action : PERMIT
+
+    -   name    : fuz_wait_client_run_selected_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        args    :
+            action : PERMIT
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_permit
         testcase: testcases.scale.fuz.run_client
         iterators:
             type      : nested
@@ -24,7 +134,7 @@ testcases:
             proto     : [ tcp ]
         args    :
             num_sessions : 10
-            cps : 200
+            cps : 100
             pcap : False
             session_time : 900
             static_arp : True
@@ -35,11 +145,10 @@ testcases:
     -   name    : delete_add_config
         testcase: testcases.config.delete_add_base
         stress  : True
-
-    -   name    : fuz_server_start_1
+    -   name    : fuz_server_start
         testcase: testcases.scale.fuz.server_start
 
-    -   name    : fuz_client_run_1
+    -   name    : fuz_client_run_permit
         testcase: testcases.scale.fuz.run_client
         iterators:
             type      : nested
@@ -47,13 +156,12 @@ testcases:
             proto     : [ tcp ]
         args    :
             num_sessions : 10
-            cps : 200
+            cps : 100
             pcap : False
             session_time : 900
             static_arp : True
-            action : PERMIT
 
-    -   name    : fuz_server_stop_1
+    -   name    : fuz_server_stop
         testcase: testcases.scale.fuz.server_stop
 
     -   name    : policy_change_to_drop
@@ -64,7 +172,7 @@ testcases:
     -   name    : fuz_server_start_2
         testcase: testcases.scale.fuz.server_start
 
-    -   name    : fuz_client_run_2
+    -   name    : fuz_client_run_deny
         testcase: testcases.scale.fuz.run_client
         iterators:
             type      : nested
@@ -72,11 +180,212 @@ testcases:
             proto     : [ tcp ]
         args    :
             num_sessions : 10
-            cps : 200
+            cps : 100
             pcap : False
             session_time : 900
             static_arp : True
             action : DENY
 
     -   name    : fuz_server_stop_2
+        testcase: testcases.scale.fuz.server_stop
+    -   name    : policy_change_to_allow
+        testcase: testcases.config.update.policy
+        args    :
+            action : PERMIT
+
+    -   name    : fuz_server_start_2
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_permit
+        testcase: testcases.scale.fuz.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            pcap : False
+            session_time : 900
+            static_arp : True
+            action : PERMIT
+
+    -   name    : fuz_server_stop_2
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_permit_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            pcap : False
+            session_time : 900
+            static_arp : True
+            action : PERMIT
+
+    -   name    : policy_change_to_drop
+        testcase: testcases.config.update.policy
+        args    :
+            wait   : 60
+            action : DENY
+
+    -   name    : fuz_wait_client_run_deny_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            action : DENY
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 300
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : policy_change_to_allow
+        testcase: testcases.config.update.policy
+        args    :
+            wait   : 300
+            action : PERMIT
+
+    -   name    : fuz_wait_client_run_permit_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            action : PERMIT
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 120
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : endpoint_update_ipv6
+        testcase: testcases.config.update.endpoint
+        args    :
+            count : 5
+            wait   : 600
+
+    -   name    : fuz_wait_client_run_endpoint_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 120
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : delete_add_selected_objects
+        testcase: testcases.config.delete_add_base
+        args    :
+            count : 5
+            wait : 300
+            hal_log : False
+            kinds :
+                - FlowExportPolicy
+                - MirrorSession
+                - Tunnel
+
+    -   name    : fuz_wait_client_run_selected_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_bg
+        testcase: testcases.scale.fuz.run_client_bg
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 10
+            cps : 100
+            attempts : 120
+            pcap : False
+            session_time : 900
+            static_arp : True
+
+    -   name    : flap_switch_ports
+        testcase: testcases.triggers.switch_flap
+        args    :
+            flap_count : 5
+            num_ports : 1
+            interval : 30
+            down_time : 20
+
+    -   name    : fuz_wait_client_run_selected_update_bg
+        testcase: testcases.scale.fuz.wait_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : fuz_server_stop
         testcase: testcases.scale.fuz.server_stop

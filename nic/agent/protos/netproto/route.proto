@@ -26,7 +26,7 @@ service RouteApi {
 
     rpc GetRoute (api.ObjectMeta) returns (Route) {};
     rpc ListRoutes (api.ObjectMeta) returns (RouteList) {};
-    rpc WatchRoutes (api.ObjectMeta) returns (stream RouteEvent) {};
+    rpc WatchRoutes (api.ObjectMeta) returns (stream RouteEventList) {};
 }
 
 // Route object
@@ -64,4 +64,9 @@ message RouteList {
 message RouteEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Route           Route       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "route,omitempty"];
+}
+
+// route watch events batched
+message RouteEventList {
+    repeated RouteEvent RouteEvents  = 1;
 }

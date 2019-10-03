@@ -91,10 +91,10 @@ func (tb *TestBed) CheckIotaClusterHealth() error {
 }
 
 // MakeVeniceCluster inits the venice cluster
-func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
+func (sm *SysModel) MakeVeniceCluster(ctx context.Context) error {
 	// get CMD URL URL
 	var veniceCmdURL []string
-	for _, node := range tb.Nodes {
+	for _, node := range sm.tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			veniceCmdURL = append(veniceCmdURL, fmt.Sprintf("%s:9001", node.NodeMgmtIP))
 		}
@@ -108,7 +108,7 @@ func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
 		},
 		Spec: cluster.ClusterSpec{
 			AutoAdmitDSCs: true,
-			QuorumNodes:   tb.getVeniceIPAddrs(),
+			QuorumNodes:   sm.tb.getVeniceIPAddrs(),
 		},
 	}
 
@@ -124,7 +124,7 @@ func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
 
 	// ask iota server to make cluster
 	log.Debugf("Making cluster with params: %+v", makeCluster)
-	cfgClient := iota.NewConfigMgmtApiClient(tb.iotaClient.Client)
+	cfgClient := iota.NewConfigMgmtApiClient(sm.tb.iotaClient.Client)
 	resp, err := cfgClient.MakeCluster(ctx, &makeCluster)
 	if err != nil {
 		log.Errorf("Error initing venice cluster. Err: %v", err)
@@ -134,20 +134,20 @@ func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
 		log.Errorf("Error making venice cluster: ApiResp: %+v. Err %v", resp.ApiResponse, err)
 		return fmt.Errorf("Error making venice cluster")
 	}
-	tb.makeClustrResp = resp
+	sm.tb.makeClustrResp = resp
 
 	// done
 	return nil
 }
 
 // SetupVeniceNodes sets up some test tools on venice nodes
-func (tb *TestBed) SetupVeniceNodes() error {
+func (sm *SysModel) SetupVeniceNodes() error {
 
 	log.Infof("Setting up venice nodes..")
 
 	// walk all venice nodes
-	trig := tb.NewTrigger()
-	for _, node := range tb.Nodes {
+	trig := sm.tb.NewTrigger()
+	for _, node := range sm.tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			entity := node.NodeName + "_venice"
 			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/k8s/"), entity, node.NodeName)
@@ -203,15 +203,13 @@ func (tb *TestBed) SetupVeniceNodes() error {
 }
 
 // CheckVeniceServiceStatus checks if all services are running on venice nodes
-func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
+func (sm *SysModel) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 	ret := ""
-	trig := tb.NewTrigger()
-	for _, node := range tb.Nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-			entity := node.NodeName + "_venice"
-			trig.AddCommand(fmt.Sprintf("docker ps -q -f Name=pen-cmd"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("docker ps -q -f Name=pen-etcd"), entity, node.NodeName)
-		}
+	trig := sm.tb.NewTrigger()
+	for _, node := range sm.veniceNodes {
+		entity := node.iotaNode.Name + "_venice"
+		trig.AddCommand(fmt.Sprintf("docker ps -q -f Name=pen-cmd"), entity, node.iotaNode.Name)
+		trig.AddCommand(fmt.Sprintf("docker ps -q -f Name=pen-etcd"), entity, node.iotaNode.Name)
 	}
 
 	// trigger commands
@@ -231,11 +229,11 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 	}
 
 	// check all pods on leader node
-	for _, node := range tb.Nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE && node.NodeMgmtIP == leaderNode {
-			trig = tb.NewTrigger()
-			entity := node.NodeName + "_venice"
-			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl get pods -owide --no-headers"), entity, node.NodeName)
+	for _, node := range sm.veniceNodes {
+		if node.iotaNode.IpAddress == leaderNode {
+			trig = sm.tb.NewTrigger()
+			entity := node.iotaNode.Name + "_venice"
+			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl get pods -owide --no-headers"), entity, node.iotaNode.Name)
 
 			// trigger commands
 			triggerResp, err = trig.Run()
@@ -254,16 +252,32 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 				log.Debugf("Got kubectl resp\n%v", cmdResp.Stdout)
 				ret = cmdResp.Stdout
 				out := strings.Split(cmdResp.Stdout, "\n")
+			checkLoop:
 				for _, line := range out {
 					if line != "" && !strings.Contains(line, "Running") {
+						for _, downNode := range sm.veniceNodesDisconnected {
+							if strings.Contains(line, downNode.iotaNode.IpAddress) {
+								//Ignore the nodes which are disconnected.
+								break checkLoop
+							}
+						}
 						fmt.Printf("Some kuberneted services were not running: %v", cmdResp.Stdout)
 						return ret, fmt.Errorf("Some pods not running: %v", line)
 					}
 				}
 			}
 
-			trig = tb.NewTrigger()
-			trig.AddCommand(`/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name' `, entity, node.NodeName)
+			cNodes := []string{}
+			for _, vn := range sm.veniceNodes {
+				cNodes = append(cNodes, fmt.Sprintf("%q", vn.iotaNode.IpAddress))
+			}
+
+			hostSelector := "select([.status.hostIP]|inside([" + strings.Join(cNodes, ",") + "]))"
+			trig = sm.tb.NewTrigger()
+
+			trig.AddCommand(`/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | `+hostSelector+
+				`| select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name' `,
+				entity, node.iotaNode.Name)
 
 			// trigger commands
 			triggerResp, err = trig.Run()
@@ -277,7 +291,7 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 					return ret, fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 				}
 				if cmdResp.Stdout != "" {
-					return ret, fmt.Errorf("Some pods not ready: %v", cmdResp.Stdout)
+					fmt.Printf("Some pods not ready: %v, ignoring....", cmdResp.Stdout)
 				}
 			}
 		}
@@ -287,7 +301,7 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 }
 
 // CheckNaplesHealth checks if naples is healthy
-func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
+func (sm *SysModel) CheckNaplesHealth(node *Naples) error {
 	nodeIP := node.testNode.instParams.NodeMgmtIP
 	if node.testNode.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 		nodeIP = node.testNode.instParams.NicMgmtIP
@@ -317,7 +331,7 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 	}
 
 	// NAPLES is supposed to be part of a Cluster, so we need auth token to talk to Agent
-	veniceCtx, err := tb.VeniceLoggedInCtx(context.Background())
+	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
 	if err != nil {
 		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
 		log.Errorf("%v", nerr)
@@ -325,7 +339,7 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 	}
 	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
 	defer cancel()
-	agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, tb.GetVeniceURL()[0], []string{"*"})
+	agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, sm.GetVeniceURL()[0], []string{"*"})
 	if err != nil {
 		nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
 		log.Errorf("%v", nerr)

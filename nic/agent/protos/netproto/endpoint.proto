@@ -26,7 +26,7 @@ service EndpointApi {
     rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
     rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
     rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
-    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
+    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEventList) {};
     rpc EndpointOperUpdate (stream EndpointEvent) returns (api.TypeMeta) {};
 }
 
@@ -103,4 +103,10 @@ message EndpointList {
 message EndpointEvent {
     api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     Endpoint       Endpoint = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoint,omitempty"];
+}
+
+
+// endpoint watch events batched
+message EndpointEventList {
+    repeated EndpointEvent EndpointEvents  = 1;
 }

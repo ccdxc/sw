@@ -14,10 +14,10 @@
         }
     ],
     "flags": ["restartable", "save_stdout_on_crash"],
-    "timeout": 30.0
+    "timeout": 0.0
 }, {
     "name": "nmd",
-    "command": "/naples/nic/bin/nmd",
+    "command": "/naples/nic/bin/nmd -oob-interface eth1",
     "dependencies": [
         {
             "kind": "service",
@@ -25,7 +25,7 @@
         }
     ],
     "flags": ["restartable", "save_stdout_on_crash"],
-    "timeout": 30.0
+    "timeout": 0.0
 }, {
     "name": "tmagent",
     "command": "/naples/nic/bin/tmagent",
@@ -36,7 +36,7 @@
         }
     ],
     "flags": ["restartable", "save_stdout_on_crash"],
-    "timeout": 30.0
+    "timeout": 0.0
 }, {
     "name": "nevtsproxy",
     "command": "/naples/nic/bin/nevtsproxy",
@@ -47,7 +47,7 @@
         }
     ],
     "flags": ["restartable", "save_stdout_on_crash"],
-    "timeout": 30.0
+    "timeout": 0.0
 }, {
     "name": "upgrade",
     "command": "/naples/nic/bin/upgrade",

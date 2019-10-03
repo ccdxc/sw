@@ -9,8 +9,10 @@ package nimbus
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -27,6 +29,10 @@ type NamespaceReactor interface {
 	UpdateNamespace(namespaceObj *netproto.Namespace) error         // updates an Namespace
 	DeleteNamespace(namespaceObj, ns, name string) error            // deletes an Namespace
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+}
+type NamespaceOStream struct {
+	sync.Mutex
+	stream netproto.NamespaceApi_NamespaceOperUpdateClient
 }
 
 // WatchNamespaces runs Namespace watcher loop
@@ -52,11 +58,13 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 	}
 
 	// start oper update stream
-	ostream, err := namespaceRPCClient.NamespaceOperUpdate(ctx)
+	opStream, err := namespaceRPCClient.NamespaceOperUpdate(ctx)
 	if err != nil {
 		log.Errorf("Error starting Namespace oper updates. Err: %v", err)
 		return
 	}
+
+	ostream := &NamespaceOStream{stream: opStream}
 
 	// get a list of objects
 	objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
@@ -77,22 +85,37 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 
 	// loop till the end
 	for {
+		evtWork := func(evt *netproto.NamespaceEvent) {
+			client.debugStats.AddInt("NamespaceWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got Namespace watch event: Type: {%+v} Namespace:{%+v}", client.clientName, evt.EventType, evt.Namespace.ObjectMeta)
+			client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
+			go client.processNamespaceEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
 		select {
 		case evt, ok := <-recvCh:
 			if !ok {
 				log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
 				return
 			}
-			client.debugStats.AddInt("NamespaceWatchEvents", 1)
-
-			log.Infof("Ctrlerif: agent %s got Namespace watch event: Type: {%+v} Namespace:{%+v}", client.clientName, evt.EventType, evt.Namespace.ObjectMeta)
-
-			client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
-			go client.processNamespaceEvent(*evt, reactor, ostream)
-			//Give it some time to increment waitgrp
-			time.Sleep(100 * time.Millisecond)
+			evtWork(evt)
 		// periodic resync
 		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
 			// get a list of objects
 			objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
 			if err != nil {
@@ -119,19 +142,20 @@ func (client *NimbusClient) watchNamespaceRecvLoop(stream netproto.NamespaceApi_
 	// loop till the end
 	for {
 		// receive from stream
-		evt, err := stream.Recv()
+		objList, err := stream.Recv()
 		if err != nil {
 			log.Errorf("Error receiving from watch channel. Exiting Namespace watch. Err: %v", err)
 			return
 		}
-
-		recvch <- evt
+		for _, evt := range objList.NamespaceEvents {
+			recvch <- evt
+		}
 	}
 }
 
 // diffNamespace diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffNamespaces(objList *netproto.NamespaceList, reactor NamespaceReactor, ostream netproto.NamespaceApi_NamespaceOperUpdateClient) {
+func (client *NimbusClient) diffNamespaces(objList *netproto.NamespaceList, reactor NamespaceReactor, ostream *NamespaceOStream) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Namespace)
 	for _, obj := range objList.Namespaces {
@@ -162,7 +186,7 @@ func (client *NimbusClient) diffNamespaces(objList *netproto.NamespaceList, reac
 	// add/update all new objects
 	for _, obj := range objList.Namespaces {
 		evt := netproto.NamespaceEvent{
-			EventType: api.EventType_CreateEvent,
+			EventType: api.EventType_UpdateEvent,
 			Namespace: *obj,
 		}
 		client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
@@ -171,7 +195,7 @@ func (client *NimbusClient) diffNamespaces(objList *netproto.NamespaceList, reac
 }
 
 // processNamespaceEvent handles Namespace event
-func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, reactor NamespaceReactor, ostream netproto.NamespaceApi_NamespaceOperUpdateClient) {
+func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, reactor NamespaceReactor, ostream *NamespaceOStream) {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -237,13 +261,17 @@ func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, r
 			}
 
 			// send oper status
-			err := ostream.Send(&robj)
+			ostream.Lock()
+			modificationTime, _ := types.TimestampProto(time.Now())
+			robj.Namespace.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
 			if err != nil {
 				log.Errorf("failed to send Namespace oper Status, %s", err)
 				client.debugStats.AddInt("NamespaceOperSendError", 1)
 			} else {
 				client.debugStats.AddInt("NamespaceOperSent", 1)
 			}
+			ostream.Unlock()
 
 			return
 		}

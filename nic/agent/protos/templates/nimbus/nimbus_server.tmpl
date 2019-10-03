@@ -10,9 +10,13 @@ package nimbus
 import (
     "context"
     "errors"
+    "strconv"
+    "time"
 
     "github.com/pensando/sw/api"
+	"github.com/gogo/protobuf/types"
     "github.com/pensando/sw/nic/agent/protos/netproto"
+	hdr "github.com/pensando/sw/venice/utils/histogram"
     "github.com/pensando/sw/venice/globals"
     "github.com/pensando/sw/venice/utils/log"
     memdb "github.com/pensando/sw/venice/utils/memdb"
@@ -63,11 +67,20 @@ type {{$crudObject}}StatusReactor interface {
     GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
 }
 
+type {{$crudObject}}NodeStatus struct {
+    nodeID        string
+    watcher       *memdb.Watcher
+    opSentStatus  map[api.EventType]*EventStatus
+    opAckedStatus map[api.EventType]*EventStatus
+}
+
 // {{$crudObject}}Topic is the {{$crudObject}} topic on message bus
 type {{$crudObject}}Topic struct {
-	grpcServer    *rpckit.RPCServer // gRPC server instance
-	server        *MbusServer
-	statusReactor {{$crudObject}}StatusReactor // status event reactor
+    sync.Mutex
+    grpcServer      *rpckit.RPCServer // gRPC server instance
+    server          *MbusServer
+    statusReactor   {{$crudObject}}StatusReactor // status event reactor
+    nodeStatus       map[string]*{{$crudObject}}NodeStatus
 }
 
 // Add{{$crudObject}}Topic returns a network RPC server
@@ -77,6 +90,7 @@ func Add{{$crudObject}}Topic(server *MbusServer, reactor {{$crudObject}}StatusRe
         grpcServer: server.grpcServer,
         server:     server,
         statusReactor: reactor,
+        nodeStatus: make(map[string]*{{$crudObject}}NodeStatus),
     }
 
     // register the RPC handlers
@@ -86,6 +100,179 @@ func Add{{$crudObject}}Topic(server *MbusServer, reactor {{$crudObject}}StatusRe
 
     return &handler, nil
 }
+
+func (eh *{{$crudObject}}Topic) registerWatcher(nodeID string, watcher *memdb.Watcher) {
+    eh.Lock()
+    defer eh.Unlock()
+
+    eh.nodeStatus[nodeID] = &{{$crudObject}}NodeStatus{nodeID: nodeID, watcher: watcher}
+    eh.nodeStatus[nodeID].opSentStatus = make(map[api.EventType]*EventStatus)
+    eh.nodeStatus[nodeID].opAckedStatus = make(map[api.EventType]*EventStatus)
+}
+
+func (eh *{{$crudObject}}Topic) unRegisterWatcher(nodeID string) {
+    eh.Lock()
+    defer eh.Unlock()
+
+    delete(eh.nodeStatus, nodeID)
+}
+
+//update recv object status
+func (eh *{{$crudObject}}Topic) updateAckedObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    nodeStatus, ok := eh.nodeStatus[nodeID]
+    if !ok {
+        //Watcher already unregistered.
+        return
+    }
+
+    evStatus, ok = nodeStatus.opAckedStatus[event]
+    if !ok {
+        nodeStatus.opAckedStatus[event] = &EventStatus{}
+        evStatus = nodeStatus.opAckedStatus[event]
+    }
+
+	rcvdTime, _ := objMeta.ModTime.Time()
+	sendTime, _ := objMeta.CreationTime.Time()
+	delta := rcvdTime.Sub(sendTime)
+
+	hdr.Record(nodeID+ "_" + "{{$crudObject}}", delta)
+	hdr.Record("{{$crudObject}}", delta)
+	hdr.Record(nodeID, delta)
+
+    new, _  := strconv.Atoi(objMeta.ResourceVersion)
+    //for create/delete keep track of last one sent to, this may not be full proof
+    //  Create could be processed asynchoronusly by client and can come out of order.
+    //  For now should be ok as at least we make sure all messages are processed.
+    //For update keep track of only last one as nimbus client periodically pulls
+    if evStatus.LastObjectMeta != nil {
+        current, _  := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+        if current > new {
+            return
+        }
+    }
+    evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *{{$crudObject}}Topic) updateSentObjStatus(nodeID string, event api.EventType, objMeta *api.ObjectMeta) {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    nodeStatus, ok := eh.nodeStatus[nodeID]
+    if !ok {
+        //Watcher already unregistered.
+        return
+    }
+
+    evStatus, ok = nodeStatus.opSentStatus[event]
+    if !ok {
+        nodeStatus.opSentStatus[event] = &EventStatus{}
+        evStatus = nodeStatus.opSentStatus[event]
+    }
+
+    new, _  := strconv.Atoi(objMeta.ResourceVersion)
+    //for create/delete keep track of last one sent to, this may not be full proof
+    //  Create could be processed asynchoronusly by client and can come out of order.
+    //  For now should be ok as at least we make sure all messages are processed.
+    //For update keep track of only last one as nimbus client periodically pulls
+    if evStatus.LastObjectMeta != nil {
+        current, _  := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+        if current > new {
+            return
+        }
+    }
+    evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *{{$crudObject}}Topic) WatcherInConfigSync(nodeID string, event api.EventType) bool {
+
+
+    var ok bool
+    var evStatus *EventStatus
+    var evAckStatus *EventStatus
+
+    eh.Lock()
+    defer eh.Unlock()
+
+    nodeStatus, ok := eh.nodeStatus[nodeID]
+    if !ok {
+        return true
+    }
+
+    evStatus, ok = nodeStatus.opSentStatus[event]
+    if !ok {
+        //nothing sent, so insync
+        return true
+     }
+
+    //In-flight object still exists
+    if len(nodeStatus.watcher.Channel) != 0 {
+        log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "{{$crudObject}}", event)
+        return false
+    }
+
+    evAckStatus, ok = nodeStatus.opAckedStatus[event]
+    if !ok {
+        //nothing received, failed.
+        log.Infof("watcher %v still has not received anything %v(%v)", nodeID, "{{$crudObject}}", event)
+        return false
+     }
+
+    if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+        log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+             nodeID, "{{$crudObject}}", event, evStatus.LastObjectMeta.ResourceVersion,
+             evAckStatus.LastObjectMeta.ResourceVersion)
+        return false
+    }
+
+    return true
+}
+
+/*
+//GetSentEventStatus
+func (eh *{{$crudObject}}Topic) GetSentEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opSentStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+
+//GetAckedEventStatus
+func (eh *{{$crudObject}}Topic) GetAckedEventStatus(nodeID string, event api.EventType) *EventStatus {
+
+    eh.Lock()
+    defer eh.Unlock()
+    var evStatus *EventStatus
+
+    objStatus, ok := eh.opAckedStatus[nodeID]
+    if ok {
+        evStatus, ok = objStatus.opStatus[event]
+        if ok {
+            return evStatus
+        }
+    }
+    return nil
+}
+
+*/
 
 // Create{{$crudObject}} creates {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Create{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
@@ -160,6 +347,7 @@ func (eh *{{$crudObject}}Topic) Get{{$crudObject}}(ctx context.Context, objmeta 
 // List{{$crudObject}}s lists all {{$crudObject}}s matching object selector
 func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel *api.ObjectMeta) (*netproto.{{$crudObject}}List, error) {
     var objlist netproto.{{$crudObject}}List
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
     filterFn := func(memdb.Object) bool {
             return true
@@ -171,10 +359,14 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
 
     // walk all objects
     objs := eh.server.memDB.ListObjects("{{$crudObject}}", filterFn)
+	//creationTime, _ := types.TimestampProto(time.Now())
     for _, oo := range objs {
         obj, err := {{$crudObject}}FromObj(oo)
         if err == nil {
+			//obj.CreationTime = api.Timestamp{Timestamp: *creationTime}
             objlist.{{$crudObject}}s = append(objlist.{{$crudObject}}s, obj)
+            //record the last object sent to check config sync
+            eh.updateSentObjStatus(nodeID, api.EventType_UpdateEvent, &obj.ObjectMeta)
         }
     }
 
@@ -209,6 +401,9 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
         return err
     }
 
+    eh.registerWatcher(nodeID, &watcher)
+    defer eh.unRegisterWatcher(nodeID)
+
     // increment stats
     eh.server.Stats("{{$crudObject}}", "ActiveWatch").Inc()
     eh.server.Stats("{{$crudObject}}", "WatchConnect").Inc()
@@ -218,17 +413,37 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 
 
     // walk all {{$crudObject}}s and send it out
-    for _, obj := range objlist.{{$crudObject}}s {
-        watchEvt := netproto.{{$crudObject}}Event{
-            EventType: api.EventType_CreateEvent,
-            {{$crudObject}}:  *obj,
-        }
-        err = stream.Send(&watchEvt)
-        if err != nil {
-            log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-            return err
-        }
-    }
+	watchEvts := netproto.{{$crudObject}}EventList{}
+	for _, obj := range objlist.{{$crudObject}}s {
+		watchEvt := netproto.{{$crudObject}}Event{
+			EventType: api.EventType_CreateEvent,
+			{{$crudObject}}:       *obj,
+		}
+		watchEvts.{{$crudObject}}Events = append(watchEvts.{{$crudObject}}Events, &watchEvt)
+	}
+	if len(watchEvts.{{$crudObject}}Events) > 0 {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+			return err
+		}
+	}
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts = netproto.{{$crudObject}}EventList{}
+	sendToStream := func() error {
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.{{$crudObject}}EventList{}
+		return nil
+	}
 
     // loop forever on watch channel
     for {
@@ -262,12 +477,26 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
                 EventType: etype,
                 {{$crudObject}}:  *obj,
             }
-            // streaming send
-            err = stream.Send(&watchEvt)
-            if err != nil {
-                log.Errorf("Error sending {{$crudObject}} to stream. Err: %v", err)
-                return err
-            }
+            watchEvts.{{$crudObject}}Events = append(watchEvts.{{$crudObject}}Events, &watchEvt)
+		    if !running {
+			    running = true
+			    timer.Reset(DefaultWatchHoldInterval)
+		    }
+		    if len(watchEvts.{{$crudObject}}Events) >= DefaultWatchBatchSize {
+			    if err = sendToStream(); err != nil {
+				    return err
+			    }
+			    if !timer.Stop() {
+				    <-timer.C
+			    }
+			    timer.Reset(DefaultWatchHoldInterval)
+		    }
+		eh.updateSentObjStatus(nodeID, etype, &obj.ObjectMeta)
+        case <-timer.C:
+	        running = false
+	        if err = sendToStream(); err != nil {
+		       return err
+	        }
         case <-ctx.Done():
             return ctx.Err()
         }
@@ -279,6 +508,7 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 
 // update{{$crudObject}}Oper triggers oper update callbacks
 func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crudObject}}Event, nodeID string) error {
+    eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.{{$crudObject}}.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
 		fallthrough 
@@ -310,10 +540,10 @@ func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$cru
     for {
         oper, err := stream.Recv()
         if err == io.EOF {
-            log.Errorf("{{$crudObject}}OperUpdate stream ended. closing..")
+            log.Errorf("%v {{$crudObject}}OperUpdate stream ended. closing..", nodeID)
             return stream.SendAndClose(&api.TypeMeta{})
         } else if err != nil {
-            log.Errorf("Error receiving from {{$crudObject}}OperUpdate stream. Err: %v", err)
+            log.Errorf("Error receiving from %v {{$crudObject}}OperUpdate stream. Err: %v", nodeID, err)
             return err
         }
 

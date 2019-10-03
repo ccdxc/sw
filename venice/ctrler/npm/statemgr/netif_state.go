@@ -3,6 +3,11 @@
 package statemgr
 
 import (
+	"time"
+
+	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -10,6 +15,7 @@ import (
 
 func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.NetworkInterface {
 	// convert agentNetif -> veniceNetif
+	creationTime, _ := types.TimestampProto(time.Now())
 	netif := &network.NetworkInterface{
 		TypeMeta:   agentNetif.TypeMeta,
 		ObjectMeta: agentNetif.ObjectMeta,
@@ -18,6 +24,7 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 			// TBD: PrimaryMac: "tbf",
 		},
 	}
+	netif.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	switch agentNetif.Status.OperStatus {
 	case "UP":
