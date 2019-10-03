@@ -68,6 +68,9 @@ rsync -r --delete --delete-excluded \
   "$TOP/nic/tools/rdmactl.py" \
   "$GEN_DIR/"
 
+#copy print-cores.sh to package dir
+rsync "$TOP/nic/tools/print-cores.sh" "$GEN_DIR/"
+
 # Copy perftest sources to gen dir
 rsync -r --delete --delete-excluded \
   --exclude=".git/" \

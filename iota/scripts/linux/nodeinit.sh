@@ -64,5 +64,8 @@ else
     intmgmt=`ls /sys/bus/pci/devices/0000:$bdf/net/`
     dhcp_disable
     ifconfig $intmgmt 169.254.0.2/24
-    ping -c 5 169.254.0.1
+    if ! (ping -c 5 169.254.0.1); then
+        ./print-cores.sh
+        exit 1
+    fi
 fi

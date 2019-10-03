@@ -36,6 +36,9 @@ mkdir -p "$GEN_DIR"
 rsync -r --delete --delete-excluded \
   "$SCRIPTS_SRC/" "$GEN_DIR"
 
+#copy print-cores.sh to package dir
+rsync "$TOP/nic/tools/print-cores.sh" "$GEN_DIR/"
+
 # Copy linux driver sources to gen dir
 mkdir -p "$GEN_DIR/drivers"
 rsync -r --delete --delete-excluded --copy-links \

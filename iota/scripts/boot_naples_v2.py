@@ -318,6 +318,22 @@ class EntityManagement:
         if ret:
             raise Exception("Enitity : {}, src : {}, dst {} ".format(self.ipaddr, src_filename, dest_filename))
 
+    @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
+    def CopyOut(self, src_filename, entity_dir=""):
+        if entity_dir:
+            if not entity_dir.endswith("/"):
+                entity_dir = entity_dir + "/"
+        dest_filename = entity_dir + os.path.basename(src_filename)
+        cmd = "%s %s:%s %s" % (self.scp_pfx, self.ssh_host, src_filename, dest_filename)
+        print(cmd)
+        ret = os.system(cmd)
+        if ret:
+            raise Exception("Enitity : {}, src : {}:{}, dst {} ".format(self.ipaddr, self.ssh_host, src_filename, dest_filename))
+        self.RunSshCmd("sync")
+        ret = self.RunSshCmd("ls -l %s" % dest_filename)
+        if ret:
+            raise Exception("Enitity : {}, src : {}:{}, dst {} ".format(self.ipaddr, self.ssh_host, src_filename, dest_filename))
+
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
