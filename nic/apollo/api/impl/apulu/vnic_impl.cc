@@ -235,7 +235,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // program v4 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
     // populating them
-    p4pd_ret = p4pd_global_entry_write(P4_APULU_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        hw_id, NULL, NULL,
                                        &rxdma_rx_vnic_info_v4_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -245,7 +245,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program v6 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id + 1
-    p4pd_ret = p4pd_global_entry_write(P4_APULU_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        hw_id + 1, NULL, NULL,
                                        &rxdma_rx_vnic_info_v6_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -301,7 +301,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // program v4 VNIC_INFO_RXDMA entry for Tx direction in 2nd half of the
     // table at VNIC_INFO_TABLE_SIZE + hw_id index
-    p4pd_ret = p4pd_global_entry_write(P4_APULU_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        VNIC_INFO_TABLE_SIZE + hw_id,
                                        NULL, NULL, &rxdma_tx_vnic_info_v4_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -311,7 +311,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // program v6 TXDMA_VNIC_INFO entry for Tx direction in 2nd half of the
     // table at VNIC_INFO_TABLE_SIZE + hw_id + 1 index
-    p4pd_ret = p4pd_global_entry_write(P4_APULU_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
                                        VNIC_INFO_TABLE_SIZE + hw_id + 1,
                                        NULL, NULL, &rxdma_tx_vnic_info_v6_data);
     if (p4pd_ret != P4PD_SUCCESS) {

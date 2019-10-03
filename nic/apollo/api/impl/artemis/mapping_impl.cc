@@ -19,7 +19,7 @@
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
 #include "nic/apollo/api/impl/artemis/mapping_impl.hpp"
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 
 using sdk::table::sdk_table_api_params_t;

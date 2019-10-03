@@ -3,8 +3,8 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET       = apollo_rxdma.asmbin
 MODULE_PREREQS      = apollo_rxdma.p4bin eth.p4bin
 MODULE_PIPELINE     = apollo
-MODULE_INCS         = ${BLD_P4GEN_DIR}/apollo_rxdma/asm_out \
-                      ${BLD_P4GEN_DIR}/apollo_rxdma/alt_asm_out \
+MODULE_INCS         = ${BLD_P4GEN_DIR}/p4plus_rxdma/asm_out \
+                      ${BLD_P4GEN_DIR}/p4plus_rxdma/alt_asm_out \
                       ${TOPDIR} \
                       ${TOPDIR}/nic/asm/common-p4+/include \
                       ${TOPDIR}/nic/include \

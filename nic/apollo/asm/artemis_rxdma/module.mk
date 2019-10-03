@@ -3,8 +3,8 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET       = artemis_rxdma.asmbin
 MODULE_PREREQS      = artemis_rxdma.p4bin
 MODULE_PIPELINE     = artemis
-MODULE_INCS         = ${BLD_P4GEN_DIR}/artemis_rxdma/asm_out \
-                      ${BLD_P4GEN_DIR}/artemis_rxdma/alt_asm_out \
+MODULE_INCS         = ${BLD_P4GEN_DIR}/p4plus_rxdma/asm_out \
+                      ${BLD_P4GEN_DIR}/p4plus_rxdma/alt_asm_out \
                       ${TOPDIR} \
                       ${TOPDIR}/nic/asm/common-p4+/include \
                       ${TOPDIR}/nic/include \

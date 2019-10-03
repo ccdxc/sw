@@ -14,7 +14,7 @@
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/p4/common/defines.h"
-#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 namespace api {

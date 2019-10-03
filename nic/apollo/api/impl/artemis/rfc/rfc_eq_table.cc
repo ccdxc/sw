@@ -14,7 +14,7 @@
 #include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
 #include "nic/apollo/api/impl/rfc/rte_bitmap_utils.hpp"
 #include "nic/apollo/api/impl/artemis/rfc/rfc_utils.hpp"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/p4/include/artemis_sacl_defines.h"
 
 #define RFC_RESULT_RULE_ACTION_ALLOW               0
@@ -419,7 +419,7 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-                                   P4_ARTEMIS_TXDMA_TBL_ID_RFC_P1,
+                                   P4_P4PLUS_TXDMA_TBL_ID_RFC_P1,
                                    RFC_P1_RFC_ACTION_P1_ID,
                                    action_data);
     // reset the action data after flushing it
@@ -442,7 +442,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-              P4_ARTEMIS_TXDMA_TBL_ID_RFC_P2,
+              P4_P4PLUS_TXDMA_TBL_ID_RFC_P2,
               RFC_P2_RFC_ACTION_P2_ID,
               action_data);
     // reset the action data after flushing it
@@ -759,7 +759,7 @@ rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
     PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (rfc_p3_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
-              P4_ARTEMIS_TXDMA_TBL_ID_RFC_P3,
+              P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,
               RFC_P3_RFC_ACTION_P3_ID, action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));

@@ -16,7 +16,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 using sdk::table::handle_t;
 

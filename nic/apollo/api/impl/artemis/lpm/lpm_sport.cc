@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 
 sdk_ret_t
 lpm_sport_add_key_to_stage (uint8_t *bytes, uint32_t idx,
@@ -205,7 +205,7 @@ sdk_ret_t
 lpm_sport_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-               P4_ARTEMIS_RXDMA_TBL_ID_RXLPM2,
+               P4_P4PLUS_RXDMA_TBL_ID_RXLPM2,
                RXLPM2_MATCH2_16B_ID, bytes);
 }
 
@@ -213,7 +213,7 @@ sdk_ret_t
 lpm_sport_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-               P4_ARTEMIS_RXDMA_TBL_ID_RXLPM2,
+               P4_P4PLUS_RXDMA_TBL_ID_RXLPM2,
                RXLPM2_MATCH2_16B_RETRIEVE_ID, bytes);
 }
 

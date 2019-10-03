@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = artemis_txdma.p4bin
-MODULE_SRCS     = ${MODULE_SRC_DIR}/artemis_txdma.p4
+MODULE_SRCS     = ${MODULE_SRC_DIR}/p4plus_txdma.p4
 MODULE_PIPELINE = artemis
 MODULE_NCC_OPTS = --pipeline=artemis --asm-out --p4-plus --no-ohi --two-byte-profile \
                   --pd-gen --p4-plus-module txdma \

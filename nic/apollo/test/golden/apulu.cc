@@ -32,8 +32,8 @@
 #include "nic/apollo/p4/include/apulu_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
-#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
-#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "nic/apollo/test/golden/apulu_pkts.h"
 
 #define EPOCH 0x55

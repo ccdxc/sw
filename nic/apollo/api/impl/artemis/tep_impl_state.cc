@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl_state.hpp"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
@@ -29,7 +29,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
     sdk_table_factory_params_t table_params;
 
     // instantiate P4 tables for bookkeeping
-    p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
                                      &tinfo);
     // allocate indexer for remote 4to6 mapping table hw id
     remote_46_tep_idxr_ = indexer::factory(tinfo.tabledepth);

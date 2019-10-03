@@ -13,7 +13,7 @@
  *                      table config engine.
  *****************************************************************************/
 
-#include "apulu_txdma/asm_out/INGRESS_p.h"
+#include "INGRESS_p.h"
 
 struct phv_ p;
 

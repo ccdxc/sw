@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_rxdma.p4bin
-MODULE_SRCS     = ${MODULE_SRC_DIR}/apollo_rxdma.p4
+MODULE_SRCS     = ${MODULE_SRC_DIR}/p4plus_rxdma.p4
 MODULE_PIPELINE = apollo
 MODULE_NCC_OPTS = --pipeline=apollo --asm-out --p4-plus --no-ohi --two-byte-profile \
                   --p4-plus-module rxdma \

@@ -28,8 +28,8 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
-#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
-#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 extern sdk_ret_t init_service_lif(uint32_t lif_id, const char *cfg_path);
 
@@ -389,7 +389,7 @@ apulu_impl::p4plus_table_init_(void) {
     p4pd_table_properties_t tbl_ctx_txdma_act;
     p4pd_table_properties_t tbl_ctx_txdma_act_ext;
 
-    p4pd_global_table_properties_get(P4_APULU_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
@@ -400,7 +400,7 @@ apulu_impl::p4plus_table_init_(void) {
     prog.pipe = P4_PIPELINE_RXDMA;
     sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
 
-    p4pd_global_table_properties_get(P4_APULU_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_txdma_act.stage;
@@ -430,7 +430,7 @@ apulu_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
-                             P4_APULU_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
+                             P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
@@ -469,8 +469,8 @@ apulu_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                                               action_id);
         packed_entry = line->packed_entry;
     }
-    p4pd_apulu_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apulu_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    p4pd_p4plus_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_p4plus_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
@@ -492,8 +492,8 @@ apulu_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                                                               action_id);
         packed_entry = line->packed_entry;
     }
-    p4pd_apulu_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apulu_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    p4pd_p4plus_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_p4plus_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
     return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }

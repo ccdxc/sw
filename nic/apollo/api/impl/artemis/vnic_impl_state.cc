@@ -13,8 +13,8 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl_state.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 namespace api {
 namespace impl {

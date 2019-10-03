@@ -3,8 +3,8 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET       = apulu_txdma.asmbin
 MODULE_PREREQS      = apulu_txdma.p4bin
 MODULE_PIPELINE     = apulu
-MODULE_INCS         = ${BLD_P4GEN_DIR}/apulu_txdma/asm_out \
-                      ${BLD_P4GEN_DIR}/apulu_txdma/alt_asm_out \
+MODULE_INCS         = ${BLD_P4GEN_DIR}/p4plus_txdma/asm_out \
+                      ${BLD_P4GEN_DIR}/p4plus_txdma/alt_asm_out \
                       ${TOPDIR} \
                       ${TOPDIR}/nic/asm/common-p4+/include \
                       ${TOPDIR}/nic/include \

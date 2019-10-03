@@ -33,16 +33,11 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
 
-#if defined(APOLLO)
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
-#elif defined(ARTEMIS)
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd_table.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd_table.h"
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU)
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd_table.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd_table.h"
 #else
 #include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
@@ -1101,6 +1096,8 @@ mpart_cfg_path()
     std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #elif defined(ARTEMIS)
     std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
+#elif defined(APULU)
+    std::string mpart_json = hal_cfg_path_ + "/apulu/hbm_mem.json";
 #else
     std::string mpart_json = fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ?
             hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
@@ -1308,26 +1305,16 @@ lif_status(uint64_t addr)
     free(buf);
 }
 
-#if defined(APOLLO)
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_RXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_RXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_TXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_TXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_RXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_RXDMA_TBL_ID_TBLMAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_TXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_TXDMA_TBL_ID_TBLMAX
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
-#elif defined(ARTEMIS)
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_RXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_ARTEMIS_TXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_RXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_RXDMA_TBL_ID_TBLMAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_ARTEMIS_TXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_ARTEMIS_TXDMA_TBL_ID_TBLMAX
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS P4_ARTEMIS_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU)
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_TXDMA_TBL_ID_INDEX_MIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX            P4_P4PLUS_TXDMA_TBL_ID_INDEX_MAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN               P4_P4PLUS_RXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX               P4_P4PLUS_RXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN               P4_P4PLUS_TXDMA_TBL_ID_TBLMIN
+#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX               P4_P4PLUS_TXDMA_TBL_ID_TBLMAX
+#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS    P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
 #endif
 
 void table_health_monitor(uint32_t table_id,
@@ -1362,6 +1349,14 @@ p4plus_rxdma_init_tables()
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
             .p4pd_pgm_name       = "artemis",
+            .p4pd_rxdma_pgm_name = "p4plus",
+            .p4pd_txdma_pgm_name = "p4plus",
+            .cfg_path            = hal_cfg_path_.c_str(),
+    };
+#elif defined(APULU)
+    p4pd_cfg_t                 p4pd_cfg = {
+            .table_map_cfg_file  = "apulu/capri_rxdma_table_map.json",
+            .p4pd_pgm_name       = "apulu",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
@@ -1443,6 +1438,14 @@ p4plus_txdma_init_tables()
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
     };
+#elif defined(APULU)
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "apulu/capri_txdma_table_map.json",
+        .p4pd_pgm_name       = "apulu",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_.c_str(),
+    };
 #else
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
@@ -1506,7 +1509,7 @@ pd_init()
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
 
-#if !defined(APOLLO) || !defined(ARTEMIS)
+#if !defined(APOLLO) || !defined(ARTEMIS) || !defined(APULU)
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
 #endif

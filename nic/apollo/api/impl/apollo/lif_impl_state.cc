@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 
 /// \defgroup PDS_LIF_IMPL_STATE - lif state functionality
@@ -31,11 +31,11 @@ lif_impl_state::lif_impl_state(pds_state *state) {
     SDK_ASSERT(lif_ht_ != NULL);
 
     p4pluspd_txdma_table_properties_get(
-                P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
+                P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
                 &tinfo);
     tx_rate_limiter_tbl_ =
         directmap::factory(tinfo.tablename,
-                           P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
+                           P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, NULL);
     SDK_ASSERT(tx_rate_limiter_tbl_ != NULL);

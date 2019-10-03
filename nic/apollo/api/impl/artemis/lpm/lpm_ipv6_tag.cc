@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include "nic/apollo/api/impl/artemis/lpm/lpm_ipv6_tag.hpp"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -70,7 +70,7 @@ sdk_ret_t
 lpm_ipv6_tag_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-                                    P4_ARTEMIS_RXDMA_TBL_ID_RXLPM1,
+                                    P4_P4PLUS_RXDMA_TBL_ID_RXLPM1,
                                     RXLPM1_MATCH1_128B_ID, bytes);
 }
 
@@ -78,7 +78,7 @@ sdk_ret_t
 lpm_ipv6_tag_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-                                    P4_ARTEMIS_RXDMA_TBL_ID_RXLPM1,
+                                    P4_P4PLUS_RXDMA_TBL_ID_RXLPM1,
                                     RXLPM1_MATCH1_128B_RETRIEVE_ID, bytes);
 }
 

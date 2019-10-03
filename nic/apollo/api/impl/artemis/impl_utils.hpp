@@ -14,8 +14,8 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 namespace api {
 namespace impl {

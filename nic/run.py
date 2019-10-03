@@ -200,13 +200,13 @@ def run_model(args):
         if args.gft or args.gft_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/gen/p4gen/gft/dbg_out/model_debug.json")
         elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
-            os.system("%s/tools/merge_model_debug.py --pipeline apollo --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/combined_model_debug.json")
+            os.system("%s/tools/merge_model_debug.py --pipeline apollo --p4 apollo --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen/apollo/dbg_out/combined_model_debug.json")
         elif args.artemis_gtest or args.artemis_scale_test:
-            os.system("%s/tools/merge_model_debug.py --pipeline artemis --p4 artemis --rxdma artemis_rxdma --txdma artemis_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/gen/p4gen//artemis/dbg_out/combined_model_debug.json")
+            os.system("%s/tools/merge_model_debug.py --pipeline artemis --p4 artemis --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/gen/p4gen/artemis/dbg_out/combined_model_debug.json")
         elif args.apulu_gtest:
-            os.system("%s/tools/merge_model_debug.py --pipeline apulu --p4 apulu --rxdma apulu_rxdma --txdma apulu_txdma" % nic_dir)
+            os.system("%s/tools/merge_model_debug.py --pipeline apulu --p4 apulu --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apulu/gen/p4gen/apulu/dbg_out/combined_model_debug.json")
         elif args.hello_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen/hello/dbg_out/model_debug.json")

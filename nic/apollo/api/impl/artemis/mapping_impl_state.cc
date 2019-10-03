@@ -15,7 +15,7 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -42,7 +42,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     SDK_ASSERT(local_ip_mapping_tbl_ != NULL);
 
     // MAPPING table
-    mhparams.table_id = P4_ARTEMIS_TXDMA_TBL_ID_MAPPING;
+    mhparams.table_id = P4_P4PLUS_TXDMA_TBL_ID_MAPPING;
     mhparams.num_hints = P4_MAPPING_NUM_HINTS_PER_ENTRY;
     mhparams.key2str = NULL;
     mhparams.appdata2str = NULL;
@@ -97,7 +97,7 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_global_table_properties_get(P4_ARTEMIS_TXDMA_TBL_ID_MAPPING, &tinfo);
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);

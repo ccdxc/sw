@@ -12,7 +12,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/p4/include/artemis_defines.h"
 #include "gen/p4gen/artemis/include/p4pd.h"
 

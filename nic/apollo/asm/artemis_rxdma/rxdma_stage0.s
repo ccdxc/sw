@@ -13,7 +13,7 @@
  *                      table config engine.
  *****************************************************************************/
 
-#include "artemis_rxdma/asm_out/INGRESS_p.h"
+#include "INGRESS_p.h"
 
 struct phv_ p;
 

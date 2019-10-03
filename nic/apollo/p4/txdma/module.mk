@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_txdma.p4bin
-MODULE_SRCS     = ${MODULE_SRC_DIR}/apollo_txdma.p4
+MODULE_SRCS     = ${MODULE_SRC_DIR}/p4plus_txdma.p4
 MODULE_PIPELINE = apollo
 MODULE_NCC_OPTS = --pipeline=apollo --asm-out --p4-plus --no-ohi --two-byte-profile \
                   --pd-gen --p4-plus-module txdma \

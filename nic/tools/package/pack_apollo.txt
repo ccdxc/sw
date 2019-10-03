@@ -102,8 +102,8 @@ nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIP
 nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_p4/                   /nic/conf/$PIPELINE/p4_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json         /nic/conf/$PIPELINE/capri_p4_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 
 # link specific libs
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/

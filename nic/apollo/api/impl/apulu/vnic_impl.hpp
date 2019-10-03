@@ -21,8 +21,8 @@
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
-#include "gen/p4gen/apulu_rxdma/include/apulu_rxdma_p4pd.h"
-#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 using sdk::table::handle_t;
 

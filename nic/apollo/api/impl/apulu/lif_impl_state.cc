@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "gen/p4gen/apulu_txdma/include/apulu_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 
 /// \defgroup PDS_LIF_IMPL_STATE - lif state functionality

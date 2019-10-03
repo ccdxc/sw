@@ -12,13 +12,9 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_toeplitz.hpp"
-#ifdef APOLLO
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
-#endif
-#ifdef ARTEMIS
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU)
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #endif
 
 using namespace sdk::platform::capri;

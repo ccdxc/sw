@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/rfc/rte_bitmap_utils.hpp"
 #include "nic/apollo/api/impl/apollo/rfc/rfc_utils.hpp"
 #include "nic/apollo/p4/include/sacl_defines.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 
 #define RFC_RESULT_STATELESS_BIT_MASK           0x1
 #define RFC_RESULT_STATEFUL_BIT_MASK            0x2
@@ -238,7 +238,7 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-                                                           P4_APOLLO_RXDMA_TBL_ID_SACL_IP_SPORT_P1,
+                                                           P4_P4PLUS_RXDMA_TBL_ID_SACL_IP_SPORT_P1,
                                                            SACL_IP_SPORT_P1_SACL_IP_SPORT_P1_ID,
                                                            action_data);
     // reset the action data after flushing it
@@ -1096,7 +1096,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
     action_data = (sacl_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-                                                           P4_APOLLO_RXDMA_TBL_ID_SACL_P2,
+                                                           P4_P4PLUS_RXDMA_TBL_ID_SACL_P2,
                                                            SACL_P2_SACL_P2_ID, action_data);
     // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));

@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include "nic/apollo/api/impl/apollo/lpm/lpm_ipv6_route.hpp"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -109,7 +109,7 @@ sdk_ret_t
 lpm_ipv6_route_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_txdma_table(addr,
-               P4_APOLLO_TXDMA_TBL_ID_ROUTE,
+               P4_P4PLUS_TXDMA_TBL_ID_ROUTE,
                ROUTE_SEARCH_IPV6_ID, bytes);
 }
 
@@ -117,7 +117,7 @@ sdk_ret_t
 lpm_ipv6_route_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_txdma_table(addr,
-               P4_APOLLO_TXDMA_TBL_ID_ROUTE,
+               P4_P4PLUS_TXDMA_TBL_ID_ROUTE,
                ROUTE_SEARCH_IPV6_RETRIEVE_ID, bytes);
 }
 

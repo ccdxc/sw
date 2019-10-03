@@ -23,8 +23,8 @@
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
-#include "gen/p4gen/artemis_rxdma/include/artemis_rxdma_p4pd.h"
-#include "gen/p4gen/artemis_txdma/include/artemis_txdma_p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 namespace api {
 namespace impl {
@@ -234,7 +234,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // program VNIC_INFO_RXDMA entry for TX direction in 2nd half of the table
     // at hw_id_ index
-    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        VNIC_INFO_TABLE_SIZE + hw_id_,
                                        NULL, NULL, &tx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -244,7 +244,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program VNIC_INFO_RXDMA entry for RX direction at hw_id_ index
-    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        hw_id_, NULL, NULL,
                                        &rx_rxdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -253,7 +253,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program TXDMA_VNIC_INFO entry at hw_id_ index
-    p4pd_ret = p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
                                        hw_id_, NULL, NULL,
                                        &txdma_vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {

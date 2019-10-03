@@ -233,7 +233,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                          spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
         remote_46_mapping_data.remote_46_info.nh_id = nh_idx_;
         p4pd_ret =
-            p4pd_global_entry_write(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
+            p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
                                     remote46_hw_id_, NULL, NULL,
                                     &remote_46_mapping_data);
 
@@ -357,7 +357,7 @@ tep_impl::fill_spec_(pds_tep_spec_t *spec) {
     remote_46_mapping_actiondata_t remote_46_mapping_data = { 0 };
     p4pd_error_t p4pdret;
 
-    p4pdret = p4pd_global_entry_read(P4_ARTEMIS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
+    p4pdret = p4pd_global_entry_read(P4_P4PLUS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
                                      remote46_hw_id_, NULL, NULL,
                                      &remote_46_mapping_data);
     if (unlikely(p4pdret != P4PD_SUCCESS)) {
