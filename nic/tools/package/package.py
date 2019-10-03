@@ -50,7 +50,7 @@ parser.add_argument('--dry-run', dest='dry_run',
 
 # pipeline
 parser.add_argument('--pipeline', dest='pipeline', default='iris',
-                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu'],
+                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus'],
                      help='Pipeline')
 
 # feature type

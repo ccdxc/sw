@@ -1,6 +1,21 @@
 #include <inttypes.h>
 #include "nic/hal/pd/hal_pd_error.hpp"
 
+p4pd_error_t p4pd_rxdma_hwkey_hwmask_build(unsigned int a, void* b, void* c, unsigned char* d, unsigned char* e) { return 0; }
+p4pd_error_t p4pd_rxdma_actiondata_appdata_set(unsigned int a, unsigned char b, void* c, void* d) { return 0; }
+p4pd_error_t p4pd_rxdma_actiondata_appdata_get(unsigned int a, unsigned char b, void* c, void* d) { return 0; }
+p4pd_error_t p4pd_rxdma_actiondata_appdata_size_get(unsigned int a, unsigned char b) { return 0; }
+p4pd_error_t p4pd_rxdma_actiondata_hwfield_get(unsigned int a, unsigned char b, unsigned int c, unsigned char* d, void* e) { return 0; }
+p4pd_error_t p4pd_rxdma_actiondata_hwfield_set(unsigned int a, unsigned char b, unsigned int c, unsigned char* d, void* e) { return 0; }
+p4pd_error_t p4pd_rxdma_entry_install(unsigned int a, unsigned int b, void* c, void* d, void* e) { return 0; }
+p4pd_error_t p4pd_txdma_hwkey_hwmask_build(unsigned int a, void* b, void* c, unsigned char* d, unsigned char* e) { return 0; }
+p4pd_error_t p4pd_txdma_actiondata_appdata_get(unsigned int a, unsigned char b, void* c, void* d) { return 0; }
+p4pd_error_t p4pd_txdma_actiondata_appdata_set(unsigned int a, unsigned char b, void* c, void* d) { return 0; }
+p4pd_error_t p4pd_txdma_actiondata_appdata_size_get(unsigned int a, unsigned char b) { return 0; }
+p4pd_error_t p4pd_txdma_actiondata_hwfield_get(unsigned int a, unsigned char b, unsigned int c, unsigned char* d, void* e) { return 0; }
+p4pd_error_t p4pd_txdma_actiondata_hwfield_set(unsigned int a, unsigned char b, unsigned int c, unsigned char* d, void* e) { return 0; }
+p4pd_error_t p4pd_txdma_entry_install(unsigned int a, unsigned int b, void* c, void* d, void* e) { return 0; }
+
 void p4pd_txdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
     uint32_t *hwkeymask_len, uint32_t *hwactiondata_len) {}
 
