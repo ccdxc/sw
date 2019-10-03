@@ -138,7 +138,7 @@ VirtIODev::VirtIORegsInit()
     memset((void *)&devcmd, 0, sizeof(devcmd));
     memset((void *)&devcmd_old, 0, sizeof(devcmd_old));
 
-    features = VIRTIO_NET_F_CSUM | VIRTIO_F_VERSION_1;
+    features = VIRTIO_F_VERSION_1;
     devcmd.cfg[0].device_feature = features;
     devcmd.cfg[1].device_feature = features >> 32;
     devcmd.cfg[0].num_queues = 2;
