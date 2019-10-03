@@ -25,6 +25,7 @@ class VpcObject(base.ConfigObjectBase):
         super().__init__()
 
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
+        self.deleted = False
         self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
@@ -159,6 +160,32 @@ class VpcObject(base.ConfigObjectBase):
         grpcmsg = vpc_pb2.VPCGetRequest()
         grpcmsg.Id.append(self.VPCId)
         return grpcmsg
+
+    def GetGrpcDeleteMessage(self):
+        grpcmsg = vpc_pb2.VPCDeleteRequest()
+        grpcmsg.Id.append(self.VPCId)
+        return grpcmsg
+
+    def Create(self, spec=None):
+        utils.CreateObject(self, api.ObjectTypes.VPC)
+
+    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
+        return utils.ReadObject(self, api.ObjectTypes.VPC, expRetCode)
+
+    def ReadAfterDelete(self, spec=None):
+        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+
+    def Delete(self, spec=None):
+        utils.DeleteObject(self, api.ObjectTypes.VPC)
+
+    def Equals(self, obj, spec):
+        return True
+
+    def MarkDeleted(self, flag=True):
+        self.deleted = flag
+
+    def IsDeleted(self):
+        return self.deleted
 
     def Show(self):
         logger.info("VPC Object:", self)
