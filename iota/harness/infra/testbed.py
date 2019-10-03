@@ -18,6 +18,7 @@ import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
+from iota.exceptions import *
 
 ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.topdir)
 
@@ -343,10 +344,12 @@ class _Testbed:
         resp = api.InitTestbed(msg)
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
-            return types.status.FAILURE
+            raise TestbedFailureException
+            #return types.status.FAILURE
         if not api.IsApiResponseOk(resp):
             Logger.error("Failed to initialize testbed: ")
-            return types.status.FAILURE
+            raise TestbedFailureException
+            #return types.status.FAILURE
         for instance,node in zip(self.__tbspec.Instances, resp.nodes):
             if getattr(instance, 'NodeOs', None) == "esx":
                 instance.esx_ctrl_vm_ip = node.esx_ctrl_node_ip_address

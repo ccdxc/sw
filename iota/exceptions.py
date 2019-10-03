@@ -1,0 +1,3 @@
+class TestbedFailureException(Exception):
+    pass
+

@@ -10,6 +10,7 @@ import iota.harness.infra.types as types
 #import iota.harness.infra.store as store
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from iota.exceptions import *
 
 class YmlObject(object):
     def __init__(self, d):
@@ -40,7 +41,11 @@ def Main():
     for ts_spec in ts_specs:
         ts = testsuite.TestSuite(ts_spec)
         testsuites.append(ts)
-        ret = ts.Main()
+        try:
+            ret = ts.Main()
+        except TestbedFailureException:
+            result = types.status.TESTBED_FAILURE
+            break
         if ret != types.status.SUCCESS:
             result = ret
             if GlobalOptions.no_keep_going:
