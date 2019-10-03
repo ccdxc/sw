@@ -20,7 +20,7 @@ testcases:
         testcase: testcases.penctl.log
         iterators :
             type : simple
-            option : ["nmd", "netagent", "tmagent"]
+            option : ["nmd", "netagent", "tmagent", "pciemgrd"]
 
     -   name    : CHECK_EVENTS
         testcase: testcases.penctl.events
