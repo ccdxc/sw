@@ -1335,11 +1335,15 @@ table rx_table_cpu_hash {
 control common_p4plus_stage0 {
 
     if (app_header.table0_valid == 1) {
-        apply(common_p4plus_stage0_app_header_table_ext_offset_64);
         apply(common_p4plus_stage0_app_header_table_offset_64);
+        if (app_header.table1_valid == 1) {
+            apply(common_p4plus_stage0_app_header_table_ext_offset_64);
+        }
     } else {
         apply(common_p4plus_stage0_app_header_table);
-        apply(common_p4plus_stage0_app_header_ext_table);
+        if (app_header.table1_valid == 1) {
+            apply(common_p4plus_stage0_app_header_ext_table);
+        }
     }
 
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {

@@ -45,7 +45,7 @@ rx_dummy:
 .align
 rdma_resp_rx_stage0:
     j resp_rx_rqcb_process
-    nop
+    phvwr p.app_header_table1_valid, 0
 
 //Do not change the order of this entry. 
 //Keep it the second one after dummy
@@ -53,7 +53,7 @@ rdma_resp_rx_stage0:
 .align
 rdma_req_rx_stage0:
     j req_rx_sqcb1_process
-    nop
+    phvwr p.app_header_table1_valid, 0
 
 //Do not change the order of this entry
 //This has to align with the txdma_stage0.s program

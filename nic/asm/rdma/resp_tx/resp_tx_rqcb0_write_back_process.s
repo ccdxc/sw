@@ -145,7 +145,7 @@ error_disable_qp:
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_SQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri         p.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{p4_to_p4plus.table0_valid...p4_to_p4plus.table1_valid}, 0x3
 
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR

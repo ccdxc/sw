@@ -38,7 +38,7 @@ req_tx_sq_drain_feedback_process:
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri         p.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{p4_to_p4plus.table0_valid...p4_to_p4plus.table1_valid}, 0x3
 
     // Fill sq_drain feedback msg with txdma version of ssn and tx_psn. Compare
     // ssn with msn in RXDMA to identify completion of all oustanding responses

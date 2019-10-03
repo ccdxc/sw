@@ -631,7 +631,7 @@ error_disable_exit:
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri         p.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{p4_to_p4plus.table0_valid...p4_to_p4plus.table1_valid}, 0x3
     //purposefully disabling this optimization - so, fetch wrid program is invoked all the time
     //from there stats program is invoked to update error stats
     //bbeq           CAPRI_KEY_FIELD(IN_P, first), 1, exit

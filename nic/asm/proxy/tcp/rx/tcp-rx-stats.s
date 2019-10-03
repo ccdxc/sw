@@ -28,6 +28,7 @@ tcp_rx_stats_stage_start:
     // No harm keeping this bit set for non-OOO case as this is the
     // last stage and recirc should not be getting set.
     //CAPRI_CLEAR_TABLE_VALID(0)
+    phvwr   p.app_header_table1_valid, 1
 
 // TODO: Move to multi stats update
 

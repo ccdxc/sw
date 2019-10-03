@@ -689,7 +689,7 @@ flush_rq:
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
-    phvwri         p.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{p4_to_p4plus.table0_valid...p4_to_p4plus.table1_valid}, 0x3
 
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_flush_rq), 1

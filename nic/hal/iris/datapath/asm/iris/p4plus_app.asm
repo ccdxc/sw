@@ -84,7 +84,7 @@ p4plus_app_tcp_proxy:
                     p.p4_to_p4plus_tcp_proxy_valid, TRUE
   phvwrpair     p.p4_to_p4plus_tcp_proxy_p4plus_app_id, \
                     k.control_metadata_p4plus_app_id[3:0], \
-                    p.p4_to_p4plus_tcp_proxy_table0_valid, TRUE
+                    p.{p4_to_p4plus_tcp_proxy_table0_valid,p4_to_p4plus_tcp_proxy_table1_valid}, 0x3
 
   or            r1, k.tcp_option_one_sack_valid, k.tcp_option_two_sack_valid, 1
   or            r1, r1, k.tcp_option_three_sack_valid, 2
@@ -164,6 +164,7 @@ p4plus_app_ipsec:
   phvwr       p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwr       p.p4_to_p4plus_ipsec_table1_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
   add         r4, k.flow_lkp_metadata_lkp_dport,k.flow_lkp_metadata_lkp_sport, 16
   phvwr       p.p4_to_p4plus_ipsec_spi, r4

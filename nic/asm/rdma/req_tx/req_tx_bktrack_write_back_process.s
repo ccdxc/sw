@@ -107,7 +107,7 @@ error_disable_exit:
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri.e       p.p4_to_p4plus.table0_valid, 1
+    phvwri.e       p.{p4_to_p4plus.table0_valid...p4_to_p4plus.table1_valid}, 0x3
     DMA_SET_END_OF_PKT_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
 
 bubble_to_next_stage:

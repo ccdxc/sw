@@ -19,6 +19,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
     .align
 tcp_rx_read_shared_stage0_start_ext:
+    CAPRI_CLEAR_TABLE_VALID(1)
 
     // note: for feedback packets, these fields are valid for LAST_OOO_PKT
     // but not WIN_UPD. For WIN_UPD the following phvwr are a NOP

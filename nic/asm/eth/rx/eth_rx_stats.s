@@ -48,7 +48,6 @@ eth_rx_stats_incr_accept:
     nop
 
 eth_rx_stats_incr_drop:
-#if 0
     seq             c2, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_UNICAST
     addi.c2         _r_offset, _r_lif_offset, LIF_STATS_RX_UCAST_DROP_BYTES_OFFSET
     seq             c3, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_MULTICAST
@@ -57,7 +56,6 @@ eth_rx_stats_incr_drop:
     addi.c4         _r_offset, _r_lif_offset, LIF_STATS_RX_BCAST_DROP_BYTES_OFFSET
 
     ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_t1_s2s_pkt_len, 1)
-#endif
 
     addi            _r_offset, _r_lif_offset, LIF_STATS_RX_QUEUE_DISABLED_OFFSET
     ATOMIC_INC_VAL_5(_r_base, _r_offset, _r_addr, _r_val,

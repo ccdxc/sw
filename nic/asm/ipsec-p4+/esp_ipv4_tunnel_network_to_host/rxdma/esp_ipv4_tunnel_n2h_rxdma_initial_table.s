@@ -59,6 +59,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
     addui r1, r0, hiword(IPSEC_DEC_NMDR_PI)
     addi r1, r1, loword(IPSEC_DEC_NMDR_PI)
+    CAPRI_CLEAR_TABLE_VALID(1)
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore, r1, TABLE_SIZE_64_BITS)
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index

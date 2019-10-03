@@ -318,7 +318,7 @@ error_disable_qp:
 
     phvwrpair      p.req_feedback.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_SQ, p.req_feedback.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.req_feedback.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri         p.req_feedback.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{req_feedback.p4_to_p4plus.table0_valid...req_feedback.p4_to_p4plus.table1_valid}, 0x3
 
     phvwrpair      p.req_feedback.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.req_feedback.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
@@ -337,7 +337,7 @@ error_disable_qp:
 
     phvwrpair      p.resp_feedback.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.resp_feedback.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.resp_feedback.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
-    phvwri         p.resp_feedback.p4_to_p4plus.table0_valid, 1
+    phvwri         p.{resp_feedback.p4_to_p4plus.table0_valid...resp_feedback.p4_to_p4plus.table1_valid}, 0x3
 
     phvwrpair      p.resp_feedback.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.resp_feedback.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
