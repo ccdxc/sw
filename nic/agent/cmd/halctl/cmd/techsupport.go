@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -33,65 +32,54 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// remove the output directory if one exists
-	err := os.RemoveAll(outFile)
-	if err != nil {
-		fmt.Printf("Failed to remove directory %s, err : %v\n", outFile, err)
-		os.Exit(1)
-	}
-
-	// create a new directory
-	err = os.MkdirAll(outDir, 0777)
-	if err != nil {
-		fmt.Printf("Failed to create directory %s, err : %v\n", outDir, err)
-		os.Exit(1)
-	}
-
-	// create the o/p file
-	ofile, err := os.OpenFile(outFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
-	if err != nil {
-		fmt.Printf("Failed to create output file %s, err : %v\n", outFile, err)
-		os.Exit(1)
-	}
-
-	ofile.WriteString("Capturing techsupport information\n\n")
-	ofile.WriteString("Flush HAL logs\n\n")
+	fmt.Printf("Capturing techsupport information\n\n")
+	fmt.Printf("Flush HAL logs\n\n")
 	flushLogsDebugCmdHandler(nil, nil)
-	ofile.WriteString("Lif information\n\n")
-	handlelifDetailShowCmd(nil, ofile)
-	ofile.WriteString("Interface information\n\n")
-	handleIfDetailShowCmd(nil, ofile)
-	ofile.WriteString("Security profile information\n\n")
-	handleNwsecProfShowCmd(nil, ofile)
-	ofile.WriteString("VRF information\n\n")
-	handleVrfDetailShowCmd(nil, ofile)
-	ofile.WriteString("L2 segment information\n\n")
-	handlel2segDetailShowCmd(nil, ofile)
-	ofile.WriteString("Multicast Information\n\n")
-	handleMulticastDetailShowCmd(nil, ofile)
-	ofile.WriteString("Network information\n\n")
-	handleNwDetailShowCmd(nil, ofile)
-	ofile.WriteString("Endpoint information\n\n")
-	handleEpDetailShowCmd(nil, ofile)
-	ofile.WriteString("Port information\n\n")
-	handlePortDetailShowCmd(nil, ofile)
-	ofile.WriteString("Session information\n\n")
-	handleSessionDetailShowCmd(nil, ofile)
-	ofile.WriteString("ACL information\n\n")
-	handleACLShowCmd(nil, ofile)
-	//	ofile.WriteString("Port information\n\n")
-	//	handlePortShowCmd(nil, ofile)
-	ofile.WriteString("QoS information\n\n")
-	handleQosShowCmd(nil, ofile)
-	ofile.WriteString("Copp information\n\n")
-	handleCoppShowCmd(nil, ofile)
-	ofile.WriteString("Memory information\n\n")
-	allMemoryShowHandler(ofile)
-	ofile.WriteString("Thread information\n\n")
-	threadDetailShow(ofile)
-	ofile.WriteString("System information\n\n")
-	handleSystemDetailShowCmd(nil, ofile)
-	ofile.WriteString("Flush HAL logs\n\n")
+	fmt.Printf("Lif information\n\n")
+	handlelifDetailShowCmd(nil, nil)
+	fmt.Printf("Interface information\n\n")
+	handleIfDetailShowCmd(nil, nil)
+	fmt.Printf("Security profile information\n\n")
+	handleNwsecProfShowCmd(nil, nil)
+	//Move this to stream and enable
+	//fmt.Printf("Security policy information\n\n")
+	//handleNwsecPolicyDetailShowCmd(nil, nil)
+	fmt.Printf("VRF information\n\n")
+	handleVrfDetailShowCmd(nil, nil)
+	fmt.Printf("L2 segment information\n\n")
+	handlel2segDetailShowCmd(nil, nil)
+	fmt.Printf("Multicast Information\n\n")
+	handleMulticastDetailShowCmd(nil, nil)
+	fmt.Printf("Network information\n\n")
+	handleNwDetailShowCmd(nil, nil)
+	fmt.Printf("Endpoint information\n\n")
+	handleEpDetailShowCmd(nil, nil)
+	fmt.Printf("Port information\n\n")
+	handlePortDetailShowCmd(nil, nil)
+	//fmt.Printf("Session information\n\n")
+	//handleSessionDetailShowCmd(nil, nil)
+	fmt.Printf("ACL information\n\n")
+	handleACLShowCmd(nil, nil)
+	fmt.Printf("QoS information\n\n")
+	handleQosShowCmd(nil, nil)
+	fmt.Printf("Copp information\n\n")
+	handleCoppShowCmd(nil, nil)
+	fmt.Printf("Memory Mtrack information\n\n")
+	mtrackShowCmdHandler(nil, nil)
+	fmt.Printf("Memory slab information\n\n")
+	slabDetailShowCmdHandler(nil, nil)
+	fmt.Printf("Thread information\n\n")
+	threadDetailShow(nil)
+	fmt.Printf("System information\n\n")
+	handleSystemDetailShowCmd(nil, nil)
+	fmt.Printf("System Qos Credits\n\n")
+	systemQueueCreditsShowCmdHandler(nil, nil)
+	fmt.Printf("System Statistics Pb detail\n\n")
+	systemPbDetailStatsShowCmdHandler(nil, nil)
+	fmt.Printf("System Statistics Qos Class Queues\n\n")
+	qosQueuesCmdHandler(nil, nil)
+	fmt.Printf("System Statistics Qos Class Thresholds\n\n")
+	qosThresholdsCmdHandler(nil, nil)
+	fmt.Printf("Flush HAL logs\n\n")
 	flushLogsDebugCmdHandler(nil, nil)
-	ofile.Close()
 }

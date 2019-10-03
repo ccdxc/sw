@@ -74,18 +74,43 @@
                                 {
                                         "Name" : "LLC Stats",
                                         "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show hbm llc-stats"
+                                        "Command" : "/nic/bin/halctl show platform hbm llc-stats"
+                                },
+				{
+                                        "Name" : "Show Halctl Techsupport",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show techsupport"
+                                },
+				{
+                                        "Name" : "Show Table Dump id 19",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show table dump --table-id 19"
+                                },
+				{
+                                        "Name" : "Show Table Dump id 34",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show table dump --table-id 34"
+                                },
+				{
+                                        "Name" : "Show Agent Mirror Sessions",
+                                        "Method" : 0,
+                                        "Command" : "curl  localhost:9007/api/mirror/sessions/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Telmetry FlowExports",
+                                        "Method" : 0,
+                                        "Command" : "curl  localhost:9007/api/mirror/sessions/ | jq ."
                                 },
                                 {
-                                        "Name" : "Show Lif",
+                                        "Name" : "Show Session Count",
                                         "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show lif"
-                                },                                
-				{
-                                        "Name" : "Table Info",
+                                        "Command" : "/nic/bin/halctl show session | wc -l"
+                                },
+                                {
+                                        "Name" : "Show Nwsec Policy Count",
                                         "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show table info"
-				},
+                                        "Command" : "/nic/bin/halctl show nwsec policy | grep \"Rule Id\" | wc -l"
+                                },
 				{
                                         "Name" : "NaplesStatus Delphi Object",
                                         "Method" : 0,

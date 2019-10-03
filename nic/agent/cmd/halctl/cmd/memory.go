@@ -74,7 +74,7 @@ func init() {
 }
 
 func slabShowCmdHandler(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		slabDetailShowCmdHandler(cmd, args)
 		return
 	}
@@ -185,7 +185,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var slabGetReqMsg *halproto.SlabGetRequestMsg
 
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		var req *halproto.SlabGetRequest
 		req = &halproto.SlabGetRequest{
 			Id: slabID,
@@ -228,7 +228,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		mtrackDetailShowCmdHandler(cmd, args)
 		return
 	}
