@@ -43,7 +43,7 @@
             "cache": "p4ig"
         },
         {
-            "name": "flow",
+            "name": "flow_info",
             "size": "65536K",
             "cache": "p4ig"
         },
