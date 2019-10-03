@@ -4,14 +4,16 @@ import iota.test.iris.utils.naples_host as host
 
 IONIC_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth"
 
-def Main(tCase):
+def Main(tc):
     for node in api.GetNaplesHostnames():
         for i in api.GetNaplesHostInterfaces(node):
             req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+
             if api.GetNodeOs(node) == host.OS_TYPE_BSD:
                 api.Trigger_AddHostCommand(
-                    req, node, "bash " + IONIC_DRV_PATH + "/ionic_stats.sh check %s" %
-                    host.GetNaplesSysctl(i))
+                    req, node, "bash " + IONIC_DRV_PATH +
+                    "/ionic_stats.sh -i %s -c" %
+                    (host.GetNaplesSysctl(i)))
                 # Clear the stats.
                 api.Trigger_AddHostCommand(
                     req, node, 'sysctl dev.%s.reset_stats=1 1>/dev/null' % host.GetNaplesSysctl(i))
