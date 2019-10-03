@@ -245,13 +245,26 @@ func updateCPUInfo() *cmd.CPUInfo {
 	log.Info("updating CPU Info in SmartNIC object")
 	numProc, err := exec.Command("/bin/bash", "-c", "nproc").Output()
 	if err != nil {
+		log.Errorf("Couldn't get number of processors. Err : %v", err)
+		return nil
+	}
+
+	cpuMHz, err := exec.Command("/bin/bash", "-c", "cat /proc/cpuinfo | grep BogoMIPS | head -1 | awk -F: '{print $2}'").Output()
+	if err != nil {
+		log.Errorf("Couldn't get cpu speed. Err : %v", err)
 		return nil
 	}
 
 	cores, _ := strconv.Atoi(string(numProc))
+	cpuGHz, err := strconv.ParseFloat(strings.TrimSpace(string(cpuMHz)), 64)
+
+	if err != nil {
+		log.Errorf("Failed to parse cpu speed. Err : %v", err)
+		return nil
+	}
 
 	return &cmd.CPUInfo{
-		Speed:    "1.67 GHz",
+		Speed:    fmt.Sprintf("%.2f GHz", cpuGHz/1000.0),
 		NumCores: int32(cores),
 	}
 }
