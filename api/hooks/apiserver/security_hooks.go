@@ -219,7 +219,7 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 
 			if len(pp.Ports) != 0 {
 				// you can not specify ports for icmp
-				if strings.ToLower(pp.Protocol) == "icmp" {
+				if strings.ToLower(pp.Protocol) == "icmp" || strings.ToLower(pp.Protocol) == "1" {
 					return fmt.Errorf("Can not specify ports for ICMP protocol in rule[%d]: %v", i, r)
 				}
 
