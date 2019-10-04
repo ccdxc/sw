@@ -148,7 +148,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             return if_db()->find(&api_ctxt->api_params->if_key);
         }
-        return vpc_db()->find(&api_ctxt->api_params->vpc_spec.key);
+        return if_db()->find(&api_ctxt->api_params->if_spec.key);
 
     case OBJ_ID_VPC:
         if (api_ctxt->api_op == API_OP_DELETE) {
