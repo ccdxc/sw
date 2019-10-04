@@ -3738,3 +3738,135 @@ func TestNetworkSecurityPolicyICMPProtocol1_WithPorts(t *testing.T) {
 	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
 	Assert(t, len(errs) != 0, "specifying ports for icmp protocol must be rejected. Error: %v", errs)
 }
+
+func TestNetworkSecurityPolicySingleton0PortInline(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "0",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "specifying ports 0 as a single rule must fail. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicySingleton0_0PortInline(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "0-0",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"any"},
+		},
+	}
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateNetworkSecurityPolicy(sgp, "v1", false, false)
+	Assert(t, len(errs) != 0, "specifying ports 0 as a single rule must fail. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicySingleton0PortApp(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "0",
+				},
+			},
+		},
+	}
+
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "specifying ports 0 as a single rule must fail. Error: %v", errs)
+}
+
+func TestNetworkSecurityPolicySingleton0_0PortApp(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "badApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "0-0",
+				},
+			},
+		},
+	}
+
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "specifying ports 0 as a single rule must fail. Error: %v", errs)
+}

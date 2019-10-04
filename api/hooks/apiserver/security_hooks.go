@@ -226,6 +226,10 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 				// parse port ranges
 				portRanges := strings.Split(pp.Ports, ",")
 				for _, prange := range portRanges {
+					// Test for a single port 0
+					if port0, err := strconv.Atoi(prange); err == nil && port0 == 0 {
+						return errors.New("port 0 must always be specified with a range")
+					}
 					ports := strings.Split(prange, "-")
 					for _, port := range ports {
 						i, err := strconv.Atoi(port)
@@ -239,6 +243,9 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 					if len(ports) == 2 {
 						first, _ := strconv.Atoi(ports[0])
 						second, _ := strconv.Atoi(ports[1])
+						if first == 0 && second == 0 {
+							return fmt.Errorf("invalid port range %v. upper and lower port range bounds must not be 0", prange)
+						}
 						if first > second {
 							return fmt.Errorf("Invalid port range %v. first number bigger than second in rule[%d]: %v", prange, i, r)
 						}
@@ -389,6 +396,9 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 
 			portRanges := strings.Split(pp.Ports, ",")
 			for _, prange := range portRanges {
+				if port0, err := strconv.Atoi(prange); err == nil && port0 == 0 {
+					ret = append(ret, errors.New("port 0 must always be specified with a range"))
+				}
 				ports := strings.Split(prange, "-")
 				for _, port := range ports {
 					i, err := strconv.Atoi(port)
@@ -402,6 +412,11 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 				if len(ports) == 2 {
 					first, _ := strconv.Atoi(ports[0])
 					second, _ := strconv.Atoi(ports[1])
+
+					if first == 0 && second == 0 {
+						ret = append(ret, fmt.Errorf("invalid port range %v. upper and lower port range bounds must not be 0", prange))
+					}
+
 					if first > second {
 						ret = append(ret, fmt.Errorf("Invalid port range %v. first number bigger than second", prange))
 					}
