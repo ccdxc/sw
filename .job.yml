@@ -72,11 +72,17 @@ image:
 queue_name: builder
 jobs:
   api:
+    labels: ["2xhourly"]
   asset-build:
+    labels: ["hourly"]
   docs:
+    labels: ["hourly"]
   dol:
+    labels: ["hourly"]
   iota:
+    labels: ["hourly"]
   iota/test/venice:
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/freebsd:
     labels: ["precommit", "hourly"]
   iota/test/standalone/sanity/esx:
@@ -88,22 +94,39 @@ jobs:
   iota/test/standalone/linux:
     labels: ["precommit", "hourly"]
 #  iota/test/venice/regression:
+#    labels: ["daily"]
   iota/test/venice/sim:
+    labels: ["hourly"]
   nic:
+    labels: ["hourly"]
   nic/agent:
+    labels: ["hourly"]
   nic/apollo:
+    labels: ["hourly"]
   nic/apollo/doc:
+    labels: ["hourly"]
   nic/sdk:
+    labels: ["hourly"]
   nic/utils/ftlite:
+    labels: ["hourly"]
   penctl:
+    labels: ["hourly"]
   platform:
+    labels: ["hourly"]
   platform/drivers/linux:
+    labels: ["hourly"]
   storage/offload:
+    labels: ["hourly"]
   storage/offload/linux-build-test:
+    labels: ["hourly"]
   test:
+    labels: ["hourly"]
   test/ci_targets/e2e:
+    labels: ["2xhourly"]
   venice:
+    labels: ["hourly"]
   venice/ui:
+    labels: ["hourly"]
 
 dependencies:
   api:
