@@ -401,11 +401,11 @@ class NaplesManagement(EntityManagement):
 
     def Reboot(self):
         if not self.host.PciSensitive():
-            self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
+            self.SendlineExpect("reboot", ["#", "capri login:", "capri-gold login:"], timeout = 120)
         else:
             self.host.Reboot()
             self.host.WaitForSsh()
-            self.SendlineExpect("", ["capri login:", "capri-gold login:"], timeout = 120)
+            self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"], timeout = 120)
         self.__login()
 
     def InstallPrep(self):

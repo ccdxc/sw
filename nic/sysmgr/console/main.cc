@@ -53,20 +53,15 @@ int main(int argc, char *argv[])
     const char *auth[] = {"/bin/login", NULL};
     const char *no_auth[] = {"/bin/login", "-f", "root", NULL};
 
-    if (nic_mode() == HOSTPIN_MODE)
+    if (access(CONSOLE_MAGIC_FILE, F_OK) != -1)
     {
-        // In network managed mode. Disable Console unless it has been
-        // enabled explicitly
-        if (access(CONSOLE_MAGIC_FILE, F_OK) == -1)
-        {
-            // Console magic file is not there, disable console
-            pause();
-        }
-        else
-        {
-            // Console magic file is there, drop straight into bash shell
-            execvp(no_auth[0], (char* const*)no_auth);
-        }
+        // Console magic file is there, drop straight into bash shell
+        execvp(no_auth[0], (char* const*)no_auth);
+    }
+    else if (nic_mode() == HOSTPIN_MODE)
+    {
+        // In network managed mode. Disable console
+        pause();
     }
     else
     {
