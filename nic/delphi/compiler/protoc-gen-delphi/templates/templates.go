@@ -238,6 +238,7 @@ public:
     string JSONString();
     static {{.GetName}}Iterator Iterator();
     void * Raw() { return shm_ptr_; };
+    uint64_t GetPalAddr() { return pal_addr_; };
 	static delphi::error  CreateTable();
 
     {{if (.HasExtOption "delphi.singleton")}}
