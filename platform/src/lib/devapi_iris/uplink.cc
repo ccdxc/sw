@@ -96,7 +96,6 @@ devapi_uplink::get_uplink(uint32_t port_num)
 devapi_uplink *
 devapi_uplink::get_oob_uplink(void)
 {
-    sdk_ret_t ret = SDK_RET_OK;
     devapi_uplink *uplink = NULL;
 
     for (auto it = uplink_db_.cbegin(); it != uplink_db_.cend(); it++) {

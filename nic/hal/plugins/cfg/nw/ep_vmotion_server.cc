@@ -49,7 +49,7 @@ ep_vmotion_server_initiate (VmotionMessage& msg,
     ep_vmotion_server_ctxt_t    *vm_server_ctxt = NULL;
     VmotionInitiate             init_msg;
     VmotionMessage              msg_rsp;
-    ep_t                        *ep = NULL;
+    // ep_t                        *ep = NULL;
 
     vm_server_ctxt = (ep_vmotion_server_ctxt_t *)
         HAL_CALLOC(HAL_MEM_ALLOC_VMOTION_SERVER_SLAVE_CTXT, 
@@ -68,7 +68,7 @@ ep_vmotion_server_initiate (VmotionMessage& msg,
     MAC_UINT64_TO_ADDR(vm_server_ctxt->mac, init_msg.mac_address());
     HAL_TRACE_DEBUG("vmotion init for mac: {}", macaddr2str(vm_server_ctxt->mac));
 
-    ep = find_ep_by_mac(vm_server_ctxt->mac);
+    // ep = find_ep_by_mac(vm_server_ctxt->mac);
 
     // TODO: Change flows with SEP as EP. The direction for them would be ENIC.
     //       change them to Uplink

@@ -155,7 +155,6 @@ hal_ret_t
 telemetry_mirror_session_handle_repin (if_t *uplink)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    if_t        *dest_if = NULL;
 
 
     HAL_TRACE_DEBUG("Repin uplink id {} oper {}", uplink->if_id,

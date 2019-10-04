@@ -39,7 +39,6 @@ void
 ep_vmotion_client_msg (struct ev_loop *loop, struct ev_io *watcher,
                        int revents)
 {
-    hal_ret_t           ret = HAL_RET_OK;
     int                 client_sd = watcher->fd;
     VmotionMessage      msg;
     thread              *curr_thread = sdk::lib::thread::current_thread();
@@ -98,6 +97,7 @@ ep_vmotion_client_initiate_to_server (vmotion_client_t *vm_client)
         HAL_TRACE_ERR("unable to send initiate msg to server");
         return ret;
     }
+    return ret;
 }
 
 hal_ret_t

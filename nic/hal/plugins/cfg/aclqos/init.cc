@@ -327,8 +327,6 @@ hal_acl_config_init (void)
     hal_ret_t     ret = HAL_RET_OK;
     AclSpec       spec;
     AclResponse   rsp;
-    AclSelector   *match;
-    AclActionInfo *action;
 
     hal::hal_cfg_db_open(CFG_OP_WRITE);
 
@@ -340,39 +338,6 @@ hal_acl_config_init (void)
             goto end;
         }
     }
-
-#if 0
-    {
-        spec.Clear();
-        match = spec.mutable_match();
-        action = spec.mutable_action();
-
-        spec.mutable_key_or_handle()->set_acl_id(ACL_QUIESCE_ENTRY_ID);
-        spec.set_priority(ACL_QUIESCE_ENTRY_PRIORITY);
-
-        match->mutable_eth_selector()->set_src_mac(0x00eeff000004);
-        match->mutable_eth_selector()->set_src_mac_mask(0xffffffffffff);
-        match->mutable_eth_selector()->set_dst_mac(0x00eeff000005);
-        match->mutable_eth_selector()->set_dst_mac_mask(0xffffffffffff);
-        match->mutable_eth_selector()->set_eth_type(0xaaaa);
-        match->mutable_eth_selector()->set_eth_type_mask(0xffff);
-        match->mutable_internal_key()->set_from_cpu(true);
-        match->mutable_internal_mask()->set_from_cpu(true);
-
-        action->set_action(acl::AclAction::ACL_ACTION_REDIRECT);
-        action->mutable_redirect_if_key_handle()->set_interface_id(IF_ID_CPU);
-        action->mutable_internal_actions()->set_qid(types::CPUCB_ID_QUIESCE);
-        action->mutable_internal_actions()->set_qid_valid(true);
-        action->mutable_copp_key_handle()->set_copp_type(kh::COPP_TYPE_FLOW_MISS);
-
-        ret = hal::acl_create(spec, &rsp);
-        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
-            HAL_TRACE_ERR("Quiesce acl entry create failed ret {}", ret);
-            goto end;
-        }
-        HAL_TRACE_DEBUG("Quiesce acl entry created");
-    }
-#endif
 
     if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_CLASSIC) {
         ret = hal_eplearn_acl_config_init();

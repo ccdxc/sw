@@ -26,7 +26,7 @@ hal_ret_t
 vmotion_send_msg(VmotionMessage& msg, int sd)
 {
     int byte_count;
-    uint32_t msg_len, msg_left;
+    uint32_t msg_len;
     hal_ret_t ret = HAL_RET_OK;
     char *pkt;
 

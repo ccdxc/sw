@@ -281,8 +281,8 @@ hal_vmotion::server_slave_cb_(struct ev_loop *loop, struct ev_io *watcher,
 {
     hal_ret_t ret = HAL_RET_OK;
     int server_slave_sd = watcher->fd;
-    int n;
-    char buff[1024] = {0};
+    // int n;
+    // char buff[1024] = {0};
 
     HAL_TRACE_DEBUG("Received data from client");
     ret = ep_vmotion_server(server_slave_sd);
@@ -359,14 +359,9 @@ hal_vmotion::client_thread_cb_(void *ctxt)
 {
     thread              *curr_thread = (thread *)ctxt;
     vmotion_client_t    *vm_client = (vmotion_client_t *)curr_thread->data();
-    hal_vmotion         *vm = vm_client->vm;
-    struct ev_loop      *loop = ev_loop_new(EVBACKEND_POLL | EVBACKEND_SELECT | 
-                                            EVFLAG_NOENV);
-    struct ev_io        w_read;
     int                 client_sd;
     struct sockaddr_in  addr;
     int                 addr_len = sizeof(addr);
-    char                buffer[1024] = "hello";
     string              server_ip_addr_str;
     uint32_t            server_port;
 
@@ -406,6 +401,8 @@ hal_vmotion::client_thread_cb_(void *ctxt)
 
     // client processing done ... close connection
     close(client_sd);
+
+    return NULL;
 }
 
 
