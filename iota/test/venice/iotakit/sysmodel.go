@@ -1295,9 +1295,26 @@ func (sm *SysModel) IsConfigPushComplete() (bool, error) {
 // CollectLogs collects all logs files from the testbed
 func (sm *SysModel) CollectLogs() error {
 
-	sm.tb.CollectLogs()
+	// create logs directory if it doesnt exists
+	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("creating log directory failed with: %s\n", err)
+	}
 
 	if sm.tb.mockMode {
+		// create a tar.gz from all log files
+		cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		} else {
+			log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+		}
+
 		return nil
 	}
 
@@ -1346,9 +1363,9 @@ func (sm *SysModel) CollectLogs() error {
 	}
 
 	// create a tar.gz from all log files
-	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
-	cmd := exec.Command("bash", "-c", cmdStr)
-	out, err := cmd.CombinedOutput()
+	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
+	cmd = exec.Command("bash", "-c", cmdStr)
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("tar command out:\n%s\n", string(out))
 		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)

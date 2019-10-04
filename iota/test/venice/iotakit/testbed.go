@@ -1520,10 +1520,9 @@ func (sm *SysModel) reassociateNaplestoVenice(nodes []*TestNode) error {
 // SetupConfig sets up the venice cluster and basic config (like auth etc)
 func (sm *SysModel) SetupConfig(ctx context.Context) error {
 
-       if sm.tb.skipSetup {
-               return nil
-       }
-
+	if sm.tb.skipSetup {
+		return nil
+	}
 
 	// make venice cluster
 	setupVenice := func(done chan error) {
@@ -1747,47 +1746,22 @@ func (tb *TestBed) CollectLogs() error {
 		return nil
 	}
 
-	trig := tb.NewTrigger()
-	// collect reset of venice logs
-	for _, node := range tb.Nodes {
-		switch node.Personality {
-		case iota.PersonalityType_PERSONALITY_NAPLES:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
-		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_naples/%s_naples.tar /pensando/iota/logs /pensando/iota/varlog", node.NodeName, node.NodeName), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
-		case iota.PersonalityType_PERSONALITY_VENICE:
-			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s_venice/", node.NodeName), node.NodeName+"_venice", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_venice/%s_venice.tar /var/log/pensando /pensando/iota/*.log ~/nohup.out", node.NodeName, node.NodeName), node.NodeName+"_venice", node.NodeName)
-		}
-	}
-
-	resp, err := trig.Run()
+	// create a tar.gz from all log files
+	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+	cmd = exec.Command("bash", "-c", cmdStr)
+	out, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Errorf("Error collecting logs. Err: %v", err)
-	}
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("collecting logs failed. %+v", cmdResp)
+		fmt.Printf("tar command out:\n%s\n", string(out))
+		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
+		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
 		}
 	}
-	log.Infof("Collected Iota Venice/Naples logs")
 
-	// copy the files out
-	for _, node := range tb.Nodes {
-		switch node.Personality {
-		case iota.PersonalityType_PERSONALITY_NAPLES:
-			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName)}, "logs")
-		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName), fmt.Sprintf("%s_naples.tar", node.NodeName)}, "logs")
-		case iota.PersonalityType_PERSONALITY_VENICE:
-			tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
-		}
-
-	}
-
-	log.Infof("Copied  Iota Venice/Naples logs to iota server")
+	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
 	return nil
 }
-
