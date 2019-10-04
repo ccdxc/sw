@@ -964,6 +964,10 @@ func (tb *TestBed) setupTestBed() error {
 			NodeName:            node.NodeName,
 		}
 
+		//For now hack up until we get the vendor information
+		if node.instParams.Resource.ServerType == "hpe" {
+			tbn.ServerType = "hpe"
+		}
 		// set esx user name when required
 		if node.topoNode.HostOS == "esx" {
 			tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]

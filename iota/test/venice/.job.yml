@@ -31,8 +31,10 @@ e2e-targets:
      - image: build-10
        count: 2
        resources:
-         # server-type could be server-a or server-d
-         server-type: server-a
+         # ESX could be installed on any server
+         servers:
+           - type: hpe
+           - type: server-a
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
