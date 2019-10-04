@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -252,7 +253,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 		ns, err = sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
 		if err != nil {
 			log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
-			return err
+			return kvstore.NewKeyNotFoundError(epinfo.Status.Network, 0)
 		}
 	}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -183,7 +184,7 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 		sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.NetworkSecurityPolicy.Tenant, sgname)
 		if err != nil {
 			log.Errorf("Could not find the security group %s. Err: %v", sgname, err)
-			return err
+			return kvstore.NewKeyNotFoundError(sgname, 0)
 		}
 
 		// add the policy to sg
@@ -195,25 +196,6 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 
 		// link sgpolicy to sg
 		sgp.groups[sgs.SecurityGroup.Name] = sgs
-	}
-
-	return nil
-}
-
-// updateAttachedApps walks all referred apps and links them
-func (sgp *SgpolicyState) updateAttachedApps() error {
-	for _, rule := range sgp.NetworkSecurityPolicy.Spec.Rules {
-		if len(rule.Apps) != 0 {
-			for _, appName := range rule.Apps {
-				app, err := sgp.stateMgr.FindApp(sgp.NetworkSecurityPolicy.Tenant, appName)
-				if err != nil {
-					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.NetworkSecurityPolicy.Name, rule)
-					return err
-				}
-
-				app.attachPolicy(sgp.NetworkSecurityPolicy.Name)
-			}
-		}
 	}
 
 	return nil
@@ -284,6 +266,25 @@ func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*Sg
 	return &sgps, nil
 }
 
+// updateAttachedApps walks all referred apps and links them
+func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) error {
+	for _, rule := range sgp.Spec.Rules {
+		if len(rule.Apps) != 0 {
+			for _, appName := range rule.Apps {
+				app, err := sm.FindApp(sgp.Tenant, appName)
+				if err != nil {
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.Name, rule)
+					return kvstore.NewKeyNotFoundError(appName, 0)
+				}
+
+				app.attachPolicy(sgp.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
 // OnNetworkSecurityPolicyCreateReq gets called when agent sends create request
 func (sm *Statemgr) OnNetworkSecurityPolicyCreateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
@@ -350,12 +351,13 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 	// in case of errors, write status back
 	defer func() {
 		if err != nil {
-			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy error: %s", err.Error())
+			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy processing error")
+			sgp.Write()
 		}
 	}()
 
 	// find and update all attached apps
-	err = sgps.updateAttachedApps()
+	err = sm.updateAttachedApps(&sgp.NetworkSecurityPolicy)
 	if err != nil {
 		log.Errorf("Error updating attached apps. Err: %v", err)
 		return err
@@ -392,10 +394,6 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 		return nil
 	}
 
-	// update old state
-	sgp.ObjectMeta = nsgp.ObjectMeta
-	sgp.Spec = nsgp.Spec
-
 	// clear propagation status on update
 	sgp.NetworkSecurityPolicy.Status.PropagationStatus = security.PropagationStatus{}
 
@@ -409,16 +407,21 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	// in case of errors, write status back
 	defer func() {
 		if err != nil {
-			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy error: %s", err.Error())
+			sgp.NetworkSecurityPolicy.Status.PropagationStatus.Status = fmt.Sprintf("NetworkSecurityPolicy processing error")
+			sgp.Write()
 		}
 	}()
 
 	// find and update all attached apps
-	err = sgps.updateAttachedApps()
+	err = sm.updateAttachedApps(nsgp)
 	if err != nil {
 		log.Errorf("Error updating attached apps. Err: %v", err)
 		return err
 	}
+
+	// update old state
+	sgp.ObjectMeta = nsgp.ObjectMeta
+	sgp.Spec = nsgp.Spec
 
 	// store it in local DB
 	err = sm.mbus.UpdateObject(convertNetworkSecurityPolicy(sgps))

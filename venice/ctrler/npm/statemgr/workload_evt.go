@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -78,7 +79,7 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 		host, err = ws.stateMgr.ctrler.Host().Find(&api.ObjectMeta{Name: w.Spec.HostName})
 		if err != nil {
 			log.Errorf("Error finding the host %s for workload %v. Err: %v", w.Spec.HostName, w.Name, err)
-			return err
+			return kvstore.NewKeyNotFoundError(w.Spec.HostName, 0)
 		}
 	}
 
@@ -249,7 +250,7 @@ func (ws *WorkloadState) createEndpoints() error {
 	host, err := ws.stateMgr.FindHost("", ws.Workload.Spec.HostName)
 	if err != nil {
 		log.Errorf("Error finding the host %s for workload %v. Err: %v", ws.Workload.Spec.HostName, ws.Workload.Name, err)
-		return err
+		return kvstore.NewKeyNotFoundError(ws.Workload.Spec.HostName, 0)
 	}
 
 	// loop over each interface of the workload

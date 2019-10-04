@@ -6,6 +6,9 @@ import (
 	"hash/fnv"
 	"sync"
 	"sync/atomic"
+	"time"
+
+	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
 type workerState int
@@ -14,6 +17,9 @@ const (
 	notRunning workerState = iota
 	running
 )
+
+// number of times to retry the operation
+const maxRetryCount = 10
 
 //WorkFunc Prototype of work function.
 type WorkFunc func(ctx context.Context, workObj WorkObj) error
@@ -50,7 +56,17 @@ func (w *worker) Run(ctx context.Context) {
 	for true {
 		select {
 		case workContext := <-w.queue:
-			workContext.workFunc(ctx, workContext.workObj)
+			for i := 0; i < maxRetryCount; i++ {
+				err := workContext.workFunc(ctx, workContext.workObj)
+				if kvstore.IsKeyNotFoundError(err) {
+					// retry after a some time
+					time.Sleep(time.Second * time.Duration(i+1))
+					continue
+				} else {
+					// we are done
+					break
+				}
+			}
 			atomic.AddUint32(&w.doneCnt, 1)
 		case <-ctx.Done():
 			return
