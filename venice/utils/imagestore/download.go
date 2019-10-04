@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/pensando/sw/venice/utils/ctxutils"
+
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 
@@ -24,6 +26,7 @@ const (
 
 // DownloadNaplesImage downloads naples image from minio
 func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, version string, destFileName string) error {
+	log.Info("DownloadNaplesImage request from ", ctxutils.GetPeerAddress(ctx))
 	if version == "" {
 		log.Errorf("Version is needed to download a naples image from objstore")
 		return fmt.Errorf("Version is needed to download a naples image from objstore")
@@ -35,7 +38,7 @@ func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, versi
 
 // DownloadVeniceImage downloads a venice image from minio
 func DownloadVeniceImage(ctx context.Context, resolver resolver.Interface, version string) error {
-
+	log.Info("DownloadVeniceImage Version", version)
 	if version == "" {
 		log.Errorf("Version is needed to download a venice image from objstore")
 		return fmt.Errorf("Version is needed to download a venice image from objstore")
@@ -96,6 +99,7 @@ func downloadImage(ctx context.Context, resolver resolver.Interface, name string
 		log.Errorf("Could not create client (%s)", err)
 		return fmt.Errorf("Could not create client (%s)", err)
 	}
+	log.Infof("GetObject: %s", name)
 	fr, err := client.GetObject(ctx, name)
 	if err != nil {
 		log.Errorf("Could not get object (%s)", err)
@@ -114,15 +118,15 @@ func downloadImage(ctx context.Context, resolver resolver.Interface, name string
 	for {
 		n, err := fr.Read(buf)
 		if err != nil && err != io.EOF {
-			log.Errorf("Error while reading object (%s)", err)
+			log.Errorf("Error while reading object (%s) total size (%d)", err, totsize)
 			return fmt.Errorf("Error while reading object (%s)", err)
 		}
 		if n == 0 {
 			break
 		}
 		totsize += n
-		if _, err = of.Write(buf[:n]); err != nil {
-			log.Errorf("Error writing to output file (%s)", err)
+		if nbytes, err := of.Write(buf[:n]); err != nil {
+			log.Errorf("Error writing to output file (%s) bytes written (%d)", err, nbytes)
 			return fmt.Errorf("Error writing to output file (%s)", err)
 		}
 	}
