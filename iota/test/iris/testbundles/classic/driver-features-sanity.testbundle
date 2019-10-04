@@ -239,3 +239,9 @@ testcases:
         iterators :
         args      :
 
+    -   name    : DriverStatsReset
+        testcase: testcases.drivers.driverstatsreset
+        disable : False
+        iterators :
+        args      :
+

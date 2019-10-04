@@ -232,20 +232,19 @@ function usage {
 	echo "$0 options"
 	echo "  -c Check various statistics"
 	echo "  -i<interface>, e.g. interface is ionic.0, ionic.1 etc"
-	echo "  -p Print"
 	echo "  -r<byte count>, Number of bytes received as reported by iperf"
 	echo "  -t<byte count>, Number of bytes transmitted as reported by iperf"
-	echo " e.g. $0 -iionic.0 -p to print stats"
+	echo " e.g. $0 -iionic.0 to print stats for ionic0"
+	echo "      $0 -c -iionic.1 to check various stats for ionic1"
 	exit 1
 }
 
 is_check_cmd=0
-while getopts chpi:r:t: option
+while getopts chi:r:t: option
 do
 	case "${option}" in
 	c) is_check_cmd=1 ;;
 	i) ionic_inf=${OPTARG} ;;
-	p) is_check_cmd=1 ;;
 	r) app_rx_bytes=${OPTARG} ;;
 	t) app_tx_bytes=${OPTARG} ;;
 	*) usage ;;

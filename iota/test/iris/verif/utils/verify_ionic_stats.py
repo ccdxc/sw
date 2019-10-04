@@ -19,7 +19,7 @@ def Main(tc):
                     req, node, 'sysctl dev.%s.reset_stats=1 1>/dev/null' % host.GetNaplesSysctl(i))
             else:
                 api.Trigger_AddHostCommand(
-                    req, node, 'ethtool -S %s | grep packets | grep -v ": 0"' % i)
+                    req, node, 'ethtool -S %s | grep packets' % i)
 
             resp = api.Trigger(req)
             if resp is None:
@@ -36,5 +36,6 @@ def Main(tc):
                 else:
                     api.Logger.error("Command failed to run: %s" %
                                      cmd.stderr)
+                    return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
