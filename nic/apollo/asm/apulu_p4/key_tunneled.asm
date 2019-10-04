@@ -20,9 +20,8 @@ tunneled_nonip_packet:
 
 tunneled_ipv4_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
-    or              r1, k.key_metadata_parsed_sport, \
-                        k.key_metadata_parsed_dport, 16
-    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
+    phvwr           p.key_metadata_dport, k.key_metadata_parsed_dport
+    phvwr           p.key_metadata_sport, k.key_metadata_parsed_sport
     phvwr           p.key_metadata_src, k.ipv4_2_srcAddr
     phvwr           p.key_metadata_dst, k.ipv4_2_dstAddr
     phvwr           p.key_metadata_ipv4_src, k.ipv4_2_srcAddr
@@ -31,9 +30,8 @@ tunneled_ipv4_packet:
 
 tunneled_ipv6_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
-    or              r1, k.key_metadata_parsed_sport, \
-                        k.key_metadata_parsed_dport, 16
-    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
+    phvwr           p.key_metadata_dport, k.key_metadata_parsed_dport
+    phvwr           p.key_metadata_sport, k.key_metadata_parsed_sport
     phvwr           p.key_metadata_src, k.ipv6_2_srcAddr
     phvwr.e         p.key_metadata_dst, k.ipv6_2_dstAddr
     phvwr.f         p.key_metadata_proto, k.ipv6_2_nextHdr

@@ -634,7 +634,7 @@ nexthops_init (void)
     memset(&data, 0, sizeof(data));
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_0;
-    memcpy(nexthop_info->vni, &g_ctag1, sizeof(g_ctag1));
+    nexthop_info->vlan = g_ctag1;
     entry_write(tbl_id, g_nexthop_id2, 0, 0, &data, false, 0);
 }
 

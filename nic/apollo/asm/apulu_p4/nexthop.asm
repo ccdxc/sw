@@ -138,10 +138,10 @@ nexthop_rx_rewrite:
 vlan_encap:
     seq             c1, k.ctag_1_valid, FALSE
     nop.!c1.e
-    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vni
+    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vlan
     phvwr           p.ctag_1_valid, TRUE
     phvwr           p.ctag_1_etherType, k.ethernet_1_etherType
-    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vni
+    phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vlan
     phvwr           p.ethernet_1_etherType, ETHERTYPE_VLAN
     add.e           r1, r1, 4
     phvwr.f         p.capri_p4_intrinsic_packet_len, r1

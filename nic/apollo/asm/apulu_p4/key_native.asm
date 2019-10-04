@@ -28,7 +28,8 @@ native_ipv4_packet:
     or.c1           r1, k.udp_1_srcPort, k.udp_1_dstPort, 16
     or.!c1          r1, k.key_metadata_parsed_sport, \
                         k.key_metadata_parsed_dport, 16
-    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
+    phvwr           p.key_metadata_dport, r1[31:16]
+    phvwr           p.key_metadata_sport, r1[15:0]
     phvwr.e         p.key_metadata_proto, k.ipv4_1_protocol
     phvwr.f         p.key_metadata_ktype, KEY_TYPE_IPV4
 
@@ -40,7 +41,8 @@ native_ipv6_packet:
     or.c1           r1, k.udp_1_srcPort, k.udp_1_dstPort, 16
     or.!c1          r1, k.key_metadata_parsed_sport, \
                         k.key_metadata_parsed_dport, 16
-    phvwr           p.{key_metadata_dport,key_metadata_sport}, r1
+    phvwr           p.key_metadata_dport, r1[31:16]
+    phvwr           p.key_metadata_sport, r1[15:0]
     phvwr.e         p.key_metadata_proto, k.ipv6_1_nextHdr
     phvwr.f         p.key_metadata_ktype, KEY_TYPE_IPV6
 

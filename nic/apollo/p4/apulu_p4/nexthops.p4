@@ -64,7 +64,7 @@ action encap_vlan(vlan) {
     modify_field(ctag_1.vid, vlan);
 }
 
-action ipv4_vxlan_encap(vni, dipo, dmac, smac) {
+action ipv4_vxlan_encap(dipo, dmac, smac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -107,7 +107,7 @@ action ipv4_vxlan_encap(vni, dipo, dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, 14);
 }
 
-action ipv6_vxlan_encap(vni, dipo, dmac, smac) {
+action ipv6_vxlan_encap(dipo, dmac, smac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -149,7 +149,7 @@ action ipv6_vxlan_encap(vni, dipo, dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, (40 + 14));
 }
 
-action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, smaco,
+action nexthop_info(lif, qtype, qid, port, vlan, ip_type, dipo, dmaco, smaco,
                     dmaci) {
     if (txdma_to_p4e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
@@ -166,14 +166,14 @@ action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, smaco,
             modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
         }
         if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
-            encap_vlan(vni);
+            encap_vlan(vlan);
         } else {
             if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
                 modify_field(scratch_metadata.flag, ip_type);
                 if (ip_type == IPTYPE_IPV4) {
-                    ipv4_vxlan_encap(vni, dipo, dmaco, smaco);
+                    ipv4_vxlan_encap(dipo, dmaco, smaco);
                 } else {
-                    ipv6_vxlan_encap(vni, dipo, dmaco, smaco);
+                    ipv6_vxlan_encap(dipo, dmaco, smaco);
                 }
             }
         }
@@ -189,7 +189,7 @@ action nexthop_info(lif, qtype, qid, port, vni, ip_type, dipo, dmaco, smaco,
             modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
         }
         if (RX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
-            encap_vlan(vni);
+            encap_vlan(vlan);
         }
     }
     modify_field(capri_intrinsic.tm_oport, port);
