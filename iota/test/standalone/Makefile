@@ -7,8 +7,31 @@ extract-artifacts:
 esx: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite hostpin_vm --testbed /warmd.json
 
+esx-regression: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite hostpin_vm --testbed /warmd.json \
+	          --regression --skip-sanity
+
 linux: extract-artifacts
-	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+               --testbundle ethtool,connectivity,filters,mtu,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,\
+			   mode_change,post_diag_check,asic_tools,obfl_check
 
 freebsd: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json
+	
+regression-rdma: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+	           --regression --testbundle rdma_reg 
+
+regression-storage: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+	           --regression --testbundle storage 
+ 
+regression-eth: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+	           --regression --testbundle ethtool,connectivity,filters,mtu,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr
+
+regression-infra: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+	        	--regression --testbundle connectivity,mode_change,post_diag_check,asic_tools,obfl_check
+

@@ -77,9 +77,16 @@ jobs:
   dol:
   iota:
   iota/test/venice:
-  iota/test/standalone/freebsd:
-  iota/test/standalone/esx:
+  iota/test/standalone/sanity/freebsd:
+    labels: ["precommit", "hourly"]
+  iota/test/standalone/sanity/esx:
+    labels: ["precommit", "hourly"]
+  iota/test/standalone/regression/esx:
+    labels: ["daily"]
+  iota/test/standalone/regression/freebsd:
+    labels: ["daily"]
   iota/test/standalone/linux:
+    labels: ["precommit", "hourly"]
 #  iota/test/venice/regression:
   iota/test/venice/sim:
   nic:
@@ -113,9 +120,9 @@ dependencies:
   iota:
     - reference: iota/test/venice
       exclude_dirs: ["harness", "test/iris", "test/apollo"]
-    - reference: iota/test/standalone/freebsd
+    - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["test/venice", "test/apollo"]
-    - reference: iota/test/standalone/esx
+    - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["test/venice", "test/apollo"]
     #- reference: iota/test/standalone/linux
     #  exclude_dirs: ["test/venice", "test/apollo"]
@@ -124,9 +131,9 @@ dependencies:
   nic:
     - reference: iota/test/venice
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
-    - reference: iota/test/standalone/esx
+    - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
-    - reference: iota/test/standalone/freebsd
+    - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
     #- reference: iota/test/standalone/linux
     #  exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
@@ -147,9 +154,9 @@ dependencies:
     - reference: nic/apollo
     - reference: iota/test/venice
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
-    - reference: iota/test/standalone/esx
+    - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
-    - reference: iota/test/standalone/freebsd
+    - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
     #- reference: iota/test/standalone/linux
     #  exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]

@@ -8,11 +8,10 @@ queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
-  # baremetal + baremetal Esx test cases
- e2e-esx-bm:
-   commands: ["sh", "-c", "make esx"] 
-   # commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:venice-dev@pensando.io"]
+  # baremetal
+ e2e-freebsd-bm:
+   commands: ["sh", "-c", "make freebsd"]
+   owners: ["email:platform-drivers-team@pensando.io"]
    area:
    sub-area:
    feature:
@@ -20,19 +19,19 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-10
+     - image: build-12
        count: 2
        resources:
-         # server-type could be server-a or server-d
-         server-type: server-a
+         # Freebsd works with only server-d
+         server-type: server-d
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
        username: vm
        password: vm
        vars:
-          BmOs: esx
-          VmOs: linux
+          BmOs: freebsd
+          VmOs: freebsd
           EsxUsername: root
           EsxPassword: Pen0trl!
 logfiles:
