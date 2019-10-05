@@ -75,7 +75,7 @@ all: iota
 
 
 REGISTRY = registry.test.pensando.io:5000
-NIC_CONTAINER_VERSION:=1.33
+NIC_CONTAINER_VERSION:=1.35
 CUR_DIR:=$(shell pwd)
 SW_DIR:=$(shell dirname ${CUR_DIR})
 CUR_USER:=$(shell whoami)
