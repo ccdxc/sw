@@ -207,6 +207,11 @@
                                         "Command" : "/nic/bin/delphictl db get UpgApp"
                                 },
                                 {
+                                        "Name" : "DelphiObj LifMetrics",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/delphictl metrics get LifMetrics"
+                                },
+                                {
                                         "Name" : "PenCtl Version",
                                         "Method" : 0,
                                         "Command" : "/nic/bin/penctl --version"
