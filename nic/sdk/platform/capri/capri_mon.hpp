@@ -28,15 +28,16 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_mpns_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pbc_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pbm_c_hdr.h"
+#include "third-party/asic/capri/verif/apis/ns_soc_ip.h"
 
 namespace sdk {
 namespace platform {
 namespace capri {
 
-typedef struct cattrip_s {
+typedef struct hbmerrcause_s {
     uint32_t offset;
     std::string message;
-} cattrip_t;
+} hbmerrcause_t;
 
 #define MAX_CHANNEL   8
 #ifndef ARRAY_SIZE
@@ -51,11 +52,14 @@ typedef struct cattrip_s {
                     CAP_ADDR_BASE_MC_MC_0_OFFSET)
 
 #define MC_STA_OFFSET 4
+
+#define NOC_REGISTER_RESET_VALUE 0x80010
+
 pen_adjust_perf_status_t capri_adjust_perf(int chip_id, int inst_id,
                                           pen_adjust_index_t &idx,
                                           pen_adjust_perf_type_t perf_type);
 void capri_set_half_clock(int chip_id, int inst_id);
-sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip);
+sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip, bool logging);
 
 } // namespace capri
 } // namespace platform

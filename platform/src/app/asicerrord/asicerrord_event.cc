@@ -18,7 +18,7 @@ EventLoggerPtr EventLogger::getInstance()
     return instance;
 }
 
-void EventLogger::LogInterruptEvent(char *description)
+void EventLogger::LogFatalInterruptEvent(char *description)
 {
     this->recorder->event(eventtypes::NAPLES_FATAL_INTERRUPT, description);
 }

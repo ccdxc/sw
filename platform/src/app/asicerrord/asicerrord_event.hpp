@@ -12,7 +12,7 @@ class EventLogger {
     events_recorder* recorder;
 public:
     static std::shared_ptr<EventLogger> getInstance();
-    void LogInterruptEvent(char *description);
+    void LogFatalInterruptEvent(char *description);
 };
 typedef std::shared_ptr<EventLogger> EventLoggerPtr;
 

@@ -11,7 +11,7 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-cattrip_t cattrip_table[] = {
+static const hbmerrcause_t hbmerrcause_table[] = {
     {DDR_CSR_APB_CPU0_ECC_STAT_INT_ECC_1BIT_THRESH_PS0_BYTE_ADDRESS, "1BIT ECC(PS0) errors channel ="},
     {DDR_CSR_APB_CPU0_ECC_STAT_INT_ECC_1BIT_THRESH_PS1_BYTE_ADDRESS, "1BIT ECC(PS1) errors channel ="},
     {DDR_CSR_APB_CPU0_CA_PAR_ERR_STAT_CA_PARITY_ERROR_PS0_BYTE_ADDRESS, "AERR ECC(PS0) errors channel ="},
@@ -22,12 +22,30 @@ cattrip_t cattrip_table[] = {
     {DDR_CSR_APB_CPU0_MC_BASE1_STAT_READ_DATA_PARITY_ERROR_PS1_BYTE_ADDRESS, "DERR RD ECC(PS1) errors channel ="},
 };
 
+static const uint32_t slave_err_reg[] = {
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC0_S_24_264_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC1_S_25_296_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC2_S_32_328_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC3_S_33_360_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC4_S_34_392_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC5_S_35_424_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC6_S_36_456_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC7_S_37_488_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC8_S_38_520_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC9_S_39_552_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC10_S_26_584_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC11_S_27_616_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC12_S_28_648_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC13_S_29_680_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC14_S_30_712_AS_ERR_BYTE_ADDRESS,
+    NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_CCC15_S_31_744_AS_ERR_BYTE_ADDRESS,
+};
 static void
-read_cattrip_table(cattrip_t *entry, uint64_t nwl_base_addr, uint8_t channel)
+read_hbmerrcause_table(const hbmerrcause_t *entry, uint64_t nwl_base_addr, uint8_t channel, bool logging)
 {
     uint32_t reg_value = 0;
     sdk::asic::asic_reg_read(nwl_base_addr + entry->offset, &reg_value, 1, true);
-    if (reg_value) {
+    if (reg_value && logging) {
         SDK_OBFL_TRACE_ERR("ECCERR::reading register %x value is %d %s %d",
                             nwl_base_addr + entry->offset, reg_value, entry->message.c_str(), channel);
     }
@@ -113,7 +131,21 @@ print_mch_sta_data(uint64_t mc_base_addr, uint8_t channel)
         CAP_MCH_CSR_MC_STA_MC_STA_6_7_ECC_ERROR_CNT_2BIT_PS1_31_14_GET(mc_sta_reg_value[6]));
 }
 
-sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip)
+static void
+print_slave_err_regs()
+{
+    uint32_t slave_err_reg_value;
+    uint32_t slave_err_reg_reset = NOC_REGISTER_RESET_VALUE;
+    SDK_OBFL_TRACE_ERR("ECCERR::slave error registers; size is %d", ARRAY_SIZE(slave_err_reg));
+    for (uint32_t t_offset = 0; t_offset < ARRAY_SIZE(slave_err_reg); t_offset++) {
+        sdk::asic::asic_reg_read(CAP_ADDR_BASE_MS_RBM_OFFSET + slave_err_reg[t_offset], &slave_err_reg_value, 1, true);
+        // Data from slave error registers
+        SDK_OBFL_TRACE_ERR("ECCERR::Slave error register 0x%x value is : 0x%x",CAP_ADDR_BASE_MS_RBM_OFFSET + slave_err_reg[t_offset], slave_err_reg_value);
+        sdk::asic::asic_reg_write(CAP_ADDR_BASE_MS_RBM_OFFSET + slave_err_reg[t_offset], &slave_err_reg_reset, 1, ASIC_WRITE_MODE_WRITE_THRU);
+    }
+}
+
+sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip, bool logging)
 {
     uint64_t nwl_base_addr;
     uint64_t mc_base_addr;
@@ -122,12 +154,18 @@ sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip)
     {
         nwl_base_addr = CAP_NWL_ADDR(counter);
         mc_base_addr = CAP_MC_ADDR(counter);
-        for(uint32_t t_offset = 0; t_offset < ARRAY_SIZE(cattrip_table); t_offset++)
+        for(uint32_t t_offset = 0; t_offset < ARRAY_SIZE(hbmerrcause_table); t_offset++)
         {
-            read_cattrip_table(&cattrip_table[t_offset], nwl_base_addr, counter);
+            read_hbmerrcause_table(&hbmerrcause_table[t_offset], nwl_base_addr, counter, logging);
         }
-        print_mch_sta_data(mc_base_addr , counter);
+        // if it not a cattrip print all the supporting registers
+        if (logging) {
+            print_mch_sta_data(mc_base_addr , counter);
+        }
         cattrip = cattrip | read_cattrip_reg(nwl_base_addr, counter);
+    }
+    if (logging) {
+        print_slave_err_regs();
     }
     *iscattrip = cattrip;
     return SDK_RET_OK;

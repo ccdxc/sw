@@ -239,9 +239,11 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
             INFO("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
         } else {\
-            sprintf(eventbuf, "Interrupt %s at %x field %s type %s", \
-                     regname, regaddr, #fld, errortostring(type)); \
-            EventLogger::getInstance()->LogInterruptEvent(eventbuf); \
+            if (type == FATAL) {\
+                snprintf(eventbuf, sizeof(eventbuf), "Critical hardware failure, Interrupt %s at %x field %s type %s", \
+                        regname, regaddr, #fld, errortostring(type)); \
+                EventLogger::getInstance()->LogFatalInterruptEvent(eventbuf); \
+            } \
             ERR("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
         } \
