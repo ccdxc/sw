@@ -147,8 +147,8 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["test/venice", "test/apollo"]
-    #- reference: iota/test/standalone/linux
-    #  exclude_dirs: ["test/venice", "test/apollo"]
+    - reference: iota/test/standalone/linux
+      exclude_dirs: ["test/venice", "test/apollo"]
   metrics:
     - reference: venice/ui
   nic:
@@ -158,8 +158,8 @@ dependencies:
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
-    #- reference: iota/test/standalone/linux
-    #  exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
+    - reference: iota/test/standalone/linux
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
   nic/agent:
     - reference: api
     - reference: test/ci_targets/e2e
@@ -181,8 +181,8 @@ dependencies:
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
-    #- reference: iota/test/standalone/linux
-    #  exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
+    - reference: iota/test/standalone/linux
+      exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
   storage/offload:
     - reference: storage/offload/linux-build-test
   venice:
