@@ -82,7 +82,6 @@ nic/build/x86_64/iris/lib/libtop_csr_compile.so                     /nic/lib/
 nic/build/x86_64/iris/lib/libtrace.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libutils.so                               /nic/lib/
-nic/build/x86_64/iris/lib/libzmq.so.3                               /nic/lib/
 nic/build/x86_64/iris/lib/libevent_thread.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libpenipc.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
@@ -115,7 +114,7 @@ nic/hal/third-party/openssl/x86_64/lib/libcrypto.so.1.1          /nic/lib/
 nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
 nic/build/x86_64/iris/lib/libmodel_client.so                     /nic/lib/
 nic/sdk/model_sim/libs/*.so                                      /nic/lib/
-nic/sdk/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
+nic/sdk/third-party/zmq/x86_64/lib/libzmq.so                     /nic/lib/libzmq.so.3
 nic/build/x86_64/iris/lib/libsdkcapri_asicrw_if.so               /nic/lib/
 nic/build/x86_64/iris/lib/libsdkcapri_csrint.so                  /nic/lib/
 nic/build/x86_64/iris/lib/liblif_mgr.so                          /nic/lib/
