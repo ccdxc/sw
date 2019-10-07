@@ -319,7 +319,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
                   policy : policy,
                   rule: policy.spec.rules[i]
                 };
-                this.ruleMap.set(policy.status['rule-status'][i]['rule-hash'], newTuple);
+                if (policy.status['rule-status'] && policy.status['rule-status'][i]) {  // policy.status['rule-status'] may not be available.
+                     this.ruleMap.set(policy.status['rule-status'][i]['rule-hash'], newTuple);
+                }
               }
             }
           }

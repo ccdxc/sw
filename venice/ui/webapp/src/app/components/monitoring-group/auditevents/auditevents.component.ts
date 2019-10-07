@@ -49,7 +49,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   exportFilename: string = 'Venice-auditevents';
   numRows: number = 50;
 
-  maxRecords: number = 8000;
+  maxRecords: number = 4000; // AuditEvent query size may cause problem in backend, reduce it to 4000.
   startingSortField: string = 'meta.mod-time';
   startingSortOrder: number = -1;
 
@@ -127,7 +127,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
    * Overiding from tableview component
    */
   exportTableData() {
-    // TODO: Setting hard limit of 8000 for now, Export should be moved to the backend eventually
+    // TODO: Setting hard limit of maxRecords for now, Export should be moved to the backend eventually
     const exportMap: CustomExportMap = {};
     exportMap['client-ips'] = (opts) => {
       const value = Utility.getObjectValueByPropertyPath(opts.data, opts.field);
