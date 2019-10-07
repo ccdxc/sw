@@ -115,7 +115,8 @@ static u64 ionic_sw_stats_get_count(struct ionic_lif *lif)
 	/* rx stats */
 	total += MAX_Q(lif) * IONIC_NUM_RX_STATS;
 
-	if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+	if (test_bit(IONIC_LIF_UP, lif->state) &&
+	    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
 		/* tx debug stats */
 		total += MAX_Q(lif) * (IONIC_NUM_DBG_CQ_STATS +
 				      IONIC_NUM_TX_Q_STATS +
@@ -149,7 +150,8 @@ static void ionic_sw_stats_get_strings(struct ionic_lif *lif, u8 **buf)
 			*buf += ETH_GSTRING_LEN;
 		}
 
-		if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+		if (test_bit(IONIC_LIF_UP, lif->state) &&
+		    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_TX_Q_STATS; i++) {
 				snprintf(*buf, ETH_GSTRING_LEN,
 					 "txq_%d_%s",
@@ -200,7 +202,8 @@ static void ionic_sw_stats_get_strings(struct ionic_lif *lif, u8 **buf)
 			*buf += ETH_GSTRING_LEN;
 		}
 
-		if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+		if (test_bit(IONIC_LIF_UP, lif->state) &&
+		    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
 				snprintf(*buf, ETH_GSTRING_LEN,
 					 "rxq_%d_cq_%s",
@@ -236,6 +239,8 @@ static void ionic_sw_stats_get_values(struct ionic_lif *lif, u64 **buf)
 {
 	struct ionic_lif_sw_stats lif_stats;
 	struct ionic_qcq *txqcq, *rxqcq;
+	struct ionic_tx_stats *txstats;
+	struct ionic_rx_stats *rxstats;
 	int i, q_num;
 
 	ionic_get_lif_stats(lif, &lif_stats);
@@ -247,6 +252,7 @@ static void ionic_sw_stats_get_values(struct ionic_lif *lif, u64 **buf)
 
 	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		txqcq = lif_to_txqcq(lif, q_num);
+		txstats = &lif_to_txstats(lif, q_num);
 
 		/* With macvlan offload support, it is possible to
 		 * have some undefined queues in the txqcq list, so
@@ -254,24 +260,28 @@ static void ionic_sw_stats_get_values(struct ionic_lif *lif, u64 **buf)
 		 */
 		if (!txqcq || !txqcq->stats) {
 			(*buf) += IONIC_NUM_TX_STATS;
-			(*buf) += IONIC_NUM_TX_Q_STATS;
-			(*buf) += IONIC_NUM_DBG_CQ_STATS;
-			(*buf) += IONIC_NUM_DBG_INTR_STATS;
-			(*buf) += IONIC_NUM_DBG_NAPI_STATS;
-			(*buf) += IONIC_MAX_NUM_NAPI_CNTR;
-			(*buf) += IONIC_MAX_NUM_SG_CNTR;
+			if (test_bit(IONIC_LIF_UP, lif->state) &&
+			    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+				(*buf) += IONIC_NUM_TX_Q_STATS;
+				(*buf) += IONIC_NUM_DBG_CQ_STATS;
+				(*buf) += IONIC_NUM_DBG_INTR_STATS;
+				(*buf) += IONIC_NUM_DBG_NAPI_STATS;
+				(*buf) += IONIC_MAX_NUM_NAPI_CNTR;
+				(*buf) += IONIC_MAX_NUM_SG_CNTR;
+			}
 
 			/* go on the the next queue */
 			continue;
 		}
 
 		for (i = 0; i < IONIC_NUM_TX_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&txqcq->stats->tx,
+			**buf = IONIC_READ_STAT64(txstats,
 						  &ionic_tx_stats_desc[i]);
 			(*buf)++;
 		}
 
-		if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+		if (test_bit(IONIC_LIF_UP, lif->state) &&
+		    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_TX_Q_STATS; i++) {
 				**buf = IONIC_READ_STAT64(&txqcq->q,
 						      &ionic_txq_stats_desc[i]);
@@ -305,6 +315,7 @@ static void ionic_sw_stats_get_values(struct ionic_lif *lif, u64 **buf)
 
 	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		rxqcq = lif_to_rxqcq(lif, q_num);
+		rxstats = &lif_to_rxstats(lif, q_num);
 
 		/* With macvlan offload support, it is possible to
 		 * have some undefined queues in the rxqcq list, so
@@ -312,22 +323,26 @@ static void ionic_sw_stats_get_values(struct ionic_lif *lif, u64 **buf)
 		 */
 		if (!rxqcq || !rxqcq->stats) {
 			(*buf) += IONIC_NUM_RX_STATS;
-			(*buf) += IONIC_NUM_DBG_CQ_STATS;
-			(*buf) += IONIC_NUM_DBG_INTR_STATS;
-			(*buf) += IONIC_NUM_DBG_NAPI_STATS;
-			(*buf) += IONIC_MAX_NUM_NAPI_CNTR;
+			if (test_bit(IONIC_LIF_UP, lif->state) &&
+			    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+				(*buf) += IONIC_NUM_DBG_CQ_STATS;
+				(*buf) += IONIC_NUM_DBG_INTR_STATS;
+				(*buf) += IONIC_NUM_DBG_NAPI_STATS;
+				(*buf) += IONIC_MAX_NUM_NAPI_CNTR;
+			}
 
 			/* go on the the next queue */
 			continue;
 		}
 
 		for (i = 0; i < IONIC_NUM_RX_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&rxqcq->stats->rx,
+			**buf = IONIC_READ_STAT64(rxstats,
 						  &ionic_rx_stats_desc[i]);
 			(*buf)++;
 		}
 
-		if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
+		if (test_bit(IONIC_LIF_UP, lif->state) &&
+		    test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
 				**buf = IONIC_READ_STAT64(&rxqcq->cq,
 						   &ionic_dbg_cq_stats_desc[i]);

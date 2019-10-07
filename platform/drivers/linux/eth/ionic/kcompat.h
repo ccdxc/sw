@@ -2702,7 +2702,6 @@ void _kc_pci_disable_link_state(struct pci_dev *dev, int state);
 #define pci_disable_link_state(p, s) _kc_pci_disable_link_state(p, s)
 #else /* < 2.6.26 */
 #define NETDEV_CAN_SET_GSO_MAX_SIZE
-#include <linux/pci-aspm.h>
 #define HAVE_NETDEV_VLAN_FEATURES
 #ifndef PCI_EXP_LNKCAP_ASPMS
 #define PCI_EXP_LNKCAP_ASPMS 0x00000c00 /* ASPM Support */
