@@ -83,6 +83,8 @@ nic/build/x86_64/iris/lib/libtrace.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libutils.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libzmq.so.3                               /nic/lib/
+nic/build/x86_64/iris/lib/libevent_thread.so                        /nic/lib/
+nic/build/x86_64/iris/lib/libpenipc.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libdelphi*.so                             /nic/lib/
