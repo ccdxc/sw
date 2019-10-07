@@ -124,6 +124,7 @@ func checkRolloutInProgress(rolloutActionObj rollout.RolloutAction) bool {
 	if opState == rollout.RolloutStatus_PROGRESSING.String() ||
 		opState == rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String() ||
 		opState == rollout.RolloutStatus_SCHEDULED.String() ||
+		opState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String() ||
 		opState == rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String() {
 		return true
 	}

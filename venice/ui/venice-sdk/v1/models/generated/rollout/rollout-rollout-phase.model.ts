@@ -16,6 +16,7 @@ export interface IRolloutRolloutPhase {
     'end-time'?: Date;
     'reason'?: string;
     'message'?: string;
+    'num-retries'?: number;
 }
 
 
@@ -29,6 +30,8 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
+    /** Number of retries rollout performed. */
+    'num-retries': number = null;
     public static propInfo: { [prop in keyof IRolloutRolloutPhase]: PropInfoItem } = {
         'name': {
             required: false,
@@ -57,6 +60,12 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
             description:  'A detailed message indicating details about the transition.',
             required: false,
             type: 'string'
+        },
+        'num-retries': {
+            default: parseInt('0'),
+            description:  'Number of retries rollout performed.',
+            required: false,
+            type: 'number'
         },
     }
 
@@ -133,6 +142,13 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
         } else {
             this['message'] = null
         }
+        if (values && values['num-retries'] != null) {
+            this['num-retries'] = values['num-retries'];
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('num-retries')) {
+            this['num-retries'] = RolloutRolloutPhase.propInfo['num-retries'].default;
+        } else {
+            this['num-retries'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -146,6 +162,7 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
                 'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutPhase.propInfo['end-time']),
                 'reason': CustomFormControl(new FormControl(this['reason']), RolloutRolloutPhase.propInfo['reason']),
                 'message': CustomFormControl(new FormControl(this['message']), RolloutRolloutPhase.propInfo['message']),
+                'num-retries': CustomFormControl(new FormControl(this['num-retries']), RolloutRolloutPhase.propInfo['num-retries']),
             });
         }
         return this._formGroup;
@@ -163,6 +180,7 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
             this._formGroup.controls['end-time'].setValue(this['end-time']);
             this._formGroup.controls['reason'].setValue(this['reason']);
             this._formGroup.controls['message'].setValue(this['message']);
+            this._formGroup.controls['num-retries'].setValue(this['num-retries']);
         }
     }
 }

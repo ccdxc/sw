@@ -34,6 +34,7 @@ export enum RolloutRolloutActionStatus_state {
     'suspend-in-progress' = "suspend-in-progress",
     'deadline-exceeded' = "deadline-exceeded",
     'precheck-in-progress' = "precheck-in-progress",
+    'scheduled-for-retry' = "scheduled-for-retry",
 }
 
 export enum RolloutRolloutPhase_phase {
@@ -64,6 +65,7 @@ export enum RolloutRolloutStatus_state {
     'suspend-in-progress' = "suspend-in-progress",
     'deadline-exceeded' = "deadline-exceeded",
     'precheck-in-progress' = "precheck-in-progress",
+    'scheduled-for-retry' = "scheduled-for-retry",
 }
 
 

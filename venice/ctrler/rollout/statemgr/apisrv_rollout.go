@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
@@ -26,12 +27,14 @@ type RolloutState struct {
 	*Statemgr
 
 	// Local information
-	eventChan    chan rofsmEvent
-	stopChan     chan bool
-	currentState rofsmState
-	stopped      bool
-	restart      bool
-	stateTimer   *time.Timer
+	eventChan           chan rofsmEvent
+	stopChan            chan bool
+	currentState        rofsmState
+	stopped             bool
+	restart             bool
+	veniceRolloutFailed bool
+	stateTimer          *time.Timer
+	retryTimer          *time.Timer
 
 	fsm [][]fsmNode
 
@@ -112,12 +115,13 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		return nil
 	}
 	ros := RolloutState{
-		Rollout:   ro,
-		Statemgr:  sm,
-		eventChan: make(chan rofsmEvent, 100),
-		stopChan:  make(chan bool),
-		fsm:       roFSM,
-		restart:   false,
+		Rollout:             ro,
+		Statemgr:            sm,
+		eventChan:           make(chan rofsmEvent, 100),
+		stopChan:            make(chan bool),
+		fsm:                 roFSM,
+		restart:             false,
+		veniceRolloutFailed: false,
 	}
 
 	ros.Mutex.Lock()
@@ -181,7 +185,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 			log.Errorf("Error %v listing smartNICs", err)
 			return err
 		}
-		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates)
+		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros.Spec.Version)
 
 		for _, s := range sn {
 			for _, snicState := range s {
@@ -325,7 +329,12 @@ func (ros *RolloutState) stopRolloutTimer() {
 		ros.stateTimer = nil
 	}
 }
-
+func (ros *RolloutState) stopRetryTimer() {
+	if ros.retryTimer != nil {
+		ros.retryTimer.Stop()
+		ros.retryTimer = nil
+	}
+}
 func (ros *RolloutState) start() {
 	ros.currentState = fsmstStart
 	ros.Add(1)
@@ -359,6 +368,44 @@ func (ros *RolloutState) raiseRolloutEvent(status roproto.RolloutStatus_RolloutO
 	case roproto.RolloutStatus_PROGRESSING:
 		ros.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, fmt.Sprintf("Rollout(%s) to version(%s) started", ros.Rollout.Name, ros.Rollout.Spec.Version), ros.Rollout)
 	}
+}
+
+func (ros *RolloutState) checkIntendForRetry() bool {
+	var newduration time.Duration
+
+	//no retry on venice rollout failure
+	if ros.veniceRolloutFailed {
+		log.Infof("Venice rollout failed. No retry!")
+		return false
+	}
+	numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
+	if numFailures > ros.Spec.MaxNICFailuresBeforeAbort {
+		log.Infof("NIC failures (%d) are greater than spec.maxNICFailures (%d)", numFailures, ros.Spec.MaxNICFailuresBeforeAbort)
+		return false
+	}
+	if ros.Spec.GetSuspend() {
+		log.Infof("Rollout suspended. No more rollouts retries..")
+		ros.eventChan <- fsmEvSuspend
+		return false
+	}
+	if ros.Spec.ScheduledStartTime != nil {
+		duration, _ := time.ParseDuration(ros.Spec.Duration)
+		startTime, _ := ros.Spec.ScheduledStartTime.Time()
+		endTime := startTime.Add(duration)
+		newduration = endTime.Sub(time.Now())
+		log.Infof("New duration %+v", newduration.Seconds())
+		if newduration < 0 {
+			log.Infof("Specified endtime is in the past. no more rollout retries..")
+			return false
+		}
+		if newduration.Seconds() < preUpgradeTimeout.Seconds() {
+			log.Infof("Not enough time to perform retries.. ")
+			return false
+		}
+		ros.eventChan <- fsmEvRetry
+		return true
+	}
+	return false
 }
 
 // must be called with Lock held on ros object
@@ -551,6 +598,7 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 			endTime := api.Timestamp{}
 			endTime.SetTime(time.Now())
 			ros.Status.DSCsStatus[index].EndTime = &endTime
+			ros.Status.DSCsStatus[index].NumberOfRetries++
 		}
 
 	case roproto.RolloutPhase_PRE_CHECK:

@@ -65,6 +65,7 @@ var typesMapRollout = map[string]*api.Struct{
 			"message":                       api.CLIInfo{Path: "Status.DSCsStatus[].Message", Skip: false, Insert: "", Help: ""},
 			"name":                          api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                     api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"num-retries":                   api.CLIInfo{Path: "Status.DSCsStatus[].NumberOfRetries", Skip: false, Insert: "", Help: ""},
 			"phase":                         api.CLIInfo{Path: "Status.DSCsStatus[].Phase", Skip: false, Insert: "", Help: ""},
 			"prev-version":                  api.CLIInfo{Path: "Status.PreviousVersion", Skip: false, Insert: "", Help: ""},
 			"reason":                        api.CLIInfo{Path: "Status.DSCsStatus[].Reason", Skip: false, Insert: "", Help: ""},
@@ -168,6 +169,8 @@ var typesMapRollout = map[string]*api.Struct{
 			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"NumberOfRetries": api.Field{Name: "NumberOfRetries", CLITag: api.CLIInfo{ID: "num-retries", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "num-retries", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"rollout.RolloutSpec": &api.Struct{

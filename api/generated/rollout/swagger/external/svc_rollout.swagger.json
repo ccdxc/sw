@@ -1348,7 +1348,8 @@
             "suspended",
             "suspend-in-progress",
             "deadline-exceeded",
-            "precheck-in-progress"
+            "precheck-in-progress",
+            "scheduled-for-retry"
           ],
           "default": "progressing"
         },
@@ -1462,6 +1463,12 @@
         "message": {
           "type": "string",
           "description": "A detailed message indicating details about the transition."
+        },
+        "num-retries": {
+          "type": "integer",
+          "format": "int64",
+          "default": "0",
+          "description": "Number of retries rollout performed."
         }
       },
       "title": "RolloutPhase gives details of status of Rollout on each Node/Service/DistributedServiceCard"
@@ -1585,7 +1592,8 @@
             "suspended",
             "suspend-in-progress",
             "deadline-exceeded",
-            "precheck-in-progress"
+            "precheck-in-progress",
+            "scheduled-for-retry"
           ],
           "default": "progressing"
         },

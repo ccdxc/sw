@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pensando/sw/api"
+
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -14,6 +16,7 @@ const defaultNumParallel = 2 // if user has not specified parallelism in Spec, w
 
 var preUpgradeTimeout = 480 * time.Second
 var veniceUpgradeTimeout = 15 * time.Minute
+var rolloutRetryTimeout = 5 * time.Minute
 
 type rofsmEvent uint
 type rofsmState uint
@@ -32,6 +35,7 @@ const (
 	fsmstRolloutPausing
 	fsmstRolloutFail
 	fsmstRolloutSuspend
+	fsmstRetry
 )
 
 func (x rofsmState) String() string {
@@ -40,6 +44,8 @@ func (x rofsmState) String() string {
 		return "fsmstInvalid"
 	case fsmstStart:
 		return "fsmstStart"
+	case fsmstRetry:
+		return "fsmstRetry"
 	case fsmstPreCheckingVenice:
 		return "fsmstPreCheckingVenice"
 	case fsmstPreCheckingSmartNIC:
@@ -87,6 +93,8 @@ const (
 	fsmEvSuspend
 	fsmEvFail
 	fsmEvSuccess
+	fsmEvRetry
+	fsmEvRetryStart
 )
 
 func (x rofsmEvent) String() string {
@@ -95,6 +103,10 @@ func (x rofsmEvent) String() string {
 		return "fsmEvInvalid"
 	case fsmEvROCreated:
 		return "fsmEvROCreated"
+	case fsmEvRetry:
+		return "fsmEvRetry"
+	case fsmEvRetryStart:
+		return "fsmEvRetryStart"
 	case fsmEvVeniceBypass:
 		return "fsmEvVeniceBypass"
 	case fsmEvOneVenicePreUpgSuccess:
@@ -151,6 +163,11 @@ var roFSM = [][]fsmNode{
 		fsmEvSuspend:   {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 		fsmEvFail:      {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 	},
+	fsmstRetry: {
+		fsmEvRetryStart: {nextSt: fsmstPreCheckingSmartNIC, actFn: fsmAcPreUpgSmartNIC},
+		fsmEvSuspend:    {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+		fsmEvFail:       {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
+	},
 
 	fsmstPreCheckingVenice: {
 		fsmEvOneVenicePreUpgSuccess: {nextSt: fsmstPreCheckingVenice, actFn: fsmAcOneVenicePreupgSuccess},
@@ -162,7 +179,7 @@ var roFSM = [][]fsmNode{
 	},
 	fsmstPreCheckingSmartNIC: {
 		fsmEvAllSmartNICPreUpgOK:      {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
-		fsmEvSomeSmartNICPreUpgFail:   {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
+		fsmEvSomeSmartNICPreUpgFail:   {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
 		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstPreCheckingSmartNIC},
 		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstPreCheckingSmartNIC},
 		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
@@ -195,6 +212,10 @@ var roFSM = [][]fsmNode{
 		fsmEvOneSmartNICUpgSuccess: {nextSt: fsmstRollingoutOutSmartNIC}, // TODO
 		fsmEvFail:                  {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvSuspend:               {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
+	},
+	fsmstRolloutFail: {
+		fsmEvRetry:   {nextSt: fsmstRetry, actFn: fsmAcRetry},
+		fsmEvSuspend: {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 }
 
@@ -281,6 +302,7 @@ func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {
 	}
 	if numPendingPrecheck == 0 { // all venice have been issued pre-check
 		if !ros.allVenicePreCheckSuccess() {
+			ros.veniceRolloutFailed = true
 			ros.eventChan <- fsmEvFail
 		} else {
 			ros.eventChan <- fsmEvAllVenicePreUpgOK
@@ -316,6 +338,8 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 	}
 
 	if ros.Spec.ScheduledStartTime == nil {
+		ros.Spec.ScheduledStartTime = &api.Timestamp{}
+		ros.Spec.ScheduledStartTime.Seconds = int64(time.Now().Second())
 		ros.eventChan <- fsmEvScheduleNow
 		ros.raiseRolloutEvent(rollout.RolloutStatus_PROGRESSING)
 		if ros.Spec.GetSuspend() {
@@ -326,7 +350,6 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		ros.saveStatus()
 		ros.Mutex.Unlock()
 		ros.updateRolloutAction()
-
 		return
 	}
 	t, err := ros.Spec.ScheduledStartTime.Time()
@@ -394,6 +417,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 
 	if numPendingRollout == 0 {
 		if !ros.allVeniceRolloutSuccess() { // some venice rollout failed
+			ros.veniceRolloutFailed = true
 			ros.eventChan <- fsmEvFail
 		} else {
 			ros.eventChan <- fsmEvAllVeniceUpgOK
@@ -438,6 +462,7 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 
 		numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
 		numSkipped := atomic.LoadUint32(&ros.numSkipped)
+		log.Infof("Rollout numFailures %d numSkipped %d", numFailures, numSkipped)
 		if numFailures == 0 && numSkipped == 0 {
 			ros.eventChan <- fsmEvSuccess
 		} else {
@@ -445,8 +470,26 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 		}
 	}()
 }
+func fsmAcRetry(ros *RolloutState) {
+	ros.retryTimer = time.AfterFunc(rolloutRetryTimeout, func() {
+		log.Infof("Rollout retry begin")
+		ros.numPreUpgradeFailures = 0
+		ros.numSkipped = 0
+		smartNICROs, err := ros.Statemgr.ListDSCRollouts()
+		if err != nil {
+			log.Errorf("Error %v listing DSCRollouts", err)
+		} else {
+			for _, v := range smartNICROs {
+				ros.Statemgr.DeleteDSCRolloutState(v.DSCRollout)
+			}
+		}
+		ros.Status.OperationalState = rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String()
+		ros.eventChan <- fsmEvRetryStart
+	})
+}
 func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.stopRolloutTimer()
+	ros.stopRetryTimer()
 	if ros.Status.StartTime != nil {
 		ros.setEndTime()
 	}
@@ -469,16 +512,24 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	if ros.stateTimer != nil {
 		ros.stopRolloutTimer()
 	}
+	ros.stopRetryTimer()
 	if ros.Status.StartTime != nil {
 		ros.setEndTime()
 	}
 
+	if ros.checkIntendForRetry() {
+		log.Infof("scheduled for retry..")
+		ros.Mutex.Lock()
+		ros.Status.OperationalState = rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String()
+		ros.saveStatus()
+		ros.Mutex.Unlock()
+		return
+	}
 	ros.Mutex.Lock()
-	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
+	ros.Status.OperationalState = rollout.RolloutStatus_FAILURE.String()
 	ros.saveStatus()
 	ros.currentState = fsmstRolloutFail
 	ros.Mutex.Unlock()
-
 	ros.updateRolloutAction()
 	ros.raiseRolloutEvent(rollout.RolloutStatus_FAILURE)
 	ros.Statemgr.deleteRollouts()
@@ -490,6 +541,7 @@ func fsmAcRolloutFail(ros *RolloutState) {
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.stopRolloutTimer()
+	ros.stopRetryTimer()
 	if ros.Status.StartTime != nil {
 		ros.setEndTime()
 	}

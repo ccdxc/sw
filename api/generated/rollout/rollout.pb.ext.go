@@ -107,6 +107,7 @@ var RolloutStatus_RolloutOperationalState_normal = map[string]string{
 	"precheck-in-progress": "precheck-in-progress",
 	"progressing":          "progressing",
 	"scheduled":            "scheduled",
+	"scheduled-for-retry":  "scheduled-for-retry",
 	"success":              "success",
 	"suspend-in-progress":  "suspend-in-progress",
 	"suspended":            "suspended",
@@ -121,6 +122,7 @@ var RolloutStatus_RolloutOperationalState_vname = map[int32]string{
 	5: "suspend-in-progress",
 	6: "deadline-exceeded",
 	7: "precheck-in-progress",
+	8: "scheduled-for-retry",
 }
 
 var RolloutStatus_RolloutOperationalState_vvalue = map[string]int32{
@@ -132,6 +134,7 @@ var RolloutStatus_RolloutOperationalState_vvalue = map[string]int32{
 	"suspend-in-progress":  5,
 	"deadline-exceeded":    6,
 	"precheck-in-progress": 7,
+	"scheduled-for-retry":  8,
 }
 
 func (x RolloutStatus_RolloutOperationalState) String() string {
@@ -267,6 +270,7 @@ func (m *RolloutPhase) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.NumberOfRetries = 0
 		m.Phase = "pre-check"
 	}
 	return ret

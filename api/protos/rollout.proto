@@ -131,6 +131,9 @@ message RolloutPhase {
     // A detailed message indicating details about the transition.
     string Message                      = 6 [(gogoproto.nullable) = true,
                                              (gogoproto.jsontag) = "message,omitempty"];
+
+    // Number of retries rollout performed.
+    uint32 NumberOfRetries                           = 7 [(venice.default)="0", (gogoproto.jsontag) = "num-retries"];
 }
 
 // Rollout Status gives the status of the rollout at the top level as well as details of
@@ -160,6 +163,7 @@ message RolloutStatus {
       SUSPEND_IN_PROGRESS   = 5 [(venice.enumValueStr) = "suspend-in-progress"];  // Waiting for a terminal state for the pause to complete
       DEADLINE_EXCEEDED     = 6 [(venice.enumValueStr) = "deadline-exceeded"];  // Rollout could not be completed before the deadline specified by the user
       PRECHECK_IN_PROGRESS  = 7 [(venice.enumValueStr) = "precheck-in-progress"];  // Rollout Precheck in progress
+      SCHEDULED_FOR_RETRY  = 8 [(venice.enumValueStr) = "scheduled-for-retry"];  // Rollout Retry scheduled
     }
     string OperationalState                               = 4 [(venice.check) = "StrEnum(RolloutStatus.RolloutOperationalState)",
                                                              (gogoproto.jsontag) = "state,omitempty"];

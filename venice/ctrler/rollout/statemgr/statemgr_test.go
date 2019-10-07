@@ -510,6 +510,7 @@ func createSNICHelper(stateMgr *Statemgr, name string, lbls map[string]string) {
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
+			DSCVersion:     "",
 		},
 	}
 	stateMgr.handleSmartNICEvent(kvstore.Created, &sn)
@@ -674,7 +675,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err := stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn := orderSmartNICs(nil, false, snStates)
+	sn := orderSmartNICs(nil, false, snStates, "1.0")
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 2, "first bucket should have 2 naples")
 	Assert(t, sn[0][0].Name != sn[0][1].Name, "names of naples should be different")
@@ -685,12 +686,12 @@ func TestSNICOrder(t *testing.T) {
 	AssertOk(t, err, "Error parsing label")
 
 	// match only for naples with label n1
-	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates)
+	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates, "1.0")
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, sn[0][0].Name == "naples1", "expecting naples1")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates)
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, "1.0")
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
@@ -701,7 +702,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates)
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, "1.0")
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 2, "second bucket should have 2 naples")
@@ -710,7 +711,7 @@ func TestSNICOrder(t *testing.T) {
 	createSNIC("naples4", map[string]string{"l": "n3"})
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
-	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates)
+	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates, "1.0")
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 3, "first bucket should have 3 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
@@ -1124,6 +1125,189 @@ func TestMaxFailuresHit(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
 }
 
+// Test Rollout Retry.
+func TestRolloutRetry(t *testing.T) {
+
+	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+	createSNIC("naples0", map[string]string{"l1": "n1"})
+
+	seconds := time.Now().Unix()
+	scheduledStartTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds, //Add a scheduled rollout
+		},
+	}
+
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                   version,
+			ScheduledStartTime:        scheduledStartTime,
+			Duration:                  "30m",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 3,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+		},
+	}
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro,
+	}
+	stateMgr.RolloutWatcher <- evt
+
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
+		}
+	}
+	addSmartNICFailResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "failure")
+		}
+	}
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRetry) }, "Expecting Rollout to be in Retry state", "1000ms", "10s")
+}
+
+// Test Rollout Retry Timer.
+func TestRolloutRetryTimer(t *testing.T) {
+
+	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+	savedRolloutRetryTimeout := rolloutRetryTimeout
+	rolloutRetryTimeout = 100 * time.Millisecond
+	defer func() {
+		rolloutRetryTimeout = savedRolloutRetryTimeout
+	}()
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+	createSNIC("naples0", map[string]string{"l1": "n1"})
+
+	seconds := time.Now().Unix()
+	scheduledStartTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds, //Add a scheduled rollout
+		},
+	}
+
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                   version,
+			ScheduledStartTime:        scheduledStartTime,
+			Duration:                  "30m",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 3,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+		},
+	}
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro,
+	}
+	stateMgr.RolloutWatcher <- evt
+
+	addSmartNICResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
+		}
+	}
+	addSmartNICFailResponse := func(snic string, op protos.DSCOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "failure")
+		}
+	}
+	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples0 spec to have outstanding Precheck Op")
+	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstPreCheckingSmartNIC) }, "Expecting RolloutRetry to be in PreCheckSmartNIC state", "100ms", "2s")
+}
+
+//Test Rollout Suspend
+func TestRolloutSuspend(t *testing.T) {
+
+	const version = "v1.1"
+	// create recorder
+	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
+
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+	createSNIC("naples0", map[string]string{"l1": "n1"})
+
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                   version,
+			ScheduledStartTime:        nil,
+			Duration:                  "",
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 1,
+			OrderConstraints:          nil,
+			Suspend:                   true,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+		},
+	}
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro,
+	}
+	stateMgr.RolloutWatcher <- evt
+
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutSuspend) }, "Expecting Rollout to be in Fail state", "100ms", "2s")
+}
 func TestExponentialRollout(t *testing.T) {
 	const version = "v1.2"
 	// create recorder

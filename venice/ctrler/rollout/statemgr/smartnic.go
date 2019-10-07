@@ -44,6 +44,7 @@ func (sm *Statemgr) CreateDSCRolloutState(ro *protos.DSCRollout, ros *RolloutSta
 		log.Infof("SmartNIC Status %+v", snicStatus)
 
 		var op, nextOp protos.DSCOp
+		opStatus := "success"
 		switch ros.Spec.UpgradeType {
 		case roproto.RolloutSpec_Disruptive.String():
 			op = protos.DSCOp_DSCPreCheckForDisruptive
@@ -55,11 +56,13 @@ func (sm *Statemgr) CreateDSCRolloutState(ro *protos.DSCRollout, ros *RolloutSta
 			op = protos.DSCOp_DSCPreCheckForDisruptive
 			nextOp = protos.DSCOp_DSCDisruptiveUpgrade
 		}
-
+		if snicStatus.Phase == roproto.RolloutPhase_FAIL.String() {
+			opStatus = "failure"
+		}
 		st := protos.DSCOpStatus{
 			Op:       op,
 			Version:  ros.Rollout.Spec.Version,
-			OpStatus: "success",
+			OpStatus: opStatus,
 		}
 		sros.status[op] = st
 
