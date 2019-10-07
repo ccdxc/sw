@@ -164,8 +164,8 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                          smaco, intf->mac_addr(), ETH_ADDR_LEN);
         sdk::lib::memrev(nh_data.nexthop_info.dmaci,
                          spec->overlay_mac, ETH_ADDR_LEN);
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
-                                          NULL, NULL, &nh_data);
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
+                                           NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to program nexthop %u at idx %u",
                           spec->key.id, hw_id_);

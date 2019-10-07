@@ -25,7 +25,7 @@ namespace impl {
 /// \@{
 
 lif_impl *
-lif_impl::factory (pds_lif_spec_t *spec) {
+lif_impl::factory(pds_lif_spec_t *spec) {
     lif_impl *impl;
     impl = lif_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
@@ -45,6 +45,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
     pinned_if_idx_ = spec->pinned_ifidx;
     type_ = spec->type;
+    nh_idx_ = 0xFFFFFFFF;
 }
 
 lif_type_t
@@ -97,57 +98,93 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 }
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
+#define nexthop_info            action_u.nexthop_nexthop_info
 sdk_ret_t
 lif_impl::program_oob_filters(lif_info_t *lif_params) {
-#if 0
-    sdk_ret_t              ret;
-    nacl_swkey_t           key = { 0 };
-    nacl_swkey_mask_t      mask = { 0 };
-    nacl_actiondata_t      data =  { 0 };
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data = { 0 };
+    nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    // ARM -> uplink
+    // allocate required nexthops
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entries for oob, err %u",
+                      ret);
+        return ret;
+    }
+
+    // install NACL for ARM to uplink traffic
     key.capri_intrinsic_lif = key_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
+
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.port =
+        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
+    // program the nexthop
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop table for oob at idx %u",
+                      nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_UPLINK;
-    data.nacl_redirect_action.oport =
-        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
+        PDS_TRACE_ERR("Failed to program NACL entry for oob lif %u to "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
-        return ret;
+        goto error;
     }
 
+    // install for NACL for uplink to ARM traffic
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     memset(&tparams, 0, sizeof(tparams));
-
-    // uplink -> ARM
     key.capri_intrinsic_lif =
         sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
     mask.capri_intrinsic_lif_mask = 0xFFFF;
+
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.lif = key_;
+    // program the nexthop
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop table for oob at idx %u",
+                      nh_idx_ + 1);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
-    data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to oob lif %u"
+                      "err %u", pinned_if_idx_, key_, ret);
+        goto error;
     }
-    return ret;
-#endif
     return SDK_RET_OK;
+
+error:
+    nexthop_impl_db()->nh_idxr()->free(nh_idx_, 2);
+    nh_idx_ = 0xFFFFFFFF;
+    return ret;
 }
 
 sdk_ret_t
