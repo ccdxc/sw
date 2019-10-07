@@ -9,8 +9,13 @@ struct ipfix_create_record_d d;
 struct phv_                  p;
 
 %%
+    .param      ipfix_stats_base
 
 ipfix_create_record:
+    addi        r5, r0, loword(ipfix_stats_base)
+    addui       r5, r5, hiword(ipfix_stats_base)
+    add         r5, r5, k.ipfix_metadata_export_id, 6
+
     // check if there is space available to fit a record
     add         r7, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     IPFIX_MAX_RECORD_SIZE
@@ -33,6 +38,7 @@ ipfix_create_record:
     bcf         [c1], ipfix_create_ipv6_record
 
 ipfix_create_non_ip_record:
+    add         r5, r5, IPFIX_STATS_NUM_RECORDS_NONIP_OFFSET
     phvwr.!c1   p.ipfix_record_nonip_set_id, IPFIX_NON_IP_RECORD_ID
     phvwr       p.ipfix_record_nonip_len, IPFIX_NON_IP_RECORD_SIZE
 
@@ -52,11 +58,12 @@ ipfix_create_non_ip_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector)
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
-    b           ipfix_header_fixups
+    b           ipfix_update_record_stats
     tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     IPFIX_NON_IP_RECORD_SIZE
 
 ipfix_create_ipv4_record:
+    add         r5, r5, IPFIX_STATS_NUM_RECORDS_IPV4_OFFSET
     phvwr       p.ipfix_record_ipv4_set_id, IPFIX_IPv4_RECORD_ID
     phvwr       p.ipfix_record_ipv4_len, IPFIX_IPv4_RECORD_SIZE
 
@@ -76,11 +83,12 @@ ipfix_create_ipv4_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector)
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
-    b           ipfix_header_fixups
+    b           ipfix_update_record_stats
     tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     IPFIX_IPv4_RECORD_SIZE
 
 ipfix_create_ipv6_record:
+    add         r5, r5, IPFIX_STATS_NUM_RECORDS_IPV6_OFFSET
     phvwr       p.ipfix_record_ipv6_set_id, IPFIX_IPv6_RECORD_ID
     phvwr       p.ipfix_record_ipv6_len, IPFIX_IPv6_RECORD_SIZE
 
@@ -102,6 +110,13 @@ ipfix_create_ipv6_record:
 
     tbladd      d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     IPFIX_IPv6_RECORD_SIZE
+
+ipfix_update_record_stats:
+    // update record stats
+    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    add         r6, r6, r5[26:0]
+    or          r7,  1, r5[31:27], 58
+    memwr.dx    r6, r7
 
 ipfix_header_fixups:
     // if scan is not complete and there is space for another record,

@@ -405,6 +405,11 @@
             "size": "32K"
         },
         {
+            "name": "ipfix_stats",
+            "size": "1K",
+            "_comment": "16 exporters x 8 counters(8B)"
+        },
+        {
             "name": "app-redir-rawc",
             "size": "256K"
         },

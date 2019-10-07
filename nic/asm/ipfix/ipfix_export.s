@@ -9,6 +9,7 @@ struct ipfix_export_packet_d d;
 struct phv_                  p;
 
 %%
+    .param      ipfix_stats_base
 
 // cmd1 <-- phv2pkt (if packet needs to be sent)
 // cmd2 <-- mem2pkt (if packet needs to be sent)
@@ -17,6 +18,12 @@ struct phv_                  p;
 // cmd5 <-- ring doorbell self-16 for next scan
 
 ipfix_export_packet:
+    addi        r5, r0, loword(ipfix_stats_base)
+    addui       r5, r5, hiword(ipfix_stats_base)
+    sub         r1, k.ipfix_metadata_export_id, IPFIX_EXPORT_ID_MAX
+    add         r5, r5, r1, 6
+    add         r5, r5, IPFIX_STATS_NUM_EXPORTED_BYTES_OFFSET
+
     phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
                     CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
 
@@ -48,6 +55,14 @@ ipfix_export_packet:
     phvwr       p.phv2mem_cmd5_dma_cmd_eop, 1
 
 ipfix_export_dma_packet:
+    // update exporter stats
+    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    add         r6, r6, r5[26:0]
+    addi        r1, r0, 0x1000001
+    or          r7, d.{u.ipfix_export_packet_d.next_record_offset}.hx, r1, 32
+    or          r7, r7, r5[31:27], 58
+    memwr.dx    r6, r7
+
     phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwr       p.p4_intr_global_lif, LIF_CPU
