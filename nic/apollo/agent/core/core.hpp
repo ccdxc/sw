@@ -5,11 +5,15 @@
 #ifndef __CORE_HPP__
 #define __CORE_HPP__
 
-#define FD_INVALID (-1)
+#include "nic/apollo/core/core.hpp"
 
 namespace core {
 
-void *fd_recv_thread_start(void *ctxt);
+enum {
+    THREAD_ID_AGENT_NONE = THREAD_ID_MAX,
+    THREAD_ID_AGENT_CMD_SERVER,
+    THREAD_ID_AGENT_MAX = THREAD_ID_AGENT_CMD_SERVER,
+};
 
 #define CALLOC(id, size) calloc(size, size);
 #define FREE(id, mem)    free(mem)

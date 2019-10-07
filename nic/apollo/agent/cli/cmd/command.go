@@ -11,6 +11,8 @@ import (
 	"os"
 )
 
+var CmdSocket string = "/var/run/cmd_server_sock"
+
 // function to handle commands over unix domain sockets
 // param[in] cmd     Command context to be sent
 // return    cmdResp Command response
@@ -24,7 +26,7 @@ func HandleCommand(cmdCtxt *pds.CommandCtxt) (*pds.CommandResponse, error) {
 	}
 
 	// send over UDS
-	resp, err := utils.CmdSend("/var/run/fd_recv_sock", iovec, int(os.Stdout.Fd()))
+	resp, err := utils.CmdSend(CmdSocket, iovec, int(os.Stdout.Fd()))
 	if err != nil {
 		fmt.Printf("Command send operation failed with error %v\n", err)
 		return nil, err

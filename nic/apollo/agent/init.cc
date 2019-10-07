@@ -6,18 +6,19 @@
 #include <iostream>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
+#include "nic/apollo/agent/core/cmd.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/apollo/core/core.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace core {
 
-sdk::lib::thread    *g_cmd_server_thread;
+static sdk::lib::event_thread *g_cmd_server_thread;
 
 #define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
@@ -221,18 +222,17 @@ device_profile_read (void)
 // spawn command server thread
 //------------------------------------------------------------------------------
 sdk_ret_t
-thread_cmd_server_spawn (void)
+spawn_cmd_server_thread (void)
 {
     // spawn periodic thread that does background tasks
     g_cmd_server_thread =
-        sdk::lib::thread::factory(std::string("cmd-server").c_str(),
-            THREAD_ID_FD_RECV,
+        sdk::lib::event_thread::factory("cfg", THREAD_ID_AGENT_CMD_SERVER,
             sdk::lib::THREAD_ROLE_CONTROL,
-            0x0,    // use all control cores
-            core::fd_recv_thread_start,
+            0x0, core::cmd_server_thread_init, NULL, NULL, NULL,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             true);
+
     SDK_ASSERT_TRACE_RETURN((g_cmd_server_thread != NULL), SDK_RET_ERR,
                             "Command server thread create failure");
     g_cmd_server_thread->start(g_cmd_server_thread);
@@ -266,7 +266,7 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     }
 
     // spawn command server thread
-    ret = thread_cmd_server_spawn();
+    ret = spawn_cmd_server_thread();
     if (ret != SDK_RET_OK) {
         return ret;
     }
