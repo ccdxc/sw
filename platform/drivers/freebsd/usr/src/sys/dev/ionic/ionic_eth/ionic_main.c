@@ -35,8 +35,8 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Anish Gupta <anish@pensando.io>");
 MODULE_VERSION(ionic, 1);
 
-const char
-*ionic_port_oper_status_str(enum port_oper_status status)
+const char *
+ionic_port_oper_status_str(enum port_oper_status status)
 {
 
 	switch (status) {
@@ -51,8 +51,8 @@ const char
 	}
 }
 
-const char
-*ionic_port_admin_state_str(enum PortAdminState state)
+const char *
+ionic_port_admin_state_str(enum PortAdminState state)
 {
 
 	switch (state) {
@@ -67,8 +67,8 @@ const char
 	}
 }
 
-const char
-*ionic_port_fec_type_str(enum port_fec_type type)
+const char *
+ionic_port_fec_type_str(enum port_fec_type type)
 {
 
 	switch (type) {
@@ -83,8 +83,8 @@ const char
 	}
 }
 
-const char
-*ionic_port_pause_type_str(enum port_pause_type type)
+const char *
+ionic_port_pause_type_str(enum port_pause_type type)
 {
 
 	switch (type) {
@@ -99,8 +99,8 @@ const char
 	}
 }
 
-const char
-*ionic_port_loopback_mode_str(enum port_loopback_mode mode)
+const char *
+ionic_port_loopback_mode_str(enum port_loopback_mode mode)
 {
 
 	switch (mode) {
@@ -115,8 +115,8 @@ const char
 	}
 }
 
-const char
-*ionic_xcvr_state_str(enum xcvr_state state)
+const char *
+ionic_xcvr_state_str(enum xcvr_state state)
 {
 
 	switch (state) {
@@ -135,8 +135,8 @@ const char
 	}
 }
 
-const char
-*ionic_phy_type_str(enum phy_type type)
+const char *
+ionic_phy_type_str(enum phy_type type)
 {
 
 	switch (type) {
@@ -151,8 +151,8 @@ const char
 	}
 }
 
-const char
-*ionic_error_to_str(enum status_code code)
+const char *
+ionic_error_to_str(enum status_code code)
 {
 
 	switch (code) {
@@ -203,8 +203,8 @@ const char
 	}
 }
 
-static const char
-*ionic_opcode_to_str(enum cmd_opcode opcode)
+static const char *
+ionic_opcode_to_str(enum cmd_opcode opcode)
 {
 
 	switch (opcode) {
@@ -268,9 +268,9 @@ static const char
 }
 
 static void
-ionic_adminq_flush(struct lif *lif)
+ionic_adminq_flush(struct ionic_lif *lif)
 {
-	struct adminq *adminq = lif->adminq;
+	struct ionic_adminq *adminq = lif->adminq;
 	struct admin_cmd *cmd;
 	struct ionic_admin_ctx *ctx;
 	int cmd_index;
@@ -297,9 +297,8 @@ ionic_adminq_flush(struct lif *lif)
 }
 
 static int
-ionic_adminq_check_err(struct lif *lif,
-		       struct ionic_admin_ctx *ctx,
-		       bool timeout)
+ionic_adminq_check_err(struct ionic_lif *lif, struct ionic_admin_ctx *ctx,
+    bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
 	const char *name;
@@ -325,8 +324,9 @@ ionic_adminq_check_err(struct lif *lif,
 }
 
 static void
-ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
+ionic_adminq_ring_doorbell(struct ionic_adminq *adminq, int index)
 {
+
 	IONIC_QUE_INFO(adminq, "ring doorbell for index: %d\n", index);
 
 	ionic_dbell_ring(adminq->lif->kern_dbpage,
@@ -335,7 +335,7 @@ ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 }
 
 static bool
-ionic_adminq_avail(struct adminq *adminq, int want)
+ionic_adminq_avail(struct ionic_adminq *adminq, int want)
 {
 	int avail;
 
@@ -345,9 +345,9 @@ ionic_adminq_avail(struct adminq *adminq, int want)
 }
 
 static int
-ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
-	struct adminq *adminq = lif->adminq;
+	struct ionic_adminq *adminq = lif->adminq;
 	struct admin_cmd *cmd;
 
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
@@ -385,9 +385,9 @@ ionic_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 }
 
 int
-ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
+ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
-	struct adminq *adminq = lif->adminq;
+	struct ionic_adminq *adminq = lif->adminq;
 	struct ifnet *ifp = lif->netdev;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err, remaining, processed;
@@ -426,7 +426,8 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	return ionic_adminq_check_err(lif, ctx, remaining == 0);
 }
 
-int ionic_set_dma_mask(struct ionic *ionic)
+int
+ionic_set_dma_mask(struct ionic *ionic)
 {
 	struct device *dev = ionic->dev;
 	int err;
@@ -448,14 +449,12 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	return err;
 }
 
-
-int ionic_identify(struct ionic *ionic)
+int
+ionic_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
-	int err;
-	unsigned int i;
-	unsigned int nwords;
+	int i, err, nwords;
 
 	ident->drv.os_type = IONIC_OS_TYPE_FREEBSD;
 	ident->drv.os_dist = 0;
@@ -492,7 +491,8 @@ err_out_unmap:
 	return err;
 }
 
-int ionic_init(struct ionic *ionic)
+int
+ionic_init(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int err;
@@ -505,7 +505,8 @@ int ionic_init(struct ionic *ionic)
 	return err;
 }
 
-int ionic_reset(struct ionic *ionic)
+int
+ionic_reset(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int err;
@@ -518,7 +519,8 @@ int ionic_reset(struct ionic *ionic)
 	return err;
 }
 
-int ionic_port_identify(struct ionic *ionic)
+int
+ionic_port_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
@@ -543,8 +545,8 @@ ionic_port_init(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
-	int i, err, nwords;
 	union port_config *config;
+	int i, err, nwords;
 
 	if (idev->port_info)
 		return 0;
@@ -627,7 +629,8 @@ ionic_set_port_state(struct ionic *ionic, uint8_t state)
 			ionic_port_admin_state_str(state), err);
 }
 
-int ionic_qos_class_identify(struct ionic *ionic)
+int
+ionic_qos_class_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
@@ -647,7 +650,8 @@ int ionic_qos_class_identify(struct ionic *ionic)
 	return err;
 }
 
-int ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *config)
+int
+ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *config)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
@@ -665,7 +669,8 @@ int ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *c
 	return err;
 }
 
-int ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
+int
+ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int err;
@@ -709,7 +714,8 @@ ionic_validate_params(void)
 		ionic_rx_fill_threshold /= div;
 }
 
-static int __init ionic_init_module(void)
+static int __init
+ionic_init_module(void)
 {
 
 	ionic_struct_size_checks();
@@ -719,8 +725,10 @@ static int __init ionic_init_module(void)
 	return ionic_bus_register_driver();
 }
 
-static void __exit ionic_cleanup_module(void)
+static void __exit
+ionic_cleanup_module(void)
 {
+
 	ionic_bus_unregister_driver();
 }
 

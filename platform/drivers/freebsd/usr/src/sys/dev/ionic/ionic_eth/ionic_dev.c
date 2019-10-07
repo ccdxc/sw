@@ -32,8 +32,10 @@
 #include "ionic_dev.h"
 #include "ionic.h"
 
-static void ionic_init_devinfo(struct ionic_dev *idev)
+static void
+ionic_init_devinfo(struct ionic_dev *idev)
 {
+
 	idev->dev_info.asic_type = ioread8(&idev->dev_info_regs->asic_type);
 	idev->dev_info.asic_rev = ioread8(&idev->dev_info_regs->asic_rev);
 
@@ -49,8 +51,8 @@ static void ionic_init_devinfo(struct ionic_dev *idev)
 	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
 }
 
-static const char
-*ionic_dev_asic_name(u8 asic_type)
+static const char *
+ionic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {
 	case ASIC_TYPE_CAPRI:
@@ -64,10 +66,10 @@ int
 ionic_dev_setup(struct ionic *ionic)
 {
 	struct ionic_dev_bar *bar = ionic->bars;
-	unsigned int num_bars = ionic->num_bars;
 	struct ionic_dev *idev = &ionic->idev;
 	struct device *dev = ionic->dev;
-	u32 sig;
+	uint32_t sig;
+	int num_bars = ionic->num_bars;
 
 	/*
 	 * BAR0 resources
@@ -138,15 +140,17 @@ ionic_dev_setup(struct ionic *ionic)
 }
 
 /* Devcmd Interface */
-static u8
+static uint8_t
 ionic_dev_cmd_status(struct ionic_dev *idev)
 {
+
 	return ioread8(&idev->dev_cmd_regs->comp.status);
 }
 
 static bool
 ionic_dev_cmd_done(struct ionic_dev *idev)
 {
+
 	return ioread32(&idev->dev_cmd_regs->done) & DEV_CMD_DONE;
 }
 
@@ -182,6 +186,7 @@ ionic_dev_cmd_disable(struct ionic_dev *idev)
 static bool
 ionic_dev_cmd_disabled(struct ionic_dev *idev)
 {
+
 	return idev->dev_cmd_disabled;
 }
 
@@ -189,7 +194,7 @@ void
 ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 {
 	union dev_cmd_comp *comp = mem;
-	unsigned int i;
+	int i;
 
 	for (i = 0; i < ARRAY_SIZE(comp->words); i++)
 		comp->words[i] = ioread32(&idev->dev_cmd_regs->comp.words[i]);
@@ -198,7 +203,7 @@ ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 void
 ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 {
-	unsigned int i;
+	int i;
 
 	/* Bail out if the interface was disabled in response to an error */
 	if (unlikely(cmd->lif_init.opcode != CMD_OPCODE_LIF_RESET &&
@@ -222,7 +227,8 @@ ionic_dev_cmd_nop(struct ionic_dev *idev)
 }
 
 /* Device commands */
-void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver)
+void
+ionic_dev_cmd_identify(struct ionic_dev *idev, uint16_t ver)
 {
 	union dev_cmd cmd = {
 		.identify.opcode = CMD_OPCODE_IDENTIFY,
@@ -232,7 +238,8 @@ void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_init(struct ionic_dev *idev)
+void
+ionic_dev_cmd_init(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.init.opcode = CMD_OPCODE_INIT,
@@ -242,7 +249,8 @@ void ionic_dev_cmd_init(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_reset(struct ionic_dev *idev)
+void
+ionic_dev_cmd_reset(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.reset.opcode = CMD_OPCODE_RESET,
@@ -252,7 +260,8 @@ void ionic_dev_cmd_reset(struct ionic_dev *idev)
 }
 
 /* Port commands */
-void ionic_dev_cmd_port_identify(struct ionic_dev *idev)
+void
+ionic_dev_cmd_port_identify(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.port_init.opcode = CMD_OPCODE_PORT_IDENTIFY,
@@ -262,7 +271,8 @@ void ionic_dev_cmd_port_identify(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_init(struct ionic_dev *idev)
+void
+ionic_dev_cmd_port_init(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.port_init.opcode = CMD_OPCODE_PORT_INIT,
@@ -273,7 +283,8 @@ void ionic_dev_cmd_port_init(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_reset(struct ionic_dev *idev)
+void
+ionic_dev_cmd_port_reset(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.port_reset.opcode = CMD_OPCODE_PORT_RESET,
@@ -283,7 +294,8 @@ void ionic_dev_cmd_port_reset(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_state(struct ionic_dev *idev, uint8_t state)
+void
+ionic_dev_cmd_port_state(struct ionic_dev *idev, uint8_t state)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -295,7 +307,8 @@ void ionic_dev_cmd_port_state(struct ionic_dev *idev, uint8_t state)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_speed(struct ionic_dev *idev, uint32_t speed)
+void
+ionic_dev_cmd_port_speed(struct ionic_dev *idev, uint32_t speed)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -307,7 +320,8 @@ void ionic_dev_cmd_port_speed(struct ionic_dev *idev, uint32_t speed)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_mtu(struct ionic_dev *idev, uint32_t mtu)
+void
+ionic_dev_cmd_port_mtu(struct ionic_dev *idev, uint32_t mtu)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -319,7 +333,8 @@ void ionic_dev_cmd_port_mtu(struct ionic_dev *idev, uint32_t mtu)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, uint8_t an_enable)
+void
+ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, uint8_t an_enable)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -331,7 +346,8 @@ void ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, uint8_t an_enable)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_fec(struct ionic_dev *idev, uint8_t fec_type)
+void
+ionic_dev_cmd_port_fec(struct ionic_dev *idev, uint8_t fec_type)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -343,7 +359,8 @@ void ionic_dev_cmd_port_fec(struct ionic_dev *idev, uint8_t fec_type)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type)
+void
+ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -355,7 +372,8 @@ void ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode)
+void
+ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -367,7 +385,8 @@ void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev)
+void
+ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {
 		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
@@ -378,8 +397,10 @@ void ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev)
 
 	ionic_dev_cmd_go(idev, &cmd);
 }
+
 /* LIF commands */
-void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver)
+void
+ionic_dev_cmd_lif_identify(struct ionic_dev *idev, uint8_t type, uint8_t ver)
 {
 	union dev_cmd cmd = {
 		.lif_identify.opcode = CMD_OPCODE_LIF_IDENTIFY,
@@ -390,7 +411,8 @@ void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, dma_addr_t addr)
+void
+ionic_dev_cmd_lif_init(struct ionic_dev *idev, uint32_t index, dma_addr_t addr)
 {
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
@@ -401,7 +423,8 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, dma_addr_t addr)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index)
+void
+ionic_dev_cmd_lif_reset(struct ionic_dev *idev, uint32_t index)
 {
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_RESET,
@@ -445,7 +468,8 @@ ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group)
 }
 
 /* Queue commands */
-void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
+void
+ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
 	uint8_t type, uint8_t ver)
 {
 	union dev_cmd cmd = {
@@ -458,21 +482,26 @@ void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid)
+int
+ionic_db_page_num(struct ionic *ionic, int lif_id, int pid)
 {
+
 	return lif_id * ionic->ident.dev.ndbpgs_per_lif + pid;
 }
 
-int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
+int
+ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
+
 	ionic_intr_clean(idev->intr_ctrl, index);
 	intr->index = index;
 
 	return 0;
 }
 
-int ionic_desc_avail(int ndescs, int head, int tail)
+int
+ionic_desc_avail(int ndescs, int head, int tail)
 {
 	int avail = tail;
 
@@ -626,6 +655,7 @@ ionic_cmd_hb_work(struct work_struct *work)
 static void
 ionic_cmd_hb_stop(struct ionic_dev *idev)
 {
+
 	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = false;
 	IONIC_WDOG_UNLOCK(idev);
@@ -635,6 +665,7 @@ ionic_cmd_hb_stop(struct ionic_dev *idev)
 void
 ionic_cmd_hb_resched(struct ionic_dev *idev)
 {
+
 	/* Cancel all outstanding work */
 	ionic_cmd_hb_stop(idev);
 
@@ -652,8 +683,8 @@ ionic_fw_hb_work(struct work_struct *work)
 	struct ionic_dev *idev =
 		container_of(work, struct ionic_dev, fw_hb_work.work);
 	struct ionic *ionic = container_of(idev, struct ionic, idev);
-	u8 fw_status;
-	u32 fw_heartbeat;
+	uint32_t fw_heartbeat;
+	uint8_t fw_status;
 
 	if (idev->fw_hb_state == IONIC_FW_HB_DISABLED ||
 	    idev->fw_hb_state == IONIC_FW_HB_UNSUPPORTED)
@@ -730,6 +761,7 @@ ionic_fw_hb_work(struct work_struct *work)
 static void
 ionic_fw_hb_stop(struct ionic_dev *idev)
 {
+
 	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = false;
 	IONIC_WDOG_UNLOCK(idev);
@@ -739,6 +771,7 @@ ionic_fw_hb_stop(struct ionic_dev *idev)
 void
 ionic_fw_hb_resched(struct ionic_dev *idev)
 {
+
 	/* Cancel all outstanding work */
 	ionic_fw_hb_stop(idev);
 

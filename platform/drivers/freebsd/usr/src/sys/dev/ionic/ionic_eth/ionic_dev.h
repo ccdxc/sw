@@ -157,11 +157,11 @@ struct ionic_dev {
 	union dev_cmd_regs __iomem *dev_cmd_regs;
 	bool dev_cmd_disabled;
 
-	u64 __iomem *db_pages;
+	uint64_t __iomem *db_pages;
 	dma_addr_t phy_db_pages;
 
 	struct ionic_intr __iomem *intr_ctrl;
-	u64 __iomem *intr_status;
+	uint64_t __iomem *intr_status;
 
 	struct mutex cmb_inuse_lock; /* for cmb_inuse */
 	unsigned long *cmb_inuse;
@@ -209,7 +209,7 @@ void ionic_fw_hb_resched(struct ionic_dev *idev);
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 
-void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver);
+void ionic_dev_cmd_identify(struct ionic_dev *idev, uint16_t ver);
 void ionic_dev_cmd_init(struct ionic_dev *idev);
 void ionic_dev_cmd_reset(struct ionic_dev *idev);
 
@@ -225,10 +225,10 @@ void ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type);
 void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode);
 void ionic_dev_cmd_port_reset_stats(struct ionic_dev *idev);
 
-void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index,
+void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, uint8_t type, uint8_t ver);
+void ionic_dev_cmd_lif_init(struct ionic_dev *idev, uint32_t index,
 	dma_addr_t regs_base);
-void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index);
+void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, uint32_t index);
 
 void ionic_dev_cmd_qos_class_identify(struct ionic_dev *idev);
 void ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group);

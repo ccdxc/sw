@@ -26,25 +26,25 @@
 #ifndef _IONIC_TXRX_H_
 #define _IONIC_TXRX_H_
 
-int ionic_setup_rx_intr(struct rxque *rxq);
-int ionic_setup_tx_intr(struct txque *txq);
-int ionic_setup_legacy_intr(struct lif *lif);
+int ionic_setup_rx_intr(struct ionic_rxque *rxq);
+int ionic_setup_tx_intr(struct ionic_txque *txq);
+int ionic_setup_legacy_intr(struct ionic_lif *lif);
 
 int ionic_start_xmit(struct ifnet *ifp, struct mbuf *m);
 
-int ionic_lif_netdev_alloc(struct lif *lif, int ndescs);
-void ionic_lif_netdev_free(struct lif *lifs);
-void ionic_lif_sysctl_free(struct lif *lifs);
+int ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs);
+void ionic_lif_netdev_free(struct ionic_lif *lifs);
+void ionic_lif_sysctl_free(struct ionic_lif *lifs);
 
 int ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features);
 int ionic_enable_os_features(struct ifnet *ifp);
 
 uint16_t ionic_set_rss_type(void);
 
-void ionic_setup_sysctls(struct lif *lif);
+void ionic_setup_sysctls(struct ionic_lif *lif);
 
-int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len);
-void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
+int ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len);
+void ionic_rx_mbuf_free(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf);
 
 /* sysctl variables. */
 extern int ionic_enable_msix;

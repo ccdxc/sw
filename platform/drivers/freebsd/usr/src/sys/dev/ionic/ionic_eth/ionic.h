@@ -196,7 +196,7 @@ struct ionic {
 #define IONIC_DEV_UNLOCK(x)		sx_xunlock(&(x)->sx)
 #define IONIC_DEV_LOCK_OWNED(x)		sx_xlocked(&(x)->sx)
 
-/* Valid on struct ionic_device and struct lif */
+/* Valid on struct ionic_device and struct ionic_lif */
 #define IONIC_WDOG_LOCK_INIT(x)		mtx_init(&(x)->wdog_mtx, \
 						 "wdog_mtx", NULL, MTX_DEF)
 #define IONIC_WDOG_LOCK_DESTROY(x)	mtx_destroy(&(x)->wdog_mtx)
@@ -204,7 +204,7 @@ struct ionic {
 #define IONIC_WDOG_UNLOCK(x)		mtx_unlock(&(x)->wdog_mtx);
 #define IONIC_WDOG_LOCK_OWNED(x)	mtx_owned(&(x)->wdog_mtx)
 
-int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx);
 
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait);

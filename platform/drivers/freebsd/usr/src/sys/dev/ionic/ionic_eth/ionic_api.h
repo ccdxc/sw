@@ -50,12 +50,12 @@
 #define IONIC_API_VERSION "5"
 
 struct sysctl_oid;
-struct lif;
+struct ionic_lif;
 
 /** struct ionic_devinfo - device information. */
 struct ionic_devinfo {
-	u8 asic_type;
-	u8 asic_rev;
+	uint8_t asic_type;
+	uint8_t asic_rev;
 	char fw_version[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
 	char serial_num[IONIC_DEVINFO_SERIAL_BUFLEN + 1];
 };
@@ -70,7 +70,7 @@ enum ionic_api_prsn {
  * @api_version:	IONIC_API_VERSION.
  * @prsn:		Personality to apply.
  *
- * This will return the opaque struct lif if and only if the netdev was created
+ * This will return the opaque struct ionic_lif if and only if the netdev was created
  * by the ionic driver, if the api version matches as described above for
  * IONIC_API_VERSION, and if the personality can be applied to the lif.
  *
@@ -176,7 +176,7 @@ void ionic_api_put_intr(struct lif *lif, int intr);
  *
  * Return: zero or negative error status.
  */
-int ionic_api_get_cmb(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order);
+int ionic_api_get_cmb(struct lif *lif, uint32_t *pgid, phys_addr_t *pgaddr, int order);
 
 /** ionic_api_put_cmb - Release cmb pages.
  * @lif:		Handle to lif.
@@ -185,7 +185,7 @@ int ionic_api_get_cmb(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order
  *
  * Release cmb pages.
  */
-void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
+void ionic_api_put_cmb(struct lif *lif, uint32_t pgid, int order);
 
 /** ionic_api_kernel_dbpage - Get mapped dorbell page for use in kernel space.
  * @lif:		Handle to lif.
@@ -201,7 +201,7 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
  */
 void ionic_api_kernel_dbpage(struct lif *lif,
 			     struct ionic_intr __iomem **intr_ctrl,
-			     u32 *dbid, u64 __iomem **dbpage);
+			     uint32_t *dbid, uint64_t __iomem **dbpage);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
  * @lif:		Handle to lif.
@@ -214,7 +214,7 @@ void ionic_api_kernel_dbpage(struct lif *lif,
  *
  * Return: zero on success or negative error status.
  */
-int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr);
+int ionic_api_get_dbid(struct lif *lif, uint32_t *dbid, phys_addr_t *addr);
 
 /** ionic_api_put_dbid - Release a doorbell id.
  * @lif:		Handle to lif.

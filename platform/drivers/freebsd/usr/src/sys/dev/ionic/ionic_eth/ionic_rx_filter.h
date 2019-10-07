@@ -28,9 +28,9 @@
 
 #define RXQ_INDEX_ANY		(0xFFFF)
 struct rx_filter {
-	u32 flow_id;
-	u32 filter_id;
-	u16 rxq_index;
+	uint32_t flow_id;
+	uint32_t filter_id;
+	uint16_t rxq_index;
 	bool visited;  /* temp variable */
 	struct rx_filter_add_cmd cmd;
 	struct hlist_node by_hash;
@@ -54,13 +54,13 @@ struct rx_filters {
 
 struct ionic_admin_ctx;
 
-void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f);
-int ionic_rx_filters_init(struct lif *lif);
-void ionic_rx_filters_deinit(struct lif *lif);
-int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
-			 u32 hash, struct ionic_admin_ctx *ctx);
-struct rx_filter *ionic_rx_filter_by_vlan_addr(struct lif *lif, u16 vid, const u8 *addr);
-struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid);
-struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr);
+void ionic_rx_filter_free(struct ionic_lif *lif, struct rx_filter *f);
+int ionic_rx_filters_init(struct ionic_lif *lif);
+void ionic_rx_filters_deinit(struct ionic_lif *lif);
+int ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id, uint16_t rxq_index,
+			 uint32_t hash, struct ionic_admin_ctx *ctx);
+struct rx_filter *ionic_rx_filter_by_vlan_addr(struct ionic_lif *lif, uint16_t vid, const uint8_t *addr);
+struct rx_filter *ionic_rx_filter_by_vlan(struct ionic_lif *lif, uint16_t vid);
+struct rx_filter *ionic_rx_filter_by_addr(struct ionic_lif *lif, const uint8_t *addr);
 
 #endif /* _IONIC_RX_FILTER_H_ */

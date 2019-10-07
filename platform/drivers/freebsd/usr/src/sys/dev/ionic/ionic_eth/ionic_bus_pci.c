@@ -47,17 +47,20 @@ static const struct pci_device_id ionic_id_table[] = {
 
 MODULE_DEVICE_TABLE(pci, ionic_id_table);
 
-int ionic_get_msix_irq(struct ionic *ionic, unsigned int num)
+int
+ionic_get_msix_irq(struct ionic *ionic, unsigned int num)
 {
 	return ionic->pdev->dev.msix + num;
 }
 
-const char *ionic_bus_info(struct ionic *ionic)
+const char *
+ionic_bus_info(struct ionic *ionic)
 {
 	return pci_name(ionic->pdev);
 }
 
-int ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
+int
+ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
 {
 	struct resource_list_entry *rle;
 	int avail, ret;
@@ -84,18 +87,20 @@ int ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
 	return avail;
 }
 
-void ionic_free_msix_vector(struct ionic *ionic)
+void
+ionic_free_msix_vector(struct ionic *ionic)
 {
 	if (ionic->pdev->dev.msix)
 		pci_release_msi(ionic->pdev->dev.bsddev);
 }
 
-static int ionic_map_bars(struct ionic *ionic)
+static int
+ionic_map_bars(struct ionic *ionic)
 {
 	struct pci_dev *pdev = ionic->pdev;
 	struct device *dev = ionic->dev;
 	struct ionic_dev_bar *bars = ionic->bars;
-	unsigned int i, j;
+	int i, j;
 
 	ionic->num_bars = 0;
 	for (i = 0, j = 0; i < IONIC_BARS_MAX; i++) {
@@ -125,17 +130,19 @@ static int ionic_map_bars(struct ionic *ionic)
 	return 0;
 }
 
-static void ionic_unmap_bars(struct ionic *ionic)
+static void
+ionic_unmap_bars(struct ionic *ionic)
 {
 	struct ionic_dev_bar *bars = ionic->bars;
-	unsigned int i;
+	int i;
 
 	for (i = 0; i < IONIC_BARS_MAX; i++)
 		if (bars[i].vaddr)
 			iounmap(bars[i].vaddr);
 }
 
-phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
+phys_addr_t
+ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 {
 	phys_addr_t addr = ionic->bars[IONIC_PCI_BAR_DBELL].bus_addr;
 	phys_addr_t offset = (phys_addr_t)page_num << PAGE_SHIFT;
@@ -143,19 +150,22 @@ phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 	return addr + offset;
 }
 
-void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
+void __iomem *
+ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 {
 	phys_addr_t addr = ionic_bus_phys_dbpage(ionic, page_num);
 
 	return ioremap(addr, PAGE_SIZE);
 }
 
-void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
+void
+ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
 {
 	iounmap(page);
 }
 
-static int ionic_pci_init(struct pci_dev *pdev)
+static int
+ionic_pci_init(struct pci_dev *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct ionic *ionic = pci_get_drvdata(pdev);
@@ -194,13 +204,15 @@ static int ionic_pci_init(struct pci_dev *pdev)
 	return (0);
 }
 
-static void ionic_pci_deinit(struct pci_dev *pdev)
+static void
+ionic_pci_deinit(struct pci_dev *pdev)
 {
 
 	pci_release_regions(pdev);
 }
 
-static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+static int
+ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
 	struct ionic *ionic;
@@ -324,7 +336,8 @@ err_out_unmap_bars:
 	return err;
 }
 
-static void ionic_remove(struct pci_dev *pdev)
+static void
+ionic_remove(struct pci_dev *pdev)
 {
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
@@ -345,7 +358,8 @@ static void ionic_remove(struct pci_dev *pdev)
 	free(ionic, M_IONIC);
 }
 
-static void ionic_shutdown(struct pci_dev *pdev)
+static void
+ionic_shutdown(struct pci_dev *pdev)
 {
 	pci_disable_device(pdev);
 }
@@ -359,13 +373,15 @@ static struct pci_driver ionic_driver = {
 	.shutdown	= ionic_shutdown,
 };
 
-int ionic_bus_register_driver(void)
+int
+ionic_bus_register_driver(void)
 {
 
 	return pci_register_driver(&ionic_driver);
 }
 
-void ionic_bus_unregister_driver(void)
+void
+ionic_bus_unregister_driver(void)
 {
 	pci_unregister_driver(&ionic_driver);
 }

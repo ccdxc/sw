@@ -211,7 +211,7 @@ SYSCTL_INT(_hw_ionic, OID_AUTO, tso_debug, CTLFLAG_RWTUN,
     &ionic_tso_debug, 0, "Enable IONIC_TSO_DEBUG messages");
 #endif
 
-static void ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq);
+static void ionic_start_xmit_locked(struct ifnet *ifp, struct ionic_txque *txq);
 
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
@@ -252,8 +252,9 @@ ionic_dump_mbuf(struct mbuf* m)
 /*
  * Set mbuf checksum flag based on hardware.
  */
-static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
-	struct rxq_comp *comp, struct rx_stats *stats)
+static void
+ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
+    struct rxq_comp *comp, struct ionic_rx_stats *stats)
 {
 	bool ipv6;
 
@@ -292,7 +293,7 @@ static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
  */
 static void
 ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
-	struct rx_stats *stats, uint16_t rss_hash)
+    struct ionic_rx_stats *stats, uint16_t rss_hash)
 {
 
 	if (!(comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK)) {
@@ -382,11 +383,11 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
  * Called for every packet received, forward to stack if its valid packet.
  */
 void
-ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
-	struct rxq_comp *comp, 	struct rxq_desc *desc)
+ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf,
+    struct rxq_comp *comp, 	struct rxq_desc *desc)
 {
 	struct mbuf *mb, *m = rxbuf->m;
-	struct rx_stats *stats = &rxq->stats;
+	struct ionic_rx_stats *stats = &rxq->stats;
 	struct ifnet *ifp = rxq->lif->netdev;
 	int left, error;
 
@@ -477,14 +478,14 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
  * Allocate mbuf for receive path.
  */
 int
-ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
+ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len)
 {
 	bus_dma_segment_t *pseg, seg[IONIC_RX_MAX_SG_ELEMS + 1];
 	struct ionic_rx_buf *rxbuf;
 	struct rxq_desc *desc;
 	struct rxq_sg_desc *sg;
 	struct mbuf *m, *mb;
-	struct rx_stats *stats = &rxq->stats;
+	struct ionic_rx_stats *stats = &rxq->stats;
 	int i, nsegs, error, size;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
@@ -565,7 +566,7 @@ ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
  * Free receive path mbuf.
  */
 void
-ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
+ionic_rx_mbuf_free(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf)
 {
 
 	rxq->stats.mbuf_free++;
@@ -584,10 +585,10 @@ ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 static irqreturn_t
 ionic_queue_isr(int irq, void *data)
 {
-	struct rxque *rxq = data;
-	struct txque *txq = rxq->lif->txqs[rxq->index];
+	struct ionic_rxque *rxq = data;
+	struct ionic_txque *txq = rxq->lif->txqs[rxq->index];
 	struct ionic_dev *idev = &rxq->lif->ionic->idev;
-	struct rx_stats* rxstats = &rxq->stats;
+	struct ionic_rx_stats* rxstats = &rxq->stats;
 	int work_done, tx_work;
 
 	KASSERT(rxq, ("rxq is NULL"));
@@ -638,8 +639,8 @@ ionic_queue_isr(int irq, void *data)
 static void
 ionic_queue_task_handler(void *arg, int pendindg)
 {
-	struct rxque *rxq = arg;
-	struct txque *txq = rxq->lif->txqs[rxq->index];
+	struct ionic_rxque *rxq = arg;
+	struct ionic_txque *txq = rxq->lif->txqs[rxq->index];
 	struct ionic_dev *idev = &rxq->lif->ionic->idev;
 	int work_done, tx_work;
 
@@ -692,7 +693,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 static void
 ionic_deferred_xmit_task(void *arg, int pending)
 {
-	struct txque *txq = arg;
+	struct ionic_txque *txq = arg;
 	struct ifnet *ifp = txq->lif->netdev;
 
 	IONIC_TX_LOCK(txq);
@@ -704,11 +705,11 @@ ionic_deferred_xmit_task(void *arg, int pending)
  * Setup queue interrupt handler.
  */
 int
-ionic_setup_rx_intr(struct rxque *rxq)
+ionic_setup_rx_intr(struct ionic_rxque *rxq)
 {
 	int err, bind_cpu;
-	struct lif *lif = rxq->lif;
-	struct txque *txq = lif->txqs[rxq->index];
+	struct ionic_lif *lif = rxq->lif;
+	struct ionic_txque *txq = lif->txqs[rxq->index];
 	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
@@ -762,7 +763,7 @@ ionic_setup_rx_intr(struct rxque *rxq)
 
 /**************************** Tx handling **********************/
 static bool
-ionic_tx_avail(struct txque *txq, int want)
+ionic_tx_avail(struct ionic_txque *txq, int want)
 {
 	int avail;
 
@@ -777,13 +778,13 @@ ionic_tx_avail(struct txque *txq, int want)
 static irqreturn_t
 ionic_legacy_isr(int irq, void *data)
 {
-	struct lif *lif = data;
+	struct ionic_lif *lif = data;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ifnet *ifp;
-	struct adminq* adminq;
-	struct notifyq* notifyq;
-	struct txque *txq;
-	struct rxque *rxq;
+	struct ionic_adminq* adminq;
+	struct ionic_notifyq* notifyq;
+	struct ionic_txque *txq;
+	struct ionic_rxque *rxq;
 	uint64_t status;
 	int work_done, i;
 
@@ -851,7 +852,8 @@ ionic_legacy_isr(int irq, void *data)
 /*
  * Setup legacy interrupt.
  */
-int ionic_setup_legacy_intr(struct lif *lif)
+int
+ionic_setup_legacy_intr(struct ionic_lif *lif)
 {
 	int error = 0;
 
@@ -861,15 +863,15 @@ int ionic_setup_legacy_intr(struct lif *lif)
 }
 
 static int
-ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
-	int *proto, int *hlen)
+ionic_get_header_size(struct ionic_txque *txq, struct mbuf *mb, uint16_t *eth_type,
+    int *proto, int *hlen)
 {
 	struct ether_vlan_header *eh;
 	struct tcphdr *th;
 	struct ip *ip;
 	int ip_hlen, tcp_hlen;
 	struct ip6_hdr *ip6;
-	struct tx_stats *stats = &txq->stats;
+	struct ionic_tx_stats *stats = &txq->stats;
 	int eth_hdr_len;
 
 	eh = mtod(mb, struct ether_vlan_header *);
@@ -933,17 +935,18 @@ ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 /*
  * XXX: Combine TSO and non-TSO xmit functions.
  */
-static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
+static int
+ionic_tx_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 {
 	struct txq_desc *desc;
 	struct txq_sg_elem *sg;
-	struct tx_stats *stats = &txq->stats;
+	struct ionic_tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
 	struct mbuf *m, *newm;
 	bool offload = false;
 	int i, error, index, nsegs;
 	bus_dma_segment_t  seg[IONIC_MAX_SEGMENTS];
-	u8 opcode, flags = 0;
+	uint8_t opcode, flags = 0;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n", txq->head_index, txq->tail_index);
 
@@ -1033,7 +1036,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	desc->cmd = encode_txq_desc_cmd(opcode, flags, nsegs - 1, txbuf->pa_addr);
 	desc->len = seg[0].ds_len;
 	/* Populate sg list with rest of segments. */
-	for (i = 0 ; i < nsegs - 1 ; i++, sg++) {
+	for (i = 0; i < nsegs - 1; i++, sg++) {
 		sg->addr = seg[i + 1].ds_addr;
 		sg->len = seg[i + 1].ds_len;
 	}
@@ -1051,8 +1054,9 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 /*
  * Validate the TSO descriptors.
  */
-static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
-	bus_dma_segment_t  *seg, int nsegs, int stop_index)
+static void
+ionic_tx_tso_dump(struct ionic_txque *txq, struct mbuf *m,
+    bus_dma_segment_t  *seg, int nsegs, int stop_index)
 {
 	struct txq_desc *desc;
 	struct txq_sg_elem *sg;
@@ -1070,7 +1074,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 
 	IONIC_TX_TRACE(txq, "start: %d stop: %d\n", txq->head_index, stop_index);
 	len = 0;
-	for (i = txq->head_index; i != stop_index; i = (i+1) % txq->num_descs) {
+	for (i = txq->head_index; i != stop_index; i = (i + 1) % txq->num_descs) {
 		txbuf = &txq->txbuf[i];
 		desc = &txq->cmd_ring[i];
 		sg = &txq->sg_ring[i * txq->sg_desc_stride];
@@ -1114,8 +1118,8 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 
 /* Is any MSS size chunk spanning more than the supported number of SGLs? */
 static inline int
-ionic_tso_is_sparse(struct txque *txq, struct mbuf *m,
-	bus_dma_segment_t *segs, int nsegs, int hdr_len)
+ionic_tso_is_sparse(struct ionic_txque *txq, struct mbuf *m,
+    bus_dma_segment_t *segs, int nsegs, int hdr_len)
 {
 	int frag_cnt = 0, frag_len = 0;
 	int seg_rem = 0, seg_idx = 0;
@@ -1161,21 +1165,19 @@ ionic_tso_is_sparse(struct txque *txq, struct mbuf *m,
 }
 
 static int
-ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
+ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 {
 	struct mbuf *m, *newm;
-	uint32_t mss;
-	struct tx_stats *stats = &txq->stats;
+	struct ionic_tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
 	struct txq_desc *desc;
 	struct txq_sg_elem *sg;
-	uint16_t eth_type;
-	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
-	uint32_t frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
 	bus_dma_segment_t seg[IONIC_MAX_TSO_SEGMENTS];
 	dma_addr_t addr;
+	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
+	uint32_t mss, frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
+	uint16_t len, eth_type;
 	uint8_t flags;
-	uint16_t len;
 	bool start, end, has_vlan;
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
@@ -1370,9 +1372,9 @@ ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 
 
 static int
-ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
+ionic_xmit(struct ifnet *ifp, struct ionic_txque *txq, struct mbuf **m)
 {
-	struct tx_stats *stats;
+	struct ionic_tx_stats *stats;
 	int err;
 
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
@@ -1393,10 +1395,10 @@ ionic_xmit(struct ifnet *ifp, struct txque *txq, struct mbuf **m)
 }
 
 static void
-ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
+ionic_start_xmit_locked(struct ifnet *ifp, struct ionic_txque *txq)
 {
 	struct mbuf *m;
-	struct tx_stats *stats;
+	struct ionic_tx_stats *stats;
 	int err;
 
 	stats = &txq->stats;
@@ -1422,9 +1424,9 @@ ionic_start_xmit_locked(struct ifnet *ifp, struct txque *txq)
 int
 ionic_start_xmit(struct ifnet *ifp, struct mbuf *m)
 {
-	struct lif *lif = if_getsoftc(ifp);
-	struct txque *txq;
-	struct rxque *rxq;
+	struct ionic_lif *lif = if_getsoftc(ifp);
+	struct ionic_txque *txq;
+	struct ionic_rxque *rxq;
 	int  err, qid = 0;
 #ifdef RSS
 	int bucket;
@@ -1462,7 +1464,7 @@ ionic_start_xmit(struct ifnet *ifp, struct mbuf *m)
 static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
-	struct lif *lif = if_getsoftc(ifp);
+	struct ionic_lif *lif = if_getsoftc(ifp);
 	struct lif_stats *hwstat = &lif->info->stats;
 
 	switch (cnt) {
@@ -1527,10 +1529,10 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 static void
 ionic_tx_qflush(struct ifnet *ifp)
 {
-	struct lif *lif = if_getsoftc(ifp);
-	struct txque *txq;
+	struct ionic_lif *lif = if_getsoftc(ifp);
+	struct ionic_txque *txq;
 	struct mbuf *m;
-	unsigned int i;
+	int i;
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
@@ -1546,7 +1548,7 @@ ionic_tx_qflush(struct ifnet *ifp)
 static void
 ionic_if_init(void *arg)
 {
-	struct lif *lif = arg;
+	struct ionic_lif *lif = arg;
 
 	IONIC_LIF_LOCK(lif);
 	ionic_open_or_stop(lif);
@@ -1554,7 +1556,7 @@ ionic_if_init(void *arg)
 }
 
 int
-ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
+ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 {
 	struct ifnet *ifp;
 
@@ -1597,7 +1599,7 @@ ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 
 #define IONIC_IFP_MAX_SLEEPS 40
 void
-ionic_lif_netdev_free(struct lif *lif)
+ionic_lif_netdev_free(struct ionic_lif *lif)
 {
 	struct ifnet *ifp = lif->netdev;
 	uint32_t sleeps = 0;
@@ -1628,7 +1630,7 @@ ionic_lif_netdev_free(struct lif *lif)
 static int
 ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	int coal, error;
 
 	error = sysctl_handle_int(oidp, &coal, 0, req);
@@ -1644,7 +1646,7 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 static int
 ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	struct sbuf *sb;
 	struct ionic_mc_addr *mc;
 	struct rx_filter *f;
@@ -1676,7 +1678,7 @@ ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_vlan_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	struct sbuf *sb;
 	struct ionic_mc_addr *mc;
 	struct rx_filter *f;
@@ -1711,13 +1713,13 @@ static int
 ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_dev *idev;
-	struct lif *lif;
-	struct rxque *rxq;
-	struct adminq *adminq;
-	struct notifyq* notifyq;
+	struct ionic_lif *lif;
+	struct ionic_rxque *rxq;
+	struct ionic_adminq *adminq;
+	struct ionic_notifyq* notifyq;
 	struct ionic_intr __iomem *intr;
 	struct sbuf *sb;
-	u32 mask_val, cred_val;
+	uint32_t mask_val, cred_val;
 	int i, err;
 
 	lif = oidp->oid_arg1;
@@ -1751,7 +1753,7 @@ ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
 		mask_val ? "masked" : "unmasked",
 		cred_val & IONIC_INTR_CRED_COUNT);
 
-	for (i = 0; i < lif->ntxqs ; i++) {
+	for (i = 0; i < lif->ntxqs; i++) {
 		rxq = lif->rxqs[i];
 
 		intr = &idev->intr_ctrl[rxq->intr.index];
@@ -1779,10 +1781,10 @@ ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
-	u8 pause_type = idev->port_info->config.pause_type & 0xf0;
+	uint8_t pause_type = idev->port_info->config.pause_type & 0xf0;
 	int err, fc;
 
 	/* Not allowed to change for mgmt interface. */
@@ -1827,7 +1829,7 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
 	struct ifnet *ifp = lif->netdev;
@@ -1871,15 +1873,15 @@ ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_reset_stats_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
-	struct adminq *adminq = lif->adminq;
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic_adminq *adminq = lif->adminq;
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
 	struct ifnet *ifp = lif->netdev;
-	struct rxque *rxq;
-	struct txque *txq;
-	struct rx_stats *rxstat;
-	struct tx_stats *txstat;
+	struct ionic_rxque *rxq;
+	struct ionic_txque *txq;
+	struct ionic_rx_stats *rxstat;
+	struct ionic_tx_stats *txstat;
 	int i, err, value;
 
 	err = sysctl_handle_int(oidp, &value, 0, req);
@@ -1940,7 +1942,7 @@ ionic_reset_stats_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	struct lif_status *lif_status;
 	struct port_status *port_status;
 	union port_config *port_config;
@@ -2058,7 +2060,7 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_lif_reset_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	int error, reset;
 
 	lif = oidp->oid_arg1;
@@ -2079,12 +2081,12 @@ ionic_lif_reset_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_fw_hb_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic_dev *idev = &lif->ionic->idev;
-	u32 old_hb_msecs, new_hb_msecs;
+	uint32_t old_hb_msecs, new_hb_msecs;
 	int error;
 
-	old_hb_msecs = (u32)(idev->fw_hb_interval * 1000 / HZ);
+	old_hb_msecs = (uint32_t)(idev->fw_hb_interval * 1000 / HZ);
 
 	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
 	if (error || !req->newptr)
@@ -2128,12 +2130,12 @@ ionic_fw_hb_handler(SYSCTL_HANDLER_ARGS)
 static int
 ionic_cmd_hb_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic_dev *idev = &lif->ionic->idev;
-	u32 old_hb_msecs, new_hb_msecs;
+	uint32_t old_hb_msecs, new_hb_msecs;
 	int error;
 
-	old_hb_msecs = (u32)(idev->cmd_hb_interval * 1000 / HZ);
+	old_hb_msecs = (uint32_t)(idev->cmd_hb_interval * 1000 / HZ);
 
 	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
 	if (error || !req->newptr)
@@ -2160,11 +2162,11 @@ ionic_cmd_hb_handler(SYSCTL_HANDLER_ARGS)
 static int
 ionic_txq_wdog_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
-	u32 old_to_msecs, new_to_msecs;
+	struct ionic_lif *lif = oidp->oid_arg1;
+	uint32_t old_to_msecs, new_to_msecs;
 	int error;
 
-	old_to_msecs = (u32)(lif->txq_wdog_timeout * 1000 / HZ);
+	old_to_msecs = (uint32_t)(lif->txq_wdog_timeout * 1000 / HZ);
 
 	error = SYSCTL_OUT(req, &old_to_msecs, sizeof(old_to_msecs));
 	if (error || !req->newptr)
@@ -2186,11 +2188,11 @@ ionic_txq_wdog_handler(SYSCTL_HANDLER_ARGS)
 }
 
 static void
-ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
+ionic_lif_add_rxtstat(struct ionic_rxque *rxq, struct sysctl_ctx_list *ctx,
 					  struct sysctl_oid_list *queue_list)
 {
 	struct lro_ctrl *lro = &rxq->lro;
-	struct rx_stats *rxstat = &rxq->stats;
+	struct ionic_rx_stats *rxstat = &rxq->stats;
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
 			&rxq->head_index, 0, "Head index");
@@ -2261,10 +2263,10 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 }
 
 static void
-ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
+ionic_lif_add_txtstat(struct ionic_txque *txq, struct sysctl_ctx_list *ctx,
 					  struct sysctl_oid_list *list)
 {
-	struct tx_stats *txstat = &txq->stats;
+	struct ionic_tx_stats *txstat = &txq->stats;
 
 	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "head", CTLFLAG_RD,
 			&txq->head_index, 0, "Head index");
@@ -2331,7 +2333,7 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
  * Stats provided by firmware.
  */
 static void
-ionic_setup_fw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
+ionic_setup_fw_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
 	struct lif_stats *stat = &lif->info->stats;
@@ -2451,8 +2453,8 @@ ionic_setup_fw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
  * MAC statistics.
  */
 static void
-ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
-	struct sysctl_oid_list *child)
+ionic_setup_mac_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
+    struct sysctl_oid_list *child)
 {
 	struct port_stats *stats;
 	struct sysctl_oid *queue_node;
@@ -2658,10 +2660,10 @@ ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 }
 
 static void
-ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
-	struct sysctl_oid_list *child)
+ionic_notifyq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
+    struct sysctl_oid_list *child)
 {
-	struct notifyq* notifyq = lif->notifyq;
+	struct ionic_notifyq* notifyq = lif->notifyq;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2686,7 +2688,7 @@ ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 
 static void
 ionic_qos_config_sysctl(struct ionic_qos_tc *tc, int num, struct sysctl_ctx_list *ctx,
-	struct sysctl_oid_list *queue_list)
+    struct sysctl_oid_list *queue_list)
 {
 	if (num == 0) {
 		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "enable", CTLFLAG_RD,
@@ -2709,7 +2711,7 @@ ionic_qos_config_sysctl(struct ionic_qos_tc *tc, int num, struct sysctl_ctx_list
 }
 
 static int
-ionic_qos_validate(struct lif *lif, int qnum)
+ionic_qos_validate(struct ionic_lif *lif, int qnum)
 {	
 	struct ionic_qos_tc *swtc;
 
@@ -2741,7 +2743,7 @@ ionic_qos_validate(struct lif *lif, int qnum)
 static int
 ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
+	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct identity *ident = &ionic->ident;
 	union qos_config *qos;
@@ -2818,7 +2820,7 @@ ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
 }
 
 static void
-ionic_qos_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
+ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 		struct sysctl_oid_list *child)
 {
 	struct sysctl_oid *queue_node, *queue_node1;
@@ -2851,11 +2853,11 @@ ionic_qos_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 static int
 ionic_adminq_hb_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif = oidp->oid_arg1;
-	u32 old_hb_msecs, new_hb_msecs;
+	struct ionic_lif *lif = oidp->oid_arg1;
+	uint32_t old_hb_msecs, new_hb_msecs;
 	int error;
 
-	old_hb_msecs = (u32)(lif->adq_hb_interval * 1000 / HZ);
+	old_hb_msecs = (uint32_t)(lif->adq_hb_interval * 1000 / HZ);
 
 	error = SYSCTL_OUT(req, &old_hb_msecs, sizeof(old_hb_msecs));
 	if (error || !req->newptr)
@@ -2877,10 +2879,10 @@ ionic_adminq_hb_handler(SYSCTL_HANDLER_ARGS)
 }
 
 static void
-ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
+ionic_adminq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 		struct sysctl_oid_list *child)
 {
-	struct adminq* adminq = lif->adminq;
+	struct ionic_adminq* adminq = lif->adminq;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2915,7 +2917,7 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
  * Firmware update
  */
 static int
-ionic_firmware_update2(struct lif *lif)
+ionic_firmware_update2(struct ionic_lif *lif)
 {
 	const struct firmware *fw;
 	struct ionic_dev *idev = &lif->ionic->idev;
@@ -2955,7 +2957,7 @@ ionic_firmware_update2(struct lif *lif)
 static int
 ionic_firmware_update_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif *lif;
+	struct ionic_lif *lif;
 	int error, reset;
 
 	lif = oidp->oid_arg1;
@@ -2967,7 +2969,7 @@ ionic_firmware_update_sysctl(SYSCTL_HANDLER_ARGS)
 }
 
 static void
-ionic_setup_device_stats(struct lif *lif)
+ionic_setup_device_stats(struct ionic_lif *lif)
 {
 	struct sysctl_ctx_list *ctx = &lif->sysctl_ctx;
 	struct sysctl_oid *tree = lif->sysctl_ifnet;
@@ -3071,7 +3073,7 @@ ionic_setup_device_stats(struct lif *lif)
 }
 
 void
-ionic_setup_sysctls(struct lif *lif)
+ionic_setup_sysctls(struct ionic_lif *lif)
 {
 	device_t dev = lif->ionic->dev;
 	struct ifnet *ifp = lif->netdev;
@@ -3153,7 +3155,7 @@ ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features)
 }
 
 void
-ionic_lif_sysctl_free(struct lif *lif)
+ionic_lif_sysctl_free(struct ionic_lif *lif)
 {
 	if (lif->sysctl_ifnet) {
 		sysctl_ctx_free(&lif->sysctl_ctx);
@@ -3162,7 +3164,7 @@ ionic_lif_sysctl_free(struct lif *lif)
 }
 
 static void
-ionic_iff_up(struct lif *lif)
+ionic_iff_up(struct ionic_lif *lif)
 {
 #ifdef NETAPP_PATCH
 	bool iff_up;
@@ -3203,7 +3205,7 @@ ionic_iff_up(struct lif *lif)
 static int
 ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 {
-	struct lif *lif = if_getsoftc(ifp);
+	struct ionic_lif *lif = if_getsoftc(ifp);
 	struct ifreq *ifr = (struct ifreq *) data;
 	int error = 0;
 	int mask;

@@ -36,61 +36,61 @@
 #define LIF_NAME_MAX_SZ			8
 #define MAX_VLAN_TAG 			4095
 
-struct adminq_stats {
-	u64 comp_err;
+struct ionic_adminq_stats {
+	uint64_t comp_err;
 };
 
-struct tx_stats {
-	u64 dma_map_err;
-	u64 pkts;
-	u64 bytes;
-	u64 clean;
-	u64 re_queue;
-	u64 mbuf_defrag;
-	u64 mbuf_defrag_err;
-	u64 no_descs;
-	u64 no_csum_offload;
-	u64 csum_offload;
-	u64 comp_err;
-	u64 tso_ipv4;
-	u64 tso_ipv6;
-	u64 tso_max_sg;
-	u64 tso_max_size;
-	u64 tso_max_descs;
-	u64 tso_too_big;
-	u64 tso_no_descs;
-	u64 tso_sparse;
-	u64 tso_defrag_sparse;
-	u64 pkt_sparse;
-	u64 pkt_defrag_sparse;
-	u64 bad_ethtype;	/* Unknown Ethernet frame. */
-	u64 wdog_expired;
+struct ionic_tx_stats {
+	uint64_t dma_map_err;
+	uint64_t pkts;
+	uint64_t bytes;
+	uint64_t clean;
+	uint64_t re_queue;
+	uint64_t mbuf_defrag;
+	uint64_t mbuf_defrag_err;
+	uint64_t no_descs;
+	uint64_t no_csum_offload;
+	uint64_t csum_offload;
+	uint64_t comp_err;
+	uint64_t tso_ipv4;
+	uint64_t tso_ipv6;
+	uint64_t tso_max_sg;
+	uint64_t tso_max_size;
+	uint64_t tso_max_descs;
+	uint64_t tso_too_big;
+	uint64_t tso_no_descs;
+	uint64_t tso_sparse;
+	uint64_t tso_defrag_sparse;
+	uint64_t pkt_sparse;
+	uint64_t pkt_defrag_sparse;
+	uint64_t bad_ethtype;	/* Unknown Ethernet frame. */
+	uint64_t wdog_expired;
 };
 
-struct rx_stats {
-	u64 dma_map_err;
-	u64 alloc_err;
-	u64 pkts;
-	u64 bytes;
-	u64 csum_ip_ok;
-	u64 csum_ip_bad;
-	u64 csum_l4_ok;
-	u64 csum_l4_bad;
+struct ionic_rx_stats {
+	uint64_t dma_map_err;
+	uint64_t alloc_err;
+	uint64_t pkts;
+	uint64_t bytes;
+	uint64_t csum_ip_ok;
+	uint64_t csum_ip_bad;
+	uint64_t csum_l4_ok;
+	uint64_t csum_l4_bad;
 	/* Only for debugging. */
-	u64 mbuf_alloc;
-	u64 mbuf_free;
-	u64 isr_count; 	// Not required.
-	u64 task;	/* Number of time task was invoked. */
-	u64 comp_err;
-	u64 length_err;
+	uint64_t mbuf_alloc;
+	uint64_t mbuf_free;
+	uint64_t isr_count; 	// Not required.
+	uint64_t task;	/* Number of time task was invoked. */
+	uint64_t comp_err;
+	uint64_t length_err;
 
-	u64 rss_ip4;
-	u64 rss_tcp_ip4;
-	u64 rss_udp_ip4;
-	u64 rss_ip6;
-	u64 rss_tcp_ip6;
-	u64 rss_udp_ip6;
-	u64 rss_unknown;
+	uint64_t rss_ip4;
+	uint64_t rss_tcp_ip4;
+	uint64_t rss_udp_ip4;
+	uint64_t rss_ip6;
+	uint64_t rss_tcp_ip6;
+	uint64_t rss_udp_ip6;
+	uint64_t rss_unknown;
 };
 
 struct ionic_rx_buf {
@@ -101,17 +101,17 @@ struct ionic_rx_buf {
 
 struct ionic_tx_buf {
 	struct mbuf *m;
-	u8 is_tso;
+	uint8_t is_tso;
 	bus_dmamap_t dma_map;
 	bus_dmamap_t tso_dma_map;
 	uint64_t timestamp;
 	uint64_t pa_addr; 		/* Cache address to avoid access to command ring. */
 };
 
-struct adminq {
+struct ionic_adminq {
 	char name[QUEUE_NAME_MAX_SZ];
 
-	struct lif *lif;
+	struct ionic_lif *lif;
 	unsigned int num_descs;
 
 	unsigned int pid;
@@ -120,7 +120,7 @@ struct adminq {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
-	u64 dbval;
+	uint64_t dbval;
 
 	bus_dma_tag_t buf_tag;
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
@@ -138,7 +138,7 @@ struct adminq {
 	unsigned int comp_index;		/* Index for completion descriptors. */
 	int done_color; 			/* Expected completion color. */
 
-	struct adminq_stats stats;
+	struct ionic_adminq_stats stats;
 	struct intr intr;
 
 	struct ionic_admin_ctx **ctx_ring;
@@ -150,10 +150,10 @@ struct adminq {
 	struct admin_comp *comp_ring;
 };
 
-struct notifyq {
+struct ionic_notifyq {
 	char name[QUEUE_NAME_MAX_SZ];
 
-	struct lif *lif;
+	struct ionic_lif *lif;
 	unsigned int num_descs;
 
 	unsigned int pid;
@@ -183,10 +183,10 @@ struct notifyq {
 	union notifyq_comp *comp_ring;
 };
 
-struct rxque {
+struct ionic_rxque {
 	char name[QUEUE_NAME_MAX_SZ];
 
-	struct lif *lif;
+	struct ionic_lif *lif;
 	unsigned int num_descs; /* Max number of descriptors. */
 
 	unsigned int pid;
@@ -195,7 +195,7 @@ struct rxque {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
-	u64 dbval;
+	uint64_t dbval;
 
 	struct ionic_rx_buf *rxbuf; /* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
@@ -214,7 +214,7 @@ struct rxque {
 	unsigned int comp_index;		/* Completion index. */
 	int done_color; 			/* Expected completion color - 0/1. */
 
-	struct rx_stats stats;
+	struct ionic_rx_stats stats;
 	struct intr intr;
 
 	struct task task;			/* Queue completion handler. */
@@ -235,10 +235,10 @@ struct rxque {
  * Transmit queue.
  * XXX: Interrupt resource for Tx is part of Rx.
  */
-struct txque {
+struct ionic_txque {
 	char name[QUEUE_NAME_MAX_SZ];
 
-	struct lif *lif;
+	struct ionic_lif *lif;
 	unsigned int num_descs;
 
 	unsigned int pid;
@@ -248,7 +248,7 @@ struct txque {
 	unsigned int ver;
 	unsigned int hw_index;
 	unsigned int hw_type;
-	u64 dbval;
+	uint64_t dbval;
 
 	struct ionic_tx_buf *txbuf;	/* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
@@ -270,7 +270,7 @@ struct txque {
 
 	unsigned long wdog_start;	/* In ticks */
 	bool full;
-	struct tx_stats stats;
+	struct ionic_tx_stats stats;
 	struct buf_ring	*br;
 
 	/*
@@ -283,16 +283,16 @@ struct txque {
 };
 
 struct ionic_mc_addr {
-	u8  addr[ETHER_ADDR_LEN];
+	uint8_t  addr[ETHER_ADDR_LEN];
 	bool present;
 };
 
-struct lif {
+struct ionic_lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
 	struct net_device *netdev;
 
-	u8 dev_addr[ETHER_ADDR_LEN] __aligned(sizeof(int));
+	uint8_t dev_addr[ETHER_ADDR_LEN] __aligned(sizeof(int));
 
 	struct ionic *ionic;
 
@@ -303,10 +303,10 @@ struct lif {
 	unsigned int hw_index;
 
 	unsigned int kern_pid;
-	u64 __iomem *kern_dbpage;
+	uint64_t __iomem *kern_dbpage;
 
 	struct workqueue_struct *adminq_wq;
-	struct adminq *adminq;
+	struct ionic_adminq *adminq;
 
 	struct mtx wdog_mtx;
 	struct workqueue_struct *wdog_wq;
@@ -319,9 +319,9 @@ struct lif {
 	unsigned long txq_wdog_timeout;
 	bool txq_wdog_resched;
 
-	struct notifyq *notifyq;
-	struct txque **txqs;
-	struct rxque **rxqs;
+	struct ionic_notifyq *notifyq;
+	struct ionic_txque **txqs;
+	struct ionic_rxque **rxqs;
 
 	unsigned int nnqs;
 	unsigned int neqs;
@@ -333,14 +333,14 @@ struct lif {
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size;	/* MTU size. */
 
-	u32 hw_features;		/* Features enabled in hardware, e.g. checksum, TSO etc. */
+	uint32_t hw_features;		/* Features enabled in hardware, e.g. checksum, TSO etc. */
 
 	uint16_t rss_types;
-	u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
-	u8 *rss_ind_tbl;
+	uint8_t rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
+	uint8_t *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
 	struct ionic_dma_info rss_dma;
-	u32 rss_ind_tbl_sz;
+	uint32_t rss_ind_tbl_sz;
 
 	int intr_coalesce_us;		/* Interrupt coalescing value in us. */
 	int intr_coalesce_max_us;	/* Interrupt coalescing maximum value in us. */
@@ -371,7 +371,7 @@ struct lif {
 	eventhandler_tag vlan_attach;
 	eventhandler_tag vlan_detach;
 
-	u64 last_eid;
+	uint64_t last_eid;
 #ifdef NETAPP_PATCH
 	bool iff_up;
 #endif
@@ -379,17 +379,17 @@ struct lif {
 	bool stop;
 	bool reinit_in_progress;
 
-	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
-	u16 link_down_count;
+	uint32_t link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
+	uint16_t link_down_count;
 
-	u32 info_sz;
+	uint32_t info_sz;
 	dma_addr_t info_pa;
 	struct ionic_dma_info info_dma;
 	struct lif_info *info;
 
-	u64 	num_dev_cmds;
-	u64     num_resets;
-	u32     wdog_error_trigger;
+	uint64_t num_dev_cmds;
+	uint64_t num_resets;
+	uint32_t wdog_error_trigger;
 };
 
 
@@ -427,7 +427,7 @@ struct lif {
 #define IONIC_Q_FULL(q)		(IONIC_Q_REMAINING(q) == 0)
 
 int ionic_stop(struct ifnet *ifp);
-void ionic_open_or_stop(struct lif *lif);
+void ionic_open_or_stop(struct ionic_lif *lif);
 
 int ionic_lif_identify(struct ionic *ionic);
 int ionic_lifs_alloc(struct ionic *ionic);
@@ -440,43 +440,43 @@ int ionic_lifs_size(struct ionic *ionic);
 
 int ionic_txq_identify(struct ionic *ionic, uint8_t ver);
 
-int ionic_adminq_clean(struct adminq* adminq, int limit);
-int ionic_notifyq_clean(struct notifyq* notifyq);
+int ionic_adminq_clean(struct ionic_adminq* adminq, int limit);
+int ionic_notifyq_clean(struct ionic_notifyq* notifyq);
 
-int ionic_dev_intr_reserve(struct lif *lif, struct intr *intr);
-void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);
+int ionic_dev_intr_reserve(struct ionic_lif *lif, struct intr *intr);
+void ionic_dev_intr_unreserve(struct ionic_lif *lif, struct intr *intr);
 
-struct lif *ionic_netdev_lif(struct ifnet *ifp);
+struct ionic_lif *ionic_netdev_lif(struct ifnet *ifp);
 
-int ionic_set_hw_features(struct lif *lif, uint32_t features);
+int ionic_set_hw_features(struct ionic_lif *lif, uint32_t features);
 
-int ionic_lif_rss_config(struct lif *lif, uint16_t types,
-	const u8 *key, const u32 *indir);
+int ionic_lif_rss_config(struct ionic_lif *lif, uint16_t types,
+	const uint8_t *key, const uint32_t *indir);
  
-void ionic_rx_fill(struct rxque *rxq);
-int ionic_rx_clean(struct rxque *rxq, int rx_limit);
-void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
+void ionic_rx_fill(struct ionic_rxque *rxq);
+int ionic_rx_clean(struct ionic_rxque *rxq, int rx_limit);
+void ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *buf,
 		struct rxq_comp *comp, struct rxq_desc *desc);
 
-void ionic_tx_ring_doorbell(struct txque *txq, int index);
-int ionic_tx_clean(struct txque* txq, int tx_limit);
+void ionic_tx_ring_doorbell(struct ionic_txque *txq, int index);
+int ionic_tx_clean(struct ionic_txque* txq, int tx_limit);
 
 int ionic_change_mtu(struct ifnet *ifp, int new_mtu);
 void ionic_set_rx_mode(struct ifnet *ifp);
 
-int ionic_set_multi(struct lif* lif);
+int ionic_set_multi(struct ionic_lif* lif);
 
 int ionic_set_mac(struct ifnet *ifp);
-int ionic_lif_quiesce(struct lif *lif);
-int ionic_lif_reinit(struct lif *lif, bool wdog_reset_path);
+int ionic_lif_quiesce(struct ionic_lif *lif);
+int ionic_lif_reinit(struct ionic_lif *lif, bool wdog_reset_path);
 
-void ionic_adminq_hb_resched(struct lif *lif);
-void ionic_txq_wdog_resched(struct lif *lif);
+void ionic_adminq_hb_resched(struct ionic_lif *lif);
+void ionic_txq_wdog_resched(struct ionic_lif *lif);
 
-int ionic_setup_intr_coal(struct lif *lif, int coal);
-int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);
+int ionic_setup_intr_coal(struct ionic_lif *lif, int coal);
+int ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data, size_t fw_sz);
 
-int ionic_lif_reset_stats(struct lif *lif);
+int ionic_lif_reset_stats(struct ionic_lif *lif);
 
 extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;
