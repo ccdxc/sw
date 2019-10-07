@@ -295,6 +295,13 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     if(capri_cfg->completion_func) {
         capri_cfg->completion_func(sdk_status_t::SDK_STATUS_SCHEDULER_INIT_DONE);
     }
+
+    // disable txs scheduler fifo cache as a workaround for asic bug
+    // where fifo cache is out of sync with hbm scheduler table
+    txs_csr.cfg_scheduler_dbg.read();
+    txs_csr.cfg_scheduler_dbg.fifo_mode_thr(0);
+    txs_csr.cfg_scheduler_dbg.write();
+
     SDK_TRACE_DEBUG("Set hbm base addr for TXS sched to 0x%lx, dtdm_lo_map 0x%lx, dtdm_hi_map 0x%lx",
                     txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
     return SDK_RET_OK;
