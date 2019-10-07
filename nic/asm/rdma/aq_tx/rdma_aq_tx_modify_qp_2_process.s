@@ -14,6 +14,7 @@ struct aq_tx_s2_t1_k k;
 #define TO_SQCB2_RQCB0_INFO_P to_s5_info
 #define TO_SQCB0_INFO_P to_s6_info    
 #define TO_S3_INFO to_s3_info
+#define TO_S4_INFO to_s4_info
 
 #define DMA_CMD_BASE r6
     
@@ -87,6 +88,7 @@ hdr_update:
 
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, dcqcn_profile), r4     // BD Slot
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, congestion_mgmt_enable), 1
+    phvwr       p.rdma_feedback.modify_qp.congestion_mgmt_enable, 1
     phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, congestion_mgmt_enable), 1
 
     // r5 holds ah_addr
@@ -94,9 +96,9 @@ hdr_update:
     // get addr of dcqcn config cb for profile (id - 1)
     AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r6, r7)
     add         r6, r6, r4, LOG_SIZEOF_DCQCN_CONFIG_T
-    // r5 - dcqcn_config_addr, r6 - dcqcn_cb_addr
+    // r6 - dcqcn_config_addr, r5 - dcqcn_cb_addr
     phvwrpair   CAPRI_PHV_FIELD(TO_S3_INFO, cb_addr), r6, CAPRI_PHV_FIELD(TO_S3_INFO, congestion_mgmt_enable), 1
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, cb_addr), r5
+    phvwrpair   CAPRI_PHV_FIELD(TO_S4_INFO, cb_addr), r5, CAPRI_PHV_FIELD(TO_S4_INFO, congestion_mgmt_enable), 1
 
 pcp_dscp:
     // fetch tm-iq (cosB) for QP looking up dscp-pcp-tm-iq map table

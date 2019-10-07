@@ -50,7 +50,7 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(tc.pvtdata.lif, 0).data
     tc.pvtdata.pre_dcqcn_data = copy.deepcopy(rs.lqp.dcqcn_data)
-
+    tc.pvtdata.rate_enforced = tc.pvtdata.dcqcn_profile.rp_qp_rate
     return
 
 def TestCaseTrigger(tc):
@@ -93,7 +93,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that dcqcn cb values are sane
-        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'rate_enforced', 100000):
+        if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'rate_enforced', tc.pvtdata.rate_enforced):
             return False
 
         if not VerifyFieldAbsolute(tc, rs.lqp.dcqcn_data, 'target_rate', 100000):

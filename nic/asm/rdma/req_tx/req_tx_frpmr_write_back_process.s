@@ -14,7 +14,6 @@ struct sqcb0_t d;
 #define K_WQE_ADDR          CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 #define K_PT_BASE           CAPRI_KEY_RANGE(IN_P, pt_base_sbit0_ebit7, pt_base_sbit24_ebit31)
 #define K_DMA_SIZE          CAPRI_KEY_RANGE(IN_P, dma_size_sbit0_ebit7, dma_size_sbit24_ebit31)
-#define K_SPEC_CINDEX       CAPRI_KEY_RANGE(IN_P, spec_cindex_sbit0_ebit7,spec_cindex_sbit8_ebit15)
 
 #define DMA_CMD_BASE        r6
 
@@ -31,7 +30,7 @@ req_tx_frpmr_write_back_process:
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
     // matches current cindex. 
-    seq           c1, K_SPEC_CINDEX, SQ_C_INDEX // Branch Delay Slot
+    seq           c1, K_GLOBAL_SPEC_CINDEX, SQ_C_INDEX // Branch Delay Slot
     bcf            [!c1], spec_fail
     CAPRI_SET_TABLE_2_VALID(0) // BD-slot
     /*

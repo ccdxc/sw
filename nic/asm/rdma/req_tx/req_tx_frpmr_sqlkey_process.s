@@ -20,8 +20,7 @@ struct key_entry_aligned_t d;
 
 #define K_ACC_CTRL         CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA               CAPRI_KEY_RANGE(IN_P, base_va_sbit0_ebit7, base_va_sbit56_ebit63)
-#define K_LEN              CAPRI_KEY_RANGE(IN_TO_S_P, len_sbit0_ebit7, len_sbit48_ebit63)
-#define K_SPEC_CINDEX      CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
+#define K_LEN              CAPRI_KEY_RANGE(IN_TO_S_P, len_sbit0_ebit7, len_sbit56_ebit63)
 #define K_LOG_PAGE_SIZE    CAPRI_KEY_FIELD(IN_P, log_page_size)
 #define K_USER_KEY         CAPRI_KEY_FIELD(IN_P, new_user_key)
 #define K_SGE_INDEX        CAPRI_KEY_FIELD(IN_P, sge_index)
@@ -85,7 +84,6 @@ frpmr:
 
     phvwrpair CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, pt_base), r4, \
               CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, dma_size), K_NUM_PT_ENTRIES
-    phvwr     CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, spec_cindex), K_SPEC_CINDEX
 
 load_frpmr_wb:
     SQCB0_ADDR_GET(r2)
@@ -117,7 +115,6 @@ error_completion:
     phvwr          p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET))
 
-    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
     // Set error-disable-qp. 
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1 //BD-slot
     SQCB2_ADDR_GET(r2)

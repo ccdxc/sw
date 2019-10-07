@@ -21,9 +21,9 @@ struct key_entry_aligned_t d;
 #define K_MW_PT_BASE       CAPRI_KEY_RANGE(IN_P, mw_pt_base_sbit0_ebit7, mw_pt_base_sbit24_ebit31)
 #define K_MW_TYPE          CAPRI_KEY_FIELD(IN_P, mw_type)
 #define K_MR_L_KEY         CAPRI_KEY_RANGE(IN_TO_S_P, mr_l_key_sbit0_ebit7, mr_l_key_sbit24_ebit31)
-#define K_MR_COOKIE        CAPRI_KEY_RANGE(IN_TO_S_P, mr_cookie_sbit0_ebit7, mr_cookie_sbit16_ebit31)
+#define K_MR_COOKIE        CAPRI_KEY_RANGE(IN_TO_S_P, mr_cookie_msg_psn_sbit0_ebit7, mr_cookie_msg_psn_sbit24_ebit31)
 #define K_PD               CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd)
-#define K_HOST_ADDR        CAPRI_KEY_FIELD(IN_TO_S_P, host_addr)
+#define K_HOST_ADDR        CAPRI_KEY_FIELD(IN_TO_S_P, host_addr_spec_enable)
 
 %%
 

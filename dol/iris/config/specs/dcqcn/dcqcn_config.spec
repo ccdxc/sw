@@ -6,6 +6,7 @@ default_profile:
     id                              : 0
     np_incp_802p_prio               : 6
     np_cnp_dscp                     : 48
+    rp_token_bucket_size            : 150000
     rp_initial_alpha_value          : 1023
     rp_dce_tcp_g                    : 65535
     rp_dce_tcp_rtt                  : 55
@@ -17,6 +18,7 @@ default_profile:
     rp_clamp_flags                  : 2
     rp_threshold                    : 5
     rp_time_reset                   : 5
+    rp_qp_rate                      : 1
     rp_byte_reset                   : 31
     rp_ai_rate                      : 5
     rp_hai_rate                     : 15

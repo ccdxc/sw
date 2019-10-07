@@ -14,27 +14,26 @@ class RdmaDcqcnProfile(Packet):
         BitField("pad", 0, 64),
         ByteField("np_incp_802p_prio", 0),
         ByteField("np_cnp_dscp", 0),
-        BitField("np_rsvd", 0, 48),
-        ShortField("rp_initial_alpha_value", 0),
+        IntField("rp_min_target_rate", 0),
         ShortField("rp_dce_tcp_g", 0),
         IntField("rp_dce_tcp_rtt", 0),
         IntField("rp_rate_reduce_monitor_period", 0),
         IntField("rp_rate_to_set_on_first_cnp", 0),
         IntField("rp_min_rate", 0),
+        ShortField("rp_initial_alpha_value", 0),
         ByteField("rp_gd", 0),
         ByteField("rp_min_dec_fac", 0),
         BitField("rp_clamp_flags", 0, 8),
         BitField("rp_rsvd3", 0, 3),
         BitField("rp_threshold", 0, 5),
-        ShortField("rp_rsvd4", 0),
         ShortField("rp_time_reset", 0),
+        IntField("rp_qp_rate", 0),
         IntField("rp_byte_reset", 0),
         BitField("rp_rsvd", 0, 14),
         BitField("rp_ai_rate", 0, 18),
         BitField("rp_rsvd1", 0, 14),
         BitField("rp_hai_rate", 0, 18),
-        IntField("rp_min_target_rate", 0),
-        BitField("rp_rsvd2", 0, 32),
+        LongField("rp_token_bucket_size", 0)
     ]
 
 class RdmaDcqcnProfileObject(object):
@@ -46,6 +45,8 @@ class RdmaDcqcnProfileObject(object):
     def Init(self, spec):
         self.np_incp_802p_prio = spec.np_incp_802p_prio if hasattr(spec, "np_incp_802p_prio") else 0
         self.np_cnp_dscp = spec.np_cnp_dscp if hasattr(spec, "np_cnp_dscp") else 0
+        self.rp_token_bucket_size = spec.rp_token_bucket_size if hasattr(spec, "rp_token_bucket_size") else 0
+        self.rp_min_target_rate = spec.rp_min_target_rate if hasattr(spec, "rp_min_target_rate") else 0
         self.rp_initial_alpha_value  = spec.rp_initial_alpha_value if hasattr(spec, "rp_initial_alpha_value") else 0
         self.rp_dce_tcp_g = spec.rp_dce_tcp_g if hasattr(spec, "rp_dce_tcp_g") else 0
         self.rp_dce_tcp_rtt = spec.rp_dce_tcp_rtt if hasattr(spec, "rp_dce_tcp_rtt") else 0
@@ -57,20 +58,21 @@ class RdmaDcqcnProfileObject(object):
         self.rp_clamp_flags = spec.rp_clamp_flags if hasattr(spec, "rp_clamp_flags") else 0
         self.rp_threshold = spec.rp_threshold if hasattr(spec, "rp_threshold") else 0
         self.rp_time_reset = spec.rp_time_reset if hasattr(spec, "rp_time_reset") else 0
+        self.rp_qp_rate = spec.rp_qp_rate if hasattr(spec, "rp_qp_rate") else 0
         self.rp_byte_reset = spec.rp_byte_reset if hasattr(spec, "rp_byte_reset") else 0
         self.rp_ai_rate = spec.rp_ai_rate if hasattr(spec, "rp_ai_rate") else 0
         self.rp_hai_rate = spec.rp_hai_rate if hasattr(spec, "rp_hai_rate") else 0
 
-        self.data = RdmaDcqcnProfile(np_incp_802p_prio = self.np_incp_802p_prio,
-                        np_cnp_dscp = self.np_cnp_dscp, rp_initial_alpha_value = self.rp_initial_alpha_value,
+        self.data = RdmaDcqcnProfile(np_incp_802p_prio = self.np_incp_802p_prio, np_cnp_dscp = self.np_cnp_dscp,
+                        rp_token_bucket_size = self.rp_token_bucket_size, rp_initial_alpha_value = self.rp_initial_alpha_value,
                         rp_dce_tcp_g = self.rp_dce_tcp_g, rp_dce_tcp_rtt = self.rp_dce_tcp_rtt,
                         rp_rate_reduce_monitor_period = self.rp_rate_reduce_monitor_period,
                         rp_rate_to_set_on_first_cnp = self.rp_rate_to_set_on_first_cnp,
                         rp_min_rate = self.rp_min_rate, rp_gd = self.rp_gd,
                         rp_min_dec_fac = self.rp_min_dec_fac, rp_clamp_flags = self.rp_clamp_flags,
                         rp_threshold = self.rp_threshold, rp_time_reset = self.rp_time_reset,
-                        rp_byte_reset = self.rp_byte_reset, rp_ai_rate = self.rp_ai_rate,
-                        rp_hai_rate = self.rp_hai_rate)
+                        rp_qp_rate = self.rp_qp_rate, rp_byte_reset = self.rp_byte_reset, rp_ai_rate = self.rp_ai_rate,
+                        rp_hai_rate = self.rp_hai_rate, rp_min_target_rate = self.rp_min_target_rate)
 
     def Write(self):
         if (GlobalOptions.dryrun): return

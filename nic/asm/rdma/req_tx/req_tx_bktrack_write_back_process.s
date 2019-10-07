@@ -68,6 +68,9 @@ skip_spec_psn_update:
      // clear bktrack_in_progress in SQCB1 so that it can start
      // accepting response packets
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+     // Fake a dcqcn_rl_failure to force dcqcn stage to reset copies of
+     // spec_cindex and msg_psn after backtrack.
+     tblwr         d.dcqcn_rl_failure, 1
 
 update_spec_cindex:
  

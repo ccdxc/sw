@@ -29,6 +29,8 @@
 #define tx_table_s4_t0 aq_tx_s4_t0
 #define tx_table_s4_t1 aq_tx_s4_t1
 #define tx_table_s4_t2 aq_tx_s4_t2
+#define tx_table_s4_t3 aq_tx_s4_t3
+
 #define tx_table_s5_t0 aq_tx_s5_t0
 #define tx_table_s5_t1 aq_tx_s5_t1
 #define tx_table_s5_t2 aq_tx_s5_t2
@@ -65,12 +67,10 @@
 #define tx_table_s5_t1_action aq_tx_rqcb0_process
 #define tx_table_s5_t2_action aq_tx_sqcb2_process
 #define tx_table_s5_t2_action1 aq_tx_query_sqcb2_process
-#define tx_table_s5_t3_action aq_tx_dcqcn_config_process_s5
 
 #define tx_table_s6_t0_action aq_tx_feedback_process_s6
 #define tx_table_s6_t1_action aq_tx_rqcb2_process
 #define tx_table_s6_t2_action aq_tx_sqcb0_process
-#define tx_table_s6_t3_action aq_tx_dcqcn_cb_process
 
 #define tx_table_s7_t0_action aq_tx_feedback_process
 #define tx_table_s7_t3_action aq_tx_stats_process
@@ -126,15 +126,6 @@ header_type aq_tx_to_stage_wqe2_info_t {
         log_num_dcqcn_profiles           :    4;
         log_num_kt_entries               :    5;
         pad                              :   49;
-    }
-}
-
-header_type aq_tx_dcqcn_config_to_cb_info_t {
-    fields {
-        byte_cntr_thr                    :   32;
-        alpha_val                        :   16;
-        log_sq_size                      :    5;
-        pad                              :  107;
     }
 }
 
@@ -328,15 +319,11 @@ metadata aq_tx_aqcb_to_sqcb_t t2_s2s_sqcb2_to_sqcb0_info;
 metadata aq_tx_aqcb_to_sqcb_t t2_s2s_sqcb2_to_sqcb0_info_scr;
 
 //Table-3
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_stats_info t3_s2s_dcqcn_config_to_cb_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_stats_info
 
 metadata aq_tx_stats_info_t t3_s2s_stats_info;
 @pragma scratch_metadata
 metadata aq_tx_stats_info_t t3_s2s_stats_info_scr;
-
-metadata aq_tx_dcqcn_config_to_cb_info_t t3_s2s_dcqcn_config_to_cb_info;
-@pragma scratch_metadata
-metadata aq_tx_dcqcn_config_to_cb_info_t t3_s2s_dcqcn_config_to_cb_info_scr;
 
 /*
  * Stage 0 table 0 action
@@ -458,29 +445,11 @@ action aq_tx_sqcb2_process () {
 action aq_tx_dcqcn_config_process_s4 () {
     // from ki global
     GENERATE_GLOBAL_K
-}
-
-action aq_tx_dcqcn_config_process_s5 () {
-    // from ki global
-    GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
+    modify_field(to_s4_info_scr.cb_addr, to_s4_info.cb_addr);
 
     // stage to stage
-}
-
-action aq_tx_dcqcn_cb_process () {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-
-    // stage to stage
-    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.byte_cntr_thr, t3_s2s_dcqcn_config_to_cb_info.byte_cntr_thr);
-    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.alpha_val, t3_s2s_dcqcn_config_to_cb_info.alpha_val);
-    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.log_sq_size, t3_s2s_dcqcn_config_to_cb_info.log_sq_size);
-    modify_field(t3_s2s_dcqcn_config_to_cb_info_scr.pad, t3_s2s_dcqcn_config_to_cb_info.pad);
 }
 
 action aq_tx_sqcb0_process () {

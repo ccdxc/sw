@@ -34,8 +34,6 @@ resp_tx_rqcb0_write_back_process:
     bcf             [c1], drop_phv
     CAPRI_SET_TABLE_1_VALID(0) // BD slot
 
-    bbeq       CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, dcqcn_rl_failure
-
 add_headers_common:
     // prior to adding any DMA commands to ship headers, check if it is UD service.
     seq             c1, d.serv_type, RDMA_SERV_TYPE_UD  //BD Slot
@@ -70,6 +68,9 @@ rsq_write_back:
     // check if speculated psn matches with current psn
     seq         c1, CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), d.curr_read_rsp_psn
     bcf         [!c1], drop_phv
+    nop         // BD Slot
+
+    bbeq        CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, dcqcn_rl_failure
     seq         c1, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress), 1 // BD Slot
     bcf         [c1], incr_psn
     tblwr       d.read_rsp_in_progress, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress) // BD Slot

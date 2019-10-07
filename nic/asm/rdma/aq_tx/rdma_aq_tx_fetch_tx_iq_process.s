@@ -51,5 +51,5 @@ rdma_aq_tx_fetch_tx_iq_process:
 setup_dcqcn:
     CAPRI_RESET_TABLE_3_ARG()
     add         r3, r0, K_DCQCN_CONFIG_ADDR
-    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_dcqcn_config_process, r3)
+    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_dcqcn_config_process, r3)
 

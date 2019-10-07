@@ -45,11 +45,12 @@ resp_tx_dcqcn_timer_process:
    
     // Check if timer T expired. 
     tblmincri   d.num_alpha_exp_cnt, 16, 1
+    bbeq        d.max_rate_reached, 1, skip_timer_restart
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_alpha_timer_expiry), 1    // BD Slot
     slt         c1, d.num_alpha_exp_cnt, K_TIMER_EXP_THR
-    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_alpha_timer_expiry), 1
     bcf         [c1], restart_timer
-    nop 
-    
+    nop         // BD Slot
+
     // Timer T expired. Ring doorbell to run dcqcn algo. 
     tblmincri   d.timer_exp_cnt, 16, 1
     phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_timer_T_expiry), 1
@@ -62,7 +63,7 @@ restart_timer:
     bbeq        d.max_rate_reached, 1, skip_timer_restart
     nop
     // Restart alpha timer. Alpha timer runs for 55us by default.
-    CAPRI_START_SLOW_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_ALPHA_TIMER_INTERVAL)
+    CAPRI_START_FAST_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_ALPHA_TIMER_INTERVAL)
 
 skip_timer_restart:
     CAPRI_SET_TABLE_0_VALID(0)

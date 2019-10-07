@@ -10,6 +10,8 @@
 
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
+#define HBM_PAGE_SIZE 4096
+#define HBM_PAGE_ALIGN_MASK ~(HBM_PAGE_SIZE - 1)
 #define BARMAP_BASE_SHIFT 23 // Barmap is 8M aligned
 #define BARMAP_SIZE_SHIFT 23 // Barmap is in units of 8M
 #define HBM_CACHE_LINE_SIZE 64 // Bytes
@@ -1360,30 +1362,29 @@ struct dcqcn_config_cb_t {
             // NP
             np_incp_802p_prio:8;
             np_cnp_dscp:8;
-            np_rsvd:48;
+            rp_min_target_rate:32;
             // RP Alpha update
-            rp_initial_alpha_value:16;
             rp_dce_tcp_g:16;
             rp_dce_tcp_rtt:32;
             // RP Rate Decrease
             rp_rate_reduce_monitor_period:32;
             rp_rate_to_set_on_first_cnp:32;
             rp_min_rate:32;
+            rp_initial_alpha_value:16;
             rp_gd:8;
             rp_min_dec_fac:8;
             // RP Rate increase
             rp_clamp_flags:8;
             rp_rsvd3:3;        
             rp_threshold:5;
-            rp_rsvd4:16;
             rp_time_reset:16;
+            rp_qp_rate:32;
             rp_byte_reset:32;
             rp_rsvd:14;
             rp_ai_rate:18;
             rp_rsvd1:14;
             rp_hai_rate:18;
-            rp_min_target_rate:32;
-            rp_rsvd2:32;
+            rp_token_bucket_size:64;
 };
 
 //Common DCQCN CB for both req and resp paths.
@@ -1395,7 +1396,8 @@ struct dcqcn_cb_t {
 
     // Configurable params.
     byte_counter_thr:       32; // byte-counter-threshold in Bytes. (Bc)
-    rsvd1:                  32;
+    rsvd1:                   8;
+    sq_msg_psn:             24;
     // Algorithm computed params.
     rate_enforced:          32; // Enforced rate in Mbps. (Rc)
     target_rate:            32; // Target rate in Mbps. (Rt)
@@ -1409,7 +1411,8 @@ struct dcqcn_cb_t {
     num_cnp_processed:      8;  // Num of CNP processed used by rate-compute-ring.
     max_rate_reached:       1;  // This will be set if we have reached max-qp-rate and dcqcn rate-increase timers are stopped.
     log_sq_size:            5;
-    rsvd0:                  2;
+    resp_rl_failure:        1;  // Track rl_failures caused by dcqcn until reset by stage0
+    rsvd0:                  1;
 
     // Rate-limiter token-bucket related params.
     last_sched_timestamp:   48;
@@ -1533,7 +1536,8 @@ struct rdma_aq_feedback_t {
             access_flags             :  3;
             cur_state                :  3;
             cur_state_valid          :  1;
-            rsvd                     :  6;
+            congestion_mgmt_enable   :  1;
+            rsvd                     :  5;
         } modify_qp;
         struct {
             rq_id                    : 24;
@@ -1788,26 +1792,25 @@ struct aqwqe_t {
         struct {
             np_incp_802p_prio:8;
             np_cnp_dscp:8;
-            np_rsvd:48;
-            rp_initial_alpha_value:16;
+            np_rsvd:32;
             rp_dce_tcp_g:16;
             rp_dce_tcp_rtt:32;
             rp_rate_reduce_monitor_period:32;
             rp_rate_to_set_on_first_cnp:32;
             rp_min_rate:32;
+            rp_initial_alpha_value:16;
             rp_gd:8;
             rp_min_dec_fac:8;
             rp_clamp_flags:8;
             rp_threshold:8;
-            rp_rsvd4:16;
             rp_time_reset:16;
+            rp_qp_rate:32;
             rp_byte_reset:32;
             rp_rsvd:14;
             rp_ai_rate:18;
             rp_rsvd2:14;
             rp_hai_rate:18;
-            rp_min_target_rate:32;
-            rp_rsvd3:32;
+            rp_token_bucket_size:64;
         } mod_dcqcn;
     };
 };

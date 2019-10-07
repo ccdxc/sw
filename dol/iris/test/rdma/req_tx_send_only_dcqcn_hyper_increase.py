@@ -39,6 +39,7 @@ def TestCaseSetup(tc):
     # Setting target rate to 90 gbps and rate-enforced to 80 gbps
     rs.lqp.dcqcn_data.target_rate = 90000
     rs.lqp.dcqcn_data.rate_enforced = 80000
+    rs.lqp.dcqcn_data.max_rate_reached = 0
     # Setting byte-count-threshold to 31 bytes to trigger dcqcn algorithm 
     # on sending 32 byte packet. Here dcqcn algorithm will be invoked for hyper-increase
     # since both byte-counter-expiry count (which is 1+5=6) and timer-expirty-cnt is 6 

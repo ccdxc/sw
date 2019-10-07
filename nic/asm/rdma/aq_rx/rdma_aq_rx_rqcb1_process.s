@@ -15,7 +15,8 @@ struct aq_rx_s5_t2_k k;
 
 #define R_RQCB_ADDR     r2  // RQCB1 Address
 
-#define K_SQCB_ADDR   CAPRI_KEY_RANGE(IN_P, sqcb_addr_sbit0_ebit3, sqcb_addr_sbit28_ebit31)
+#define K_SQCB_ADDR   CAPRI_KEY_RANGE(IN_P, sqcb_addr_sbit0_ebit2, sqcb_addr_sbit27_ebit31)
+#define K_CONGESTION_MGMT_ENABLED CAPRI_KEY_FIELD(IN_P, congestion_mgmt_enable)
 %%
 
 .align
@@ -38,6 +39,7 @@ hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rsq_base
     nop
 
+    tblwr       d.congestion_mgmt_enable, K_CONGESTION_MGMT_ENABLED
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr       d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
 

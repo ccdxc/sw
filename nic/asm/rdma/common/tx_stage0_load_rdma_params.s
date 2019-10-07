@@ -58,8 +58,10 @@ rq:
     CAPRI_SET_FIELD(r2, RQCB_TO_DCQCN_CFG_T, dcqcn_config_base, r4)  // BD Slot
 
 sq:
+    add r2, r0, offsetof(struct phv_, to_stage_2_to_stage_data) // BD slot
+    CAPRI_SET_FIELD(r2, REQ_TX_TO_S2_T, log_num_kt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_kt_entries)
     b done
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)    // BD Slot
+    CAPRI_SET_FIELD(r2, REQ_TX_TO_S2_T, log_num_dcqcn_profiles, d.u.tx_stage0_lif_rdma_params_d.log_num_dcqcn_profiles)     // BD Slot
 
 aq:
     add r2, r0, k.p4_txdma_intr_qid

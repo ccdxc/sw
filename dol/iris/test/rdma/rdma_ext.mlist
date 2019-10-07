@@ -191,6 +191,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_READ_FML_FAILURE_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : resp_tx_read_fml_failure_dcqcn
+        spec    : resp_tx_read_fml_failure_dcqcn.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_READ_FML_PAD_DCQCN
         enable  : True
         package : test.rdma

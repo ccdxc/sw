@@ -394,7 +394,8 @@ header_type rdma_aq_completion_feedback_header_modify_qp_t {
         access_flags          :   3;
         cur_state             :   3;
         cur_state_valid       :   1;
-        rsvd2                 :   6;
+        congestion_mgmt_enable : 1;
+        rsvd2                 :   5;
     }
 }
 

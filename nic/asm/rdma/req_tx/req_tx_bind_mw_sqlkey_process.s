@@ -17,8 +17,6 @@ struct key_entry_aligned_t d;
 #define K_R_KEY    CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit7, r_key_sbit24_ebit31)
 #define K_MW_TYPE  CAPRI_KEY_FIELD(IN_P, mw_type) 
 
-#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
-
 #define SQLKEY_TO_RKEY_MW_INFO_P t0_s2s_sqlkey_to_rkey_mw_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
@@ -35,7 +33,6 @@ req_tx_bind_mw_sqlkey_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
-    phvwr.c1       p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
 
     // if memory region is not in valid state or doesn't allow memory window or
     // is zero based virtual address region, then do not allow memory window
@@ -77,9 +74,9 @@ req_tx_bind_mw_sqlkey_process:
     phvwr      CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, va), r1 
 
     phvwrpair  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-               CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie), d.mr_cookie
+               CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie_msg_psn), d.mr_cookie
 
-    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, host_addr), d.host_addr
+    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, host_addr_spec_enable), d.host_addr
 
     KT_BASE_ADDR_GET2(r1, r2)
     add            r2, K_R_KEY, r0

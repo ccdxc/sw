@@ -29,6 +29,7 @@ struct aq_rx_s4_t2_k k;
 #define K_SQD_ASYNC_NOTIFY_EN CAPRI_KEY_FIELD(IN_P, sqd_async_notify_en)
 #define K_ACCESS_FLAGS_VALID CAPRI_KEY_FIELD(IN_P, access_flags_valid)
 #define K_ACCESS_FLAGS CAPRI_KEY_FIELD(IN_P, access_flags)
+#define K_CONGESTION_MGMT_ENABLED CAPRI_KEY_FIELD(IN_P, congestion_mgmt_enable)
 %%
 
     .param      rdma_aq_rx_rqcb1_process
@@ -56,9 +57,10 @@ cur_state:
 hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rrq_base
     nop
-    
-    tblwr     d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
-    tblwr     d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
+
+    tblwr       d.congestion_mgmt_enable, K_CONGESTION_MGMT_ENABLED
+    tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
+    tblwr       d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
     
 rrq_base:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P, rrq_valid), 1, state

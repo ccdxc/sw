@@ -123,8 +123,9 @@ header_type aq_rx_aqcb_to_sqcb1_info_t {
         access_flags             :   3;
         cur_state                :   3;
         cur_state_valid          :   1;
+        congestion_mgmt_enable   :   1;
         sqcb_addr                :  32;
-        pad                      :  44;
+        pad                      :  43;
     }
 }
 
@@ -452,6 +453,7 @@ action rdma_stage0_aq_feedback_action3 () {
     modify_field(rdma_aq_feedback_mqp_scr.access_flags, rdma_aq_feedback_mqp.access_flags);
     modify_field(rdma_aq_feedback_mqp_scr.cur_state, rdma_aq_feedback_mqp.cur_state);
     modify_field(rdma_aq_feedback_mqp_scr.cur_state_valid, rdma_aq_feedback_mqp.cur_state_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.congestion_mgmt_enable, rdma_aq_feedback_mqp.congestion_mgmt_enable);
 }
 
 action rdma_stage0_aq_feedback_action4 () {
@@ -609,6 +611,7 @@ action rdma_aq_rx_sqcb1_process () {
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.access_flags, t2_s2s_aqcb_to_sqcb1_info.access_flags);
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.cur_state, t2_s2s_aqcb_to_sqcb1_info.cur_state);    
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.cur_state_valid, t2_s2s_aqcb_to_sqcb1_info.cur_state_valid);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.congestion_mgmt_enable, t2_s2s_aqcb_to_sqcb1_info.congestion_mgmt_enable);    
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.pad, t2_s2s_aqcb_to_sqcb1_info.pad);    
 }
 
@@ -636,6 +639,7 @@ action rdma_aq_rx_rqcb1_process () {
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state, t2_s2s_sqcb1_to_rqcb1_info.cur_state);
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state_valid, t2_s2s_sqcb1_to_rqcb1_info.cur_state_valid);
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.sqcb_addr, t2_s2s_sqcb1_to_rqcb1_info.sqcb_addr);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.congestion_mgmt_enable, t2_s2s_sqcb1_to_rqcb1_info.congestion_mgmt_enable);    
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pad, t2_s2s_sqcb1_to_rqcb1_info.pad);
 }
 

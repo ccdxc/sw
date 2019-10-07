@@ -43,7 +43,7 @@ hdr_update:
 
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr       d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
-    phvwr.c1    CAPRI_PHV_FIELD(DCQCN_CONFIG_TO_CB_P, log_sq_size), d.log_sq_size
+    phvwr.c1    p.dcqcn_cb.log_sq_size, d.log_sq_size
 
 dst_qp:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P, dst_qp_valid), 1, rrq_base

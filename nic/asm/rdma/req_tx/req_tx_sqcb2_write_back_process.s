@@ -12,7 +12,6 @@ struct sqcb2_t d;
 #define IN_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define IN_TO_S_P to_s5_sqcb_wb_add_hdr_info
 
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_TO_S5_DATA k.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
 #define K_WQE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 
@@ -31,7 +30,7 @@ req_tx_sqcb2_write_back_process:
     // discard and continue with speculation until speculative cindex
     // matches current cindex. Similarly, drop if dcqcn rate enforcement
     // doesn't allow this packet
-    seq            c1, K_SPEC_CINDEX, d.sq_cindex
+    seq            c1, K_GLOBAL_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
     SQCB0_ADDR_GET(r1) //BD-slot
 

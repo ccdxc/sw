@@ -27,7 +27,6 @@ struct req_tx_s2_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 

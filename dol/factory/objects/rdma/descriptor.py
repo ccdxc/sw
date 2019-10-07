@@ -345,31 +345,32 @@ class RdmaAqDescriptorQueryQP(Packet):
   ]
 
 class RdmaAqDescriptorQueryAH(Packet):
-	fields_desc = [
-		LELongField("dma_addr", 0),
-		BitField("rsvd", 0, 384),
-	]
+    fields_desc = [
+        LELongField("dma_addr", 0),
+        BitField("rsvd", 0, 384),
+    ]
 
 class RdmaAqDescriptorModifyDcqcn(Packet):
     fields_desc = [
         ByteField("np_incp_802p_prio", 0),
         ByteField("np_cnp_dscp", 0),
-        BitField("np_rsvd", 0, 48),
-        ShortField("rp_initial_alpha_value", 0),
+        BitField("np_rsvd", 0, 32),
         ShortField("rp_dce_tcp_g", 0),
         IntField("rp_dce_tcp_rtt", 0),
         IntField("rp_rate_reduce_monitor_period", 0),
         IntField("rp_rate_to_set_on_first_cnp", 0),
         IntField("rp_min_rate", 0),
+        ShortField("rp_initial_alpha_value", 0),
         ByteField("rp_gd", 0),
         ByteField("rp_min_dec_fac", 0),
         BitField("rp_clamp_flags", 0, 8),
         ByteField("rp_threshold", 0),
-        IntField("rp_time_reset", 0),
+        ShortField("rp_time_reset", 0),
+        IntField("rp_qp_rate", 0),
         IntField("rp_byte_reset", 0),
         IntField("rp_ai_rate", 0),
         IntField("rp_hai_rate", 0),
-        BitField("rp_rsvd", 0, 64),
+        LongField("rp_token_bucket_size", 0),
     ]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
@@ -1029,6 +1030,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         mod_dcqcn = RdmaAqDescriptorModifyDcqcn(
                             np_incp_802p_prio = wqe.np_incp_802p_prio,
                             np_cnp_dscp = wqe.np_cnp_dscp,
+                            rp_token_bucket_size = wqe.rp_token_bucket_size,
                             rp_initial_alpha_value = wqe.rp_initial_alpha_value,
                             rp_dce_tcp_g = wqe.rp_dce_tcp_g,
                             rp_dce_tcp_rtt = wqe.rp_dce_tcp_rtt,
@@ -1040,6 +1042,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
                             rp_clamp_flags = wqe.rp_clamp_flags,
                             rp_threshold = wqe.rp_threshold,
                             rp_time_reset = wqe.rp_time_reset,
+                            rp_qp_rate = wqe.rp_qp_rate,
                             rp_byte_reset = wqe.rp_byte_reset,
                             rp_ai_rate = wqe.rp_ai_rate,
                             rp_hai_rate = wqe.rp_hai_rate)
@@ -1123,6 +1126,8 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
                     if hasattr(self.spec.fields.modify_dcqcn, 'np_incp_802p_prio') else 0
             np_cnp_dscp = self.spec.fields.modify_dcqcn.np_cnp_dscp \
                     if hasattr(self.spec.fields.modify_dcqcn, 'np_cnp_dscp') else 0
+            rp_token_bucket_size = self.spec.fields.modify_dcqcn.rp_token_bucket_size \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_token_bucket_size') else 0
             rp_initial_alpha_value = self.spec.fields.modify_dcqcn.rp_initial_alpha_value \
                     if hasattr(self.spec.fields.modify_dcqcn, 'rp_initial_alpha_value') else 0
             rp_dce_tcp_g = self.spec.fields.modify_dcqcn.rp_dce_tcp_g \
@@ -1145,6 +1150,8 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
                     if hasattr(self.spec.fields.modify_dcqcn, 'rp_threshold') else 0
             rp_time_reset = self.spec.fields.modify_dcqcn.rp_time_reset \
                     if hasattr(self.spec.fields.modify_dcqcn, 'rp_time_reset') else 0
+            rp_qp_rate = self.spec.fields.modify_dcqcn.rp_qp_rate \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_qp_rate') else 0
             rp_byte_reset = self.spec.fields.modify_dcqcn.rp_byte_reset \
                     if hasattr(self.spec.fields.modify_dcqcn, 'rp_byte_reset') else 0
             rp_ai_rate = self.spec.fields.modify_dcqcn.rp_ai_rate \
@@ -1154,6 +1161,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             mod_dcqcn = RdmaAqDescriptorModifyDcqcn(
                             np_incp_802p_prio = np_incp_802p_prio,
                             np_cnp_dscp = np_cnp_dscp,
+                            rp_token_bucket_size = rp_token_bucket_size,
                             rp_initial_alpha_value = rp_initial_alpha_value,
                             rp_dce_tcp_g = rp_dce_tcp_g,
                             rp_dce_tcp_rtt = rp_dce_tcp_rtt,
@@ -1165,6 +1173,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
                             rp_clamp_flags = rp_clamp_flags,
                             rp_threshold = rp_threshold,
                             rp_time_reset = rp_time_reset,
+                            rp_qp_rate = rp_qp_rate,
                             rp_byte_reset = rp_byte_reset,
                             rp_ai_rate = rp_ai_rate,
                             rp_hai_rate = rp_hai_rate)

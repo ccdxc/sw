@@ -87,14 +87,16 @@ skip_memwr:
         nop // Exit Slot
 
     .brcase         RSQ_RING_ID
-        // reset sched_eval_done
-        tblwr           d.ring_empty_sched_eval_done, 0
-
         // check if spec_color == curr_color
-        seq             c7, d.spec_color, d.curr_color
-        tblmincri.!c7   d.spec_color, 1, 1
-        tblwr.!c7       d.spec_read_rsp_psn, d.curr_read_rsp_psn
+        bbeq            d.spec_color, d.curr_color, rsq_process
+        // reset sched_eval_done
+        tblwr           d.ring_empty_sched_eval_done, 0     // BD Slot
 
+        tblmincri       d.spec_color, 1, 1
+        tblwr           d.spec_read_rsp_psn, d.curr_read_rsp_psn
+        phvwr           CAPRI_PHV_FIELD(TO_S4_P, resp_rl_failure), 1
+
+rsq_process:
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.

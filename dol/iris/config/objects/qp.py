@@ -620,7 +620,8 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.BitField("last_cnp_timestamp", 0, 48),
 
         scapy.IntField("byte_counter_thr",0),
-        scapy.IntField("rsvd1",0),
+        scapy.ByteField("rsvd1",0),
+        scapy.BitField("sq_msg_psn", 0, 24),
 
         scapy.IntField("rate_enforced", 0),
         scapy.IntField("target_rate",0),
@@ -634,7 +635,8 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.ByteField("num_cnp_processed", 0),
         scapy.BitField("max_rate_reached", 0, 1),
         scapy.BitField("log_sq_size", 0, 5),
-        scapy.BitField("rsvd0", 0, 2),
+        scapy.BitField("resp_rl_failure", 0, 1),
+        scapy.BitField("rsvd0", 0, 1),
         
 
         scapy.BitField("last_sched_timestamp", 0, 48),

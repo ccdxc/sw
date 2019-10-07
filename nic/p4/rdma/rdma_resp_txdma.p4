@@ -249,7 +249,8 @@ header_type resp_tx_to_stage_dcqcn_info_t {
         dcqcn_cb_addr                    :   34;
         congestion_mgmt_enable           :    1;
         packet_len                       :   14;
-        rsvd                             :   47;
+        resp_rl_failure                  :    1;
+        rsvd                             :   46;
         pd                               :   32;
     }
 }
@@ -662,6 +663,7 @@ action resp_tx_dcqcn_enforce_process () {
     modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
     modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
     modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
+    modify_field(to_s4_dcqcn_info_scr.resp_rl_failure, to_s4_dcqcn_info.resp_rl_failure);
     modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
 
     // stage to stage

@@ -98,7 +98,7 @@ def TestCaseStepVerify(tc, step):
 
         # verify that cur_avail_tokens in dcqcn state is 88. Since at end of 5 iteration 600 bits will be accumulated.
         # with core-clock frequency of 833 ticks per us.
-        # 8192 bits will be consumed by packet. So 600-512 = 88 tokens remain.
+        # 512 bits will be consumed by packet. So 600-512 = 88 tokens remain.
         if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens',88): 
             return False
 

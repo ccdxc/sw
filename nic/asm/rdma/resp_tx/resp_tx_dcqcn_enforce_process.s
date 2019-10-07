@@ -36,8 +36,11 @@ resp_tx_dcqcn_enforce_process:
     // Skip this stage if congestion_mgmt is disabled.
     seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_enable), 0 //delay slot
     bcf           [c2], load_write_back
-    nop
 
+    seq           c1, CAPRI_KEY_FIELD(IN_TO_S4_P, resp_rl_failure), 1   // BD Slot
+    seq           c2, d.resp_rl_failure, 1
+    bcf           [c2 & !c1], drop_phv
+    tblwr.c1      d.resp_rl_failure, 0
     /* Rate enforcement logic.
      * This is done in 2 steps.
      * 1. Replenish tokens based on time elapsed since last_sched_timestamp.
@@ -98,7 +101,7 @@ ring_dcqcn_doorbell:
     // Reset cur-byte-counter, incr byte counter expiry count and ring dcqcn doorbell to update rate.
     tblwr         d.cur_byte_counter, 0
     tblmincri     d.byte_counter_exp_cnt, 0x10, 1 // byte_counter_exp_cnt is 16-bit value. 
-    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_byte_threshold_db), 1
+    phvwr         CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, rp_num_byte_threshold_db), 1
     DOORBELL_INC_PINDEX(K_GLOBAL_LIF,  K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_RATE_COMPUTE_RING_ID, r5, r6)
     
 load_write_back:            
@@ -128,15 +131,16 @@ exit:
 
 drop_phv:
 
+    tblwr         d.resp_rl_failure, 1
     // DCQCN rate-enforcement failed. Drop PHV and load rqcb1.
     phvwr         p.common.p4_intr_global_drop, 1 
 
-    CAPRI_RESET_TABLE_1_ARG()
     CAPRI_SET_FIELD2(RQCB0_WB_INFO_P, rate_enforce_failed, 1)
 
     RQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)
 
+#if !(defined (HAPS) || defined (HW))
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
      * Below code is for testing on model only since there are no timestamps on model.
@@ -146,6 +150,7 @@ drop_phv:
     add         r1, r1, CUR_TIMESTAMP 
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
+#endif
 
     nop.e
     nop

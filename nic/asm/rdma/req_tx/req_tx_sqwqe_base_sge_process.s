@@ -28,7 +28,6 @@ struct req_tx_s2_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 
 %%
     .param    req_tx_sqlkey_process
@@ -209,11 +208,8 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
-                   p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
-    phvwr          p.common.p4_intr_recirc, 1
-
-    phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
+    phvwrpair      p.common.p4_intr_recirc, 1, \
+                   p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0) 
 

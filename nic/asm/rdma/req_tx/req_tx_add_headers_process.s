@@ -20,7 +20,6 @@ struct sqcb2_t d;
 #define IN_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define IN_TO_S_P to_s5_sqcb_wb_add_hdr_info
 
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_AH_HANDLE   CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_ah_handle_sbit0_ebit7, op_send_wr_ah_handle_sbit8_ebit31)
 #define K_AH_SIZE     CAPRI_KEY_FIELD(IN_TO_S_P, ah_size)
@@ -63,7 +62,7 @@ req_tx_add_headers_process:
     // to continue from yet to be processed wqe.
 
     // Similarly, drop if dcqcn rate enforcement doesn't allow this packet
-    seq            c1, K_SPEC_CINDEX, d.sq_cindex
+    seq            c1, K_GLOBAL_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
     nop
 

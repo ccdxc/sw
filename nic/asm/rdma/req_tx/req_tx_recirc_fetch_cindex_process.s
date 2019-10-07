@@ -8,7 +8,6 @@ struct sqcb0_t d;
 
 #define IN_TO_S_P   to_s6_sqcb_wb_add_hdr_info
 
-#define K_SPEC_CINDEX  CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_TO_S_P, read_req_adjust_sbit0_ebit7, read_req_adjust_sbit8_ebit23)
 
 %%
@@ -21,7 +20,7 @@ req_tx_recirc_fetch_cindex_process:
     seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], bubble_to_next_stage
 
-    seq           c2, K_SPEC_CINDEX, SQ_C_INDEX // BD-slot
+    seq           c2, K_GLOBAL_SPEC_CINDEX, SQ_C_INDEX // BD-slot
     bcf           [!c2], drop_recirc_spec_miss
     CAPRI_SET_TABLE_2_VALID(0) //BD-slot
     bbeq           d.spec_enable, 0, skip_msg_psn_check

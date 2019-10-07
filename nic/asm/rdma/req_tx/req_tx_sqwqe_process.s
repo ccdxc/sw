@@ -35,9 +35,10 @@ struct req_tx_s2_t0_k k;
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_PRIVILEGED_QKEY K_HEADER_TEMPLATE_ADDR
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_FAST_REG_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
 #define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
+#define K_LOG_NUM_KT_ENTRIES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_kt_entries_sbit0_ebit0, log_num_kt_entries_sbit1_ebit4)
+#define K_LOG_NUM_DCQCN_PROFILES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_dcqcn_profiles)
 
 %%
     .param    req_tx_sqsge_process
@@ -175,7 +176,14 @@ send_or_write:
     add            r6, d.ud_send.ah_handle, r0
     muli           r2, r6, AT_ENTRY_SIZE_BYTES
     blt            r4, r5, ud_error_pmtu
-    add            r2, r2, K_GLOBAL_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
+    KT_BASE_ADDR_GET2(r6, r5)
+    sll            r5, KEY_ENTRY_SIZE_BYTES, K_LOG_NUM_KT_ENTRIES
+    add            r6, r6, r5
+    sll            r5, DCQCN_CONFIG_SIZE_BYTES, K_LOG_NUM_DCQCN_PROFILES
+    add            r6, r6, r5
+    addi           r6, r6, (HBM_PAGE_SIZE - 1)
+    andi           r6, r6, HBM_PAGE_ALIGN_MASK
+    add            r2, r2, r6
     // AH_SIZE is the last byte in AH_ENTRY
     add            r6, r2, HDR_TEMPLATE_T_SIZE_BYTES
     tblwr.l        d.ud_send.ah_handle, r2[34:HDR_TEMP_ADDR_SHIFT]

@@ -38,6 +38,7 @@ enum dcqcn_var {
 	NP_ICNP_802P_PRIO,		/* 0..7 (prio) */
 	NP_CNP_DSCP,			/* 0..63 (dscp) */
 
+	RP_TOKEN_BUCKET_SIZE,	/* 100..100000000 (100kb - 100gb) */
 	/* reaction point alpha update */
 	RP_INITIAL_ALPHA_VALUE,		/* 0..1023 */
 	RP_DCE_TCP_G,			/* 0..1023 */
@@ -55,6 +56,7 @@ enum dcqcn_var {
 	RP_CLAMP_TGT_RATE_ATI,		/* 0..1 (bool) */
 	RP_THRESHOLD,			/* 1..31 */
 	RP_TIME_RESET,			/* 1..32767 (x RP_DCE_TCP_RTT) */
+	RP_QP_RATE,			/* 1.. (Mbps) */
 	RP_BYTE_RESET,			/* 1..32767 (B) */
 	RP_AI_RATE,			/* 1.. (Mbps) */
 	RP_HAI_RATE,			/* 1.. (Mbps) */
@@ -116,9 +118,10 @@ static const struct dcqcn_vals dcqcn_defaults[] = {
 	{
 		.v[NP_ICNP_802P_PRIO]			= 6,
 		.v[NP_CNP_DSCP]				= 48,
+		.v[RP_TOKEN_BUCKET_SIZE]		= 150000,
 		.v[RP_INITIAL_ALPHA_VALUE]		= 1023,
 		.v[RP_DCE_TCP_G]			= 1019,
-		.v[RP_DCE_TCP_RTT]			= 1,
+		.v[RP_DCE_TCP_RTT]			= 55,
 		.v[RP_RATE_REDUCE_MONITOR_PERIOD]	= 4,
 		.v[RP_MIN_RATE]				= 1,
 		.v[RP_GD]				= 11,
@@ -126,6 +129,7 @@ static const struct dcqcn_vals dcqcn_defaults[] = {
 		.v[RP_CLAMP_TGT_RATE_ATI]		= 1,
 		.v[RP_THRESHOLD]			= 5,
 		.v[RP_TIME_RESET]			= 5,
+		.v[RP_QP_RATE]				= 100000,
 		.v[RP_BYTE_RESET]			= 32767,
 		.v[RP_AI_RATE]				= 5,
 		.v[RP_HAI_RATE]				= 50,
@@ -159,6 +163,9 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 
 	wr.wqe.mod_dcqcn.np_cnp_dscp =
 		prof->vals.v[NP_CNP_DSCP];
+
+	wr.wqe.mod_dcqcn.rp_token_bucket_size =
+		cpu_to_be64(prof->vals.v[RP_TOKEN_BUCKET_SIZE]);
 
 	wr.wqe.mod_dcqcn.rp_initial_alpha_value =
 		cpu_to_be16(prof->vals.v[RP_INITIAL_ALPHA_VALUE]);
@@ -196,6 +203,9 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 
 	wr.wqe.mod_dcqcn.rp_time_reset =
 		cpu_to_be32(prof->vals.v[RP_TIME_RESET]);
+
+	wr.wqe.mod_dcqcn.rp_qp_rate =
+		cpu_to_be32(prof->vals.v[RP_QP_RATE]);
 
 	wr.wqe.mod_dcqcn.rp_byte_reset =
 		cpu_to_be32(prof->vals.v[RP_BYTE_RESET]);
@@ -297,6 +307,9 @@ static const struct attribute_group dcqcn_profile_np_group = {
 	.attrs = dcqcn_profile_np_attrs,
 };
 
+static DCQCN_INT_ATTR(token_bucket_size,
+		      100, 100000000, RP_TOKEN_BUCKET_SIZE);
+
 static DCQCN_INT_ATTR(initial_alpha_value,
 		      0, 1023, RP_INITIAL_ALPHA_VALUE);
 
@@ -329,7 +342,10 @@ static DCQCN_INT_ATTR(threshold,
 		      1, 31, RP_THRESHOLD);
 
 static DCQCN_INT_ATTR(time_reset,
-		      1, 131071, RP_TIME_RESET);
+		      1, 32767, RP_TIME_RESET);
+
+static DCQCN_INT_ATTR(qp_rate,
+		      1, 100000, RP_QP_RATE);
 
 static DCQCN_INT_ATTR(byte_reset,
 		      1, 32767, RP_BYTE_RESET);
@@ -341,6 +357,7 @@ static DCQCN_INT_ATTR(hai_rate,
 		      1, INT_MAX, RP_HAI_RATE);
 
 static struct attribute *dcqcn_profile_rp_attrs[] = {
+	&dcqcn_profile_attr_token_bucket_size.kattr.attr,
 	&dcqcn_profile_attr_initial_alpha_value.kattr.attr,
 	&dcqcn_profile_attr_dce_tcp_g.kattr.attr,
 	&dcqcn_profile_attr_dce_tcp_rtt.kattr.attr,
@@ -353,6 +370,7 @@ static struct attribute *dcqcn_profile_rp_attrs[] = {
 	&dcqcn_profile_attr_clamp_tgt_rate_ati.kattr.attr,
 	&dcqcn_profile_attr_threshold.kattr.attr,
 	&dcqcn_profile_attr_time_reset.kattr.attr,
+	&dcqcn_profile_attr_qp_rate.kattr.attr,
 	&dcqcn_profile_attr_byte_reset.kattr.attr,
 	&dcqcn_profile_attr_ai_rate.kattr.attr,
 	&dcqcn_profile_attr_hai_rate.kattr.attr,

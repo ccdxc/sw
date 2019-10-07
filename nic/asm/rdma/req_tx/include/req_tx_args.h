@@ -24,8 +24,11 @@ struct req_tx_lkey_to_ptseg_info_t {
 struct req_tx_to_stage_2_t {
     wqe_addr: 64;
     header_template_addr: 32;
-    ah_base_addr_page_id: 22;
-    pad: 10;
+    spec_cindex: 16;
+    fast_reg_rsvd_lkey_enable: 1;
+    pad: 6;
+    log_num_kt_entries: 5;
+    log_num_dcqcn_profiles: 4;
 };
 
 #if 0

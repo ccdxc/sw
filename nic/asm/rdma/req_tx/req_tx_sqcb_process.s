@@ -105,12 +105,14 @@ process_req_tx:
         mincr          r2, 24, -1
         tblwr.c4       d.spec_msg_psn, r2
         tblwr          d.dcqcn_rl_failure, 0
+        phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_reset), 1
 
 process_send:
         bbeq           d.frpmr_in_progress, 1, frpmr
                               
         // if (sqcb0_p->fence) goto fence
         seq            c3, d.fence, 1 // Branch Delay Slot
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
         bcf            [c3], fence
         
         // if (sqcb0_p->in_progress) goto in_progress
@@ -133,9 +135,8 @@ poll_for_work:
         // header_template_addr is needed to load hdr_template_process in fast-path.
         // For UD QPs, header_template_addr is shared with the q_key
         phvwrpair      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
-                       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, spec_cindex), SPEC_SQ_C_INDEX // BD-slot
+                       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable // BD-slot
 
-        phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
 
@@ -168,7 +169,6 @@ poll_for_work:
         sll            r4, 1, d.log_pmtu
         
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
-        CAPRI_RESET_TABLE_0_ARG()
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), d.log_pmtu, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
@@ -182,19 +182,14 @@ poll_for_work:
         cmov      r1, c1, d.read_req_adjust, 0
         phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), r1
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX 
+        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
  
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r2, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
-
-        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
-        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
-                  
-        
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
+
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, r2)
         
@@ -224,7 +219,6 @@ pt_process:
         sll            r4, 1, d.log_pmtu
         
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
-        CAPRI_RESET_TABLE_0_ARG()
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, page_offset), r1, \
                   CAPRI_PHV_FIELD(SQCB_TO_PT_P, remaining_payload_bytes), r4
         // TODO Need to check for room in RRQ ring for Read/Atomic before
@@ -246,15 +240,12 @@ pt_process:
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 
-        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
-        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
 
         seq.e          c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
@@ -262,6 +253,8 @@ pt_process:
 in_progress:
         // do not speculate for in_progress processing
         add            r4, r0, SQ_C_INDEX // Branch Delay Slot
+        // r1 is base address of PHV_GLOBAL. Preserve it.
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, r4)
 
         // Set rexmit bit if spec-cindex is behind sqd-cindex
         sub            r2, SQ_P_INDEX, d.sqd_cindex
@@ -275,14 +268,11 @@ in_progress:
         phvwrpair CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr, \
                   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
        
-        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r4
+        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
+
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr
         
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r4
-        
-        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r4
+        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
         
         mincr          r4, d.log_num_wqes, 1
 
@@ -346,6 +336,10 @@ in_progress_spec:
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, num_valid_sges), d.num_sges, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
 
+        add       r4, d.spec_msg_psn, r0
+        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, host_addr_spec_enable), d.spec_enable, \
+                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie_msg_psn), r4
+	
         phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, in_progress), d.in_progress
 
         phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
@@ -503,6 +497,7 @@ restart_timer:
         nop
 
     .brcase        MAX_SQ_DOORBELL_RINGS
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
 
         crestore  [c2], d.poll_for_work, 0x1
         crestore  [c1], d.poll_in_progress, 0x1
@@ -559,6 +554,7 @@ fence:
 
     // Reset spec-cindex to cindex to re-process wqe.
     tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
 
     // Set rexmit bit if spec-cindex is behind sqd-cindex
     sub            r2, SQ_P_INDEX, d.sqd_cindex
@@ -574,12 +570,10 @@ fence:
                 CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
     phvwrpair   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
                 CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
-    phvwrpair   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-                CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr       CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
     phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, wqe_addr), d.curr_wqe_ptr
     phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
-                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
-    phvwr       CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
+                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
 
     // Set up s2s info.
     CAPRI_RESET_TABLE_0_ARG()
@@ -611,6 +605,7 @@ end:
 frpmr:
     // Reset spec_cindex and trigger dcqcn/sqcb_write_back/sqcb2_write_back to update cindex-copy everywhere.
     tblwr      SPEC_SQ_C_INDEX, SQ_C_INDEX
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
 
     // Set rexmit bit if spec-cindex is behind sqd-cindex
     sub            r2, SQ_P_INDEX, d.sqd_cindex
@@ -624,8 +619,6 @@ frpmr:
     // Its ok to reset the flag here. cindex-copy update is not expected to fail!
     tblwr      d.frpmr_in_progress, 0
 
-    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
     // Fence on FRPMR WQE is no-op. So set fence_done to 1 to skip fence check.
     phvwr      CAPRI_PHV_FIELD(SQCB_TO_WQE_P, fence_done), 1
 

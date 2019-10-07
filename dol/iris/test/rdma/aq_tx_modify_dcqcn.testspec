@@ -19,6 +19,7 @@ descriptors:
             modify_dcqcn:
                 np_incp_802p_prio               : 6
                 np_cnp_dscp                     : 48
+                rp_token_bucket_size            : 1000
                 rp_initial_alpha_value          : 1023
                 rp_dce_tcp_g                    : 1019
                 rp_dce_tcp_rtt                  : 1
@@ -30,6 +31,7 @@ descriptors:
                 rp_clamp_flags                  : 2
                 rp_threshold                    : 1
                 rp_time_reset                   : 300
+                rp_qp_rate                      : 10
                 rp_byte_reset                   : 32767
                 rp_ai_rate                      : 5
                 rp_hai_rate                     : 15
@@ -45,6 +47,7 @@ descriptors:
             modify_dcqcn:
                 np_incp_802p_prio               : 6
                 np_cnp_dscp                     : 48
+                rp_token_bucket_size            : 1000
                 rp_initial_alpha_value          : 1023
                 rp_dce_tcp_g                    : 1019
                 rp_dce_tcp_rtt                  : 1
@@ -56,6 +59,7 @@ descriptors:
                 rp_clamp_flags                  : 2
                 rp_threshold                    : 1
                 rp_time_reset                   : 300
+                rp_qp_rate                      : 10
                 rp_byte_reset                   : 32767
                 rp_ai_rate                      : 5
                 rp_hai_rate                     : 15

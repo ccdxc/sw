@@ -30,7 +30,6 @@ struct req_tx_s3_t0_k k;
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 #define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
-#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_SPEC_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, spec_enable)
 #define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_msg_psn_sbit0_ebit7, spec_msg_psn_sbit16_ebit23)
 
@@ -236,12 +235,10 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
-                   p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
+    phvwr          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
     phvwr          p.common.p4_intr_recirc, 1
 
-    phvwrpair      CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX, \
-                   CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, read_req_adjust), K_SPEC_MSG_PSN
+    phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, read_req_adjust), K_SPEC_MSG_PSN
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0)
 
