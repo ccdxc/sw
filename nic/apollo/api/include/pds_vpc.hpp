@@ -69,13 +69,15 @@ typedef struct pds_vpc_info_s {
 
 /// \brief     create VPC
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC ID and prefix should be passed
 ///            VPC prefix should not overlap with existing VPC prefixes
 ///            A VPC with same ID should not be created again
 ///            Any other validation that is expected on the VPC should be done
 ///            by the caller
-sdk_ret_t pds_vpc_create(pds_vpc_spec_t *spec);
+sdk_ret_t pds_vpc_create(pds_vpc_spec_t *spec,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read VPC
 /// \param[in]  key  key
@@ -86,15 +88,19 @@ sdk_ret_t pds_vpc_read(pds_vpc_key_t *key, pds_vpc_info_t *info);
 
 /// \brief     update VPC
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC specification should be passed
-sdk_ret_t pds_vpc_update(pds_vpc_spec_t *spec);
+sdk_ret_t pds_vpc_update(pds_vpc_spec_t *spec,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete VPC
 /// \param[in] key key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC key should be passed
-sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key);
+sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief VPC peering specification
 typedef struct pds_vpc_peer_spec_s {
@@ -122,8 +128,10 @@ typedef struct pds_vpc_peer_info_s {
 
 /// \brief     create VPC peering
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec);
+sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec,
+                              pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read VPC peering related information
 /// \param[in]  key  key
@@ -133,14 +141,18 @@ sdk_ret_t pds_vpc_peer_read(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
 
 /// \brief     update VPC peering
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid VPC specification should be passed
-sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec);
+sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec,
+                              pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete VPC peering
 /// \param[in] key key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vpc_peer_delete(pds_vpc_peer_key_t *key);
+sdk_ret_t pds_vpc_peer_delete(pds_vpc_peer_key_t *key,
+                              pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

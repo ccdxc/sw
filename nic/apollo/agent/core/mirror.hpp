@@ -18,10 +18,13 @@ typedef struct mirror_session_db_cb_ctxt_s {
 } mirror_session_db_cb_ctxt_t;
 
 sdk_ret_t mirror_session_create(pds_mirror_session_key_t *key,
-                                pds_mirror_session_spec_t *spec);
+                                pds_mirror_session_spec_t *spec,
+                                pds_batch_ctxt_t bctxt);
 sdk_ret_t mirror_session_update(pds_mirror_session_key_t *key,
-                                pds_mirror_session_spec_t *spec);
-sdk_ret_t mirror_session_delete(pds_mirror_session_key_t *key);
+                                pds_mirror_session_spec_t *spec,
+                                pds_batch_ctxt_t bctxt);
+sdk_ret_t mirror_session_delete(pds_mirror_session_key_t *key,
+                                pds_batch_ctxt_t bctxt);
 sdk_ret_t mirror_session_get(pds_mirror_session_key_t *key,
                              pds_mirror_session_info_t *info);
 sdk_ret_t mirror_session_get_all(mirror_session_get_cb_t mirror_session_get_cb,

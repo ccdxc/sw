@@ -54,8 +54,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = mapping_pb2.MappingRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
@@ -120,7 +121,8 @@ class RemoteMappingObjectClient:
     def CreateObjects(self):
         if len(self.__objs) == 0:
             return
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.MAPPING, msgs)
         return
 

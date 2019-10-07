@@ -69,8 +69,9 @@ class TunnelObject(base.ConfigObjectBase):
                utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
                self.Nat, self.MACAddr)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = tunnel_pb2.TunnelRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.VPCId = 0 # TODO: Create Substrate VPC
@@ -92,8 +93,9 @@ class TunnelObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.Id)
         return grpcmsg
 
-    def GetGrpcDeleteMessage(self):
+    def GetGrpcDeleteMessage(self, cookie):
         grpcmsg = tunnel_pb2.TunnelDeleteRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.Id.append(self.Id)
         return grpcmsg
 
@@ -178,9 +180,10 @@ class TunnelObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__lobjs))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__lobjs))
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
         return
 

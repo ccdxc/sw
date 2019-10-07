@@ -16,7 +16,8 @@ tag_create_validate (pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-tag_create (pds_tag_key_t *key, pds_tag_spec_t *spec)
+tag_create (pds_tag_key_t *key, pds_tag_spec_t *spec,
+            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -33,7 +34,7 @@ tag_create (pds_tag_key_t *key, pds_tag_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tag_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_tag_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create tag {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -55,7 +56,8 @@ tag_update_validate (pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec)
+tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec,
+            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -72,7 +74,7 @@ tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tag_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_tag_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create tag {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -82,7 +84,7 @@ tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec)
     if (agent_state::state()->del_from_tag_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete tag {} from tag db", key->id);
     }
-    
+
     if ((ret = agent_state::state()->add_to_tag_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add tag {} to db, err {}",
                       spec->key.id, ret);
@@ -93,7 +95,7 @@ tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-tag_delete (pds_tag_key_t *key)
+tag_delete (pds_tag_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -103,7 +105,7 @@ tag_delete (pds_tag_key_t *key)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tag_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_tag_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete tag {}, err {}", key->id, ret);
             return ret;
         }

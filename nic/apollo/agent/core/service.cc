@@ -15,28 +15,33 @@ service_create_validate (pds_svc_mapping_spec_t *spec)
     pds_vpc_spec_t *vpc_spec;
 
     // verify VPC exists
-    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->key.vpc)) == NULL) {
-        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, vpc {} not found",
-                      spec->key.vpc.id, spec->key.svc_port, spec->key.vpc.id);
+    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->key.vpc)) ==
+            NULL) {
+        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, vpc {} "
+                      "not found", spec->key.vpc.id, spec->key.svc_port,
+                      spec->key.vpc.id);
         return SDK_RET_INVALID_ARG;
     }
     // verify VPC exists
     if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) == NULL) {
-        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, vpc {} not found",
-                      spec->key.vpc.id, spec->key.svc_port, spec->vpc.id);
+        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, vpc {} "
+                      "not found", spec->key.vpc.id, spec->key.svc_port,
+                      spec->vpc.id);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-service_create (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec)
+service_create (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec,
+                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_service_db(key) != NULL) {
-        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, service already exists",
-                      spec->key.vpc.id, spec->key.svc_port);
+        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, "
+                      "service already exists", spec->key.vpc.id,
+                      spec->key.svc_port);
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = service_create_validate(spec)) != SDK_RET_OK) {
@@ -46,13 +51,14 @@ service_create (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_svc_mapping_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_svc_mapping_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, err {}",
                           spec->key.vpc.id, spec->key.svc_port, ret);
             return ret;
         }
     }
-    if ((ret = agent_state::state()->add_to_service_db(key, spec)) != SDK_RET_OK) {
+    if ((ret = agent_state::state()->add_to_service_db(key, spec)) !=
+            SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add service vpc {} svc port {} to db, err {}",
                       spec->key.vpc.id, spec->key.svc_port, ret);
         return ret;
@@ -66,28 +72,35 @@ service_update_validate (pds_svc_mapping_spec_t *spec)
     pds_vpc_spec_t *vpc_spec;
 
     // verify VPC exists
-    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->key.vpc)) == NULL) {
-        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, vpc {} not found",
-                      spec->key.vpc.id, spec->key.svc_port, spec->key.vpc.id);
+    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->key.vpc)) ==
+            NULL) {
+        PDS_TRACE_ERR("Failed to create service vpc {} svc port {}, "
+                      "vpc {} not found", spec->key.vpc.id, spec->key.svc_port,
+                      spec->key.vpc.id);
         return SDK_RET_INVALID_ARG;
     }
+
     // verify VPC exists
-    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) == NULL) {
-        PDS_TRACE_ERR("Failed to update service vpc {} svc port {}, vpc {} not found",
-                      spec->key.vpc.id, spec->key.svc_port, spec->vpc.id);
+    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) ==
+            NULL) {
+        PDS_TRACE_ERR("Failed to update service vpc {} svc port {}, "
+                      "vpc {} not found", spec->key.vpc.id, spec->key.svc_port,
+                      spec->vpc.id);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-service_update (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec)
+service_update (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec,
+                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_service_db(key) == NULL) {
-        PDS_TRACE_ERR("Failed to update service vpc {} svc port {}, service doesn't exist",
-                      spec->key.vpc.id, spec->key.svc_port);
+        PDS_TRACE_ERR("Failed to update service vpc {} svc port {}, "
+                      "service doesn't exist", spec->key.vpc.id,
+                      spec->key.svc_port);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
@@ -98,7 +111,7 @@ service_update (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_svc_mapping_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_svc_mapping_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update service vpc {} svc port {}, err {}",
                           spec->key.vpc.id, spec->key.svc_port, ret);
             return ret;
@@ -110,17 +123,17 @@ service_update (pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec)
                       key->vpc.id, key->svc_port);
     }
 
-    if ((ret = agent_state::state()->add_to_service_db(key, spec)) != SDK_RET_OK) {
+    if ((ret = agent_state::state()->add_to_service_db(key, spec)) !=
+            SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add service vpc {} svc port {} to db, err {}",
                       spec->key.vpc.id, spec->key.svc_port, ret);
         return ret;
     }
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-service_delete (pds_svc_mapping_key_t *key)
+service_delete (pds_svc_mapping_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -130,7 +143,7 @@ service_delete (pds_svc_mapping_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_svc_mapping_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_svc_mapping_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete service vpc {} svc port {}, err {}",
                           key->vpc.id, key->svc_port, ret);
             return ret;

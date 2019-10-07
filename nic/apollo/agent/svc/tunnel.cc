@@ -16,27 +16,52 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    pds_tep_spec_t *api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
     for (int i = 0; i < proto_req->request_size(); i ++) {
+
         api_spec = (pds_tep_spec_t *)
                     core::agent_state::state()->tep_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         pds_tep_proto_to_api_spec(api_spec, request);
         hooks::tunnel_create(api_spec);
-        ret = core::tep_create(request.id(), api_spec);
+        ret = core::tep_create(request.id(), api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
-            break;
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -47,26 +72,51 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    pds_tep_spec_t *api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_tep_spec_t *)
-                    core::agent_state::state()->tep_slab()->alloc();
+        api_spec =
+            (pds_tep_spec_t *)core::agent_state::state()->tep_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         pds_tep_proto_to_api_spec(api_spec, request);
-        ret = core::tep_update(request.id(), api_spec);
+        ret = core::tep_update(request.id(), api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
-            break;
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -76,14 +126,36 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
                             const pds::TunnelDeleteRequest *proto_req,
                             pds::TunnelDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
-        ret = core::tep_delete(proto_req->id(i));
+        ret = core::tep_delete(proto_req->id(i), bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }

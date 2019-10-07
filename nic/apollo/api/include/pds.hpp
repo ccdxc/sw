@@ -20,39 +20,41 @@
 /// \defgroup PDS_BASE Base enums and macros
 /// @{
 
-#define PDS_EPOCH_INVALID             0x0    ///< Invalid epoch
-#define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< Invalid route table id
-#define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy id
+#define PDS_EPOCH_INVALID             0x0    ///< invalid epoch
+#define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< invalid route table id
+#define PDS_POLICY_ID_INVALID         0x0    ///< invalid policy id
+#define PDS_BATCH_CTXT_INVALID        0x0    ///< invalid batch context
 
 // Basic PDS data types
-typedef uint32_t                  pds_vpc_id_t;              ///< VPC id
-typedef uint32_t                  pds_subnet_id_t;           ///< Subnet id
-typedef uint16_t                  pds_vnic_id_t;             ///< VNIC id
-typedef uint32_t                  pds_rule_id_t;             ///< Rule index
-typedef uint32_t                  pds_rsc_pool_id_t;         ///< Resource pool id
-typedef uint32_t                  pds_epoch_t;               ///< Epoch id
+typedef uint64_t                  pds_batch_ctxt_t;          ///< opaque batch context
+typedef uint32_t                  pds_vpc_id_t;              ///< vpc id
+typedef uint32_t                  pds_subnet_id_t;           ///< subnet id
+typedef uint16_t                  pds_vnic_id_t;             ///< vnic id
+typedef uint32_t                  pds_rule_id_t;             ///< rule identifier
+typedef uint32_t                  pds_rsc_pool_id_t;         ///< resource pool id
+typedef uint32_t                  pds_epoch_t;               ///< epoch id
 typedef uint32_t                  pds_slot_id_t;             ///< MPLS tag value
 typedef uint16_t                  pds_vlan_id_t;             ///< VLAN tag value
-typedef uint32_t                  pds_vnid_id_t;             ///< VXLAN id
+typedef uint32_t                  pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t                  pds_mpls_tag_t;            ///< MPLS tag value
-typedef uint32_t                  pds_mapping_id_t;          ///< Mapping table index
-typedef uint32_t                  pds_route_table_id_t;      ///< Route table index
-typedef uint32_t                  pds_policy_id_t;           ///< Policy table index
-typedef uint16_t                  pds_lif_key_t;             ///< LIF key id
-typedef uint32_t                  pds_if_id_t;               ///< Interface id
-typedef uint32_t                  pds_mirror_session_id_t;   ///< Mirror session table index
-typedef uint32_t                  pds_meter_id_t;            ///< Meter table index
-typedef uint32_t                  pds_tag_id_t;              ///< TAG table index
-typedef uint32_t                  pds_vpc_peer_id_t;         ///< VPC peer id
-typedef uint32_t                  pds_nexthop_id_t;          ///< Nexthop table index
-typedef uint32_t                  pds_nexthop_group_id_t;    ///< Nexthop group table index
+typedef uint32_t                  pds_mapping_id_t;          ///< mapping table index
+typedef uint32_t                  pds_route_table_id_t;      ///< route table index
+typedef uint32_t                  pds_policy_id_t;           ///< policy table index
+typedef uint16_t                  pds_lif_key_t;             ///< lif key id
+typedef uint32_t                  pds_if_id_t;               ///< interface id
+typedef uint32_t                  pds_mirror_session_id_t;   ///< mirror session table index
+typedef uint32_t                  pds_meter_id_t;            ///< meter table index
+typedef uint32_t                  pds_tag_id_t;              ///< tag table index
+typedef uint32_t                  pds_vpc_peer_id_t;         ///< vpc peer id
+typedef uint32_t                  pds_nexthop_id_t;          ///< nexthop table index
+typedef uint32_t                  pds_nexthop_group_id_t;    ///< nexthop group table index
 typedef uint32_t                  pds_tep_id_t;              ///< TEP table index
+typedef uint32_t                  pds_ifindex_t;             ///< interface index
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface
-typedef uint32_t                  pds_ifindex_t;             ///< Interface index
 
-/// \brief Encapsulation type
+/// \brief encapsulation type
 typedef enum pds_encap_type_e {
     PDS_ENCAP_TYPE_NONE     = 0,    ///< No encap
     PDS_ENCAP_TYPE_DOT1Q    = 1,    ///< dot1q encap
@@ -63,11 +65,11 @@ typedef enum pds_encap_type_e {
 
 /// \brief QinQ tag values
 typedef struct pds_qinq_tag_s {
-    uint16_t c_tag;    ///< Customer VLAN tag
-    uint16_t s_tag;    ///< Service VLAN tag
+    uint16_t c_tag;    ///< customer VLAN tag
+    uint16_t s_tag;    ///< service VLAN tag
 } pds_qinq_tag_t;
 
-/// \brief Encapsulation values
+/// \brief encapsulation values
 typedef union pds_encap_val_u {
     uint16_t       vlan_tag;    ///< 12 bit .1q tag
     pds_qinq_tag_t qinq_tag;    ///< QinQ tag
@@ -76,10 +78,10 @@ typedef union pds_encap_val_u {
     uint32_t       value;       ///< generic value to refer to other values
 } pds_encap_val_t;
 
-/// \brief Encapsulation config
+/// \brief encapsulation config
 typedef struct pds_encap_s {
-    pds_encap_type_t type;    ///< Encap type
-    pds_encap_val_t  val;     ///< Encap value
+    pds_encap_type_t type;    ///< encap type
+    pds_encap_val_t  val;     ///< encap value
 } pds_encap_t;
 
 /// \@}
@@ -92,7 +94,7 @@ typedef struct pds_vpc_key_s {
 /// \brief    subnet key
 /// \remark subnet id is not scoped under a vpc, it is globally unique id
 typedef struct pds_subnet_key_s {
-    pds_subnet_id_t id;    ///< Subnet id
+    pds_subnet_id_t id;    ///< subnet id
 } __PACK__ pds_subnet_key_t;
 
 /// \brief    TEP key
@@ -107,17 +109,17 @@ typedef struct pds_if_key_s {
 
 /// \brief VNIC key
 typedef struct pds_vnic_key_s {
-    pds_vnic_id_t id;    ///< Unique VNIC id (in the range 0 to 1024)
+    pds_vnic_id_t id;    ///< unique VNIC id (in the range 0 to 1024)
 } __PACK__ pds_vnic_key_t;
 
 /// \brief Meter key
 typedef struct pds_meter_key_s {
-    pds_meter_id_t id;    ///< Unique meter id
+    pds_meter_id_t id;    ///< unique meter id
 } __PACK__ pds_meter_key_t;
 
 /// \brief Tag key
 typedef struct pds_tag_key_s {
-    pds_tag_id_t id;    ///< Unique tag id
+    pds_tag_id_t id;    ///< unique tag id
 } __PACK__ pds_tag_key_t;
 
 /// \brief    mapping key
@@ -136,7 +138,7 @@ typedef struct pds_route_table_key_s {
 
 /// \brief    policy key
 typedef struct pds_policy_key_s {
-    pds_policy_id_t    id;    ///< Unique id for the policy
+    pds_policy_id_t    id;    ///< unique id for the policy
 } __PACK__ pds_policy_key_t;
 
 /// \brief    mirror session key
@@ -157,7 +159,7 @@ typedef struct pds_nexthop_group_key_s {
 
 /// \brief    resource pool key
 typedef struct pds_rsc_pool_key_s {
-    pds_rsc_pool_id_t id;    ///< Resource pool id
+    pds_rsc_pool_id_t id;    ///< resource pool id
 } __PACK__ pds_rsc_pool_key_t;
 
 /// \brief    service mapping key

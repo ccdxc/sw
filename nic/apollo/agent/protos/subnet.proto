@@ -74,7 +74,9 @@ message Subnet {
 
 // subnet create and update request
 message SubnetRequest {
-  repeated SubnetSpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt     BatchCtxt = 1;
+  repeated SubnetSpec Request   = 2;
 }
 
 // subnet create and update response
@@ -96,7 +98,9 @@ message SubnetGetResponse {
 
 // subnet delete request
 message SubnetDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // subnet delete response

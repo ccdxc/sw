@@ -63,8 +63,9 @@ class LocalMappingObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = mapping_pb2.MappingRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id.VPCId = self.VNIC.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
@@ -86,8 +87,9 @@ class LocalMappingObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
         return grpcmsg
 
-    def GetGrpcSvcMappingCreateMessage(self):
+    def GetGrpcSvcMappingCreateMessage(self, cookie):
         grpcmsg = service_pb2.SvcMappingRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Key.VPCId = self.SubstrateVPCId
         utils.GetRpcIPAddr(self.SvcIPAddr, spec.Key.IPAddr)
@@ -142,11 +144,12 @@ class LocalMappingObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.MAPPING, msgs)
 
         if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(), self.__objs))
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.__objs))
             api.client.Create(api.ObjectTypes.SVCMAPPING, msgs)
         return
 

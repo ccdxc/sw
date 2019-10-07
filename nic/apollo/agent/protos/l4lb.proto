@@ -86,7 +86,9 @@ message L4LbPolicy {
 
 // L4Lb policy create and update request
 message L4LbPolicyRequest {
-  repeated L4LbPolicySpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt         BatchCtxt = 1;
+  repeated L4LbPolicySpec Request   = 2;
 }
 
 // L4Lb policy create and update response
@@ -108,7 +110,9 @@ message L4LbPolicyGetResponse {
 
 // L4Lb policy delete request
 message L4LbPolicyDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // L4Lb policy delete response

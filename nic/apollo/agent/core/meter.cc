@@ -16,17 +16,17 @@ meter_create_validate (pds_meter_spec_t *spec)
         pds_meter_rule_t *rule_spec = &spec->rules[rule];
         if ((rule_spec->type == PDS_METER_TYPE_PPS_POLICER) ||
             (rule_spec->type == PDS_METER_TYPE_BPS_POLICER)) {
-            PDS_TRACE_ERR("Failed to create meter {}. PPS and BPS Policers not supported",
-                          spec->key.id);
+            PDS_TRACE_ERR("Failed to create meter {}, PPS and BPS policers "
+                          "not supported", spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
     }
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-meter_create (pds_meter_key_t *key, pds_meter_spec_t *spec)
+meter_create (pds_meter_key_t *key, pds_meter_spec_t *spec,
+              pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -43,14 +43,15 @@ meter_create (pds_meter_key_t *key, pds_meter_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_meter_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_meter_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create meter {}, err {}",
                           spec->key.id, ret);
             return ret;
         }
     }
 
-    if ((ret = agent_state::state()->add_to_meter_db(key, spec)) != SDK_RET_OK) {
+    if ((ret = agent_state::state()->add_to_meter_db(key, spec)) !=
+            SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add meter {} to db, err {}",
                       spec->key.id, ret);
         return ret;
@@ -65,17 +66,17 @@ meter_update_validate (pds_meter_spec_t *spec)
         pds_meter_rule_t *rule_spec = &spec->rules[rule];
         if ((rule_spec->type == PDS_METER_TYPE_PPS_POLICER) ||
             (rule_spec->type == PDS_METER_TYPE_BPS_POLICER)) {
-            PDS_TRACE_ERR("Failed to update meter {}. PPS and BPS Policers not supported",
-                          spec->key.id);
+            PDS_TRACE_ERR("Failed to update meter {}, PPS and BPS policers "
+                          "not supported", spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
     }
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec)
+meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec,
+              pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -92,7 +93,7 @@ meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_meter_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_meter_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create meter {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -103,17 +104,17 @@ meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec)
         PDS_TRACE_ERR("Failed to delete meter {} from meter db", key->id);
     }
 
-    if ((ret = agent_state::state()->add_to_meter_db(key, spec)) != SDK_RET_OK) {
+    if ((ret = agent_state::state()->add_to_meter_db(key, spec)) !=
+            SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add meter {} to db, err {}",
                       spec->key.id, ret);
         return ret;
     }
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-meter_delete (pds_meter_key_t *key)
+meter_delete (pds_meter_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -123,7 +124,7 @@ meter_delete (pds_meter_key_t *key)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_meter_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_meter_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete meter {}, err {}", key->id, ret);
             return ret;
         }

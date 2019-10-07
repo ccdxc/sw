@@ -316,7 +316,9 @@ message PortGetResponse {
 }
 
 message PortUpdateRequest {
-  PortSpec Spec = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  PortSpec        Spec      = 2;
 }
 
 message PortUpdateResponse {

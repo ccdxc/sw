@@ -60,10 +60,9 @@ typedef struct pds_subnet_info_s {
 } __PACK__ pds_subnet_info_t;
 
 /// \brief Create subnet
-///
 /// \param[in] spec Specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-///
 /// \remark
 ///  - A valid VPC id should be used
 ///  - Subnet prefix passed should be valid as per VPC prefix
@@ -71,35 +70,34 @@ typedef struct pds_subnet_info_s {
 ///  - Subnet with same id should not be created again
 ///  - Any other validation that is expected on the subnet should be done
 ///    by the caller
-sdk_ret_t pds_subnet_create(pds_subnet_spec_t *spec);
+sdk_ret_t pds_subnet_create(pds_subnet_spec_t *spec,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief Read subnet
-///
 /// \param[in] key Key
 /// \param[out] info Information
 /// \return #SDK_RET_OK on success, failure status code on error
-///
 /// \remark
 ///  - Subnet spec containing a valid subnet key should be passed
 sdk_ret_t pds_subnet_read(pds_subnet_key_t *key, pds_subnet_info_t *info);
 
 /// \brief Update subnet
-///
 /// \param[in] spec Specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-///
 /// \remark
 ///  - A valid subnet spec should be passed
-sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec);
+sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief Delete subnet
-///
 /// \param[in] key Key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-///
 /// \remark
 ///  - A valid subnet key should be passed
-sdk_ret_t pds_subnet_delete(pds_subnet_key_t *key);
+sdk_ret_t pds_subnet_delete(pds_subnet_key_t *key,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

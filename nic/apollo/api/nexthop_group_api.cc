@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -16,26 +17,25 @@
 #include "nic/apollo/api/nexthop_group_state.hpp"
 
 static sdk_ret_t
-pds_nexthop_group_api_handle (api::api_op_t op, pds_nexthop_group_key_t *key,
+pds_nexthop_group_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+                              pds_nexthop_group_key_t *key,
                               pds_nexthop_group_spec_t *spec)
 {
     sdk_ret_t rv;
-    api_ctxt_t api_ctxt;
+    api_ctxt_t *api_ctxt;
 
     if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
-    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_NEXTHOP, op);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = op;
-        api_ctxt.obj_id = api::OBJ_ID_NEXTHOP;
+    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_NEXTHOP, op);
+    if (likely(api_ctxt != NULL)) {
         if (op == api::API_OP_DELETE) {
-            api_ctxt.api_params->nexthop_group_key = *key;
+            api_ctxt->api_params->nexthop_group_key = *key;
         } else {
-            api_ctxt.api_params->nexthop_group_spec = *spec;
+            api_ctxt->api_params->nexthop_group_spec = *spec;
         }
-        return (api::g_api_engine.process_api(&api_ctxt));
+        return process_api(bctxt, api_ctxt);
     }
     return SDK_RET_OOM;
 }
@@ -72,9 +72,10 @@ pds_nexthop_group_find (pds_nexthop_group_key_t *key)
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-pds_nexthop_group_create (pds_nexthop_group_spec_t *spec)
+pds_nexthop_group_create (_In_ pds_nexthop_group_spec_t *spec,
+                          _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_nexthop_group_api_handle(api::API_OP_CREATE, NULL, spec));
+    return pds_nexthop_group_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -110,13 +111,15 @@ pds_nexthop_group_read (pds_nexthop_group_key_t *key,
 }
 
 sdk_ret_t
-pds_nexthop_group_update (pds_nexthop_group_spec_t *spec)
+pds_nexthop_group_update (_In_ pds_nexthop_group_spec_t *spec,
+                          _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_nexthop_group_api_handle(api::API_OP_UPDATE, NULL, spec));
+    return pds_nexthop_group_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
-pds_nexthop_group_delete (pds_nexthop_group_key_t *key)
+pds_nexthop_group_delete (_In_ pds_nexthop_group_key_t *key,
+                          _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_nexthop_group_api_handle(api::API_OP_DELETE, key, NULL));
+    return pds_nexthop_group_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
 }

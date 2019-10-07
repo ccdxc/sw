@@ -17,7 +17,6 @@ PortSvcImpl::PortGet(ServerContext *context,
     sdk_ret_t ret;
 
     PDS_TRACE_VERBOSE("Received Port Get");
-
     if (proto_req) {
         for (int i = 0; i < proto_req->id_size(); i ++) {
             ret = api::port_get(proto_req->id(i), pds_port_to_proto,

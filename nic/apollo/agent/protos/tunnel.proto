@@ -82,7 +82,9 @@ message Tunnel {
 
 // tunnel create and update request
 message TunnelRequest {
-  repeated TunnelSpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt     BatchCtxt = 1;
+  repeated TunnelSpec Request   = 2;
 }
 
 // tunnel create and update response
@@ -104,7 +106,9 @@ message TunnelGetResponse {
 
 // tunnel delete request
 message TunnelDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // tunnel delete response

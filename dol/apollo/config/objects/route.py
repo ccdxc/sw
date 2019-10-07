@@ -77,8 +77,9 @@ class RouteObject(base.ConfigObjectBase):
                %(self.RouteTblId, self.VPCId, self.AddrFamily,\
                  len(self.routes), self.RouteType)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = route_pb2.RouteTableRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
@@ -98,8 +99,9 @@ class RouteObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.RouteTblId)
         return grpcmsg
 
-    def GetGrpcDeleteMessage(self):
+    def GetGrpcDeleteMessage(self, cookie):
         grpcmsg = route_pb2.RouteTableDeleteRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.Id.append(self.RouteTblId)
         return grpcmsg
 
@@ -340,7 +342,8 @@ class RouteObjectClient:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.ROUTE, msgs)
         return
 

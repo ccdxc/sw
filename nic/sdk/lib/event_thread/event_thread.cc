@@ -60,7 +60,7 @@ event_thread::factory(const char *name, uint32_t thread_id,
     if (!mem) {
         return NULL;
     }
-    
+
     new_thread = new (mem) event_thread();
     rv = new_thread->init(name, thread_id, thread_role, cores_mask,
                           init_func, exit_func, message_cb, ipc_cb, prio,
@@ -167,8 +167,8 @@ event_thread::run_(void) {
 
     // IPC
     this->ipc_client_ = ipc::ipc_client::factory(this->thread_id());
-    ev_io_init(&this->ipc_watcher_, &this->ipc_callback_, this->ipc_client_->fd(),
-               EV_READ);
+    ev_io_init(&this->ipc_watcher_, &this->ipc_callback_,
+               this->ipc_client_->fd(), EV_READ);
     this->ipc_watcher_.data = this;
 
     ev_io_start(this->loop_, &this->ipc_watcher_);
@@ -273,7 +273,7 @@ event_timer_start (event_timer_t *timer)
 {
     // We can only add and remove events from inside the context of the thread
     assert(t_event_thread_ != NULL);
-    
+
     t_event_thread_->timer_start(timer);
 }
 
@@ -282,7 +282,7 @@ event_timer_stop (event_timer_t *timer)
 {
     // We can only add and remove events from inside the context of the thread
     assert(t_event_thread_ != NULL);
-    
+
     t_event_thread_->timer_stop(timer);
 }
 
@@ -291,7 +291,7 @@ event_timer_again (event_timer_t *timer)
 {
     // We can only manipulate events from inside the context of the thread
     assert(t_event_thread_ != NULL);
-    
+
     t_event_thread_->timer_again(timer);
 }
 
@@ -322,7 +322,7 @@ event_message_send (uint32_t thread_id, void *message)
 {
     assert(thread_id <= MAX_THREAD_ID);
     assert(g_event_thread_table[thread_id] != NULL);
-    
+
     g_event_thread_table[thread_id]->message_send(message);
 }
 
@@ -330,7 +330,7 @@ void
 event_thread::message_send(void *message) {
     // This function can be called from different thread
     // No locking required
-    
+
     this->enqueue(message);
     ev_async_send(this->loop_, &this->async_watcher_);
 }
@@ -352,7 +352,7 @@ void
 event_ipc_reply (ipc::ipc_msg_ptr msg, const void *data, size_t data_length)
 {
     assert(t_event_thread_ != NULL);
-    
+
     t_event_thread_->ipc_reply(msg, data, data_length);
 }
 

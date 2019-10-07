@@ -9,16 +9,21 @@
 
 namespace core {
 
-typedef void (*service_get_cb_t)(const pds_svc_mapping_info_t *spec, void *ctxt);
+typedef void (*service_get_cb_t)(const pds_svc_mapping_info_t *spec,
+                                 void *ctxt);
 
 typedef struct service_db_cb_ctxt_s {
     service_get_cb_t cb;
     void *ctxt;
 } service_db_cb_ctxt_t;
 
-sdk_ret_t service_create(pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec);
-sdk_ret_t service_update(pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec);
-sdk_ret_t service_delete(pds_svc_mapping_key_t *key);
+sdk_ret_t service_create(pds_svc_mapping_key_t *key,
+                         pds_svc_mapping_spec_t *spec,
+                         pds_batch_ctxt_t bctxt);
+sdk_ret_t service_update(pds_svc_mapping_key_t *key,
+                         pds_svc_mapping_spec_t *spec,
+                         pds_batch_ctxt_t bctxt);
+sdk_ret_t service_delete(pds_svc_mapping_key_t *key, pds_batch_ctxt_t bctxt);
 sdk_ret_t service_get(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info);
 sdk_ret_t service_get_all(service_get_cb_t service_get_cb, void *ctxt);
 

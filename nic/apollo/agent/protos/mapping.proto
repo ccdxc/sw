@@ -79,7 +79,9 @@ message Mapping {
 
 // mapping create and update request
 message MappingRequest {
-  repeated MappingSpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt      BatchCtxt = 1;
+  repeated MappingSpec Request   = 2;
 }
 
 // mapping create and update response
@@ -107,7 +109,9 @@ message MappingDumpRequest {
 
 // mapping delete request
 message MappingDeleteRequest {
-  repeated MappingKey Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt     BatchCtxt = 1;
+  repeated MappingKey Id        = 2;
 }
 
 // mapping delete response

@@ -31,21 +31,22 @@ typedef enum api_op_e {
 /// \brief Object identifiers
 typedef enum obj_id_e {
     OBJ_ID_NONE,           ///< None
-    OBJ_ID_DEVICE,         ///< Device
-    OBJ_ID_PORT,           ///< Port
-    OBJ_ID_IF,             ///< Interface
-    OBJ_ID_VPC,            ///< VPC
-    OBJ_ID_SUBNET,         ///< Subnet
+    OBJ_ID_BATCH,          ///< batch
+    OBJ_ID_DEVICE,         ///< device
+    OBJ_ID_PORT,           ///< port
+    OBJ_ID_IF,             ///< interface
+    OBJ_ID_VPC,            ///< vpc
+    OBJ_ID_SUBNET,         ///< subnet
     OBJ_ID_TEP,            ///< TEP
-    OBJ_ID_VNIC,           ///< VNIC
-    OBJ_ID_MAPPING,        ///< Mapping
-    OBJ_ID_ROUTE_TABLE,    ///< Route table
-    OBJ_ID_POLICY,         ///< Policy
-    OBJ_ID_MIRROR_SESSION, ///< Mirror session
-    OBJ_ID_METER,          ///< Meter
-    OBJ_ID_TAG,            ///< (Service) tag
+    OBJ_ID_VNIC,           ///< vNIC
+    OBJ_ID_MAPPING,        ///< mapping
+    OBJ_ID_ROUTE_TABLE,    ///< route table
+    OBJ_ID_POLICY,         ///< policy
+    OBJ_ID_MIRROR_SESSION, ///< mirror session
+    OBJ_ID_METER,          ///< meter
+    OBJ_ID_TAG,            ///< (service) tag
     OBJ_ID_SVC_MAPPING,    ///< service mapping
-    OBJ_ID_VPC_PEER,       ///< VPC peer
+    OBJ_ID_VPC_PEER,       ///< vpc peer
     OBJ_ID_NEXTHOP,        ///< nexthop
     OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
     OBJ_ID_MAX,

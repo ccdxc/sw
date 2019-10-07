@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/service.hpp"
@@ -15,19 +16,37 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
                           const pds::SvcMappingRequest *proto_req,
                           pds::SvcMappingResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_svc_mapping_key_t key = {0};
-    pds_svc_mapping_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_svc_mapping_spec_t *api_spec;
+    pds_svc_mapping_key_t key = { 0 };
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_svc_mapping_spec_t *)
                     core::agent_state::state()->service_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.vpc.id = request.key().vpcid();
@@ -35,11 +54,18 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
         pds_service_proto_to_api_spec(api_spec, request);
         hooks::svc_mapping_create(api_spec);
-        ret = core::service_create(&key, api_spec);
+        ret = core::service_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -49,30 +75,55 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
                           const pds::SvcMappingRequest *proto_req,
                           pds::SvcMappingResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_svc_mapping_key_t key = {0};
-    pds_svc_mapping_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_svc_mapping_spec_t *api_spec;
+    pds_svc_mapping_key_t key = { 0 };
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_svc_mapping_spec_t *)
                     core::agent_state::state()->service_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.vpc.id = request.key().vpcid();
         key.svc_port = request.key().svcport();
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
         pds_service_proto_to_api_spec(api_spec, request);
-        ret = core::service_update(&key, api_spec);
+        ret = core::service_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -82,18 +133,40 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
                           const pds::SvcMappingDeleteRequest *proto_req,
                           pds::SvcMappingDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_svc_mapping_key_t key = {0};
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_svc_mapping_key_t key = { 0 };
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->key_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->key_size(); i++) {
         key.vpc.id = proto_req->key(i).vpcid();
         key.svc_port = proto_req->key(i).svcport();
         ipaddr_proto_spec_to_api_spec(&key.vip, proto_req->key(i).ipaddr());
-        ret = core::service_delete(&key);
+        ret = core::service_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -103,8 +176,8 @@ SvcImpl::SvcMappingGet(ServerContext *context,
                        const pds::SvcMappingGetRequest *proto_req,
                        pds::SvcMappingGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_svc_mapping_key_t key = {0};
-    pds_svc_mapping_info_t info = {0};
+    pds_svc_mapping_key_t key = { 0 };
+    pds_svc_mapping_info_t info = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -121,7 +194,7 @@ SvcImpl::SvcMappingGet(ServerContext *context,
         ipaddr_proto_spec_to_api_spec(&key.vip, proto_req->key(i).ipaddr());
         ret = core::service_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             break;
         }
         auto response = proto_rsp->add_response();

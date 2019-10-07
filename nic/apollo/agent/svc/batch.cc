@@ -10,36 +10,45 @@ Status
 BatchSvcImpl::BatchStart(ServerContext *context,
                          const pds::BatchSpec *proto_spec,
                          pds::BatchStatus *proto_status) {
-    pds_batch_params_t api_batch_params = { 0 };
-    api_batch_params.epoch = proto_spec->epoch();
+    pds_batch_ctxt_t bctxt;
+    pds_batch_params_t batch_params = { 0 };
+
+    batch_params.epoch = proto_spec->epoch();
+    batch_params.async = false;
 
     // TODO: adding this here since there is no proto defs for
     // flows, this needs to be cleaned up
-    if (hooks::batch_start(api_batch_params.epoch) != SDK_RET_OK) {
+    if (hooks::batch_start(batch_params.epoch) != SDK_RET_OK) {
         return Status::CANCELLED;
     }
 
-    if (api_batch_params.epoch != PDS_EPOCH_INVALID) {
-        if (pds_batch_start(&api_batch_params) == sdk::SDK_RET_OK) {
+    if (batch_params.epoch != PDS_EPOCH_INVALID) {
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt != PDS_BATCH_CTXT_INVALID) {
+            proto_status->set_apistatus(types::ApiStatus::API_STATUS_OK);
+            proto_status->mutable_batchcontext()->set_batchcookie(bctxt);
             return Status::OK;
         }
     }
-    return Status::OK;
+    proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+    return Status::CANCELLED;
 }
 
 Status
-BatchSvcImpl::BatchCommit(ServerContext *context, const Empty *proto_spec,
+BatchSvcImpl::BatchCommit(ServerContext *context,
+                          const types::BatchCtxt *ctxt,
                           Empty *proto_status) {
-    if (pds_batch_commit() == sdk::SDK_RET_OK) {
+    if (pds_batch_commit(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
         return Status::OK;
     }
     return Status::CANCELLED;
 }
 
 Status
-BatchSvcImpl::BatchAbort(ServerContext *context, const Empty *proto_spec,
+BatchSvcImpl::BatchAbort(ServerContext *context,
+                         const types::BatchCtxt *ctxt,
                          Empty *proto_status) {
-    if (pds_batch_abort() == sdk::SDK_RET_OK) {
+    if (pds_batch_destroy(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
         return Status::OK;
     }
     return Status::CANCELLED;

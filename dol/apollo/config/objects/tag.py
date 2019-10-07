@@ -48,8 +48,9 @@ class TagObject(base.ConfigObjectBase):
         return "TagTblID:%dAddrFamily:%s|NumRules:%d"\
                %(self.TagTblId, self.AddrFamily, len(self.Rules))
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = tags_pb2.TagRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.TagTblId
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
@@ -234,7 +235,8 @@ class TagObjectClient:
             #Show before create as tag gets modified after GenerateObjects()
             self.ShowObjects()
             logger.info("Creating TAG Objects in agent")
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+            cookie = utils.GetBatchCookie()
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
             api.client.Create(api.ObjectTypes.TAG, msgs)
         return
 

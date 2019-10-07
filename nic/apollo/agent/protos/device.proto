@@ -15,7 +15,7 @@ service DeviceSvc {
   rpc DeviceCreate (DeviceRequest) returns (DeviceResponse) {}
   rpc DeviceUpdate (DeviceRequest) returns (DeviceResponse) {}
   rpc DeviceGet (types.Empty) returns (DeviceGetResponse) {}
-  rpc DeviceDelete (types.Empty) returns (DeviceDeleteResponse) {}
+  rpc DeviceDelete (DeviceDeleteRequest) returns (DeviceDeleteResponse) {}
 }
 
 enum DeviceProfile {
@@ -76,7 +76,9 @@ message Device {
 
 // device create and update request
 message DeviceRequest {
-  DeviceSpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  DeviceSpec      Request   = 2;
 }
 
 // device create and update response
@@ -89,6 +91,12 @@ message DeviceResponse {
 message DeviceGetResponse {
   types.ApiStatus ApiStatus = 1;
   Device          Response  = 2;
+}
+
+// device delete request
+message DeviceDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
 }
 
 // device delete response

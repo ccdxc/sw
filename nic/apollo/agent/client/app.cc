@@ -454,61 +454,45 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
     return SDK_RET_OK;
 }
 
-sdk_ret_t
+//static uint64_t g_batch_cookie = PDS_BATCH_CTXT_INVALID;
+pds_batch_ctxt_t
 batch_start_grpc (int epoch)
 {
     BatchSpec           spec;
     ClientContext       start_context;
     Status              ret_status;
-    pds_batch_params_t  params;
+    pds_batch_params_t  params = { 0 };
     BatchStatus         status;
 
     params.epoch = epoch;
     populate_batch_spec(&spec, &params);
 
-    /* Batch start */
+    // batch start
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
         printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-
-    return SDK_RET_OK;
+    //g_batch_cookie = status.batchcontext().batchcookie();
+    return status.batchcontext().batchcookie();
 }
 
 sdk_ret_t
-batch_commit_grpc (void)
+batch_commit_grpc (pds_batch_ctxt_t bctxt)
 {
     ClientContext       commit_context;
+    BatchCtxt           batch_context;
     types::Empty        empty_spec;
     types::Empty        response;
     Status              ret_status;
 
-    /* Batch commit */
-    ret_status = g_batch_stub_->BatchCommit(&commit_context, empty_spec, &response);
+    batch_context.set_batchcookie(bctxt);
+    ret_status = g_batch_stub_->BatchCommit(&commit_context,
+                                            batch_context, &response);
     if (!ret_status.ok()) {
         printf("%s: Batch commit failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-batch_abort_grpc (void)
-{
-    ClientContext       abort_context;
-    types::Empty        empty_spec;
-    types::Empty        response;
-    Status              ret_status;
-
-    /* Batch abort */
-    ret_status = g_batch_stub_->BatchAbort(&abort_context, empty_spec, &response);
-    if (!ret_status.ok()) {
-        printf("%s: Batch abort failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
-    }
-
     return SDK_RET_OK;
 }
 

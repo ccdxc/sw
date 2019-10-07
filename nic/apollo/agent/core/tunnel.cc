@@ -25,7 +25,7 @@ tep_create_validate (pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-tep_create (uint32_t key, pds_tep_spec_t *spec)
+tep_create (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -39,7 +39,7 @@ tep_create (uint32_t key, pds_tep_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_create(spec)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_create(spec, bctxt)) != sdk::SDK_RET_OK) {
             return ret;
         }
     }
@@ -50,7 +50,7 @@ tep_create (uint32_t key, pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-tep_update (uint32_t key, pds_tep_spec_t *spec)
+tep_update (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -58,7 +58,7 @@ tep_update (uint32_t key, pds_tep_spec_t *spec)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_update(spec)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_update(spec, bctxt)) != sdk::SDK_RET_OK) {
             return ret;
         }
     }
@@ -71,7 +71,7 @@ tep_update (uint32_t key, pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-tep_delete (uint32_t key)
+tep_delete (uint32_t key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;
@@ -81,7 +81,7 @@ tep_delete (uint32_t key)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_delete(&spec->key)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_delete(&spec->key, bctxt)) != sdk::SDK_RET_OK) {
             return ret;
         }
     }

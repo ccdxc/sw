@@ -77,12 +77,14 @@ message NatPolicy {
 
 // NAT policy create and update request
 message NatPolicyRequest {
-  repeated NatPolicySpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt        BatchCtxt = 1;
+  repeated NatPolicySpec Request   = 2;
 }
 
 // NAT policy create and update response
 message NatPolicyResponse {
-  types.ApiStatus               ApiStatus = 1;
+  types.ApiStatus          ApiStatus = 1;
   repeated NatPolicyStatus Response  = 2;
 }
 
@@ -99,7 +101,9 @@ message NatPolicyGetResponse {
 
 // NAT policy delete request
 message NatPolicyDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // NAT policy delete response

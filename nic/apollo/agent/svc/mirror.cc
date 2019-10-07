@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/mirror.hpp"
@@ -15,32 +16,57 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
     pds_mirror_session_key_t key;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
     pds_mirror_session_spec_t *api_spec;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_mirror_session_spec_t *)
                        core::agent_state::state()->mirror_session_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.id = request.id();
         ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             core::agent_state::state()->mirror_session_slab()->free(api_spec);
-            break;
+            goto end;
         }
-        ret = core::mirror_session_create(&key, api_spec);
+        ret = core::mirror_session_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
-            break;
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -51,32 +77,57 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
     pds_mirror_session_key_t key;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
     pds_mirror_session_spec_t *api_spec;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_mirror_session_spec_t *)
                        core::agent_state::state()->mirror_session_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.id = request.id();
         ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             core::agent_state::state()->mirror_session_slab()->free(api_spec);
-            break;
+            goto end;
         }
-        ret = core::mirror_session_update(&key, api_spec);
+        ret = core::mirror_session_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
-            break;
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -86,17 +137,40 @@ MirrorSvcImpl::MirrorSessionDelete(ServerContext *context,
                                    const pds::MirrorSessionDeleteRequest *proto_req,
                                    pds::MirrorSessionDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
     pds_mirror_session_key_t key;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::mirror_session_delete(&key);
+        ret = core::mirror_session_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
+
     return Status::OK;
 }
 

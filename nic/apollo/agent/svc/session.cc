@@ -27,7 +27,8 @@ SessionSvcImpl::FlowGet(ServerContext *context, const Empty *req,
 }
 
 Status
-SessionSvcImpl::SessionClear(ServerContext *context, const pds::SessionClearRequest *req,
+SessionSvcImpl::SessionClear(ServerContext *context,
+                             const pds::SessionClearRequest *req,
                              pds::SessionClearResponse *rsp) {
     sdk_ret_t ret;
     uint32_t idx = 0;
@@ -39,7 +40,8 @@ SessionSvcImpl::SessionClear(ServerContext *context, const pds::SessionClearRequ
 }
 
 Status
-SessionSvcImpl::FlowClear(ServerContext *context, const pds::FlowClearRequest *req,
+SessionSvcImpl::FlowClear(ServerContext *context,
+                          const pds::FlowClearRequest *req,
                           pds::FlowClearResponse *rsp) {
     sdk_ret_t ret;
     uint32_t idx = 0;

@@ -80,11 +80,13 @@ typedef struct pds_tep_info_s {
 
 /// \brief     create TEP
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    TEP with same key (i.e., IP address) should not be created again
 ///            Any other validation that is expected on the TEP should be done
 ///            by the caller
-sdk_ret_t pds_tep_create(pds_tep_spec_t *spec);
+sdk_ret_t pds_tep_create(pds_tep_spec_t *spec,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read TEP
 /// \param[in]  key key
@@ -95,15 +97,19 @@ sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info);
 
 /// \brief     update TEP
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    valid TEP specification should be passed
-sdk_ret_t pds_tep_update(pds_tep_spec_t *spec);
+sdk_ret_t pds_tep_update(pds_tep_spec_t *spec,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete TEP
 /// \param[in] key key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    valid TEP key should be passed
-sdk_ret_t pds_tep_delete(pds_tep_key_t *key);
+sdk_ret_t pds_tep_delete(pds_tep_key_t *key,
+                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

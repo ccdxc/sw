@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/route.hpp"
@@ -14,29 +15,47 @@ Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
-    sdk_ret_t ret = sdk::SDK_RET_OK;
-    pds_route_table_key_t key = {0};
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
     pds_route_table_spec_t *api_spec;
+    pds_route_table_key_t key = { 0 };
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_route_table_spec_t *)
                     core::agent_state::state()->route_table_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.id = request.id();
         ret = pds_route_table_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
-            return Status::CANCELLED;
+            goto end;
         }
         hooks::route_table_create(api_spec);
-        ret = core::route_table_create(&key, api_spec);
+        ret = core::route_table_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
         // free the routes memory
@@ -44,9 +63,16 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
             api_spec->routes = NULL;
         }
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -85,28 +111,46 @@ Status
 RouteSvcImpl::RouteTableUpdate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
-    sdk_ret_t ret = sdk::SDK_RET_OK;
-    pds_route_table_key_t key = {0};
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_route_table_key_t key = { 0 };
     pds_route_table_spec_t *api_spec;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_route_table_spec_t *)
                     core::agent_state::state()->route_table_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto request = proto_req->request(i);
         key.id = request.id();
         ret = pds_route_table_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
-            return Status::CANCELLED;
+            goto end;
         }
-        ret = core::route_table_update(&key, api_spec);
+        ret = core::route_table_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
         // free the routes memory
@@ -114,9 +158,16 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
             api_spec->routes = NULL;
         }
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -126,16 +177,38 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
                                const pds::RouteTableDeleteRequest *proto_req,
                                pds::RouteTableDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_route_table_key_t key = {0};
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_route_table_key_t key = { 0 };
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::route_table_delete(&key);
+        ret = core::route_table_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }

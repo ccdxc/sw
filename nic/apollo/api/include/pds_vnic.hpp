@@ -74,29 +74,31 @@ typedef struct pds_vnic_info_s {
 } pds_vnic_info_t;
 
 /// \brief Create VNIC
-///
 /// \param[in] spec Specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec);
+sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec,
+                          pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief Read VNIC information
-///
 /// \param[in] key Key
 /// \param[out] info Information
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_read(pds_vnic_key_t *key, pds_vnic_info_t *info);
 
 /// \brief Update VNIC specification
-///
 /// \param[in] spec Specififcation
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vnic_update(pds_vnic_spec_t *spec);
+sdk_ret_t pds_vnic_update(pds_vnic_spec_t *spec,
+                          pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief Delete VNIC
-///
 /// \param[in] key Key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key);
+sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key,
+                          pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

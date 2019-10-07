@@ -103,9 +103,7 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   pds_epoch_t epoch,
                                   api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+                                  obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      re-activate config in the hardware stage 0 tables relevant
     ///             to this object, if any, this reactivation must be based on
@@ -138,6 +136,20 @@ private:
 
     /// \brief  destructor
     ~nexthop_impl() {}
+
+    /// \brief     program nexthop related tables during create
+    /// \param[in] epoch epoch being activated
+    /// \param[in] nh    nexthop obj being programmed
+    /// \param[in] spec  nexthop configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_create_(pds_epoch_t epoch, nexthop *nh,
+                               pds_nexthop_spec_t *spec);
+
+    /// \brief     program nexthop related tables during delete
+    /// \param[in] epoch epoch being activated
+    /// \param[in] nh    nexthop obj being programmed
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, nexthop *nh);
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification

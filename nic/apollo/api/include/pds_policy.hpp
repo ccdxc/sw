@@ -161,8 +161,10 @@ typedef struct pds_policy_info_s {
 
 /// \brief    create policy
 /// \param[in] policy    policy configurationn
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
+sdk_ret_t pds_policy_create(pds_policy_spec_t *policy,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    read policy
 /// \param[in]  key    policy key
@@ -172,13 +174,17 @@ sdk_ret_t pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info);
 
 /// \brief    update policy
 /// \param[in] policy    policy configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_update(pds_policy_spec_t *policy);
+sdk_ret_t pds_policy_update(pds_policy_spec_t *policy,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    delete policy
 /// \param[in] key    policy key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_delete(pds_policy_key_t *key);
+sdk_ret_t pds_policy_delete(pds_policy_key_t *key,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

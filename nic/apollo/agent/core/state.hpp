@@ -265,6 +265,8 @@ public:
 
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
     void pds_mock_mode_set(bool val) { pds_mock_mode_ = val; }
+    uint64_t epoch(void) const { return epoch_; }
+    uint64_t new_epoch(void) { return SDK_ATOMIC_INC_UINT64(&epoch_, 1); }
 
 private:
     void cleanup(void);
@@ -286,8 +288,9 @@ private:
     }
 
 private:
-    cfg_db  *cfg_db_;
-    bool    pds_mock_mode_;
+    cfg_db   *cfg_db_;
+    bool     pds_mock_mode_;    // true if we are in PDS HAL mock mode
+    uint64_t epoch_;            // config epoch
 };
 
 }    // namespace core

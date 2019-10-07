@@ -40,8 +40,9 @@ class MirrorSessionObject(base.ConfigObjectBase):
         return "MirrorSession%d|SnapLen:%s|SpanType:%s" %\
                (self.Id, self.SnapLen, self.SpanType)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = mirror_pb2.MirrorSessionRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.SnapLen = self.SnapLen
@@ -121,7 +122,8 @@ class MirrorSessionObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.MIRROR, msgs)
         return
 

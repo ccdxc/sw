@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -16,26 +17,24 @@
 #include "nic/apollo/api/meter_state.hpp"
 
 static sdk_ret_t
-pds_meter_api_handle (api::api_op_t op, pds_meter_key_t *key,
-                      pds_meter_spec_t *spec)
+pds_meter_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+                      pds_meter_key_t *key, pds_meter_spec_t *spec)
 {
     sdk_ret_t rv;
-    api_ctxt_t api_ctxt;
+    api_ctxt_t *api_ctxt;
 
     if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
-    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_METER, op);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = op;
-        api_ctxt.obj_id = api::OBJ_ID_METER;
+    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_METER, op);
+    if (likely(api_ctxt != NULL)) {
         if (op == api::API_OP_DELETE) {
-            api_ctxt.api_params->meter_key = *key;
+            api_ctxt->api_params->meter_key = *key;
         } else {
-            api_ctxt.api_params->meter_spec = *spec;
+            api_ctxt->api_params->meter_spec = *spec;
         }
-        return (api::g_api_engine.process_api(&api_ctxt));
+        return process_api(bctxt, api_ctxt);
     }
     return SDK_RET_OOM;
 }
@@ -51,9 +50,9 @@ pds_meter_entry_find (pds_meter_key_t *key)
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-pds_meter_create (pds_meter_spec_t *spec)
+pds_meter_create (_In_ pds_meter_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_meter_api_handle(api::API_OP_CREATE, NULL, spec));
+    return pds_meter_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -76,13 +75,13 @@ pds_meter_read (pds_meter_key_t *key, pds_meter_info_t *info)
 }
 
 sdk_ret_t
-pds_meter_update (pds_meter_spec_t *spec)
+pds_meter_update (_In_ pds_meter_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_meter_api_handle(api::API_OP_UPDATE, NULL, spec));
+    return pds_meter_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
-pds_meter_delete (pds_meter_key_t *key)
+pds_meter_delete (_In_ pds_meter_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_meter_api_handle(api::API_OP_DELETE, key, NULL));
+    return pds_meter_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
 }

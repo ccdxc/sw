@@ -38,10 +38,10 @@ sdk_ret_t create_tag_grpc(pds_tag_spec_t *spec);
 sdk_ret_t create_nexthop_grpc(pds_nexthop_spec_t *spec);
 sdk_ret_t create_svc_mapping_grpc(pds_svc_mapping_spec_t *spec);
 
-sdk_ret_t batch_start_grpc(int epoch);
-sdk_ret_t batch_commit_grpc(void);
-sdk_ret_t batch_abort_grpc(void);
+pds_batch_ctxt_t batch_start_grpc(int epoch);
+sdk_ret_t batch_commit_grpc(pds_batch_ctxt_t bctxt);
+sdk_ret_t batch_abort_grpc(pds_batch_ctxt_t bctxt);
 sdk_ret_t test_app_push_configs(void);
 void test_app_init(void);
 
-#endif
+#endif    // __TEST_APP_HPP__

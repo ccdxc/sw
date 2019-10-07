@@ -77,7 +77,10 @@ message VPC {
 
 // VPC create and update request
 message VPCRequest {
-  repeated VPCSpec Request = 1; // batched requests
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // batched requests
+  repeated VPCSpec Request  = 2;
 }
 
 // VPC create and update response
@@ -99,7 +102,9 @@ message VPCGetResponse {
 
 // VPC delete request
 message VPCDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // VPC delete response
@@ -136,8 +141,10 @@ message VPCPeer {
 
 // VPC peer create and update request
 message VPCPeerRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt      BatchCtxt = 1;
   // batched request
-  repeated VPCPeerSpec Request = 1;
+  repeated VPCPeerSpec Request   = 2;
 }
 
 // VPC peer create and update response
@@ -161,7 +168,9 @@ message VPCPeerGetResponse {
 
 // VPC peer delete request
 message VPCPeerDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // VPC peer delete response

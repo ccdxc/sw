@@ -69,8 +69,10 @@ typedef struct pds_remote_mapping_info_t {
 
 /// \brief    create local mapping
 /// \param[in] spec    local mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_t *spec);
+sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_t *spec,
+                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    read local mapping
 /// \param[in] key    key to local mapping
@@ -81,18 +83,24 @@ sdk_ret_t pds_local_mapping_read(pds_mapping_key_t *key,
 
 /// \brief    update local mapping
 /// \param[in] spec    local mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_local_mapping_update(pds_local_mapping_spec_t *spec);
+sdk_ret_t pds_local_mapping_update(pds_local_mapping_spec_t *spec,
+                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    delete local mapping
 /// \param[in] key    key to local mapping
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_local_mapping_delete(pds_mapping_key_t *key);
+sdk_ret_t pds_local_mapping_delete(pds_mapping_key_t *key,
+                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    create remote mapping
 /// \param[in] spec    remote mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_remote_mapping_create(pds_remote_mapping_spec_t *spec);
+sdk_ret_t pds_remote_mapping_create(pds_remote_mapping_spec_t *spec,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    read remote mapping
 /// \param[in] key    key to remote mapping
@@ -103,13 +111,17 @@ sdk_ret_t pds_remote_mapping_read(pds_mapping_key_t *key,
 
 /// \brief    update remote mapping
 /// \param[in] spec    remote mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_remote_mapping_update(pds_remote_mapping_spec_t *spec);
+sdk_ret_t pds_remote_mapping_update(pds_remote_mapping_spec_t *spec,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    delete remote mapping
 /// \param[in] key    key to remote mapping
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *key);
+sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *key,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

@@ -62,8 +62,10 @@ message SvcMapping {
 
 // service mapping create and update request
 message SvcMappingRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt         BatchCtxt = 1;
   // batched request
-  repeated SvcMappingSpec Request = 1;
+  repeated SvcMappingSpec Request   = 2;
 }
 
 // service mapping create and update response
@@ -88,8 +90,10 @@ message SvcMappingGetResponse {
 
 // service mapping delete request
 message SvcMappingDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated SvcKey Key = 1;
+  repeated SvcKey Key       = 2;
 }
 
 // service mapping delete response

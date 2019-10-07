@@ -23,7 +23,8 @@ mirror_session_create_validate (pds_mirror_session_spec_t *spec)
     }
     if (spec->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         // check if VPC exists, if mirror session type is ERSPAN
-        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc) == NULL) {
+        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc)
+                == NULL) {
             PDS_TRACE_ERR("Failed to create erspan mirror session {}, "
                           "vpc {} not found", spec->key.id,
                           spec->erspan_spec.vpc.id);
@@ -35,7 +36,8 @@ mirror_session_create_validate (pds_mirror_session_spec_t *spec)
 
 sdk_ret_t
 mirror_session_create (pds_mirror_session_key_t *key,
-                       pds_mirror_session_spec_t *spec)
+                       pds_mirror_session_spec_t *spec,
+                       pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -50,7 +52,7 @@ mirror_session_create (pds_mirror_session_key_t *key,
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_mirror_session_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_mirror_session_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create mirror session {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -80,7 +82,8 @@ mirror_session_update_validate (pds_mirror_session_spec_t *spec)
     }
     if (spec->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         // check if VPC exists, if mirror session type is ERSPAN
-        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc) == NULL) {
+        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc)
+                == NULL) {
             PDS_TRACE_ERR("Failed to create erspan mirror session {}, "
                           "vpc {} not found", spec->key.id,
                           spec->erspan_spec.vpc.id);
@@ -92,7 +95,8 @@ mirror_session_update_validate (pds_mirror_session_spec_t *spec)
 
 sdk_ret_t
 mirror_session_update (pds_mirror_session_key_t *key,
-                       pds_mirror_session_spec_t *spec)
+                       pds_mirror_session_spec_t *spec,
+                       pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -107,7 +111,7 @@ mirror_session_update (pds_mirror_session_key_t *key,
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_mirror_session_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_mirror_session_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update mirror session {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -127,7 +131,7 @@ mirror_session_update (pds_mirror_session_key_t *key,
 }
 
 sdk_ret_t
-mirror_session_delete (pds_mirror_session_key_t *key)
+mirror_session_delete (pds_mirror_session_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_mirror_session_spec_t *spec;
@@ -137,7 +141,7 @@ mirror_session_delete (pds_mirror_session_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_mirror_session_delete(&spec->key)) != SDK_RET_OK) {
+        if ((ret = pds_mirror_session_delete(&spec->key, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }

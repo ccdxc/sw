@@ -8,18 +8,45 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 
 namespace api {
 
+static slab *g_api_params_slab_ = NULL;
+static slab *g_api_ctxt_slab_ = NULL;
+static slab *g_api_msg_slab_ = NULL;
+// TODO: move this out of api_thread
+static sdk::lib::ipc::ipc_client *g_api_ipc_client_;
+
 /// \defgroup PDS_API_ENGINE Framework for processing APIs
 /// @{
 
 static pds_epoch_t    g_current_epoch_ = PDS_EPOCH_INVALID;
-api_engine            g_api_engine;
+static thread_local api_engine    g_api_engine;
+
+slab *
+api_params_slab (void)
+{
+    return g_api_params_slab_;
+}
+
+slab *
+api_ctxt_slab (void)
+{
+    return g_api_ctxt_slab_;
+}
+
+slab *
+api_msg_slab (void)
+{
+    return g_api_msg_slab_;
+}
 
 pds_epoch_t
 get_current_epoch (void)
@@ -27,10 +54,11 @@ get_current_epoch (void)
     return g_current_epoch_;
 }
 
-slab *
-api_params_slab (void)
+// TODO: move this out of api_thread
+sdk::lib::ipc::ipc_client *
+api_ipc_client (void)
 {
-    return g_api_engine.api_params_slab();
+    return g_api_ipc_client_;
 }
 
 sdk_ret_t
@@ -217,7 +245,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
     sdk_ret_t     ret = SDK_RET_OK;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
-                      sdk::SDK_RET_INVALID_OP);
+                       sdk::SDK_RET_INVALID_OP);
     switch (api_ctxt->api_op) {
     case API_OP_CREATE:
         ret = pre_process_create_(api_ctxt);
@@ -251,9 +279,9 @@ api_engine::pre_process_stage_(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.stage = API_BATCH_STAGE_PRE_PROCESS;
-    for (auto it = batch_ctxt_.api_ctxts.begin();
-         it != batch_ctxt_.api_ctxts.end(); ++it) {
-        ret = pre_process_api_(&*it);
+    for (auto it = batch_ctxt_.api_ctxts->begin();
+         it != batch_ctxt_.api_ctxts->end(); ++it) {
+        ret = pre_process_api_(*it);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -651,64 +679,23 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 }
 
 sdk_ret_t
-api_engine::process_api(api_ctxt_t *api_ctxt) {
-    sdk_ret_t ret;
-    bool batching = batching_en_;
-    static pds_batch_params_t batch_params;
-
-    // if batching is disabled, every API call is batch of 1
-    if (batching == false) {
-        batch_params.epoch = g_current_epoch_ + 1;
-        ret = batch_begin(&batch_params);
-        if (unlikely(ret != SDK_RET_OK)) {
-            return ret;
-        }
-    }
-    if (batch_ctxt_.stage != API_BATCH_STAGE_INIT) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-
-    // stash this API so we can process it later
-    batch_ctxt_.api_ctxts.push_back(*api_ctxt);
-
-    // end internal batching
-    if (batching == false) {
-        ret = batch_commit();
-        if (unlikely(ret != SDK_RET_OK)) {
-            // TODO: batch_abort() when abort starts working
-            //ret = batch_abort();
-            return ret;
-        }
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-api_engine::batch_begin(pds_batch_params_t *params) {
-    SDK_ASSERT_RETURN((params != NULL), sdk::SDK_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN((params->epoch != PDS_EPOCH_INVALID),
-                      sdk::SDK_RET_INVALID_ARG);
-    batching_en_ = true;
-    batch_ctxt_.epoch = params->epoch;
-    batch_ctxt_.stage = API_BATCH_STAGE_INIT;
-    batch_ctxt_.api_ctxts.reserve(64);
-    return SDK_RET_OK;
-};
-
-sdk_ret_t
-api_engine::batch_commit(void) {
+api_engine::batch_commit(batch_info_t *batch) {
     sdk_ret_t    ret;
+
+    batch_ctxt_.epoch = batch->epoch;
+    batch_ctxt_.stage = API_BATCH_STAGE_INIT;
+    batch_ctxt_.api_ctxts = &batch->apis;
 
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
-    PDS_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts.size());
+    PDS_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts->size());
     PDS_TRACE_INFO("Starting pre-process stage for epoch %u",
                    batch_ctxt_.epoch);
     ret = pre_process_stage_();
     PDS_TRACE_INFO("Finished pre-process stage for epoch %u",
                    batch_ctxt_.epoch);
     if (ret != SDK_RET_OK) {
-        return ret;
+        goto error;
     }
     PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
                    batch_ctxt_.dirty_obj_list.size(),
@@ -721,7 +708,7 @@ api_engine::batch_commit(void) {
     ret = resource_reservation_stage_();
     PDS_TRACE_INFO("Finished resource reservation phase");
     if (ret != SDK_RET_OK) {
-        return ret;
+        goto error;
     }
 
     // walk over the dirty object list and compute the (aka. puppet) objects
@@ -732,7 +719,7 @@ api_engine::batch_commit(void) {
     PDS_TRACE_INFO("Finished object dependency computation stage for epoch %u",
                    batch_ctxt_.epoch);
     if (ret != SDK_RET_OK) {
-        return ret;
+        goto error;
     }
     PDS_TRACE_INFO("Dependency object list size %u, map size %u",
                    batch_ctxt_.dep_obj_list.size(),
@@ -747,7 +734,7 @@ api_engine::batch_commit(void) {
     PDS_TRACE_INFO("Finished program config stage for epoch %u",
                    batch_ctxt_.epoch);
     if (ret != SDK_RET_OK) {
-        return ret;
+        goto error;
     }
 
     // activate the epoch in h/w & s/w by programming stage0 tables, if any
@@ -760,20 +747,9 @@ api_engine::batch_commit(void) {
     // end the table mgmt. lib transaction
     impl_base::pipeline_impl()->table_transaction_end();
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
         return ret;
     }
-
-    // clear all batch related info
-    // walk all API contexts and free the api params allocated
-    PDS_TRACE_INFO("Clearing API contexts ...");
-    for (auto it = batch_ctxt_.api_ctxts.begin();
-         it != batch_ctxt_.api_ctxts.end(); ++it) {
-        if ((*it).api_params) {
-            api_params_free((*it).api_params, (*it).obj_id, (*it).api_op);
-        }
-    }
-    batch_ctxt_.api_ctxts.clear();
-    PDS_TRACE_INFO("Finished clearing API contexts ...");
 
     // walk dirty object map/list & release all stateless object memory
     PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
@@ -790,13 +766,16 @@ api_engine::batch_commit(void) {
     g_current_epoch_ = batch_ctxt_.epoch;
     batch_ctxt_.epoch = PDS_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-    batching_en_ = false;
-
     return SDK_RET_OK;
+
+error:
+
+    batch_abort_();
+    return ret;
 }
 
 sdk_ret_t
-api_engine::batch_abort(void) {
+api_engine::batch_abort_(void) {
     sdk_ret_t                     ret;
     dirty_obj_list_t::iterator    next_it;
     obj_ctxt_t                    octxt;
@@ -817,15 +796,6 @@ api_engine::batch_abort(void) {
     // clear all batch related info
     batch_ctxt_.epoch = PDS_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-    PDS_TRACE_INFO("Clearing API contexts ...");
-    for (auto it = batch_ctxt_.api_ctxts.begin();
-         it != batch_ctxt_.api_ctxts.end(); ++it) {
-        if ((*it).api_params) {
-            api_params_free((*it).api_params, (*it).obj_id, (*it).api_op);
-        }
-    }
-    batch_ctxt_.api_ctxts.clear();
-    PDS_TRACE_INFO("Finished clearing API contexts ...");
 
     // walk dirty object map/list & release all stateless object memory
     PDS_TRACE_INFO("Clearing dirty object map/list ...");
@@ -845,21 +815,68 @@ api_engine::batch_abort(void) {
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
-    batching_en_ = false;
 
     return SDK_RET_OK;
 }
 
-api_engine::api_engine() {
-    api_params_slab_ =
+static inline sdk_ret_t
+api_engine_init (void)
+{
+    g_api_params_slab_ =
         slab::factory("api-params", PDS_SLAB_ID_API_PARAMS,
-                      sizeof(api_params_t), 128, true, true, true, NULL);
+                      sizeof(api_params_t), 512, true, true, true, NULL);
+    g_api_ctxt_slab_ =
+        slab::factory("api-ctxt", PDS_SLAB_ID_API_CTXT,
+                      sizeof(api_ctxt_t), 512, true, true, true, NULL);
+    g_api_msg_slab_ =
+        slab::factory("api-msg", PDS_SLAB_ID_API_MSG,
+                      sizeof(api_msg_t), 512, true, true, true, NULL);
+    // TODO: move this out of api_thread
+    g_api_ipc_client_ = sdk::lib::ipc::ipc_client::factory(core::THREAD_ID_CFG);
+    SDK_ASSERT(g_api_ipc_client_ != NULL);
+    return SDK_RET_OK;
 }
 
-api_engine::~api_engine() {
-    if (api_params_slab_) {
-        slab::destroy(api_params_slab_);
+void
+api_thread_init_fn (void *ctxt)
+{
+    api_engine_init();
+}
+
+void
+api_thread_exit_fn (void *ctxt)
+{
+}
+
+void
+api_thread_event_cb (void *msg, void *ctxt)
+{
+}
+
+void
+api_thread_ipc_cb (sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt)
+{
+    sdk_ret_t ret;
+    api_msg_t *api_msg = *(api_msg_t **)msg->data();
+
+    PDS_TRACE_DEBUG("Rcvd IPC msg");
+    // basic validation
+    if (unlikely(api_msg == NULL)) {
+        PDS_TRACE_ERR("Empty ipc msg received");
+        return;
     }
+
+    switch (api_msg->msg_id) {
+    case API_MSG_ID_BATCH:
+        ret = g_api_engine.batch_commit(&api_msg->batch);
+        break;
+
+    default:
+        PDS_TRACE_ERR("Unknown ipc msg %u", api_msg->msg_id);
+        break;
+    }
+    sdk::lib::event_ipc_reply(msg, &ret, sizeof(ret));
+    return;
 }
 
 /// \@}

@@ -31,6 +31,11 @@ class BatchObject(base.ConfigObjectBase):
         batchspec.epoch = 0
         return batchspec
 
+    def GetBatchContext(self):
+        batchctx = types_pb2.BatchCtxt()
+        batchctx.BatchCookie = Store.GetBatchCookie()
+        return batchctx
+
     def SetNextEpoch(self):
         self.epoch += 1
         return
@@ -39,7 +44,7 @@ class BatchObject(base.ConfigObjectBase):
         logger.info("Batch Object:", self)
         logger.info("- %s" % repr(self))
         return
-    
+
 class BatchObjectClient:
     def __init__(self):
         self.__obj = None
@@ -61,14 +66,22 @@ class BatchObjectClient:
 
     def Start(self):
         self.__obj.SetNextEpoch()
-        api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetBatchSpec())
-        return
+        status = api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetBatchSpec())
+        # store batch context in config store
+        cookie = status[0].BatchContext.BatchCookie
+        logger.info("Setting Batch cookie to ", cookie)
+        Store.SetBatchCookie(cookie)
+        return status
 
     def Commit(self):
         if self.__commit_for_flows:
             api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetInvalidBatchSpec())
             self.__commit_for_flows = False
-        api.client.Commit(api.ObjectTypes.BATCH, self.__obj.GetBatchSpec())
+        api.client.Commit(api.ObjectTypes.BATCH, self.__obj.GetBatchContext())
+        # invalidate batch context in config store
+        logger.info("Setting Batch cookie to None")
+        Store.SetBatchCookie(None)
         return
 
 client = BatchObjectClient()
+Store.SetBatchClient(client)

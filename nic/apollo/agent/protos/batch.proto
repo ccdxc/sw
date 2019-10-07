@@ -12,21 +12,22 @@ import "types.proto";
 
 service BatchSvc {
   rpc BatchStart (BatchSpec) returns (BatchStatus) {}
-  rpc BatchCommit(types.Empty) returns (types.Empty) {}
-  rpc BatchAbort(types.Empty) returns (types.Empty) {}
+  rpc BatchCommit(types.BatchCtxt) returns (types.Empty) {}
+  rpc BatchAbort(types.BatchCtxt) returns (types.Empty) {}
 }
 
-// Tunnel configuration
+// batch configuration
 message BatchSpec {
   // epoch number for this batched API transaction
-  uint32 epoch               = 1 [(gogoproto.moretags) = "meta:mandatory"];;
-  // in case of failure, auto rollback if rollback_on_failure is set to true
-  // or else leave the system in that state
-  bool   rollback_on_failure = 2 [(gogoproto.moretags) = "meta:mandatory"];;
+  uint32 epoch = 1 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
-// Operational status of the batch
+// operational status of the batch
 message BatchStatus {
+  // status of the BatchStart() request
+  types.ApiStatus ApiStatus    = 1;
+  // batch context to be used in all API calls in this batch
+  types.BatchCtxt BatchContext = 2;
 }
 
 // Batch object

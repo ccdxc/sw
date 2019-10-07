@@ -42,6 +42,7 @@ using grpc::Status;
 using grpc::ClientContext;
 using pds::BatchSpec;
 using pds::BatchStatus;
+using types::BatchCtxt;
 using pds::Batch;
 using pds::MappingKey;
 using pds::MappingRequest;
@@ -330,7 +331,6 @@ populate_batch_spec (BatchSpec *spec, pds_batch_params_t *batch)
         return;
     }
     spec->set_epoch(batch->epoch);
-    spec->set_rollback_on_failure(false);
     return;
 }
 

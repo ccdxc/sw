@@ -217,7 +217,7 @@ jobd/artemis/pds_scale_test_mock: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/artemis/vxlan
 jobd/dol/artemis/vxlan: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline artemis --topo vxlan --feature networking
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline artemis --topo vxlan --feature networking
 
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}

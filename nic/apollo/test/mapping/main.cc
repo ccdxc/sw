@@ -87,7 +87,7 @@ protected:
 
         rt_addr = rt_pfx.addr;
 
-        batch_start();
+        pds_batch_ctxt_t bctxt = batch_start();
         sample_device_setup();
 
         vpc_feeder vpc_feeder;
@@ -123,7 +123,7 @@ protected:
         vnic_feeder vnic_feeder;
         vnic_feeder.init(1, num_vnics, vnic_stepper_mac);
         many_create(vnic_feeder);
-        batch_commit();
+        batch_commit(bctxt);
 
         vpc_key.id = api_test::g_vpc_id;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
@@ -611,11 +611,11 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
                             g_base_vnic_mac, g_vnic_cidr_v4, true,
                             g_public_ip_v4);
 
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     seed.num_vnics = 1;
     seed.num_ip_per_vnic = 1;
     LOCAL_MAPPING_MANY_CREATE(&seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     seed.num_vnics = k_max_vnic;
     seed.num_ip_per_vnic = PDS_MAX_VNIC_IP;
@@ -1136,11 +1136,11 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
                             g_base_vnic_mac, g_tep_cidr_v4.c_str());
 
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     dummy_seed.num_vnics = 1;
     dummy_seed.num_teps = 1;
     REMOTE_MAPPING_MANY_CREATE(&dummy_seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     seed.num_vnics = k_max_vnic;
     seed.num_teps = PDS_MAX_TEP - 1;

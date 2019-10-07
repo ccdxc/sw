@@ -76,8 +76,10 @@ typedef struct pds_nexthop_info_s {
 
 /// \brief     create nexthop
 /// \param[in] spec nexthop specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nexthop_create(pds_nexthop_spec_t *spec);
+sdk_ret_t pds_nexthop_create(pds_nexthop_spec_t *spec,
+                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read a given nexthop
 /// \param[in]  key  key of the nexthop
@@ -87,14 +89,18 @@ sdk_ret_t pds_nexthop_read(pds_nexthop_key_t *key, pds_nexthop_info_t *info);
 
 /// \brief     update nexthop
 /// \param[in] spec nexthop specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nexthop_update(pds_nexthop_spec_t *spec);
+sdk_ret_t pds_nexthop_update(pds_nexthop_spec_t *spec,
+                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete a given nexthop
 /// \param[in] key key of the nexthop
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid nexthop key should be passed
-sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key);
+sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key,
+                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief nexthop group type
 typedef enum pds_nexthop_group_type_e {

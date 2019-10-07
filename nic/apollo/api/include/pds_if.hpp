@@ -87,8 +87,10 @@ typedef struct pds_if_info_s {
 
 /// \brief     create interface
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_if_create(pds_if_spec_t *spec);
+sdk_ret_t pds_if_create(pds_if_spec_t *spec,
+                        pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read interface
 /// \param[in]  key  key
@@ -99,15 +101,19 @@ sdk_ret_t pds_if_read(pds_if_key_t *key, pds_if_info_t *info);
 
 /// \brief     update interface
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid interface specification should be passed
-sdk_ret_t pds_if_update(pds_if_spec_t *spec);
+sdk_ret_t pds_if_update(pds_if_spec_t *spec,
+                        pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete interface
 /// \param[in] key key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid interface key should be passed
-sdk_ret_t pds_if_delete(pds_if_key_t *key);
+sdk_ret_t pds_if_delete(pds_if_key_t *key,
+                        pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

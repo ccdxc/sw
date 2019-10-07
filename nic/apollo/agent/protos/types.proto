@@ -226,3 +226,10 @@ enum LifType {
   LIF_TYPE_MNIC_CPU                 = 6;
 }
 
+// BatchCtxt is opaque to application(s) and is expected to be passed
+// back (to identify the batch) in every API call of this batch until
+// BatchCommit() or BatchAbort()
+message BatchCtxt {
+  // opaque cookie
+  uint64 BatchCookie = 1;
+}

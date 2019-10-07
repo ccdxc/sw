@@ -38,7 +38,7 @@ protected:
     /** called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /* call base class function */
-        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
         params.enable_fte = false;
@@ -54,8 +54,9 @@ protected:
 
 static inline bool pds_batching_enabled()
 {
-    if (getenv("BATCHING_DISABLED"))
+    if (getenv("BATCHING_DISABLED")) {
         return FALSE;
+    }
     return TRUE;
 }
 
@@ -64,15 +65,17 @@ TEST_F(scale_test, scale_test_create)
 {
     sdk_ret_t rv;
     pds_batch_params_t batch_params = {0};
+    pds_batch_ctxt_t bctxt;
 
     if (pds_batching_enabled()) {
         batch_params.epoch = 1;
-        rv = pds_batch_start(&batch_params);
-        ASSERT_TRUE(rv == SDK_RET_OK);
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        ASSERT_TRUE(bctxt != PDS_BATCH_CTXT_INVALID);
     }
     rv = create_objects();
     ASSERT_TRUE(rv == SDK_RET_OK);
-    rv = pds_batch_commit();
+    rv = pds_batch_commit(bctxt);
     ASSERT_TRUE(rv == SDK_RET_OK);
 
 #ifdef SIM
@@ -84,8 +87,7 @@ TEST_F(scale_test, scale_test_create)
     if (g_daemon_mode) {
         printf("Entering forever loop ...\n");
         fflush(stdout);
-        while (1)
-            ;
+        while (1);
     }
 }
 

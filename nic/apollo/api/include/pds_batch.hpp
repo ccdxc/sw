@@ -17,34 +17,33 @@
 /// \defgroup PDS_BATCH Batch API
 /// @{
 
-// TODO: there is a case where epoch can rollover and new epoch is actually
-// less than old epoch, how does datapath handle this ? In s/w if we
-// detect this, we can set old epoch to PDS_INVALID_EPOCH in all table
-// entries we are touching
-
-/// \brief Batch parameters
+/// \brief    api batch parameters
 typedef struct pds_batch_params_s {
     pds_epoch_t    epoch;    ///< Epoch value for this batch
                              ///< PDS_EPOCH_INVALID is reserved
+    bool           async;    ///< process this batch asynchronously
+                             ///< and return the batch cookie along with
+                             ///< the response
+    uint64_t       cookie;   ///< cookie to correlate batch request with
+                             ///< response in case of async processing
 } __PACK__ pds_batch_params_t;
 
-/// \brief Start the batch for commit
-///
+/// \brief start the batch for commit
 /// \param[in] batch_params Batch specific information
-/// \return #SDK_RET_OK on success, failure status code on error
-sdk::sdk_ret_t pds_batch_start(pds_batch_params_t *batch_params);
+/// \return opaque ctxt to (internally) identify the batch
+pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params);
 
-/// \brief Commit the configuration in the batch
-/// Commit the configuration corresponding to epoch provided
+/// \brief commit the configuration in the batch
+/// commit the configuration corresponding to epoch provided
 /// in pds_batch_start() and activate the datapath to use this epoch
-///
+/// \param[in] opaque batch context identifying the API batching
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk::sdk_ret_t pds_batch_commit(void);
+sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt);
 
-/// \brief Aborts currents batch processing and ignore the epoch
-///
+/// \brief destroy/abort all the batch context
+/// \param[in] opaque batch context identifying the API batching
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk::sdk_ret_t pds_batch_abort(void);
+sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt);
 
 /// @}
 

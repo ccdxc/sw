@@ -1,4 +1,4 @@
-## HAL Coding Style (C/C++/protobuf only) 
+## HAL Coding Style (C/C++/protobuf only)
 
 * Except for the protobuf generated files, don't use camel case for anything
   including class names, function names, variable names etc.
@@ -61,6 +61,11 @@
   - if parameters are spread across multiple lines, parameters from 2nd line
     onwards must be aligned with 1st parameter (not 4 space indentantion from
     start of the next line)
+* "if" block must have 4 space indentation and must always be inside curly
+  braces (even if there is only one statement in the block)
+* if-else must always be cuddled (e.g., } else { in same line)
+* switch & case in switch-case statement should be aligned in same column
+
 
 ## Building and making sure HAL build is fine
 1. Under sw/, do "make pull-assets"

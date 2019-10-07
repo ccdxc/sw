@@ -8,11 +8,14 @@
 #include "nic/apollo/test/scale/test_common.hpp"
 
 static int g_epoch = 1;
+static pds_batch_ctxt_t g_bctxt = PDS_BATCH_CTXT_INVALID;
 
-static inline bool pds_batching_enabled()
+static inline bool
+pds_batching_enabled (void)
 {
-    if (getenv("BATCHING_DISABLED"))
+    if (getenv("BATCHING_DISABLED")) {
         return FALSE;
+    }
     return TRUE;
 }
 
@@ -29,10 +32,10 @@ create_route_table (pds_route_table_spec_t *route_table)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create route table failed!, ret %u", ret);
     if (pds_batching_enabled()) {
-        ret = batch_commit_grpc();
+        ret = batch_commit_grpc(g_bctxt);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Batch commit failed!, ret %u", ret);
-        ret = batch_start_grpc(g_epoch++);
+        g_bctxt = batch_start_grpc(g_epoch++);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Batch start failed!, ret %u", ret);
     }
@@ -159,30 +162,28 @@ create_mirror_session (pds_mirror_session_spec_t *ms)
 sdk_ret_t
 create_objects_init (test_params_t *test_params)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-
-    /* BATCH START */
     if (pds_batching_enabled()) {
-        ret = batch_start_grpc(g_epoch++);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch start failed!, ret %u", ret);
+        g_bctxt = batch_start_grpc(g_epoch++);
+        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
+                                SDK_RET_ERR,
+                                "Batch start failed!");
     }
-    return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
-create_objects_end ()
+create_objects_end (void)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
 
     if (pds_batching_enabled()) {
-        ret = batch_start_grpc(PDS_EPOCH_INVALID);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch start failed!, ret %u", ret);
-        /* BATCH COMMIT */
-        ret = batch_commit_grpc();
+        g_bctxt = batch_start_grpc(PDS_EPOCH_INVALID);
+        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
+                                SDK_RET_ERR,
+                                "Batch start failed!");
+        ret = batch_commit_grpc(g_bctxt);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Batch commit failed!, ret %u", ret);
     }
-    return ret;
+    return SDK_RET_OK;
 }

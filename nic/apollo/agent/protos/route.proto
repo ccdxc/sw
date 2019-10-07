@@ -68,7 +68,9 @@ message RouteTable {
 
 // route table create and update request
 message RouteTableRequest {
-  repeated RouteTableSpec Request = 1; // batched request
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt         BatchCtxt = 1;
+  repeated RouteTableSpec Request   = 2; // batched request
 }
 
 // route table create and update response
@@ -90,7 +92,10 @@ message RouteTableGetResponse {
 
 // route table delete request
 message RouteTableDeleteRequest {
-  repeated uint32 Id = 1; // batched request
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // batched request
+  repeated uint32 Id        = 2;
 }
 
 // route table delete response

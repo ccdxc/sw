@@ -16,9 +16,11 @@ typedef struct nh_db_cb_ctxt_s {
     void       *ctxt;
 } nh_db_cb_ctxt_t;
 
-sdk_ret_t nh_create(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec);
-sdk_ret_t nh_update(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec);
-sdk_ret_t nh_delete(pds_nexthop_key_t *key);
+sdk_ret_t nh_create(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+                    pds_batch_ctxt_t bctxt);
+sdk_ret_t nh_update(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+                    pds_batch_ctxt_t bctxt);
+sdk_ret_t nh_delete(pds_nexthop_key_t *key, pds_batch_ctxt_t bctxt);
 sdk_ret_t nh_get(pds_nexthop_key_t *key, pds_nexthop_info_t *info);
 sdk_ret_t nh_get_all(nh_get_cb_t nexthop_get_cb, void *ctxt);
 

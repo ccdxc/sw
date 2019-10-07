@@ -86,8 +86,10 @@ message Meter {
 
 // meter table create and update request
 message MeterRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt    BatchCtxt = 1;
   // batched request
-  repeated MeterSpec Request = 1;
+  repeated MeterSpec Request   = 2;
 }
 
 // meter table create and update response
@@ -110,8 +112,10 @@ message MeterGetResponse {
 
 // meter table delete request
 message MeterDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated uint32 Id = 1;
+  repeated uint32 Id        = 2;
 }
 
 // meter table delete response

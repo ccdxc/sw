@@ -33,10 +33,10 @@ namespace api_test {
 template <typename class_T, typename seed_T>
 inline void workflow_1(seed_T *seed) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
     MANY_DELETE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -45,18 +45,18 @@ inline void workflow_1(seed_T *seed) {
 template <typename class_T, typename seed_T>
 inline void workflow_2(seed_T *seed) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
     MANY_DELETE(seed);
     MANY_CREATE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -65,22 +65,22 @@ inline void workflow_2(seed_T *seed) {
 template <typename class_T, typename seed_T>
 inline void workflow_3(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_CREATE(seed2);
     MANY_DELETE(seed1);
     MANY_CREATE(seed3);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
     MANY_READ(seed2);
     MANY_READ(seed3);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed2);
     MANY_DELETE(seed3);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed2);
     MANY_READ_FAIL(seed3);
@@ -90,15 +90,15 @@ inline void workflow_3(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
 template <typename class_T, typename seed_T>
 inline void workflow_4(seed_T *seed) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -107,28 +107,28 @@ inline void workflow_4(seed_T *seed) {
 template <typename class_T, typename seed_T>
 inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_CREATE(seed2);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
     MANY_READ(seed2);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
     MANY_CREATE(seed3);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
     MANY_READ(seed2);
     MANY_READ(seed3);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed2);
     MANY_DELETE(seed3);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed2);
     MANY_READ_FAIL(seed3);
@@ -139,12 +139,12 @@ inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
 template <typename class_T, typename seed_T>
 inline void workflow_6(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_UPDATE(seed1A);
     MANY_UPDATE(seed1B);
     MANY_DELETE(seed1B);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1B);
 }
@@ -154,20 +154,20 @@ inline void workflow_6(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
 template <typename class_T, typename seed_T>
 inline void workflow_7(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_DELETE(seed1);
     MANY_CREATE(seed1);
     MANY_UPDATE(seed1A);
     MANY_UPDATE(seed1B);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1B);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1B);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1B);
 }
@@ -177,22 +177,22 @@ inline void workflow_7(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
 template <typename class_T, typename seed_T>
 inline void workflow_8(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_UPDATE(seed1A);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1A);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed1B);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1B);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1B);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1B);
 }
@@ -201,16 +201,16 @@ inline void workflow_8(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
 template <typename class_T, typename seed_T>
 inline void workflow_9(seed_T *seed1, seed_T *seed1A) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed1A);
     MANY_DELETE(seed1A);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1A);
 }
@@ -221,33 +221,33 @@ template <typename class_T, typename seed_T>
 inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
                         seed_T *seed3, seed_T *seed3A, seed_T *seed4) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
     MANY_CREATE(seed2);
     MANY_CREATE(seed3);
     MANY_DELETE(seed1);
     MANY_UPDATE(seed2A);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
     MANY_READ(seed2A);
     MANY_READ(seed3);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed3A);
     MANY_DELETE(seed2A);
     MANY_CREATE(seed4);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed3A);
     MANY_READ_FAIL(seed2);
     MANY_READ(seed4);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed4);
     MANY_DELETE(seed3A);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed4);
     MANY_READ_FAIL(seed3A);
@@ -257,23 +257,22 @@ inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
 template <typename class_T, typename seed_T>
 inline void workflow_neg_1(seed_T *seed) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_CREATE(seed);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -282,10 +281,9 @@ inline void workflow_neg_1(seed_T *seed) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_2(seed_T *seed) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -297,16 +295,14 @@ inline void workflow_neg_3(seed_T *seed) {
     MANY_READ_FAIL(seed);
 
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_DELETE(seed);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     // trigger
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ_FAIL(seed);
 }
@@ -315,25 +311,24 @@ inline void workflow_neg_3(seed_T *seed) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_4(seed_T *seed1, seed_T *seed2) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
     MANY_DELETE(seed2);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed1);
     MANY_READ_FAIL(seed2);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed2);
 }
@@ -342,24 +337,23 @@ inline void workflow_neg_4(seed_T *seed1, seed_T *seed2) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
     MANY_UPDATE(seed1A);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed1);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
 }
@@ -368,23 +362,22 @@ inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed1A);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed1);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
 }
@@ -393,24 +386,23 @@ inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_UPDATE(seed1A);
     MANY_UPDATE(seed2);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed1);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
 }
@@ -419,24 +411,23 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
 template <typename class_T, typename seed_T>
 inline void workflow_neg_8(seed_T *seed1, seed_T *seed2) {
     // trigger
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed1);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
     MANY_UPDATE(seed2);
-    batch_commit_fail();
-    batch_abort();
+    batch_commit_fail(bctxt);
 
     MANY_READ(seed1);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     MANY_DELETE(seed1);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ_FAIL(seed1);
 }
@@ -448,21 +439,21 @@ inline void workflow_11(seed_T *seed) {
     // trigger
     //MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
-    batch_start();
+    pds_batch_ctxt_t bctxt = batch_start();
     MANY_CREATE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     MANY_READ(seed);
 
-    batch_start();
+    bctxt = batch_start();
     MANY_CREATE(seed);
-    //batch_commit_fail();
-    batch_commit();
+    //batch_commit_fail(bctxt);
+    batch_commit(bctxt);
 
     // cleanup
-    batch_start();
+    bctxt = batch_start();
     //MANY_DELETE(seed);
-    batch_commit();
+    batch_commit(bctxt);
 
     //MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }

@@ -59,8 +59,10 @@ message Tag {
 
 // tag table create and update request
 message TagRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated TagSpec Request = 1;
+  repeated TagSpec Request  = 2;
 }
 
 // tag table create and update response
@@ -83,8 +85,10 @@ message TagGetResponse {
 
 // tag table delete request
 message TagDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated uint32 Id = 1;
+  repeated uint32 Id        = 2;
 }
 
 // tag table delete response

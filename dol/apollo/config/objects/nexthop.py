@@ -33,8 +33,9 @@ class NexthopObject(base.ConfigObjectBase):
                (self.NexthopId, self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
                 self.MACAddr, self.VlanId)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = nh_pb2.NexthopRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.NexthopId
         spec.IPNhInfo.VPCId = self.VPC.VPCId
@@ -131,7 +132,8 @@ class NexthopObjectClient:
 
     def CreateObjects(self):
         if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+            cookie = utils.GetBatchCookie()
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
             api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
         return
 

@@ -48,8 +48,10 @@ typedef struct pds_svc_mapping_info_t {
 
 /// \brief      create service mapping
 /// \param[in]  spec service mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_svc_mapping_create(pds_svc_mapping_spec_t *spec);
+sdk_ret_t pds_svc_mapping_create(pds_svc_mapping_spec_t *spec,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read service mapping
 /// \param[in]  key key to service mapping
@@ -60,13 +62,17 @@ sdk_ret_t pds_svc_mapping_read(pds_svc_mapping_key_t *key,
 
 /// \brief      update service mapping
 /// \param[in]  spec service mapping configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_svc_mapping_update(pds_svc_mapping_spec_t *spec);
+sdk_ret_t pds_svc_mapping_update(pds_svc_mapping_spec_t *spec,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      delete service mapping
 /// \param[in]  key key to service mapping
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_svc_mapping_delete(pds_svc_mapping_key_t *key);
+sdk_ret_t pds_svc_mapping_delete(pds_svc_mapping_key_t *key,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

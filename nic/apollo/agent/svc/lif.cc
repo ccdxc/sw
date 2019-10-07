@@ -15,7 +15,6 @@ IfSvcImpl::LifGet(ServerContext *context,
     sdk_ret_t ret;
 
     PDS_TRACE_VERBOSE("Received Lif Get");
-
     if (proto_req) {
         for (int i = 0; i < proto_req->lifid_size(); i ++) {
             pds_lif_spec_t spec = {0};

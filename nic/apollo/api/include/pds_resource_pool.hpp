@@ -38,30 +38,33 @@ typedef struct pds_conntrack_cfg_s {
 } __PACK__ pds_conntrack_cfg_t;
 
 /// \brief Resource limits
-typedef struct pds_rsrc_limits_s {
+typedef struct pds_rsc_limits_s {
     /// Limits per class
     pds_class_limits_t class_limits[PDS_TRAFFIC_CLASS_MAX];
     /// Connection tracking limits
     pds_conntrack_cfg_t conn_track;
-} __PACK__ pds_rsrc_limits_t;
+} __PACK__ pds_rsc_limits_t;
 
 /// Resource pool
-typedef struct pds_rsrc_pool_s {
-    pds_rsrc_pool_id_t key;      ///< Key
-    pds_rsrc_limits_t limits;    ///< Limits
-} __PACK__ pds_rsrc_pool_t;
+typedef struct pds_rsc_pool_s {
+    pds_rsc_pool_id_t key;      ///< Key
+    pds_rsc_limits_t limits;    ///< Limits
+} __PACK__ pds_rsc_pool_t;
 
 /// \brief Create resource pool
-///
-/// \param[in] rsrc_pool Resource pool information
+/// \param[in] rsc_pool Resource pool information
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-pds_status_t pds_rsrc_pool_create(pds_rsrc_pool_t *rsrc_pool);
+pds_status_t pds_rsc_pool_create(pds_rsc_pool_t *rsc_pool,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief Delete resource pool
-///
 /// \param[in] key Key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-pds_status_t pds_rsrc_pool_delete(pds_rsrc_pool_key_t *key);
+pds_status_t pds_rsc_pool_delete(pds_rsc_pool_key_t *key,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
 
 /// @}
 

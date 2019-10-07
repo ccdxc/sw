@@ -30,7 +30,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -44,7 +44,7 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vpc_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_vpc_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.id, ret);
             return ret;
         }
@@ -80,7 +80,7 @@ vpc_update_validate (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -90,7 +90,7 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vpc_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_vpc_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
             return ret;
         }
@@ -117,7 +117,7 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_delete (pds_vpc_key_t *key)
+vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
@@ -127,7 +127,7 @@ vpc_delete (pds_vpc_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vpc_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_vpc_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc {}, err {}", key->id, ret);
             return ret;
         }
@@ -213,7 +213,8 @@ vpc_peer_create_validate (pds_vpc_peer_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec)
+vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec,
+                 pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -228,7 +229,7 @@ vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vpc_peer_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_vpc_peer_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc_peer {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -244,7 +245,7 @@ vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_peer_delete (pds_vpc_peer_key_t *key)
+vpc_peer_delete (pds_vpc_peer_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_vpc_peer_spec_t *spec;
@@ -255,7 +256,7 @@ vpc_peer_delete (pds_vpc_peer_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vpc_peer_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_vpc_peer_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc_peer {}, err {}", key->id, ret);
             return ret;
         }

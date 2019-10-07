@@ -132,8 +132,10 @@ typedef struct pds_meter_info_s {
 
 /// \brief     create meter
 /// \param[in] spec meter configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_create(pds_meter_spec_t *spec);
+sdk_ret_t pds_meter_create(pds_meter_spec_t *spec,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read meter
 /// \param[in]  key key
@@ -143,13 +145,17 @@ sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
 
 /// \brief     update meter
 /// \param[in] spec meter configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_update(pds_meter_spec_t *spec);
+sdk_ret_t pds_meter_update(pds_meter_spec_t *spec,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete meter
 /// \param[in] key key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_delete(pds_meter_key_t *key);
+sdk_ret_t pds_meter_delete(pds_meter_key_t *key,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

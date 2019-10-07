@@ -34,6 +34,8 @@ echo "Running vpc peer test"
 $GDB artemis_vpc_peer_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_vpc_peer_test.xml" > artemis_vpc_peer_test.log.txt
 [[ $? -ne 0 ]] && echo "artemis_vpc_peer_test failed!" && exit 1
 
+exit 0
+
 #echo "Running tep test"
 #$GDB artemis_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/artemis_tep_test.xml" > artemis_tep_test.log.txt
 #[[ $? -ne 0 ]] && echo "artemis_tep_test failed!" && exit 1

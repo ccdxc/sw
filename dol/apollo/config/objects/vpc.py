@@ -143,8 +143,9 @@ class VpcObject(base.ConfigObjectBase):
             self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
         return __get()
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = vpc_pb2.VPCRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
@@ -161,8 +162,9 @@ class VpcObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.VPCId)
         return grpcmsg
 
-    def GetGrpcDeleteMessage(self):
+    def GetGrpcDeleteMessage(self, cookie):
         grpcmsg = vpc_pb2.VPCDeleteRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.Id.append(self.VPCId)
         return grpcmsg
 
@@ -243,7 +245,8 @@ class VpcObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VPC, msgs)
 
         # Create Nexthop object

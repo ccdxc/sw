@@ -73,12 +73,14 @@ message MirrorSession {
 
 // Mirror policy create and update request
 message MirrorSessionRequest {
-  repeated MirrorSessionSpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt            BatchCtxt = 1;
+  repeated MirrorSessionSpec Request   = 2;
 }
 
 // Mirror policy create and update response
 message MirrorSessionResponse {
-  types.ApiStatus ApiStatus = 1;
+  types.ApiStatus              ApiStatus = 1;
   repeated MirrorSessionStatus Response  = 2;
 }
 
@@ -95,7 +97,9 @@ message MirrorSessionGetResponse {
 
 // Mirror policy delete request
 message MirrorSessionDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // Mirror policy delete response

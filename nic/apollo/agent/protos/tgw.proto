@@ -75,7 +75,10 @@ message TGw {
 
 // Transit Gateway create and update request
 message TGwRequest {
-  repeated TGwSpec Request = 1; // batched requests
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt  BatchCtxt = 1;
+  // batched requests
+  repeated TGwSpec Request   = 2;
 }
 
 // Transit Gateway create and update response
@@ -97,7 +100,9 @@ message TGwGetResponse {
 
 // Transit Gateway delete request
 message TGwDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // Transit Gateway delete response

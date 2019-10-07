@@ -150,13 +150,20 @@ def ValidateDelete(obj, resps):
                 obj.Show()
     return
 
+def GetBatchCookie():
+    return Store.GetBatchCookie()
+
 def CreateObject(obj, objType):
     if not obj.IsDeleted():
         logger.info("Already restored %s" %(obj.__repr__()))
         return
-    msg = obj.GetGrpcCreateMessage()
+    batchClient = Store.GetBatchClient()
+    batchClient.Start()
+    cookie = GetBatchCookie()
+    msg = obj.GetGrpcCreateMessage(cookie)
     resps = api.client.Create(objType, [msg])
     ValidateCreate(obj, resps)
+    batchClient.Commit()
 
 def ReadObject(obj, objType, expRetCode):
     msg = obj.GetGrpcReadMessage()
@@ -167,9 +174,13 @@ def DeleteObject(obj, objType):
     if obj.IsDeleted():
         logger.info("Already deleted %s" %(obj.__repr__()))
         return
-    msg = obj.GetGrpcDeleteMessage()
+    batchClient = Store.GetBatchClient()
+    batchClient.Start()
+    cookie = GetBatchCookie()
+    msg = obj.GetGrpcDeleteMessage(cookie)
     resps = api.client.Delete(objType, [msg])
     ValidateDelete(obj, resps)
+    batchClient.Commit()
 
 def GetIPProtoByName(protoname):
     """
@@ -357,3 +368,4 @@ def MergeFilteredObjects(objs, selected_objs):
         CachedObjs.add(objs)
     elif CachedObjs.use_selected_objs is True:
         objs.extend(selected_objs)
+

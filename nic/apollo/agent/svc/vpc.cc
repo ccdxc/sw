@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/vpc.hpp"
@@ -15,28 +16,53 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
                       const pds::VPCRequest *proto_req,
                       pds::VPCResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_key_t key = {0};
-    pds_vpc_spec_t *api_spec = {0};
+    pds_batch_ctxt_t bctxt;
+    pds_vpc_spec_t *api_spec;
+    pds_vpc_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_vpc_spec_t *)
-                    core::agent_state::state()->vpc_slab()->alloc();
+        api_spec =
+            (pds_vpc_spec_t *)core::agent_state::state()->vpc_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
         pds_vpc_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::vpc_create(&key, api_spec);
+        ret = core::vpc_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -46,28 +72,53 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
                       const pds::VPCRequest *proto_req,
                       pds::VPCResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_key_t key = {0};
-    pds_vpc_spec_t *api_spec = {0};
+    pds_batch_ctxt_t bctxt;
+    pds_vpc_spec_t *api_spec;
+    pds_vpc_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_vpc_spec_t *)
-                    core::agent_state::state()->vpc_slab()->alloc();
+        api_spec =
+            (pds_vpc_spec_t *)core::agent_state::state()->vpc_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
         pds_vpc_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::vpc_update(&key, api_spec);
+        ret = core::vpc_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -77,17 +128,38 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
                       const pds::VPCDeleteRequest *proto_req,
                       pds::VPCDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_key_t key = {0};
+    pds_batch_ctxt_t bctxt;
+    pds_vpc_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
 
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::vpc_delete(&key);
+        ret = core::vpc_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -97,8 +169,8 @@ VPCSvcImpl::VPCGet(ServerContext *context,
                    const pds::VPCGetRequest *proto_req,
                    pds::VPCGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_key_t key = {0};
-    pds_vpc_info_t info = {0};
+    pds_vpc_key_t key = { 0 };
+    pds_vpc_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("VPC Get Received")
 
@@ -131,28 +203,53 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
                           const pds::VPCPeerRequest *proto_req,
                           pds::VPCPeerResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_peer_key_t key = {0};
-    pds_vpc_peer_spec_t *api_spec = {0};
+    pds_batch_ctxt_t bctxt;
+    pds_vpc_peer_spec_t *api_spec;
+    pds_vpc_peer_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->request_size(); i ++) {
         api_spec = (pds_vpc_peer_spec_t *)
-                    core::agent_state::state()->vpc_peer_slab()->alloc();
+                       core::agent_state::state()->vpc_peer_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            break;
+            goto end;
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
         pds_vpc_peer_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::vpc_peer_create(&key, api_spec);
+        ret = core::vpc_peer_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
-            break;
+        if (ret != SDK_RET_OK) {
+            goto end;
         }
+    }
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -162,17 +259,38 @@ VPCSvcImpl::VPCPeerDelete(ServerContext *context,
                           const pds::VPCPeerDeleteRequest *proto_req,
                           pds::VPCPeerDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_peer_key_t key = {0};
+    pds_batch_ctxt_t bctxt;
+    pds_vpc_peer_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
 
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::vpc_peer_delete(&key);
+        ret = core::vpc_peer_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
     }
     return Status::OK;
 }
@@ -182,8 +300,8 @@ VPCSvcImpl::VPCPeerGet(ServerContext *context,
                        const pds::VPCPeerGetRequest *proto_req,
                        pds::VPCPeerGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_peer_key_t key = {0};
-    pds_vpc_peer_info_t info = {0};
+    pds_vpc_peer_key_t key = { 0 };
+    pds_vpc_peer_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("VPCPeer Get Received")
 

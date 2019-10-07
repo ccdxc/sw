@@ -79,7 +79,10 @@ message Vnic {
 
 // vnic create and update request
 message VnicRequest {
-  repeated VnicSpec Request = 1; // batched request
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt   BatchCtxt = 1;
+  // batched request
+  repeated VnicSpec Request   = 2;
 }
 
 // vnic create and update response
@@ -101,7 +104,10 @@ message VnicGetResponse {
 
 // vnic delete request
 message VnicDeleteRequest {
-  repeated uint32 VnicId = 1; // batched request
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // batched request
+  repeated uint32 VnicId    = 2;
 }
 
 // vnic delete response

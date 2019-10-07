@@ -62,11 +62,13 @@ typedef struct pds_device_info_s {
 
 /// \brief     create device
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    device is a global configuration and can be created only once.
 ///            Any other validation that is expected on the TEP should be done
 ///            by the caller
-sdk_ret_t pds_device_create(pds_device_spec_t *spec);
+sdk_ret_t pds_device_create(pds_device_spec_t *spec,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read device
 /// \param[out] info device information
@@ -75,13 +77,16 @@ sdk_ret_t pds_device_read(pds_device_info_t *info);
 
 /// \brief     update device
 /// \param[in] spec specification
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid device specification should be passed
-sdk_ret_t pds_device_update(pds_device_spec_t *spec);
+sdk_ret_t pds_device_update(pds_device_spec_t *spec,
+                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief  delete device
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_device_delete(void);
+sdk_ret_t pds_device_delete(pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

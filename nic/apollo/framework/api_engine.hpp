@@ -17,12 +17,11 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/vpc.hpp"
-#include "nic/apollo/api/subnet.hpp"
-#include "nic/apollo/api/vnic.hpp"
 
 using std::vector;
 using std::unordered_map;
@@ -54,10 +53,10 @@ typedef enum api_batch_stage_e {
 ///   we should return the api_params_t memory back to slab
 typedef struct obj_ctxt_s obj_ctxt_t;
 struct obj_ctxt_s {
-    api_op_t        api_op;         ///< De-duped/compressed API opcode
-    obj_id_t        obj_id;         ///< Object identifier
+    api_op_t        api_op;         ///< de-duped/compressed API opcode
+    obj_id_t        obj_id;         ///< object identifier
     api_params_t    *api_params;    ///< API specific parameters
-    api_base        *cloned_obj;    ///< Cloned object, for UPD processing
+    api_base        *cloned_obj;    ///< cloned object, for UPD processing
 
     ///< Object handlers can save arbitrary state across callbacks here and it
     ///< is opaque to the api engine
@@ -65,8 +64,8 @@ struct obj_ctxt_s {
         void        *cb_ctxt;
         uint64_t    upd_bmap;
     };
-    uint8_t rsvd_rscs:1;          ///< True if resource reservation stage is done
-    uint8_t hw_dirty:1;           ///< True if hw entries are updated,
+    uint8_t rsvd_rscs:1;          ///< true if resource reservation stage is done
+    uint8_t hw_dirty:1;           ///< true if hw entries are updated,
                                   ///< but not yet activated
 
     obj_ctxt_s() {
@@ -107,30 +106,30 @@ typedef list<api_base *> dep_obj_list_t;
 
 /// \brief Batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
-    pds_epoch_t           epoch;           ///< epoch in progress, passed in
-                                           ///< pds_batch_begin()
-    api_batch_stage_t     stage;           ///< phase of the batch processing
-    vector<api_ctxt_t>    api_ctxts;       ///< API contexts per batch
+    pds_epoch_t             epoch;           ///< epoch in progress, passed in
+                                             ///< pds_batch_begin()
+    api_batch_stage_t       stage;           ///< phase of the batch processing
+    vector<api_ctxt_t *>    *api_ctxts;      ///< API contexts per batch
 
     // dirty object map is needed because in the same batch we could have
     // multiple modifications of same object, like security rules change and
     // route changes can happen for same vnic in two different API calls but in
     // same batch and we need to activate them in one write (not one after
     // another)
-    dirty_obj_map_t     dirty_obj_map;     ///< dirty object map
-    dirty_obj_list_t    dirty_obj_list;    ///< dirty object list
-    dep_obj_map_t       dep_obj_map;       ///< dependent object map
-    dep_obj_list_t      dep_obj_list;      ///< dependent object list
+    dirty_obj_map_t         dirty_obj_map;   ///< dirty object map
+    dirty_obj_list_t        dirty_obj_list;  ///< dirty object list
+    dep_obj_map_t           dep_obj_map;     ///< dependent object map
+    dep_obj_list_t          dep_obj_list;    ///< dependent object list
 } api_batch_ctxt_t;
 
 /// \brief Encapsulation for all API processing framework
 class api_engine {
 public:
     /// \brief Constructor
-    api_engine();
+    api_engine() {}
 
     /// \brief Destructor
-    ~api_engine();
+    ~api_engine() {}
 
     /// \brief Handle batch begin by setting up per API batch context
     ///
@@ -140,28 +139,9 @@ public:
     /// \brief Commit all the APIs in this batch
     /// Release any temporary state or resources like memory, per API context
     /// info etc.
-    ///
+    /// param[in] batch    batch of APIs to process
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t batch_commit(void);
-
-    /// \brief Abort all the APIs in this batch
-    /// Release any temporary state or resources like memory, per API context
-    /// info etc.
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t batch_abort(void);
-
-    /// \brief Wrapper function for processing all API calls
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t process_api(api_ctxt_t *api_ctxt);
-
-    /// \brief return the slab from where API params is allocated
-    /// \return slab pointer
-    slab *api_params_slab(void) { return api_params_slab_; }
-
-    /// \brief return true if batching is enabled or else false
-    /// \return true or false based on whether batching is enabled or not
-    bool batching_en(void) const { return batching_en_; }
+    sdk_ret_t batch_commit(batch_info_t *batch);
 
 private:
 
@@ -265,6 +245,13 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_config_stage_(void);
 
+    /// \brief Abort all the APIs in this batch
+    /// Release any temporary state or resources like memory, per API context
+    /// info etc.
+    ///
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t batch_abort_(void);
+
     /// \brief Add given api object to dirty list of the API batch
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
@@ -325,13 +312,16 @@ private:
         // API_OP_UPDATE
         {API_OP_INVALID, API_OP_INVALID, API_OP_DELETE, API_OP_UPDATE },
     };
-    bool                batching_en_;
     api_batch_ctxt_t    batch_ctxt_;
     slab                *api_params_slab_;
 };
 
-/// \brief API engine (singleton) instance
-extern api_engine    g_api_engine;
+// api thread entry, exit and ipc handler functions
+void api_thread_init_fn(void *ctxt);
+void api_thread_exit_fn(void *ctxt);
+void api_thread_event_cb(void *msg, void *ctx);
+void api_thread_ipc_cb(sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt);
+sdk::lib::ipc::ipc_client *api_ipc_client(void);
 
 /// \@}
 

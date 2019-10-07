@@ -40,24 +40,24 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
-        batch_start();
+        pds_batch_ctxt_t bctxt = batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_SUBSTRATE);
         sample_subnet_setup();
         sample_tep_setup(k_tep_ip1, 1);
         sample_tep_setup(k_tep_ip2, 1);
         sample_tep_setup(k_tep_ip3, 1);
         sample_device_setup();
-        batch_commit();
+        batch_commit(bctxt);
     }
     static void TearDownTestCase() {
-        batch_start();
+        pds_batch_ctxt_t bctxt = batch_start();
         sample_tep_teardown(k_tep_ip1, 1);
         sample_tep_teardown(k_tep_ip2, 1);
         sample_tep_teardown(k_tep_ip3, 1);
         sample_subnet_teardown();
         sample_vpc_teardown(PDS_VPC_TYPE_SUBSTRATE);
         sample_device_teardown();
-        batch_commit();
+        batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
     }

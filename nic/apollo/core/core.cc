@@ -13,6 +13,8 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -181,7 +183,7 @@ thread_create (const char *name, uint32_t thread_id,
 
 // spawn all the necessary threads
 sdk_ret_t
-thread_periodic_spawn (pds_state *state)
+spawn_periodic_thread (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
@@ -203,7 +205,31 @@ thread_periodic_spawn (pds_state *state)
 }
 
 sdk_ret_t
-thread_nicmgr_spawn (pds_state *state)
+spawn_pciemgr_thread (pds_state *state)
+{
+    sdk::lib::thread    *new_thread;
+
+    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
+        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
+         (getenv("NICMGR_SIM_MODE"))) {
+        // spawn pciemgr thread
+        new_thread =
+            thread_create("pciemgr", THREAD_ID_PCIEMGR,
+                sdk::lib::THREAD_ROLE_CONTROL,
+                0x0,    // use all control cores
+                pdspciemgr::pciemgrapi::pciemgr_thread_start,
+                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                NULL);
+        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                                "pciemgr thread create failure");
+        new_thread->start(new_thread);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+spawn_nicmgr_thread (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
@@ -226,9 +252,32 @@ thread_nicmgr_spawn (pds_state *state)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+spawn_api_thread (pds_state *state)
+{
+    sdk::lib::event_thread    *new_thread;
+
+    new_thread =
+        sdk::lib::event_thread::factory("cfg", THREAD_ID_API,
+                                        sdk::lib::THREAD_ROLE_CONTROL,
+                                        0x0,    // use all control cores
+                                        api::api_thread_init_fn,
+                                        api::api_thread_exit_fn,
+                                        api::api_thread_event_cb,
+                                        api::api_thread_ipc_cb,
+                                        sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                        sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                        NULL);
+     SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                             "cfg thread create failure");
+     g_thread_store[THREAD_ID_API] = new_thread;
+     new_thread->start(new_thread);
+     return SDK_RET_OK;
+}
+
 #if 0
 sdk_ret_t
-thread_fte_spawn (pds_state *state)
+spawn_fte_thread (pds_state *state)
 {
     uint32_t            i, tid;
     char                thread_name[16];
@@ -285,30 +334,6 @@ threads_stop (void)
             g_thread_store[thread_id] = NULL;
         }
     }
-}
-
-sdk_ret_t
-thread_pciemgr_spawn (pds_state *state)
-{
-    sdk::lib::thread    *new_thread;
-
-    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
-        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
-         (getenv("NICMGR_SIM_MODE"))) {
-        // spawn pciemgr thread
-        new_thread =
-            thread_create("pciemgr", THREAD_ID_PCIEMGR,
-                sdk::lib::THREAD_ROLE_CONTROL,
-                0x0,    // use all control cores
-                pdspciemgr::pciemgrapi::pciemgr_thread_start,
-                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                NULL);
-        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
-                                "pciemgr thread create failure");
-        new_thread->start(new_thread);
-    }
-    return SDK_RET_OK;
 }
 
 // install signal handler for given signal

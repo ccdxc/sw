@@ -154,6 +154,22 @@ public:
     /// \return interface type
     pds_if_type_t type(void) const { return type_; }
 
+    /// \brief    return the physical port number of this interface
+    /// \return   physical port number or 0xFF if invalid
+    uint8_t port(void) const { return port_; }
+
+    /// \brief    return the wire encap of this (L3) interface
+    /// \return   wire encap of this L3 interface
+    pds_encap_t encap(void) { return encap_; }
+
+    /// \brief    return the MAC address of this interface
+    /// \return   MAC address of this interface
+    mac_addr_t& mac_addr(void) { return mac_; }
+
+    /// \brief    return IP subnet of this interface
+    /// \return   IP prefix configured on this interface
+    ip_prefix_t& ip_prefix(void) { return ip_pfx_; }
+
     /// \brief    set the interface specific information
     /// \param[in] if_info    pointer to the interface specific information
     void set_if_info(void *if_info) { if_info_ = if_info; }
@@ -175,9 +191,18 @@ private:
     void *if_info_;                ///< interface specific information
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
+    union {
+        /// L3 interface specific information
+        struct {
+            uint8_t port_;         ///< port number
+            pds_encap_t encap_;    ///< wire encap, if any
+            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
+            mac_addr_t mac_;       ///< MAC address of this L3 interface
+        };
+    };
     ht_ctxt_t ifindex_ht_ctxt_;    ///< hash table context
     friend class if_state;         ///< if_state is friend of if_entry
-} __PACK__;
+};
 
 /// \@}    // end of PDS_IF_ENTRY
 

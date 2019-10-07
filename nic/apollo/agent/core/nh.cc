@@ -15,7 +15,8 @@ nh_create_validate (pds_nexthop_spec_t *spec)
 }
 
 sdk_ret_t
-nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
+nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+           pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -29,7 +30,7 @@ nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_nexthop_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_nexthop_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key.id, ret);
             return ret;
         }
@@ -48,7 +49,8 @@ nh_update_validate (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
 }
 
 sdk_ret_t
-nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
+nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+           pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -57,7 +59,7 @@ nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_nexthop_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_nexthop_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key.id, ret);
             return ret;
         }
@@ -73,7 +75,7 @@ nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
 }
 
 sdk_ret_t
-nh_delete (pds_nexthop_key_t *key)
+nh_delete (pds_nexthop_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
@@ -83,7 +85,7 @@ nh_delete (pds_nexthop_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_nexthop_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_nexthop_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete nh {}, err {}", key->id, ret);
             return ret;
         }

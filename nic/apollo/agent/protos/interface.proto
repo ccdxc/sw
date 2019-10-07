@@ -108,7 +108,10 @@ message Interface {
 
 // interface create and update request
 message InterfaceRequest {
-  repeated InterfaceSpec Request = 1; // batched requests
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt        BatchCtxt = 1;
+  // batched requests
+  repeated InterfaceSpec Request   = 2;
 }
 
 // interface create and update response
@@ -130,7 +133,9 @@ message InterfaceGetResponse {
 
 // interface delete request
 message InterfaceDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // interface delete response

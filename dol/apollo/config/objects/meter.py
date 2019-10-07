@@ -137,8 +137,9 @@ class MeterObject(base.ConfigObjectBase):
         ruleobj.Priority = rule.Priority
         return
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = meter_pb2.MeterRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.MeterId
         spec.Af = utils.GetRpcIPAddrFamily(self.Af)
@@ -322,7 +323,8 @@ class MeterObjectClient:
 
     def CreateObjects(self):
         if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+            cookie = utils.GetBatchCookie()
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
             api.client.Create(api.ObjectTypes.METER, msgs)
         return
 

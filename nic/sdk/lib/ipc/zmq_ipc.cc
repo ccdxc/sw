@@ -131,16 +131,20 @@ zmq_ipc_client::init(uint32_t id) {
     int rc;
 
     assert(id <= IPC_MAX_ID);
- 
+
     this->id_ = id;
     this->next_serial_ = 1;
     this->zsocket_ = zmq_socket(g_zmq_ctx, ZMQ_ROUTER);
-    
+
     rc = zmq_bind(this->zsocket_, ipc_path_external(id).c_str());
     assert(rc == 0);
     SDK_TRACE_DEBUG("Listening on %s", ipc_path_external(id).c_str());
 
     rc = zmq_bind(this->zsocket_, ipc_path_internal(id).c_str());
+    if (rc != 0) {
+       SDK_TRACE_ERR("zmq_bind failed(%d) for %s", errno,
+                     ipc_path_internal(id).c_str());
+    }
     assert(rc == 0);
     SDK_TRACE_DEBUG("Listening on %s", ipc_path_internal(id).c_str());
 
@@ -160,7 +164,7 @@ zmq_ipc_client::connect_(uint32_t recipient) {
 
         zctx = g_zmq_ctx;
         zconn = zmq_socket(zctx, ZMQ_REQ);
-        
+
         // stavros todo fixme, check externa/internal
         rc = zmq_connect(zconn, ipc_path_internal(recipient).c_str());
         assert(rc == 0);
@@ -168,7 +172,7 @@ zmq_ipc_client::connect_(uint32_t recipient) {
                         ipc_path_internal(recipient).c_str());
         this->zconnections_[recipient] = zconn;
     }
- 
+
     return this->zconnections_[recipient];
 }
 
@@ -213,7 +217,7 @@ zmq_ipc_client::send_recv(uint32_t recipient, const void *data,
 
     // stavros todo: send pointer
     this->send_preamble_(zconn, recipient, false);
-    
+
     // stavros todo fixme send only the pointer for internal connections
     rc = zmq_send(zconn, data, data_length, 0);
     assert(rc >= 0);
@@ -231,7 +235,7 @@ zmq_ipc_client::fd(void) {
     size_t fd_len;
 
     fd_len = sizeof(fd);
-    
+
     zmq_getsockopt(this->zsocket_, ZMQ_FD, &fd, &fd_len);
 
     return fd;
@@ -243,9 +247,9 @@ zmq_ipc_client::is_event_pending(void) {
     size_t zevents_len;
 
     zevents_len = sizeof(zevents);
-    
+
     zmq_getsockopt(this->zsocket_, ZMQ_EVENTS, &zevents, &zevents_len);
-    
+
     return (zevents & ZMQ_POLLIN);
 }
 

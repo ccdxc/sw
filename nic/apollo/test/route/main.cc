@@ -38,7 +38,7 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
-        batch_start();
+        pds_batch_ctxt_t bctxt = batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_TENANT);
         if (apollo()) {
             // create max TEPs which can be used as NHs for routes
@@ -47,17 +47,17 @@ protected:
             // create max NHs which can be used as NHs for routes
             sample_nexthop_setup();
         }
-        batch_commit();
+        batch_commit(bctxt);
     }
     static void TearDownTestCase() {
-        batch_start();
+        pds_batch_ctxt_t bctxt = batch_start();
         if (apollo()) {
             sample_tep_teardown();
         } else {
             sample_nexthop_teardown();
         }
         sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
-        batch_commit();
+        batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
     }
@@ -415,7 +415,6 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
         first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV4, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // trigger - test max v6 route tables with MAX+1 routes
     batch_params.epoch = ++g_batch_epoch;
@@ -424,7 +423,6 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
         first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV6, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 #endif
 }
 

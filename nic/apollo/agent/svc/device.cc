@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
@@ -18,7 +19,10 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
                             pds::DeviceResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    pds_device_spec_t *api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -29,11 +33,31 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_create(api_spec);
+        ret = pds_device_create(api_spec, bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
     return Status::OK;
 }
 
@@ -72,7 +96,10 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
                             pds::DeviceResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    pds_device_spec_t *api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -83,25 +110,47 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
         return Status::OK;
     }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_update(api_spec);
+        ret = pds_device_update(api_spec, bctxt);
     }
 
     // update device.conf with profile
     auto profile = proto_req->request().profile();
     ret = device_profile_update(profile);
-
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
     return Status::OK;
 }
 
 Status
 DeviceSvcImpl::DeviceDelete(ServerContext *context,
-                            const types::Empty *empty,
+                            const pds::DeviceDeleteRequest *proto_req,
                             pds::DeviceDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec = NULL;
+    pds_batch_ctxt_t bctxt;
+    pds_device_spec_t *api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
 
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
@@ -109,10 +158,29 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
         return Status::OK;
     }
     memset(api_spec, 0, sizeof(pds_device_spec_t));
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_delete();
+        ret = pds_device_delete(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
     return Status::OK;
 }
 

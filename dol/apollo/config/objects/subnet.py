@@ -112,8 +112,9 @@ class SubnetObject(base.ConfigObjectBase):
         return "SubnetID:%d|VPCId:%d|PfxSel:%d|MAC:%s" %\
                (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMACAddr.get())
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = subnet_pb2.SubnetRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
         spec.VPCId = self.VPC.VPCId
@@ -174,7 +175,8 @@ class SubnetObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.SUBNET, msgs)
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects()

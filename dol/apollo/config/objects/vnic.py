@@ -63,8 +63,9 @@ class VnicObject(base.ConfigObjectBase):
         return "VnicID:%d|SubnetID:%d|VPCId:%d" %\
                (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = vnic_pb2.VnicRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
@@ -91,8 +92,9 @@ class VnicObject(base.ConfigObjectBase):
         grpcmsg.VnicId.append(self.VnicId)
         return grpcmsg
 
-    def GetGrpcDeleteMessage(self):
+    def GetGrpcDeleteMessage(self, cookie):
         grpcmsg = vnic_pb2.VnicDeleteRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.VnicId.append(self.VnicId)
         return grpcmsg
 
@@ -214,7 +216,8 @@ class VnicObjectClient:
     def CreateObjects(self):
         if len(self.__objs.values()) == 0:
             return
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VNIC, msgs)
         # Create Local Mapping Objects
         lmapping.client.CreateObjects()

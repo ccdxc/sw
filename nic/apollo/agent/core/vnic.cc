@@ -28,7 +28,8 @@ vnic_create_validate (pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
+vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
+             pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -45,7 +46,7 @@ vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vnic_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_vnic_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vnic {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -79,7 +80,8 @@ vnic_update_validate (pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
+vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
+             pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -96,7 +98,7 @@ vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vnic_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_vnic_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vnic {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -106,7 +108,7 @@ vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
     if (agent_state::state()->del_from_vnic_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete vnic {} from vnic db", key->id);
     }
-    
+
     if ((ret = agent_state::state()->add_to_vnic_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add vnic {} to db, err {}",
                       spec->key.id, ret);
@@ -117,7 +119,7 @@ vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-vnic_delete (pds_vnic_key_t *key)
+vnic_delete (pds_vnic_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -127,7 +129,7 @@ vnic_delete (pds_vnic_key_t *key)
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_vnic_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_vnic_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vnic {}, err {}", key->id, ret);
             return ret;
         }

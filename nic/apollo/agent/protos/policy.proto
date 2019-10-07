@@ -69,7 +69,9 @@ message SecurityPolicy {
 
 // security policy create and update request
 message SecurityPolicyRequest {
-  repeated SecurityPolicySpec Request = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt             BatchCtxt = 1;
+  repeated SecurityPolicySpec Request   = 2;
 }
 
 // security policy create and update response
@@ -91,7 +93,9 @@ message SecurityPolicyGetResponse {
 
 // security policy delete request
 message SecurityPolicyDeleteRequest {
-  repeated uint32 Id = 1;
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
 }
 
 // security policy delete response

@@ -16,7 +16,8 @@ policy_create_validate (pds_policy_spec_t *spec)
 }
 
 sdk_ret_t
-policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
+policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec,
+               pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -30,14 +31,16 @@ policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_policy_create(spec)) != SDK_RET_OK) {
+        if ((ret = pds_policy_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create policy {}, err {}",
                           spec->key.id, ret);
             return ret;
         }
     }
-    if ((ret = agent_state::state()->add_to_policy_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add policy {} to db, err {}", spec->key.id, ret);
+    if ((ret = agent_state::state()->add_to_policy_db(key, spec)) !=
+            SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add policy {} to db, err {}",
+                      spec->key.id, ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -51,7 +54,8 @@ policy_update_validate (pds_policy_spec_t *spec)
 }
 
 sdk_ret_t
-policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec)
+policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec,
+               pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -65,7 +69,7 @@ policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_policy_update(spec)) != SDK_RET_OK) {
+        if ((ret = pds_policy_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update policy {}, err {}",
                           spec->key.id, ret);
             return ret;
@@ -74,15 +78,17 @@ policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec)
     if (agent_state::state()->del_from_policy_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete policy {} from db", key->id);
     }
-    if ((ret = agent_state::state()->add_to_policy_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add policy {} to db, err {}", spec->key.id, ret);
+    if ((ret = agent_state::state()->add_to_policy_db(key, spec)) !=
+            SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add policy {} to db, err {}",
+                      spec->key.id, ret);
         return ret;
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-policy_delete (pds_policy_key_t *key)
+policy_delete (pds_policy_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_policy_spec_t *spec;
@@ -92,7 +98,7 @@ policy_delete (pds_policy_key_t *key)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_policy_delete(key)) != SDK_RET_OK) {
+        if ((ret = pds_policy_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete policy {}, err {}", key->id, ret);
             return ret;
         }

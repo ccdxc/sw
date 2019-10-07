@@ -57,8 +57,9 @@ class DeviceObject(base.ConfigObjectBase):
         self.lif.Show()
         return
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = device_pb2.DeviceRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
         grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
@@ -123,7 +124,8 @@ class DeviceObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.SWITCH, msgs)
         tunnel.client.CreateObjects()
         return

@@ -82,8 +82,10 @@ message Nexthop {
 
 // nexthop create and update request
 message NexthopRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt      BatchCtxt = 1;
   // batched create or update requests
-  repeated NexthopSpec Request = 1;
+  repeated NexthopSpec Request   = 2;
 }
 
 // nexthop create and update response
@@ -110,8 +112,10 @@ message NexthopGetResponse {
 
 // nexthop delete request
 message NexthopDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // list of nexthops to delete
-  repeated uint32 Id = 1;
+  repeated uint32 Id        = 2;
 }
 
 // nexthop delete response
@@ -167,8 +171,10 @@ message NhGroup {
 
 // nexthop group create and update request
 message NhGroupRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt      BatchCtxt = 1;
   // batched create or update requests
-  repeated NhGroupSpec Request = 1;
+  repeated NhGroupSpec Request   = 2;
 }
 
 // nexthop group create and update response
@@ -195,8 +201,10 @@ message NhGroupGetResponse {
 
 // nexthop group delete request
 message NhGroupDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
   // list of nexthop groups to delete
-  repeated uint32 Id = 1;
+  repeated uint32 Id        = 2;
 }
 
 // nexthop group delete response

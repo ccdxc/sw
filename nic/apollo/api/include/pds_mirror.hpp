@@ -71,8 +71,10 @@ typedef struct pds_mirror_session_info_s {
 
 /// \brief    create mirror session
 /// \param[in] spec    mirror session configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_t *spec);
+sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_t *spec,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief read mirror session
 /// \param[in] key    pointer to spec
@@ -83,13 +85,17 @@ sdk_ret_t pds_mirror_session_read(pds_mirror_session_key_t *key,
 
 /// \brief    update mirror session
 /// \param[in] spec    mirror session configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_update(pds_mirror_session_spec_t *spec);
+sdk_ret_t pds_mirror_session_update(pds_mirror_session_spec_t *spec,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    delete mirror session
 /// \param[in] key    mirror session key
+/// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_t *key);
+sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_t *key,
+                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
 

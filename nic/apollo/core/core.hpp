@@ -20,11 +20,12 @@ namespace core {
 
 enum {
     THREAD_ID_NONE       = 0,
-    THREAD_ID_CONTROL    = 1,
-    THREAD_ID_PERIODIC   = 2,
-    THREAD_ID_NICMGR     = 3,
-    THREAD_ID_PCIEMGR    = 4,
-    THREAD_ID_FD_RECV    = 5,
+    THREAD_ID_CFG        = 1,
+    THREAD_ID_API        = 2,
+    THREAD_ID_PERIODIC   = 3,
+    THREAD_ID_NICMGR     = 4,
+    THREAD_ID_PCIEMGR    = 5,
+    THREAD_ID_FD_RECV    = 6,
     THREAD_ID_FTE_START  = 16,
     THREAD_ID_FTE_1      = THREAD_ID_FTE_START,
     THREAD_ID_FTE_2      = THREAD_ID_FTE_1 + 1,
@@ -39,11 +40,11 @@ enum {
     TIMER_ID_SYSTEM_SCAN  = 2,
 };
 
-sdk_ret_t thread_periodic_spawn(pds_state *state);
-sdk_ret_t thread_cmd_server_spawn(pds_state *state);
-sdk_ret_t thread_nicmgr_spawn(pds_state *state);
-sdk_ret_t thread_pciemgr_spawn(pds_state *state);
-//sdk_ret_t thread_fte_spawn(pds_state *state);
+sdk_ret_t spawn_periodic_thread(pds_state *state);
+sdk_ret_t spawn_nicmgr_thread(pds_state *state);
+sdk_ret_t spawn_pciemgr_thread(pds_state *state);
+sdk_ret_t spawn_api_thread(pds_state *state);
+//sdk_ret_t spawn_fte_thread(pds_state *state);
 void threads_stop(void);
 sdk::lib::thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,

@@ -157,8 +157,9 @@ class PolicyObject(base.ConfigObjectBase):
                 specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
                 specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
-    def GetGrpcCreateMessage(self):
+    def GetGrpcCreateMessage(self, cookie):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
         spec.Id = self.PolicyId
         spec.Direction = utils.GetRpcDirection(self.Direction)
@@ -172,8 +173,9 @@ class PolicyObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.PolicyId)
         return grpcmsg
 
-    def GetGrpcDeleteMessage(self):
+    def GetGrpcDeleteMessage(self, cookie):
         grpcmsg = policy_pb2.SecurityPolicyDeleteRequest()
+        grpcmsg.BatchCtxt.BatchCookie = cookie
         grpcmsg.Id.append(self.PolicyId)
         return grpcmsg
 
@@ -697,7 +699,8 @@ class PolicyObjectClient:
         #Show before create as policy gets modified after GenerateObjects()
         self.ShowObjects()
         logger.info("Creating Policy Objects in agent")
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.POLICY, msgs)
         return
 

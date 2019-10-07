@@ -14,6 +14,7 @@ using grpc::ServerContext;
 using pds::DeviceSvc;
 using pds::DeviceRequest;
 using pds::DeviceSpec;
+using pds::DeviceDeleteRequest;
 using pds::DeviceResponse;
 
 class DeviceSvcImpl final : public DeviceSvc::Service {
@@ -23,7 +24,7 @@ public:
     Status DeviceUpdate(ServerContext *context, const pds::DeviceRequest *req,
                         pds::DeviceResponse *rsp) override;
     Status DeviceDelete(ServerContext *context,
-                        const types::Empty *empty,
+                        const pds::DeviceDeleteRequest *req,
                         pds::DeviceDeleteResponse *proto_rsp) override;
     Status DeviceGet(ServerContext *context,
                      const types::Empty *empty,

@@ -216,24 +216,27 @@ pds_init (pds_init_params_t *params)
         return SDK_RET_OK;
     }
 
-    // spin periodic thread. have to be before linkmgr init
-    core::thread_periodic_spawn(&api::g_pds_state);
+    // spawn api thread
+    core::spawn_api_thread(&api::g_pds_state);
+
+    // spawn periodic thread, have to be before linkmgr init
+    core::spawn_periodic_thread(&api::g_pds_state);
 
     // trigger linkmgr initialization
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 
-    // spin pciemgr thread.
-    core::thread_pciemgr_spawn(&api::g_pds_state);
+    // spawn pciemgr thread.
+    core::spawn_pciemgr_thread(&api::g_pds_state);
 
     PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
     sleep(2);
 
-    // spin nicmgr thread. have to be after linkmgr init
-    core::thread_nicmgr_spawn(&api::g_pds_state);
+    // spawn nicmgr thread. have to be after linkmgr init
+    core::spawn_nicmgr_thread(&api::g_pds_state);
 
     // spin fte threads
-    //core::thread_fte_spawn(&api::g_pds_state);
+    //core::spawn_thread_fte(&api::g_pds_state);
 
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
