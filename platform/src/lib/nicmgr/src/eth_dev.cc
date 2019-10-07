@@ -2012,12 +2012,12 @@ Eth::HeartbeatEventHandler()
 lif_type_t
 Eth::ConvertDevTypeToLifType(EthDevType dev_type)
 {
-    switch(dev_type) {
+    switch (dev_type) {
         case ETH_HOST: return sdk::platform::LIF_TYPE_HOST;
-        case ETH_HOST_MGMT: return sdk::platform::LIF_TYPE_HOST_MANAGEMENT;
-        case ETH_MNIC_OOB_MGMT: return sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT;
-        case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
-        case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
+        case ETH_HOST_MGMT: return sdk::platform::LIF_TYPE_HOST_MGMT;
+        case ETH_MNIC_OOB_MGMT: return sdk::platform::LIF_TYPE_MNIC_OOB_MGMT;
+        case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
+        case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT;
         case ETH_MNIC_CPU: return sdk::platform::LIF_TYPE_MNIC_CPU;
         default: return sdk::platform::LIF_TYPE_NONE;
     }

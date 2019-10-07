@@ -219,7 +219,7 @@ devapi_lif::reset(void)
 }
 
 sdk_ret_t
-devapi_lif::get_max_filters(uint32_t *ucast_filters, 
+devapi_lif::get_max_filters(uint32_t *ucast_filters,
                             uint32_t *mcast_filters)
 {
     if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC) {
@@ -1279,21 +1279,21 @@ bool
 devapi_lif::is_oobmnic(void)
 {
     return (info_.type ==
-            sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT);
+            sdk::platform::LIF_TYPE_MNIC_OOB_MGMT);
 }
 
 bool
 devapi_lif::is_intmgmtmnic(void)
 {
     return (info_.type ==
-            sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT);
+            sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
 }
 
 bool
 devapi_lif::is_inbmgmtmnic(void)
 {
     return (info_.type ==
-            sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT);
+            sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT);
 }
 
 bool
@@ -1307,7 +1307,7 @@ devapi_lif::is_mnic(void)
 bool
 devapi_lif::is_hostmgmt(void)
 {
-    return (info_.type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT);
+    return (info_.type == sdk::platform::LIF_TYPE_HOST_MGMT);
 }
 
 bool

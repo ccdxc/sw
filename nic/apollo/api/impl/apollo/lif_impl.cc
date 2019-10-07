@@ -312,13 +312,13 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     lif_internal_mgmt_ctx_t cb_ctx = {0};
     sdk_table_api_params_t  tparams = { 0 };
 
-    if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT) {
+    if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
         host_mgmt_lif = this;
-        cb_ctx.type = sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
+        cb_ctx.type = sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
         cb_ctx.lif = &mnic_int_mgmt_lif;
-    } else if (lif_params->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT) {
+    } else if (lif_params->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
         mnic_int_mgmt_lif = this;
-        cb_ctx.type = sdk::platform::LIF_TYPE_HOST_MANAGEMENT;
+        cb_ctx.type = sdk::platform::LIF_TYPE_HOST_MGMT;
         cb_ctx.lif = &host_mgmt_lif;
     }
     lif_impl_db()->walk(lif_internal_mgmt_cb_, &cb_ctx);

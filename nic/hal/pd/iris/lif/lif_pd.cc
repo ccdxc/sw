@@ -410,7 +410,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
 
     ret = lif_pd_tx_policer_program_hw(pd_lif, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
+        HAL_TRACE_ERR("unable to program hw for tx policer");
         goto end;
     }
 

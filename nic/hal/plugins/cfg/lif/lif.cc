@@ -1542,16 +1542,16 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
-    /* 
+    /*
      * Scenario:
-     * EP Moved to this lif: 
+     * EP Moved to this lif:
      * - Take cfg db read lock. This should prevent lif update to
      *   create the clone
      * Lif Update from Nicmgr:
      * - When we clone here without write lock, FTE thread which is
      *   processing EP move takes read lock and gets the LIF. It will
      *   update the lif with ENIC in its if_list. The clone will not
-     *   have this new ENIC and after the end of update we lost 
+     *   have this new ENIC and after the end of update we lost
      *   the ENIC in if_list which is there in lif but not in its clone.
      */
     // lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj, spec);

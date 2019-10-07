@@ -62,15 +62,15 @@ devapi_impl::lif_create(lif_info_t *info) {
     }
     lif_impl_db()->insert(lif);
 
-    if (info->type == sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+    if (info->type == sdk::platform::LIF_TYPE_MNIC_OOB_MGMT) {
         // currently adding support only for MNIC oob
         lif->program_oob_filters(info);
-    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT) {
         lif->program_inband_filters(info);
-    } else if ((info->type == sdk::platform::LIF_TYPE_MNIC_CPU)) {
+    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_CPU) {
         lif->program_flow_miss_nacl(info);
-    } else if (info->type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT ||
-                info->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT) {
+    } else if (info->type == sdk::platform::LIF_TYPE_HOST_MGMT ||
+                info->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
         lif->program_internal_mgmt_nacl(info);
     }
     PDS_TRACE_DEBUG("Programmed filters/NACLs for lif %u %s %u",

@@ -473,7 +473,6 @@ batch_start_grpc (int epoch)
         printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    //g_batch_cookie = status.batchcontext().batchcookie();
     return status.batchcontext().batchcookie();
 }
 
