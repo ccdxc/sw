@@ -83,7 +83,7 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
         // process this batch of APIs synchronously/asynchronously
         ret = api::process_api(bctxt, NULL);
     }
-    pds_batch_destroy(bctxt);
+    api_batch_destroy(bctxt);
     return ret;
 }
 

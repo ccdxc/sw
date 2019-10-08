@@ -45,7 +45,7 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         api_spec = (pds_svc_mapping_spec_t *)
                     core::agent_state::state()->service_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -55,19 +55,26 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         pds_service_proto_to_api_spec(api_spec, request);
         hooks::svc_mapping_create(api_spec);
         ret = core::service_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -104,7 +111,7 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
         api_spec = (pds_svc_mapping_spec_t *)
                     core::agent_state::state()->service_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -113,19 +120,26 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
         ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
         pds_service_proto_to_api_spec(api_spec, request);
         ret = core::service_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -162,13 +176,24 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
         ipaddr_proto_spec_to_api_spec(&key.vip, proto_req->key(i).ipaddr());
         ret = core::service_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
 }
 
 Status

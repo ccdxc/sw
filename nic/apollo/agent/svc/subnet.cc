@@ -45,7 +45,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         api_spec = (pds_subnet_spec_t *)
                     core::agent_state::state()->subnet_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -53,19 +53,26 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         pds_subnet_proto_to_api_spec(api_spec, request);
         hooks::subnet_create(api_spec);
         ret = core::subnet_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -102,26 +109,33 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
         api_spec = (pds_subnet_spec_t *)
                     core::agent_state::state()->subnet_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
         key.id = request.id();
         pds_subnet_proto_to_api_spec(api_spec, request);
         ret = core::subnet_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -156,13 +170,24 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
         key.id = proto_req->id(i);
         ret = core::subnet_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
 }
 
 Status
