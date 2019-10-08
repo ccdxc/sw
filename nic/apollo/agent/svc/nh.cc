@@ -45,26 +45,33 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
         api_spec = (pds_nexthop_spec_t *)
                     core::agent_state::state()->nh_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -101,26 +108,33 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
         api_spec = (pds_nexthop_spec_t *)
                     core::agent_state::state()->nh_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto proto_spec = proto_req->request(i);
         key.id = proto_spec.id();
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -155,13 +169,24 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
         key.id = proto_req->id(i);
         ret = core::nh_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
 }
 
 Status

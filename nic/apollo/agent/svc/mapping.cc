@@ -144,7 +144,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
     }
-    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 
 end:
