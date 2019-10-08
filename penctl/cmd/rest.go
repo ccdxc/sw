@@ -126,7 +126,7 @@ func restPostFile(url string, uploadFile string) ([]byte, error) {
 		}
 	}()
 
-	resp, err := http.Post(url, mpw.FormDataContentType(), r)
+	resp, err := penHTTPClient.Post(url, mpw.FormDataContentType(), r)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
