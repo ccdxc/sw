@@ -18,8 +18,8 @@ Status
 DeviceSvcImpl::DeviceCreate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
                             pds::DeviceResponse *proto_rsp) {
-    sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -50,14 +50,14 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
 
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_create(api_spec, bctxt);
+        pds_device_create(api_spec, bctxt);
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-
-    // destroy the internal batch
-    if (batched_internally) {
-        pds_batch_destroy(bctxt);
-    }
     return Status::OK;
 }
 
@@ -127,18 +127,20 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
 
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_update(api_spec, bctxt);
+        pds_device_update(api_spec, bctxt);
     }
 
     // update device.conf with profile
+    // TODO: ideally this should be done during commit time (and we need to
+    //       handle aborting/rollback here)
     auto profile = proto_req->request().profile();
     ret = device_profile_update(profile);
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
 
@@ -146,8 +148,8 @@ Status
 DeviceSvcImpl::DeviceDelete(ServerContext *context,
                             const pds::DeviceDeleteRequest *proto_req,
                             pds::DeviceDeleteResponse *proto_rsp) {
-    sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -173,14 +175,14 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
     }
 
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_delete(bctxt);
+        pds_device_delete(bctxt);
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-
-    // destroy the internal batch
-    if (batched_internally) {
-        pds_batch_destroy(bctxt);
-    }
     return Status::OK;
 }
 

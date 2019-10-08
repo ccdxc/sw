@@ -16,6 +16,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
                           pds::MeterResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    Status status = Status::OK;
     pds_meter_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -44,7 +45,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
         api_spec = (pds_meter_spec_t *)
                     core::agent_state::state()->meter_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -55,7 +56,6 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
             goto end;
         }
         ret = core::meter_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
         // free the rules memory
         if (api_spec->rules != NULL) {
@@ -66,6 +66,12 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
             goto end;
         }
     }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
 
 end:
 
@@ -73,7 +79,8 @@ end:
     if (batched_internally) {
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -110,7 +117,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
         api_spec = (pds_meter_spec_t *)
                     core::agent_state::state()->meter_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -121,7 +128,6 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
             goto end;
         }
         ret = core::meter_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
         // free the rules memory
         if (api_spec->rules != NULL) {
@@ -132,6 +138,12 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
             goto end;
         }
     }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
 
 end:
 
@@ -139,6 +151,7 @@ end:
     if (batched_internally) {
         pds_batch_destroy(bctxt);
     }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
 
@@ -173,14 +186,23 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
         ret = core::meter_delete(&key, bctxt);
-        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    return Status::OK;
+
+end:
 
     // destroy the internal batch
     if (batched_internally) {
         pds_batch_destroy(bctxt);
     }
-
     return Status::OK;
 }
 

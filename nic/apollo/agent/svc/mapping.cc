@@ -19,6 +19,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                               const pds::MappingRequest *proto_req,
                               pds::MappingResponse *proto_rsp) {
     pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
     Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -57,28 +58,33 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
 
         if (!core::agent_state::state()->pds_mock_mode()) {
             if (proto_req->request(i).has_tunnelip() == false) {
-                if (pds_local_mapping_create(&local_spec, bctxt) !=
-                        SDK_RET_OK) {
-                    status = Status::CANCELLED;
+                ret = pds_local_mapping_create(&local_spec, bctxt);
+                if (ret != SDK_RET_OK) {
                     goto end;
                 }
             } else {
-                if (pds_remote_mapping_create(&remote_spec, bctxt) !=
-                        SDK_RET_OK) {
-                    status = Status::CANCELLED;
+                ret = pds_remote_mapping_create(&remote_spec, bctxt);
+                if (ret != SDK_RET_OK) {
                     goto end;
                 }
             }
         }
     }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
 
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return status;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -86,6 +92,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
                               const pds::MappingRequest *proto_req,
                               pds::MappingResponse *proto_rsp) {
     pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
     Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -121,26 +128,31 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
         }
         if (!core::agent_state::state()->pds_mock_mode()) {
             if (proto_req->request(i).has_tunnelip() == false) {
-                if (pds_local_mapping_update(&local_spec,
-                                             bctxt) != SDK_RET_OK) {
-                    status = Status::CANCELLED;
+                ret = pds_local_mapping_update(&local_spec, bctxt);
+                if (ret != SDK_RET_OK) {
                     goto end;
                 }
             } else {
-                if (pds_remote_mapping_update(&remote_spec,
-                                              bctxt) != SDK_RET_OK) {
-                    status = Status::CANCELLED;
+                ret = pds_remote_mapping_update(&remote_spec, bctxt);
+                if (ret != SDK_RET_OK) {
                     goto end;
                 }
             }
         }
     }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
 
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // commit the internal batch
         pds_batch_destroy(bctxt);
     }
-    return status;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }

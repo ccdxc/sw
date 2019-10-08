@@ -192,7 +192,11 @@ private:
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
     union {
-        /// L3 interface specific information
+        ///< uplink specific information
+        struct {
+            uint16_t hw_lif_id_;   ///< lif id allocate for this uplink
+        };
+        ///< L3 interface specific information
         struct {
             uint8_t port_;         ///< port number
             pds_encap_t encap_;    ///< wire encap, if any
