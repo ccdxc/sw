@@ -79,7 +79,7 @@ uint32_t __parse_rpcb_entry(const uint8_t *pkt, uint32_t dlen,
     }
     memcpy(rpcb->r_netid, &pkt[offset], len);
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES - len%WORD_BYTES)):len;
-    if ((dlen-offset) < WORD_BYTES) {
+    if ((dlen < offset) || ((dlen-offset) < WORD_BYTES)) {
         incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet len {} is smaller to parse addr len",
                       (dlen-offset));
@@ -94,7 +94,7 @@ uint32_t __parse_rpcb_entry(const uint8_t *pkt, uint32_t dlen,
     }
     memcpy(rpcb->r_addr, &pkt[offset], len);
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES - len%WORD_BYTES)):len;
-    if ((dlen-offset) < WORD_BYTES) {
+    if ((dlen < offset) || ((dlen-offset) < WORD_BYTES)) {
         incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet len {} is smaller to parse owner len",
                       (dlen-offset));
@@ -172,7 +172,7 @@ uint32_t __parse_call_hdr(const uint8_t *pkt, uint32_t dlen,
     len = __pack_uint32(pkt, &offset);
     HAL_TRACE_VERBOSE("Offset: {} len: {}", offset, len);
     offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-    if ((dlen-offset) < WORD_BYTES) {
+    if (dlen < offset || ((dlen-offset) < WORD_BYTES)) {
         incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Cannot parse further dlen {} is smaller than a word",
                       (dlen-offset));
@@ -214,7 +214,7 @@ uint32_t __parse_reply_hdr(const uint8_t *pkt, uint32_t dlen,
         offset += WORD_BYTES;
         len = __pack_uint32(pkt, &offset);
         offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
-        if ((dlen-offset) < WORD_BYTES) {
+        if ((dlen < offset) || ((dlen-offset) < WORD_BYTES)) {
             incr_parse_error(rpc_info);
             HAL_TRACE_ERR("Packet len {} is smaller than a word",
                           (dlen-offset));

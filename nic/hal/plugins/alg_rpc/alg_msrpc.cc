@@ -326,6 +326,12 @@ __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
     // It is padded to be word aligned
     offset += (bind_ack.sec_addr.len%WORD_BYTES)?(bind_ack.sec_addr.len+(\
          WORD_BYTES - bind_ack.sec_addr.len%WORD_BYTES)):bind_ack.sec_addr.len;
+    if (offset > dlen) {
+        incr_parse_error(rpc_info);
+        HAL_TRACE_ERR("Packet Len {} is smaller than offset size {}",
+                       dlen, offset);
+        return 0;
+    }
     offset += 2; // Padding
     bind_ack.rlist.num_rslts = pkt[offset++];
     if (bind_ack.rlist.num_rslts > MAX_CONTEXT) {
