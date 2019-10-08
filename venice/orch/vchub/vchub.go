@@ -102,7 +102,7 @@ func waitForever() {
 	select {}
 }
 
-func launchVCHub(opts *cliOpts) {
+func launchVCHub(opts *cliOpts, logger log.Logger) {
 	// Initialize store and start grpc server
 	r := resolver.New(&resolver.Config{Name: globals.VCHub, Servers: strings.Split(opts.resolverURLs, ",")})
 
@@ -111,7 +111,7 @@ func launchVCHub(opts *cliOpts) {
 	vchStore.Run(storeCh)
 	log.Infof("%s is running", globals.VCHub)
 
-	instance, err := instanceManager.NewInstanceManager(globals.APIServer, r, storeCh, opts.vcenterList)
+	instance, err := instanceManager.NewInstanceManager(globals.APIServer, r, storeCh, opts.vcenterList, logger)
 	if instance == nil || err != nil {
 		log.Errorf("Failed to create api server watcher. Err : %v", err)
 	}
@@ -123,8 +123,7 @@ func main() {
 	var opts cliOpts
 	err := parseOpts(&opts)
 	if err != nil {
-		// TODO : Re-enable this line
-		//os.Exit(1)
+		os.Exit(1)
 	}
 
 	// Fill logger config params
@@ -148,6 +147,6 @@ func main() {
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
 
-	launchVCHub(&opts)
+	launchVCHub(&opts, logger)
 	waitForever()
 }

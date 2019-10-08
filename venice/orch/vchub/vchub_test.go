@@ -114,7 +114,7 @@ func TestVCHub(t *testing.T) {
 		return
 	}
 
-	go launchVCHub(&opts)
+	go launchVCHub(&opts, logger)
 	time.Sleep(1100 * time.Millisecond)
 
 	// verify nwifs are created

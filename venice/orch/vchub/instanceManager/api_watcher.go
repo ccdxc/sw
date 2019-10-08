@@ -31,8 +31,6 @@ func (instance *InstanceManager) watchOrchestrationConfiguration(apicl apiclient
 			if ok {
 				orchConfig := evt.Object.(*orchestration.Orchestrator)
 				instance.handleConfigEvent(evt.Type, orchConfig)
-			} else {
-				log.Errorf("Failed to receive configuration event.")
 			}
 		case <-instance.watchCtx.Done():
 			log.Info("Exiting watch for orchestration configuration")
@@ -44,14 +42,10 @@ func (instance *InstanceManager) watchOrchestrationConfiguration(apicl apiclient
 func (instance *InstanceManager) runApisrvWatcher() {
 	instance.waitGrp.Add(1)
 	defer instance.waitGrp.Done()
-
-	config := log.GetDefaultConfig("VCHubApiWatcher")
-	l := log.GetNewLogger(config)
-	b := balancer.New(instance.resolver)
+	log.Info("Running API Server Watcher")
 
 	for {
-		apicl, err := apiclient.NewGrpcAPIClient(globals.VCHub, instance.apisrvURL, l, rpckit.WithBalancer(b))
-
+		apicl, err := apiclient.NewGrpcAPIClient(globals.VCHub, instance.apisrvURL, instance.logger, rpckit.WithBalancer(balancer.New(instance.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC Server [%s]\n", instance.apisrvURL)
 		} else {

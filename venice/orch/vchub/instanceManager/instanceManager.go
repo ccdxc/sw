@@ -35,6 +35,8 @@ type InstanceManager struct {
 	apisrvURL             string
 	resolver              resolver.Interface
 	storeCh               chan defs.StoreMsg
+	logger                log.Logger
+	vcProbeMap            map[string]*vcprobe.VCProbe
 }
 
 // Stop stops the watcher
@@ -57,11 +59,12 @@ func (w *InstanceManager) stop() {
 }
 
 // NewInstanceManager creates a new watcher
-func NewInstanceManager(apisrvURL string, resolver resolver.Interface, storeCh chan defs.StoreMsg, vcenterList []*url.URL) (*InstanceManager, error) {
+func NewInstanceManager(apisrvURL string, resolver resolver.Interface, storeCh chan defs.StoreMsg, vcenterList []*url.URL, logger log.Logger) (*InstanceManager, error) {
 	if len(apisrvURL) == 0 {
 		return nil, fmt.Errorf("API server URL is empty")
 	}
 
+	log.Infof("Got API Server URL. [%v]", apisrvURL)
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	instance := &InstanceManager{
@@ -72,6 +75,10 @@ func NewInstanceManager(apisrvURL string, resolver resolver.Interface, storeCh c
 		},
 		vcenterList: vcenterList,
 		storeCh:     storeCh,
+		apisrvURL:   apisrvURL,
+		logger:      logger,
+		resolver:    resolver,
+		vcProbeMap:  make(map[string]*vcprobe.VCProbe),
 	}
 
 	return instance, nil
@@ -86,7 +93,9 @@ func (w *InstanceManager) Start() {
 			vcp := vcprobe.NewVCProbe(u.Hostname()+":"+u.Port(), u, w.storeCh)
 			if vcp.Start() == nil {
 				vcp.Run()
+				w.vcProbeMap[u.String()] = vcp
 			} else {
+				log.Info("Stopping VCP")
 				vcp.Stop()
 				retryMap[u.String()] = vcp
 			}
@@ -103,7 +112,9 @@ func (w *InstanceManager) Start() {
 			if v.Start() == nil {
 				v.Run()
 				delete(retryMap, u)
+				w.vcProbeMap[u] = v
 			} else {
+				log.Info("Stopping VCP")
 				v.Stop()
 			}
 		}
@@ -116,22 +127,36 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 	switch evtType {
 	case kvstore.Created, kvstore.Updated:
 
-		vc := fmt.Sprintf("https://%s:%s@%s:8990/sdk", config.Spec.Credentials.UserName, config.Spec.Credentials.Password, config.Spec.URI)
+		vc := fmt.Sprintf("https://%s:%s@%s/sdk", config.Spec.Credentials.UserName, config.Spec.Credentials.Password, config.Spec.URI)
 		vcURL, err := soap.ParseURL(vc)
 		if err != nil {
 			log.Errorf("Failed to parse VCenter URL [%v]. Err : %v", vc, err)
 			return
 		}
 
-		// TODO : Add retries for connections
 		vcp := vcprobe.NewVCProbe(vcURL.Hostname()+":"+vcURL.Port(), vcURL, w.storeCh)
-		if vcp.Start() == nil {
-			vcp.Run()
-		} else {
-			vcp.Stop()
-		}
+		started := false
 		log.Infof("Config item created. %v", config)
+
+		for !started {
+			err := vcp.Start()
+			if err == nil {
+				vcp.Run()
+				w.vcProbeMap[config.Spec.URI] = vcp
+				started = true
+				log.Infof("VC Probe started for %v", config.Spec.URI)
+			} else {
+				log.Errorf("Failed to start VCP : %v", err)
+			}
+
+			time.Sleep(time.Second)
+		}
 	case kvstore.Deleted:
 		log.Infof("Config item deleted. %v", config)
+		vcp := w.vcProbeMap[config.Spec.URI]
+		if vcp != nil {
+			log.Infof("Stopping VC Probe for %v", config.Spec.URI)
+			vcp.Stop()
+		}
 	}
 }
