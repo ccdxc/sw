@@ -36,13 +36,11 @@
           <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.version }}
           </div>
         </div>
-        <!-- comment out duration until backend supports it
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Duration: </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec.duration }}</div>
         </div>
-         -->
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
@@ -144,17 +142,17 @@
                  (selectedIndexChange)="selectedIndexChangeEvent($event)">
     <mat-tab label="CONTROLLER NODES" *ngIf="!isNaplesOnly()">
       <ng-container
-                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-nodes-status'], tablename:'Controller Nodes'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-nodes-status'], tablename:'Controller Nodes', statusCols:statusCols}">
       </ng-container>
     </mat-tab>
     <mat-tab label="CONTROLLER SERVICES" *ngIf="!isNaplesOnly()">
       <ng-container
-                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services', statusCols:statusCols}">
       </ng-container>
     </mat-tab>
     <mat-tab label="DISTRIBUTED SERVICES CARDS" *ngIf="!isVeniceOnly()">
       <ng-container
-                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['dscs-status'], tablename:'Distributed Services Cards'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['dscs-status'], tablename:'Distributed Services Cards', statusCols:dscsStatusCols}">
       </ng-container>
     </mat-tab>
   </mat-tab-group>
@@ -185,7 +183,7 @@
   </div>
 </app-pagebody>
 
-<ng-template #statusTable let-data="data" , let-tablename="tablename">
+<ng-template #statusTable let-data="data" , let-tablename="tablename" let-statusCols="statusCols">
   <div fxFlex class="rolloutstatus-table-div">
     <app-lazyrender [data]="data" [rows]="36" [virtualRowHeight]="56">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="statusCols"

@@ -72,6 +72,16 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
   ];
 
+  // Only DSC should show number of retries. We use a seperate column configuration. See html about how to how to set columns to table
+  dscsStatusCols: TableCol[] = [
+    { field: 'name', header: 'Name', class: 'rolloutstatus-column rolloutstatus-column-name', sortable: true, width: 15 },
+    { field: 'phase', header: 'Phase', class: 'rolloutstatus-column rolloutstatus-column-phase', sortable: true, width: 15 },
+    { field: 'start-time', header: 'Start Time', class: 'rolloutstatus-column rolloutstatus-column-sdate', sortable: true, width: 10 },
+    { field: 'end-time', header: 'End Time', class: 'rolloutstatus-column rolloutstatus-column-edate', sortable: true, width: 10 },
+    { field: 'num-retries', header: 'Retry Times', class: 'rolloutstatus-column rolloutstatus-column-reason', sortable: true, width: 10 },
+    { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
+  ];
+
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
 // During progressing rollout, WatchDistributedServiceCard may fail resulting in this.naples to be set to empty.
 // This affects the "name" column of the NICs table (see getNICID func).
@@ -236,6 +246,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     );
     this.subscriptions.push(getSubscription);
   }
+
 
   watchRolloutDetail() {
     this.rolloutsEventUtility = new HttpEventUtility<RolloutRollout>(RolloutRollout);

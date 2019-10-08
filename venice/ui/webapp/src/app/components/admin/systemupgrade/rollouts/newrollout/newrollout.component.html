@@ -41,10 +41,10 @@
               </div>
               <div fxFlex></div>
               <div fxFlex="auto" fxLayout="row">
-                <!-- comment out duration for now as backend does not support it - 2019-05-09
                 <div fxFlex="nogrow" class="newrollout-text">Duration:</div>
-                <input fxFlex="200px" formControlName="duration" appErrorTooltip class="newrollout-input-common"
-                  matspellcheck="false" type="text" pInputText placeholder="Until completion"> -->
+                <input fxFlex="200px" formControlName="duration" appErrorTooltip
+                       class="newrollout-input-common"
+                       matspellcheck="false" type="text" pInputText placeholder="Until completion">
                 <div fxFlex="nogrow" class="newrollout-text">Schedule *:</div>
                 <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
                             formControlName="scheduled-start-time"

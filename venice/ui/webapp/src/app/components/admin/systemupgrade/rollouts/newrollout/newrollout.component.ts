@@ -226,7 +226,6 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).setValidators([required, this.isRolloutScheduleTimeValid()]);
       this.newRollout.$formGroup.get(['spec', 'version']).setValidators([required]);
     }
-    this.newRollout.$formGroup.get(['spec', 'duration']).disable(); // TODO: Disable duration for this release 2019-05-02
   }
 
 
