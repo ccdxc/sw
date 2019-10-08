@@ -152,7 +152,8 @@ func PrintInventory() {
 		vmID := vm.Reference().Value
 		href := vm.Runtime.Host.Reference()
 		hostID := href.Value
-		log.Infof("%s  <=  %s", vmID, hostID)
+		log.Infof("VM: %s", vmID)
+		log.Infof("    Host: %s", hostID)
 		hh := simulator.Map.Get(href)
 		if hh != nil {
 			hs := hh.(*simulator.HostSystem)
@@ -163,9 +164,9 @@ func PrintInventory() {
 	}
 	log.Infof("++++++++++++++++++++++++++++++++++\n")
 	for k, e := range hosts {
-		log.Infof("HostKey=== %s", k)
+		log.Infof("Host: %s", k)
 		for _, v := range e.Vm {
-			log.Infof("VMKey: %s", v.Reference().Value)
+			log.Infof("    VM: %s", v.Reference().Value)
 		}
 	}
 

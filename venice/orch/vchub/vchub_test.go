@@ -76,6 +76,7 @@ func testTeardown() {
 }
 
 func TestVCHub(t *testing.T) {
+	t.Skip()
 	testSetup()
 	defer testTeardown()
 

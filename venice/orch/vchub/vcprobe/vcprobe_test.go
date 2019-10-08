@@ -8,6 +8,8 @@ import (
 
 	"github.com/pensando/sw/venice/orch/vchub/defs"
 	"github.com/pensando/sw/venice/orch/vchub/sim"
+	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 const (
@@ -15,10 +17,37 @@ const (
 )
 
 func TestSOAP(t *testing.T) {
+	vcID := "127.0.0.1:8990"
+	expectedMsgs := map[defs.VCObject][]defs.StoreMsg{
+		// The changes property is not checked currently
+		defs.VirtualMachine: []defs.StoreMsg{
+			defs.StoreMsg{
+				VcObject:   defs.VirtualMachine,
+				Key:        "virtualmachine-41",
+				Originator: vcID,
+			},
+			defs.StoreMsg{
+				VcObject:   defs.VirtualMachine,
+				Key:        "virtualmachine-45",
+				Originator: vcID,
+			},
+		},
+		defs.HostSystem: []defs.StoreMsg{
+			defs.StoreMsg{
+				VcObject:   defs.HostSystem,
+				Key:        "hostsystem-21",
+				Originator: vcID,
+			},
+		},
+	}
+	hosts := []string{testNic1Mac} // A default cluster host will be created in addition to this list
+	vms := 2                       // VMs to be created per resource pool
+
+	log.SetConfig(log.GetDefaultConfig("vcprobe_test"))
 	s := sim.New()
 	defer s.Destroy()
 
-	vc1, err := s.Run("127.0.0.1:8990", []string{testNic1Mac}, 2)
+	vc1, err := s.Run("127.0.0.1:8990", hosts, vms)
 	if err != nil {
 		t.Fatalf("Error %v simulating vCenter", err)
 	}
@@ -30,24 +59,53 @@ func TestSOAP(t *testing.T) {
 
 	storeCh := make(chan defs.StoreMsg, 24)
 	time.Sleep(100 * time.Millisecond) // let simulator start
-	vcp := NewVCProbe(u, storeCh)
+	vcp := NewVCProbe(vcID, u, storeCh)
 	vcp.Start()
+	defer vcp.Stop()
 	vcp.Run()
 
-	counts := make(map[defs.VCProp]int)
-	stopped := false
-	for m := range storeCh {
-		c := counts[m.Property]
-		counts[m.Property] = c + 1
+	eventMap := make(map[defs.VCObject][]defs.StoreMsg)
+	doneCh := make(chan bool)
 
-		if counts[defs.HostPropConfig] >= 1 &&
-			counts[defs.VMPropConfig] >= 2 {
-			if !stopped {
-				stopped = true
-				vcp.Stop()
-				close(storeCh)
+	go func() {
+		for {
+			select {
+			case <-doneCh:
+				return
+			case m := <-storeCh:
+				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+
+				if len(eventMap[defs.HostSystem]) >= 1 &&
+					len(eventMap[defs.VirtualMachine]) >= 2 {
+					doneCh <- true
+				}
 			}
 		}
-
+	}()
+	select {
+	case <-doneCh:
+	case <-time.After(3 * time.Second):
+		sim.PrintInventory()
+		doneCh <- false
+		t.Logf("Failed to receive all messages. ")
+		t.Logf("Expected: ")
+		for k, v := range expectedMsgs {
+			t.Logf("%d %s but got %d %s", len(v), k, len(eventMap[k]), k)
+		}
+		t.FailNow()
+	}
+	for objType, events := range expectedMsgs {
+		recvEvents := eventMap[objType]
+		for _, expE := range events {
+			foundMatch := false
+			for _, recvE := range recvEvents {
+				if expE.Key == recvE.Key &&
+					expE.Originator == recvE.Originator {
+					foundMatch = true
+					break
+				}
+			}
+			Assert(t, foundMatch, "could not find matching event for %v", expE)
+		}
 	}
 }

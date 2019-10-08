@@ -1,6 +1,6 @@
 .PHONY : default clean
 
-TARGET := mock_monitoring.go mock_apiclient.go mock_network.go mock_cluster.go
+TARGET := mock_workload.go mock_monitoring.go mock_apiclient.go mock_network.go mock_cluster.go
 
 default: ${TARGET}
 
@@ -64,6 +64,14 @@ mock_cluster.go: ../generated/cluster/svc_cluster_crudinterface.go Makefile
 	goimports -local "github.com/pensando/sw" -w $@
 	rm -f *.bak_
 
+mock_workload.go: ../generated/workload/svc_workload_crudinterface.go Makefile
+	mockgen -destination=$@ -package=mock --source $< tenant
+	sed -i.bak_ -e 's/\*Workload/\*workload.Workload/g' $@
+	sed -i.bak_ -e 's/\*Endpoint/\*workload.Endpoint/g' $@
+	sed -i.bak_ -e 's/[[:space:](]WorkloadV1WorkloadInterface[[:space:])]/ (network.WorkloadV1WorkloadInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]WorkloadV1EndpointInterface[[:space:])]/ (network.WorkloadV1EndpointInterface)/g' $@
+	goimports -local "github.com/pensando/sw" -w $@
+	rm -f *.bak_
 
 clean:
 	rm -f ${TARGET}

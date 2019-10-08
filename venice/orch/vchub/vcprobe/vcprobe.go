@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"reflect"
 	"sync"
 	"time"
 
@@ -37,12 +36,14 @@ type VCProbe struct {
 }
 
 // NewVCProbe returns a new instance of VCProbe
-func NewVCProbe(vcURL *url.URL, hOutBox chan<- defs.StoreMsg) *VCProbe {
+func NewVCProbe(vcID string, vcURL *url.URL, hOutBox chan<- defs.StoreMsg) *VCProbe {
 	return &VCProbe{
+		vcID:   vcID,
 		vcURL:  vcURL,
 		outBox: hOutBox,
 		tp:     newTagsProbe(vcURL, hOutBox),
 	}
+	// Check we have correct permissions when we connect.
 }
 
 // Start creates a client and view manager
@@ -60,7 +61,6 @@ func (v *VCProbe) Start() error {
 
 	v.client = c
 	v.viewMgr = view.NewManager(v.client.Client)
-	v.vcID = v.vcURL.Hostname() + ":" + v.vcURL.Port()
 
 	err = v.tp.Start(v.ctx)
 	return err
@@ -77,50 +77,34 @@ func (v *VCProbe) Stop() {
 
 // Run runs the probe
 func (v *VCProbe) Run() {
-	go v.probeSmartNICs()
-	go v.probeNwIFs()
-	go v.tp.PollTags(&v.wg)
-}
-
-// GetVeth checks if the base virtual device is a vnic and returns a pointer to
-// VirtualEthernetCard
-func GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
-	dKind := reflect.TypeOf(d).Elem()
-
-	switch dKind {
-	case reflect.TypeOf((*types.VirtualVmxnet3)(nil)).Elem():
-		v3 := d.(*types.VirtualVmxnet3)
-		return &v3.VirtualVmxnet.VirtualEthernetCard
-	case reflect.TypeOf((*types.VirtualVmxnet2)(nil)).Elem():
-		v2 := d.(*types.VirtualVmxnet2)
-		return &v2.VirtualVmxnet.VirtualEthernetCard
-	case reflect.TypeOf((*types.VirtualVmxnet)(nil)).Elem():
-		v1 := d.(*types.VirtualVmxnet)
-		return &v1.VirtualEthernetCard
-	case reflect.TypeOf((*types.VirtualE1000)(nil)).Elem():
-		e1 := d.(*types.VirtualE1000)
-		return &e1.VirtualEthernetCard
-	case reflect.TypeOf((*types.VirtualE1000e)(nil)).Elem():
-		e1e := d.(*types.VirtualE1000e)
-		return &e1e.VirtualEthernetCard
-	default:
-		return nil
+	tryForever := func(fn func()) {
+		for v.ctx.Err() == nil {
+			fn()
+			time.Sleep(retryDelay)
+		}
 	}
+	go tryForever(v.probeHosts)
+	go tryForever(v.probeWorkloads)
+	go tryForever(func() {
+		v.tp.PollTags(&v.wg)
+	})
 }
 
-// probeSmartNICs probes the vCenter for SmartNICs
-func (v *VCProbe) probeSmartNICs() error {
+// probeHosts probes the vCenter for hosts and smartnics
+func (v *VCProbe) probeHosts() {
 	var err error
 	v.wg.Add(1)
 	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
 	kinds := []string{"HostSystem"}
+	// Which host objects to watch (all)
 	hostView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
 	if err != nil {
 		log.Fatalf("CreateContainerView returned %v", err)
-		return err
+		return
 	}
 
+	// Fields to watch for change
 	hostProps := []string{"config"}
 	hostRef := types.ManagedObjectReference{Type: "HostSystem"}
 	filter := new(property.WaitFilter).Add(hostView.Reference(), hostRef.Type, hostProps, hostView.TraversalSpec())
@@ -132,8 +116,9 @@ func (v *VCProbe) probeSmartNICs() error {
 				continue
 			}
 			hostKey := update.Obj.Value
-			v.updateSNIC(hostKey, update.ChangeSet)
+			v.updateHost(hostKey, update.ChangeSet)
 		}
+		// Must return false, returning true will cause waitForUpdates to exit.
 		return false
 	}
 	for {
@@ -144,93 +129,100 @@ func (v *VCProbe) probeSmartNICs() error {
 		}
 
 		if v.ctx.Err() != nil {
-			return err
+			return
 		}
 
-		log.Infof("probeSmartNICs property.WaitForView exited, retrying...")
+		log.Infof("probeHosts property.WaitForView exited, retrying...")
 		time.Sleep(retryDelay)
 	}
 
 }
 
-// updateSNIC is the callback that injects a message to the smartnic store
-func (v *VCProbe) updateSNIC(hostKey string, pc []types.PropertyChange) {
-	log.Infof("<== updateSNIC hostKey: %s ==>", hostKey)
+// updateHost is the callback that injects a message to the smartnic store
+func (v *VCProbe) updateHost(hostKey string, pc []types.PropertyChange) {
+	log.Infof("<== updateHost vcID: %s hostKey: %s ==>", v.vcID, hostKey)
 	if len(pc) != 1 {
 		log.Errorf("Only a single property expected at this time.")
 		spew.Dump(pc)
 		return
 	}
-
-	// build a vSphereHost based on the update
-	vhNew := &defs.ESXHost{DvsMap: make(map[string]*defs.DvsInstance), PenNICs: make(map[string]*defs.NICInfo)}
-
-	globalHostKey := v.vcID + ":" + hostKey
-	msg := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.HostPropConfig,
-		Key:        globalHostKey,
-		Value:      vhNew,
+	m := defs.StoreMsg{
+		VcObject:   defs.HostSystem,
+		Key:        hostKey,
+		Changes:    pc,
 		Originator: v.vcID,
 	}
+	v.outBox <- m
 
-	for _, prop := range pc {
-		if prop.Op == types.PropertyChangeOpRemove || prop.Op == types.PropertyChangeOpIndirectRemove {
-			msg.Op = defs.VCOpDelete
-			break
-		}
-		hConfig, ok := prop.Val.(types.HostConfigInfo)
-		if !ok {
-			log.Errorf(">>>Bad prop<<<")
-			spew.Dump(prop)
-			return
-		}
+	// build a vSphereHost based on the update
+	// vhNew := &defs.ESXHost{DvsMap: make(map[string]*defs.DvsInstance), PenNICs: make(map[string]*defs.NICInfo)}
 
-		nwInfo := hConfig.Network
-		if nwInfo == nil {
-			log.Errorf("Missing hConfig.Network")
-			return
-		}
+	// globalHostKey := v.vcID + ":" + hostKey
+	// msg := defs.StoreMsg{
+	// 	Op:         defs.VCOpSet,
+	// 	Property:   defs.HostPropConfig,
+	// 	Key:        globalHostKey,
+	// 	Value:      vhNew,
+	// 	Originator: v.vcID,
+	// }
 
-		for _, pnic := range nwInfo.Pnic {
-			// TODO check for vendor field to identify Pensando NICs
-			vhNew.PenNICs[pnic.Device] = &defs.NICInfo{Mac: pnic.Mac, Name: pnic.Device}
-		}
+	// for _, prop := range pc {
+	// 	if prop.Op == types.PropertyChangeOpRemove || prop.Op == types.PropertyChangeOpIndirectRemove {
+	// 		msg.Op = defs.VCOpDelete
+	// 		break
+	// 	}
+	// 	hConfig, ok := prop.Val.(types.HostConfigInfo)
+	// 	if !ok {
+	// 		log.Errorf(">>>Bad prop<<<")
+	// 		spew.Dump(prop)
+	// 		return
+	// 	}
 
-		for _, sx := range nwInfo.ProxySwitch {
-			// TODO ignore if it's not our dvs
-			if sx.Spec.Backing == nil {
-				log.Errorf("DVS backing is nil")
-				continue
-			}
+	// 	nwInfo := hConfig.Network
+	// 	if nwInfo == nil {
+	// 		log.Errorf("Missing hConfig.Network")
+	// 		return
+	// 	}
 
-			backing, ok := sx.Spec.Backing.(*types.DistributedVirtualSwitchHostMemberPnicBacking)
-			if !ok {
-				log.Errorf("Expected DistributedVirtualSwitchHostMemberPnicBacking")
-				continue
-			}
+	// 	for _, pnic := range nwInfo.Pnic {
+	// 		// TODO check for vendor field to identify Pensando NICs
+	// 		vhNew.PenNICs[pnic.Device] = &defs.NICInfo{Mac: pnic.Mac, Name: pnic.Device}
+	// 	}
 
-			dvs := new(defs.DvsInstance)
-			dvs.Name = sx.DvsName
-			for _, ps := range backing.PnicSpec {
-				if i, found := vhNew.PenNICs[ps.PnicDevice]; found {
-					dvs.Uplinks = append(dvs.Uplinks, ps.PnicDevice)
-					i.DvsUUID = sx.DvsUuid // updates map
+	// 	for _, sx := range nwInfo.ProxySwitch {
+	// 		// TODO ignore if it's not our dvs
+	// 		if sx.Spec.Backing == nil {
+	// 			log.Errorf("DVS backing is nil")
+	// 			continue
+	// 		}
 
-				} else {
-					// TODO: this should be an alarm
-					log.Errorf("%s not recognized", ps.PnicDevice)
-				}
-			}
-			vhNew.DvsMap[sx.DvsUuid] = dvs
-		}
-	}
+	// 		backing, ok := sx.Spec.Backing.(*types.DistributedVirtualSwitchHostMemberPnicBacking)
+	// 		if !ok {
+	// 			log.Errorf("Expected DistributedVirtualSwitchHostMemberPnicBacking")
+	// 			continue
+	// 		}
 
-	v.outBox <- msg
+	// 		dvs := new(defs.DvsInstance)
+	// 		dvs.Name = sx.DvsName
+	// 		for _, ps := range backing.PnicSpec {
+	// 			if i, found := vhNew.PenNICs[ps.PnicDevice]; found {
+	// 				dvs.Uplinks = append(dvs.Uplinks, ps.PnicDevice)
+	// 				i.DvsUUID = sx.DvsUuid // updates map
+
+	// 			} else {
+	// 				// TODO: this should be an alarm
+	// 				log.Errorf("%s not recognized", ps.PnicDevice)
+	// 			}
+	// 		}
+	// 		vhNew.DvsMap[sx.DvsUuid] = dvs
+	// 	}
+	// }
+
+	// v.outBox <- msg
 }
 
-// probeNwIFs probes the vCenter for VNICs
-func (v *VCProbe) probeNwIFs() error {
+// probeWorkloads probes the vCenter for VNICs
+func (v *VCProbe) probeWorkloads() {
 	var err error
 	v.wg.Add(1)
 	defer v.wg.Done()
@@ -239,11 +231,13 @@ func (v *VCProbe) probeNwIFs() error {
 	vmView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
 	if err != nil {
 		log.Fatalf("CreateContainerView returned %v", err)
-		return err
+		return
 	}
 
 	vmRef := types.ManagedObjectReference{Type: "VirtualMachine"}
-	vmProps := []string{"config", "name", "runtime", "tag", "customValue"}
+	// TODO: See which props we can get from summary alone
+	// From vCenter docs, they optimize for watchers on the summary property.
+	vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
 	filter := new(property.WaitFilter).Add(vmView.Reference(), vmRef.Type, vmProps, vmView.TraversalSpec())
 
 	updFunc := func(updates []types.ObjectUpdate) bool {
@@ -253,8 +247,9 @@ func (v *VCProbe) probeNwIFs() error {
 				continue
 			}
 			vmKey := update.Obj.Value
-			v.updateNwIF(vmKey, update.ChangeSet)
+			v.updateWorkload(vmKey, update.ChangeSet)
 		}
+		// Must return false, returning true will cause waitForUpdates to exit.
 		return false
 	}
 
@@ -266,115 +261,113 @@ func (v *VCProbe) probeNwIFs() error {
 		}
 
 		if v.ctx.Err() != nil {
-			return err
+			return
 		}
 
-		log.Infof("probeSmartNICs property.WaitForView exited, retrying...")
+		log.Infof("probeWorkloads property.WaitForView exited, retrying...")
 		time.Sleep(retryDelay)
 	}
 
 }
 
-// updateNwIF is the callback that injects a message to the nwif store
-func (v *VCProbe) updateNwIF(vmKey string, pc []types.PropertyChange) {
+// updateWorkload is the callback that injects a message to the nwif store
+func (v *VCProbe) updateWorkload(vmKey string, pc []types.PropertyChange) {
 	var m defs.StoreMsg
-	globalVMKey := v.vcID + ":" + vmKey
-	log.Infof("<== updateNwIF vmKey: %s ==>", globalVMKey)
+	m = defs.StoreMsg{
+		VcObject: defs.VirtualMachine,
+		// Op:         getStoreOp(prop.Op),
+		// Property:   defs.VMPropRT,
+		Key:        vmKey,
+		Changes:    pc,
+		Originator: v.vcID,
+	}
+	log.Infof("<== updateWorkload vcID: %s vmKey: %s ==>", v.vcID, vmKey)
+	v.outBox <- m
+
 	//spew.Dump(pc)
-	for _, prop := range pc {
-		switch defs.VCProp(prop.Name) {
-		case defs.VMPropConfig:
-			op := getStoreOp(prop.Op)
-			value := &defs.VMConfig{}
-			if op != defs.VCOpDelete {
-				vnics, err := getVirtualNICs(&prop)
-				if err != nil {
-					continue
-				}
-				value = &defs.VMConfig{Vnics: vnics}
-			}
-			m = defs.StoreMsg{
-				Op:         getStoreOp(prop.Op),
-				Property:   defs.VMPropConfig,
-				Key:        globalVMKey,
-				Value:      value,
-				Originator: v.vcID,
-			}
-		case defs.VMPropName:
-			m = defs.StoreMsg{
-				Op:         getStoreOp(prop.Op),
-				Property:   defs.VMPropName,
-				Key:        globalVMKey,
-				Value:      prop.Val.(string),
-				Originator: v.vcID,
-			}
-		case defs.VMPropRT:
-			rt := prop.Val.(types.VirtualMachineRuntimeInfo)
-			m = defs.StoreMsg{
-				Op:         getStoreOp(prop.Op),
-				Property:   defs.VMPropRT,
-				Key:        globalVMKey,
-				Value:      &defs.VMRuntime{HostKey: v.vcID + ":" + rt.Host.Value, PowerState: string(rt.PowerState)},
-				Originator: v.vcID,
-			}
-		//case defs.VMPropTag:
-		//case defs.VMPropCustom:
-		default:
-			log.Errorf("Unknown property %s", prop.Name)
-			continue
-		}
+	// for _, prop := range pc {
+	// 	switch defs.VCProp(prop.Name) {
+	// 	case defs.VMPropConfig:
+	// 		op := getStoreOp(prop.Op)
+	// 		value := &defs.VMConfig{}
+	// 		if op != defs.VCOpDelete {
+	// 			vnics, err := getWorkloadInterfaces(&prop)
+	// 			if err != nil {
+	// 				continue
+	// 			}
+	// 			value = &defs.VMConfig{Vnics: vnics}
+	// 		}
+	// 		m = defs.StoreMsg{
+	// 			Op:         getStoreOp(prop.Op),
+	// 			Property:   defs.VMPropConfig,
+	// 			Key:        globalVMKey,
+	// 			Value:      value,
+	// 			Originator: v.vcID,
+	// 		}
+	// 	case defs.VMPropName:
+	// 		m = defs.StoreMsg{
+	// 			Op:         getStoreOp(prop.Op),
+	// 			Property:   defs.VMPropName,
+	// 			Key:        globalVMKey,
+	// 			Value:      prop.Val.(string),
+	// 			Originator: v.vcID,
+	// 		}
+	// 	case defs.VMPropRT:
+	// 		rt := prop.Val.(types.VirtualMachineRuntimeInfo)
+	// 		m = defs.StoreMsg{
+	// 			Op:         getStoreOp(prop.Op),
+	// 			Property:   defs.VMPropRT,
+	// 			Key:        globalVMKey,
+	// 			Value:      &defs.VMRuntime{HostKey: v.vcID + ":" + rt.Host.Value, PowerState: string(rt.PowerState)},
+	// 			Originator: v.vcID,
+	// 		}
+	// 	//case defs.VMPropTag:
+	// 	//case defs.VMPropCustom:
+	// 	default:
+	// 		log.Errorf("Unknown property %s", prop.Name)
+	// 		continue
+	// 	}
 
-		v.outBox <- m
-	}
+	// v.outBox <- m
+	// }
 }
 
-func getStoreOp(op types.PropertyChangeOp) defs.VCOp {
-	switch op {
-	case types.PropertyChangeOpRemove:
-		return defs.VCOpDelete
-	case types.PropertyChangeOpIndirectRemove:
-		return defs.VCOpDelete
-	default:
-		return defs.VCOpSet
-	}
-}
+// getWorkloadInterfaces extracts vnic info from the property
+// func getWorkloadInterfaces(p *types.PropertyChange) (map[string]*defs.VirtualNIC, error) {
+// 	var name string
+// 	res := make(map[string]*workload.WorkloadIntfSpec)
 
-// getVirtualNICs extracts vnic info from the property
-func getVirtualNICs(p *types.PropertyChange) (map[string]*defs.VirtualNIC, error) {
-	var name string
-	res := make(map[string]*defs.VirtualNIC)
+// 	vmConfig, ok := p.Val.(types.VirtualMachineConfigInfo)
+// 	if !ok {
+// 		log.Errorf("Expected VirtualMachineConfigInfo, got %s", reflect.TypeOf(p.Val).Name())
+// 		return nil, errors.New("reflect error")
+// 	}
 
-	vmConfig, ok := p.Val.(types.VirtualMachineConfigInfo)
-	if !ok {
-		log.Errorf("Expected VirtualMachineConfigInfo, got %s", reflect.TypeOf(p.Val).Name())
-		return nil, errors.New("reflect error")
-	}
+// 	for _, d := range vmConfig.Hardware.Device {
+// 		vec := GetVeth(d)
+// 		if vec != nil {
+// 			back, ok := vec.Backing.(*types.VirtualEthernetCardDistributedVirtualPortBackingInfo)
+// 			if !ok {
+// 				log.Errorf("Expected types.VirtualEthernetCardDistributedVirtualPortBackingInfo, got %s", reflect.TypeOf(vec.Backing).Name())
+// 				continue
+// 			}
+// 			desc, ok := vec.VirtualDevice.DeviceInfo.(*types.Description)
+// 			if ok {
+// 				name = desc.Label
+// 			} else {
+// 				name = ""
+// 			}
+// 			vnic := &workload.WorkloadIntfSpec{
+// 				Name:         name,
+// 				MacAddress:   vec.MacAddress,
+// 				PortgroupKey: back.Port.PortgroupKey,
+// 				PortKey:      back.Port.PortKey,
+// 				SwitchUUID:   back.Port.SwitchUuid,
+// 			}
 
-	for _, d := range vmConfig.Hardware.Device {
-		vec := GetVeth(d)
-		if vec != nil {
-			back, ok := vec.Backing.(*types.VirtualEthernetCardDistributedVirtualPortBackingInfo)
-			if !ok {
-				log.Errorf("Expected types.VirtualEthernetCardDistributedVirtualPortBackingInfo, got %s", reflect.TypeOf(vec.Backing).Name())
-				continue
-			}
-			desc, ok := vec.VirtualDevice.DeviceInfo.(*types.Description)
-			if ok {
-				name = desc.Label
-			} else {
-				name = ""
-			}
-			vnic := &defs.VirtualNIC{
-				Name:         name,
-				MacAddress:   vec.MacAddress,
-				PortgroupKey: back.Port.PortgroupKey,
-				PortKey:      back.Port.PortKey,
-				SwitchUUID:   back.Port.SwitchUuid,
-			}
+// 			res[vec.MacAddress] = vnic
+// 		}
+// 	}
 
-			res[vec.MacAddress] = vnic
-		}
-	}
-
-	return res, nil
-}
+// 	return res, nil
+// }

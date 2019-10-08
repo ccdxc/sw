@@ -1,10 +1,17 @@
 package defs
 
+import (
+	"github.com/vmware/govmomi/vim25/types"
+)
+
 // VCOp defines the object operations
 type VCOp string
 
 // VCProp defines the vSphere property type
 type VCProp string
+
+// VCObject defines the vSphere object types we are interested in
+type VCObject string
 
 const (
 	// VCOpSet indicates a create or modify
@@ -23,14 +30,19 @@ const (
 	VMPropTag = VCProp("tag")
 	// VMPropCustom identifies the VM's customValue property
 	VMPropCustom = VCProp("customValue")
+	// VMPropOverallStatus identifies the VM's overallStatus property
+	VMPropOverallStatus = VCProp("overallStatus")
+	// VirtualMachine identifies the VCenter VM object type
+	VirtualMachine = VCObject("VirtualMachine")
+	// HostSystem identifies the VCenter Host object type
+	HostSystem = VCObject("HostSystem")
 )
 
 // StoreMsg specifies a store operation
 type StoreMsg struct {
-	Op         VCOp
-	Property   VCProp // Type of property passed
-	Key        string // vSphere key for the hostsystem object
-	Value      interface{}
+	VcObject   VCObject
+	Key        string // vSphere key for the object
+	Changes    []types.PropertyChange
 	Originator string // Identifier for the VC that originated the update
 }
 

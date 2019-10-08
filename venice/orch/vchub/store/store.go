@@ -3,37 +3,49 @@ package store
 import (
 	"context"
 	"sync"
+	"time"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // VCHStore maintains information about a store instance
 type VCHStore struct {
-	ctx    context.Context
-	wg     sync.WaitGroup
-	snicDB *snicStore
-	nwifDB *nwifStore
+	ctx   context.Context
+	wg    sync.WaitGroup
+	apicl apiclient.Services
 }
 
 // NewVCHStore returns an instance of VCHStore
-func NewVCHStore(ctx context.Context) *VCHStore {
-	ss := newSnicStore(ctx)
-	finder := func(hostKey, dvsUuid string) string {
-		return getSNICId(ss, hostKey, dvsUuid)
-	}
+func NewVCHStore(ctx context.Context, apisrvURL string, resolver resolver.Interface) *VCHStore {
+	config := log.GetDefaultConfig("VCStore")
+	l := log.GetNewLogger(config)
+	b := balancer.New(resolver)
 
-	ns := newNwifStore(ctx, finder)
+	apicl, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		client, err := apiclient.NewGrpcAPIClient(globals.VCHub, apisrvURL, l, rpckit.WithBalancer(b))
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	}, 100*time.Millisecond, 20)
 
-	notifier := func(hostKey string) {
-		ns.hostUpdate(hostKey)
+	if err != nil {
+		// TODO: Make this recoverable
+		// TODO: If the connection to api server goes down,
+		// VCStore must be able to reconnect the client and recover
+		log.Errorf("Failed to create API Server client: %+v", err)
 	}
-	ss.registerNotify(notifier)
 
 	return &VCHStore{
-		ctx:    ctx,
-		snicDB: ss,
-		nwifDB: ns,
+		ctx:   ctx,
+		apicl: apicl.(apiclient.Services),
 	}
 }
 
@@ -63,34 +75,15 @@ func (v *VCHStore) run(inbox <-chan defs.StoreMsg) {
 				return
 			}
 
-			log.Infof("Msg from %v, key: %s prop: %s", m.Originator, m.Key, m.Property)
-			switch m.Property {
-			case defs.HostPropConfig:
-				var hc *defs.ESXHost
-				if m.Value != nil {
-					hc = m.Value.(*defs.ESXHost)
-				}
-				v.snicDB.processHostConfig(m.Op, m.Key, hc)
-
-			case defs.VMPropConfig:
-				var vc *defs.VMConfig
-				if m.Value != nil {
-					vc = m.Value.(*defs.VMConfig)
-				}
-				v.nwifDB.processVMConfig(m.Op, m.Key, vc)
-
-			case defs.VMPropName:
-				if m.Value != nil {
-					v.nwifDB.processVMName(m.Op, m.Key, m.Value.(string))
-				}
-
-			case defs.VMPropRT:
-				var vr *defs.VMRuntime
-				if m.Value != nil {
-					vr = m.Value.(*defs.VMRuntime)
-				}
-				v.nwifDB.processVMRunTime(m.Op, m.Key, vr)
-
+			log.Infof("Msg from %v, key: %s prop: %s", m.Originator, m.Key, m.VcObject)
+			switch m.VcObject {
+			case defs.VirtualMachine:
+				v.handleWorkload(m)
+			case defs.HostSystem:
+				v.handleHost(m)
+			default:
+				log.Errorf("Unknown object %s", m.VcObject)
+				continue
 			}
 		}
 	}

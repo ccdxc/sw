@@ -1,702 +1,730 @@
-/*
- *
- * Copyright 2017, Pensando Systems
- * All rights reserved.
- *
- */
-
 package store
 
 import (
-	"errors"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
 
-	infraapi "github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/orch"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
+	mockapi "github.com/pensando/sw/api/mock"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
-	"github.com/pensando/sw/venice/utils/kvstore/memkv"
-	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
+	mocks "github.com/pensando/sw/venice/orch/vchub/store/mocks"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-const (
-	testNic1Mac = "6a00.02e7.a840"
-	testNic2Mac = "6a00.02e7.aa54"
-	testNic3Mac = "6a00.02e7.a964"
-	testNic4Mac = "6a00.02e7.ba94"
-	testIf1Mac  = "6e00.02e7.dd40"
-	testIf2Mac  = "6e00.02e7.dc54"
-	testIf1ID   = "52fd7958-f4da-78bb-1590-856861348cee:4001"
-	testIf2ID   = "53256758-eecc-79bb-1590-899861348cfd:4004"
-	waitTO      = 2 * time.Second
-	testVCId    = "192.168.0.1:8989"
-	dvs1Id      = "00:11:zz:dd"
-	dvs2Id      = "00:11:xx:ee"
-	testVMKey   = "192.168.0.1:8989:vm-33"
-)
-
-type TestSuite struct {
-	testNics  []*orch.SmartNIC
-	testIfs   []*orch.NwIF
-	testStore *memkv.MemKv
-}
-
-func (ts *TestSuite) setup(t *testing.T) {
-	s, err := Init("", kvs.KVStoreTypeMemkv)
-	if err != nil {
-		t.Fatalf("store.Init returned %v", err)
-	}
-
-	m, ok := s.(*memkv.MemKv)
-	if !ok {
-		t.Fatalf("Bad store type")
-	}
-	ts.testStore = m
-
-	ts.testNics = make([]*orch.SmartNIC, 2)
-	ts.testNics[0] = &orch.SmartNIC{
-		ObjectKind:       "SmartNIC",
-		ObjectAPIVersion: "v1",
-		ObjectMeta: &infraapi.ObjectMeta{
-			Name:            "ServerA.vmnic0",
-			ResourceVersion: "3",
+func TestStoreRun(t *testing.T) {
+	// If supplied, will only run the test with the matching name
+	forceTestName := ""
+	testCases := []struct {
+		name      string
+		events    []defs.StoreMsg
+		setupMock func(*mocks.MockAPIClient)
+	}{
+		{
+			name: "basic workload create",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+			},
 		},
-		Status: &orch.SmartNIC_Status{
-			HostIP:     "10.193.231.234",
-			MacAddress: testNic1Mac,
-			Switch:     "Pensando-dvs-1",
+		{
+			name: "workload create with interfaces",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.VirtualMachineConfigInfo{
+								Hardware: types.VirtualHardware{
+									Device: []types.BaseVirtualDevice{
+										generateVNIC("aaaa:bbbb:cccc", "10", "E1000e"),
+										generateVNIC("aaaa:bbbb:dddd", "11", "E1000"),
+									},
+								},
+							},
+						},
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAssign, // same as add
+							Name: "config",
+							Val: types.VirtualMachineConfigInfo{
+								Hardware: types.VirtualHardware{
+									// Should ignore other devices
+									Device: []types.BaseVirtualDevice{
+										generateVNIC("aaaa:bbbb:cccc", "10", "E1000e"),
+										generateVNIC("aaaa:bbbb:dddd", "11", "E1000"),
+										generateVNIC("aaaa:bbbb:eeee", "5000", "Vmxnet"), // Outside vlan range
+										generateVNIC("aaaa:bbbb:eeee", "-10", "Vmxnet2"), // Outside vlan range
+										&types.VirtualLsiLogicSASController{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: workload.WorkloadSpec{
+						Interfaces: []workload.WorkloadIntfSpec{
+							workload.WorkloadIntfSpec{
+								MACAddress:   "aaaa:bbbb:cccc",
+								MicroSegVlan: 10,
+							},
+							workload.WorkloadIntfSpec{
+								MACAddress:   "aaaa:bbbb:dddd",
+								MicroSegVlan: 11,
+							},
+							workload.WorkloadIntfSpec{
+								MACAddress:   "aaaa:bbbb:eeee",
+								MicroSegVlan: 0,
+							},
+							workload.WorkloadIntfSpec{
+								MACAddress:   "aaaa:bbbb:eeee",
+								MicroSegVlan: 0,
+							},
+						},
+					},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+			},
+		},
+		{
+			name: "workload create with vm name",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAssign, // same as add
+							Name: "config",
+							Val: types.VirtualMachineConfigInfo{
+								Name: "test-vm",
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: api.ObjectMeta{
+						Name: "127.0.0.1:8990-virtualmachine-41",
+						Labels: map[string]string{
+							"vm-name": "test-vm",
+						},
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+					},
+					Spec: workload.WorkloadSpec{},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+			},
+		},
+		{
+			name: "workload create with runtime info",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "runtime",
+							Val: types.VirtualMachineRuntimeInfo{
+								Host: &types.ManagedObjectReference{
+									Type:  "HostSystem",
+									Value: "hostsystem-21",
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: workload.WorkloadSpec{
+						HostName: "hostsystem-21",
+					},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+			},
+		},
+		{
+			name: "workload update",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "runtime",
+							Val: types.VirtualMachineRuntimeInfo{
+								Host: &types.ManagedObjectReference{
+									Type:  "HostSystem",
+									Value: "hostsystem-21",
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec:       workload.WorkloadSpec{},
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: workload.WorkloadSpec{
+						HostName: "hostsystem-21",
+					},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
+				mWorkload.EXPECT().Update(gomock.Any(), expWorkload).Return(nil, nil)
+			},
+		},
+		{
+			name: "Workload redundant update",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "runtime",
+							Val: types.VirtualMachineRuntimeInfo{
+								Host: &types.ManagedObjectReference{
+									Type:  "HostSystem",
+									Value: "hostsystem-21",
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: workload.WorkloadSpec{
+						HostName: "hostsystem-21",
+					},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
+			},
+		},
+		{
+			name: "Workload delete",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpRemove,
+							Name: "config",
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: workload.WorkloadSpec{
+						HostName: "hostsystem-21",
+					},
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
+				mWorkload.EXPECT().Delete(gomock.Any(), expMeta).Return(nil, nil)
+			},
+		},
+		{
+			name: "host create",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aaaa:bbbb:cccc",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expHost := &cluster.Host{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Host",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							cluster.DistributedServiceCardID{
+								MACAddress: "aaaa:bbbb:cccc",
+							},
+						},
+					},
+				}
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+				mHost.EXPECT().Create(gomock.Any(), expHost).Return(nil, nil)
+			},
+		},
+		{
+			name: "host update",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aaaa:bbbb:dddd",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingHost := &cluster.Host{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Host",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							cluster.DistributedServiceCardID{
+								MACAddress: "aaaa:bbbb:cccc",
+							},
+						},
+					},
+				}
+				expHost := &cluster.Host{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Host",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							cluster.DistributedServiceCardID{
+								MACAddress: "aaaa:bbbb:dddd",
+							},
+						},
+					},
+				}
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
+				mHost.EXPECT().Update(gomock.Any(), expHost).Return(nil, nil)
+			},
+		},
+		{
+			name: "host redundant update",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aaaa:bbbb:cccc",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingHost := &cluster.Host{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Host",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							cluster.DistributedServiceCardID{
+								MACAddress: "aaaa:bbbb:cccc",
+							},
+						},
+					},
+				}
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
+			},
+		},
+		{
+			name: "Host delete",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpRemove,
+							Name: "config",
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				existingHost := &cluster.Host{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Host",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							cluster.DistributedServiceCardID{
+								MACAddress: "aaaa:bbbb:cccc",
+							},
+						},
+					},
+				}
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
+				mHost.EXPECT().Delete(gomock.Any(), expMeta).Return(nil, nil)
+			},
+		},
+		{
+			name: "Host unknown property should no-op",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "invalid-property",
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
+				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
+			},
+		},
+		// Negative cases
+		{
+			name: "5XX error",
+			events: []defs.StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+				},
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+						},
+					},
+				},
+			},
+			setupMock: func(mockApicl *mocks.MockAPIClient) {
+				expWorkloadMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				expHostMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-hostsystem-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
+				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
+				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.Unavailable), "", nil)
+				mWorkload.EXPECT().Get(gomock.Any(), expWorkloadMeta).Return(nil, err)
+
+				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
+				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
+				mHost.EXPECT().Get(gomock.Any(), expHostMeta).Return(nil, err)
+			},
 		},
 	}
 
-	ts.testNics[1] = &orch.SmartNIC{
-		ObjectKind:       "SmartNIC",
-		ObjectAPIVersion: "v1",
-		ObjectMeta: &infraapi.ObjectMeta{
-			Name:            "ServerB.vmnic0",
-			ResourceVersion: "4",
-		},
-		Status: &orch.SmartNIC_Status{
-			HostIP:     "10.193.231.251",
-			MacAddress: testNic2Mac,
-			Switch:     "Pensando-dvs-1",
-		},
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	store := &VCHStore{
+		ctx: ctx,
 	}
 
-	ts.testIfs = make([]*orch.NwIF, 2)
-	ts.testIfs[0] = &orch.NwIF{
-		ObjectKind:       "NwIF",
-		ObjectAPIVersion: "v1",
-		ObjectMeta: &infraapi.ObjectMeta{
-			Name:            "warrior1.eth0",
-			ResourceVersion: "4",
-			UUID:            "52fd7958-f4da-78bb-1590-856861348cee:4001",
-		},
-		Config: &orch.NwIF_Config{
-			LocalVLAN: 321,
-		},
-		Status: &orch.NwIF_Status{
-			MacAddress:  testIf1Mac,
-			PortGroup:   "Pensando-default",
-			Switch:      "Pensando-dvs-1",
-			SmartNIC_ID: testNic1Mac,
-		},
-		Attributes: map[string]string{
-			"VMName": "warrior1",
-			"Org":    "Winner",
-		},
-	}
-	ts.testIfs[1] = &orch.NwIF{
-		ObjectKind:       "NwIF",
-		ObjectAPIVersion: "v1",
-		ObjectMeta: &infraapi.ObjectMeta{
-			Name:            "cav1.eth0",
-			ResourceVersion: "4",
-			UUID:            "53256758-eecc-79bb-1590-899861348cfd:4004",
-		},
-		Config: &orch.NwIF_Config{
-			LocalVLAN: 322,
-		},
-		Status: &orch.NwIF_Status{
-			MacAddress:  testIf2Mac,
-			PortGroup:   "Pensando-default",
-			Switch:      "Pensando-dvs-1",
-			SmartNIC_ID: testNic2Mac,
-		},
-		Attributes: map[string]string{
-			"VMName": "cav1",
-			"Org":    "RunnerUp",
-		},
-	}
-}
-
-var suite *TestSuite
-
-func w4Resp(wc <-chan error) error {
-	select {
-
-	case e := <-wc:
-		return e
-
-	case <-time.After(waitTO):
-		return errors.New("Timed out waiting for response")
-
-	}
-}
-
-func TestSmartNICAPI(t *testing.T) {
-	var err error
-
-	suite = &TestSuite{}
-	suite.setup(t)
-
-	// simple create
-	err = SmartNICCreate(context.Background(), testNic1Mac, suite.testNics[0])
-	if err != nil {
-		t.Errorf("SmartNICCreate failed %v", err)
-		return
-	}
-
-	nicList, err := SmartNICList(context.Background())
-	if err != nil {
-		t.Errorf("SmartNICList failed %v", err)
-		return
-	}
-
-	nics := nicList.GetItems()
-	if len(nics) != 1 {
-		t.Errorf("Expected 1 nic. Got %+v", nics)
-		return
-	}
-
-	// redundant create
-	err = SmartNICCreate(context.Background(), testNic1Mac, suite.testNics[0])
-	if err != nil {
-		t.Errorf("SmartNICCreate failed %v", err)
-		return
-	}
-
-	// update with err
-	suite.testStore.SetErrorState(true)
-	suite.testNics[0].ObjectMeta.Name = "Butterfly.vmnic0"
-	respCh := make(chan error)
-	go func() {
-		respCh <- SmartNICCreate(context.Background(), testNic1Mac, suite.testNics[0])
-		close(respCh)
-	}()
-
-	time.Sleep(200 * time.Millisecond)
-	suite.testStore.SetErrorState(false)
-	err = w4Resp(respCh)
-	if err != nil {
-		t.Errorf("SmartNICCreate failed %v", err)
-	}
-
-	// read and verify that it was updated
-	n := &orch.SmartNIC{}
-	err = kvStore.Get(context.Background(), smartNICPath+testNic1Mac, n)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-	}
-
-	if n.ObjectMeta.Name != "Butterfly.vmnic0" {
-		t.Errorf("Expected Butterfly.vmnic0, got %v", n.ObjectMeta.Name)
-	}
-
-	// update api
-	n.Status.Switch = "Foo"
-	err = SmartNICUpdate(context.Background(), testNic1Mac, n)
-	if err != nil {
-		t.Errorf("SmartNICUpdate failed %v", err)
-	}
-
-	// read and verify that it was updated
-	nn := &orch.SmartNIC{}
-	err = kvStore.Get(context.Background(), smartNICPath+testNic1Mac, nn)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-	}
-
-	if nn.Status.Switch != "Foo" {
-		t.Errorf("Expected Foo, got %v", n.Status.Switch)
-	}
-
-	// delete
-	err = SmartNICDelete(context.Background(), testNic1Mac)
-	if err != nil {
-		t.Errorf("SmartNICDelete failed %v", err)
-	}
-
-	// delete again
-	err = SmartNICDelete(context.Background(), testNic1Mac)
-	if err == nil {
-		t.Errorf("SmartNICDelete succeeded while expecting failure")
-	}
-
-}
-
-func TestSmartNICStore(t *testing.T) {
-
-	suite = &TestSuite{}
-	suite.setup(t)
-
-	s := NewVCHStore(context.Background())
-	storeCh := make(chan defs.StoreMsg, 16)
-	defer close(storeCh)
-	go s.Run(storeCh)
-
-	time.Sleep(100 * time.Millisecond) // let store start
-
-	globalHostKey := testVCId + ":" + "host-1"
-
-	// inject a delete
-	m1 := defs.StoreMsg{
-		Op:         defs.VCOpDelete,
-		Property:   defs.HostPropConfig,
-		Key:        globalHostKey,
-		Originator: testVCId,
-	}
-
-	storeCh <- m1
-
-	// inject a set host
-	h1 := &defs.ESXHost{
-		DvsMap:  make(map[string]*defs.DvsInstance),
-		PenNICs: make(map[string]*defs.NICInfo),
-	}
-	h1.DvsMap["00:11:zz:dd"] = &defs.DvsInstance{
-		Name:    "Pen-dvs1",
-		Uplinks: []string{"vmnic0", "vmnic1"},
-	}
-
-	h1.PenNICs["vmnic0"] = &defs.NICInfo{Mac: testNic1Mac, DvsUUID: "00:11:zz:dd"}
-	h1.PenNICs["vmnic1"] = &defs.NICInfo{Mac: testNic2Mac, DvsUUID: "00:11:zz:dd"}
-
-	m2 := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.HostPropConfig,
-		Key:        globalHostKey,
-		Value:      h1,
-		Originator: testVCId,
-	}
-
-	storeCh <- m2
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-
-	nicList, err := SmartNICList(context.Background())
-	if err != nil {
-		t.Errorf("SmartNICList failed %v", err)
-		return
-	}
-
-	nics := nicList.GetItems()
-	if len(nics) != 2 {
-		t.Errorf("Expected 2 nics. Got %+v", nics)
-		return
-	}
-
-	// inject set host with only one nic
-	h2 := &defs.ESXHost{
-		DvsMap:  make(map[string]*defs.DvsInstance),
-		PenNICs: make(map[string]*defs.NICInfo),
-	}
-	h2.DvsMap["00:11:zz:dd"] = &defs.DvsInstance{
-		Name:    "Pen-dvs1",
-		Uplinks: []string{"vmnic1"},
-	}
-	h2.PenNICs["vmnic1"] = &defs.NICInfo{Mac: testNic2Mac, DvsUUID: "00:11:zz:dd"}
-	m2.Value = h2
-	storeCh <- m2
-	time.Sleep(500 * time.Millisecond) // let store process the msg
-
-	nicList, err = SmartNICList(context.Background())
-	if err != nil {
-		t.Errorf("SmartNICList failed %v", err)
-		return
-	}
-
-	nics = nicList.GetItems()
-	if len(nics) != 1 {
-		t.Errorf("Expected 1 nic. Got %+v", nics)
-		t.Errorf("m2val: %+v", m2.Value)
-		return
-	}
-
-	// inject a redundant message
-	storeCh <- m2
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-
-	// inject set host with the other nic
-	delete(h1.PenNICs, "vmnic1")
-	h1.DvsMap["00:11:zz:dd"] = &defs.DvsInstance{
-		Name:    "Pen-dvs1",
-		Uplinks: []string{"vmnic0"},
-	}
-	m2.Value = h1
-	storeCh <- m2
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-
-	nn := &orch.SmartNIC{}
-	err = kvStore.Get(context.Background(), smartNICPath+testNic1Mac, nn)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-		return
-	}
-	if nn.Status.MacAddress != testNic1Mac {
-		t.Errorf("Expected %s, got %v", testNic1Mac, nn.Status.MacAddress)
-	}
-
-	// inject a delete
-	storeCh <- m1
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-	err = kvStore.Get(context.Background(), smartNICPath+testNic1Mac, nn)
-	if err == nil {
-		t.Errorf("Get succeeded while expecting failure")
-	}
-}
-
-func TestNwIFAPI(t *testing.T) {
-	var err error
-
-	suite = &TestSuite{}
-	suite.setup(t)
-
-	// simple create
-	err = NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
-	if err != nil {
-		t.Errorf("NwIFCreate failed %v", err)
-		return
-	}
-
-	ifList, err := NwIFList(context.Background())
-	if err != nil {
-		t.Errorf("NwIFList failed %v", err)
-		return
-	}
-
-	ifs := ifList.GetItems()
-	if len(ifs) != 1 {
-		t.Errorf("Expected 1 if. Got %+v", ifs)
-		return
-	}
-
-	// redundant create
-	err = NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
-	if err != nil {
-		t.Errorf("NwIFCreate failed %v", err)
-		return
-	}
-
-	// update with err
-	suite.testStore.SetErrorState(true)
-	suite.testIfs[0].ObjectMeta.Name = "Butterfly.eth0"
-	respCh := make(chan error)
-	go func() {
-		respCh <- NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
-		close(respCh)
-	}()
-
-	time.Sleep(200 * time.Millisecond)
-	suite.testStore.SetErrorState(false)
-	err = w4Resp(respCh)
-	if err != nil {
-		t.Errorf("NwIFCreate failed %v", err)
-	}
-
-	// read and verify that it was updated
-	n := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+formNwIFKey(testVMKey, testIf1Mac), n)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-	}
-
-	if n.ObjectMeta.Name != "Butterfly.eth0" {
-		t.Errorf("Expected Butterfly.eth0, got %v", n.ObjectMeta.Name)
-	}
-
-	// update api
-	n.Status.PortGroup = "Foooo"
-	err = NwIFUpdate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), n)
-	if err != nil {
-		t.Errorf("NwIFUpdate failed %v", err)
-	}
-
-	// read and verify that it was updated
-	nn := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+formNwIFKey(testVMKey, testIf1Mac), nn)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-	}
-
-	if nn.Status.PortGroup != "Foooo" {
-		t.Errorf("Expected Foooo, got %v", n.Status.PortGroup)
-	}
-
-	// delete
-	err = NwIFDelete(context.Background(), formNwIFKey(testVMKey, testIf1Mac))
-	if err != nil {
-		t.Errorf("NwIFDelete failed %v", err)
-	}
-
-	// delete again
-	err = NwIFDelete(context.Background(), formNwIFKey(testVMKey, testIf1Mac))
-	if err == nil {
-		t.Errorf("NwIFDelete succeeded while expecting failure")
-	}
-
-}
-
-func injectSetHost(storeCh chan defs.StoreMsg, hostKey string, nicMacs []string) {
-	h1 := &defs.ESXHost{
-		DvsMap:  make(map[string]*defs.DvsInstance),
-		PenNICs: make(map[string]*defs.NICInfo),
-	}
-	h1.DvsMap[dvs1Id] = &defs.DvsInstance{
-		Name:    "Pen-dvs1",
-		Uplinks: []string{"vmnic0"},
-	}
-
-	h1.DvsMap[dvs2Id] = &defs.DvsInstance{
-		Name:    "Pen-dvs2",
-		Uplinks: []string{"vmnic1"},
-	}
-
-	h1.PenNICs["vmnic0"] = &defs.NICInfo{Mac: nicMacs[0], DvsUUID: dvs1Id}
-	h1.PenNICs["vmnic1"] = &defs.NICInfo{Mac: nicMacs[1], DvsUUID: dvs2Id}
-
-	m2 := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.HostPropConfig,
-		Key:        testVCId + ":" + hostKey,
-		Value:      h1,
-		Originator: testVCId,
-	}
-
-	storeCh <- m2
-}
-
-func verifySNICBinding(t *testing.T, snicID string, ifCount int) {
-	// verify Status.SmartNIC_ID changed to blank
-	ifList, err := NwIFList(context.Background())
-	if err != nil {
-		t.Errorf("NwIFList failed %v", err)
-		return
-	}
-
-	ifs := ifList.GetItems()
-	if len(ifs) != ifCount {
-		t.Errorf("Expected %d nwif. Got %+v", ifCount, ifs)
-		return
-	}
-
-	for _, nwif := range ifs {
-		if nwif.Status.SmartNIC_ID != snicID {
-			t.Errorf("Expected %s. Got %+v", snicID, nwif.Status.SmartNIC_ID)
+	for _, tc := range testCases {
+		if len(forceTestName) != 0 && tc.name != forceTestName {
+			continue
 		}
+		t.Logf("running %s", tc.name)
+		ctrl := gomock.NewController(t)
+
+		mWorkload := mockapi.NewMockWorkloadV1WorkloadInterface(ctrl)
+		mWorkloadGroup := &mocks.MockWorkloadV1{
+			MWorkload: mWorkload,
+		}
+		mHost := mockapi.NewMockClusterV1HostInterface(ctrl)
+		mClusterGroup := &mocks.MockClusterV1{
+			MHost: mHost,
+		}
+		mockApicl := &mocks.MockAPIClient{
+			AWorkloadV1: mWorkloadGroup,
+			AClusterV1:  mClusterGroup,
+		}
+		store.apicl = mockApicl
+		tc.setupMock(mockApicl)
+		storeCh := make(chan defs.StoreMsg, 24)
+		store.Run(storeCh)
+		// Push events
+		for _, e := range tc.events {
+			storeCh <- e
+		}
+		// Time for events to process
+		time.Sleep(10 * time.Millisecond)
+		ctrl.Finish()
 	}
+
+	// Terminating store instance
+	cancelFn()
+	doneCh := make(chan bool)
+	go func() {
+		store.WaitForExit()
+		doneCh <- true
+	}()
+	select {
+	case <-doneCh:
+	case <-time.After(1 * time.Second):
+		t.Fatalf("Store failed to shutdown within timeout")
+	}
+
+	Assert(t, len(forceTestName) == 0, "focus test flag should not be checked in")
 }
 
-func TestNwIFStore(t *testing.T) {
-
-	suite = &TestSuite{}
-	suite.setup(t)
-
-	s := NewVCHStore(context.Background())
-	storeCh := make(chan defs.StoreMsg, 16)
-	defer close(storeCh)
-	go s.Run(storeCh)
-
-	time.Sleep(100 * time.Millisecond) // let store start
-
-	globalVMKey := testVCId + ":" + "vm-1"
-
-	// inject a delete
-	m1 := defs.StoreMsg{
-		Op:         defs.VCOpDelete,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Originator: testVCId,
+func generateVNIC(macAddress, portKey string, vnicType string) types.BaseVirtualDevice {
+	ethCard := types.VirtualEthernetCard{
+		VirtualDevice: types.VirtualDevice{
+			Backing: &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
+				Port: types.DistributedVirtualSwitchPortConnection{
+					PortKey: portKey,
+				},
+			},
+		},
+		MacAddress: macAddress,
 	}
-
-	storeCh <- m1
-
-	// inject a set host
-	injectSetHost(storeCh, "host-101", []string{testNic1Mac, testNic2Mac})
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-
-	nicList, err := SmartNICList(context.Background())
-	if err != nil {
-		t.Errorf("SmartNICList failed %v", err)
-		return
-	}
-
-	nics := nicList.GetItems()
-	if len(nics) != 2 {
-		t.Errorf("Expected 2 nics. Got %+v", nics)
-		return
-	}
-
-	// inject set VM config
-	vnic1 := &defs.VirtualNIC{
-		Name:       "eth0",
-		MacAddress: testIf1Mac,
-		PortKey:    "32",
-		SwitchUUID: dvs1Id,
-	}
-
-	vm1 := &defs.VMConfig{Vnics: make(map[string]*defs.VirtualNIC)}
-	vm1.Vnics[testIf1Mac] = vnic1
-	m2 := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Value:      vm1,
-		Originator: testVCId,
-	}
-	storeCh <- m2
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-
-	ifList, err := NwIFList(context.Background())
-	if err != nil {
-		t.Errorf("NwIFList failed %v", err)
-		return
-	}
-
-	ifs := ifList.GetItems()
-	if len(ifs) != 1 {
-		t.Errorf("Expected 1 nwif. Got %+v", ifs)
-		t.Errorf("m2val: %+v", m2.Value)
-		return
-	}
-
-	// inject a vm config set with two vnics
-	vnic2 := &defs.VirtualNIC{
-		Name:       "eth1",
-		MacAddress: testIf2Mac,
-		PortKey:    "32",
-		SwitchUUID: dvs2Id,
-	}
-	vm1 = &defs.VMConfig{Vnics: make(map[string]*defs.VirtualNIC)}
-	vm1.Vnics[testIf1Mac] = vnic1
-	vm1.Vnics[testIf2Mac] = vnic2
-
-	m2 = defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Value:      vm1,
-		Originator: testVCId,
-	}
-	storeCh <- m2
-
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-	ifList, err = NwIFList(context.Background())
-	if err != nil {
-		t.Errorf("NwIFList failed %v", err)
-		return
-	}
-
-	ifs = ifList.GetItems()
-	if len(ifs) != 2 {
-		t.Errorf("Expected 2 nwif. Got %+v", ifs)
-		t.Errorf("m2val: %+v", m2.Value)
-		return
-	}
-
-	// Inject set runtime
-	rt1 := &defs.VMRuntime{
-		HostKey: testVCId + ":" + "host-101",
-	}
-
-	m3 := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.VMPropRT,
-		Key:        globalVMKey,
-		Value:      rt1,
-		Originator: testVCId,
-	}
-	storeCh <- m3
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-
-	// verify smartnic binding
-	if1 := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf1Mac, if1)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-		return
-	}
-
-	if if1.Status.SmartNIC_ID != testNic1Mac {
-		t.Errorf("Expected %s, got %s", testNic1Mac, if1.Status.SmartNIC_ID)
-	}
-	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf2Mac, if1)
-	if err != nil {
-		t.Errorf("Get failed %v", err)
-		return
-	}
-	if if1.Status.SmartNIC_ID != testNic2Mac {
-		t.Errorf("Expected %s, got %s", testNic2Mac, if1.Status.SmartNIC_ID)
-	}
-
-	// inject redundant messages
-	storeCh <- m2
-	storeCh <- m3
-
-	// inject a change runtime
-	// Inject set runtime
-	rt2 := &defs.VMRuntime{
-		HostKey: testVCId + ":" + "host-102",
-	}
-
-	m4 := defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.VMPropRT,
-		Key:        globalVMKey,
-		Value:      rt2,
-		Originator: testVCId,
-	}
-	storeCh <- m4
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-
-	// verify Status.SmartNIC_ID changed to blank
-	verifySNICBinding(t, "", 2)
-
-	// now inject a set host for host-102 and verify SmartNIC_ID
-	injectSetHost(storeCh, "host-102", []string{testNic4Mac, testNic4Mac})
-	time.Sleep(100 * time.Millisecond) // let store process the msg
-	verifySNICBinding(t, testNic4Mac, 2)
-
-	// inject with only 1 vnic
-	vm1 = &defs.VMConfig{Vnics: make(map[string]*defs.VirtualNIC)}
-	vm1.Vnics[testIf2Mac] = vnic2
-	m2 = defs.StoreMsg{
-		Op:         defs.VCOpSet,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Value:      vm1,
-		Originator: testVCId,
-	}
-	storeCh <- m2
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf1Mac, if1)
-	if err == nil {
-		t.Errorf("Read of %s succeeded while expecting failure", testIf1Mac)
-		return
-	}
-
-	// inject a delete
-	m2 = defs.StoreMsg{
-		Op:         defs.VCOpDelete,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Originator: testVCId,
-	}
-	storeCh <- m2
-	time.Sleep(200 * time.Millisecond) // let store process the msg
-	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf2Mac, if1)
-	if err == nil {
-		t.Errorf("Read of %s succeeded while expecting failure", testIf2Mac)
-		return
+	switch vnicType {
+	case "Vmxnet3":
+		return &types.VirtualVmxnet3{
+			VirtualVmxnet: types.VirtualVmxnet{
+				VirtualEthernetCard: ethCard,
+			},
+		}
+	case "Vmxnet2":
+		return &types.VirtualVmxnet2{
+			VirtualVmxnet: types.VirtualVmxnet{
+				VirtualEthernetCard: ethCard,
+			},
+		}
+	case "Vmxnet":
+		return &types.VirtualVmxnet{
+			VirtualEthernetCard: ethCard,
+		}
+	case "E1000e":
+		return &types.VirtualE1000e{
+			VirtualEthernetCard: ethCard,
+		}
+	case "E1000":
+		return &types.VirtualE1000{
+			VirtualEthernetCard: ethCard,
+		}
+	default:
+		return &types.VirtualE1000{
+			VirtualEthernetCard: ethCard,
+		}
 	}
 }

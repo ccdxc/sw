@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
 	"github.com/pensando/sw/venice/orch/vchub/instanceManager"
-	"github.com/pensando/sw/venice/orch/vchub/server"
 	"github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -105,25 +104,12 @@ func waitForever() {
 
 func launchVCHub(opts *cliOpts) {
 	// Initialize store and start grpc server
-	if _, err := store.Init(opts.storeURL, opts.storeType); err != nil {
-		log.Errorf("failed to init store %v", err)
-		// TODO : Reenable this line
-		//os.Exit(1)
-	}
-	_, err := server.NewVCHServer(opts.listenURL)
-	if err != nil {
-		log.Errorf("VCHServer start failed %v", err)
-		// TODO : Reenable this line
-		//os.Exit(1)
-	}
-
-	log.Infof("%s is running", globals.VCHub)
+	r := resolver.New(&resolver.Config{Name: globals.VCHub, Servers: strings.Split(opts.resolverURLs, ",")})
 
 	storeCh := make(chan defs.StoreMsg, storeQSize)
-	vchStore := store.NewVCHStore(context.Background())
+	vchStore := store.NewVCHStore(context.Background(), globals.APIServer, r)
 	vchStore.Run(storeCh)
-
-	r := resolver.New(&resolver.Config{Name: globals.VCHub, Servers: strings.Split(opts.resolverURLs, ",")})
+	log.Infof("%s is running", globals.VCHub)
 
 	instance, err := instanceManager.NewInstanceManager(globals.APIServer, r, storeCh, opts.vcenterList)
 	if instance == nil || err != nil {

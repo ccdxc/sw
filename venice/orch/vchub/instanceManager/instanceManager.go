@@ -83,7 +83,7 @@ func (w *InstanceManager) Start() {
 
 	if len(w.vcenterList) > 0 {
 		for _, u := range w.vcenterList {
-			vcp := vcprobe.NewVCProbe(u, w.storeCh)
+			vcp := vcprobe.NewVCProbe(u.Hostname()+":"+u.Port(), u, w.storeCh)
 			if vcp.Start() == nil {
 				vcp.Run()
 			} else {
@@ -124,7 +124,7 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		}
 
 		// TODO : Add retries for connections
-		vcp := vcprobe.NewVCProbe(vcURL, w.storeCh)
+		vcp := vcprobe.NewVCProbe(vcURL.Hostname()+":"+vcURL.Port(), vcURL, w.storeCh)
 		if vcp.Start() == nil {
 			vcp.Run()
 		} else {
