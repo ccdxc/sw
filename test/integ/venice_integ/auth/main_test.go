@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"os"
 	"testing"
 
 	"google.golang.org/grpc/grpclog"
@@ -109,6 +108,11 @@ func (tInfo *tInfo) setup() error {
 		return err
 	}
 
+	// start ldap server
+	if err := setupOpenLdap(); err != nil {
+		log.Errorf("cannot start openldap server, err: %v", err)
+		return err
+	}
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
 	if err != nil {
@@ -135,6 +139,7 @@ func (tInfo *tInfo) teardown() {
 	tInfo.apiServer.Stop()
 	tInfo.apiGw.Stop()
 	testutils.CleanupIntegTLSProvider()
+	shutdownOpenLdap()
 }
 
 func TestMain(m *testing.M) {
@@ -150,8 +155,5 @@ func TestMain(m *testing.M) {
 	}
 
 	defer tinfo.teardown()
-
-	rcode := m.Run()
-
-	os.Exit(rcode)
+	m.Run()
 }

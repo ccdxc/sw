@@ -17,28 +17,42 @@ import (
 const (
 	ldapHost    = "localhost"
 	registryURL = "registry.test.pensando.io:5000"
-	ldapImage   = "osixia/openldap:1.1.10"
+	ldapImage   = "pensando/openldap:0.1"
 	// ServerName is name in TLS certificate of LDAP server
-	ServerName = "0a7af420ff67"
+	ServerName = "testServer"
 	// TrustedCerts is the TLS certificate of LDAP server
 	TrustedCerts = `-----BEGIN CERTIFICATE-----
-MIIC/TCCAoOgAwIBAgIUF58P7j/wJUrJXKM1LVlrWRaAc8wwCgYIKoZIzj0EAwMw
-gZYxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsT
-G0luZm9ybWF0aW9uIFRlY2hub2xvZ3kgRGVwLjEUMBIGA1UEBxMLQWxidXF1ZXJx
-dWUxEzARBgNVBAgTCk5ldyBNZXhpY28xHzAdBgNVBAMTFmRvY2tlci1saWdodC1i
-YXNlaW1hZ2UwHhcNMTcxMjEzMjIyNDAwWhcNMTgxMjEzMjIyNDAwWjCBjDELMAkG
-A1UEBhMCVVMxEzARBgNVBAgTCk5ldyBNZXhpY28xFDASBgNVBAcTC0FsYnVxdWVy
-cXVlMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsTG0luZm9ybWF0aW9u
-IFRlY2hub2xvZ3kgRGVwLjEVMBMGA1UEAxMMMGE3YWY0MjBmZjY3MHYwEAYHKoZI
-zj0CAQYFK4EEACIDYgAE0kmi9mFmxknKd5nDSTG/aIzTvJ3Uza7kNJzNP8+F9Fsb
-F9A2N0uDcGuEYZfDwfwHcoUIw/+1kNy+endSrAipOYSEZN91bOdGAOzZE+JsrLhW
-yS3MrFIUviI1qevigvJwo4GZMIGWMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAU
-BggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUOJFK
-TNnQJCm5qhClodH6dCz3zkswHwYDVR0jBBgwFoAUT6XpeiVcMBicYtOXhbpQsoeu
-bvgwFwYDVR0RBBAwDoIMMGE3YWY0MjBmZjY3MAoGCCqGSM49BAMDA2gAMGUCMQCC
-wNQ0bAkWU27WgzOhn0m7wh87W2U9NX0xJLGNDFsjwfn26uagp46V4h2UKVICe98C
-MFB3stnk7Lfr/w/14951n5lek97eDTodYfiF4UxeqL386krQ6eduscPIrin1114r
-0w==
+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
 -----END CERTIFICATE-----`
 	// BaseDN is the subtree in LDAP hierarchy to search for user and groups
 	BaseDN = "DC=pensando,DC=io"
@@ -113,6 +127,9 @@ func StartOpenLdapServer(name string) (string, error) {
 			"-e", "LDAP_DOMAIN=pensando.io",
 			"-e", "LDAP_ADMIN_PASSWORD=pensando",
 			"-e", "LDAP_TLS_VERIFY_CLIENT=try",
+			"-e", "LDAP_TLS_CRT_FILENAME=testServer.crt",
+			"-e", "LDAP_TLS_KEY_FILENAME=testServer.key",
+			"-e", "LDAP_TLS_CA_CRT_FILENAME=testCA.crt",
 			fmt.Sprintf("%s/%s", registryURL, ldapImage)}
 
 		// run the command
@@ -198,8 +215,12 @@ func CreateLdapUser(addr, username, password, tenant string, groups []string) er
 func CreateGroup(addr, dn string, parents, members []string) error {
 	req := ldap.NewAddRequest(dn)
 	req.Attribute("objectClass", []string{GroupObjectClassAttribute, "top"})
-	req.Attribute(GroupAttribute, parents)
-	req.Attribute("member", members)
+	if len(parents) > 0 {
+		req.Attribute(GroupAttribute, parents)
+	}
+	if len(members) > 0 {
+		req.Attribute("member", members)
+	}
 	conn, err := getConnection(addr, true)
 	if err != nil {
 		return err
