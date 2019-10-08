@@ -208,27 +208,20 @@ var _ = Describe("diagnostics tests", func() {
 		})
 	})
 	Context("npm", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.Npm)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Npm)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check log query", func() {
-			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
-			var updatedModObj *diagnostics.Module
-			var err error
 			Eventually(func() error {
-				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
-				return err
-			}, 10, 1).Should(BeNil())
-			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
-			// query logs through Debug action
-			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Npm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Npm)})
+				if err != nil {
+					return err
+				}
+				modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+				updatedModObj, err := ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				if err != nil {
+					return err
+				}
+				Expect(updatedModObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
+				// query logs through Debug action
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -245,19 +238,20 @@ var _ = Describe("diagnostics tests", func() {
 					!strings.Contains(respStr, "\"level\":\"error\"") {
 					return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
-				return nil
-			}, 30, 1).Should(BeNil())
-			// restore info log level
-			Eventually(func() error {
+				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
-			}, 10, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Npm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Npm)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -275,12 +269,16 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("no stats returned: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check Action (list-objects) query", func() {
-			var err error
-			// query stats through Debug action
+			// query list-objects through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Npm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Npm)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -298,12 +296,16 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("did not succeed: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check Action (dump-nimbus-db) query", func() {
-			var err error
-			// query stats through Debug action
+			// query dump-nimbus-db through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Npm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Npm)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -321,7 +323,7 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("did not succeed: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 	})
 	Context("apigw logs", func() {
@@ -547,27 +549,20 @@ var _ = Describe("diagnostics tests", func() {
 		})
 	})
 	Context("rollout", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.Rollout)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Rollout)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check log query", func() {
-			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
-			var updatedModObj *diagnostics.Module
-			var err error
 			Eventually(func() error {
-				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
-				return err
-			}, 10, 1).Should(BeNil())
-			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
-			// query logs through Debug action
-			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Rollout)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Rollout)})
+				if err != nil {
+					return err
+				}
+				modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+				updatedModObj, err := ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				if err != nil {
+					return err
+				}
+				Expect(updatedModObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
+				// query logs through Debug action
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -584,19 +579,20 @@ var _ = Describe("diagnostics tests", func() {
 					!strings.Contains(respStr, "\"level\":\"error\"") {
 					return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
-				return nil
-			}, 30, 1).Should(BeNil())
-			// restore info log level
-			Eventually(func() error {
+				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
-			}, 10, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Rollout)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Rollout)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -614,31 +610,23 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("no stats returned: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 	})
 	Context("tpm", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.Tpm)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Tpm)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check log query", func() {
-			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
-			var updatedModObj *diagnostics.Module
-			var err error
 			Eventually(func() error {
-				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
-				return err
-			}, 10, 1).Should(BeNil())
-			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
-			// query logs through Debug action
-			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Tpm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Tpm)})
+				if err != nil {
+					return err
+				}
+				modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+				updatedModObj, err := ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				if err != nil {
+					return err
+				}
+				Expect(updatedModObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -655,19 +643,20 @@ var _ = Describe("diagnostics tests", func() {
 					!strings.Contains(respStr, "\"level\":\"error\"") {
 					return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
-				return nil
-			}, 30, 1).Should(BeNil())
-			// restore info log level
-			Eventually(func() error {
+				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
-			}, 10, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Tpm)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Tpm)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -685,7 +674,7 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("no stats returned: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 	})
 	Context("naples", func() {
@@ -726,20 +715,14 @@ var _ = Describe("diagnostics tests", func() {
 		})
 	})
 	Context("apiserver", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.APIServer)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.APIServer)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.APIServer)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.APIServer)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -757,12 +740,16 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("no stats returned: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check Action (list-watchers) query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.APIServer)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.APIServer)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -780,7 +767,7 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("did not succeed: {%v}", respStr)
 				}
 				return nil
-			}, 30, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 	})
 })
