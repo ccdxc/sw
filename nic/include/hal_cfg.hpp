@@ -67,6 +67,7 @@ typedef struct device_cfg_s {
     hal_feature_profile_t feature_profile;
     port_admin_state_t admin_state; // default port admin state
     sdk::lib::device_profile_t *device_profile;
+    uint32_t mgmt_vlan;
 } device_cfg_t;
 
 typedef struct hal_cfg_s {

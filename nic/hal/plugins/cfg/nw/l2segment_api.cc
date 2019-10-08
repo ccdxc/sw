@@ -192,6 +192,24 @@ l2seg_get_prmsc_oif_list(l2seg_t *pi_l2seg)
 }
 
 // ----------------------------------------------------------------------------
+// Returns shared bcast_oif_list
+// ----------------------------------------------------------------------------
+oif_list_id_t
+l2seg_get_shared_bcast_oif_list(l2seg_t *pi_l2seg)
+{
+    return pi_l2seg->base_oif_list_id + HAL_SHARED_BCAST_OIFLIST_OFFSET;
+}
+
+// ----------------------------------------------------------------------------
+// Returns shared mcast_oif_list
+// ----------------------------------------------------------------------------
+oif_list_id_t
+l2seg_get_shared_mcast_oif_list(l2seg_t *pi_l2seg)
+{
+    return pi_l2seg->base_oif_list_id + HAL_SHARED_MCAST_OIFLIST_OFFSET;
+}
+
+// ----------------------------------------------------------------------------
 // Returns bcast_oif_list
 // ----------------------------------------------------------------------------
 ip_addr_t
@@ -216,5 +234,22 @@ mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg)
 
     return NULL;
 }
+
+//----------------------------------------------------------------------------
+// l2seg is a shared mgmt l2seg and it also has the corresponding l2seg
+//----------------------------------------------------------------------------
+bool 
+l2seg_is_shared_mgmt_attached(l2seg_t *l2seg)
+{
+    if (l2seg && l2seg->is_shared_inband_mgmt) {
+        for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+            if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 
 }

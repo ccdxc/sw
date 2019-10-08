@@ -333,7 +333,7 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 	// Ensure all lateral objects are created
 	nw, err := ag.FindNetwork(defaultNwMeta)
 	AssertOk(t, err, "Lateral network obj not found")
-	Assert(t, nw.Spec.VlanID == types.UntaggedVLAN, "VLAN ID did not match")
+	Assert(t, nw.Spec.VlanID == types.UntaggedCollVLAN, "VLAN ID did not match")
 
 	ep, err := ag.FindEndpoint(lateralObjMeta)
 	AssertOk(t, err, "Lateral endpoint obj not found")
@@ -423,7 +423,7 @@ func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
 	// Ensure all lateral objects are created
 	nw, err := ag.FindNetwork(defaultNwMeta)
 	AssertOk(t, err, "Lateral network obj not found")
-	Assert(t, nw.Spec.VlanID == types.UntaggedVLAN, "VLAN ID did not match")
+	Assert(t, nw.Spec.VlanID == types.UntaggedCollVLAN, "VLAN ID did not match")
 
 	_, err = ag.FindEndpoint(lateralObjMeta)
 	AssertOk(t, err, "Lateral endpoint obj not found")
@@ -525,7 +525,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	// Ensure all lateral objects are created
 	nw, err := ag.FindNetwork(defaultNwMeta)
 	AssertOk(t, err, "Lateral network obj not found")
-	Assert(t, nw.Spec.VlanID == types.UntaggedVLAN, "VLAN ID did not match")
+	Assert(t, nw.Spec.VlanID == types.UntaggedCollVLAN, "VLAN ID did not match")
 
 	_, err = ag.FindEndpoint(lateralObjMeta)
 	AssertOk(t, err, "Lateral endpoint obj not found")
@@ -540,7 +540,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	// Ensure all lateral objects are created
 	nw, err = ag.FindNetwork(defaultNwMeta)
 	AssertOk(t, err, "Lateral network obj not found")
-	Assert(t, nw.Spec.VlanID == types.UntaggedVLAN, "VLAN ID did not match")
+	Assert(t, nw.Spec.VlanID == types.UntaggedCollVLAN, "VLAN ID did not match")
 
 	ep, err := ag.FindEndpoint(lateralObjMeta)
 	AssertOk(t, err, "Lateral endpoint obj not found")

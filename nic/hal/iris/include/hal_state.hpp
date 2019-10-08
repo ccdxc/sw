@@ -313,6 +313,11 @@ public:
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
 
+    void set_mgmt_vlan(uint32_t vlan) {
+        mgmt_vlan_ = vlan;
+    }
+    uint32_t mgmt_vlan(void) const { return mgmt_vlan_; }
+
     void set_uplink_flood_mode(hal_uplink_flood_mode_t mode) {
         uplink_flood_mode_ = mode;
     }
@@ -427,6 +432,7 @@ private:
     eventmgr                *event_mgr_;
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
+    uint32_t                mgmt_vlan_;
     hal_uplink_flood_mode_t uplink_flood_mode_;
     if_id_t                 app_redir_if_id_;
     lif_id_t                mnic_internal_mgmt_lif_id_;
@@ -725,6 +731,13 @@ public:
         oper_db_->set_forwarding_mode(mode);
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
+
+    // mgmt vlan APIs
+    void set_mgmt_vlan(uint32_t vlan) {
+        oper_db_->set_mgmt_vlan(vlan);
+    }
+    uint32_t mgmt_vlan(void) const { return oper_db_->mgmt_vlan(); }
+
 
     // multicast uplink mode APIs
     void set_uplink_flood_mode(hal_uplink_flood_mode_t mode) {

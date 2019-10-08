@@ -16,6 +16,7 @@ SDK_DEFINE_MAP(dev_port_state_t, DEV_PORT_STATE)
 #define FEATURE_PROFILE_KEY_STR "feature-profile"
 #define PORT_ADMIN_STATE_KEY_STR "port-admin-state"
 #define MGMT_IF_MAC_STR "mgmt-if-mac"
+#define MGMT_VLAN_STR "mgmt-vlan"
 #define DEVICE_QOS_PROFILE_STR "profile.qos"
 
 device *
@@ -195,6 +196,10 @@ device::populate_device(ptree &pt)
             device_db_.mgmt_if_mac = pt.get<std::uint64_t>(MGMT_IF_MAC_STR);
         }
 
+        if (it->first == MGMT_VLAN_STR) {
+            device_db_.mgmt_vlan = pt.get<std::uint32_t>(MGMT_VLAN_STR);
+        }
+
         if (it->first == DEVICE_QOS_PROFILE_STR) {
             qos_profile_name =
                     pt.get<std::string>(DEVICE_QOS_PROFILE_STR, "default");
@@ -213,6 +218,7 @@ device::populate_device_defaults_(void)
     device_db_.feature_profile = FEATURE_PROFILE_CLASSIC_DEFAULT;
     device_db_.port_admin_state = PORT_ADMIN_STATE_ENABLE;
     device_db_.mgmt_if_mac = 0;
+    device_db_.mgmt_vlan = 0;
     device_db_.device_profile.qos_profile =
                             {9216, 8, 25, 27, 16, 2, {0, 24}};
 }

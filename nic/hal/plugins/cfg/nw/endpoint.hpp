@@ -234,6 +234,7 @@ hal_ret_t endpoint_delete(EndpointDeleteRequest& spec,
                           EndpointDeleteResponse *rsp);
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
+bool endpoint_is_remote(ep_t *ep);
 
 hal_ret_t ep_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t ep_restore_cb(void *obj, uint32_t len);

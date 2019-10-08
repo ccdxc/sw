@@ -7,6 +7,7 @@ header_type flow_lkp_metadata_t {
         lkp_type         : 4;
         ipv4_hlen        : 4;          // For Normalization
         lkp_vrf          : 16;
+        lkp_classic_vrf  : 16;
         lkp_src          : 128;
         lkp_dst          : 128;
         lkp_sport        : 16;
@@ -48,66 +49,153 @@ metadata flow_miss_metadata_t flow_miss_metadata;
 
 // entry 0 of flow_info table will be programmed as the miss entry
 action flow_miss() {
-    validate_flow_key();
+    // Notes:
+    // ------
+    // Smart L2seg:
+    //  - flow_miss_idx    : WLs
+    // Classic L2seg: 
+    //  - flow_miss_idx    : BC
+    //  - flow_miss_idx + 1: MC
+    //  - flow_miss_idx + 2: Prom
+    //  - flow_miss_idx + 3: BC + WLs :: (flow_miss_idx + 3 ~ flow_miss_idx) -> (Smart L2seg's flow_miss_idx)
+    //  - flow_miss_idx + 4: MC + WLs :: (flow_miss_idx + 4 ~ flow_miss_idx + 1)  -> (Smart L2seg's flow_miss_idx)
+    // Multicast Group:
+    //  - mc_idx    : MC OIFs + ALL_MC OIFs 
+    //  - mc_idx + 1: MC OIFs + ALL_MC OIFs + WLS :: (mc_idx + 1 ~ mc_idx) -> (Smart L2seg's flow_miss_idx)
+    //
+    // 
+    // - mode switch is not enabled
+    //                   : fall to flow miss logic
+    // - mode switch is enabled, registered mac is a hit with smart nic mode:
+    //                   : fall to flow miss logic
+    // - mode switch is enabled 
+    //   - classic mode
+    //   - mcast:
+    //     - reg_mac:
+    //       - hit:
+    //         - allow_flood: 1
+    //           - Classic MC replications + WL replications
+    //           - repl_ptr + 1
+    //         - allow_flood: 0
+    //           - Classic MC replications picked up in registered_macs.
+    //       - miss:
+    //         - allow_flood: 1
+    //           - Classic ALL_MC replications + WL replications
+    //           - repl_ptr + 3
+    //         - allow_flood: 0
+    //           - Classic ALL_MC replications picked up in registered_macs.
+    //   - bcast:
+    //     - allow_flood: 1
+    //       - Classic BC replications + WL replications
+    //       - repl_ptr + 3
+    //     - allow_flood: 0
+    //       - Classic BC replications picked up in registered_macs
+    //   - ucast
+    //     - reg_mac_hit: 1
+    //       - fwd info from reg_mac
+    //     - reg_mac_hit: 0
+    //       - Prom. replications picked in registered_macs
+    if ((control_metadata.mode_switch_en == FALSE ) or
+        ((control_metadata.registered_mac_miss == FALSE) and
+         (control_metadata.registered_mac_nic_mode == NIC_MODE_SMART))) {
 
-    if (flow_lkp_metadata.lkp_vrf == 0) {
-        modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
-        drop_packet();
-    }
+        validate_flow_key();
 
-    if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
-        ((tcp.flags & TCP_FLAG_SYN) != TCP_FLAG_SYN) and
-        (l4_metadata.tcp_non_syn_first_pkt_drop == ACT_DROP)) {
-        modify_field(control_metadata.drop_reason, DROP_TCP_NON_SYN_FIRST_PKT);
-        drop_packet();
-    }
-
-    modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-    modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
-
-    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-        modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
-                     (1 << P4_I2E_FLAGS_FLOW_MISS));
-        modify_field(control_metadata.flow_miss_ingress, TRUE);
-        modify_field(control_metadata.dst_lport, CPU_LPORT);
-    }
-
-    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_CPU) {
-        modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
-                     (1 << P4_I2E_FLAGS_FLOW_MISS));
-        modify_field(control_metadata.flow_miss_ingress, TRUE);
-        modify_field(control_metadata.dst_lport, CPU_LPORT);
-    }
-
-    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_DROP) {
-        modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
-        drop_packet();
-    }
-
-    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_FLOOD) {
-        if (control_metadata.allow_flood == TRUE) {
-            modify_field(capri_intrinsic.tm_replicate_en, TRUE);
-            modify_field(capri_intrinsic.tm_replicate_ptr,
-                         control_metadata.flow_miss_idx);
-            modify_field(rewrite_metadata.rewrite_index,
-                         flow_miss_metadata.rewrite_index);
-            modify_field(rewrite_metadata.tunnel_rewrite_index,
-                         flow_miss_metadata.tunnel_rewrite_index);
-            modify_field(rewrite_metadata.tunnel_vnid,
-                         flow_miss_metadata.tunnel_vnid);
-            modify_field(tunnel_metadata.tunnel_originate,
-                         flow_miss_metadata.tunnel_originate);
-        } else {
-            modify_field(control_metadata.drop_reason,
-                         DROP_MULTI_DEST_NOT_PINNED_UPLINK);
+        if (flow_lkp_metadata.lkp_vrf == 0) {
+            modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
             drop_packet();
+        }
+
+        if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
+            ((tcp.flags & TCP_FLAG_SYN) != TCP_FLAG_SYN) and
+            (l4_metadata.tcp_non_syn_first_pkt_drop == ACT_DROP)) {
+            modify_field(control_metadata.drop_reason, DROP_TCP_NON_SYN_FIRST_PKT);
+            drop_packet();
+        }
+
+        modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+        modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
+
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+            modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
+                         (1 << P4_I2E_FLAGS_FLOW_MISS));
+            modify_field(control_metadata.flow_miss_ingress, TRUE);
+            modify_field(control_metadata.dst_lport, CPU_LPORT);
+        }
+
+        if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_CPU) {
+            modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
+                         (1 << P4_I2E_FLAGS_FLOW_MISS));
+            modify_field(control_metadata.flow_miss_ingress, TRUE);
+            modify_field(control_metadata.dst_lport, CPU_LPORT);
+        }
+
+        if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_DROP) {
+            modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
+            drop_packet();
+        }
+
+        if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_FLOOD) {
+            if (control_metadata.allow_flood == TRUE) {
+                modify_field(capri_intrinsic.tm_replicate_en, TRUE);
+                modify_field(capri_intrinsic.tm_replicate_ptr,
+                             control_metadata.flow_miss_idx);
+                modify_field(rewrite_metadata.rewrite_index,
+                             flow_miss_metadata.rewrite_index);
+                modify_field(rewrite_metadata.tunnel_rewrite_index,
+                             flow_miss_metadata.tunnel_rewrite_index);
+                modify_field(rewrite_metadata.tunnel_vnid,
+                             flow_miss_metadata.tunnel_vnid);
+                modify_field(tunnel_metadata.tunnel_originate,
+                             flow_miss_metadata.tunnel_originate);
+            } else {
+                    modify_field(control_metadata.drop_reason,
+                                 DROP_MULTI_DEST_NOT_PINNED_UPLINK);
+                    drop_packet();
+            }
+        }
+
+        if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
+            modify_field(rewrite_metadata.tunnel_rewrite_index,
+                         control_metadata.flow_miss_idx);
+        }
+    } else {
+        // Only shared mgmt traffic on uplinks should come here.
+        modify_field(control_metadata.nic_mode, NIC_MODE_CLASSIC);
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+            if (control_metadata.registered_mac_miss == FALSE) { 
+                if (control_metadata.registered_mac_nic_mode == NIC_MODE_CLASSIC) {
+                    if (control_metadata.allow_flood == TRUE) {
+                        // Classic MC replications + WL replications
+                        add(capri_intrinsic.tm_replicate_ptr, 
+                            capri_intrinsic.tm_replicate_ptr, 1); 
+                    } else {
+                        // Classic MC replications picked up in registered_macs.
+                    }
+                } else {
+                    // hit and smart should never happen.
+                }
+            } else {
+                // reg_mac is a miss
+                if (control_metadata.allow_flood == TRUE) {
+                    // Classic ALL_MC replications + WL replications
+                    add_to_field(capri_intrinsic.tm_replicate_ptr, 3);
+                } else {
+                    // Classic ALL_MC replications picked up in registered_macs.
+                }
+            }
+        } else {
+            if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+                if (control_metadata.allow_flood == TRUE) {
+                    // Classic BC replications + WL replications
+                    add_to_field(capri_intrinsic.tm_replicate_ptr, 3);
+                } else {
+                    // Classic BC replications picked up in registered_macs
+                }
+            }
         }
     }
 
-    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
-        modify_field(rewrite_metadata.tunnel_rewrite_index,
-                     control_metadata.flow_miss_idx);
-    }
 }
 
 action flow_hit_drop(start_timestamp, mirror_on_drop_overwrite,

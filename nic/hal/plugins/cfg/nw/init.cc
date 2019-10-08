@@ -142,6 +142,9 @@ init (hal_cfg_t *hal_cfg)
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->device_cfg.forwarding_mode);
 
+    // set the mgmt vlan
+    g_hal_state->set_mgmt_vlan(hal_cfg->device_cfg.mgmt_vlan);
+
     // default set to local switch prom. for DOLs to pass
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
 

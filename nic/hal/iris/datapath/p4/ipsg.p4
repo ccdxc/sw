@@ -34,6 +34,9 @@ action ipsg_miss() {
 // prevent spoofing of (mac, ip) from workloads which are mapped to a 
 // different LIF.
 action ipsg_hit(src_lif, mac, vlan_valid, vlan_id) {
+    if (control_metadata.ipsg_enable == FALSE) {
+        // return;
+    }
     if ((control_metadata.src_lif != src_lif) or
         (ethernet.srcAddr != mac) or
         (vlan_tag.valid != vlan_valid) or
@@ -49,7 +52,7 @@ action ipsg_hit(src_lif, mac, vlan_valid, vlan_id) {
     modify_field(scratch_metadata.vlan_id, vlan_id);
 }
 
-@pragma stage 2
+@pragma stage 5
 table ipsg {
     reads {
         entry_inactive.ipsg         : ternary;
@@ -66,8 +69,9 @@ table ipsg {
 }
 
 control process_ipsg {
-    if ((control_metadata.nic_mode == NIC_MODE_SMART) and
-        (control_metadata.ipsg_enable == TRUE)) {
+    // Moved ipsg_en into action as lookup is going through even if its disabled.
+    // Looks like some issue in predicate tcam programming
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
         apply(ipsg);
     }
 }

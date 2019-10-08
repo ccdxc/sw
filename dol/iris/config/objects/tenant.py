@@ -335,7 +335,10 @@ class TenantObject(base.ConfigObjectBase):
             reqspec.gipo_prefix.address.v4_addr = self.gipo_prefix.getnum()
             reqspec.gipo_prefix.prefix_len = self.gipo_len
         else:
-            reqspec.vrf_type = haldefs.common.VRF_TYPE_CUSTOMER
+            if GlobalOptions.classic:
+                reqspec.vrf_type = haldefs.common.VRF_TYPE_INBAND_MANAGEMENT
+            else:
+                reqspec.vrf_type = haldefs.common.VRF_TYPE_CUSTOMER
 
         return
 

@@ -20,6 +20,7 @@
 // TODO: we don't seem to be using these ??
 #include <vector>
 #include <tuple>
+using grpc::ServerWriter;
 using std::vector;
 using std::tuple;
 
@@ -668,4 +669,27 @@ DebugServiceImpl::QueueCreditsGet(ServerContext *context,
     sdk::asic::pd::queue_credits_get(queue_credits_proto_fill, rsp_msg);
     rsp_msg->set_apistatus(types::API_STATUS_OK);
     return Status::OK;
+}
+
+Status
+DebugServiceImpl::OifListGet(ServerContext *context,
+                             const OifListGetRequestMsg *req,
+                             ServerWriter<OifListGetResponseMsg> *writer)
+{
+     uint32_t    i, nreqs = req->request_size();
+
+     hal::hal_cfg_db_open(hal::CFG_OP_READ);
+     HAL_TRACE_DEBUG("Rcvd oifl Get");
+     if (nreqs == 0) {
+         HAL_TRACE_DEBUG("Rcvd oifl Get All Request");
+         hal::oiflist_get_all_stream(writer);
+         return Status::OK;
+     }
+
+     for (i = 0; i < nreqs; i++) {
+         auto request = req->request(i);
+         hal::oiflist_get_stream(request, writer);
+     }
+     hal::hal_cfg_db_close();
+     return Status::OK;
 }

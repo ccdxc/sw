@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	// UntaggedVLAN identifies an untagged vlan
-	UntaggedVLAN = 8192
+	// UntaggedCollVLAN identifies an untagged vlan
+	UntaggedCollVLAN = 8191
 	// DefaultTimeout for non user specified timeouts
 	DefaultTimeout = math.MaxUint32
 	// DefaultConnectionSetUpTimeout is the default connection set up timeout

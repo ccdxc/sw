@@ -9,6 +9,7 @@ syntax = "proto3";
 import "types.proto";
 import "kh.proto";
 import "interface.proto";
+import "multicast.proto";
 
 package debug;
 option go_package="halproto";
@@ -64,6 +65,8 @@ service Debug {
   rpc MemoryTrim (types.Empty) returns (types.Empty) {}
   rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
   rpc SessionCtrlUpdate (SessionCtrlRequestMsg) returns (types.Empty) {}    
+
+  rpc OifListGet (OifListGetRequestMsg) returns (stream OifListGetResponseMsg) {}
 }
 
 
@@ -746,4 +749,22 @@ message SessionCtrlSpec {
 }
 message SessionCtrlRequestMsg {
   repeated SessionCtrlSpec spec = 1;
+}
+
+message OifListGetRequest {
+    fixed32 id = 1;
+}
+
+message OifListGetRequestMsg {
+    repeated OifListGetRequest request = 1;
+}
+
+message OifListGetResponse {
+  types.ApiStatus       api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  multicast.OifList     oif_list      = 2;
+}
+
+message OifListGetResponseMsg {
+  types.ApiStatus               api_status = 1;  // API status code
+  repeated OifListGetResponse   response = 2;    // batched response
 }

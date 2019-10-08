@@ -107,8 +107,10 @@ extern uint32_t flow_lkupid_hw_key_size(void);
 hal_ret_t pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                     if_t *prom_enic_if,
                                     bool inc, bool skip_hw_pgm);
+#if 0
 hal_ret_t l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg,
                                 bool is_upgrade);
+#endif
 hal_ret_t l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg);
 hal_ret_t l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg,
                                                    if_t *hal_if);
@@ -117,7 +119,8 @@ hal_ret_t l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg,
                                                 bool is_upgrade = false);
 hal_ret_t l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg);
 hal_ret_t l2seg_pd_depgm_cpu_tx_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
-hal_ret_t l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg);
+hal_ret_t l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg,
+                                  bool is_upgrade = false);
 hal_ret_t l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
                                                  uint32_t upd_flags,
                                                  nwsec_profile_t *nwsec_prof,
@@ -130,6 +133,16 @@ hal_ret_t l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
                                            if_t *prom_enic_if,
                                            input_properties_actiondata_t &data);
 hal_ret_t l2seg_pd_repgm_enics (l2seg_t *l2seg);
+hal_ret_t l2seg_pd_copy_inp_prop_tbl_idx (l2seg_t *l2seg, 
+                                          hal_handle_t other_l2seg_hdl,
+                                          uint32_t up_ifpc_id);
+l2seg_t *l2seg_pd_get_shared_mgmt_l2seg(l2seg_t *l2seg, 
+                                        if_t *hal_if);
+hal_ret_t l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
+                                 nwsec_profile_t *nwsec_prof,
+                                 uint32_t num_prom_lifs,
+                                 if_t *prom_enic_if,
+                                 input_properties_actiondata_t &data);
 }   // namespace pd
 }   // namespace hal
 

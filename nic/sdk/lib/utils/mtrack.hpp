@@ -115,7 +115,7 @@ public:
         } else {
             // this can happen if mtrack is enabled on the fly and some memory
             // allocations happened before that and are now being freed
-            SDK_TRACE_ERR("Freed mem {:#x} with alloc id {} without mtrack info",
+            SDK_TRACE_ERR("Freed mem %p with alloc id %d without mtrack info",
                           ptr, alloc_id);
         }
         SDK_SPINLOCK_UNLOCK(&mtrack_map_slock_);

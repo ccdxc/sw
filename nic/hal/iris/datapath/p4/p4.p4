@@ -103,6 +103,10 @@ header_type control_metadata_t {
         vlan_strip                     : 1;
         span_copy                      : 1;
         nic_mode                       : 1;
+        registered_mac_launch          : 1;
+        registered_mac_nic_mode        : 1;
+        registered_mac_miss            : 1;
+        mode_switch_en                 : 1;
         skip_flow_lkp                  : 1;
         parse_tcp_option_error         : 1;
         allow_flood                    : 1;

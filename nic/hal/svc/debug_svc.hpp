@@ -82,6 +82,8 @@ using debug::PacketBufferResponseMsg;
 using debug::QueueCreditsGetResponse;
 using debug::SessionCtrlRequestMsg;
 using debug::SessionCtrlSpec;
+using debug::OifListGetResponseMsg;
+using debug::OifListGetRequestMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -182,6 +184,9 @@ public:
     Status QueueCreditsGet(ServerContext *context,
                            const Empty *req,
                            QueueCreditsGetResponse *rsp_msg) override;
+    Status OifListGet(ServerContext *context,
+                      const OifListGetRequestMsg *req,
+                      grpc::ServerWriter<debug::OifListGetResponseMsg> *writer) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

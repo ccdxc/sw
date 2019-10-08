@@ -68,6 +68,7 @@ typedef struct device_s {
     dev_feature_profile_t  feature_profile;        // feature profile
     dev_port_state_t       port_admin_state;       // ports' default admin state
     uint64_t               mgmt_if_mac;            // mgmt if's mac. used only for telemetry
+    uint32_t               mgmt_vlan;              // vlan encap on uplinks for mgmt
     device_profile_t       device_profile;         // device config profile
     std::string            device_cfg_path;        // device config path
 } device_t;
@@ -81,6 +82,7 @@ public:
     dev_feature_profile_t get_feature_profile(void) { return device_db_.feature_profile; }
     dev_port_state_t get_port_admin_state(void) { return device_db_.port_admin_state; }
     uint64_t get_mgmt_if_mac(void) { return device_db_.mgmt_if_mac; }
+    uint32_t get_mgmt_vlan(void) { return device_db_.mgmt_vlan; }
     device_profile_t *device_profile(void) {
         return &device_db_.device_profile;
     }

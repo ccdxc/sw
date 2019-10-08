@@ -97,11 +97,13 @@ message L2SegmentStatus {
   multicast.OifList         bcast_lst           = 4;  // Bcast replication list
   multicast.OifList         mcast_lst           = 5;  // Mcast replication list
   multicast.OifList         prom_lst            = 6;  // Prom replication list
+  multicast.OifList         shared_bcast_lst    = 7;  // Shared Bcast replication list
+  multicast.OifList         shared_mcast_lst    = 8;  // Shared Mcast replication list
 
   // TODO - add vNICs/uplinks this vlan is up on
   oneof l2seg_status {
-      L2segmentStatusEpd    epd_info            = 7;    // L2seg oper state for enterprise pipeline
-      L2segmentStatusCpd    cpd_info            = 8;    // L2seg oper state for cloud pipeline
+      L2segmentStatusEpd    epd_info            = 9;    // L2seg oper state for enterprise pipeline
+      L2segmentStatusCpd    cpd_info            = 10;    // L2seg oper state for cloud pipeline
   }
 }
 

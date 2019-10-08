@@ -35,6 +35,7 @@ namespace hal {
 #define HAL_MAX_OIF_LISTS            65536
 #define HAL_MAX_MC_ENTRIES            2048
 #define HAL_MAX_OIF_PER_MC_ENTRY       256
+#define HAL_MC_ENTRY_OIFL_BLOCK          2
 
 typedef enum mc_key_type {
     MC_KEY_TYPE_NONE = 0,
@@ -166,6 +167,11 @@ void *mc_entry_get_key_func(void *entry);
 uint32_t mc_entry_key_size(void);
 mc_entry_t *mc_entry_lookup_key_or_handle(const MulticastEntryKeyHandle& kh);
 char *mc_key_to_string(mc_key_t *key);
+static inline oif_list_id_t 
+mc_entry_shared_oifl(mc_entry_t *mc_entry) 
+{
+    return mc_entry->oif_list + 1;
+}
 
 // SVC CRUD APIs
 hal_ret_t multicastentry_create(MulticastEntrySpec& spec,

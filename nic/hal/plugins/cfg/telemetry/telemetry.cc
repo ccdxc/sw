@@ -498,7 +498,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
                      dest_if->if_type, dest_if->if_op_status,
                      dest_if->if_id);
-    if (!dest_if->is_oob_management) {
+    if (!dest_if->is_oob_management &&
+        endpoint_is_remote(ep)) {
         auto ndest_if = telemetry_get_active_bond_uplink();
         if (ndest_if) {
             HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",

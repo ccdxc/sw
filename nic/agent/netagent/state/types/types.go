@@ -58,7 +58,7 @@ const (
 	TCPProxyPolicyID        = "tcpProxyPolicyID"
 	SecurityProfileID       = "securityProfileID"
 	AppID                   = "appID"
-	UntaggedVLAN            = 8192
+	UntaggedCollVLAN        = 8191
 	OOBManagementInterface  = "oob_mnic0"
 	ManagementUplink        = "uplink130"
 )

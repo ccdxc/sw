@@ -169,7 +169,7 @@ func (na *Nagent) createDefaultUntaggedNw() error {
 			},
 		},
 		Spec: netproto.NetworkSpec{
-			VlanID: types.UntaggedVLAN, // Untagged
+			VlanID: types.UntaggedCollVLAN, // Untagged
 		},
 	}
 	err := na.CreateNetwork(&defNw)

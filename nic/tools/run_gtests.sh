@@ -52,6 +52,7 @@ ${CMD_OPTS} uplinkpc_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/uplinkpc_t
 ${CMD_OPTS} internal_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/internal_test.xml"
 ${CMD_OPTS} endpoint_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_test.xml"
 ${CMD_OPTS} endpoint_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_classic_test.xml"
+${CMD_OPTS} ep_mgmt_merge --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ep_mgmt_merge.xml"
 ${CMD_OPTS} network_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/network_test.xml"
 ${CMD_OPTS} vrf_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vrf_test.xml"
 #${CMD_OPTS} l2seg_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_classic_test.xml"

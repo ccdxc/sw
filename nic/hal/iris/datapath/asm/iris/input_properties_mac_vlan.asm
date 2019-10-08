@@ -42,7 +42,7 @@ input_properties_mac_vlan:
   or            r1, d.input_properties_mac_vlan_d.tunnel_vnid, \
                     d.input_properties_mac_vlan_d.tunnel_rewrite_index, 30
   phvwr         p.{flow_miss_metadata_tunnel_rewrite_index, \
-                    _pad_2818_, \
+                    _pad_2826_, \
                     flow_miss_metadata_tunnel_vnid}, r1
   or            r1, d.input_properties_mac_vlan_d.src_lport, \
                     d.input_properties_mac_vlan_d.dst_lport, 16

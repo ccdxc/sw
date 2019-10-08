@@ -11,9 +11,11 @@ struct phv_              p;
 
 registered_macs:
   phvwr       p.qos_metadata_qos_class_id, k.capri_intrinsic_tm_oq
+  phvwr       p.control_metadata_registered_mac_nic_mode, d.registered_macs_d.nic_mode
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  seq         c2, k.flow_lkp_metadata_lkp_vrf, r0
+  phvwr       p.control_metadata_registered_mac_miss, TRUE
+  seq         c2, k.flow_lkp_metadata_lkp_classic_vrf, r0
   bcf         [c2], registered_macs_input_properites_miss_drop
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   bcf         [c1], registered_macs_all_multicast

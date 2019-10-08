@@ -3,4 +3,6 @@
 -I ../../../../../nic/sdk
 -I ../../../../../nic/build/x86_64/iris
 -I ../../../third-party/spdlog/include
+-I ../../../../../nic/sdk/third-party/libev/include
 -std=c++11
+-D__FNAME__

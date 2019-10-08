@@ -891,7 +891,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     pd_func_args.pd_qos_class_get_admin_cos = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
+        HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
                       __FUNCTION__, lif->lif_id, ret);
     }
 
@@ -909,7 +909,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
             return ret;
         }
     } else {
-        HAL_TRACE_ERR("pi-lif:{}:failed to fetch control cos of lif {}, err : {}",
+        HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch control cos of lif {}, err : {}",
                       __FUNCTION__, lif->lif_id, ret);
     }
 

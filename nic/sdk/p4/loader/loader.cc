@@ -310,7 +310,7 @@ p4_load_mpu_programs (const char *handle,
                            MpuSymbol(param_u->name.c_str(), MPUSYM_PARAM,
                                      param_r->val));
                 } else {
-                    SDK_TRACE_ERR("Cannot resolve param %s",
+                    SDK_TRACE_WARN("Cannot resolve param %s",
                                   param_u->name.c_str());
                 }
             }

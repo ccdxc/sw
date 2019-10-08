@@ -1157,6 +1157,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     // Data
     inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
+    inp_prop.classic_vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_DMA;
     inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = 0;
@@ -1417,9 +1418,11 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         }
     }
 
+#if 0
     if (key_mask) {
         HAL_FREE(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, key_mask);
     }
+#endif
 
 end:
     return ret;

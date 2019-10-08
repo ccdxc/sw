@@ -10,6 +10,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
+	metadata "google.golang.org/grpc/metadata"
 )
 
 // MockisRegisterRequest_IdNameOrAddr is a mock of isRegisterRequest_IdNameOrAddr interface
@@ -879,6 +880,133 @@ func (mr *MockDebugClientMockRecorder) SessionCtrlUpdate(ctx, in interface{}, op
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionCtrlUpdate", reflect.TypeOf((*MockDebugClient)(nil).SessionCtrlUpdate), varargs...)
 }
 
+// OifListGet mocks base method
+func (m *MockDebugClient) OifListGet(ctx context.Context, in *OifListGetRequestMsg, opts ...grpc.CallOption) (Debug_OifListGetClient, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "OifListGet", varargs...)
+	ret0, _ := ret[0].(Debug_OifListGetClient)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// OifListGet indicates an expected call of OifListGet
+func (mr *MockDebugClientMockRecorder) OifListGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OifListGet", reflect.TypeOf((*MockDebugClient)(nil).OifListGet), varargs...)
+}
+
+// MockDebug_OifListGetClient is a mock of Debug_OifListGetClient interface
+type MockDebug_OifListGetClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockDebug_OifListGetClientMockRecorder
+}
+
+// MockDebug_OifListGetClientMockRecorder is the mock recorder for MockDebug_OifListGetClient
+type MockDebug_OifListGetClientMockRecorder struct {
+	mock *MockDebug_OifListGetClient
+}
+
+// NewMockDebug_OifListGetClient creates a new mock instance
+func NewMockDebug_OifListGetClient(ctrl *gomock.Controller) *MockDebug_OifListGetClient {
+	mock := &MockDebug_OifListGetClient{ctrl: ctrl}
+	mock.recorder = &MockDebug_OifListGetClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockDebug_OifListGetClient) EXPECT() *MockDebug_OifListGetClientMockRecorder {
+	return m.recorder
+}
+
+// Recv mocks base method
+func (m *MockDebug_OifListGetClient) Recv() (*OifListGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "Recv")
+	ret0, _ := ret[0].(*OifListGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Recv indicates an expected call of Recv
+func (mr *MockDebug_OifListGetClientMockRecorder) Recv() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Recv", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).Recv))
+}
+
+// Header mocks base method
+func (m *MockDebug_OifListGetClient) Header() (metadata.MD, error) {
+	ret := m.ctrl.Call(m, "Header")
+	ret0, _ := ret[0].(metadata.MD)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Header indicates an expected call of Header
+func (mr *MockDebug_OifListGetClientMockRecorder) Header() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Header", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).Header))
+}
+
+// Trailer mocks base method
+func (m *MockDebug_OifListGetClient) Trailer() metadata.MD {
+	ret := m.ctrl.Call(m, "Trailer")
+	ret0, _ := ret[0].(metadata.MD)
+	return ret0
+}
+
+// Trailer indicates an expected call of Trailer
+func (mr *MockDebug_OifListGetClientMockRecorder) Trailer() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Trailer", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).Trailer))
+}
+
+// CloseSend mocks base method
+func (m *MockDebug_OifListGetClient) CloseSend() error {
+	ret := m.ctrl.Call(m, "CloseSend")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloseSend indicates an expected call of CloseSend
+func (mr *MockDebug_OifListGetClientMockRecorder) CloseSend() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseSend", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).CloseSend))
+}
+
+// Context mocks base method
+func (m *MockDebug_OifListGetClient) Context() context.Context {
+	ret := m.ctrl.Call(m, "Context")
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// Context indicates an expected call of Context
+func (mr *MockDebug_OifListGetClientMockRecorder) Context() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).Context))
+}
+
+// SendMsg mocks base method
+func (m_2 *MockDebug_OifListGetClient) SendMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "SendMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendMsg indicates an expected call of SendMsg
+func (mr *MockDebug_OifListGetClientMockRecorder) SendMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMsg", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).SendMsg), m)
+}
+
+// RecvMsg mocks base method
+func (m_2 *MockDebug_OifListGetClient) RecvMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "RecvMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecvMsg indicates an expected call of RecvMsg
+func (mr *MockDebug_OifListGetClientMockRecorder) RecvMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecvMsg", reflect.TypeOf((*MockDebug_OifListGetClient)(nil).RecvMsg), m)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1342,4 +1470,121 @@ func (m *MockDebugServer) SessionCtrlUpdate(arg0 context.Context, arg1 *SessionC
 // SessionCtrlUpdate indicates an expected call of SessionCtrlUpdate
 func (mr *MockDebugServerMockRecorder) SessionCtrlUpdate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionCtrlUpdate", reflect.TypeOf((*MockDebugServer)(nil).SessionCtrlUpdate), arg0, arg1)
+}
+
+// OifListGet mocks base method
+func (m *MockDebugServer) OifListGet(arg0 *OifListGetRequestMsg, arg1 Debug_OifListGetServer) error {
+	ret := m.ctrl.Call(m, "OifListGet", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OifListGet indicates an expected call of OifListGet
+func (mr *MockDebugServerMockRecorder) OifListGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OifListGet", reflect.TypeOf((*MockDebugServer)(nil).OifListGet), arg0, arg1)
+}
+
+// MockDebug_OifListGetServer is a mock of Debug_OifListGetServer interface
+type MockDebug_OifListGetServer struct {
+	ctrl     *gomock.Controller
+	recorder *MockDebug_OifListGetServerMockRecorder
+}
+
+// MockDebug_OifListGetServerMockRecorder is the mock recorder for MockDebug_OifListGetServer
+type MockDebug_OifListGetServerMockRecorder struct {
+	mock *MockDebug_OifListGetServer
+}
+
+// NewMockDebug_OifListGetServer creates a new mock instance
+func NewMockDebug_OifListGetServer(ctrl *gomock.Controller) *MockDebug_OifListGetServer {
+	mock := &MockDebug_OifListGetServer{ctrl: ctrl}
+	mock.recorder = &MockDebug_OifListGetServerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockDebug_OifListGetServer) EXPECT() *MockDebug_OifListGetServerMockRecorder {
+	return m.recorder
+}
+
+// Send mocks base method
+func (m *MockDebug_OifListGetServer) Send(arg0 *OifListGetResponseMsg) error {
+	ret := m.ctrl.Call(m, "Send", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Send indicates an expected call of Send
+func (mr *MockDebug_OifListGetServerMockRecorder) Send(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).Send), arg0)
+}
+
+// SetHeader mocks base method
+func (m *MockDebug_OifListGetServer) SetHeader(arg0 metadata.MD) error {
+	ret := m.ctrl.Call(m, "SetHeader", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetHeader indicates an expected call of SetHeader
+func (mr *MockDebug_OifListGetServerMockRecorder) SetHeader(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHeader", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).SetHeader), arg0)
+}
+
+// SendHeader mocks base method
+func (m *MockDebug_OifListGetServer) SendHeader(arg0 metadata.MD) error {
+	ret := m.ctrl.Call(m, "SendHeader", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendHeader indicates an expected call of SendHeader
+func (mr *MockDebug_OifListGetServerMockRecorder) SendHeader(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHeader", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).SendHeader), arg0)
+}
+
+// SetTrailer mocks base method
+func (m *MockDebug_OifListGetServer) SetTrailer(arg0 metadata.MD) {
+	m.ctrl.Call(m, "SetTrailer", arg0)
+}
+
+// SetTrailer indicates an expected call of SetTrailer
+func (mr *MockDebug_OifListGetServerMockRecorder) SetTrailer(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTrailer", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).SetTrailer), arg0)
+}
+
+// Context mocks base method
+func (m *MockDebug_OifListGetServer) Context() context.Context {
+	ret := m.ctrl.Call(m, "Context")
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// Context indicates an expected call of Context
+func (mr *MockDebug_OifListGetServerMockRecorder) Context() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).Context))
+}
+
+// SendMsg mocks base method
+func (m_2 *MockDebug_OifListGetServer) SendMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "SendMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendMsg indicates an expected call of SendMsg
+func (mr *MockDebug_OifListGetServerMockRecorder) SendMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMsg", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).SendMsg), m)
+}
+
+// RecvMsg mocks base method
+func (m_2 *MockDebug_OifListGetServer) RecvMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "RecvMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecvMsg indicates an expected call of RecvMsg
+func (mr *MockDebug_OifListGetServerMockRecorder) RecvMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecvMsg", reflect.TypeOf((*MockDebug_OifListGetServer)(nil).RecvMsg), m)
 }

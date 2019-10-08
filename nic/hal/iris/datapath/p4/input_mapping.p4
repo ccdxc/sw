@@ -238,12 +238,13 @@ table input_mapping_native2 {
 //              multiacast traffic in case we are in host pinning and
 //              overlay mode where one copy of packet is sent to uplink
 //              to GIPo with this VNID.
-action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
+action input_properties(vrf, classic_vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
                         flow_miss_idx, ipsg_enable, l4_profile_idx,
                         dst_lport, src_lport, allow_flood, bounce_vnid,
                         mirror_on_drop_en, mirror_on_drop_session_id,
-                        clear_promiscuous_repl, nic_mode) {
+                        clear_promiscuous_repl, nic_mode, mode_switch_en) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
+    modify_field(flow_lkp_metadata.lkp_classic_vrf, classic_vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
     modify_field(control_metadata.flow_miss_qos_class_id, flow_miss_qos_class_id);
@@ -260,6 +261,10 @@ action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id
                  mirror_on_drop_session_id);
     modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
     modify_field(control_metadata.nic_mode, nic_mode);
+    modify_field(control_metadata.mode_switch_en, mode_switch_en);
+    if ((nic_mode == NIC_MODE_CLASSIC) or (mode_switch_en == 1)) {
+        modify_field(control_metadata.registered_mac_launch, 1);
+    }
 }
 
 @pragma stage 1
@@ -332,10 +337,10 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     modify_field(control_metadata.src_lif, src_lif);
 
-    input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
+    input_properties(vrf, 0, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable, l4_profile_idx, dst_lport,
                      src_lport, allow_flood, tunnel_vnid, mirror_on_drop_en,
-                     mirror_on_drop_session_id, 0, NIC_MODE_SMART);
+                     mirror_on_drop_session_id, 0, NIC_MODE_SMART, 0);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);

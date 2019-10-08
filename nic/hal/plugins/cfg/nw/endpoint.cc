@@ -2105,7 +2105,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 
 
     if (!app_ctxt.if_change && !l2seg_change && !iplist_change) {
-        HAL_TRACE_ERR("No change in EP update");
+        HAL_TRACE_WARN("No change in EP update");
         goto end;
     }
 
@@ -3033,6 +3033,14 @@ ep_restore_cb (void *obj, uint32_t len)
 
     return 0;    // TODO: fix me
 }
+
+bool 
+endpoint_is_remote(ep_t *ep) 
+{
+    return (ep && (ep->ep_flags & EP_FLAGS_REMOTE));
+}
+
+
 
 }    // namespace hal
 

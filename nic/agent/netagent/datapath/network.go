@@ -137,7 +137,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
 	}
 
-	if nw.Spec.VlanID == constants.UntaggedVLAN {
+	if nw.Spec.VlanID == constants.UntaggedCollVLAN {
 		ifKeyHandles = []*halproto.InterfaceKeyHandle{}
 	}
 	// build l2 segment data
@@ -316,7 +316,7 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
 	}
 
-	if nw.Spec.VlanID == constants.UntaggedVLAN {
+	if nw.Spec.VlanID == constants.UntaggedCollVLAN {
 		ifKeyHandles = []*halproto.InterfaceKeyHandle{}
 	}
 	// build l2 segment data

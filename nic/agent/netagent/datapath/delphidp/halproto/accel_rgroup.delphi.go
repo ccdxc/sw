@@ -242,6 +242,10 @@ It has these top-level messages:
 	QueueCreditsGetResponse
 	SessionCtrlSpec
 	SessionCtrlRequestMsg
+	OifListGetRequest
+	OifListGetRequestMsg
+	OifListGetResponse
+	OifListGetResponseMsg
 	ICMPMsg
 	DoSService
 	DoSSessionLimits

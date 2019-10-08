@@ -168,9 +168,10 @@ def UpdateNodeUuidEndpoints(objects):
 
 def UpdateTestBedVlans(objects):
     for obj in objects:
-        vlan = api.Testbed_AllocateVlan()
-        api.Logger.info("Network Object: %s, Allocated Vlan = %d" % (obj.meta.name, vlan))
-        obj.spec.vlan_id = vlan
+        if obj.spec.vlan_id == -1:
+            vlan = api.Testbed_AllocateVlan()
+            obj.spec.vlan_id = vlan
+        api.Logger.info("Network Object: %s, Allocated Vlan = %d" % (obj.meta.name, obj.spec.vlan_id))
 
 __config_pushed = False
 def PushBaseConfig(ignore_error = True, kinds=None):

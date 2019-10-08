@@ -431,9 +431,9 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
 	 return HAL_RET_NO_RESOURCE;
      }
      else {
-	 HAL_TRACE_ERR("mmap the WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
-		       type, wring_id, (uint64_t)wring_base, (uint64_t)meta->virt_base_addr[wring_id],
-		       ((meta->num_slots * meta->slot_size_in_bytes)/1024));
+         HAL_TRACE_DEBUG("mmap the WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
+                         type, wring_id, (uint64_t)wring_base, (uint64_t)meta->virt_base_addr[wring_id],
+                         ((meta->num_slots * meta->slot_size_in_bytes)/1024));
      }
 
      /*
@@ -443,11 +443,11 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
 	 meta->virt_obj_base_addr[wring_id] = (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
 									       obj_reg_size);
 	 if (!meta->virt_obj_base_addr[wring_id]) {
-             HAL_TRACE_ERR("Failed to mmap the OBJ Ring(T:{}, Q:{})", type, wring_id);
+         HAL_TRACE_ERR("Failed to mmap the OBJ Ring(T:{}, Q:{})", type, wring_id);
 	     return HAL_RET_NO_RESOURCE;
 	 }
 	 else {
-	     HAL_TRACE_ERR("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
+	     HAL_TRACE_DEBUG("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
 			   type, wring_id, (uint64_t)wring_obj_base,
 			   (uint64_t)meta->virt_obj_base_addr[wring_id], (obj_reg_size/1024));
 	 }

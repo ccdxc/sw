@@ -8,6 +8,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
+#include "nic/hal/svc/debug_svc.hpp"
 #include "gen/proto/multicast.pb.h"
 
 using multicast::Oif;
@@ -43,8 +44,16 @@ typedef struct oif_s {
     oif_s():intf(NULL),l2seg(NULL),qid(0),purpose(intf::LIF_QUEUE_PURPOSE_NONE){}
 } __PACK__ oif_t;
 
+typedef struct oifl_get_s {
+    oif_list_id_t id;
+    grpc::ServerWriter<debug::OifListGetResponseMsg> *writer;
+    debug::OifListGetResponseMsg msg;
+    uint32_t count;
+} oifl_get_t;
+
 // Retrieves the OIF List entry from OIF List ID
 hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp);
+hal_ret_t oif_list_get(oif_list_t *oif_list, OifList *rsp);
 // Creates a new oif_list and returns handle
 hal_ret_t oif_list_create(oif_list_id_t *list);
 // Creates a contiguous block of oif_lists and returns handle to the first one
@@ -54,7 +63,7 @@ hal_ret_t oif_list_delete(oif_list_id_t list);
 // Takes an oiflis_handle and deletes a block starting from it
 hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size);
 hal_ret_t oif_list_attach(oif_list_id_t frm, oif_list_id_t to);;
-hal_ret_t oif_list_detach(oif_list_id_t frm);;
+hal_ret_t oif_list_detach(oif_list_id_t frm);
 // Adds an oif to list
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif);
 // Adds an QP based oif to list
@@ -74,6 +83,10 @@ hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list);
 
 void *oif_list_get_key_func(void *entry);
 uint32_t oif_list_key_size(void);
+
+hal_ret_t oiflist_get_all_stream(grpc::ServerWriter<debug::OifListGetResponseMsg> *writer);
+hal_ret_t oiflist_get_stream (debug::OifListGetRequest& req, 
+                              grpc::ServerWriter<debug::OifListGetResponseMsg> *writer);
 }    // namespace hal
 
 #endif /* __OIF_LIST_API_HPP__ */

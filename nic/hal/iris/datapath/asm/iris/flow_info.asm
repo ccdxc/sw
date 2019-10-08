@@ -85,6 +85,11 @@ f_flow_info_thread_1:
 flow_miss:
   seq           c1, r5[0], 0
   nop.!c1.e
+  seq           c1, k.control_metadata_mode_switch_en, FALSE
+  seq           c2, k.control_metadata_registered_mac_miss, FALSE
+  seq           c3, k.control_metadata_registered_mac_nic_mode, NIC_MODE_SMART
+  orcf          c1, [c2&c3]
+  bcf           [!c1], flow_miss_classic
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
@@ -117,12 +122,10 @@ flow_miss_common:
   b             flow_miss_multicast
   nop
   .brcase FLOW_MISS_ACTION_REDIRECT
-  or            r1, k.control_metadata_flow_miss_idx_s8_e15, \
-                    k.control_metadata_flow_miss_idx_s0_e7, 8
-  phvwr.e       p.rewrite_metadata_tunnel_rewrite_index, r1
+  phvwr.e       p.rewrite_metadata_tunnel_rewrite_index, \
+                    k.control_metadata_flow_miss_idx
   nop
   .brend
-
 
 flow_miss_unicast:
   phvwr.e       p.control_metadata_dst_lport, CPU_LPORT
@@ -130,18 +133,26 @@ flow_miss_unicast:
 
 flow_miss_multicast:
   seq           c1, k.control_metadata_allow_flood, TRUE
-  bcf           [!c1], flow_miss_mdest_not_pinned_drop
-  or            r1, k.control_metadata_flow_miss_idx_s8_e15, \
-                    k.control_metadata_flow_miss_idx_s0_e7, 8
-  phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, r1, \
-                    p.capri_intrinsic_tm_replicate_en, 1
+  bcf           [!c1], flow_miss_not_allow_flood
+  phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx, \
+                     p.capri_intrinsic_tm_replicate_en, 1
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     k.flow_miss_metadata_tunnel_originate
-  phvwr         p.rewrite_metadata_rewrite_index[11:0], \
-                    k.flow_miss_metadata_rewrite_index
-  phvwr.e       p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
-  phvwr.f       p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    k.flow_miss_metadata_tunnel_rewrite_index
+  or            r1, k.flow_miss_metadata_rewrite_index_s8_e10, \
+                   k.flow_miss_metadata_rewrite_index_s0_e7, 3
+  or            r2, k.flow_miss_metadata_rewrite_index_s11_e11, r1, 1
+  phvwr         p.rewrite_metadata_rewrite_index[11:0], r2
+  phvwr         p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
+  or.e          r1, k.flow_miss_metadata_tunnel_rewrite_index_s8_e9, \
+                    k.flow_miss_metadata_tunnel_rewrite_index_s0_e7, 2
+  phvwr.f       p.rewrite_metadata_tunnel_rewrite_index[9:0], r1
+
+flow_miss_not_allow_flood:
+  bcf           [!c2], flow_miss_mdest_not_pinned_drop
+  add           r1, r0, k.control_metadata_flow_miss_idx
+  phvwrpair.e   p.capri_intrinsic_tm_replicate_ptr, r1, \
+                    p.capri_intrinsic_tm_replicate_en, 1
+  nop
 
 flow_miss_mdest_not_pinned_drop:
   phvwr.e       p.control_metadata_drop_reason[DROP_MULTI_DEST_NOT_PINNED_UPLINK], 1
@@ -154,6 +165,24 @@ flow_miss_input_properites_miss_drop:
 flow_miss_tcp_non_syn_first_pkt_drop:
   phvwr.e       p.control_metadata_drop_reason[DROP_TCP_NON_SYN_FIRST_PKT], 1
   phvwr         p.capri_intrinsic_drop, 1
+
+flow_miss_classic:
+  phvwr         p.control_metadata_nic_mode, NIC_MODE_CLASSIC
+  seq           c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
+  bcf           [c1], flow_miss_classic_broadcast
+flow_miss_classic_multicast:
+  seq           c1, k.control_metadata_registered_mac_miss, FALSE
+  seq           c2, k.control_metadata_allow_flood, TRUE
+  setcf         c3, [c1&c2]
+  nop.!c3.e
+  add.e         r1, k.capri_intrinsic_tm_replicate_ptr, 1
+  phvwr         p.capri_intrinsic_tm_replicate_ptr, r1
+
+flow_miss_classic_broadcast:
+  seq           c1, k.control_metadata_allow_flood, TRUE
+  nop.!c1.e
+  add.e         r1, k.capri_intrinsic_tm_replicate_ptr, 3
+  phvwr         p.capri_intrinsic_tm_replicate_ptr, r1
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
@@ -171,9 +200,11 @@ flow_hit_drop:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_info_from_cpu:
   phvwr         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  seq.e         c1, k.p4plus_to_p4_dst_lport_valid, TRUE
-  phvwr.c1      p.control_metadata_dst_lport, \
-                    k.p4plus_to_p4_dst_lport
+  seq           c1, k.p4plus_to_p4_dst_lport_valid, TRUE
+  nop.!c1.e
+  or.e          r1, k.p4plus_to_p4_dst_lport_s8_e10, \
+                    k.p4plus_to_p4_dst_lport_s0_e7, 3
+  phvwr         p.control_metadata_dst_lport, r1
 
 .align
 flow_hit_from_vm_bounce:

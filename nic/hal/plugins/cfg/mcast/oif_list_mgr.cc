@@ -343,7 +343,7 @@ hal_ret_t oif_list_attach(oif_list_id_t frm, oif_list_id_t to)
     }
 
     oif_list->attached_to = to;
-    HAL_TRACE_DEBUG("Detached list {} from {}", frm, to);
+    HAL_TRACE_DEBUG("Attached list {} -> {}", frm, to);
     return HAL_RET_OK;
 }
 
@@ -371,7 +371,7 @@ hal_ret_t oif_list_detach(oif_list_id_t frm)
     }
 
     oif_list->attached_to = OIF_LIST_ID_INVALID;
-    HAL_TRACE_DEBUG("Detached list {}", frm);
+    HAL_TRACE_DEBUG("Detached list {} -/->", frm);
     return HAL_RET_OK;
 }
 
@@ -541,11 +541,14 @@ hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
     pd::pd_func_args_t pd_func_args = {};
     pd::pd_oif_list_get_args_t args = {};
 
+    HAL_TRACE_DEBUG("oifl get for id: {}", list_id);
     oif_list_t *oif_list = find_oif_list_by_key(list_id);
     if (oif_list == NULL) {
         HAL_TRACE_ERR("Failed to find list {}", list_id);
         return HAL_RET_ENTRY_NOT_FOUND;
     }
+
+    HAL_TRACE_DEBUG("found oifl get for id: {}", list_id);
 
     rsp->set_id(oif_list->id);
     rsp->set_attached_list_id(oif_list->attached_to);
@@ -569,5 +572,90 @@ hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
     pd_func_args.pd_oif_list_get = &args;
     return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_GET, &pd_func_args);
 }
+
+hal_ret_t oif_list_get(oif_list_t *oif_list, OifList *rsp)
+{
+    dllist_ctxt_t *curr_node = NULL;
+    pd::pd_func_args_t pd_func_args = {};
+    pd::pd_oif_list_get_args_t args = {};
+
+    HAL_TRACE_DEBUG("found oifl get for id: {}", oif_list->id);
+
+    rsp->set_id(oif_list->id);
+    rsp->set_attached_list_id(oif_list->attached_to);
+    rsp->set_is_honor_ingress(oif_list->honor_ingress);
+
+    dllist_for_each(curr_node, &oif_list->oifs) {
+        oif_db_t *db_oif = dllist_entry(curr_node, oif_db_t, dllist_ctxt);
+        if_t *hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
+        l2seg_t *l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
+        Oif   *oif_rsp = rsp->add_oifs();
+        SDK_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
+        oif_rsp->set_q_id(db_oif->qid);
+        oif_rsp->set_q_purpose(db_oif->purpose);
+        oif_rsp->mutable_interface()->set_interface_id(hal_if->if_id);
+        oif_rsp->mutable_l2segment()->set_segment_id(l2seg->seg_id);
+    }
+
+    // OIF PD Status
+    args.list = oif_list->id;
+    args.rsp = rsp;
+    pd_func_args.pd_oif_list_get = &args;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_GET, &pd_func_args);
+}
+
+#define OIFL_GET_STREAM_COUNT 200
+hal_ret_t
+oiflist_get_stream (debug::OifListGetRequest& req, 
+                    grpc::ServerWriter<debug::OifListGetResponseMsg> *writer)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    debug::OifListGetResponseMsg msg;
+    oifl_get_t oifl_get;
+
+    ret = oif_list_get(req.id(), msg.add_response()->mutable_oif_list());
+    if (ret != HAL_RET_OK) {
+        msg.set_api_status(types::API_STATUS_NOT_FOUND);
+    }
+    writer->Write(msg);
+
+    return ret;
+}
+
+hal_ret_t
+oiflist_get_all_stream(grpc::ServerWriter<debug::OifListGetResponseMsg> *writer)
+{
+    oifl_get_t oifl_get;
+
+    oifl_get.writer = writer;
+    oifl_get.msg.Clear();
+    oifl_get.count = 0;
+
+    HAL_TRACE_DEBUG("Getting all oifls");
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        oif_list_t* oifl = (oif_list_t *)entry;
+        oifl_get_t *oifl_get = (oifl_get_t *)ctxt;
+        HAL_TRACE_DEBUG("walking oifl get for id: {}", oifl->id);
+        hal::oif_list_get(oifl, oifl_get->msg.add_response()->mutable_oif_list());
+        oifl_get->count++;
+        if (oifl_get->count == OIFL_GET_STREAM_COUNT) {
+            oifl_get->writer->Write(oifl_get->msg);
+            oifl_get->msg.Clear();
+            oifl_get->count = 0;
+        }
+        return false;
+    };
+
+    sdk_ret_t ret = g_hal_state->oif_list_id_ht()->walk_safe(walk_func, &oifl_get);
+    if (oifl_get.count) {
+        oifl_get.writer->Write(oifl_get.msg);
+        oifl_get.msg.Clear();
+        oifl_get.count = 0;
+    }
+
+    return hal_sdk_ret_to_hal_ret(ret);
+}
+
 
 }    // namespace hal

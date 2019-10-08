@@ -202,6 +202,10 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
         match->mutable_internal_key()->set_no_drop(true);
         match->mutable_internal_mask()->set_no_drop(true);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -223,6 +227,10 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
         match->mutable_internal_key()->set_no_drop(true);
         match->mutable_internal_mask()->set_no_drop(true);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -247,6 +255,10 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_key()->set_no_drop(true);
         match->mutable_internal_key()->set_flow_miss(true);
         match->mutable_internal_mask()->set_flow_miss(true);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -270,6 +282,10 @@ hal_eplearn_acl_config_init (void)
         ip_selector->mutable_icmp_selector()->set_icmp_type_mask(0xff);
         match->mutable_internal_key()->set_flow_miss(true);
         match->mutable_internal_mask()->set_flow_miss(true);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -289,6 +305,10 @@ hal_eplearn_acl_config_init (void)
         ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(DHCP_CLIENT_PORT);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_CLIENT_PORT);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -308,6 +328,10 @@ hal_eplearn_acl_config_init (void)
         ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(DHCP_SERVER_PORT);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_SERVER_PORT);
+        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+            match->mutable_internal_key()->set_direction(0);
+            match->mutable_internal_mask()->set_direction(1);
+        }
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {

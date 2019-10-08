@@ -149,8 +149,11 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
         goto end;
     }
 
+#if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         is_ep_classic(args->ep)) {
+#endif
+    if (ep_pd->reg_mac_tbl_idx != INVALID_INDEXER_INDEX) {
         ret = ep_pd_depgm_registered_mac(ep_pd);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
@@ -552,9 +555,10 @@ ep_pd_dealloc_res(pd_ep_t *pd_ep)
 hal_ret_t
 ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
-    nwsec_profile_t      *nwsec_profile;
+    hal_ret_t           ret = HAL_RET_OK;
+    ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
+    l2seg_t             *l2seg = NULL;
+    nwsec_profile_t     *nwsec_profile;
 
     // Program IPSG Table
     nwsec_profile = ep_get_pi_nwsec(pi_ep);
@@ -565,12 +569,6 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
                                  TABLE_OPER_INSERT);
     }
 
-    // Classic mode or if its behind OOB MNIC or internal  management MNIC pr
-    // host management mnic
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        is_ep_management(pi_ep)) {
-#endif
     // Classic Mode:
     // - All EPs
     // Smart(hostpin)
@@ -579,7 +577,10 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
     //   - Internal Management MNIC
     //   - Host Management Mnic
     //   - Untagged enics on Host Data and Naples Data LIFs
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+    // - Workload EPs to support shared inband mgmt traffic
+    l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
+    if (is_forwarding_mode_classic_nic() || 
+        (l2seg_is_cust(l2seg) && l2seg->is_shared_inband_mgmt) ||
         is_ep_classic(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
@@ -879,18 +880,21 @@ pd_ep_ipsg_change (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    sdk_ret_t                       sdk_ret;
-    registered_macs_swkey_t         key;
-    registered_macs_actiondata_t      data;
-    sdk_hash                        *reg_mac_tbl = NULL;
-    ep_t                            *pi_ep = (ep_t *)pd_ep->pi_ep;
-    l2seg_t                         *l2seg = NULL;
-    mac_addr_t                      *mac = NULL;
-    if_t                            *pi_if = NULL;
-    uint32_t                        hash_idx = INVALID_INDEXER_INDEX;
+    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           sdk_ret;
+    registered_macs_swkey_t             key;
+    registered_macs_otcam_swkey_mask_t  key_mask, *key_mask_p = NULL; 
+    registered_macs_actiondata_t        data;
+    sdk_hash                            *reg_mac_tbl = NULL;
+    ep_t                                *pi_ep = (ep_t *)pd_ep->pi_ep;
+    l2seg_t                             *l2seg = NULL;
+    mac_addr_t                          *mac = NULL;
+    if_t                                *pi_if = NULL;
+    uint32_t                            hash_idx = INVALID_INDEXER_INDEX;
+    bool                                direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
+    memset(&key_mask, 0, sizeof(key_mask));
     memset(&data, 0, sizeof(data));
 
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
@@ -899,7 +903,18 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     // lkp_vrf
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
     SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-    key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
+    key.flow_lkp_metadata_lkp_classic_vrf = 
+        ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
+    if (l2seg->is_shared_inband_mgmt && l2seg_is_cust(l2seg)) {
+        data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_SMART;
+        direct_to_otcam = true;
+        memset(&key_mask, ~0, sizeof(key_mask));
+        memset(&key_mask.flow_lkp_metadata_lkp_classic_vrf_mask, 0, 
+               sizeof(key_mask.flow_lkp_metadata_lkp_classic_vrf_mask));
+        key_mask_p = &key_mask;
+    } else {
+        data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_CLASSIC;
+    }
 
     // lkp_mac
     mac = ep_get_mac_addr(pi_ep);
@@ -914,7 +929,8 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert
-        sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx, key_mask_p, 
+                                      direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("classic: unable to program for ep:{}, ret: {}",

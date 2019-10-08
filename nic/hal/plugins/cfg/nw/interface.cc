@@ -517,9 +517,13 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
         if (lif->packet_filters.receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_add_oif(l2seg_get_shared_bcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_all_multicast) {
             ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_add_oif(l2seg_get_shared_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_promiscuous) {
@@ -530,9 +534,13 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
         if (lif->packet_filters.receive_broadcast) {
             ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_remove_oif(l2seg_get_shared_bcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_all_multicast) {
             ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_remove_oif(l2seg_get_shared_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_promiscuous) {
@@ -558,8 +566,12 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
         if (lif_upd->receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_add_oif(l2seg_get_shared_bcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_remove_oif(l2seg_get_shared_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
@@ -568,8 +580,12 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
         if (lif_upd->receive_all_multicast) {
             ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_add_oif(l2seg_get_shared_mcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            SDK_ASSERT(ret == HAL_RET_OK);
+            ret = oif_list_remove_oif(l2seg_get_shared_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
@@ -967,6 +983,26 @@ uplink_if_get_oper_state(uint32_t fp_port_num)
         case port_oper_status_t::PORT_OPER_STATUS_DOWN: return intf::IF_STATUS_DOWN;
         default:                                        return intf::IF_STATUS_NONE;
     }
+}
+
+uint32_t
+uplink_if_get_idx (if_t *hal_if)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_if_get_args_t    args   = {0};
+    InterfaceGetResponse    rsp;
+    pd::pd_func_args_t      pd_func_args = {0};
+
+    // Getting PD information
+    args.hal_if = hal_if;
+    args.rsp = &rsp;
+    pd_func_args.pd_if_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD get for If id : {}. ret : {}",
+                      hal_if->if_id, ret);
+    }
+    return rsp.status().uplink_info().uplink_idx();
 }
 
 hal_ret_t
@@ -2344,7 +2380,7 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     // Check for changes
     ret = if_update_check_for_change(spec, hal_if, &app_ctxt, &has_changed);
     if (ret != HAL_RET_OK || !has_changed) {
-        HAL_TRACE_ERR("no change/error in if update");
+        HAL_TRACE_WARN("no change/error in if update");
         goto end;
     }
 
@@ -5548,5 +5584,7 @@ if_status_to_str (IfStatus status)
         default: return "IF_STATUS_NONE";
     }
 }
+
+
 
 }    // namespace hal

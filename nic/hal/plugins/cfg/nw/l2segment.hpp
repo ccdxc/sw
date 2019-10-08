@@ -15,6 +15,9 @@
 
 #include "gen/proto/l2segment.pb.h"
 
+// Max. number of uplinks
+#define HAL_MAX_UPLINKS 8
+
 using l2segment::L2SegmentDeleteRequest;
 using l2segment::MulticastFwdPolicy;
 using l2segment::BroadcastFwdPolicy;
@@ -66,46 +69,53 @@ typedef struct eplearn_cfg_s {
 
 
 typedef struct l2seg_s {
-    sdk_spinlock_t        slock;                   // lock to protect this structure
-    hal_handle_t          vrf_handle;              // vrf's handle
-    l2seg_id_t            seg_id;                  // L2 segment id
-    L2SegmentType         segment_type;            // type of L2 segment
-    encap_t               wire_encap;              // wire encap
-    encap_t               tunnel_encap;            // tunnel encap
-    eplearn_cfg_t         eplearn_cfg;             // eplearn cfg
-    MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
-    BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
-    ip_addr_t             gipo;                    // gipo for vxlan
+    sdk_spinlock_t        slock;                        // lock to protect this structure
+    hal_handle_t          vrf_handle;                   // vrf's handle
+    l2seg_id_t            seg_id;                       // L2 segment id
+    L2SegmentType         segment_type;                 // type of L2 segment
+    encap_t               wire_encap;                   // wire encap
+    encap_t               tunnel_encap;                 // tunnel encap
+    eplearn_cfg_t         eplearn_cfg;                  // eplearn cfg
+    MulticastFwdPolicy    mcast_fwd_policy;             // multicast policy
+    BroadcastFwdPolicy    bcast_fwd_policy;             // broadcast policy
+    ip_addr_t             gipo;                         // gipo for vxlan
+    bool                  is_shared_inband_mgmt;       
+    hal_handle_t          other_shared_mgmt_l2seg_hdl[HAL_MAX_UPLINKS];  
 
-    oif_list_id_t         base_oif_list_id;        // Base replication list id
-    hal_handle_t          pinned_uplink;           // pinned uplink
+
+    oif_list_id_t         base_oif_list_id;             // Base replication list id
+    hal_handle_t          pinned_uplink;                // pinned uplink
 
     // operational state of L2 segment
-    hal_handle_t          hal_handle;              // HAL allocated handle
-    uint32_t              num_ep;                  // no. of endpoints
+    hal_handle_t          hal_handle;                   // HAL allocated handle
+    uint32_t              num_ep;                       // no. of endpoints
     // forward references
-    block_list            *nw_list;                // network list
-    block_list            *mbrif_list;             // interface list
+    block_list            *nw_list;                     // network list
+    block_list            *mbrif_list;                  // interface list
     // back references
-    block_list            *acl_list;               // acl list
-    block_list            *if_list;                // back_iflist
+    block_list            *acl_list;                    // acl list
+    block_list            *if_list;                     // back_iflist
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list
     // dllist_ctxt_t         session_list_head;       // vrf's L2 segment list link
 
     // PD state
-    void                  *pd;                     // all PD specific state
+    void                  *pd;                          // all PD specific state
     bool                   proxy_arp_enabled;
     bool                   single_wire_mgmt;
 
-    ht_ctxt_t              uplink_oif_list_ht_ctxt;// hash table for uplink OIF lists
+    ht_ctxt_t              uplink_oif_list_ht_ctxt;     // hash table for uplink OIF lists
 
 } __PACK__ l2seg_t;
 
-#define HAL_BCAST_OIFLIST_OFFSET      0
-#define HAL_MCAST_OIFLIST_OFFSET      1
-#define HAL_PRMSC_OIFLIST_OFFSET      2
+#define HAL_OIFLIST_BLOCK                   5
+#define HAL_BCAST_OIFLIST_OFFSET            0
+#define HAL_MCAST_OIFLIST_OFFSET            1
+#define HAL_PRMSC_OIFLIST_OFFSET            2
+#define HAL_SHARED_BCAST_OIFLIST_OFFSET     3
+#define HAL_SHARED_MCAST_OIFLIST_OFFSET     4
+
 
 // cb data structures
 typedef struct l2seg_create_app_ctxt_s {
@@ -165,6 +175,8 @@ is_l2seg_wire_encap_vxlan (l2seg_t *l2seg)
 extern void *l2seg_id_get_key_func(void *entry);
 extern uint32_t l2seg_id_key_size(void);
 l2seg_t *find_l2seg_by_id(l2seg_id_t l2seg_id);
+l2seg_t *find_l2seg_by_wire_encap(encap_t encap, types::VrfType vrf_type,
+                                  hal_handle_t designated_uplink_hdl);
 l2seg_t *l2seg_lookup_by_handle(hal_handle_t handle);
 l2seg_t *l2seg_lookup_key_or_handle(const L2SegmentKeyHandle& kh);
 const char *l2seg_spec_keyhandle_to_str(const L2SegmentKeyHandle& key_handle);
@@ -201,6 +213,7 @@ uint32_t l2seg_uplink_oif_key_size (void);
 bool l2seg_is_mbr_if (l2seg_t *l2seg, if_id_t if_id);
 bool l2seg_is_oob_mgmt(l2seg_t *l2seg);
 bool l2seg_is_mgmt(l2seg_t *l2seg);
+bool l2seg_is_cust(l2seg_t *l2seg);
 hal_ret_t l2seg_select_pinned_uplink(l2seg_t *l2seg);
 hal_ret_t l2seg_handle_repin (l2seg_t *l2seg);
 
