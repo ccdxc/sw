@@ -2858,6 +2858,7 @@
     "github.com/cayleygraph/cayley/quad",
     "github.com/cayleygraph/cayley/schema",
     "github.com/cenkalti/backoff",
+    "github.com/cheggaaa/pb",
     "github.com/codahale/hdrhistogram",
     "github.com/containernetworking/cni/pkg/skel",
     "github.com/containernetworking/cni/pkg/types",
