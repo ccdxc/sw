@@ -16,7 +16,9 @@ import (
 	"net/http/httputil"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/cheggaaa/pb"
 	"github.com/ghodss/yaml"
 
 	"github.com/pensando/sw/nic/agent/nmd/state"
@@ -78,59 +80,65 @@ func printHTTPResp(resp *http.Response) {
 	}
 }
 
-func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
+func restPostFile(url string, uploadFile string) ([]byte, error) {
 	if ur, err := getNaplesURL(); err == nil {
 		url = ur + url
 	} else {
 		return nil, err
 	}
 
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	for key, r := range values {
-		var fw io.Writer
-		var err error
-		if x, ok := r.(io.Closer); ok {
-			defer x.Close()
-		}
-		if x, ok := r.(*os.File); ok {
-			if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
-				return nil, err
-			}
-		} else {
-			if fw, err = w.CreateFormField(key); err != nil {
-				return nil, err
-			}
-		}
-		if _, err = io.Copy(fw, r); err != nil {
-			return nil, err
-		}
+	var err error
+	var f *os.File
+	var fi os.FileInfo
+	var bar *pb.ProgressBar
 
-	}
-	w.Close()
-
-	req, err := http.NewRequest("POST", url, &b)
-	if err != nil {
+	if f, err = os.Open(uploadFile); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	printHTTPReq(req)
-	res, err := penHTTPClient.Do(req)
-	if err != nil {
-		fmt.Println("Unable to get response from Distributed Service Card.")
-		if strings.Contains(err.Error(), httpsSignature) || strings.Contains(err.Error(), "transport connection broken") {
-			err = fmt.Errorf("Distributed Service Card is part of a cluster, authentication token required")
-		}
+	if fi, err = f.Stat(); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
-	defer res.Body.Close()
-	printHTTPResp(res)
-	if verbose {
-		fmt.Println("Status: ", res.Status)
-		fmt.Println("Header: ", res.Header)
+	bar = pb.New64(fi.Size()).SetUnits(pb.U_BYTES).SetRefreshRate(time.Millisecond * 10)
+	bar.Start()
+
+	r, w := io.Pipe()
+	mpw := multipart.NewWriter(w)
+	go func() {
+		var part io.Writer
+		defer w.Close()
+		defer f.Close()
+
+		if part, err = mpw.CreateFormFile("file", fi.Name()); err != nil {
+			fmt.Println(err)
+			return
+		}
+		part = io.MultiWriter(part, bar)
+		if _, err = io.Copy(part, f); err != nil {
+			fmt.Println(err)
+			return
+		}
+		if err = mpw.Close(); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}()
+
+	resp, err := http.Post(url, mpw.FormDataContentType(), r)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
-	bodyBytes, _ := ioutil.ReadAll(res.Body)
+	defer resp.Body.Close()
+	bar.Finish()
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 
 	return bodyBytes, nil
 }
