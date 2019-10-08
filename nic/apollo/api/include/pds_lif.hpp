@@ -16,8 +16,10 @@ typedef struct pds_lif_spec_s {
     pds_lif_key_t    key;
     ///< if index of the pinned port/lif
     pds_ifindex_t    pinned_ifidx;
-    ///< type of lif 
+    ///< type of lif
     lif_type_t       type;
+    ///< vlan_strip_en is set to true if vlan needs to be stripped in datapath
+    bool vlan_strip_en;
 } pds_lif_spec_t;
 
 /// \brief Read LIF information

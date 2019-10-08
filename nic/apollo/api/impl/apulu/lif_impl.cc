@@ -100,7 +100,7 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 #define nexthop_info            action_u.nexthop_nexthop_info
 sdk_ret_t
-lif_impl::program_oob_filters(lif_info_t *lif_params) {
+lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
@@ -193,7 +193,7 @@ error:
 }
 
 sdk_ret_t
-lif_impl::program_inband_filters(lif_info_t *lif_params) {
+lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
@@ -221,8 +221,8 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for inb lif %u at idx %u",
-                      key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program nexthop table for inb lif %u at "
+                      "idx %u", key_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -290,7 +290,7 @@ error:
 }
 
 sdk_ret_t
-lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
+lif_impl::create_flow_miss_mnic_(pds_lif_spec_t *spec) {
 #if 0
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
@@ -322,25 +322,8 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
     return SDK_RET_OK;
 }
 
-typedef struct lif_internal_mgmt_ctx_s {
-    lif_impl **lif;
-    lif_type_t type;
-} __PACK__ lif_internal_mgmt_ctx_t;
-
-static bool
-lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
-    lif_impl *lif = (lif_impl *)api_obj;
-    lif_internal_mgmt_ctx_t *cb_ctx = (lif_internal_mgmt_ctx_t *)ctxt;
-
-    if (lif->type() == cb_ctx->type) {
-        *cb_ctx->lif = lif;
-        return true;
-    }
-    return false;
-}
-
 sdk_ret_t
-lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
+lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
 #if 0
     sdk_ret_t ret = SDK_RET_OK;
     nacl_swkey_t key = { 0 };
@@ -402,6 +385,47 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     return ret;
 #endif
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+lif_impl::create(pds_lif_spec_t *spec) {
+    sdk_ret_t ret;
+
+    switch (spec->type) {
+    case sdk::platform::LIF_TYPE_MNIC_OOB_MGMT:
+        ret = create_oob_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT:
+        ret = create_inb_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_MNIC_CPU:
+        ret = create_flow_miss_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_HOST_MGMT:
+    case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
+        ret = create_internal_mgmt_mnic_(spec);
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+    return ret;
+}
+
+typedef struct lif_internal_mgmt_ctx_s {
+    lif_impl **lif;
+    lif_type_t type;
+} __PACK__ lif_internal_mgmt_ctx_t;
+
+static bool
+lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
+    lif_impl *lif = (lif_impl *)api_obj;
+    lif_internal_mgmt_ctx_t *cb_ctx = (lif_internal_mgmt_ctx_t *)ctxt;
+
+    if (lif->type() == cb_ctx->type) {
+        *cb_ctx->lif = lif;
+        return true;
+    }
+    return false;
 }
 
 /// \@}

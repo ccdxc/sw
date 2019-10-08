@@ -47,6 +47,7 @@ devapi_impl::destroy(devapi *impl) {
 
 sdk_ret_t
 devapi_impl::lif_create(lif_info_t *info) {
+    sdk_ret_t ret;
     lif_impl *lif;
     pds_lif_spec_t spec = { 0 };
 
@@ -56,26 +57,18 @@ devapi_impl::lif_create(lif_info_t *info) {
     spec.key = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
     spec.type = info->type;
+    spec.vlan_strip_en = info->vlan_strip_en;
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
     }
-    lif_impl_db()->insert(lif);
-
-    if (info->type == sdk::platform::LIF_TYPE_MNIC_OOB_MGMT) {
-        // currently adding support only for MNIC oob
-        lif->program_oob_filters(info);
-    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT) {
-        lif->program_inband_filters(info);
-    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_CPU) {
-        lif->program_flow_miss_nacl(info);
-    } else if (info->type == sdk::platform::LIF_TYPE_HOST_MGMT ||
-                info->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
-        lif->program_internal_mgmt_nacl(info);
+    ret = lif->create(&spec);
+    if (ret == SDK_RET_OK) {
+        PDS_TRACE_DEBUG("Programmed lif %u %s %u",
+                        info->lif_id, info->name, info->type);
+        lif_impl_db()->insert(lif);
     }
-    PDS_TRACE_DEBUG("Programmed filters/NACLs for lif %u %s %u",
-                    info->lif_id, info->name, info->type);
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t

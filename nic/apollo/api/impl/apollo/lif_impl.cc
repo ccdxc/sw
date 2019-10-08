@@ -57,7 +57,6 @@ lif_impl::key(void) {
     return key_;
 }
 
-
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
 lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
@@ -99,7 +98,7 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
-lif_impl::program_oob_filters(lif_info_t *lif_params) {
+lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -137,7 +136,7 @@ lif_impl::program_oob_filters(lif_info_t *lif_params) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
+    data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -150,7 +149,7 @@ lif_impl::program_oob_filters(lif_info_t *lif_params) {
 }
 
 sdk_ret_t
-lif_impl::program_inband_filters(lif_info_t *lif_params) {
+lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -196,7 +195,7 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
+    data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -209,7 +208,7 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
 }
 
 sdk_ret_t
-lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
+lif_impl::create_flow_miss_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -235,51 +234,9 @@ lif_impl::program_flow_miss_nacl(lif_info_t *lif_params) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
     } else {
-        PDS_TRACE_ERR("Success -  program NACL entry for mnic %s lif %u -> "
-                      "uplink 0x%x, err %u", lif_params->name, key_, pinned_if_idx_, ret);
+        PDS_TRACE_ERR("Success -  program NACL entry for lif %u -> "
+                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
     }
-
-#if 0
-    // uplink0 -> ARM
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    key.capri_intrinsic_lif = 1;
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-    data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CPU;
-    data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
-    } else {
-        PDS_TRACE_ERR("Success program NACL entry for %s uplink %u -> mnic "
-                      "lif %u, err %u", lif_params->name, pinned_if_idx_, key_, ret);
-    }
-
-    // uplink0 -> ARM
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    key.capri_intrinsic_lif = 5;
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-    data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CPU;
-    data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
-    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
-    } else {
-        PDS_TRACE_ERR("Sucess program NACL entry for %s uplink %u -> mnic "
-                      "lif %u, err %u", lif_params->name, pinned_if_idx_, key_, ret);
-    }
-#endif
 
     return ret;
 }
@@ -302,28 +259,29 @@ lif_internal_mgmt_cb_(void *api_obj, void *ctxt) {
 }
 
 sdk_ret_t
-lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
-    sdk_ret_t ret = SDK_RET_OK;
+lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
+    uint32_t idx;
+    sdk_ret_t ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
     lif_impl *host_mgmt_lif = NULL, *mnic_int_mgmt_lif = NULL;
     lif_internal_mgmt_ctx_t cb_ctx = {0};
     sdk_table_api_params_t  tparams = { 0 };
 
-    if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
+    if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
         host_mgmt_lif = this;
         cb_ctx.type = sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
         cb_ctx.lif = &mnic_int_mgmt_lif;
-    } else if (lif_params->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
+    } else if (spec->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
         mnic_int_mgmt_lif = this;
         cb_ctx.type = sdk::platform::LIF_TYPE_HOST_MGMT;
         cb_ctx.lif = &host_mgmt_lif;
     }
     lif_impl_db()->walk(lif_internal_mgmt_cb_, &cb_ctx);
+
     if (!host_mgmt_lif || !mnic_int_mgmt_lif) {
-        return ret;
+        return SDK_RET_OK;
     }
 
     PDS_TRACE_DEBUG("programming nacls for internal management:");
@@ -362,6 +320,30 @@ lif_impl::program_internal_mgmt_nacl(lif_info_t *lif_params) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed NACL entry for mnic_int_mgmt -> host_mgmt"
                       "err %u", ret);
+    }
+    return ret;
+}
+
+sdk_ret_t
+lif_impl::create(pds_lif_spec_t *spec) {
+    sdk_ret_t ret;
+
+    switch (spec->type) {
+    case sdk::platform::LIF_TYPE_MNIC_OOB_MGMT:
+        ret = create_oob_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT:
+        ret = create_inb_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_MNIC_CPU:
+        ret = create_flow_miss_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_HOST_MGMT:
+    case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
+        ret = create_internal_mgmt_mnic_(spec);
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
     }
     return ret;
 }
