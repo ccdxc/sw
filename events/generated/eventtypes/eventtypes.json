@@ -199,9 +199,24 @@
  ],
  "system": [
   {
+   "Name": "NAPLES_CATTRIP_INTERRUPT",
+   "Severity": "critical",
+   "Desc": "System encountered cattrip resetting system"
+  },
+  {
    "Name": "NAPLES_FATAL_INTERRUPT",
    "Severity": "critical",
    "Desc": "Naples has a fatal interrupt"
+  },
+  {
+   "Name": "NAPLES_OVER_TEMP",
+   "Severity": "warn",
+   "Desc": "System temperature is above threshold."
+  },
+  {
+   "Name": "NAPLES_OVER_TEMP_EXIT",
+   "Severity": "warn",
+   "Desc": "System temperature is below threshold."
   },
   {
    "Name": "NAPLES_SERVICE_STOPPED",

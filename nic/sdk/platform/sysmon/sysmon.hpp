@@ -17,6 +17,12 @@ typedef enum {
    UKNOWN_STATE = 4
 } sysmond_led_event_t;
 
+typedef enum {
+   SYSMOND_HBM_TEMP_NONE = 0,
+   SYSMOND_HBM_TEMP_ABOVE_THRESHOLD = 1,
+   SYSMOND_HBM_TEMP_BELOW_THRESHOLD = 2
+} sysmond_hbm_threshold_event_t;
+
 typedef struct systemled_s {
     sysmond_led_event_t event;
     pal_led_color_t color;
@@ -27,7 +33,8 @@ typedef void (*frequency_change_event_cb_t)(uint32_t frequency);
 typedef void (*cattrip_event_cb_t)(void);
 typedef void (*power_event_cb_t)(sdk::platform::sensor::system_power_t *power);
 typedef void (*temp_event_cb_t)(
-        sdk::platform::sensor::system_temperature_t *temperature);
+        sdk::platform::sensor::system_temperature_t *temperature,
+        sysmond_hbm_threshold_event_t hbm_event);
 typedef void (*memory_event_cb_t)(
         uint64_t total_mem, uint64_t available_mem, uint64_t free_mem);
 

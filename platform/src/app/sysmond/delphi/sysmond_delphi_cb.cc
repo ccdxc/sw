@@ -14,7 +14,7 @@ static delphi::objects::asicmemorymetrics_t asicmemory;
 static delphi::SdkPtr g_sdk;
 
 void
-event_cb_init (void)
+delphi_event_cb_init (void)
 {
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     pthread_t delphi_thread;
@@ -33,7 +33,7 @@ event_cb_init (void)
 }
 
 void
-frequency_change_event_cb (uint32_t frequency)
+delphi_frequency_change_event_cb (uint32_t frequency)
 {
     uint64_t key = 0;
     int chip_id = 0;
@@ -47,7 +47,7 @@ frequency_change_event_cb (uint32_t frequency)
 }
 
 void
-cattrip_event_cb (void)
+delphi_cattrip_event_cb (void)
 {
     TRACE_INFO(GetObflLogger(), "Cattrip occurred");
     TRACE_FLUSH(GetObflLogger());
@@ -55,7 +55,7 @@ cattrip_event_cb (void)
 }
 
 void
-power_event_cb (sdk::platform::sensor::system_power_t *power)
+delphi_power_event_cb (sdk::platform::sensor::system_power_t *power)
 {
     uint64_t key = 0;
 
@@ -69,7 +69,7 @@ power_event_cb (sdk::platform::sensor::system_power_t *power)
 }
 
 void
-temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
+delphi_temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
 {
     uint64_t key = 0;
 
@@ -85,7 +85,7 @@ temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
 }
 
 void
-memory_event_cb (uint64_t total_mem, uint64_t available_mem,
+delphi_memory_event_cb (uint64_t total_mem, uint64_t available_mem,
                  uint64_t free_mem)
 {
     uint64_t key = 0;

@@ -7,8 +7,6 @@
 
 using namespace std;
 
-void event_cb_init(void);
-
 class SysmondService : public delphi::Service,
                        public enable_shared_from_this<SysmondService>,
                        public delphi::objects::SysmgrSystemStatusReactor {

@@ -8,7 +8,7 @@
 #include "platform/evutils/include/evutils.h"
 #include "logger.h"
 #include "delphi/sysmond_delphi.hpp"
-#include "delphi/sysmond_cb.hpp"
+#include "sysmond_cb.hpp"
 
 #define SYSMOND_TIMER_ID_POLL 1
 #define SYSMOND_POLL_TIME     10000 // 10 secs = 10 * 1000 msecs

@@ -328,6 +328,27 @@ func init() {
 		Desc:       "Naples has a fatal interrupt",
 		SuppressMM: false}
 
+	eventTypes[NAPLES_CATTRIP_INTERRUPT] = &EventTypeAttributes{
+		EType:      NAPLES_CATTRIP_INTERRUPT.String(),
+		Severity:   "critical",
+		Category:   "system",
+		Desc:       "System encountered cattrip resetting system",
+		SuppressMM: false}
+
+	eventTypes[NAPLES_OVER_TEMP] = &EventTypeAttributes{
+		EType:      NAPLES_OVER_TEMP.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "System temperature is above threshold.",
+		SuppressMM: false}
+
+	eventTypes[NAPLES_OVER_TEMP_EXIT] = &EventTypeAttributes{
+		EType:      NAPLES_OVER_TEMP_EXIT.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "System temperature is below threshold.",
+		SuppressMM: false}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:      ROLLOUT_STARTED.String(),
 		Severity:   "info",

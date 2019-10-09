@@ -54,7 +54,10 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ROLLOUT_SUSPENDED',
   ],
   system: [
+    'NAPLES_CATTRIP_INTERRUPT',
     'NAPLES_FATAL_INTERRUPT',
+    'NAPLES_OVER_TEMP',
+    'NAPLES_OVER_TEMP_EXIT',
     'NAPLES_SERVICE_STOPPED',
     'SERVICE_PENDING',
     'SERVICE_RUNNING',
@@ -257,10 +260,25 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.info,
       "Desc": "Rollout suspended",
   },
+  'NAPLES_CATTRIP_INTERRUPT' : {
+      "Name": "NAPLES_CATTRIP_INTERRUPT",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "System encountered cattrip resetting system",
+  },
   'NAPLES_FATAL_INTERRUPT' : {
       "Name": "NAPLES_FATAL_INTERRUPT",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Naples has a fatal interrupt",
+  },
+  'NAPLES_OVER_TEMP' : {
+      "Name": "NAPLES_OVER_TEMP",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System temperature is above threshold.",
+  },
+  'NAPLES_OVER_TEMP_EXIT' : {
+      "Name": "NAPLES_OVER_TEMP_EXIT",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System temperature is below threshold.",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",

@@ -102,7 +102,7 @@ power_event_cb (sdk::platform::sensor::system_power_t *power)
 }
 
 static void
-temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
+temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature, sysmond_hbm_threshold_event_t hbm_event)
 {
     PDS_TRACE_VERBOSE("Die temperature is {}C, local temperature is {}C,"
                       " HBM temperature is {}C", temperature->dietemp/1000,

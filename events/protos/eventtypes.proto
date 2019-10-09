@@ -236,6 +236,17 @@ enum EventTypes {
                                            (severity)    = CRITICAL,
                                            (desc)        = "Naples has a fatal interrupt"];
 
+    NAPLES_CATTRIP_INTERRUPT        = 509 [(category)    = System,
+                                           (severity)    = CRITICAL,
+                                           (desc)        = "System encountered cattrip resetting system"];
+
+    NAPLES_OVER_TEMP                = 510 [(category)    = System,
+                                           (severity)    = WARN,
+                                           (desc)        = "System temperature is above threshold."];
+
+    NAPLES_OVER_TEMP_EXIT           = 511 [(category)    = System,
+                                           (severity)    = WARN,
+                                           (desc)        = "System temperature is below threshold."];
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,
