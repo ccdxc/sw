@@ -24,7 +24,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -36,7 +36,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -56,7 +56,6 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         }
         hooks::route_table_create(api_spec);
         ret = core::route_table_create(&key, api_spec, bctxt);
-
         // free the routes memory
         if (api_spec->routes != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
@@ -97,7 +96,7 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -109,7 +108,7 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -167,7 +166,7 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -178,7 +177,7 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }

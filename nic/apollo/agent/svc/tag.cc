@@ -23,7 +23,7 @@ TagSvcImpl::TagCreate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -35,7 +35,7 @@ TagSvcImpl::TagCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -44,7 +44,7 @@ TagSvcImpl::TagCreate(ServerContext *context,
         api_spec = (pds_tag_spec_t *)
                     core::agent_state::state()->tag_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -55,8 +55,6 @@ TagSvcImpl::TagCreate(ServerContext *context,
             goto end;
         }
         ret = core::tag_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-
         // free the rules memory
         if (api_spec->rules != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
@@ -67,13 +65,21 @@ TagSvcImpl::TagCreate(ServerContext *context,
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -89,7 +95,7 @@ TagSvcImpl::TagUpdate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -101,7 +107,7 @@ TagSvcImpl::TagUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -110,7 +116,7 @@ TagSvcImpl::TagUpdate(ServerContext *context,
         api_spec = (pds_tag_spec_t *)
                     core::agent_state::state()->tag_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -121,8 +127,6 @@ TagSvcImpl::TagUpdate(ServerContext *context,
             goto end;
         }
         ret = core::tag_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-
         // free the rules memory
         if (api_spec->rules != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
@@ -133,13 +137,21 @@ TagSvcImpl::TagUpdate(ServerContext *context,
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -154,7 +166,7 @@ TagSvcImpl::TagDelete(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -165,7 +177,7 @@ TagSvcImpl::TagDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -174,13 +186,24 @@ TagSvcImpl::TagDelete(ServerContext *context,
         key.id = proto_req->id(i);
         ret = core::tag_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
     }
     return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
 }
 
 Status

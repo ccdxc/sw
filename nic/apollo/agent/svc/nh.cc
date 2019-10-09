@@ -24,7 +24,7 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -36,7 +36,7 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -87,7 +87,7 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -99,7 +99,7 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -149,7 +149,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -160,7 +160,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }

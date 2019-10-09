@@ -23,7 +23,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -35,7 +35,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -44,7 +44,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
         api_spec =
             (pds_vnic_spec_t *)core::agent_state::state()->vnic_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -55,19 +55,26 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
             goto end;
         }
         ret = core::vnic_create(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -83,7 +90,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -95,7 +102,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -104,7 +111,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
         api_spec =
             (pds_vnic_spec_t *)core::agent_state::state()->vnic_slab()->alloc();
         if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            ret = SDK_RET_OOM;
             goto end;
         }
         auto request = proto_req->request(i);
@@ -115,19 +122,26 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
             goto end;
         }
         ret = core::vnic_update(&key, api_spec, bctxt);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
             goto end;
         }
     }
 
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
 end:
 
-    // destroy the internal batch
     if (batched_internally) {
+        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::OK;
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
 }
 
 Status
@@ -142,7 +156,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
 
     if ((proto_req == NULL) || (proto_req->vnicid_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -153,7 +167,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -162,13 +176,23 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
         key.id = proto_req->vnicid(i);
         ret = core::vnic_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
     }
 
-    // destroy the internal batch
     if (batched_internally) {
-        pds_batch_destroy(bctxt);
+        // commit the internal batch
+        pds_batch_commit(bctxt);
     }
     return Status::OK;
+
+end:
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
 }
 
 Status

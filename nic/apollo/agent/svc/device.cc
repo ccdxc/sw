@@ -26,12 +26,12 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -43,7 +43,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -103,12 +103,12 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        return Status::CANCELLED;
     }
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::OK;
+        return Status::CANCELLED;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -120,7 +120,7 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
@@ -157,7 +157,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-        return Status::OK;
+        return Status::CANCELLED;
     }
     memset(api_spec, 0, sizeof(pds_device_spec_t));
 
@@ -169,7 +169,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
-            return Status::OK;
+            return Status::CANCELLED;
         }
         batched_internally = true;
     }
