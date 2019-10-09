@@ -62,8 +62,6 @@ header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 @pragma pa_field_union ingress p4_to_arm.l4_2_offset                offset_metadata.l4_2
 header p4_to_arm_header_t p4_to_arm;
 
-header apulu_txdma_to_p4e_header_t txdma_to_p4e;
-
 // layer 0
 header ethernet_t ethernet_0;
 header vlan_tag_t ctag_0;
@@ -346,7 +344,6 @@ parser deparse_ingress {
     extract(p4_to_arm);
     extract(p4i_to_rxdma);
 
-    extract(txdma_to_p4e);
     extract(p4i_i2e);
 
     return parse_ingress_packet;
@@ -390,7 +387,6 @@ parser parse_egress_common {
 
 @pragma xgress egress
 parser parse_egress {
-    extract(txdma_to_p4e);
     return parse_i2e_metadata;
 }
 
@@ -534,7 +530,6 @@ parser deparse_egress {
 
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_recirc);
-    extract(txdma_to_p4e);
     extract(p4e_i2e);
 
     // layer 0

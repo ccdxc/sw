@@ -20,12 +20,12 @@ action flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
             modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(scratch_metadata.flag, nexthop_valid);
             if (nexthop_valid == TRUE) {
-                modify_field(txdma_to_p4e.nexthop_type, nexthop_type);
+                modify_field(p4i_i2e.nexthop_type, nexthop_type);
                 if (nexthop_type == NEXTHOP_TYPE_VPC) {
-                    modify_field(txdma_to_p4e.mapping_lkp_id, nexthop_id);
+                    modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
                 } else {
-                    modify_field(txdma_to_p4e.mapping_bypass, TRUE);
-                    modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.nexthop_id, nexthop_id);
                 }
             }
         }
@@ -133,12 +133,12 @@ action ipv4_flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
             modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(scratch_metadata.flag, nexthop_valid);
             if (nexthop_valid == TRUE) {
-                modify_field(txdma_to_p4e.nexthop_type, nexthop_type);
+                modify_field(p4i_i2e.nexthop_type, nexthop_type);
                 if (nexthop_type == NEXTHOP_TYPE_VPC) {
-                    modify_field(txdma_to_p4e.mapping_lkp_id, nexthop_id);
+                    modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
                 } else {
-                    modify_field(txdma_to_p4e.mapping_bypass, TRUE);
-                    modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.nexthop_id, nexthop_id);
                 }
             }
         }

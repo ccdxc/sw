@@ -15,10 +15,10 @@ overlay_nexthop_group_info:
     phvwr           p.rewrite_metadata_nexthop_type, \
                         d.overlay_nexthop_group_info_d.nexthop_type
     seq             c1, d.overlay_nexthop_group_info_d.num_nexthops, r0
-    phvwr.c1.e      p.txdma_to_p4e_nexthop_id, \
+    phvwr.c1.e      p.p4e_i2e_nexthop_id, \
                         d.overlay_nexthop_group_info_d.nexthop_id
     add.e           r1, r1, d.overlay_nexthop_group_info_d.nexthop_id
-    phvwr.f         p.txdma_to_p4e_nexthop_id, r1
+    phvwr.f         p.p4e_i2e_nexthop_id, r1
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -12,11 +12,11 @@ struct phv_         p;
 %%
 
 mapping_info:
-    seq             c7, k.txdma_to_p4e_nexthop_type, NEXTHOP_TYPE_VPC
-    phvwr.c7        p.p4e_i2e_vpc_id, k.txdma_to_p4e_mapping_lkp_id
+    seq             c7, k.p4e_i2e_nexthop_type, NEXTHOP_TYPE_VPC
+    phvwr.c7        p.p4e_i2e_vpc_id, k.p4e_i2e_mapping_lkp_id
 
-    bbeq            k.txdma_to_p4e_mapping_bypass, TRUE, mapping_miss
-    phvwr           p.rewrite_metadata_nexthop_type, k.txdma_to_p4e_nexthop_type
+    bbeq            k.p4e_i2e_mapping_bypass, TRUE, mapping_miss
+    phvwr           p.rewrite_metadata_nexthop_type, k.p4e_i2e_nexthop_type
 
     bbne            d.mapping_info_d.entry_valid, TRUE, mapping_miss
     // Set bit 31 for overflow hash lookup to work
@@ -75,7 +75,7 @@ mapping_miss:
 mapping_hit:
     seq             c1, d.mapping_info_d.nexthop_valid, TRUE
     phvwr.c1        p.rewrite_metadata_nexthop_type, d.mapping_info_d.nexthop_type
-    phvwr.c1        p.txdma_to_p4e_nexthop_id, d.mapping_info_d.nexthop_id
+    phvwr.c1        p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
     phvwr           p.vnic_metadata_egress_bd_id, d.mapping_info_d.egress_bd_id
     phvwr.e         p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
     phvwr.f         p.egress_recirc_mapping_done, TRUE

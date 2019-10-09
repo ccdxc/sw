@@ -9,7 +9,11 @@ header_type apulu_i2e_metadata_t {
         vnic_id             : 16;
         bd_id               : 16;
         vpc_id              : 16;
-        pad0                : 7;
+        mapping_lkp_id      : 16;
+        nexthop_id          : 16;
+        pad0                : 4;
+        nexthop_type        : 2;
+        mapping_bypass      : 1;
         update_checksum     : 1;
     }
 }

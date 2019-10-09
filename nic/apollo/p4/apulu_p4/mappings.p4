@@ -149,11 +149,11 @@ action mapping_info(entry_valid,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
-    if (txdma_to_p4e.nexthop_type == NEXTHOP_TYPE_VPC) {
-        modify_field(p4e_i2e.vpc_id, txdma_to_p4e.mapping_lkp_id);
+    if (p4e_i2e.nexthop_type == NEXTHOP_TYPE_VPC) {
+        modify_field(p4e_i2e.vpc_id, p4e_i2e.mapping_lkp_id);
     }
-    if (txdma_to_p4e.mapping_bypass == TRUE) {
-        modify_field(rewrite_metadata.nexthop_type, txdma_to_p4e.nexthop_type);
+    if (p4e_i2e.mapping_bypass == TRUE) {
+        modify_field(rewrite_metadata.nexthop_type, p4e_i2e.nexthop_type);
         // return
     }
     if (entry_valid == TRUE) {
@@ -163,7 +163,7 @@ action mapping_info(entry_valid,
         modify_field(scratch_metadata.flag, nexthop_valid);
         if (nexthop_valid == TRUE) {
             modify_field(rewrite_metadata.nexthop_type, nexthop_type);
-            modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+            modify_field(p4e_i2e.nexthop_id, nexthop_id);
         }
         modify_field(egress_recirc.mapping_done, TRUE);
 
@@ -247,9 +247,9 @@ action mapping_info(entry_valid,
 @pragma hbm_table
 table mapping {
     reads {
-        p4e_i2e.mapping_lkp_type        : exact;
-        txdma_to_p4e.mapping_lkp_id     : exact;
-        p4e_i2e.mapping_lkp_addr        : exact;
+        p4e_i2e.mapping_lkp_type    : exact;
+        p4e_i2e.mapping_lkp_id      : exact;
+        p4e_i2e.mapping_lkp_addr    : exact;
     }
     actions {
         mapping_info;

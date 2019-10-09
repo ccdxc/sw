@@ -10,7 +10,7 @@ struct phv_         p;
 %%
 
 nexthop_info:
-    seq             c1, k.txdma_to_p4e_nexthop_id, r0
+    seq             c1, k.p4e_i2e_nexthop_id, r0
     bcf             [c1], nexthop_invalid
     // r1 : packet length
     add             r1, r0, k.capri_p4_intrinsic_packet_len

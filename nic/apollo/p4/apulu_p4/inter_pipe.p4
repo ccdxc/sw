@@ -14,7 +14,6 @@ action tunnel_decap() {
 
 action ingress_to_egress() {
     add_header(capri_p4_intrinsic);
-    add_header(txdma_to_p4e);
     add_header(p4i_i2e);
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
@@ -149,7 +148,6 @@ action p4e_inter_pipe() {
     }
 
     remove_header(p4e_i2e);
-    remove_header(txdma_to_p4e);
     remove_header(egress_recirc);
     if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
         egress_to_rxdma();

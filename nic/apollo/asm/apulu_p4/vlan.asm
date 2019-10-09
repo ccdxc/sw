@@ -54,12 +54,12 @@ vlan_mapping_key:
     bcf             [!c1], vlan_mapping_key_non_ipv4
     phvwr.c1        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4
     phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ipv4_1_dstAddr
-    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r7
+    phvwr.f         p.p4i_i2e_mapping_lkp_id, r7
 
 vlan_mapping_key_non_ipv4:
     phvwr           p.p4i_i2e_mapping_lkp_type, KEY_TYPE_MAC
     phvwr.e         p.p4i_i2e_mapping_lkp_addr, k.ethernet_1_dstAddr
-    phvwr.f         p.txdma_to_p4e_mapping_lkp_id, r6
+    phvwr.f         p.p4i_i2e_mapping_lkp_id, r6
 
 /*****************************************************************************/
 /* error function                                                            */

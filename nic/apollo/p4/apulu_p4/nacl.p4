@@ -9,9 +9,9 @@ action nacl_drop() {
 }
 
 action nacl_redirect(nexthop_type, nexthop_id) {
-    modify_field(txdma_to_p4e.mapping_bypass, TRUE);
-    modify_field(txdma_to_p4e.nexthop_type, nexthop_type);
-    modify_field(txdma_to_p4e.nexthop_id, nexthop_id);
+    modify_field(p4i_i2e.mapping_bypass, TRUE);
+    modify_field(p4i_i2e.nexthop_type, nexthop_type);
+    modify_field(p4i_i2e.nexthop_id, nexthop_id);
     modify_field(control_metadata.flow_miss, FALSE);
 
     modify_field(capri_intrinsic.drop, 0);

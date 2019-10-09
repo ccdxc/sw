@@ -22,12 +22,10 @@ p4i_inter_pipe:
 ingress_to_egress:
     /*
     phvwr           p.p4i_i2e_valid, TRUE
-    phvwr           p.txdma_to_p4e_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          1100 0000 1000
+    bitmap          X100 0000 1000
     */
     phvwr.e         p.{p4i_i2e_valid, \
-                        txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
                         p4i_to_p4plus_classic_nic_ip_valid, \
@@ -37,7 +35,7 @@ ingress_to_egress:
                         capri_p4_intrinsic_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0xC08
+                        capri_txdma_intrinsic_valid}, 0x408
     phvwr.f         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
 
 ingress_to_rxdma:
@@ -45,10 +43,9 @@ ingress_to_rxdma:
     phvwr           p.p4i_to_rxdma_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          0010 0001 1000
+    bitmap          X010 0001 1000
     */
     phvwr           p.{p4i_i2e_valid, \
-                        txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
                         p4i_to_p4plus_classic_nic_ip_valid, \
@@ -70,10 +67,9 @@ ingress_recirc:
     /*
     phvwr           p.ingress_recirc_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
-    bitmap          0000 0010 1000
+    bitmap          X000 0010 1000
     */
     phvwr.e         p.{p4i_i2e_valid, \
-                        txdma_to_p4e_valid, \
                         p4i_to_rxdma_valid, \
                         p4_to_arm_valid, \
                         p4i_to_p4plus_classic_nic_ip_valid, \

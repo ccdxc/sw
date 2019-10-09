@@ -75,11 +75,11 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
         (scratch_metadata.mac == ethernet_1.dstAddr))) {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_IPV4);
         modify_field(p4i_i2e.mapping_lkp_addr, ipv4_1.dstAddr);
-        modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.vpc_id);
+        modify_field(p4i_i2e.mapping_lkp_id, vnic_metadata.vpc_id);
     } else {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_MAC);
         modify_field(p4i_i2e.mapping_lkp_type, ethernet_1.dstAddr);
-        modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.bd_id);
+        modify_field(p4i_i2e.mapping_lkp_id, vnic_metadata.bd_id);
     }
 }
 
@@ -129,11 +129,11 @@ action vni_info(vnic_id, bd_id, vpc_id, rmac) {
         (scratch_metadata.mac == ethernet_2.dstAddr))) {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_IPV4);
         modify_field(p4i_i2e.mapping_lkp_addr, ipv4_2.dstAddr);
-        modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.vpc_id);
+        modify_field(p4i_i2e.mapping_lkp_id, vnic_metadata.vpc_id);
     } else {
         modify_field(p4i_i2e.mapping_lkp_type, KEY_TYPE_MAC);
         modify_field(p4i_i2e.mapping_lkp_type, ethernet_2.dstAddr);
-        modify_field(txdma_to_p4e.mapping_lkp_id, vnic_metadata.bd_id);
+        modify_field(p4i_i2e.mapping_lkp_id, vnic_metadata.bd_id);
     }
 }
 

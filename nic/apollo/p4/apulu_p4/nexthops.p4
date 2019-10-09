@@ -10,13 +10,13 @@ action overlay_nexthop_group_info(nexthop_id, nexthop_type, num_nexthops) {
             (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
     modify_field(rewrite_metadata.nexthop_type, nexthop_type);
-    modify_field(txdma_to_p4e.nexthop_id, scratch_metadata.nexthop_id);
+    modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
 }
 
 @pragma stage 2
 table overlay_nexthop_group {
     reads {
-        txdma_to_p4e.nexthop_id : exact;
+        p4e_i2e.nexthop_id  : exact;
     }
     actions {
         overlay_nexthop_group_info;
@@ -35,13 +35,13 @@ action underlay_nexthop_group_info(nexthop_id, num_nexthops) {
         modify_field(scratch_metadata.nexthop_id, nexthop_id +
             (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
-    modify_field(txdma_to_p4e.nexthop_id, scratch_metadata.nexthop_id);
+    modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
 }
 
 @pragma stage 3
 table underlay_nexthop_group {
     reads {
-        txdma_to_p4e.nexthop_id : exact;
+        p4e_i2e.nexthop_id  : exact;
     }
     actions {
         underlay_nexthop_group_info;
@@ -151,7 +151,7 @@ action ipv6_vxlan_encap(dipo, dmac, smac) {
 
 action nexthop_info(lif, qtype, qid, port, vlan, ip_type, dipo, dmaco, smaco,
                     dmaci) {
-    if (txdma_to_p4e.nexthop_id == 0) {
+    if (p4e_i2e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
     if (control_metadata.rx_packet == FALSE) {
@@ -206,7 +206,7 @@ action nexthop_info(lif, qtype, qid, port, vlan, ip_type, dipo, dmaco, smaco,
 @pragma hbm_table
 table nexthop {
     reads {
-        txdma_to_p4e.nexthop_id : exact;
+        p4e_i2e.nexthop_id  : exact;
     }
     actions {
         nexthop_info;

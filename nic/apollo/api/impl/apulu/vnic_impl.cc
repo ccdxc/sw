@@ -86,7 +86,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     local_mapping_hdl_ = tparams.handle;
 
     // reserve an entry in MAPPING table
-    mapping_key.txdma_to_p4e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
     mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
     sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                      spec->mac_addr, ETH_ADDR_LEN);
@@ -449,7 +449,7 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     mapping_appdata_t mapping_data = { 0 };
 
     // fill the key
-    mapping_key.txdma_to_p4e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
     mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
     sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                      spec->mac_addr, ETH_ADDR_LEN);

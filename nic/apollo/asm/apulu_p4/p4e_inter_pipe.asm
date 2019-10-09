@@ -14,7 +14,7 @@ p4e_inter_pipe:
     phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq
     seq             c1, k.egress_recirc_mapping_done, FALSE
     bcf             [c1], egress_recirc
-    phvwrpair.!c1   p.p4e_i2e_valid, FALSE, p.txdma_to_p4e_valid, FALSE
+    phvwr.!c1       p.p4e_i2e_valid, FALSE
     seq             c1, k.capri_intrinsic_tm_oport, TM_PORT_DMA
     nop.!c1.e
 

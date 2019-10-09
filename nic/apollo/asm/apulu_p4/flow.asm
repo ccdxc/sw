@@ -51,11 +51,11 @@ label_flow_hit:
     phvwr       p.ingress_recirc_flow_done, TRUE
     seq         c1, d.flow_hash_d.nexthop_valid, TRUE
     bcf         [!c1], label_flow_hit_nexthop_done
-    phvwr.c1    p.txdma_to_p4e_nexthop_type, d.flow_hash_d.nexthop_type
+    phvwr.c1    p.p4i_i2e_nexthop_type, d.flow_hash_d.nexthop_type
     seq         c1, d.flow_hash_d.nexthop_type, NEXTHOP_TYPE_VPC
-    phvwr.c1    p.txdma_to_p4e_mapping_lkp_id, d.flow_hash_d.nexthop_id
-    phvwr.!c1   p.txdma_to_p4e_mapping_bypass, TRUE
-    phvwr.!c1   p.txdma_to_p4e_nexthop_id, d.flow_hash_d.nexthop_id
+    phvwr.c1    p.p4i_i2e_mapping_lkp_id, d.flow_hash_d.nexthop_id
+    phvwr.!c1   p.p4i_i2e_mapping_bypass, TRUE
+    phvwr.!c1   p.p4i_i2e_nexthop_id, d.flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
     phvwr.e     p.p4i_i2e_session_id, d.flow_hash_d.session_id
     phvwr.f     p.p4i_i2e_flow_role, d.flow_hash_d.flow_role

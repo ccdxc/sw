@@ -514,7 +514,7 @@ mappings_init (void)
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
-    key.txdma_to_p4e_mapping_lkp_id = g_vpc_id1;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
     memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip1, 4);
     mapping_info->entry_valid = 1;
     mapping_info->nexthop_valid = 1;
@@ -527,7 +527,7 @@ mappings_init (void)
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
-    key.txdma_to_p4e_mapping_lkp_id = g_vpc_id1;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
     memcpy(key.p4e_i2e_mapping_lkp_addr, &g_sip1, 4);
     mapping_info->entry_valid = 1;
     mapping_info->nexthop_valid = 1;
