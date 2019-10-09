@@ -1672,9 +1672,9 @@ func (tb *TestBed) PrintResult() {
 }
 
 // Cleanup cleans up the testbed
-func (tb *TestBed) Cleanup() error {
+func (sm *SysModel) Cleanup() error {
 	// collect all log files
-	tb.CollectLogs()
+	sm.CollectLogs()
 	return nil
 }
 

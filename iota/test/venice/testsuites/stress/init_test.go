@@ -71,7 +71,7 @@ var _ = BeforeSuite(func() {
 // AfterSuite handles cleanup after test suite completes
 var _ = AfterSuite(func() {
 	if ts != nil && ts.tb != nil {
-		ts.tb.Cleanup()
+		ts.model.Cleanup()
 		ts.tb.PrintResult()
 	}
 })
