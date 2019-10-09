@@ -1,6 +1,7 @@
 #ifndef _PAL_CPLD_H_
 #define _PAL_CPLD_H_
 #include <stdint.h>
+#include <stdbool.h>
 #include "pal_types.h"
 
 #define CPLD_REGISTER_REVISION              0x00
@@ -11,6 +12,9 @@
 #define CPLD_REGISTER_CORE_TEMP             0x16
 #define CPLD_REGISTER_HBM_TEMP              0x17
 #define CPLD_REGISTER_BOARD_TEMP            0x18
+#define CPLD_PERSISTENT_REG                 0x20
+#define CPLD_CONF_FLASH_READ_BYTE           0x50
+#define CPLD_DATA_CACHE_END_ADDR            0x5f
 #define CPLD_REGISTER_ID                    0x80
 
 //CPLD ID and REV
@@ -49,21 +53,40 @@
 #define MDIO_WR_ENA             0x4
 
 //Others.
-#define GPIOHANDLES_MAX 64
+#define CPLD_MAX_RETRY              600
+#define CPLD_HWLOCK_MASK            0x07
+#define CPLD_READ_STATUS_MASK       0x31
+#define CPLD_COMPLETION_STATUS_BIT1 0x80
 
+#define CPLD_CFG_FLASH_SIZE         (16 * 2175)
+#define CPLD_FLASH_TRANS_SIZE       16
+
+// GPIO Definitions
+#define GPIO_3_POWER_CYCLE 0x3
+#define GPIO_EN 0x1
+
+#define GPIOHANDLES_MAX 64
 #define GPIOHANDLE_REQUEST_INPUT        (1UL << 0)
 #define GPIOHANDLE_REQUEST_OUTPUT       (1UL << 1)
 #define GPIOHANDLE_REQUEST_ACTIVE_LOW   (1UL << 2)
 #define GPIOHANDLE_REQUEST_OPEN_DRAIN   (1UL << 3)
 #define GPIOHANDLE_REQUEST_OPEN_SOURCE  (1UL << 4)
+typedef void (*cpld_upgrade_status_cb_t)(pal_cpld_status_t, int, void *ctxt);
 
+int cpld_reg_bit_set(int reg, int bit);
+int cpld_reg_bit_reset(int reg, int bit);
 int cpld_reg_rd(uint8_t addr);
 int cpld_reg_wr(uint8_t addr, uint8_t data);
 int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy);
 int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy);
 int cpld_mdio_smi_rd(uint8_t addr, uint16_t* data, uint8_t phy);
 int cpld_mdio_smi_wr(uint8_t addr, uint16_t data, uint8_t phy);
-int write_cpld_gpios(int gpio, uint32_t data);
+int pal_write_gpios(int gpio, uint32_t data);
+void cpld_reload_reset(void);
+bool cpld_verify_idcode(void);
+int cpld_erase(void);
+int cpld_read_flash(uint8_t *buf, uint32_t len);
+int cpld_write_flash(const uint8_t *buf, uint32_t len, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg);
 /* CPLD APIs */
 int pal_is_qsfp_port_psnt(int port_no);
 int pal_qsfp_set_port(int port);
@@ -79,4 +102,11 @@ int pal_get_cpld_id(void);
 void pal_write_core_temp(int data);
 void pal_write_hbm_temp(int data);
 void pal_write_board_temp(int data);
+void pal_cpld_reload_reset(void);
+bool pal_cpld_verify_idcode(void);
+int pal_cpld_erase(void);
+int pal_cpld_read_flash(uint8_t *buf, uint32_t size);
+int pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg);
+void pal_power_cycle(void);
+bool pal_cpld_hwlock_enabled(void);
 #endif

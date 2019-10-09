@@ -181,7 +181,7 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevutils.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                             /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/cpld                                   /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                                /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libsensor.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmnet.so                             /nic/lib/

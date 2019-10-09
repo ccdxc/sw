@@ -41,6 +41,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "pal_types.h"
 #include "pal_locks.h"
 #include "pal_i2c.h"

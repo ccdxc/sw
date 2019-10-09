@@ -47,5 +47,11 @@ typedef enum uuid_e {
     PCIEMGR     =       2
 } uuid_t;
 
+typedef enum {
+    PAL_UPGRADE_COMPLETED = 0,
+    PAL_UPGRADE_ERASED_DONE,
+    PAL_UPGRADE_WRITE_DONE,
+    PAL_UPGRADE_VERIFY_DONE
+} pal_cpld_status_t;
 #endif
 

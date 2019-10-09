@@ -3,7 +3,6 @@
 nic/build/aarch64/iris/bin/capview                                              /platform/bin/
 nic/build/aarch64/iris/bin/palreg                                               /platform/bin/
 nic/build/aarch64/iris/bin/cpldapp                                              /platform/bin/
-nic/build/aarch64/iris/bin/cpld                                                 /platform/bin/
 nic/build/aarch64/iris/bin/palutils                                             /platform/bin/
 nic/build/aarch64/iris/bin/captrace                                             /platform/bin/
 nic/build/aarch64/iris/bin/memtun                                               /platform/bin/
@@ -60,6 +59,10 @@ nic/sdk/third-party/ncurses/aarch64/*.so                                       /
 platform/tools/start-nicmgr-haps.sh                                             /platform/tools/
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
+platform/src/app/cpld/bin/*.bin                                                 /platform/etc/cpld/
+platform/src/app/pciemgrd/scripts/pcie_hostdn.sh                                /platform/tools/
+platform/src/app/cpld/cpldapp.sh                                                /platform/tools/
+platform/src/app/cpld/reboot.sh                                                 /platform/tools/
 
 # Oprom
 nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/

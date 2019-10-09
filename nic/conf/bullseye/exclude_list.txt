@@ -9,7 +9,7 @@ exclude folder ../../platform/src/lib/intrutils/
 exclude folder ../../platform/src/app/capmon/
 exclude folder ../../platform/src/app/captrace/
 exclude folder ../../platform/src/app/capview/
-exclude folder ../../platform/src/app/cpldapp/
+exclude folder ../../platform/src/app/cpld/
 exclude folder ../../platform/src/app/cpmem/
 exclude folder ../../platform/src/app/regio/
 exclude folder ../hal/test/gtests/

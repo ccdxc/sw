@@ -142,6 +142,7 @@ nic/apollo/tools/sysreset.sh                                      /nic/tools/
 nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
+nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
 
 # platform modules

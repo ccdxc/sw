@@ -16,10 +16,6 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pal/include/pal.h"
 
-typedef u_int8_t bool;
-#define true 1
-#define false 0
-
 #define SW_PRINT pciesys_logdebug
 #define SWPRINT  pciesys_logdebug
 #define SWPRINTF pciesys_logdebug

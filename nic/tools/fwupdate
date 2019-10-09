@@ -5,6 +5,8 @@
 #
 
 R=""
+export LD_LIBRARY_PATH=/platform/lib:/nic/lib:$LD_LIBRARY_PATH
+export PATH=/platform/bin:$PATH
 if [ `arch` != aarch64 ]; then
     export PATH=`pwd`/bin:$PATH
     R=`pwd`/data
@@ -22,6 +24,9 @@ MTDPART_MAINFWB=mainfwb
 MTDPART_GOLDFW=goldfw
 MTDPART_DIAGFW=diagfw
 MTDPART_FWSEL=fwsel
+
+LOCK_TIMEOUT_SECS=600
+LOCK_OPT=nowait
 
 CMDLINE="$*"
 
@@ -48,6 +53,10 @@ usage: fwupdate [--from-legacy] action [options]
     -p pkgfile      - Package filename
     -I              - Ignore images missing from package
     -D              - Dry-run
+    -x              - Skip installing CPLD bitfiles
+    -R              - Force CPLD installation (ignore rev)
+    -W (wait|break) - Lock wait operation (default: nowait)
+    -T secs         - Lock timeout in second (default 600)
 
   fwnames:
     altfw           - Alternate (non-running) main firmware (for -i)
@@ -56,7 +65,8 @@ usage: fwupdate [--from-legacy] action [options]
     goldfw          - Golden recovery image (for -i or -s)
     diagfw          - Diag firmware (for -i or -s)
     uboot           - U-Boot boot loader (for -i)
-    all             - Synonym for "altfw goldfw diagfw uboot". Implies -I
+    cpld            - CPLD bitfile (for -i)
+    all             - Synonym for "altfw goldfw diagfw uboot cpld". Implies -I
 EOF
 exit 1
 }
@@ -64,6 +74,7 @@ exit 1
 LOGDIR=$R/obfl
 LOGFILE=$LOGDIR/fwupdate.log
 LOGMAXSZ=1048576
+PIDFILE=$R/var/run/fwupdate.pid
 
 do_log_emit()
 {
@@ -82,7 +93,7 @@ do_log_emit()
         mv $LOGFILE ${LOGFILE}.1
         : > $LOGFILE
     fi
-    echo "$1 [`date "+%Y-%m-%d %H:%M:%S"`] fwupdate:$dry $2" >> $LOGFILE
+    echo "$1 [`date "+%Y-%m-%d %H:%M:%S"`] fwupdate[$$]:$dry $2" >> $LOGFILE
     ) 2>/dev/null
 }
 
@@ -112,7 +123,7 @@ log_error()
         shift
     fi
     log_emit E "$*"
-    if [ $emit ]; then
+    if [ $emit -ne 0 ]; then
         echo "$*" >&2
     fi
 }
@@ -129,6 +140,28 @@ fatal_err()
     exit 1
 }
 
+log_eval()
+{
+    local x res
+    local want_echo=1
+
+    if [ "X-$1" = "X--n" ]; then
+        want_echo=0
+        shift
+    fi
+    set -o pipefail
+    eval "$@" 2>&1 |
+    while read x; do
+        log_info "$x"
+        if [ $want_echo -ne 0 ]; then
+            echo $x
+        fi
+    done
+    res=$?
+    set +o pipefail
+    return $res
+}
+
 # Globals
 PKG=""
 DRY_RUN=""
@@ -139,6 +172,8 @@ FROM_LEGACY=0
 TO_LEGACY=0
 IS_CUSTOM_INSTALLER=0
 VERIFY_FWNAME=""
+SKIP_BITFILES=0
+CPLD_IGNORE_REV=0
 D=""
 
 # Legacy support
@@ -146,9 +181,32 @@ fwobj_to_fwtype=fwobj_to_fwtype
 fwtype_to_files=fwtype_to_files
 file_to_target=file_to_target
 
+CPLDRESET=$R/tmp/cpldreset
+CACHEFILE=$R/var/run/fwupdate.cache
+
+D=$R/tmp/update$$
+RESETFLAG=$R/tmp/fwresetflag
+MANIFEST=$D/MANIFEST
+INSTALLER=$D/installer
+ERR=$D/err.out
+TMPFILE=$D/tmpfile
+FRU=$R/tmp/fru.json
+
+mkdir -p $D
+
+finish() {
+    pcie_reset_release
+    rm -rf $D
+    release_lock
+}
+trap finish EXIT
+trap "" INT QUIT PIPE HUP TSTP
+
 main()
 {
     local action need_pkg opt
+
+    set +o pipefail
 
     action=NONE
     need_pkg=0
@@ -170,7 +228,7 @@ main()
         IS_CUSTOM_INSTALLER=1
         shift
     fi
-    while getopts "i:vV:rs:SlLp:DIC" opt; do
+    while getopts "i:vV:rs:SlLp:DICxRW:T:" opt; do
         case "$opt" in
         i) action=INSTALL; need_pkg=1; INSTALL_IMAGES=$OPTARG; ;;
         v) action=VERIFY_PACKAGE; need_pkg=1; ;;
@@ -184,35 +242,24 @@ main()
         p) PKG=$OPTARG; ;;
         D) DRY_RUN=dry_run; ;;
         I) IGNORE_MISSING=1; ;;
+        x) SKIP_BITFILES=1 ;;
+        R) CPLD_IGNORE_REV=1 ;;
+        W) LOCK_OPT=$OPTARG; ;;
+        T) LOCK_TIMEOUT_SECS=$OPTARG; ;;
         *) usage; ;;
         esac
     done
 
+    if [ "$LOCK_OPT" != "wait" -a "$LOCK_OPT" != "nowait" -a \
+        "$LOCK_OPT" != "break" ]; then
+        usage
+    fi
+    # Check correctness of lock timeout
+    printf "%d" "$LOCK_TIMEOUT_SECS" >/dev/null 2>&1 || usage
+
     if [ $need_pkg -ne 0 ]; then
         [ -z "$PKG" ] && usage
     fi
-    D=/tmp/update$$
-    mkdir -p $D
-    MANIFEST=$D/MANIFEST
-    INSTALLER=$D/installer
-    RESETFLAG=$D/resetflag
-    ERR=$D/err.out
-    TMPFILE=$D/tmpfile
-    CACHEFILE=$R/var/run/fwupdate.cache
-
-    finish() {
-        pcie_reset_release
-        rm -rf $D
-    }
-    trap finish EXIT
-
-    terminate() {
-        echo ""
-        log_error -e "ABORTED"
-        finish
-        exit 1
-    }
-    trap terminate INT QUIT
 
     if [ $need_pkg -ne 0 ]; then
         tar xfO $PKG MANIFEST > $MANIFEST 2>$ERR
@@ -226,9 +273,29 @@ main()
                 log_info "Launching custom package installer"
                 echo "===> Found custom package installer; launching..."
                 launch_custom_installer "$@"
-                fatal "custom installer failed"
+                if [ $? -ne 0 ]; then
+                    fatal "custom installer failed"
+                else
+                    return 0
+                fi
             fi
         fi
+        s=`mani_opt_value .installer.resources`
+        if [ "$s" != "null" ]; then
+            extract_resources
+            export PATH=$D/bin:$PATH
+            export FWUPDATE_RESOURCES=$D
+        fi
+    fi
+
+    # Skip cpld operations for systems with missing or incompatible cpldapp
+    if which cpldapp >/dev/null 2>&1; then
+        r=`printf "%d" \`cpldapp -r 0x0\` 2>/dev/null`
+        if [ $? -ne 0 ]; then
+            SKIP_BITFILES=1
+        fi
+    else
+        SKIP_BITFILES=1
     fi
 
     set -e -u
@@ -257,7 +324,13 @@ main()
 
     INSTALL)
         log_info "BEGIN $CMDLINE"
+        take_lock $LOCK_OPT || fatal "Operation already in progress"
         install_images
+        if [ $IS_CUSTOM_INSTALLER -eq 1 -a -x $D/bin/postinstall.sh ]; then
+            log_info "Executing post-install script"
+            echo "===> Executing post-install script"
+            $DRY_RUN run_post_install
+        fi
         log_info "END"
         ;;
 
@@ -267,6 +340,7 @@ main()
 
     SET_STARTUP_FW)
         log_info "BEGIN $CMDLINE"
+        take_lock $LOCK_OPT || fatal "Operation already in progress"
         set_startup_image
         log_info "END"
         ;;
@@ -314,6 +388,64 @@ alt_fw_of()
     esac
 }
 
+uptime_secs()
+{
+    ( cat $R/proc/uptime 2>/dev/null || echo 0 ) | sed -e 's/\..*//'
+}
+
+take_lock()
+{
+    local wait_op="$1"
+    local pid s t_now t_lock t_held log_first
+
+    log_info "Taking lock"
+    log_first=0
+    while true; do
+        t_now=`uptime_secs`
+        s=`cat $PIDFILE 2>/dev/null || echo "0 0"`
+        set -- $s; pid=$1; t_lock=$2
+        if [ $pid -eq 0 -o $pid -eq $$ ]; then
+            break
+        fi
+        if kill -0 $pid 2>/dev/null; then
+            t_held=$(( $t_now - $t_lock ))
+            if [ "$wait_op" = "break" -o \
+                 $t_held -gt $LOCK_TIMEOUT_SECS -o \
+                 $t_held -lt 0 ]; then
+                log_error "Breaking lock held for $t_held seconds" 
+                break
+            fi
+            if [ "$wait_op" = "nowait" ]; then
+                log_info "Lock already held; returning"
+                return 1
+            else
+                if [ $log_first -eq 0 ]; then
+                    log_info "Waiting for pid $pid to terminate"
+                    log_first=1
+                fi
+                sleep 1
+            fi
+        else
+            break
+        fi
+    done
+    t_now=`uptime_secs`
+    echo "$$ $t_now" > $PIDFILE
+    log_info "Lock taken"
+}
+
+release_lock()
+{
+    local pid s t_lock
+
+    s=`cat $PIDFILE 2>/dev/null || echo "0 0"`
+    set -- $s; pid=$1; t_lock=$2
+    if [ $pid -eq $$ ]; then
+        log_info "Releasing lock"
+        rm -f $PIDFILE
+    fi
+}
+
 launch_custom_installer()
 {
     name=`mani_opt_value ".installer.name"`
@@ -338,7 +470,46 @@ launch_custom_installer()
         fatal "installer extraction failed"
     fi
     chmod +x $INSTALLER
-    exec $INSTALLER --custom-installer "$@"
+    $INSTALLER --custom-installer "$@"
+}
+
+extract_resources()
+{
+    name=`mani_opt_value ".installer.resources.name"`
+    if [ "$name" = "null" ]; then
+        fatal "resources not found"
+    fi
+    algo=`mani_opt_value ".installer.resources.verify.algorithm"`
+    if [ "$algo" = "null" ]; then
+        fatal "resources hash algorithm not found"
+    fi
+    check_hash_algo "$algo"
+    want_hash=`mani_opt_value ".installer.resources.verify.hash"`
+    if [ "$want_hash" = "null" ]; then
+        fatal "resources hash not found"
+    fi
+    got_hash=`tar xfO $PKG $name | hash $algo`
+    if [ "$got_hash" != "$want_hash" ]; then
+        fatal "resources verifcation failed"
+    fi
+    ( tar xfO $PKG $name | ( cd $D && tar xf - ) ) 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "resource extraction failed"
+    fi
+}
+
+run_post_install()
+{
+    local res
+
+    set +e
+    log_eval $D/bin/postinstall.sh $D $PKG $MANIFEST
+    if [ $? -ne 0 ]; then
+        fatal "FAILED"
+    fi
+    set -e
+    log_info "OK"
+    echo "OK"
 }
 
 # find_mmcpart_bypartuuid D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
@@ -393,10 +564,16 @@ get_kernel_fwname()
 # get_root_mount_uuid
 get_root_mount_uuid()
 {
-    local devid partno dev s
+    local c devid partno dev s
 
+    c=`grep '/ro ' $R/proc/1/mountinfo | grep 'squashfs' | wc -l`
+    if [ $c -gt 1 ]; then
+        log_eval -n "cat $R/proc/1/mountinfo"
+        fatal "get_root_mount_uuid: multiple root mounts found"
+    fi
     devid=`grep '/ro ' $R/proc/1/mountinfo | grep 'squashfs' | awk '{ print $3 }'`
     if [ -z "$devid" ]; then
+        log_eval -n "cat $R/proc/1/mountinfo"
         fatal "get_root_mount_uuid: can't find root mountinfo"
     fi
     partno=`cat $R/sys/dev/block/$devid/partition`
@@ -419,6 +596,9 @@ get_running_fwname()
     case $fwname in
     mainfwa|mainfwb)
         uuid=`get_root_mount_uuid`
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
         fwname=`partuuid_to_fwname $uuid`
         ;;
     *)
@@ -441,20 +621,6 @@ partuuid_to_fwname()
     fi
 }
 
-# Get root= partition
-# NOT USED
-get_boot_part()
-{
-    local cmd s
-
-    cmd=`cat $R/proc/cmdline`
-    s=`expr "$cmd" : '.*root=PARTUUID=\([0-9a-zA-Z-]*\)' | tr '[a-z]' '[A-Z]'`
-    if [ -z "$s" ]; then
-        fatal "get_boot_part: can't find root PARTUUID"
-    fi
-    echo $s
-}
-
 to_blocks()
 {
     local size=$1 blksz=$2
@@ -464,13 +630,6 @@ to_blocks()
 mani_keys()
 {
     local cmd="$1 | keys | join(\" \") | tostring"
-
-    jq -r "$cmd" $MANIFEST
-}
-
-mani_numkeys()
-{
-    local cmd="$1 | keys | length"
 
     jq -r "$cmd" $MANIFEST
 }
@@ -492,6 +651,13 @@ mani_value()
         fatal "mani_value: $1 not found"
     fi
     echo $s
+}
+
+mani_length()
+{
+    local cmd="$1 | length"
+
+    jq -r "$cmd" $MANIFEST
 }
 
 # Given a fwname and fileobj, returns the device and partition name
@@ -659,25 +825,26 @@ install_mtd()
     log_info "Writing $path to $dev offset $offs ($size bytes)"
     seek=`to_blocks $offs $ersz`
     blks=`to_blocks $size $ersz`
-    echo -n "Erasing..."
+    echo "Erasing..."
     flash_erase -q $dev $offs $blks 2>$ERR
     if [ $? -ne 0 ]; then
         fatal_err "Flash erase failed"
     fi
-    echo " OK"
-    echo -n "Writing..."
+    echo "OK"
+    echo "Writing..."
     ( tar xfO $PKG $path | dd of=$dev bs=$ersz seek=$seek status=none ) 2>$ERR
     if [ $? -ne 0 ]; then
         fatal_err "Flash write failed"
     fi
-    echo " OK"
-    echo -n "Verifying..."
+    echo "OK"
+    echo "Verifying..."
     got_hash=`dd if=$dev bs=$ersz skip=$seek count=$blks status=none | head -c $size | hash $algo` 2>$ERR
     if [ "$got_hash" != "$hash" ]; then
-        echo " FAILED"
+        echo "FAILED"
         fatal_err "Flash verify failed"
     fi
-    echo " OK"
+    echo "OK"
+    log_info "OK"
     set -e
 }
 
@@ -691,20 +858,21 @@ install_mmc()
     set +e
     echo "Writing $path to $dev ($size bytes)..."
     log_info "Writing $path to $dev ($size bytes)"
-    echo -n "Writing..."
+    echo "Writing..."
     tar xfO $PKG $path | dd of=$dev status=none 2>$ERR
     if [ $? -ne 0 ]; then
         fatal_err "MMC write failed"
     fi
-    echo " OK"
-    echo -n "Verifying..."
+    echo "OK"
+    echo "Verifying..."
     dblks=`to_blocks $size 512`
     got_hash=`dd if=$dev bs=512 count=$dblks status=none | head -c $size | hash $algo` 2>$ERR
     if [ "$got_hash" != "$hash" ]; then
-        echo " FAILED"
+        echo "FAILED"
         fatal_err "MMC verify failed"
     fi
     echo "OK"
+    log_info "OK"
     set -e
 }
 
@@ -757,20 +925,11 @@ legacy_fwobj_to_fwtype()
 }
 
 # Verify the contents of a naples_fw.tar file
-verify_package()
+verify_package_firmware()
 {
     local fwobj want_type want_files remainder found i fileobj
-    local fileobj path algo want_hash got_hash swver
+    local fileobj path algo want_hash got_hash
 
-    echo "===> Verifying package"
-    log_info "Verifying package"
-    if [ `mani_numkeys .firmware` -eq 0 ]; then
-        fatal "verify_package: No firmware content"
-    fi
-    swver=`mani_opt_value ".software_version"`
-    if [ "$swver" != "null" ]; then
-        log_info "Software version $swver"
-    fi
     for fwobj in `mani_keys .firmware`; do
         #
         # File collection verification
@@ -778,7 +937,7 @@ verify_package()
         want_type=`$fwobj_to_fwtype $fwobj`
         want_files=`$fwtype_to_files $want_type`
         if [ `mani_value .firmware.$fwobj.type` != $want_type ]; then
-            fatal "verify_package: $fwobj: invalid image type"
+            fatal "verify_package_firmware: $fwobj: invalid image type"
         fi
         for fileobj in `mani_keys ".firmware.$fwobj.files"`; do
             remainder=""
@@ -791,12 +950,12 @@ verify_package()
                 fi
             done
             if [ ! $found ]; then
-                fatal "verify_package: $fwobj: unexpected file type $fileobj"
+                fatal "verify_package_firmware: $fwobj: unexpected file type $fileobj"
             fi
             want_files=$remainder
         done
         if [ ! -z "$want_files" ]; then
-            fatal "verify_package: $fwobj: expected file type $want_files not found"
+            fatal "verify_package_firmware: $fwobj: expected file type $want_files not found"
         fi
 
         #
@@ -805,26 +964,79 @@ verify_package()
         for fileobj in `mani_keys ".firmware.$fwobj.files"`; do
             path=`mani_opt_value ".firmware.$fwobj.files.$fileobj.name"`
             if [ "$path" = "null" ]; then
-                fatal "verify_package: $fwobj: required file data not found"
+                fatal "verify_package_firmware: $fwobj: required file data not found"
             fi
-            echo -n "Verifying package file: $path..."
+            echo "Verifying package file: $path..."
             algo=`mani_opt_value ".firmware.$fwobj.files.$fileobj.verify.algorithm"`
             if [ "$algo" = "null" ]; then
-                fatal "verify_package: $path: required hash algorithm not found"
+                fatal "verify_package_firmware: $path: required hash algorithm not found"
             fi
             check_hash_algo "$algo"
             want_hash=`mani_opt_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
             if [ "$want_hash" = "null" ]; then
-                fatal "verify_package: $path: required hash value not found"
+                fatal "verify_package_firmware: $path: required hash value not found"
             fi
             got_hash=`tar xfO $PKG $path | hash $algo`
             if [ "$got_hash" != "$want_hash" ]; then
-                echo " FAILED"
-                fatal "verify_package: $path: verifcation failed"
+                echo "FAILED"
+                fatal "verify_package_firmware: $path: verifcation failed"
             fi
-            echo " OK"
+            echo "OK"
         done
     done
+}
+
+verify_package_bitfiles()
+{
+    local bitfileslength counter path algo want_hash got_hash
+
+    bitfileslength=`mani_length .bitfiles`
+    for counter in `seq 1 $bitfileslength`
+    do
+        #path=`jq -r ".bitfiles[$counter - 1].name" $MANIFEST`
+        path=`mani_value ".bitfiles[$counter - 1].name"`
+        if [ "$path" = "null" ]; then
+            fatal "verify_package_bitfiles: required file data not found"
+        fi
+        echo "Verifying bitfile file: $path..."
+        algo=`mani_value ".bitfiles[$counter - 1].verify.algorithm"`
+        if [ "$algo" = "null" ]; then
+            fatal "verify_package_bitfiles: $path: required hash algorithm not found"
+        fi
+        want_hash=`mani_value ".bitfiles[$counter - 1].verify.hash"`
+        if [ "$want_hash" = "null" ]; then
+            fatal "verify_package_bitfiles: $path: required hash value not found"
+        fi
+        got_hash=`tar xfO $PKG $path | hash $algo`
+        if [ "$got_hash" != "$want_hash" ]; then
+            echo "FAILED"
+            fatal "verify_package_bitfiles: $path: verifcation failed"
+        fi
+        echo "OK"
+    done
+}
+
+# Verify the contents of a naples_fw.tar file
+verify_package()
+{
+    local content=0
+    echo "===> Verifying package"
+    log_info "Verifying package"
+    swver=`mani_opt_value ".software_version"`
+    if [ "$swver" != "null" ]; then
+        log_info "Software version $swver"
+    fi
+    if [ `mani_length .firmware` -ne 0 ]; then
+        content=1
+        verify_package_firmware
+    fi
+    if [ `mani_length .bitfiles` -ne 0 ]; then
+        content=1
+        verify_package_bitfiles
+    fi
+    if [ $content -eq 0 ]; then
+        fatal "verify_package: No content"
+    fi
     echo "Package file OK"
 }
 
@@ -869,7 +1081,7 @@ do_verify_image()
     fwtype=`$fwobj_to_fwtype $fwobj`
     files=`$fwtype_to_files $fwtype`
     for f in $files; do
-        echo -n "Verifying $f..."
+        echo "Verifying $f..."
         s=`$file_to_target $fwname $f`; set -- $s; dev=$1; part=$2; offs=$3
         case "$dev" in
         mtd)
@@ -915,10 +1127,10 @@ do_verify_image()
             ;;
         esac
         if [ "$got_hash" != "$hash" ]; then
-            echo " FAILED"
+            echo "FAILED"
             fatal "verify_image: Verify failed"
         fi
-        echo " OK"
+        echo "OK"
     done
 }
 
@@ -945,13 +1157,13 @@ invalidate_mtd()
     local dev=$1 offs=$2
 
     set +e
-    echo -n "Invalidating $dev..."
+    echo "Invalidating $dev..."
     log_info "Invalidating $dev"
     flash_erase -q $dev $offs 1 2>$ERR
     if [ $? -ne 0 ]; then
         fatal_err "Failed to invalidate $dev"
     fi
-    echo " OK"
+    echo "OK"
     set -e
 }
 
@@ -959,9 +1171,9 @@ invalidate_mmc()
 {
     local dev=$1
 
-    echo -n "===> Invalidating $dev..."
+    echo "===> Invalidating $dev..."
     dd if=/dev/zero of=$dev bs=512 count=1 status=none
-    echo " OK"
+    echo "OK"
 }
 
 # Invalidate the existing fwname
@@ -993,18 +1205,27 @@ pcie_swapin()
     local path=$1
     cat << EOF > ${path}.new
 #!/bin/sh
-touch $RESETFLAG
+echo \$0 "\$@" > $RESETFLAG
+echo "Waiting for firmware update to terminate"
+while kill -0 $$ 2>/dev/null; do sleep 1; done; exec $path "\$@"
 EOF
-    chmod +x ${path}.new
-    ln $path ${path}.old
-    mv ${path}.new $path
+    if [ $? -eq 0 ]; then
+        if chmod +x ${path}.new; then
+            if [ ! -f ${path}.real ]; then
+                ln $path ${path}.real
+            fi
+            test -f ${path}.real && mv ${path}.new $path
+        fi
+    else
+        rm -f ${path}.new
+    fi
 }
 
 pcie_swapout()
 {
     local path=$1
-    if [ -f ${path}.old ]; then
-        mv ${path}.old $path
+    if [ -f ${path}.real ]; then
+        ln -f ${path}.real $path
     fi
 }
 
@@ -1017,12 +1238,15 @@ pcie_reset_hold()
 
 pcie_reset_release()
 {
+    local op
+
     pcie_swapout $R/sbin/reboot
     pcie_swapout $R/nic/tools/sysreset.sh
     if [ -f $RESETFLAG ]; then
         rm -rf $D
-        log_info "Issuing reset"
-        $R/nic/tools/sysreset.sh
+        op=`cat $RESETFLAG`
+        log_info "Delayed operation will occur: $op"
+        rm -f $RESETFLAG
         return 1
     fi
 }
@@ -1035,7 +1259,7 @@ critical_section_begin()
         return
     fi
     case "$fwtype" in
-    uboot)
+    uboot|cpld)
         pcie_reset_hold || true
         ;;
     *)
@@ -1050,8 +1274,8 @@ critical_section_end()
         return
     fi
     case "$fwtype" in
-    uboot)
-        pcie_reset_release || true
+    uboot|cpld)
+        pcie_reset_release
         ;;
     *)
         ;;
@@ -1080,7 +1304,36 @@ install_fwobj()
         hash=`mani_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
         do_install_file $fwname $fwobj $fileobj $path $hash $algo
     done
-    critical_section_end $fwtype
+    critical_section_end $fwtype || fatal "Aborted due to pending reset"
+}
+
+# Install a bitfile to the CPLD
+install_cpld_bitfile()
+{
+    local path=$1
+    local status
+
+    set +e
+    log_info "Writing CPLD bitfile $path"
+    rm -f $TMPFILE
+    tar xfO $PKG $path > $TMPFILE 2>$ERR
+    if [ $? -ne 0 ]; then
+        fatal_err "install_cpld_bitfile: $path failed"
+    fi
+    if [ ! -s $TMPFILE ]; then
+        fatal "install_cpld_bitfile: $path invalid file"
+    fi
+    log_eval cpldapp -writeflash $TMPFILE
+    status=$?
+    rm -f $TMPFILE
+    if [ $status -eq 0 ]; then
+        echo "OK"
+        log_info "OK"
+        touch $CPLDRESET
+    else
+        fatal "install_cpld_bitfile: cpld program FAILED"
+    fi
+    set -e
 }
 
 fwname_to_fwobj()
@@ -1106,10 +1359,10 @@ check_install_list()
                 fatal "check_install_list: Cannot install over running firmware"
             fi
             ;;
-        altfw|goldfw|diagfw|uboot)
+        altfw|goldfw|diagfw|uboot|cpld)
             ;;
         all)
-            INSTALL_IMAGES="altfw goldfw diagfw uboot"
+            INSTALL_IMAGES="altfw goldfw diagfw uboot cpld"
             IGNORE_MISSING=1
             ;;
         *)
@@ -1117,6 +1370,70 @@ check_install_list()
             ;;
         esac
     done
+}
+
+do_install_firmware_images()
+{
+    local fwname fwobj
+
+    # Iterate over the desired images
+    for fwname in $INSTALL_IMAGES; do
+        if [ $fwname = "altfw" ]; then
+            fwname=$ALT_FW
+        fi
+        fwobj=`fwname_to_fwobj $fwname`
+        install_fwobj $fwobj $fwname
+    done
+}
+
+do_install_bitfile_images()
+{
+    local running_cpld_rev part_number bitfileslength partnumberlength i
+    local bitfile_cpld_rev manipartnumber found mani_cpld_rev path
+
+    # Get current id and revision of CPLD.
+    running_cpld_rev=`printf "%d" \`cpldapp -r 0x0\``
+
+    # Get the part number of the system.
+    part_number=`jq -r '.["part-number"]' $FRU | awk -F'[ -]' '{print $1"-"$2}'`
+
+    bitfileslength=`mani_length .bitfiles`
+    found=0
+    for counter in `seq 1 $bitfileslength`
+    do
+        partnumberlength=`mani_length ".bitfiles[$counter - 1].partnumber"`
+        bitfile_cpld_rev=`mani_value ".bitfiles[$counter - 1].version"`
+        # Bit 7 of the running and candidate CPLD revisions must match
+        if [ $((($running_cpld_rev ^ $bitfile_cpld_rev) & 0x80)) -ne 0 ]; then
+            continue
+        fi
+        for i in `seq 1 $partnumberlength`
+        do
+            manipartnumber=`mani_value ".bitfiles[$counter - 1].partnumber[$i - 1]"`
+            if [ $part_number = $manipartnumber ]; then
+                # Break out of the loop since we found the image.
+                found=1
+                break 2
+            fi
+        done
+    done
+    if [ $found -eq 0 ]; then
+        # Nothing CPLD image present for this card
+        echo "===> No bitfile update required"
+        return
+    fi
+
+    # Found a CPLD image for this card.  Check the version.
+    mani_cpld_rev=`mani_value ".bitfiles[$counter - 1].version"`
+    if [ $CPLD_IGNORE_REV -eq 0 -a $running_cpld_rev -ge $mani_cpld_rev ]; then
+        return
+    fi
+    echo "===> Commit install CPLD rev $mani_cpld_rev over rev $running_cpld_rev"
+    path=`mani_value ".bitfiles[$counter - 1].name"`
+    echo "===> Install bitfile image $path"
+    critical_section_begin cpld
+    $DRY_RUN install_cpld_bitfile $path
+    critical_section_end cpld || fatal "Aborted due to pending reset"
 }
 
 do_install_images()
@@ -1128,8 +1445,14 @@ do_install_images()
         if [ $fwname = "altfw" ]; then
             fwname=$ALT_FW
         fi
-        fwobj=`fwname_to_fwobj $fwname`
-        install_fwobj $fwobj $fwname
+        if [ $fwname = "cpld" ]; then
+            if [ $SKIP_BITFILES -eq 0 ]; then
+                do_install_bitfile_images
+            fi
+        else
+            fwobj=`fwname_to_fwobj $fwname`
+            install_fwobj $fwobj $fwname
+        fi
     done
 }
 
@@ -1248,7 +1571,7 @@ get_uboot_info()
     set -- `dd if=$dev bs=16 count=1 status=none | od -t x4 | head -1`
     u_magic=0x$3
     if [ $u_magic != $UBOOT_SIZE_MAGIC ]; then
-        echo "uboot magic not found" >&2
+        log_error -e "uboot magic not found"
         return 1
     fi
     u_len=$((0x$4))
@@ -1256,7 +1579,7 @@ get_uboot_info()
         echo $u_len
         jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
     else
-        echo "uboot metadata not found" >&2
+        log_error -e "uboot metadata not found"
         return 1
     fi
 }
@@ -1269,7 +1592,7 @@ get_kernel_fit_info()
     v=$(((0x$2 << 24) + (0x$3 << 16) + (0x$4 << 8) + 0x$5))
     k_magic=`printf "0x%08x\n" $v`
     if [ $k_magic != $KERNEL_ITB_MAGIC ]; then
-        echo "kernel_fit magic not found" >&2
+        log_error -e "kernel_fit magic not found"
         return 1
     fi
     k_len=$(((0x$6 << 24) + (0x$7 << 16) + (0x$8 << 8) + 0x$9))
@@ -1277,7 +1600,7 @@ get_kernel_fit_info()
         echo $k_len
         jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
     else
-        echo "kernel_fit metadata not found" >&2
+        log_error -e "kernel_fit metadata not found"
         return 1
     fi
 }
@@ -1289,7 +1612,7 @@ get_system_image_info()
     set -- `dd if=$dev bs=4 count=1 status=none | od -t x4 | head -1`
     s_magic=0x$2
     if [ $s_magic != $SQUASHFS_MAGIC ]; then
-        echo "system_info magic not found" >&2
+        log_error -e "system_info magic not found"
         return 1
     fi
     set -- `dd if=$dev bs=8 skip=5 count=1 status=none | od -t x8 | head -1`
@@ -1298,7 +1621,7 @@ get_system_image_info()
         echo $s_len
         jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
     else
-        echo "system_image metadata not found" >&2
+        log_error -e "system_image metadata not found"
         return 1
     fi
 }
@@ -1393,6 +1716,19 @@ do_list_firmware()
     JFPREF=","
 }
 
+do_list_cpld()
+{
+    local cpld_rev=`printf "%d" \`cpldapp -r 0x0\``
+    cat << EOF
+    $JFPREF "cpld": {
+        "bitfile": {
+        "version": "$cpld_rev"
+        }
+    }
+EOF
+    JFPREF=","
+}
+
 list_firmware()
 {
     local fwname
@@ -1403,6 +1739,9 @@ list_firmware()
         JPREF=""
         do_list_firmware $fwname
     done
+    if [ $SKIP_BITFILES -eq 0 ]; then
+        do_list_cpld
+    fi
     echo "}"
     ) | jq -r -M .
 }
@@ -1422,7 +1761,7 @@ list_loaded_firmware()
         fatal "$CACHEFILE not found"
         exit 1
     fi
-    local fwname
+    local fwname s
     (
         echo "{ \"uboot\":"
         fwname=`get_kernel_fwname`
@@ -1448,6 +1787,11 @@ list_loaded_firmware()
             jq -r -M  .$fwname $CACHEFILE
             ;;
         esac
+        s=`jq -r ".cpld | tostring" $CACHEFILE`
+        if [ "$s" != "null" ]; then
+            echo ", \"cpld\":"
+            jq -r -M .cpld $CACHEFILE
+        fi
         echo "}"
     ) | jq -r -M .
 }
@@ -1504,4 +1848,11 @@ init_emmc()
     esac
 }
 
-main "$@"
+set -o pipefail
+main "$@" 2>&1 |
+(
+    IFS='<newline>'
+    while read x; do
+        echo "$x" || true
+    done
+)

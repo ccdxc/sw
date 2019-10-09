@@ -145,6 +145,7 @@ nic/apollo/tools/artemis/syskill.sh                               /nic/tools/
 nic/apollo/tools/sysreset.sh                                      /nic/tools/
 nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
+nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
 
 # platform modules
@@ -163,7 +164,7 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevutils.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/cpld                                /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libsensor.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmnet.so                          /nic/lib/

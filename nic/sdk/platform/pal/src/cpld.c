@@ -2,9 +2,6 @@
 /*
  * Copyright (c) 2018, Pensando Systems Inc.
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include "pal_cpld.h"
 #include "pal_locks.h"
 #include "pal.h"
@@ -90,313 +87,55 @@ void
 pal_write_board_temp(int data)
 {
 }
+
+void
+pal_cpld_reload_reset(void)
+{
+}
+
+bool
+pal_cpld_verify_idcode(void)
+{
+    return false;
+}
+
+int
+pal_cpld_erase(void)
+{
+    return -1;
+}
+
+int
+pal_cpld_read_flash(uint8_t *buf, uint32_t size)
+{
+    return -1;
+}
+
+int
+pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg)
+{
+    return -1;
+}
+
+void
+pal_power_cycle(void)
+{
+}
+
+bool
+pal_cpld_hwlock_enabled(void)
+{
+    return false;
+}
 #else
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <assert.h>
-#include "internal.h"
-#include <sys/ioctl.h>
-#include <linux/gpio.h>
-#include <linux/spi/spidev.h>
 
-struct gpiohandle_request {
-        __u32 lineoffsets[GPIOHANDLES_MAX];
-        __u32 flags;
-        __u8 default_values[GPIOHANDLES_MAX];
-        char consumer_label[32];
-        __u32 lines;
-        int fd;
-};
-struct gpiohandle_data {
-        __u8 values[GPIOHANDLES_MAX];
-};
-
-#define GPIOHANDLE_GET_LINE_VALUES_IOCTL _IOWR(0xB4, 0x08, struct gpiohandle_data)
-#define GPIOHANDLE_SET_LINE_VALUES_IOCTL _IOWR(0xB4, 0x09, struct gpiohandle_data)
-#define GPIO_GET_LINEHANDLE_IOCTL _IOWR(0xB4, 0x03, struct gpiohandle_request)
-#define GPIO_GET_LINEEVENT_IOCTL _IOWR(0xB4, 0x04, struct gpioevent_request)
-
-const  int CPLD_FAIL    = -1;
-const  int CPLD_SUCCESS = 0;
+static int CPLD_FAIL    = -1;
+static int CPLD_SUCCESS = 0;
 static int cpld_rev     = -1;
-static int cpld_id     = -1;
-static const char spidev_path[] = "/dev/spidev0.0";
-
-static int
-write_gpios(int gpio, uint32_t data)
-{
-    struct gpiochip_info ci;
-    struct gpiohandle_request hr;
-    struct gpiohandle_data hd;
-    int fd;
-
-    memset(&hr, 0, sizeof (hr));
-    //control only one gpio
-    if (gpio > 7) {
-        if ((fd = open("/dev/gpiochip1", O_RDWR, 0)) < 0) {
-            return CPLD_FAIL;
-        }
-        hr.lineoffsets[0] = gpio - 7;
-    } else {
-        if ((fd = open("/dev/gpiochip0", O_RDWR, 0)) < 0) {
-            return CPLD_FAIL;
-        }
-        hr.lineoffsets[0] = gpio;
-    }
-    if (ioctl(fd, GPIO_GET_CHIPINFO_IOCTL, &ci) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-    hr.flags = GPIOHANDLE_REQUEST_OUTPUT;
-    hr.lines = 1;
-    hd.values[0] = data;
-    if (ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &hr) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-    close(fd);
-    if (ioctl(hr.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &hd) < 0) {
-        close(hr.fd);
-        return CPLD_FAIL;
-    }
-    close(hr.fd);
-    return CPLD_SUCCESS;
-}
-
-static int
-read_gpios(int d, uint32_t mask)
-{
-    struct gpiochip_info ci;
-    struct gpiohandle_request hr;
-    struct gpiohandle_data hd;
-    char buf[32];
-    int value, fd, n, i;
-
-    snprintf(buf, sizeof (buf), "/dev/gpiochip%d", d);
-    if ((fd = open(buf, O_RDWR, 0)) <  0) {
-        return CPLD_FAIL;
-    }
-    if (ioctl(fd, GPIO_GET_CHIPINFO_IOCTL, &ci) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-    memset(&hr, 0, sizeof (hr));
-    n = 0;
-    for (i = 0; i < ci.lines; i++) {
-        if (mask & (1 << i)) {
-            hr.lineoffsets[n++] = i;
-        }
-    }
-    hr.flags = GPIOHANDLE_REQUEST_INPUT;
-    hr.lines = n;
-    if (ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &hr) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-    close(fd);
-    if (ioctl(hr.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &hd) < 0) {
-        close(hr.fd);
-        return CPLD_FAIL;
-    }
-    close(hr.fd);
-    value = 0;
-    for (i = hr.lines - 1; i >= 0; i--) {
-        value = (value << 1) | (hd.values[i] & 0x1);
-    }
-    return value;
-}
-
-static int
-read_cpld_gpios(void)
-{
-    return (read_gpios(1, 0x3f) << 2) | read_gpios(0, 0xc0);
-}
-
-static int
-cpld_read(uint8_t addr)
-{
-    struct spi_ioc_transfer msg[2];
-    uint8_t txbuf[4];
-    uint8_t rxbuf[1];
-    int fd;
-
-    txbuf[0] = 0x0b;
-    txbuf[1] = addr;
-    txbuf[2] = 0x00;
-    rxbuf[0] = 0x00;
-
-    memset(msg, 0, sizeof (msg));
-    msg[0].tx_buf = (intptr_t)txbuf;
-    msg[0].len = 3;
-    msg[1].rx_buf = (intptr_t)rxbuf;
-    msg[1].len = 1;
-
-    if ((fd = open(spidev_path, O_RDWR, 0)) < 0) {
-        return CPLD_FAIL;
-    }
-    if (ioctl(fd, SPI_IOC_MESSAGE(1), msg) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-
-    close(fd);
-    return read_cpld_gpios();
-}
-
-static int
-cpld_write(uint8_t addr, uint8_t data)
-{
-    struct spi_ioc_transfer msg[1];
-    uint8_t txbuf[3];
-    int fd;
-
-    txbuf[0] = 0x02;
-    txbuf[1] = addr;
-    txbuf[2] = data;
-
-    memset(msg, 0, sizeof (msg));
-    msg[0].tx_buf = (intptr_t)txbuf;
-    msg[0].len = 3;
-
-    if ((fd = open(spidev_path, O_RDWR, 0)) < 0) {
-        return CPLD_FAIL;
-    }
-
-    if (ioctl(fd, SPI_IOC_MESSAGE(1), msg) < 0) {
-        close(fd);
-        return CPLD_FAIL;
-    }
-    close(fd);
-    return CPLD_SUCCESS;
-}
-
-static int
-cpld_reg_bit_set(int reg, int bit)
-{
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-    int rc = CPLD_FAIL;
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    cpld_data = cpld_read(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-    cpld_data |= mask;
-    rc = cpld_write(reg, cpld_data);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
-    return rc;
-}
-
-static int
-cpld_reg_bit_reset(int reg, int bit)
-{
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-    int rc = CPLD_FAIL;
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    cpld_data = cpld_read(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-    cpld_data &= ~mask;
-    rc = cpld_write(reg, cpld_data);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
-    return rc;
-}
+static int cpld_id      = -1;
 
 /* Public APIs */
-int
-cpld_reg_rd(uint8_t reg)
-{
-    int value = 0;
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    value = cpld_read(reg);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
-    return value;
-}
-
-int
-cpld_reg_wr(uint8_t reg, uint8_t data)
-{
-    int rc = CPLD_FAIL;
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    rc = cpld_write(reg, data);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
-    return rc;
-}
-
-int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy)
-{
-    uint8_t data_lo, data_hi;
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    cpld_write(MDIO_CRTL_HI_REG, addr);
-    cpld_write(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_RD_ENA | MDIO_ACC_ENA);
-    usleep(1000);
-    cpld_write(MDIO_CRTL_LO_REG, 0);
-    usleep(1000);
-    data_lo = cpld_read(MDIO_DATA_LO_REG);
-    data_hi = cpld_read(MDIO_DATA_HI_REG);
-    *data = (data_hi << 8) | data_lo;
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-    }
-    return CPLD_SUCCESS;
-}
-
-int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
-{
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    cpld_write(MDIO_CRTL_HI_REG, addr);
-    cpld_write(MDIO_DATA_LO_REG, (data & 0xFF));
-    cpld_write(MDIO_DATA_HI_REG, ((data >> 8) & 0xFF));
-    cpld_write(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_WR_ENA | MDIO_ACC_ENA);
-    usleep(1000);
-    cpld_write(MDIO_CRTL_LO_REG, 0);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
-    return CPLD_SUCCESS;
-}
-
-int
-write_cpld_gpios(int gpio, uint32_t data)
-{
-    return (write_gpios(gpio, data));
-}
-
 int
 pal_is_qsfp_port_psnt(int port_no)
 {
@@ -586,19 +325,12 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
 int
 pal_program_marvell(uint8_t marvell_addr, uint32_t data)
 {
-    if (!pal_wr_lock(CPLDLOCK)) {
-        pal_mem_trace("Could not lock pal.lck\n");
-        return CPLD_FAIL;
-    }
-    cpld_write(0x7, marvell_addr);
-    cpld_write(0x8, (data >> 8) && 0xff);
-    cpld_write(0x9, data && 0xff);
-    cpld_write(0x6, (0xc << 3) | 0x4 | 0x1);
-    cpld_write(0x6, 0);
-    if (!pal_wr_unlock(CPLDLOCK)) {
-        pal_mem_trace("Failed to unlock.\n");
-        return CPLD_FAIL;
-    }
+    cpld_reg_wr(0x7, marvell_addr);
+    cpld_reg_wr(0x8, (data >> 8) && 0xff);
+    cpld_reg_wr(0x9, data && 0xff);
+    cpld_reg_wr(0x6, (0xc << 3) | 0x4 | 0x1);
+    cpld_reg_wr(0x6, 0);
+
     return CPLD_SUCCESS;
 }
 
@@ -627,6 +359,18 @@ pal_get_cpld_id(void)
         cpld_id = cpld_reg_rd(CPLD_REGISTER_ID);
     }
     return cpld_id;
+}
+
+bool
+pal_cpld_hwlock_enabled(void)
+{
+    int value = 0;
+
+    value = cpld_reg_rd(CPLD_PERSISTENT_REG);
+    if (value == -1) {
+        return value;
+    }
+    return (value & CPLD_HWLOCK_MASK) ? true : false;
 }
 
 int
@@ -684,5 +428,41 @@ pal_write_board_temp(int data)
 {
     data = (data > 127) ? 127 : data;
     cpld_reg_wr(CPLD_REGISTER_BOARD_TEMP, data);
+}
+
+void
+pal_cpld_reload_reset(void)
+{
+    cpld_reload_reset();
+}
+
+bool
+pal_cpld_verify_idcode(void)
+{
+    return cpld_verify_idcode();
+}
+
+int
+pal_cpld_erase(void)
+{
+    return cpld_erase();
+}
+
+int
+pal_cpld_read_flash(uint8_t *buf, uint32_t size)
+{
+    return cpld_read_flash(buf, size);
+}
+
+int
+pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg)
+{
+    return cpld_write_flash(buf, size, cpld_upgrade_status_cb, arg);
+}
+
+void
+pal_power_cycle(void)
+{
+    pal_write_gpios(GPIO_3_POWER_CYCLE, GPIO_EN);
 }
 #endif
