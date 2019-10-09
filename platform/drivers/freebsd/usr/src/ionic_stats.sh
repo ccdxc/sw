@@ -134,6 +134,9 @@ function check_fw_stats {
 		fw_rx_pkts=$((fw_rx_pkts+i));
 	done;
 
+	# XXX: fw update stats area every 200ms so fw and driver count may not match
+	# if there is active traffic.
+	return 0;
 
 	status=0
 	#Tx packet count for driver should be greater than firmware counter.
@@ -155,8 +158,6 @@ function check_fw_stats {
 		echo  $inf Packet Tx[drv: $drv_tx_pkts fw: $fw_tx_pkts], Rx[drv: $drv_rx_pkts fw: $fw_rx_pkts]
 	fi
 
-	#Fw update stats area every 200ms so fw and driver count may not match
-	# if there is active traffic.
 	#exit $status
 }
 
