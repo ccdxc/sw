@@ -10,6 +10,7 @@
 namespace core {
 
 void cmd_server_thread_init(void *ctxt);
+void cmd_server_thread_exit(void *ctxt);
 
 }    // namespace core
 

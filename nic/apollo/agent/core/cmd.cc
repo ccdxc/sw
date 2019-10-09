@@ -115,4 +115,10 @@ cmd_server_thread_init (void *ctxt)
     sdk::lib::event_io_start(&cmd_accept_io);
 }
 
+void
+cmd_server_thread_exit (void *ctxt)
+{
+    sdk::lib::event_io_stop(&cmd_accept_io);
+}
+
 }    // namespace core

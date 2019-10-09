@@ -228,8 +228,8 @@ spawn_cmd_server_thread (void)
     g_cmd_server_thread =
         sdk::lib::event_thread::factory("cfg", THREAD_ID_AGENT_CMD_SERVER,
             sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, core::cmd_server_thread_init, NULL, NULL, NULL,
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            0x0, core::cmd_server_thread_init, core::cmd_server_thread_exit,
+            NULL, NULL, sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             true);
 
