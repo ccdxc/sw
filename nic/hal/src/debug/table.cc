@@ -21,13 +21,15 @@ table_metadata_get (table::TableMetadataResponseMsg *rsp)
     hal::pd::pd_table_metadata_get_args_t args;
     pd::pd_func_args_t pd_func_args = {0};
 
+    // Optimistically set the api status to OK. If failure is seen in the guts,
+    // then respective function will set the correct api status.
+    rsp->set_api_status(types::API_STATUS_OK);
+
     args.rsp = rsp;
 
     pd_func_args.pd_table_metadata_get = &args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_METADATA_GET,
                                &pd_func_args);
-    rsp->set_api_status(types::API_STATUS_OK);
-
     return ret;
 }
 
@@ -41,12 +43,16 @@ table_get (TableSpec& spec, TableResponse *rsp)
     hal::pd::pd_table_get_args_t args;
     pd::pd_func_args_t pd_func_args = {0};
 
+    // Optimistically set the api status to OK. If failure is seen in the guts,
+    // then respective function will set the correct api status.
+    rsp->set_api_status(types::API_STATUS_OK);
+
     args.spec = &spec;
     args.rsp = rsp;
 
     pd_func_args.pd_table_get = &args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TABLE_GET, &pd_func_args);
-    rsp->set_api_status(types::API_STATUS_OK);
+
 
 
     return ret;

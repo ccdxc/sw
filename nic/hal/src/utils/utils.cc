@@ -289,18 +289,11 @@ hal_prepare_rsp (hal_ret_t ret)
     case HAL_RET_INVALID_ARG:
         return types::API_STATUS_INVALID_ARG;
         break;
+    case HAL_RET_ENTRY_NOT_FOUND:
     case HAL_RET_VRF_NOT_FOUND:
-        return types::API_STATUS_NOT_FOUND;
-        break;
     case HAL_RET_L2SEG_NOT_FOUND:
-        return types::API_STATUS_NOT_FOUND;
-        break;
     case HAL_RET_IF_NOT_FOUND:
-        return types::API_STATUS_NOT_FOUND;
-        break;
     case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
-        return types::API_STATUS_NOT_FOUND;
-        break;
     case HAL_RET_QOS_CLASS_NOT_FOUND:
         return types::API_STATUS_NOT_FOUND;
         break;

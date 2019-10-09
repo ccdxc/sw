@@ -4,6 +4,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "gen/proto/table.pb.h"
 #include "nic/hal/pd/iris/debug/table_pd.hpp"
+#include "nic/hal/svc/table_svc.hpp"
 
 using table::TableMetadataResponseMsg;
 
@@ -230,10 +231,11 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
     } else if (table_id >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX) {
         cb.dm = g_hal_state_pd->p4plus_txdma_dm_table(table_id);
     }
-    if (!cb.dm) {
-        return  ret;
-    }
 
+    TABLE_TEST_TRACE_RSP_RETURN((cb.dm != NULL), rsp,
+                                HAL_RET_ENTRY_NOT_FOUND,
+                                "Failed to find the table id: {}",
+                                table_id);
     cb.msg = msg;
 
     cb.dm->iterate(pd_table_directmap_entry, &cb);
@@ -270,7 +272,10 @@ pd_table_tcam_get_entries (uint32_t table_id, TableResponse *rsp)
     TableTcamMsg *msg = rsp->mutable_tcam_table();
 
     cb.tcam_table = g_hal_state_pd->tcam_table(table_id);
-    SDK_ASSERT_RETURN((cb.tcam_table != NULL), HAL_RET_ERR);
+    TABLE_TEST_TRACE_RSP_RETURN((cb.tcam_table != NULL), rsp,
+                                HAL_RET_ENTRY_NOT_FOUND,
+                                "Failed to find the tcam table id: {}",
+                                table_id);
     cb.msg = msg;
 
     cb.tcam_table->iterate(pd_table_tcam_entry, &cb);
@@ -306,7 +311,10 @@ pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp)
     TableHashMsg *msg = rsp->mutable_hash_table();
 
     cb.hash_table = g_hal_state_pd->hash_tcam_table(table_id);
-    SDK_ASSERT_RETURN((cb.hash_table != NULL), HAL_RET_ERR);
+    TABLE_TEST_TRACE_RSP_RETURN((cb.hash_table != NULL), rsp,
+                              HAL_RET_ENTRY_NOT_FOUND,
+                              "Failed to find the hash table id: {}",
+                              table_id);
     cb.msg = msg;
 
     cb.hash_table->iterate(pd_table_hash_entry, &cb, sdk_hash::BOTH);
@@ -315,8 +323,9 @@ pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp)
 }
 
 // Met
-bool pd_table_met_entry(uint32_t repl_list_idx,
-                        Met *met, const void *cb_data)
+bool
+pd_table_met_entry(uint32_t repl_list_idx,
+                   Met *met, const void *cb_data)
 {
     char buff[8192];
     pd_met_entry_cb_t *cb = (pd_met_entry_cb_t*)cb_data;
@@ -365,10 +374,10 @@ pd_table_get (pd_func_args_t *pd_func_args)
     auto key = spec->key();
     if (key.id_or_name_case() == table::TableIdName::kTableId) {
         ret = pd_table_kind_get_from_id(key.table_id(), &kind);
-        if (ret == HAL_RET_INVALID_ARG) {
-            HAL_TRACE_ERR("Failed to find table with id: {}", key.table_id());
-            return HAL_RET_INVALID_ARG;
-        }
+        TABLE_TEST_TRACE_RSP_RETURN((ret == HAL_RET_OK), rsp,
+                                    ret, "Failed to find table with id: {}",
+                                    key.table_id());
+
         switch (kind) {
         case table::TABLE_INDEX:
             ret = pd_table_index_get_entries(key.table_id(), rsp);

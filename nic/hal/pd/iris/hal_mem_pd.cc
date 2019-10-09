@@ -696,7 +696,7 @@ hal_state_pd::~hal_state_pd()
     proxyccb_hwid_ht_ ? ht::destroy(proxyccb_hwid_ht_) : HAL_NOP;
 
     if (dm_tables_) {
-        for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
+        for (tid = P4TBL_ID_INDEX_MIN; tid <= P4TBL_ID_INDEX_MAX; tid++) {
             if (dm_tables_[tid]) {
                 directmap::destroy(dm_tables_[tid]);
             }
@@ -706,7 +706,7 @@ hal_state_pd::~hal_state_pd()
 
     if (hash_tcam_tables_) {
         for (tid = P4TBL_ID_HASH_OTCAM_MIN;
-             tid < P4TBL_ID_HASH_OTCAM_MAX; tid++) {
+             tid <= P4TBL_ID_HASH_OTCAM_MAX; tid++) {
             if (hash_tcam_tables_[tid]) {
                 sdk_hash::destroy(hash_tcam_tables_[tid]);
             }
@@ -715,7 +715,7 @@ hal_state_pd::~hal_state_pd()
     }
 
     if (tcam_tables_) {
-        for (tid = P4TBL_ID_TCAM_MIN; tid < P4TBL_ID_TCAM_MIN; tid++) {
+        for (tid = P4TBL_ID_TCAM_MIN; tid <= P4TBL_ID_TCAM_MAX; tid++) {
             if (tcam_tables_[tid]) {
                 tcam::destroy(tcam_tables_[tid]);
             }
@@ -737,7 +737,7 @@ hal_state_pd::~hal_state_pd()
 
     if (p4plus_rxdma_dm_tables_) {
         for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
-             tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+             tid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
                 directmap::destroy(p4plus_rxdma_dm_tables_[tid -
                                    P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
@@ -748,7 +748,7 @@ hal_state_pd::~hal_state_pd()
 
     if (p4plus_txdma_dm_tables_) {
         for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
-             tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+             tid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
                 directmap::destroy(p4plus_txdma_dm_tables_[tid -
                                    P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);

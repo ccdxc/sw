@@ -24,6 +24,17 @@ using table::TableRequestMsg;
 using table::TableResponseMsg;
 using table::TableSpec;
 
+#define TABLE_TEST_TRACE_RSP_RETURN(cond, rsp, rv, args...)         \
+    do {                                                            \
+        if (unlikely(!(cond))) {                                    \
+            SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");             \
+            SDK_TRACE_ERR(args);                                    \
+            rsp->set_api_status(hal_prepare_rsp(rv));               \
+            return rv;                                              \
+        }                                                           \
+    } while (FALSE)
+
+
 class TableServiceImpl final : public Table::Service {
 public:
     Status TableMetadataGet(ServerContext *context,
