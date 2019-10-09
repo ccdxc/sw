@@ -99,11 +99,13 @@ typedef struct mpu_ {
 typedef struct stage_ {
     uint8_t srdy;
     uint8_t drdy;
-    uint32_t te;
+    uint32_t te_min;
+    uint32_t te_max;
+    uint32_t te_avg;
     uint8_t last_table_type;
     uint32_t _lat;
-    uint32_t min;
-    uint32_t max;
+    uint32_t lat_min;
+    uint32_t lat_max;
     uint32_t m[MPU_COUNT];
     mpu_t mpus[MPU_COUNT];
     uint32_t te_phv_cnt;

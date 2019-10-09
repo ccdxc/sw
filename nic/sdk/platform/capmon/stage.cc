@@ -288,6 +288,9 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
              xoff_out = 0;
     int i, polls = 100;
     mpu_t *mpu_ptr = NULL;
+    uint8_t t_valid = 0;
+    uint8_t te_min = 16;
+    uint8_t te_max = 0;
 
     for (mpu = 0; mpu < 4; mpu++) {
         mpu_processing[mpu] = 0;
@@ -411,12 +414,15 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
         }
 
         // count all te_valid pending
+        t_valid = 0;
         for (j = 0; j < 16; j++) {
-            te_valid +=
-                (((CAP_MPU_CSR_STA_STG_TE_VALID_GET(sta_stg) >> j) & 1) == 1)
+            t_valid += (((CAP_MPU_CSR_STA_STG_TE_VALID_GET(sta_stg) >> j) & 1) == 1)
                     ? 1
                     : 0;
         }
+        te_min = (te_min < t_valid) ? te_min : t_valid;
+        te_max = (te_max > t_valid) ? te_max : t_valid;
+        te_valid += t_valid;
     }
 
     stage_t *stage_ptr = NULL;
@@ -434,9 +440,11 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
     stage_ptr->xoff.out = (xoff_out * 100) / polls;
     stage_ptr->last_table_type = last_table_type;
     stage_ptr->_lat = latency_total / polls;
-    stage_ptr->te = te_valid / polls;
-    stage_ptr->min = latency_min;
-    stage_ptr->max = latency_max;
+    stage_ptr->te_avg = te_valid / polls;
+    stage_ptr->te_min = te_min;
+    stage_ptr->te_max = te_max;
+    stage_ptr->lat_min = latency_min;
+    stage_ptr->lat_max = latency_max;
     for (mpu = 0; mpu < 4; mpu++) {
         stage_ptr->m[mpu] = phv_data_depth[mpu] / polls;
     }

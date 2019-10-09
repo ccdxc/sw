@@ -237,10 +237,11 @@ capmon_stage_display(stage_t *stage)
         CAPMON_REPORT("\n");
     }
     CAPMON_REPORT(" (util/xoff/idle) in=%3d/%3d/%3d stg=%3d/%3d/%3d "
-                  "out=%3d/%3d/%3d TE=%2u",
+                  "out=%3d/%3d/%3d TE=%2u/%2u/%2u",
                   stage->util.in, stage->xoff.in, stage->idle.in,
                   stage->util.stg, stage->xoff.stg, stage->idle.stg,
-                  stage->util.out, stage->xoff.out, stage->idle.out, stage->te);
+                  stage->util.out, stage->xoff.out, stage->idle.out,
+                  stage->te_min, stage->te_max, stage->te_avg);
 
     if (stage->last_table_type == TABLE_PCI) {
         CAPMON_REPORT(" PCI_lat=");
@@ -252,7 +253,7 @@ capmon_stage_display(stage_t *stage)
     CAPMON_REPORT("%5u", stage->_lat);
 
     if (verbose) {
-        CAPMON_REPORT(" min=%u, max=%u\n", stage->min, stage->max);
+        CAPMON_REPORT(" min=%u, max=%u\n", stage->lat_min, stage->lat_max);
         CAPMON_REPORT(" phvwr depths");
         mpu_t *mpu = NULL;
         for (int i = 0; i < 4; i++) {
