@@ -425,7 +425,7 @@ static void ionic_tx_clean(struct ionic_queue *q, struct ionic_desc_info *desc_i
 
 	if (cb_arg) {
 		struct sk_buff *skb = cb_arg;
-		u32 len = skb->len;
+		//u32 len = skb->len;
 
 		queue_index = skb_get_queue_mapping(skb);
 		if (unlikely(__netif_subqueue_stopped(q->lif->netdev,
@@ -435,7 +435,7 @@ static void ionic_tx_clean(struct ionic_queue *q, struct ionic_desc_info *desc_i
 		}
 		dev_kfree_skb_any(skb);
 		stats->clean++;
-		netdev_tx_completed_queue(q_to_ndq(q), 1, len);
+		//netdev_tx_completed_queue(q_to_ndq(q), 1, len);
 	}
 }
 
@@ -551,7 +551,7 @@ static void ionic_tx_tso_post(struct ionic_queue *q, struct txq_desc *desc,
 
 	if (done) {
 		skb_tx_timestamp(skb);
-		netdev_tx_sent_queue(q_to_ndq(q), skb->len);
+		//netdev_tx_sent_queue(q_to_ndq(q), skb->len);
 #ifdef HAVE_NETDEV_XMIT_MORE
 		ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
 #elif defined HAVE_SKB_XMIT_MORE
@@ -861,7 +861,7 @@ static int ionic_tx(struct ionic_queue *q, struct sk_buff *skb)
 	stats->pkts++;
 	stats->bytes += skb->len;
 
-	netdev_tx_sent_queue(q_to_ndq(q), skb->len);
+	//netdev_tx_sent_queue(q_to_ndq(q), skb->len);
 #ifdef HAVE_NETDEV_XMIT_MORE
 	ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
 #elif defined HAVE_SKB_XMIT_MORE

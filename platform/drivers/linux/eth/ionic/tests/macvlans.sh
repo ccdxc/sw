@@ -161,16 +161,9 @@ ip link del mv1
 # parse the log line to find number of lifs
 #  [  201.466167] ionic 0000:b5:00.0: nxqs=1 nslaves=126 nqueues=127
 pci=`ethtool -i $DEV | grep bus-info | cut "-d " -f2`
-line=`dmesg | grep "$pci: nxqs=" | tail -1 | cut -d: -f4`
-nxqs=`echo $line | cut "-d " -f1 | cut -d= -f2`
-nslaves=`echo $line | cut "-d " -f2 | cut -d= -f2`
-nqueues=`echo $line | cut "-d " -f3 | cut -d= -f2`
-tot=`expr $nxqs + $nslaves`
-if [ $tot -ne $nqueues ] ; then
-	echo "Error: macvlan queue counts incorrect: line=$line"
-	EXIT_VAL=`expr $EXIT_VAL + 1`
-fi
-
+nlifs=`cat /sys/kernel/debug/ionic/$pci/nlifs`
+nqueues=$nlifs
+nslaves=$((nlifs - 1))
 
 # try to create all the macvlans
 
