@@ -9,16 +9,7 @@
          class="tableviewedit-overlay"></div>
   </div>
 </div>
-<ng-template #TableColumnSelector>
-  <p-multiSelect *ngIf="enableColumnSelect" fxFlex="none" fxLayoutAlign="end center" appendTo="body"
-                 [options]="cols" [(ngModel)]="selectedcolumns" optionLabel="header"
-                 displaySelectedLabel="false" maxSelectedLabels="0"
-                 (onChange)="onColumnSelectChange($event)"
-                 selectedItemsLabel="{0} Columns"
-                 styleClass="tableviewedit-table-columns-selector" defaultLabel="Choose Columns">
-  </p-multiSelect>
 
-</ng-template>
 
 <ng-template #TableTemplate>
   <app-lazyrender fxFlex [data]="data" [rows]="28" [runDoCheck]="runDoCheck"
@@ -38,9 +29,6 @@
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
         <div fxLayout="row">
           <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}">
-          </ng-container>
-          <div fxFlex></div>
-          <ng-container *ngTemplateOutlet="TableColumnSelector; ">
           </ng-container>
         </div>
 

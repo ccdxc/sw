@@ -1,11 +1,19 @@
-import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output, TemplateRef } from '@angular/core';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { TableCol } from '../tableviewedit';
 
 export interface TableMenuItem {
   text: string;
   onClick: () => void;
   disabled?: boolean;
 }
+
+/**
+ * This TableheaderComponent is used in TableViewEdit.
+ * See hosts.component.ts/html". We inject actionButtonsTemplate" to
+ *  <app-tableheader  [enableColumnSelect]="true"
+ *     [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)"
+ */
 
 @Component({
   selector: 'app-tableheader',
@@ -25,9 +33,16 @@ export class TableheaderComponent implements OnInit {
   @Input() showRefreshIcon: boolean = false;
   @Input() tableMenuItems: TableMenuItem[] = [];
 
+  @Input() actionButtonsTemplate: TemplateRef<any>;
+  @Input() enableColumnSelect: boolean = false;
+  @Input() cols: TableCol[] = [];
+
   @Output() refreshIconClick: EventEmitter<any> = new EventEmitter<any>();
+  @Output() columnSelectChange: EventEmitter<any> = new EventEmitter<any>();
 
   _iconStyles: any;
+
+  selectedcolumns: TableCol[];
 
   constructor() { }
 
@@ -36,6 +51,11 @@ export class TableheaderComponent implements OnInit {
       this.icon = { margin: {} };
     }
     this._iconStyles = this._setIconStyles();
+    this.selectedcolumns = this.cols;
+  }
+
+  onColumnSelectChange($event) {
+    this.columnSelectChange.emit($event);
   }
 
   _setIconStyles() {

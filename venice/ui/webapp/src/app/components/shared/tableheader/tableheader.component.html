@@ -26,6 +26,18 @@
   </div>
   <div class="tableheader-content" fxFlex="auto" fxLayoutAlign="start center">
     <ng-content></ng-content>
+    <div fxFlex></div>
+    <div *ngIf="enableColumnSelect" class="tableheader-enableColumnSelect-div">
+      <p-multiSelect fxFlex="none" fxLayoutAlign="end center" appendTo="body"
+                     [options]="cols" [(ngModel)]="selectedcolumns" optionLabel="header"
+                     displaySelectedLabel="false" maxSelectedLabels="0"
+                     (onChange)="onColumnSelectChange($event)"
+                     selectedItemsLabel="{0} Columns"
+                     styleClass="tableviewedit-table-columns-selector"
+                     defaultLabel="Choose Columns">
+      </p-multiSelect>
+
+    </div>
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px">
     <ng-container *ngIf="lastUpdateTime != null || lastUpdateTime == ''">

@@ -57,15 +57,19 @@ export class TestTablevieweditRBAC {
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
         if (!this.skipEdit) {
+          // settings button
+          expect(actionButtons.length).toBe(3);
+          expect(actionButtons[0].nativeElement.textContent).toBe('settings');
           // edit button
+          expect(actionButtons[1].nativeElement.textContent).toBe('edit');
+          // delete button
+          expect(actionButtons[2].nativeElement.textContent).toBe('delete');
+        } else {
           expect(actionButtons.length).toBe(2);
-          expect(actionButtons[0].nativeElement.textContent).toBe('edit');
+          // settings button
+          expect(actionButtons[0].nativeElement.textContent).toBe('settings');
           // delete button
           expect(actionButtons[1].nativeElement.textContent).toBe('delete');
-        } else {
-          // delete button
-          expect(actionButtons.length).toBe(1);
-          expect(actionButtons[0].nativeElement.textContent).toBe('delete');
         }
       });
 
@@ -78,7 +82,7 @@ export class TestTablevieweditRBAC {
 
         // edit button not present
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(0);
+        expect(actionButtons.length).toBe(1);
       });
 
       it('edit access only', () => {
@@ -92,8 +96,9 @@ export class TestTablevieweditRBAC {
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit button not present
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(1);
-        expect(actionButtons[0].nativeElement.textContent).toBe('edit');
+        expect(actionButtons.length).toBe(2);
+        expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+        expect(actionButtons[1].nativeElement.textContent).toBe('edit');
       });
 
       it('delete access only', () => {
@@ -104,8 +109,9 @@ export class TestTablevieweditRBAC {
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit button not present
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(1);
-        expect(actionButtons[0].nativeElement.textContent).toBe('delete');
+        expect(actionButtons.length).toBe(2);
+        expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+        expect(actionButtons[1].nativeElement.textContent).toBe('delete');
       });
 
       it('no access', () => {
@@ -115,7 +121,7 @@ export class TestTablevieweditRBAC {
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit and delete button not present
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(0);
+        expect(actionButtons.length).toBe(1);
       });
     }
 }

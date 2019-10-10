@@ -31,7 +31,9 @@
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon" width="250px">
+  <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon" [enableColumnSelect]="true"
+                   fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
+                   [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
   </app-tableheader>
 </ng-template>
 

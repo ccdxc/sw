@@ -107,7 +107,10 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Policy Rules" [total]="count" [icon]="policyIcon">
+  <app-tableheader title="Policy Rules" [total]="count" [icon]="policyIcon"
+                   [enableColumnSelect]="true"
+                   [icon]="tableIcon" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)">
     <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center">
       Search:
       <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">

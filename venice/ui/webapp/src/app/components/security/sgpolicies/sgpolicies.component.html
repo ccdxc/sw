@@ -14,7 +14,9 @@
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Network Security Policies" [total]="count" [icon]="tableIcon">
+  <app-tableheader title="Network Security Policies" [total]="count" [enableColumnSelect]="true"
+                   [icon]="tableIcon" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)">
   </app-tableheader>
 </ng-template>
 

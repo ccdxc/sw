@@ -188,7 +188,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   onColumnSelectChange($event) {
     const selectedColumns = $event.value;
     if (selectedColumns.length > 0) {
-      this.orderSelectedColumns();
+      this.orderSelectedColumns(selectedColumns);
       this.updateWidthPercentages();
     }
   }
@@ -199,8 +199,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
    * Current selected columns is [b, e, c, a]
    * We want to change it to [a, b, c, e]. It follows the original config order.
    */
-  orderSelectedColumns(fieldname: string = 'field') {
-    this.selectedcolumns = this.selectedcolumns.sort((a: TableCol, b: TableCol) => {
+  orderSelectedColumns(selectedColumns: TableCol[], fieldname: string = 'field') {
+    this.selectedcolumns = selectedColumns.sort((a: TableCol, b: TableCol) => {
       const aIndex = this.cols.findIndex((col: TableCol) => col[fieldname] === a[fieldname]);
       const bIndex = this.cols.findIndex((col: TableCol) => col[fieldname] === b[fieldname]);
       return aIndex - bIndex;
@@ -455,6 +455,10 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
       buttons: [],
       breadcrumb: [],
     });
+  }
+
+  onColumnSelectChange($event) {
+    this.tableContainer.onColumnSelectChange($event);
   }
 
 }

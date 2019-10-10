@@ -144,7 +144,7 @@
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length"
-                           [icon]="alertsIcon"
+                           [icon]="alertsIcon" [enableColumnSelect]="false"
                            width="250px">
             <div fxFelx="none" class="">
               <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"

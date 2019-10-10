@@ -20,7 +20,9 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Policies" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Policies" [total]="count" [icon]="headerIcon" [enableColumnSelect]="true"
+                   fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
+                   [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
   </app-tableheader>
 </ng-template>
 

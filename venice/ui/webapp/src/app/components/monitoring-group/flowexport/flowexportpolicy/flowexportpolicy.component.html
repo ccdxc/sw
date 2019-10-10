@@ -21,7 +21,10 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Flow Export Policies" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Flow Export Policies" [total]="count" [icon]="headerIcon" fxFlex="auto"
+                   fxLayout="row" [tableMenuItems]="tableMenuItems"
+                   [enableColumnSelect]="true" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)">
   </app-tableheader>
 </ng-template>
 

@@ -19,7 +19,10 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Event Alert Policies" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Event Alert Policies" [total]="count" fxFlex="auto" fxLayout="row"
+                   [tableMenuItems]="tableMenuItems"
+                   [icon]="headerIcon" [cols]="cols" [enableColumnSelect]="true"
+                   (columnSelectChange)="onColumnSelectChange($event)">
     <div class="eventalertpolicies-search" fxFlex="fxFlex" fxLayoutAlign="start center">
       <!-- Lazy render currently doesn't support filtering -->
       <!-- Find Policy by: 

@@ -28,7 +28,8 @@
     <div fxFlex="auto" fxLayout="row">
       <app-tableheader fxFlex="auto" title="Firewall Logs" [max]="maxRecords"
                        [total]="dataObjects.length" [icon]="headerIcon"
-                       [tableMenuItems]="tableMenuItems"
+                       [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)"
                        [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
                        (refreshIconClick)="getFwlogs()">
         <div fxFlex></div>
