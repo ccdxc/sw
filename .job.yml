@@ -91,7 +91,9 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/freebsd:
     labels: ["daily"]
-  iota/test/standalone/linux:
+  iota/test/standalone/regression/linux:
+    labels: ["daily"]
+  iota/test/standalone/sanity/linux:
     labels: ["precommit", "hourly"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
@@ -147,7 +149,7 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["test/venice", "test/apollo"]
-    - reference: iota/test/standalone/linux
+    - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["test/venice", "test/apollo"]
   metrics:
     - reference: venice/ui
@@ -158,7 +160,7 @@ dependencies:
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
-    - reference: iota/test/standalone/linux
+    - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
   nic/agent:
     - reference: api
@@ -181,7 +183,7 @@ dependencies:
       exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
-    - reference: iota/test/standalone/linux
+    - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
   storage/offload:
     - reference: storage/offload/linux-build-test

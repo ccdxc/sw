@@ -3,15 +3,43 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-
+rebase: true
 queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
- # baremetal
- e2e-freebsd-regression-rdma:
+  # baremetal + baremetal Esx test cases
+ e2e-linux-bm-regression-rdma:
    commands: ["sh", "-c", "make regression-rdma"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:rdma-dpath@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 12h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ e2e-linux-bm-regression-eth:
+   commands: ["sh", "-c", "make regression-eth"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
    area:
    sub-area:
    feature:
@@ -20,23 +48,24 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-12
+     - image: build-7
        count: 2
        resources:
          # Freebsd works with only server-d
-         server-type: server-d
+         server-type: server-a
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
        username: vm
        password: vm
        vars:
-          BmOs: freebsd
-          VmOs: freebsd
+          BmOs: linux
+          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
- e2e-freebsd-regression-storage:
+ e2e-linux-bm-regression-storage:
    commands: ["sh", "-c", "make regression-storage"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:stg-dev@pensando.io"]
    area:
    sub-area:
@@ -46,72 +75,49 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-12
+     - image: build-7
        count: 2
        resources:
          # Freebsd works with only server-d
-         server-type: server-d
+         server-type: server-a
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
        username: vm
        password: vm
        vars:
-          BmOs: freebsd
-          VmOs: freebsd
+          BmOs: linux
+          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
- e2e-freebsd-regression-eth:
-   commands: ["sh", "-c", "make regression-eth"]
-   owners: ["email:platform-drivers-team@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 24h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-12
-       count: 2
-       resources:
-         # Freebsd works with only server-d
-         server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl!
- e2e-freebsd-regression-infra:
+ e2e-linux-bm-regression-infra:
    commands: ["sh", "-c", "make regression-infra"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:sw-team@pensando.io"]
    area:
    sub-area:
    feature:
+   max-duration: 12h
    build-dependencies:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-12
+     - image: build-7
        count: 2
        resources:
          # Freebsd works with only server-d
-         server-type: server-d
+         server-type: server-a
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
        username: vm
        password: vm
        vars:
-          BmOs: freebsd
-          VmOs: freebsd
+          BmOs: linux
+          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
