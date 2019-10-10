@@ -1,4 +1,4 @@
-gcc -std=c99 lzrw1-a.c orig-lzrw1-a.c main.c
+gcc -std=c99 lzrw1-a.c 0-lzrw1-a.c orig-lzrw1-a.c main.c -o smooth-lzrw
 
 Options:
 
@@ -10,6 +10,7 @@ Options:
 -v, --liveness-count  default 0 (0 means no liveness reporting, otherwise print a line after this many reps to report liveness)
 --compress-only       do only compression and write to output file (only write once regardless of repetition count)
 --decompress-only     do only decompression and write to output file (only write once regardless of repetition count)
+--smooth0             use release 0 of the smooth algorithm
 --no-smooth           do not use smooth algorithm, i.e., use original algorithm from Ipcores.
                       Note: original algorithm NEVER calculates adler32 checksum
 --no-adler32          do not calculate adler32 checksum

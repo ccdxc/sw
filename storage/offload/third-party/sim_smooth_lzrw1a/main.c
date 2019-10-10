@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include "lzrw.h"
 #include "orig-lzrw.h"
+#include "0-lzrw.h"
 
 //typedef unsigned long long uint64_t;
 
@@ -20,6 +21,22 @@
 
 #define BUF_SIZE_MAX    32768
 #define RAND_LEN_MIN    3
+
+typedef int (*lzrw1a_non_smooth_t)(uint32_t action,
+                                   uint8_t *hash,
+                                   uint8_t *data,
+                                   uint32_t size,
+                                   uint8_t *result,
+                                   uint32_t* p_dst_len,
+                                   uint32_t thresh);
+typedef int (*lzrw1a_smooth_t)(uint32_t action,
+                               uint8_t *hash,
+                               uint8_t *data,
+                               uint32_t size,
+                               uint8_t *result,
+                               uint32_t* p_dst_len,
+                               uint32_t thresh,
+                               uint32_t *p_adler32_chksum);
 
 static uint8_t  scratch_buf[BUF_SIZE_MAX];
 static uint8_t  input_buf[BUF_SIZE_MAX];
@@ -203,6 +220,7 @@ void usage_help(void)
              "--pattern-file or -f    read pattern from a hex ascii file and use it\n"
              "--compress-only         do only compression and write to output file\n"
              "--decompress-only       do only decompression and write to output file\n"
+             "--smooth0               use release 0 of the smooth algorithm\n"
              "--no-smooth             do not use smooth algorithm\n"
              "--no-adler32            do not calculate adler32 checksum\n"
              "--no-verify             skip data and checksum verification\n"
@@ -227,6 +245,8 @@ static uint64_t elapsed_us(const struct timeval *start,
 int main(int argc, char **argv)
 {
     char *output_fname = NULL;
+    lzrw1a_non_smooth_t lzrw1a_non_smooth = &orig_lzrw1a_compress;
+    lzrw1a_smooth_t lzrw1a_smooth = &lzrw1a_compress;
     struct timeval tv;
     struct timeval last_tv;
     uint32_t buf_size = 8192;
@@ -252,6 +272,7 @@ int main(int argc, char **argv)
     int failure;
     int cp_only = 0;
     int dc_only = 0;
+    int use_smooth0_algo = 0;
     int no_smooth = 0;
     int no_adler32 = 0;
     int no_verify = 0;
@@ -262,6 +283,7 @@ int main(int argc, char **argv)
     struct option longopts[] = {
        { "compress-only",       no_argument,        &cp_only, 1 },
        { "decompress-only",     no_argument,        &dc_only, 1 },
+       { "smooth0",             no_argument,        &use_smooth0_algo, 1 },
        { "no-smooth",           no_argument,        &no_smooth, 1 },
        { "no-adler32",          no_argument,        &no_adler32, 1 },
        { "no-verify",           no_argument,        &no_verify, 1 },
@@ -333,6 +355,17 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    if (no_smooth && use_smooth0_algo) {
+        printf("ERROR smooth0 and no-smooth cannot both be set\n");
+        return 1;
+    }
+
+    if (use_smooth0_algo && no_adler32) {
+        printf("ERROR smooth0 cannot be used with no-adler32\n");
+        return 1;
+    }
+    lzrw1a_smooth = use_smooth0_algo ? lzrw1a_compress_0 : lzrw1a_compress;
+
     cp_adler32_p = no_adler32 ? NULL : &cp_adler32;
     dc_adler32_p = no_adler32 ? NULL : &dc_adler32;
 
@@ -358,10 +391,10 @@ int main(int argc, char **argv)
             }
             //dump(input_buf, buf_size);
             cp_ret = no_smooth ?
-                     orig_lzrw1a_compress(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
-                                     buf_size, cp_buf, &cp_size, buf_size - 8) :
-                     lzrw1a_compress(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
-                                     buf_size, cp_buf, &cp_size, buf_size - 8, cp_adler32_p);
+                     (*lzrw1a_non_smooth)(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
+                                          buf_size, cp_buf, &cp_size, buf_size - 8) :
+                     (*lzrw1a_smooth)(COMPRESS_ACTION_COMPRESS, scratch_buf, input_buf,
+                                      buf_size, cp_buf, &cp_size, buf_size - 8, cp_adler32_p);
         }
         if (cp_ret) {
             failure = 0;
@@ -378,10 +411,10 @@ int main(int argc, char **argv)
 
             } else {
                 dc_ret = no_smooth ?
-                         orig_lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
-                                         cp_size, dc_buf, &dc_size, buf_size) :
-                         lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
-                                         cp_size, dc_buf, &dc_size, buf_size, dc_adler32_p);
+                         (*lzrw1a_non_smooth)(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
+                                              cp_size, dc_buf, &dc_size, buf_size) :
+                         (*lzrw1a_smooth)(COMPRESS_ACTION_DECOMPRESS, scratch_buf, cp_buf,
+                                          cp_size, dc_buf, &dc_size, buf_size, dc_adler32_p);
                 min_dc_size = min(min_dc_size, dc_size);
                 max_dc_size = max(max_dc_size, dc_size);
 

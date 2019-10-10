@@ -284,70 +284,105 @@ int lzrw1a_compress(uint32_t action, uint8_t *hash, uint8_t *data, uint32_t size
 	else
 	{
 		int pos = 0; int rescnt = 0, w_rescnt = 0;
-                uint8_t byte_result;
+		uint8_t byte_result;
 
-		p_result = thresh > SMOOTH_THRESHOLD ? dc_smooth_buf0 : result;
-		while (pos < size)
+		if (thresh <= SMOOTH_THRESHOLD)
 		{
-			uint32_t group = (uint32_t)((data[pos + 1] << 8) | (data[pos]));
-			pos += 2;
-
-			for (int item = 0; item < 16; ++item)
+			while (pos < size)
 			{
-				if (pos >= size) break;
-				if ((group & (0x0001 << item)) == 0)
+				uint32_t group = (uint32_t)((data[pos + 1] << 8) | (data[pos]));
+				pos += 2;
+
+				for (int item = 0; item < 16; ++item)
 				{
-					byte_result = p_result[w_rescnt++] = data[pos++];
-                                        INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
-					rescnt++;
-					if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
+					if (pos >= size) break;
+					if ((group & (0x0001 << item)) == 0)
 					{
-						p_result = result;
-						w_rescnt = 0;
+						byte_result = result[rescnt++] = data[pos++];
+						INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
 					}
-				}
-				else
-				{
-					int cpyOff = (data[pos + 1] | ((data[pos] << (addrBits - 8)) & 0xf00));
-					if (cpyOff == 0)
-						cpyOff += (1 << addrBits);
-					int cpyLen = (data[pos] & (0xff >> (addrBits - 8))) + 3;
-					int cpyPos = rescnt - cpyOff;
-					if ((thresh > SMOOTH_THRESHOLD) && (cpyPos >= SMOOTH_BUF_SIZE))
+					else
 					{
-						int cpyIdx = cpyPos - SMOOTH_BUF_SIZE;
+						int cpyOff = (data[pos + 1] | ((data[pos] << (addrBits - 8)) & 0xf00));
+						if (cpyOff == 0)
+							cpyOff += (1 << addrBits);
+						int cpyLen = (data[pos] & (0xff >> (addrBits - 8))) + 3;
+						int cpyPos = rescnt - cpyOff;
 						for (int c = 0; c < cpyLen; ++c)
 						{
-							byte_result = p_result[w_rescnt++] = result[cpyIdx + c];
+							byte_result = result[rescnt++] = result[cpyPos + c];
 							INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
-							rescnt++;
-							if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
-							{
-								p_result = result;
-								w_rescnt = 0;
-							}
+						}
+						pos += 2;
+					}
+				}
+			}
+			*p_dst_len = rescnt;
+		}
+		else
+		{
+			p_result = dc_smooth_buf0;
+			while (pos < size)
+			{
+				uint32_t group = (uint32_t)((data[pos + 1] << 8) | (data[pos]));
+				pos += 2;
+
+				for (int item = 0; item < 16; ++item)
+				{
+					if (pos >= size) break;
+					if ((group & (0x0001 << item)) == 0)
+					{
+						byte_result = p_result[w_rescnt++] = data[pos++];
+	                                        INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
+						rescnt++;
+						if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
+						{
+							p_result = result;
+							w_rescnt = 0;
 						}
 					}
 					else
 					{
-						for (int c = 0; c < cpyLen; ++c)
-						{
-							byte_result = p_result[w_rescnt++] = dc_result_byte(dc_smooth_buf0, result, cpyPos + c, thresh);
-							INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
-							rescnt++;
-							if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
+						int cpyOff = (data[pos + 1] | ((data[pos] << (addrBits - 8)) & 0xf00));
+						if (cpyOff == 0)
+							cpyOff += (1 << addrBits);
+						int cpyLen = (data[pos] & (0xff >> (addrBits - 8))) + 3;
+						int cpyPos = rescnt - cpyOff;
+						if (cpyPos >= SMOOTH_BUF_SIZE) {
+							int cpyIdx = cpyPos - SMOOTH_BUF_SIZE;
+							for (int c = 0; c < cpyLen; ++c)
 							{
-								p_result = result;
-								w_rescnt = 0;
+								byte_result = p_result[w_rescnt++] = result[cpyIdx + c];
+								INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
+								rescnt++;
+								if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
+								{
+									p_result = result;
+									w_rescnt = 0;
+								}
 							}
 						}
+						else
+						{
+							for (int c = 0; c < cpyLen; ++c)
+							{
+								byte_result = p_result[w_rescnt++] = dc_result_byte(dc_smooth_buf0, result, cpyPos + c, thresh);
+								INCR_GEN_ADLER32_CONT1(p_adler32_chksum, &adler32_a, &adler32_b, byte_result);
+								rescnt++;
+								if ((w_rescnt >= SMOOTH_BUF_SIZE) && (p_result != result))
+								{
+									p_result = result;
+									w_rescnt = 0;
+								}
+							}
+						}
+						pos += 2;
 					}
-					pos += 2;
 				}
 			}
+			*p_dst_len = rescnt > SMOOTH_BUF_SIZE ? rescnt - SMOOTH_BUF_SIZE : rescnt;
 		}
-                INCR_GEN_ADLER32_END(p_adler32_chksum, adler32_a, adler32_b);
-		*p_dst_len = (thresh > SMOOTH_THRESHOLD) && (rescnt > SMOOTH_BUF_SIZE) ? rescnt - SMOOTH_BUF_SIZE : rescnt;
+		INCR_GEN_ADLER32_END(p_adler32_chksum, adler32_a, adler32_b);
 		return 0;
 	}
 }
