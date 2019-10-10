@@ -15,8 +15,8 @@ class ApolloConfigStore:
         self.device = None
         self.substrate_vpc = None
 
-        # Batch cookie
-        self.batch_cookie = None
+        # Batch client
+        self.batchClient = None
         return
 
     def SetBatchClient(self, obj):
@@ -24,12 +24,6 @@ class ApolloConfigStore:
 
     def GetBatchClient(self):
         return self.batchClient
-
-    def SetBatchCookie(self, cookie):
-        self.batch_cookie = cookie
-
-    def GetBatchCookie(self):
-        return self.batch_cookie
 
     def SetTunnels(self, objs):
         return self.tunnels.SetAll(objs)

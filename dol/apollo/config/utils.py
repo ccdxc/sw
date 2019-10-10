@@ -151,7 +151,9 @@ def ValidateDelete(obj, resps):
     return
 
 def GetBatchCookie():
-    return Store.GetBatchCookie()
+    batchClient = Store.GetBatchClient()
+    obj = batchClient.Objects()
+    return obj.GetBatchCookie()
 
 def CreateObject(obj, objType):
     if not obj.IsDeleted():
