@@ -61,6 +61,8 @@ private:
     friend class vnic_impl;
     ///< mapping_impl class is friend of vnic_impl_state
     friend class mapping_impl;
+    ///< lif_impl class is friend of vnic_impl_state
+    friend class lif_impl;
 
 private:
     // NOTE: there is no explicit table mgmt for rx and tx stats, we directly

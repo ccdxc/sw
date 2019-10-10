@@ -27,7 +27,7 @@ rte_indexer::factory(uint32_t size, bool thread_safe, bool skip_zero) {
     }
     indxr = new (mem) rte_indexer();
     if (indxr->init_(size, thread_safe, skip_zero) == false) {
-        SDK_TRACE_ERR("Failed to initialize rte_indexer of size: %d\n", size);
+        SDK_TRACE_ERR("Failed to initialize rte_indexer of size %u", size);
         indxr->~rte_indexer();
         if (mem)
             SDK_FREE(SDK_MEM_ALLOC_LIB_INDEXER, indxr);
@@ -158,7 +158,7 @@ rte_indexer::alloc(uint32_t *index, uint32_t block_size) {
 
     *index = curr_index_;
     rte_bitmap_clear(INDEXER, *index);
-    SDK_TRACE_DEBUG("Scan name: curr_pos %u next_pos %u idx %u slab %lx\n",
+    SDK_TRACE_DEBUG("Scan name: curr_pos %u next_pos %u idx %u slab %lx",
                     curr_index_, next_pos, *index, (long)curr_slab_);
     usage_++;
 
@@ -284,7 +284,7 @@ rte_indexer::compute_num_indices_allocated(void) {
             usage++;
         }
     }
-    SDK_TRACE_DEBUG("Usage internal : %d Usage computed: %d", usage_, usage);
+    SDK_TRACE_DEBUG("Usage internal %u, usage computed %u", usage_, usage);
     SDK_ASSERT(usage_ == usage);
     return usage;
 }

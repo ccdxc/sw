@@ -23,6 +23,15 @@
 // nexthop types
 #define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               ROUTE_RESULT_TYPE_PEER_VPC_MASK
 
+// reserved VNIC h/w id
+#define PDS_IMPL_RSVD_VNIC_HW_ID               0
+
+// reserved BD h/w id
+#define PDS_IMPL_RSVD_BD_HW_ID                 0
+
+// reserved VPC h/w id
+#define PDS_IMPL_RSVD_VPC_HW_ID                0
+
 namespace api {
 namespace impl {
 

@@ -110,6 +110,11 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t create_internal_mgmt_mnic_(pds_lif_spec_t *spec);
 
+    ///< \brief    program necessary entries for host (data) lifs
+    ///< \param[in] spec    lif configuration parameters
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t create_host_lif_(pds_lif_spec_t *spec);
+
 private:
     pds_lif_key_t    key_;            ///< (s/w & h/w) lif id
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any

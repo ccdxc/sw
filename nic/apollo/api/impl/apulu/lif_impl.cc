@@ -100,13 +100,16 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 #define nexthop_info            action_u.nexthop_nexthop_info
+#define lif_action              action_u.lif_lif_info
 sdk_ret_t
 lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
+    uint32_t idx;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data = { 0 };
+    lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
@@ -184,6 +187,28 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
         goto error;
     }
+
+    // allocate vnic h/w id for this lif
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
+                      key_, ret);
+        return ret;
+    }
+
+    // program the LIF table
+    lif_data.action_id = LIF_LIF_INFO_ID;
+    lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
+    lif_data.lif_action.vnic_id = idx;
+    lif_data.lif_action.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
+    lif_data.lif_action.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
+                                       NULL, NULL, &lif_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
     return SDK_RET_OK;
 
 error:
@@ -195,11 +220,13 @@ error:
 
 sdk_ret_t
 lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
+    uint32_t idx;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
+    lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
@@ -279,6 +306,28 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to inb "
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
+        goto error;
+    }
+
+    // allocate vnic h/w id for this lif
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
+                      key_, ret);
+        return ret;
+    }
+
+    // program the LIF table
+    lif_data.action_id = LIF_LIF_INFO_ID;
+    lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
+    lif_data.lif_action.vnic_id = idx;
+    lif_data.lif_action.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
+    lif_data.lif_action.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
+                                       NULL, NULL, &lif_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
     return SDK_RET_OK;
@@ -389,6 +438,36 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
 }
 
 sdk_ret_t
+lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
+    uint32_t idx;
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    lif_actiondata_t lif_data = { 0 };
+
+    // allocate vnic h/w id for this lif
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
+                      key_, ret);
+        return ret;
+    }
+
+    // program the LIF table
+    lif_data.action_id = LIF_LIF_INFO_ID;
+    lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
+    lif_data.lif_action.vnic_id = idx;
+    lif_data.lif_action.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
+    lif_data.lif_action.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
+                                       NULL, NULL, &lif_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 lif_impl::create(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
 
@@ -405,6 +484,9 @@ lif_impl::create(pds_lif_spec_t *spec) {
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
         ret = create_internal_mgmt_mnic_(spec);
+        break;
+    case sdk::platform::LIF_TYPE_HOST:
+        ret = create_host_lif_(spec);
         break;
     default:
         return SDK_RET_INVALID_ARG;

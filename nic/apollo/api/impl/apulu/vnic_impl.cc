@@ -63,10 +63,10 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     // allocate hw id for this vnic
-    if (vnic_impl_db()->vnic_idxr()->alloc(&idx) != SDK_RET_OK) {
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate hw id for vnic %u, err %u",
                       spec->key.id, ret);
-        return sdk::SDK_RET_NO_RESOURCE;
+        return ret;
     }
     hw_id_ = idx;
 
