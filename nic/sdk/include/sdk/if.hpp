@@ -38,7 +38,7 @@ enum {
 ///<     t_ --> type of the interface (4 bits)
 ///<     s_ --> physical slot of the card  (4 bits)
 ///<     p_ --> parent port (1 based) (8 bits)
-///<     c_ --> child port (1 based) (8 bits)
+///<     c_ --> child port (1 based) (16 bits)
 ///< based on the type of the interface, the slot bits will be
 ///< used for a running identifier of that type of interface
 ///< e.g. IF_TYPE_UPLINK or IF_TYPE_TUNNEL etc.

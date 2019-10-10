@@ -46,6 +46,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     pinned_if_idx_ = spec->pinned_ifidx;
     type_ = spec->type;
     nh_idx_ = 0xFFFFFFFF;
+    vnic_hw_id_ = 0xFFFF;
 }
 
 lif_type_t

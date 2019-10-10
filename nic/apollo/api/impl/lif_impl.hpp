@@ -115,7 +115,11 @@ private:
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
     ht_ctxt_t        ht_ctxt_;        ///< hash table context
+    // TODO: we can have state per pipeline in this class
+    //       ideally, we should have the concrete class inside pipeline specific
+    //       dir and this should be a base class !!
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
+    uint16_t         vnic_hw_id_;     ///< vnic hw id
     friend class lif_impl_state;      ///< lif_impl_state is friend of lif_impl
 } __PACK__;
 
