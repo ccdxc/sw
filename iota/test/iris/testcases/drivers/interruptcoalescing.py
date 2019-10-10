@@ -20,7 +20,9 @@ def Trigger(tc):
     for node in tc.nodes:
         interfaces = api.GetNaplesHostInterfaces(node)
         for interface in interfaces:
-            api.Logger.info("Set Interrupt Coalescing on: %s" % interface)
+            api.Logger.info("Set Interrupt Coalescing on %s:%s to %d" % \
+                                                      (node, interface, \
+                                                       tc.iterators.coales_interval))
             if tc.os == 'linux':
                 api.Trigger_AddHostCommand(req, node, "ethtool -C %s rx-usecs %d" % \
                                                     (interface, \
