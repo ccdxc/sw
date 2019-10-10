@@ -1075,7 +1075,9 @@ func (tb *TestBed) setupTestBed() error {
 		tb.allocatedVlans = append(tb.allocatedVlans, vlan)
 	}
 	//Ignore the first one as it is native vlan
-	tb.allocatedVlans = tb.allocatedVlans[1:]
+        if len(tb.allocatedVlans) > 1 {
+	        tb.allocatedVlans = tb.allocatedVlans[1:]
+        }
 
 	// Build Topology Object after parsing warmd.json
 	nodes := &iota.NodeMsg{
@@ -1244,7 +1246,7 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 		return nerr
 	}
 
-	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
 	defer cancel()
 	token, err := utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
 	if err != nil {
@@ -1684,7 +1686,7 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 
 	// setup test params
 	if scale {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 20)
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 30)
 		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
 	} else {
 		gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
@@ -1713,7 +1715,7 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 	}
 
 	// setup default config for the sysmodel
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	ctx, cancel := context.WithTimeout(context.TODO(), 60*time.Minute)
 	defer cancel()
 	err = model.SetupDefaultConfig(ctx, scale, scaleData)
 	if err != nil {

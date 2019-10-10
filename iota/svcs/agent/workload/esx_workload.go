@@ -271,7 +271,6 @@ func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, retries, timeout u
 				break
 			}
 			vm.logger.Info("Command failed, retrying")
-			time.Sleep(500 * time.Millisecond)
 		}
 		return cmdInfo.Ctx, "", nil
 	}

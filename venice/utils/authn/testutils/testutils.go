@@ -155,7 +155,9 @@ func CreateTestUser(ctx context.Context, apicl apiclient.Services, username, pas
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		createdUser, err = apicl.AuthV1().User().Create(ctx, user)
 		// 409 is returned when user already exists. 401 when auth is already bootstrapped.
-		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") ||
+			strings.Contains(err.Error(), "Status:(409)") {
+			err = nil
 			return true, nil
 		}
 		return false, nil
@@ -241,7 +243,9 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		createdPolicy, err = apicl.AuthV1().AuthenticationPolicy().Create(ctx, policy)
 		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped.
-		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") ||
+			strings.Contains(err.Error(), "Status:(409)") {
+			err = nil
 			return true, nil
 		}
 		return false, nil
@@ -347,7 +351,10 @@ func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error
 		createdTenant, err = apicl.ClusterV1().Tenant().Create(ctx, tenant)
 		cancelFunc()
 		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped.
-		if err == nil || strings.HasPrefix(err.Error(), "Status:(412)") || strings.HasPrefix(err.Error(), "Status:(401)") {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(412)") || strings.HasPrefix(err.Error(), "Status:(401)") ||
+			strings.Contains(err.Error(), "Status:(409)") {
+			//log.Errorf("Creating tenant, Err: %v", err.Error())
+			err = nil
 			return true, nil
 		}
 		return false, nil
@@ -476,6 +483,7 @@ func CreateRoleBinding(ctx context.Context, apicl apiclient.Services, name, tena
 		createdRoleBinding, err = apicl.AuthV1().RoleBinding().Create(ctx, roleBinding)
 		// 409 is returned when role binding already exists. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
+			err = nil
 			return true, nil
 		}
 		return false, nil
@@ -580,7 +588,9 @@ func SetAuthBootstrapFlag(apicl apiclient.Services) (*cluster.Cluster, error) {
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		clusterObj, err = apicl.ClusterV1().Cluster().AuthBootstrapComplete(ctx, &cluster.ClusterAuthBootstrapRequest{})
 		// 401 when auth is already bootstrapped.
-		if err == nil || strings.HasPrefix(err.Error(), "Status:(401)") {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(401)") ||
+			strings.Contains(err.Error(), "Status:(409)") {
+			err = nil
 			return true, nil
 		}
 		return false, nil

@@ -1604,7 +1604,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 	}
 
-	modeSwitch := func(mgmtIP string) error {
+	modeSwitch := func(mgmtIP, gw string) error {
 		cmd = []string{"NAPLES_URL=http://localhost LD_LIBRARY_PATH=/naples/nic/lib64", "/naples/nic/bin/penctl", "update", "naples",
 			"--managed-by", "network", "--management-network", "oob"}
 
@@ -1631,6 +1631,21 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 		}
 
 		naples.logger.Println("Mode switch complete on : ", name)
+		//Delete default route of docker.
+		cmd = []string{"route", "delete", "default"}
+		cmdResp, _, rerr = wload.RunCommand(cmd, "", 0, 0, false, false)
+		if rerr != nil || cmdResp.ExitCode != 0 || cmdResp.Stderr != "" {
+			msg := fmt.Sprintf("Error running delete default route command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
+			naples.logger.Println(msg)
+			return errors.New(msg)
+		}
+		cmd = []string{"route", "add", "default", "gw", defaultGW}
+		cmdResp, _, rerr = wload.RunCommand(cmd, "", 0, 0, false, false)
+		if rerr != nil || cmdResp.ExitCode != 0 || cmdResp.Stderr != "" {
+			msg := fmt.Sprintf("Error running default route command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
+			naples.logger.Println(msg)
+			return errors.New(msg)
+		}
 		return nil
 	}
 
@@ -1640,7 +1655,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 			return "", err
 		}
 
-		err = modeSwitch(ipAddress)
+		err = modeSwitch(ipAddress, defaultGW)
 		if err == nil {
 			return ipAddress, nil
 		}
@@ -1710,6 +1725,7 @@ func (naples *naplesMultiSimNode) getBaseMacAddresss() (string, error) {
 				if err != nil {
 					return "", err
 				}
+				naples.logger.Infof("Using mac address from interface %v %v", intf.Name, macAddress)
 				//Write to file as mac might change
 				err = ioutil.WriteFile(naplesSimBaseMacFile, []byte(macAddress), 0644)
 				if err != nil {

@@ -24,6 +24,8 @@ const (
 	DefaultWatchBatchSize = 100
 	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events
 	DefaultWatchHoldInterval = time.Millisecond * 10
+
+	LatencyMeasurementEnabled = false
 )
 
 type EventStatus struct {

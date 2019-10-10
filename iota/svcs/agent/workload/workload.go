@@ -393,7 +393,6 @@ func (app *containerWorkload) RunCommand(cmds []string, dir string, retries uint
 				break
 			}
 			app.logger.Info("Command failed, retrying")
-			time.Sleep(500 * time.Millisecond)
 		}
 		cmdCtx.Done = true
 		cmdCtx.Stdout = strings.Map(fixUtf, cmdResp.Stdout)
@@ -759,7 +758,6 @@ func (app *bareMetalWorkload) RunCommand(cmds []string, dir string, retries uint
 			break
 		}
 		app.logger.Info("Command failed, retrying")
-		time.Sleep(500 * time.Millisecond)
 	}
 
 	if background && cmdInfo.Ctx.ExitCode == 0 {
@@ -836,7 +834,6 @@ func (app *remoteWorkload) RunCommand(cmds []string, dir string,
 					break Loop
 				}
 				app.logger.Info("Command failed, retrying")
-				time.Sleep(500 * time.Millisecond)
 			}
 		}
 		return cmdInfo.Ctx, "", nil

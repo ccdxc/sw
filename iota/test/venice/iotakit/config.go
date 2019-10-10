@@ -235,7 +235,9 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 	_, err = testutils.CreateTenant(apicl, globals.DefaultTenant)
 	if err != nil {
 		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(412)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+		// already exists
+		if !strings.HasPrefix(err.Error(), "Status:(412)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
+			 !strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateTenant failed with err: %v", err)
 		}
 	}
@@ -244,7 +246,8 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 	_, err = testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 	if err != nil {
 		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
+			 !strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateAuthenticationPolicy failed with err: %v", err)
 		}
 	}
@@ -253,7 +256,8 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 	_, err = testutils.CreateTestUser(context.TODO(), apicl, userID, password, globals.DefaultTenant)
 	if err != nil {
 		// 409 is returned when user already exists. 401 when auth is already bootstrapped. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
+			 !strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateTestUser failed with err: %v", err)
 		}
 	}

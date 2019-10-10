@@ -6,7 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -18,6 +20,17 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+// periodicFreeMemory forces garbage collection every minute and frees OS memory
+func periodicFreeMemory() {
+	for {
+		select {
+		case <-time.After(time.Minute):
+			// force GC and free OS memory
+			debug.FreeOSMemory()
+		}
+	}
+}
 
 // main function of network controller
 func main() {
@@ -52,6 +65,10 @@ func main() {
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
+
+	// set Garbage collection ratio and periodically free OS memory
+	debug.SetGCPercent(20)
+	go periodicFreeMemory()
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{

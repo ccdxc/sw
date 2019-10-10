@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
 // ReloadHosts reloads a host
 func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 	if hc.err != nil {
@@ -767,7 +768,7 @@ func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
 		return err
 	}
 
-	cmd = "ifconfig eth0 down && ifconfig eth1 down && sleep 600 && ifconfig eth0 up"
+	cmd = "ifconfig eth0 down && ifconfig eth1 down && sleep 600 && ifconfig eth0 up && ifconfig eth1 up && route add default gw 172.17.0.1"
 	stdout, err = act.RunFakeNaplesCommand(naples, cmd)
 	if err != nil {
 		log.Errorf("Failed to flap mgmt link node %v :%v", err, stdout)

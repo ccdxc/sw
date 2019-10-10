@@ -130,13 +130,15 @@ func (eh *SecurityGroupTopic) updateAckedObjStatus(nodeID string, event api.Even
 		evStatus = nodeStatus.opAckedStatus[event]
 	}
 
-	rcvdTime, _ := objMeta.ModTime.Time()
-	sendTime, _ := objMeta.CreationTime.Time()
-	delta := rcvdTime.Sub(sendTime)
+	if LatencyMeasurementEnabled {
+		rcvdTime, _ := objMeta.ModTime.Time()
+		sendTime, _ := objMeta.CreationTime.Time()
+		delta := rcvdTime.Sub(sendTime)
 
-	hdr.Record(nodeID+"_"+"SecurityGroup", delta)
-	hdr.Record("SecurityGroup", delta)
-	hdr.Record(nodeID, delta)
+		hdr.Record(nodeID+"_"+"SecurityGroup", delta)
+		hdr.Record("SecurityGroup", delta)
+		hdr.Record(nodeID, delta)
+	}
 
 	new, _ := strconv.Atoi(objMeta.ResourceVersion)
 	//for create/delete keep track of last one sent to, this may not be full proof

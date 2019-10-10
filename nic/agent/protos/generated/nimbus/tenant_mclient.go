@@ -105,7 +105,7 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 		case <-time.After(resyncInterval):
 			//Give priority to evt work
 			//Wait for batch interval for inflight work
-			time.Sleep(DefaultWatchHoldInterval)
+			time.Sleep(5 * DefaultWatchHoldInterval)
 			select {
 			case evt, ok := <-recvCh:
 				if !ok {
