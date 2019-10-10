@@ -121,11 +121,19 @@ const static vector<rsa_vector_entry_t> rsa_testvectors =
     {"rsa-testvectors/SigVer15_186-3.req",
       crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
 
+    // Late add-ons from validation vendor for modulus 4K
+    {"rsa-testvectors/SigVer15_186-2.req",
+      crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PADDING},
+
     // Probabilistic Signature Scheme (PSS)
     {"rsa-testvectors/SigGenPSS_186-3.req",
      crypto_rsa::RSA_KEY_CREATE_SIGN, RSA_PKCS1_PSS_PADDING},
 
     {"rsa-testvectors/SigVerPSS_186-3.req",
+     crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PSS_PADDING},
+
+    // Late add-ons from validation vendor for modulus 4K
+    {"rsa-testvectors/SigVerPSS_186-2.req",
      crypto_rsa::RSA_KEY_CREATE_ENCRYPT, RSA_PKCS1_PSS_PADDING},
 
 #ifdef OPENSSL_WITH_TRUNCATED_SHA_SUPPORT
