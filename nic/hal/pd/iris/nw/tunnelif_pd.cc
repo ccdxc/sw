@@ -886,12 +886,13 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
                    sizeof(ip_addr_t));
         }
         tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
-        if (vlan_id != NATIVE_VLAN_ID) {
-            tnnl_rw_key->vlan_valid = vlan_v;
-            tnnl_rw_key->vlan_id = vlan_id;
-        } else {
+        if (vlan_id >=  NATIVE_TELEMETRY_VLAN_ID_START && 
+            vlan_id <= NATIVE_TELEMETRY_VLAN_ID_END) {
             tnnl_rw_key->vlan_valid = 0;
             tnnl_rw_key->vlan_id = 0;
+        } else {
+            tnnl_rw_key->vlan_valid = vlan_v;
+            tnnl_rw_key->vlan_id = vlan_id;
         }
     } else if (actionid == TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID) {
         memcpy(tnnl_rw_key->mac_da, pi_if->gw_mac_da, sizeof(mac_addr_t));
