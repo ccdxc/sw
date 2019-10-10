@@ -7,11 +7,11 @@ import (
 	"path"
 	"time"
 
-	cmd "github.com/pensando/sw/api/generated/cluster"
-
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
@@ -72,12 +72,22 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 }
 
 func (o *clusterCreateOp) populateVersionDefaults() {
-	o.version.Kind = "Version"
-	o.version.Name = globals.DefaultVersionName
+	c, _ := types.TimestampProto(time.Now())
+
+	o.version.Defaults("all")
 	o.version.APIVersion = "v1"
-	o.version.UUID = uuid.NewV4().String()
-	o.version.SelfLink = o.version.MakeKey("cluster")
-	o.version.GenerationID = "1"
+	o.version.ObjectMeta = api.ObjectMeta{
+		Name:         globals.DefaultVersionName,
+		UUID:         uuid.NewV4().String(),
+		GenerationID: "1",
+		SelfLink:     o.version.MakeKey("cluster"),
+		CreationTime: api.Timestamp{
+			Timestamp: *c,
+		},
+		ModTime: api.Timestamp{
+			Timestamp: *c,
+		},
+	}
 	o.version.Status = cmd.VersionStatus{
 		BuildVersion: env.GitVersion,
 		VCSCommit:    env.GitCommit,

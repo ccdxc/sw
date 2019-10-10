@@ -570,10 +570,10 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// as all the operations are performed, it should be 0 now
 			if bulkReq.NumberOfActions() != 0 {
 				var errs []string
-				for _, item := range bulkResp.Items {
+				for index, item := range bulkResp.Items {
 					for key, val := range item {
 						if val.Error != nil {
-							e.logger.Debugf("request {%s} failed with err: %+v", key, val.Error)
+							e.logger.Debugf("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
 							errs = append(errs, val.Error.Reason)
 						}
 					}
@@ -588,10 +588,10 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// Caller is expected to retry the Bulk operation for failed entries.
 			if bulkResp.Errors == true {
 				var errs []string
-				for _, item := range bulkResp.Items {
+				for index, item := range bulkResp.Items {
 					for key, val := range item {
 						if val.Error != nil {
-							e.logger.Debugf("request {%s} failed with err: %+v", key, val.Error)
+							e.logger.Debugf("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
 							errs = append(errs, val.Error.Reason)
 						}
 					}

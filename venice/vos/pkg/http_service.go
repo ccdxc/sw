@@ -135,6 +135,7 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 				Digest: stat.ETag,
 			},
 		}
+		updateObjectMeta(&stat, &in.ObjectMeta)
 		stat, err = h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
 		if err != nil {
 			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error verifying image write (%s)", err))
