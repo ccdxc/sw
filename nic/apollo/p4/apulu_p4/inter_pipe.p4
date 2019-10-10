@@ -23,13 +23,33 @@ action ingress_to_egress() {
 }
 
 action ingress_to_rxdma() {
-    add_header(capri_p4_intrinsic);
-    add_header(capri_rxdma_intrinsic);
-    add_header(p4i_to_rxdma);
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
     remove_header(ingress_recirc);
+
+    add_header(capri_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
+    add_header(p4i_to_rxdma);
+    add_header(p4i_i2e);
+    add_header(p4i_to_arm);
+
+    modify_field(p4i_to_arm.packet_len, capri_p4_intrinsic.packet_len);
+    modify_field(p4i_to_arm.local_vnic_tag, vnic_metadata.bd_id);
+    modify_field(p4i_to_arm.flow_hash, p4i_i2e.entropy_hash);
+    modify_field(offset_metadata.l2_1, offset_metadata.l2_1);
+    modify_field(offset_metadata.l2_2, offset_metadata.l2_2);
+    modify_field(offset_metadata.l3_1, offset_metadata.l3_1);
+    modify_field(offset_metadata.l3_2, offset_metadata.l3_2);
+    modify_field(offset_metadata.l4_1, offset_metadata.l4_1);
+    modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
+    modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
+
+    modify_field(p4i_to_rxdma.apulu_p4plus, TRUE);
+    modify_field(p4i_to_rxdma.vnic_info_en, TRUE);
+
+    add_to_field(capri_p4_intrinsic.packet_len,
+                 (APULU_P4_TO_ARM_HDR_SZ + APULU_I2E_HDR_SZ));
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, APULU_SERVICE_LIF);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
@@ -57,7 +77,7 @@ action p4i_inter_pipe() {
         tunnel_decap();
     }
 
-    if (control_metadata.flow_miss == TRUE) {
+    if (control_metadata.flow_miss_redirect == TRUE) {
         ingress_to_rxdma();
     } else {
         ingress_to_egress();
@@ -136,6 +156,7 @@ action egress_recirc() {
 }
 
 action p4e_inter_pipe() {
+    remove_header(capri_txdma_intrinsic);
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     } else {

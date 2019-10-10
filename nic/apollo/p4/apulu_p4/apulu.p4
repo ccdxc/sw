@@ -10,12 +10,6 @@
 #include "metadata.p4"
 #include "i2e_metadata.p4"
 
-#if 0
-#include "vnic.p4"
-#include "tunnel.p4"
-#include "meter.p4"
-#endif
-
 #include "device.p4"
 #include "key.p4"
 #include "properties.p4"

@@ -10,10 +10,6 @@ struct phv_             p;
 %%
 
 read_pktdesc:
-    /* pktdesc_addr += 64  (used in iflow assist) */
-    add         r1, k.txdma_control_pktdesc_addr, 64
-    phvwr       p.txdma_control_pktdesc_addr, r1
-
     /* Load sacl base addr to r1 */
     add        r1, r0, d.read_pktdesc_d.sacl_base_addr
     /* Add SACL_P1_1_TABLE_OFFSET to sacl base address. */

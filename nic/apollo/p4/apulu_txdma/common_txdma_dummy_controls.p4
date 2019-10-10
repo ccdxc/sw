@@ -10,7 +10,7 @@ control rfc {}
 control pkt_dma {}
 
 #define txdma_predicate             app_header
-#define flow_enable                 table0_valid
+#define rfc_enable                  table0_valid
 #define pass_two                    table1_valid
 #define lpm1_enable                 table2_valid
 #define cps_path_en                 table3_valid

@@ -706,10 +706,12 @@ table rfc_p3_1 {
 }
 
 control rfc {
+    if (txdma_predicate.rfc_enable == TRUE) {
         apply(rfc_p1);
         apply(rfc_p2);
         apply(rfc_p3);
         apply(rfc_p1_1);
         apply(rfc_p2_1);
         apply(rfc_p3_1);
+    }
 }

@@ -145,13 +145,11 @@
 /*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
-#define APULU_PREDICATE_HDR_SZ          1
-#define APULU_P4I_TO_RXDMA_HDR_SZ       0
-#define APULU_I2E_HDR_SZ                0
-#define APULU_TXDMA_TO_P4E_HDR_SZ       0
+#define APULU_P4I_TO_RXDMA_HDR_SZ       52
+#define APULU_I2E_HDR_SZ                34
+#define APULU_P4_TO_ARM_HDR_SZ          17
 
 #define APULU_INGRESS_MIRROR_BLOB_SZ    (CAPRI_P4_INTRINSIC_HDR_SZ + \
-                                         APULU_TXDMA_TO_P4E_HDR_SZ + \
                                          APULU_I2E_HDR_SZ)
 
 #define PKTQ_PAGE_SIZE                  10240

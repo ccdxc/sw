@@ -2,6 +2,7 @@
 
 import sys
 import socket
+import codecs
 
 sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
@@ -45,3 +46,17 @@ opkt = Ether(dst='00:C1:C2:C3:C4:C5', src='00:11:12:13:14:15') / \
         TCP(sport=0x5678, dport=0x1234) / payload
 dump_pkt(ipkt, 'g_snd_pkt2')
 dump_pkt(opkt, 'g_rcv_pkt2')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.10.10', src='11.11.11.11') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+p4_to_arm_header = codecs.decode('006e000002ed41f250eb1123000000374b', 'hex')
+opkt = p4_to_arm_header / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.10.10', src='11.11.11.11') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+dump_pkt(ipkt, 'g_snd_pkt3')
+dump_pkt(opkt, 'g_rcv_pkt3')

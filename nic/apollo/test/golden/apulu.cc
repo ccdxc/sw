@@ -26,6 +26,7 @@
 #include "platform/capri/capri_qstate.hpp"
 #include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -49,14 +50,9 @@ using namespace sdk::platform::capri;
 #define JP4_PRGM        "p4_program"
 
 #define MEM_REGION_LIF_STATS_BASE       "lif_stats_base"
-#define MEM_REGION_FLOW_BASE            "flow"
-#define MEM_REGION_FLOW_OHASH_BASE      "flow_ohash"
-#define MEM_REGION_IPV4_FLOW_BASE       "ipv4_flow"
-#define MEM_REGION_IPV4_FLOW_OHASH_BASE "ipv4_flow_ohash"
-#define MEM_REGION_SESSION_STATS_BASE   "session_stats"
 
 #define RXDMA_SYMBOLS_MAX   1
-#define TXDMA_SYMBOLS_MAX   6
+#define TXDMA_SYMBOLS_MAX   1
 
 #define UDP_SPORT_OFFSET    34
 #define UDP_SPORT_SIZE      2
@@ -96,6 +92,7 @@ uint16_t g_bd_id = 0x2FD;
 uint16_t g_vnic_id = 0x2FE;
 uint32_t g_device_ipv4_addr = 0x64656667;
 uint64_t g_device_mac = 0x00AABBCCDDEEULL;
+uint32_t g_nexthop_id_arm = 0x137;
 
 uint64_t g_dmac1 = 0x000102030405ULL;
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
@@ -176,6 +173,23 @@ is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
 }
 
 static void
+p4plus_table_init (platform_type_t platform_type)
+{
+    p4pd_table_properties_t tbl_ctx;
+    p4plus_prog_t prog;
+
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx.stage;
+    prog.stage_tableid = tbl_ctx.stage_tableid;
+    prog.control = "apulu_txdma";
+    prog.prog_name = "txdma_stage0.bin";
+    prog.pipe = P4_PIPELINE_TXDMA;
+    sdk::platform::capri::capri_p4plus_table_init(&prog, platform_type);
+}
+
+static void
 init_service_lif ()
 {
     LIFQState qstate = {0};
@@ -186,6 +200,14 @@ init_service_lif ()
     qstate.params_in.type[0].size = 1;
     push_qstate_to_capri(&qstate, 0);
 
+    uint64_t pc;
+    int ret;
+    char progname[] = "txdma_stage0.bin";
+    char labelname[] = "apollo_read_qstate";
+    ret = sdk::p4::p4_program_label_to_offset("apulu_txdma", progname,
+                                              labelname, &pc);
+    SDK_ASSERT(ret == 0);
+
     lifqstate_t lif_qstate = {0};
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
     lif_qstate.ring1_base = get_mem_addr(JPKTDESC);
@@ -195,6 +217,7 @@ init_service_lif ()
                  sizeof(lif_qstate));
 
     lifqstate_t txdma_qstate = {0};
+    txdma_qstate.pc = pc >> 6;
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
     txdma_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
@@ -352,6 +375,28 @@ device_init (void)
 
     capri_tm_uplink_lif_set(TM_PORT_UPLINK_0, g_lif0);
     capri_tm_uplink_lif_set(TM_PORT_UPLINK_1, g_lif1);
+}
+
+static void
+nacl_init ()
+{
+    nacl_swkey_t key;
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_NACL;
+    uint32_t index;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    index = 0;
+    key.control_metadata_flow_miss = 1;
+    mask.control_metadata_flow_miss_mask = 1;
+    data.action_id = NACL_NACL_FLOW_MISS_ID;
+    data.action_u.nacl_nacl_flow_miss.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.action_u.nacl_nacl_flow_miss.nexthop_id = g_nexthop_id_arm;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
 }
 
 static void
@@ -625,6 +670,11 @@ nexthops_init (void)
     memset(&data, 0, sizeof(data));
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_1;
+    entry_write(tbl_id, g_nexthop_id_arm, 0, 0, &data, false, 0);
+    memset(&data, 0, sizeof(data));
+
+    data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nexthop_info->port = TM_PORT_UPLINK_1;
     nexthop_info->ip_type = IPTYPE_IPV4;
     memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
     memcpy(nexthop_info->smaco, &g_device_mac, 6);
@@ -769,8 +819,10 @@ TEST_F(apulu_test, test1)
     config_done();
 #endif
 
+    p4plus_table_init(platform);
     init_service_lif();
     device_init();
+    nacl_init();
     input_properties_init();
     local_mappings_init();
     mappings_init();
@@ -833,6 +885,25 @@ TEST_F(apulu_test, test1)
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt3));
+        memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
+        epkt.resize(sizeof(g_rcv_pkt3));
+        memcpy(epkt.data(), g_rcv_pkt3, sizeof(g_rcv_pkt3));
+        std::cout << "[TCID=" << tcid << "] ARM:P4I-RxDMA-TxDMA-P4E" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
         }

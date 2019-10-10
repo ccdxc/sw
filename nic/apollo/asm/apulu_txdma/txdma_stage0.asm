@@ -78,6 +78,6 @@ nicmgr_resp_stage0:
 #endif
 
 .align
-apulu_read_qstate:
+apollo_read_qstate:
     j           read_qstate_info
     nop

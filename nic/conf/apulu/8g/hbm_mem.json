@@ -181,6 +181,12 @@
             "cache": "p4plus-rxdma"
         },
         {
+            "name": "vnic_info_rxdma",
+            "size": "256K",
+            "cache": "p4plus-rxdma",
+            "_comment": "4K * 64B"
+        },
+        {
             "name": "local_mapping",
             "size": "8M",
             "cache": "p4ig",

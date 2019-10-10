@@ -54,13 +54,14 @@ header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_arm.l2_1_offset                offset_metadata.l2_1
-@pragma pa_field_union ingress p4_to_arm.l2_2_offset                offset_metadata.l2_2
-@pragma pa_field_union ingress p4_to_arm.l3_1_offset                offset_metadata.l3_1
-@pragma pa_field_union ingress p4_to_arm.l3_2_offset                offset_metadata.l3_2
-@pragma pa_field_union ingress p4_to_arm.l4_1_offset                offset_metadata.l4_1
-@pragma pa_field_union ingress p4_to_arm.l4_2_offset                offset_metadata.l4_2
-header p4_to_arm_header_t p4_to_arm;
+@pragma pa_field_union ingress p4i_to_arm.l2_1_offset               offset_metadata.l2_1
+@pragma pa_field_union ingress p4i_to_arm.l2_2_offset               offset_metadata.l2_2
+@pragma pa_field_union ingress p4i_to_arm.l3_1_offset               offset_metadata.l3_1
+@pragma pa_field_union ingress p4i_to_arm.l3_2_offset               offset_metadata.l3_2
+@pragma pa_field_union ingress p4i_to_arm.l4_1_offset               offset_metadata.l4_1
+@pragma pa_field_union ingress p4i_to_arm.l4_2_offset               offset_metadata.l4_2
+header p4_to_arm_header_t p4i_to_arm;
+header p4_to_arm_header_t p4e_to_arm;
 
 // layer 0
 header ethernet_t ethernet_0;
@@ -236,9 +237,9 @@ parser parse_ipv6_1 {
 
 parser parse_icmp {
     extract(icmp);
+    set_metadata(offset_metadata.l4_2, current + 0);
     set_metadata(key_metadata.parsed_sport, latest.icmp_type);
     set_metadata(key_metadata.parsed_dport, latest.icmp_code);
-    set_metadata(offset_metadata.l4_2, current + 0);
     return ingress;
 }
 
@@ -338,12 +339,8 @@ parser deparse_ingress {
     extract(capri_rxdma_intrinsic);
 
     extract(ingress_recirc);
-
-    extract(p4i_to_p4plus_classic_nic);
-    extract(p4i_to_p4plus_classic_nic_ip);
-    extract(p4_to_arm);
     extract(p4i_to_rxdma);
-
+    extract(p4i_to_arm);
     extract(p4i_i2e);
 
     return parse_ingress_packet;
@@ -358,6 +355,7 @@ parser egress_start {
     extract(capri_p4_intrinsic);
     return select(capri_intrinsic.tm_iport) {
         TM_PORT_EGRESS  : parse_egress_to_egress;
+        TM_PORT_DMA : parse_txdma_to_egress;
         default : parse_egress_common;
         0x1 mask 0 : deparse_egress;
     }
@@ -374,6 +372,13 @@ parser parse_egress_to_egress {
 @pragma xgress egress
 parser parse_egress_recirc_header {
     extract(egress_recirc);
+    return parse_egress;
+}
+
+@pragma xgress egress
+parser parse_txdma_to_egress {
+    extract(capri_txdma_intrinsic);
+    extract(p4e_to_arm);
     return parse_egress;
 }
 
@@ -528,7 +533,9 @@ parser deparse_egress {
     extract(p4e_to_p4plus_classic_nic);
     extract(p4e_to_p4plus_classic_nic_ip);
 
-    // Below are headers used in case of egress-to-egress recirc
+    extract(p4e_to_arm);
+
+    // below are headers used in case of egress-to-egress recirc
     extract(egress_recirc);
     extract(p4e_i2e);
 
