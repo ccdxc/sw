@@ -163,6 +163,7 @@ TEST_F (event_thread_test, basic_functionality) {
 void
 ipc_cb (ipc::ipc_msg_ptr msg, void *ctx)
 {
+    printf("%s\n", (char *)msg->data());
     event_ipc_reply(msg, "ipc pong", 9);
 }
 
@@ -173,20 +174,20 @@ TEST_F (event_thread_test, ipc_functionality) {
                                              0, SCHED_OTHER, true);
     t4->start(NULL);
 
-    ipc::ipc_client *ipc = ipc::ipc_client::factory(THREAD_T5);
+    ipc::ipc_client::factory(THREAD_T5);
 
     //
     // IF WE SEND MESSAGE BEFORE THE LISTENER BINDS THE MESSAGE WILL BE LOST
     //
     sleep(2);
     ipc::ipc_msg_ptr msg;
-    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc->send_recv(THREAD_T4, "ipc ping", 9);
+    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
     sleep(2);
 }

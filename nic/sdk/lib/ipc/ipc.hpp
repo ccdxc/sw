@@ -28,8 +28,10 @@ class ipc_client {
 public:
     static ipc_client *factory(uint32_t id);
     static void destroy(ipc_client *client);
+    static ipc_msg_ptr send_recv_once(uint32_t recipient, const void *data,
+                                      size_t data_length);
     virtual ipc_msg_ptr send_recv(uint32_t recipient, const void *data,
-                                      size_t data_length) = 0;
+                                  size_t data_length) = 0;
     virtual ipc_msg_ptr recv(void) = 0;
     virtual void reply(ipc_msg_ptr msg, const void *data,
                        size_t data_length) = 0;

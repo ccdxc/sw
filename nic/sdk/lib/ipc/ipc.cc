@@ -22,7 +22,13 @@ namespace ipc {
 
 ipc_client *
 ipc_client::factory(uint32_t id) {
-    return zmq_ipc_client::factory(id);
+    return zmq_ipc_client::factory(id, true);
+}
+
+ipc_msg_ptr
+ipc_client::send_recv_once(uint32_t recipient, const void *data, size_t data_length)
+{
+    return zmq_ipc_client::send_recv_once(recipient, data, data_length);
 }
 
 void
