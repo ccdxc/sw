@@ -74,7 +74,7 @@ jobs:
   api:
     labels: ["2xhourly"]
   asset-build:
-    labels: ["hourly"]
+    labels: ["2xhourly"]
   docs:
     labels: ["hourly"]
   dol:
