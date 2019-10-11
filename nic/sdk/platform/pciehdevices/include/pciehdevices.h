@@ -48,8 +48,10 @@ typedef struct pciehdev_nvmeres_s {
 } pciehdev_nvmeres_t;
 
 typedef struct pciehdev_virtiores_s {
-    u_int64_t virtioregspa;       /* virtio 4k register region */
-    u_int32_t virtioqidc;         /* virtio qid count */
+    u_int64_t regspa;           /* virtio register region */
+    u_int32_t regssz;           /* virtio register region size */
+    u_int32_t qidc;             /* virtio qid count */
+    u_int16_t deviceid;         /* override deviceid */
 } pciehdev_virtiores_t;
 
 typedef struct pciehdev_debugres_s {

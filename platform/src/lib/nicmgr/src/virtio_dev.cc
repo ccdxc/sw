@@ -232,7 +232,8 @@ VirtIODev::_CreateHostDevice(void)
     pres.pfres.intrdmask = 0;
     pres.pfres.cmbpa = cmb_mem_addr;
     pres.pfres.cmbsz = cmb_mem_size;
-    pres.pfres.virtio.virtioregspa = devcmd_mem_addr;
+    pres.pfres.virtio.regspa = devcmd_mem_addr;
+    pres.pfres.virtio.regssz = VIRTIO_DEV_PAGE_SIZE;
 
     // Add device to PCI topology
     if (pciemgr) {

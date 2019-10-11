@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #include "platform/pciehdevices/include/pci_ids.h"
+#include "platform/misc/include/misc.h"
 #include "platform/intrutils/include/intrutils.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
@@ -16,6 +17,13 @@
 static int
 virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
+    const u_int8_t upd[8] = {
+        /* make this table a bit more compact */
+#define UPD(U)  PRT_UPD_##U
+        /* virtio rxq */ [0] = UPD(SCHED_NONE),
+        /* virtio txq */ [1] = UPD(SCHED_SET)  | UPD(PICI_PIINC),
+#undef UPD
+    };
     u_int32_t msixtbloff, msixpbaoff;
     pciehbars_t *pbars;
     pciehbar_t pbar;
@@ -28,23 +36,63 @@ virtio_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
      * virtio resource io bar
      */
     memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    memset(&prt, 0, sizeof(prt));
 
-    pbar.type = PCIEHBARTYPE_IO;
-    pbar.size = 0x1000; /* XXX */
+    pbar.type = PCIEHBARTYPE_MEM64;
+    pbar.size = roundup_power2(res->virtio.regssz);
     pbar.cfgidx = 0;
 
+    /*
+     * Writes to the notify register go to doorbell.
+     * We'll let reads go through to the memory backing
+     * registers, although reading the doorbell is undefined.
+     */
+    memset(&preg, 0, sizeof(preg));
+    memset(&prt, 0, sizeof(prt));
+    preg.baroff = 0x200;
     pmt_bar_enc(&preg.pmt,
                 res->port,
-                PMT_TYPE_IO,
+                PMT_TYPE_MEM,
+                0x200, /* barsize */
+                0x200, /* prtsize */
+                PMTF_WR);
+    pmt_bar_set_qtype(&preg.pmt, 2, 0x7);
+
+    prt_db16_enc(&prt, res->lifb, upd);
+    /*
+     * qid encoded in the data, in data bits [0:15].
+     * Want 16 bits, but Capri errata allows only 15.
+     *
+     * This limits us to having _only_ up to 16K txrx virtqueue pairs per lif.
+     * Practically, supporting hundreds per lif will be more than sufficient.
+     *
+     * XXX Want to shift by 1 bit, but we can't.  The tx qids in doorbell data
+     * will be 1, 3, 5, etc.  For now, get the qid from data, but don't use any
+     * bits.  The qid will be zero, only supporting one queue per type for now.
+     *
+     * TODO: We can use same qtype for tx and rx, alternating rx and tx
+     * qstates.  Ring the tx doorbell for that qtype, but ring another qtype
+     * for rx.  Set the other qtype upd bits to ignore.
+     *
+     * TODO: Allocate an extra ring in rx qstate, just in case the tx doorbell
+     * rings for the rx qstate.  The tx doorbell can safely incr that ring
+     * without touching the rx state we care about, rx programs will ignore it.
+     */
+    prt_db_qidparams(&prt, 0, 0);
+    pciehbarreg_add_prt(&preg, &prt);
+    pciehbar_add_reg(&pbar, &preg);
+
+    memset(&preg, 0, sizeof(preg));
+    memset(&prt, 0, sizeof(prt));
+    pmt_bar_enc(&preg.pmt,
+                res->port,
+                PMT_TYPE_MEM,
                 pbar.size, /* barsize */
                 pbar.size, /* prtsize */
                 PMTF_RW);
 
     prt_res_enc(&prt,
-                res->virtio.virtioregspa,
-                0x1000,
+                res->virtio.regspa,
+                res->virtio.regssz,
                 PRT_RESF_NONE);
 
     pciehbarreg_add_prt(&preg, &prt);
@@ -145,9 +193,10 @@ virtio_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 
     pciehcfg_setconf_vendorid(pcfg, 0x1af4);    /* Vendor ID Redhat */
     pciehcfg_setconf_deviceid(pcfg, 0x1000);    /* transitional virtio-net */
-    /* XXX */
-    //pciehcfg_setconf_deviceid(pcfg, 0x2000);    /* XXXtest: keep drv away */
-    /* XXX */
+    if (res->virtio.deviceid) {
+        // override keeps virtio driver from trying to initialize (for testing)
+        pciehcfg_setconf_deviceid(pcfg, res->virtio.deviceid);
+    }
     pciehcfg_setconf_subvendorid(pcfg, 0x1af4); /* Subvendor ID Redhat */
     pciehcfg_setconf_subdeviceid(pcfg, 0x0001); /* Subdevice ID virtio-net */
     pciehcfg_setconf_classcode(pcfg, 0x020000); /*PCI_CLASS_NETWORK_ETHERNET*/

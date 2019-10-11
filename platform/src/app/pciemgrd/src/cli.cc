@@ -155,6 +155,7 @@ add_accel(int argc, char *argv[])
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -208,6 +209,7 @@ add_debug(int argc, char *argv[])
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -246,6 +248,7 @@ add_eth_class(const pciehdevice_type_t type, const char *types,
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -319,6 +322,7 @@ add_nvme(int argc, char *argv[])
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -353,6 +357,7 @@ add_pciestress(int argc, char *argv[])
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -386,6 +391,7 @@ add_rcdev(int argc, char *argv[])
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
@@ -410,15 +416,21 @@ add_virtio(int argc, char *argv[])
     snprintf(pres.pfres.name, sizeof(pres.pfres.name), "virtio%d", instance++);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 0;
+    pres.pfres.virtio.regspa = 0x13e000000; /* XXX */
+    pres.pfres.virtio.regssz = 0x1000;      /* XXX */
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:D:")) != -1) {
         switch (opt) {
+        case 'D':
+            pres.pfres.virtio.deviceid = strtoul(optarg, NULL, 0);
+            break;
         default:
             if (parse_common_pres_opt(opt, &pres) < 0) {
                 fprintf(stderr, "bad argument: %c\n", opt);
                 return;
             }
+            break;
         }
     }
 
