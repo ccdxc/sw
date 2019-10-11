@@ -36,7 +36,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mapping creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -109,7 +109,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mapping update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -154,5 +154,62 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
+}
+
+Status
+MappingSvcImpl::MappingDelete(ServerContext *context,
+                              const pds::MappingDeleteRequest *proto_req,
+                              pds::MappingDeleteResponse *proto_rsp) {
+    pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
+    Status status = Status::OK;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_mapping_key_t key;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, mapping delete failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        key.vpc.id = proto_req->id(i).vpcid();
+        ipaddr_proto_spec_to_api_spec(&key.ip_addr, proto_req->id(i).ipaddr());
+        ret = pds_local_mapping_delete(&key, bctxt);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // commit the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }

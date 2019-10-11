@@ -16,6 +16,8 @@ using pds::MappingSvc;
 using pds::MappingRequest;
 using pds::MappingSpec;
 using pds::MappingResponse;
+using pds::MappingDeleteRequest;
+using pds::MappingDeleteResponse;
 
 class MappingSvcImpl final : public MappingSvc::Service {
 public:
@@ -23,6 +25,8 @@ public:
                          pds::MappingResponse *rsp) override;
     Status MappingUpdate(ServerContext *context, const pds::MappingRequest *req,
                          pds::MappingResponse *rsp) override;
+    Status MappingDelete(ServerContext *context, const pds::MappingDeleteRequest *req,
+                         pds::MappingDeleteResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__
