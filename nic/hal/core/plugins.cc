@@ -35,6 +35,7 @@ struct plugin_t {
     std::string thread_init_func;
     std::string thread_exit_func;
     bool        auto_load;
+    bool        sim;
     std::vector<std::string> deps;
     std::vector<std::string> features;
 
@@ -63,6 +64,7 @@ std::ostream& operator<<(std::ostream& os, const plugin_t& val)
     os << ", thread_init_func=" << val.thread_init_func;
     os << ", thread_exit_func=" << val.thread_exit_func;
     os << ", auto_load=" << val.auto_load;
+    os << ", sim=" << val.sim;
 
     os << ", deps=[";
     for (const std::string &dep :  val.deps) {
@@ -172,6 +174,7 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
         plugin->exit_func = "exit";
     }
     plugin->auto_load = tree.get<bool>("auto_load", false);
+    plugin->sim       = tree.get<bool>("sim", false);
 
     if (auto func = tree.get_optional<std::string>("thread_init_func")) {
         plugin->thread_init_func = *func;
@@ -549,7 +552,14 @@ void plugin_manager_t::load(hal_cfg_t *hal_cfg)
 {
     // register plugins
     for (auto &kv : plugins_) {
-        register_plugin(kv.second);
+        plugin_t *plugin = kv.second;
+        if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
+            !plugin->sim ) {
+            register_plugin(plugin);
+        } else {
+            HAL_TRACE_INFO("Skipped the loading of plugin - {}, SIM: {} ",
+                           plugin->name, plugin->sim);
+        }
     }
 
     // register pipelines

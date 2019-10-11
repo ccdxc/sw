@@ -112,7 +112,7 @@ do
 	sleep "$timeout"
 	health=$(docker inspect -f '{{.State.Health.Status}}' "$CID")
 	if [ "$health" == "healthy" ]; then
-	    echo "NAPLES Container is unhealthy"
+	    echo "NAPLES Container is healthy !"
 	    NAPLES_HEALTHY=0
 	fi
 	let "i++"

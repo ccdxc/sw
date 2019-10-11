@@ -193,7 +193,6 @@ export CLI_apulu_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
 # ==========================================================================
 
 export NIC_HAL_PLUGIN_full_SOLIBS:= ${NIC_HAL_PLUGIN_full_SOLIBS} \
-                                    ${NIC_HAL_DLOPEN_SOLIBS} \
                                     ${NIC_HAL_PROTO_SOLIBS} \
                                     ${NIC_HAL_CFG_PLUGIN_SOLIBS}
 
@@ -225,7 +224,10 @@ export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                                ${NIC_COMMON_LDLIBS}
 
-export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} haltestutils
+export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
+                               ${NIC_HAL_DLOPEN_SOLIBS} \
+                               haltestutils
+
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 

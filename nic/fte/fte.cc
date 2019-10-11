@@ -405,28 +405,34 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
     pipeline->name = name;
 
     // Initialize feature blocks
-    pipeline->num_features_outbound = features_outbound.size();
     feature_t **features = pipeline->features;
+    uint16_t    num_valid_feature = 0;
     for (const std::string& fname: features_outbound) {
         feature_t *feature = feature_lookup_(fname);
         if (!feature) {
             HAL_TRACE_ERR("fte: unknown feature {} in outbound pipeline {} - skipping",
                           fname, name);
+            continue;
         }
         HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, fname);
         *features++ = feature;
+        num_valid_feature += 1;
     }
+    pipeline->num_features_outbound = num_valid_feature;
 
-    pipeline->num_features_inbound = features_inbound.size();
+    num_valid_feature = 0;
     for (const std::string& fname: features_inbound) {
         feature_t *feature = feature_lookup_(fname);
         if (!feature) {
             HAL_TRACE_ERR("fte: unknown feature {} in inbound pipeline {} - skipping",
                           fname, name);
+            continue;
         }
         HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, fname);
         *features++ = feature;
+        num_valid_feature += 1;
     }
+    pipeline->num_features_inbound = num_valid_feature;
 
     // Add to global pipline list
     pipeline_add_(pipeline);

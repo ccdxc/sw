@@ -119,6 +119,7 @@
             "exit_func" : "lb_exit",
             "auto_load" : "true",
             "deps"      : [],
+            "sim"       : "true",
             "features"  : ["lb"]
         },
         {
@@ -129,6 +130,7 @@
             "exit_func" : "nat_exit",
             "auto_load" : "true",
             "deps"      : [],
+            "sim"       : "true",
             "features"  : ["nat"]
         },
         {
@@ -139,6 +141,7 @@
             "exit_func" : "dol_exit",
             "auto_load" : "true",
             "deps"      : [],
+            "sim"       : "true",
             "features"  : ["test"]
         },
         {
@@ -149,6 +152,7 @@
             "exit_func" : "proxy_exit",
             "auto_load" : "true",
             "deps"      : [],
+            "sim"       : "true",
             "features"  : [
                 "tcp",
                 "tcp-trigger-connection",
@@ -168,6 +172,7 @@
             "thread_exit_func" : "app_redir_thread_exit",
             "auto_load" : "true",
             "deps"      : [],
+            "sim"       : "true",
             "features"  : [
                 "app-redir-miss",
                 "app-redir",
