@@ -166,6 +166,7 @@ func testQueryingFwlogs() {
 		},
 	}
 	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	numLogs := []int{20, 20, 12, 2, 0}
 
 	verifyLogs := func() {
 		Eventually(func() bool {
@@ -177,25 +178,11 @@ func testQueryingFwlogs() {
 			// Even if citadel isn't ready, it should return 5 results
 			Expect(len(resp.Results)).To(Equal(5))
 			// Since each query may go to a different replica, we check all the result lengths
-			if len(resp.Results[0].Logs) != 20 {
-				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[0].Logs)))
-				return false
-			}
-			if len(resp.Results[1].Logs) != 20 {
-				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[1].Logs)))
-				return false
-			}
-			if len(resp.Results[2].Logs) != 12 {
-				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[2].Logs)))
-				return false
-			}
-			if len(resp.Results[3].Logs) != 2 {
-				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[3].Logs)))
-				return false
-			}
-			if len(resp.Results[4].Logs) != 0 {
-				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[4].Logs)))
-				return false
+			for i, n := range numLogs {
+				if len(resp.Results[i].Logs) != n {
+					By(fmt.Sprintf("[%d] got %d records, expected %v, %+v", i, len(resp.Results[i].Logs), n, resp.Results))
+					return false
+				}
 			}
 			return true
 		}, 180, 2).Should(BeTrue(), "Citadel failed to return expected amount of results")
