@@ -31,16 +31,23 @@ pipeline_get (void)
 #endif
 }
 
+// Returns true if pipeline is apulu
+static inline bool
+apulu (void)
+{
+    return (pipeline_get() == "apulu");
+}
+
 // Returns true if pipeline is apollo
 static inline bool
-apollo ()
+apollo (void)
 {
     return (pipeline_get() == "apollo");
 }
 
 // Returns true if pipeline is artemis
 static inline bool
-artemis ()
+artemis (void)
 {
     return (pipeline_get() == "artemis");
 }

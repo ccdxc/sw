@@ -1412,10 +1412,12 @@ create_objects (void)
         }
     }
 
-    // create TEPs including MyTEP
-    ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (!apulu()) {
+        // create TEPs including MyTEP
+        ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     if (artemis()) {
@@ -1435,47 +1437,49 @@ create_objects (void)
         }
     }
 
-    // create route tables
-    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
-                              g_test_params.num_subnets,
-                              g_test_params.num_routes,
-                              &g_test_params.tep_pfx, &g_test_params.route_pfx,
-                              &g_test_params.v6_route_pfx,
-                              g_test_params.num_nh,
-                              TESTAPP_MAX_SERVICE_TEP,
-                              TESTAPP_MAX_REMOTE_SERVICE_TEP);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
+    if (!apulu()) {
+        // create route tables
+        ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
+                                  g_test_params.num_subnets,
+                                  g_test_params.num_routes,
+                                  &g_test_params.tep_pfx, &g_test_params.route_pfx,
+                                  &g_test_params.v6_route_pfx,
+                                  g_test_params.num_nh,
+                                  TESTAPP_MAX_SERVICE_TEP,
+                                  TESTAPP_MAX_REMOTE_SERVICE_TEP);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
 
-    // create security policies
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules,
-                                 IP_AF_IPV4, false);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules,
-                                 IP_AF_IPV4, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv6_rules,
-                                 IP_AF_IPV6, false);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv6_rules,
-                                 IP_AF_IPV6, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
+        // create security policies
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules,
+                                     IP_AF_IPV4, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules,
+                                     IP_AF_IPV4, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv6_rules,
+                                     IP_AF_IPV6, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv6_rules,
+                                     IP_AF_IPV6, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     // create vpcs and subnets
@@ -1486,56 +1490,58 @@ create_objects (void)
         return ret;
     }
 
-    if (artemis()) {
-        // create vpc peers
-        ret = create_vpc_peers(g_test_params.num_vpcs);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
-
-    if (apollo()) {
-        // create RSPAN mirror sessions
-        if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
-            ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
+    if (!apulu()) {
+        if (artemis()) {
+            // create vpc peers
+            ret = create_vpc_peers(g_test_params.num_vpcs);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
-    }
 
-    // create vnics
-    ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
-                       g_test_params.num_vnics, g_test_params.vlan_start,
-                       g_test_params.num_meter);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
+        if (apollo()) {
+            // create RSPAN mirror sessions
+            if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
+                ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
+                if (ret != SDK_RET_OK) {
+                    return ret;
+                }
+            }
+        }
 
-    // create mappings
-    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
-                          g_test_params.num_subnets, g_test_params.num_vnics,
-                          g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
-                          &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
-                          g_test_params.num_remote_mappings,
-                          &g_test_params.provider_pfx,
-                          &g_test_params.v6_provider_pfx);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // create service mappings
-    if (artemis()) {
-        ret = create_svc_mappings(g_test_params.num_vpcs,
-                                  g_test_params.num_subnets,
-                                  g_test_params.num_vnics,
-                                  g_test_params.num_ip_per_vnic,
-                                  &g_test_params.v4_vip_pfx,
-                                  &g_test_params.v6_vip_pfx,
-                                  &g_test_params.provider_pfx,
-                                  &g_test_params.v6_provider_pfx);
+        // create vnics
+        ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
+                           g_test_params.num_vnics, g_test_params.vlan_start,
+                           g_test_params.num_meter);
         if (ret != SDK_RET_OK) {
             return ret;
+        }
+
+        // create mappings
+        ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
+                              g_test_params.num_subnets, g_test_params.num_vnics,
+                              g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
+                              &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
+                              g_test_params.num_remote_mappings,
+                              &g_test_params.provider_pfx,
+                              &g_test_params.v6_provider_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        // create service mappings
+        if (artemis()) {
+            ret = create_svc_mappings(g_test_params.num_vpcs,
+                                      g_test_params.num_subnets,
+                                      g_test_params.num_vnics,
+                                      g_test_params.num_ip_per_vnic,
+                                      &g_test_params.v4_vip_pfx,
+                                      &g_test_params.v6_vip_pfx,
+                                      &g_test_params.provider_pfx,
+                                      &g_test_params.v6_provider_pfx);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         }
     }
 

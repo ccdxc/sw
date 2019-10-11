@@ -26,7 +26,7 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
     tparams.entry_trace_en = true;
-    tparams.table_id = P4TBL_ID_VNI_OTCAM;
+    tparams.table_id = P4TBL_ID_VNI;
     vni_tbl_ = slhash::factory(&tparams);
     SDK_ASSERT(vni_tbl_ != NULL);
 }
