@@ -21,9 +21,10 @@
 /// @{
 
 #define PDS_EPOCH_INVALID             0x0    ///< invalid epoch
+#define PDS_BATCH_CTXT_INVALID        0x0    ///< invalid batch context
 #define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< invalid route table id
 #define PDS_POLICY_ID_INVALID         0x0    ///< invalid policy id
-#define PDS_BATCH_CTXT_INVALID        0x0    ///< invalid batch context
+#define PDS_PORT_INVALID              0xFF   ///< invalid port#
 
 // Basic PDS data types
 typedef uint64_t                  pds_batch_ctxt_t;          ///< opaque batch context

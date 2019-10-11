@@ -64,7 +64,7 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
         phy_port != (int)xcvr_event_info->phy_port) {
         return false;
     }
-    sdk::linkmgr::port_update_xcvr_event(intf->if_info(), xcvr_event_info);
+    sdk::linkmgr::port_update_xcvr_event(intf->port_info(), xcvr_event_info);
     // TODO: notify interested parties
     return false;
 }
@@ -114,7 +114,7 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
     }
 
     memset(&port_info, 0, sizeof(port_info));
-    ret = sdk::linkmgr::port_get(intf->if_info(), &port_info);
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
     if (ret != sdk::SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex, ret);
         return ret;
@@ -134,7 +134,7 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
     port_info.num_lanes_cfg = api_port_info->num_lanes_cfg;
     port_info.num_lanes = api_port_info->num_lanes;
 
-    ret = sdk::linkmgr::port_update(intf->if_info(), &port_info);
+    ret = sdk::linkmgr::port_update(intf->port_info(), &port_info);
     return ret;
 }
 
@@ -180,7 +180,7 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
         sdk::linkmgr::port_delete(port_info);
         return SDK_RET_ERR;
     }
-    intf->set_if_info(port_info);
+    intf->set_port_info(port_info);
     if_db()->insert(intf);
     return SDK_RET_OK;
 }
@@ -240,6 +240,7 @@ create_ports (void)
     port_args_t    port_args;
     pds_ifindex_t ifindex;
 
+    PDS_TRACE_DEBUG("Creating ports ...");
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {
         ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
@@ -268,7 +269,7 @@ if_walk_port_get_cb (void *entry, void *ctxt)
 
     memset(&port_info, 0, sizeof(port_info));
     port_info.stats_data = stats_data;
-    ret = sdk::linkmgr::port_get(intf->if_info(), &port_info);
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
     if (ret != sdk::SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->key(), ret);
         return false;

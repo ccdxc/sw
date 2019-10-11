@@ -15,6 +15,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 
 #define PDS_MAX_IF    256             ///< Max interfaces
@@ -142,6 +143,10 @@ public:
         return (void *)&(intf->ifindex_);
     }
 
+    /// \brief     return impl instance of this interface object
+    /// \return    impl instance of the interface object
+    impl_base *impl(void) { return impl_; }
+
     /// \brief    return the interface index
     /// \return interface index
     pds_ifindex_t ifindex(void) const { return ifindex_; }
@@ -156,27 +161,36 @@ public:
 
     /// \brief    return the physical port number of this interface
     /// \return   physical port number or 0xFF if invalid
-    uint8_t port(void) const { return port_; }
+    uint8_t port(void) const {
+        if (type_ == PDS_IF_TYPE_UPLINK) {
+            return if_info_.uplink_.port_;
+        } else if (type_ == PDS_IF_TYPE_L3) {
+            return if_info_.l3_.port_;
+        }
+        return PDS_PORT_INVALID;
+    }
 
     /// \brief    return the wire encap of this (L3) interface
     /// \return   wire encap of this L3 interface
-    pds_encap_t encap(void) { return encap_; }
+    pds_encap_t l3_encap(void) { return if_info_.l3_.encap_; }
 
     /// \brief    return the MAC address of this interface
     /// \return   MAC address of this interface
-    mac_addr_t& mac_addr(void) { return mac_; }
+    mac_addr_t& l3_mac(void) { return if_info_.l3_.mac_; }
 
     /// \brief    return IP subnet of this interface
     /// \return   IP prefix configured on this interface
-    ip_prefix_t& ip_prefix(void) { return ip_pfx_; }
+    ip_prefix_t& l3_ip_prefix(void) { return if_info_.l3_.ip_pfx_; }
 
-    /// \brief    set the interface specific information
-    /// \param[in] if_info    pointer to the interface specific information
-    void set_if_info(void *if_info) { if_info_ = if_info; }
+    /// \brief    set the opaque port info for this port
+    /// \param[in] port_info    pointer to the port specific information
+    void set_port_info(void *port_info) {
+        if_info_.port_.port_info_ = port_info;
+    }
 
-    /// \brief    return interface specific information
-    /// \return return pointer to the interface specific information
-    void *if_info(void) { return if_info_; }
+    /// \brief    return port specific information
+    /// \return return pointer to the port specific information
+    void *port_info(void) { return if_info_.port_.port_info_; }
 
 private:
     /// \brief constructor
@@ -185,26 +199,36 @@ private:
     /// \brief destructor
     ~if_entry();
 
+    /// \brief    free h/w resources used by this object, if any
+    ///           (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nuke_resources_(void);
+
 private:
     pds_if_key_t key_;             ///< interface key
     ht_ctxt_t ht_ctxt_;            ///< hash table context
-    void *if_info_;                ///< interface specific information
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
     union {
+        ///< physical port specific information
+        struct {
+            void *port_info_;      ///< interface specific information
+        } port_;
         ///< uplink specific information
         struct {
-            uint16_t hw_lif_id_;   ///< lif id allocate for this uplink
-        };
+            uint8_t port_;
+        } uplink_;
         ///< L3 interface specific information
         struct {
+            pds_vpc_key_t vpc_;    ///< vpc of this L3 interface
+            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
             uint8_t port_;         ///< port number
             pds_encap_t encap_;    ///< wire encap, if any
-            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
             mac_addr_t mac_;       ///< MAC address of this L3 interface
-        };
-    };
+        } l3_;
+    } if_info_;
     ht_ctxt_t ifindex_ht_ctxt_;    ///< hash table context
+    impl_base         *impl_;      ///< impl object instance
     friend class if_state;         ///< if_state is friend of if_entry
 };
 

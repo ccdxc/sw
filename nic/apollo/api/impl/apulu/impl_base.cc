@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
+#include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
@@ -70,6 +71,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::factory((pds_tep_spec_t *)args);
+
+    case IMPL_OBJ_ID_IF:
+        return if_impl::factory((pds_if_spec_t *)args);
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::factory((pds_vpc_spec_t *)args);
@@ -141,6 +145,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::destroy((tep_impl *)impl);
+
+    case IMPL_OBJ_ID_IF:
+        return if_impl::destroy((if_impl *)impl);
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::destroy((vpc_impl *)impl);

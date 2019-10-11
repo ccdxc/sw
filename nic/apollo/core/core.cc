@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_thread.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"

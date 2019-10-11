@@ -30,6 +30,11 @@ static sdk::lib::ipc::ipc_client *g_api_ipc_client_;
 static pds_epoch_t    g_current_epoch_ = PDS_EPOCH_INVALID;
 static thread_local api_engine    g_api_engine;
 
+api_engine *
+api_engine_get(void) {
+    return &g_api_engine;
+}
+
 slab *
 api_params_slab (void)
 {
@@ -819,7 +824,7 @@ api_engine::batch_abort_(void) {
     return SDK_RET_OK;
 }
 
-static inline sdk_ret_t
+sdk_ret_t
 api_engine_init (void)
 {
     g_api_params_slab_ =
@@ -835,48 +840,6 @@ api_engine_init (void)
     g_api_ipc_client_ = sdk::lib::ipc::ipc_client::factory(core::THREAD_ID_CFG);
     SDK_ASSERT(g_api_ipc_client_ != NULL);
     return SDK_RET_OK;
-}
-
-void
-api_thread_init_fn (void *ctxt)
-{
-    api_engine_init();
-}
-
-void
-api_thread_exit_fn (void *ctxt)
-{
-}
-
-void
-api_thread_event_cb (void *msg, void *ctxt)
-{
-}
-
-void
-api_thread_ipc_cb (sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt)
-{
-    sdk_ret_t ret;
-    api_msg_t *api_msg = *(api_msg_t **)msg->data();
-
-    PDS_TRACE_DEBUG("Rcvd IPC msg");
-    // basic validation
-    if (unlikely(api_msg == NULL)) {
-        PDS_TRACE_ERR("Empty ipc msg received");
-        return;
-    }
-
-    switch (api_msg->msg_id) {
-    case API_MSG_ID_BATCH:
-        ret = g_api_engine.batch_commit(&api_msg->batch);
-        break;
-
-    default:
-        PDS_TRACE_ERR("Unknown ipc msg %u", api_msg->msg_id);
-        break;
-    }
-    sdk::lib::event_ipc_reply(msg, &ret, sizeof(ret));
-    return;
 }
 
 /// \@}

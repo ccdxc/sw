@@ -212,7 +212,7 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
         return SDK_RET_INVALID_ARG;
     }
 
-    ret = sdk::linkmgr::port_get(intf->if_info(), &port_args);
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
 
     config->speed = sdk::lib::port_speed_enum_to_mbps(port_args.port_speed);
     config->mtu = port_args.mtu;
@@ -243,7 +243,7 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
         return SDK_RET_INVALID_ARG;
     }
 
-    ret = sdk::linkmgr::port_get(intf->if_info(), &port_args);
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
 
     // status->speed =
     // status->id =

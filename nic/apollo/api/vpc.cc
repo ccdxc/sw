@@ -149,7 +149,7 @@ vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         PDS_TRACE_DEBUG("Activating vpc %u config", key_.id);
-        impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+        return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;
 }

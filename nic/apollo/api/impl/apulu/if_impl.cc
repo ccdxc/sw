@@ -46,6 +46,10 @@ if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     spec = &obj_ctxt->api_params->if_spec;
     switch (spec->type) {
+    case PDS_IF_TYPE_UPLINK:
+        // TODO: add handling
+        break;
+
     case PDS_IF_TYPE_L3:
         ret = if_impl_db()->l3if_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
@@ -64,6 +68,7 @@ if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
+// TODO: fix this
 sdk_ret_t
 if_impl::release_resources(api_base *api_obj) {
     if_entry *intf = (if_entry *)api_obj;
@@ -85,9 +90,10 @@ if_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_INVALID_OP;
 }
 
+// TODO: fix
 sdk_ret_t
 if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -106,6 +112,7 @@ if_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
+// TODO: fix
 #define vni_info    action_u.vni_vni_info
 sdk_ret_t
 if_impl::activate_if_create_(pds_epoch_t epoch, if_entry *intf,
@@ -115,7 +122,7 @@ if_impl::activate_if_create_(pds_epoch_t epoch, if_entry *intf,
 
     PDS_TRACE_DEBUG("Activating if %u, type %u, admin state %u",
                     spec->key.id, spec->type, spec->admin_state);
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

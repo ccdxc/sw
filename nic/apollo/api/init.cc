@@ -7,19 +7,22 @@
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_thread.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 #include "platform/sysmon/sysmon.hpp"
-#include "nic/sdk/lib/device/device.hpp"
 
 namespace api {
 
@@ -66,6 +69,8 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     cfg.port_event_cb = api::port_event_cb;
     cfg.xcvr_event_cb = api::xcvr_event_cb;
     cfg.port_log_fn = NULL;
+    cfg.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+    cfg.mempartition = g_pds_state.mempartition();
 
     // initialize the linkmgr
     sdk::linkmgr::linkmgr_init(&cfg);
@@ -73,6 +78,35 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     sdk::linkmgr::linkmgr_start();
 
     return SDK_RET_OK;
+}
+
+/**
+ * @brief    create one uplink per port
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+static inline sdk_ret_t
+create_uplinks (void)
+{
+    sdk_ret_t        ret;
+    pds_if_spec_t    spec = { 0 };
+    pds_ifindex_t    ifindex;
+
+    PDS_TRACE_DEBUG("Creating uplinks ...");
+    for (uint32_t port = 1;
+         port <= g_pds_state.catalogue()->num_fp_ports(); port++) {
+        ifindex = UPLINK_IFINDEX(port);
+        spec.key.id = ifindex;
+        spec.type = PDS_IF_TYPE_UPLINK;
+        spec.admin_state = PDS_IF_STATE_UP;
+        spec.uplink_info.port_num = port;
+        ret = pds_if_create(&spec, PDS_BATCH_CTXT_INVALID);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("Uplink if 0x%x creation failed", ifindex);
+            break;
+        }
+    }
+    return SDK_RET_OK;
+    //return ret;
 }
 
 /**
@@ -216,8 +250,18 @@ pds_init (pds_init_params_t *params)
         return SDK_RET_OK;
     }
 
+    // spawn pciemgr thread.
+    core::spawn_pciemgr_thread(&api::g_pds_state);
+
+    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
+    // TODO: we need to do better here !! losing 2 seconds
+    sleep(2);
+
     // spawn api thread
     core::spawn_api_thread(&api::g_pds_state);
+
+    // spawn nicmgr thread. have to be after linkmgr init
+    core::spawn_nicmgr_thread(&api::g_pds_state);
 
     // spawn periodic thread, have to be before linkmgr init
     core::spawn_periodic_thread(&api::g_pds_state);
@@ -226,14 +270,11 @@ pds_init (pds_init_params_t *params)
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 
-    // spawn pciemgr thread.
-    core::spawn_pciemgr_thread(&api::g_pds_state);
-
-    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
-    sleep(2);
-
-    // spawn nicmgr thread. have to be after linkmgr init
-    core::spawn_nicmgr_thread(&api::g_pds_state);
+    // create uplink interfaces
+    while (!api::is_api_thread_ready()) {
+        pthread_yield();
+    }
+    SDK_ASSERT(api::create_uplinks() == SDK_RET_OK);
 
     // spin fte threads
     //core::spawn_thread_fte(&api::g_pds_state);

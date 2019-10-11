@@ -50,7 +50,7 @@ typedef struct pds_uplink_pc_info_s {
 
 /// \brief L3 interface specific configuration
 typedef struct pds_l3_if_info_s {
-    pds_vpc_id_t    vpc;          ///< vpc this L3 if belongs to
+    pds_vpc_key_t   vpc;          ///< vpc this L3 if belongs to
     ip_prefix_t     ip_prefix;    ///< IP address and subnet of this L3 if
     uint8_t         port_num;     ///< uplink port# of this L3 if
     pds_encap_t     encap;        ///< (optional) encap used for egress rewrite

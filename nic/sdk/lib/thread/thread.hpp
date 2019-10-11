@@ -59,9 +59,11 @@ public:
     pthread_t pthread_id(void) const { return pthread_id_; }
     void punch_heartbeat(void);    // punch heart-beat
     timespec_t heartbeat_ts(void) const { return hb_ts_; }
-    bool is_running(void) const { return running_; }
     bool can_yield(void) const { return can_yield_; }
+    bool is_running(void) const { return running_; }
     void set_running(bool running) { running_ = running; }
+    bool ready(void) const { return ready_; }
+    void set_ready(bool ready) { ready_ = ready; }
     void set_data(void *data) { data_ = data; }
     void *data(void) const { return data_; }
     thread_role_t thread_role(void) const { return thread_role_; }
@@ -128,6 +130,7 @@ private:
     void                          *data_;
     pthread_t                     pthread_id_;
     bool                          running_;
+    bool                          ready_;
     thread_role_t                 thread_role_;
     uint64_t                      cores_mask_;
     timespec_t                    hb_ts_;

@@ -23,6 +23,7 @@ sdk_ret_t
 pds_impl_state::init(pds_state *state) {
     apulu_impl_db_ = new apulu_impl_state(state);
     lif_impl_db_ = new lif_impl_state(state);
+    if_impl_db_ = new if_impl_state(state);
     tep_impl_db_ = new tep_impl_state(state);
     vpc_impl_db_ = new vpc_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
@@ -40,6 +41,7 @@ void
 pds_impl_state::destroy(pds_impl_state *impl_state) {
     delete impl_state->apulu_impl_db_;
     delete impl_state->lif_impl_db_;
+    delete impl_state->if_impl_db_;
     delete impl_state->tep_impl_db_;
     delete impl_state->vpc_impl_db_;
     delete impl_state->vnic_impl_db_;
@@ -54,6 +56,7 @@ pds_impl_state::destroy(pds_impl_state *impl_state) {
 pds_impl_state::pds_impl_state() {
     apulu_impl_db_ = NULL;
     lif_impl_db_ = NULL;
+    if_impl_db_ = NULL;
     tep_impl_db_ = NULL;
     vpc_impl_db_ = NULL;
     vnic_impl_db_ = NULL;

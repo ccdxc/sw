@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
@@ -20,7 +21,7 @@ namespace api {
 if_entry::if_entry() {
     // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
-    if_info_ = NULL;
+    memset(&if_info_, 0, sizeof(if_info_));
     ifindex_ = IFINDEX_INVALID;
     ifindex_ht_ctxt_.reset();
 }
@@ -47,6 +48,7 @@ if_entry::factory(pds_if_spec_t *spec) {
     intf = if_db()->alloc();
     if (intf) {
         new (intf) if_entry();
+        intf->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_IF, spec);
     }
     return intf;
 }
@@ -57,28 +59,71 @@ if_entry::~if_entry() {
 
 void
 if_entry::destroy(if_entry *intf) {
+    intf->nuke_resources_();
+    if (intf->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_IF, intf->impl_);
+    }
     intf->~if_entry();
     if_db()->free(intf);
 }
 
 sdk_ret_t
 if_entry::init_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;
+
+    PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
+                    spec->key.id, spec->type);
+     memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
+     type_ = spec->type;
+     switch (type_) {
+     case PDS_IF_TYPE_UPLINK:
+         if_info_.uplink_.port_ = spec->uplink_info.port_num;
+         break;
+     case PDS_IF_TYPE_L3:
+         if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
+         if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
+         if_info_.l3_.port_ = spec->l3_if_info.port_num;
+         if_info_.l3_.encap_ = spec->l3_if_info.encap;
+         memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
+                ETH_ADDR_LEN);
+         break;
+     default:
+         return sdk::SDK_RET_INVALID_ARG;
+         break;
+     }
+     return SDK_RET_OK;
 }
 
 sdk_ret_t
 if_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->reserve_resources(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 if_entry::release_resources(void) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        impl_->release_resources(this);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+if_entry::nuke_resources_(void) {
+    if (impl_) {
+        return impl_->nuke_resources(this);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 if_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->program_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -99,7 +144,10 @@ if_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                           obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

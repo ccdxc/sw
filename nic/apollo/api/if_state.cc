@@ -27,7 +27,7 @@ if_state::if_state() {
                          sizeof(pds_if_key_t));
     SDK_ASSERT(if_ht_ != NULL);
     if_slab_ = slab::factory("interface", PDS_SLAB_ID_IF, sizeof(if_entry), 16,
-                             true, true, NULL);
+                             true, true, true, NULL);
     SDK_ASSERT(if_slab() != NULL);
 }
 

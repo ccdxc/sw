@@ -139,7 +139,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
             return SDK_RET_INVALID_ARG;
         }
         nh_data.nexthop_info.port = intf->port();
-        encap = intf->encap();
+        encap = intf->l3_encap();
         if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
             nh_data.nexthop_info.vlan = encap.val.vlan_tag;
         } else if (encap.type != PDS_ENCAP_TYPE_NONE) {
@@ -147,7 +147,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                           encap.type, spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
-        ip_pfx = intf->ip_prefix();
+        ip_pfx = intf->l3_ip_prefix();
         if (ip_pfx.addr.af == IP_AF_IPV4) {
             nh_data.nexthop_info.ip_type = IPTYPE_IPV4;
             memcpy(nh_data.nexthop_info.dipo,
@@ -161,7 +161,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         sdk::lib::memrev(nh_data.nexthop_info.dmaco,
                          spec->underlay_mac, ETH_ADDR_LEN);
         sdk::lib::memrev(nh_data.nexthop_info.
-                         smaco, intf->mac_addr(), ETH_ADDR_LEN);
+                         smaco, intf->l3_mac(), ETH_ADDR_LEN);
         sdk::lib::memrev(nh_data.nexthop_info.dmaci,
                          spec->overlay_mac, ETH_ADDR_LEN);
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,

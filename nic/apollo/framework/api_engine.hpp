@@ -17,7 +17,6 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -316,12 +315,13 @@ private:
     slab                *api_params_slab_;
 };
 
-// api thread entry, exit and ipc handler functions
-void api_thread_init_fn(void *ctxt);
-void api_thread_exit_fn(void *ctxt);
-void api_thread_event_cb(void *msg, void *ctx);
-void api_thread_ipc_cb(sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt);
-sdk::lib::ipc::ipc_client *api_ipc_client(void);
+/// \brief    initialize the API engine
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t api_engine_init(void);
+
+/// \brief    return the API engine instance
+/// \return    pointer to the (singleton) API engine instance
+api_engine *api_engine_get(void);
 
 /// \@}
 
