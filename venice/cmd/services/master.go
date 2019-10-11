@@ -789,6 +789,11 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		// and trigger the mode change on NAPLES
 		if nicState.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() && evtNIC.Spec.MgmtMode == cmd.DistributedServiceCardSpec_HOST.String() {
 			log.Infof("Decommissioning NIC: %s", evtNIC.Name)
+			// reset status
+			evtNIC.Status = cmd.DistributedServiceCardStatus{
+				AdmissionPhase:       cmd.DistributedServiceCardStatus_DECOMMISSIONED.String(),
+				AdmissionPhaseReason: "DistributedServiceCard management mode changed to HOST",
+			}
 			// Override local state and Propagate changes back to API Server
 			err = env.StateMgr.UpdateSmartNIC(evtNIC, true)
 			if err != nil {

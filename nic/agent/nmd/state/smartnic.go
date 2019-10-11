@@ -101,7 +101,6 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 		decommission := oldNic.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() &&
 			nic.Spec.MgmtMode == cmd.DistributedServiceCardSpec_HOST.String()
 
-		// TODO : Discuss if deAdmission code path has to be completely removed
 		deAdmission := oldNic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String() &&
 			nic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_PENDING.String()
 
@@ -117,42 +116,16 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					log.Errorf("Error removing trust roots: %v", err)
 				}
 
+				// restart rev proxy so that it can go back to HTTP and no client auth
+				err = n.RestartRevProxyWithRetries()
+				if err != nil {
+					log.Errorf("Failed to restart reverse proxy. Err : %v", err)
+				}
+
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.
 					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
 					recorder.Event(eventtypes.DSC_DECOMMISSIONED, fmt.Sprintf("DSC %s(%s) decommissioned from the cluster", nic.Spec.ID, nic.Name), nic)
-
-					// Update the object to be sent as health update to CMD
-					nic.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_DECOMMISSIONED.String()
-					nic.Status.AdmissionPhaseReason = "DistributedServiceCard management mode changed to HOST"
-
-					// Send one last health update to CMD before restarting the reverse proxy
-					err = n.UpdateSmartNICReq(nic)
-					if err != nil {
-						log.Errorf("Final health update to CMD failed. Err : %v", err)
-
-						// Add in-line retries
-						log.Infof("Retry sending the updates.")
-						done := false
-						retryCount := 0
-
-						for !done && retryCount < 3 {
-							retryCount = retryCount + 1
-							err = n.UpdateSmartNICReq(nic)
-							if err == nil {
-								done = true
-							}
-							log.Errorf("Failed to send health update. Err : %v", err)
-							time.Sleep(time.Second)
-						}
-					}
-
-					// restart rev proxy so that it can go back to HTTP and no client auth
-					err = n.RestartRevProxyWithRetries()
-					if err != nil {
-						log.Errorf("Failed to restart reverse proxy. Err : %v", err)
-					}
-
 					cfg := nmd.DistributedServiceCard{}
 					// Update config status to reflect the mode change
 					cfg.Spec.Mode = nmd.MgmtMode_HOST.String()
@@ -169,13 +142,6 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
 				} else {
 					recorder.Event(eventtypes.DSC_DEADMITTED, fmt.Sprintf("DSC %s(%s) de-admitted from the cluster", nic.Spec.ID, nic.Name), nic)
-
-					// restart rev proxy so that it can go back to HTTP and no client auth
-					err = n.RestartRevProxyWithRetries()
-					if err != nil {
-						log.Errorf("Failed to restart reverse proxy. Err : %v", err)
-					}
-
 					err = n.StopManagedMode()
 					if err != nil {
 						log.Errorf("Failed to stop managed mode. Err : %v", err)
