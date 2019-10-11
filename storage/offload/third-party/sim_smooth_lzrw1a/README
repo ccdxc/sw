@@ -1,4 +1,4 @@
-gcc -std=c99 lzrw1-a.c 0-lzrw1-a.c orig-lzrw1-a.c main.c -o smooth-lzrw
+gcc -std=c99 lzrw1-a.c 0-lzrw1-a.c main.c -o smooth-lzrw
 
 Options:
 

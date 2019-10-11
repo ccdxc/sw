@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include "lzrw.h"
-#include "orig-lzrw.h"
 #include "0-lzrw.h"
 
 //typedef unsigned long long uint64_t;
@@ -250,12 +249,15 @@ int main(int argc, char **argv)
     struct timeval tv;
     struct timeval last_tv;
     uint32_t buf_size = 8192;
-    uint32_t rand_len_max = 576;
+    uint32_t rand_len_highwater = 576;
     uint32_t cp_size, dc_size;
     uint32_t min_cp_size = ~0;
     uint32_t max_cp_size = 0;
     uint32_t min_dc_size = ~0;
     uint32_t max_dc_size = 0;
+    uint32_t min_rand_len = ~0;
+    uint32_t max_rand_len = 0;
+    uint32_t rand_len;
     uint32_t cp_adler32 = 0;
     uint32_t dc_adler32 = 0;
     uint32_t *cp_adler32_p;
@@ -310,10 +312,10 @@ int main(int argc, char **argv)
             }
             break;
         case 'l':
-            rand_len_max = atoi(optarg);
-            if (rand_len_max < RAND_LEN_MIN) {
-                printf("invalid rand_len_max %d, must be at least %d\n",
-                       rand_len_max, RAND_LEN_MIN);
+            rand_len_highwater = atoi(optarg);
+            if (rand_len_highwater < RAND_LEN_MIN) {
+                printf("invalid random length %d, must be at least %d\n",
+                       rand_len_highwater, RAND_LEN_MIN);
                 return 1;
             }
             break;
@@ -374,7 +376,10 @@ int main(int argc, char **argv)
 
         if (!use_pattern) {
             srand(tv.tv_sec + tv.tv_usec + i);
-            input_randomize(buf_size, rand_len_randomize(rand_len_max));
+            rand_len = rand_len_randomize(rand_len_highwater);
+            min_rand_len = min(min_rand_len, rand_len);
+            max_rand_len = max(max_rand_len, rand_len);
+            input_randomize(buf_size, rand_len);
         }
 
         if (dc_only) {
@@ -490,17 +495,22 @@ int main(int argc, char **argv)
     if (min_dc_size == ~0) {
         min_dc_size = 0;
     }
+    if (min_rand_len == ~0) {
+        min_rand_len = 0;
+    }
 
     printf("\nOther info:\n"
              "-----------\n");
-    printf("smallest CP result: %u bytes\n"
-           " largest CP result: %u bytes\n"
-           "smallest DC result: %u bytes\n"
-           " largest DC result: %u bytes\n"
-           "   last CP adler32: 0x%x\n"
-           "   last DC adler32: 0x%x\n",
+    printf("    smallest CP result: %u bytes\n"
+           "     largest CP result: %u bytes\n"
+           "    smallest DC result: %u bytes\n"
+           "     largest DC result: %u bytes\n"
+           "       last CP adler32: 0x%x\n"
+           "       last DC adler32: 0x%x\n"
+           "smallest random length: %u bytes\n"
+           " largest random length: %u bytes\n",
            min_cp_size, max_cp_size, min_dc_size, max_dc_size,
-           cp_adler32, dc_adler32);
+           cp_adler32, dc_adler32, min_rand_len, max_rand_len);
 
     return num_len_mismatches + num_data_miscompares + num_chksum_mismatches ? 1 : 0;
 }
