@@ -145,9 +145,14 @@ ip_subnet_spec_to_ip_range (ip_range_t *range, const ::types::IPSubnet& spec)
         range->vx_range[0].v4_range.ip_lo =
             spec.ipv4_subnet().address().v4_addr() &
                 ~((1 << (32 - spec.ipv4_subnet().prefix_len())) - 1);
-        range->vx_range[0].v4_range.ip_hi =
-            range->vx_range[0].v4_range.ip_lo +
+
+        if (spec.ipv4_subnet().prefix_len()) {
+            range->vx_range[0].v4_range.ip_hi =
+                range->vx_range[0].v4_range.ip_lo +
                 (1 << (32 - spec.ipv4_subnet().prefix_len())) - 1;
+        } else {
+            range->vx_range[0].v4_range.ip_hi = ~0;
+        }
     } else if (spec.has_ipv6_subnet()) {
         return HAL_RET_NOT_SUPPORTED;
     } else {

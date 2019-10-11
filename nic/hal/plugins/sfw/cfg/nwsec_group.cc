@@ -138,12 +138,9 @@ nwsec_spec_dump(void *spec)
 {
     std::string cfg;
     Message *msg = (Message *) spec;
-    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
-        return;
-    }
     google::protobuf::util::MessageToJsonString(*msg, &cfg);
-    HAL_TRACE_DEBUG("configuration:");
-    HAL_TRACE_DEBUG("{}", cfg.c_str());
+    HAL_TRACE_VERBOSE("configuration:");
+    HAL_TRACE_VERBOSE("{}", cfg.c_str());
 }
 
 
@@ -1430,7 +1427,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
 
     HAL_TRACE_DEBUG("---------------------- API Start ---------------------");
 
-    //nwsec_spec_dump(&spec);
+    nwsec_spec_dump(&spec);
     trim_mem_usage("Before Create");
     // Give up the read lock
     hal_cfg_db_close();
@@ -1596,7 +1593,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     SecurityPolicyKeyHandle kh = spec.key_or_handle();
 
     HAL_TRACE_DEBUG("---------------------- API Start-------------------");
-    //nwsec_spec_dump(&spec);
+    nwsec_spec_dump(&spec);
     trim_mem_usage("Before update");
 
     ret = validate_nwsec_policy_update(spec, res);

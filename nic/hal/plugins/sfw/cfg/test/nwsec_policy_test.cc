@@ -973,203 +973,217 @@ TEST_F(nwsec_policy_test, test7) {
     //ASSERT_TRUE(is_leak == false);
 }
 
-#if 0
-TEST_F(nwsec_policy_test, test6)
-{
+//Valid rules (0/32, 0/32,     NONE     allow) => 
+// validate (0.0.0.0, 0.0.0.0, any allow)
+// validate (0.0.0.0, <dst_ip>, any, deny)
+// validate (<src_ip>, 0.0.0.0, any, deny)
+// validate (<src_ip>, dst_ip,  any, deny)
+TEST_F(nwsec_policy_test, test8) {
     hal_ret_t                               ret;
-    SecurityProfileSpec                     sp_spec;
-    SecurityProfileResponse                 sp_rsp;
-    SecurityProfileDeleteRequest            del_req;
-    SecurityProfileDeleteResponse           del_rsp;
-    slab_stats_t                            *pre = NULL, *post = NULL;
-    bool                                    is_leak = false;
+    SecurityPolicySpec                      pol_spec;
+    SecurityPolicyResponse                  res;
+    SecurityRule                           *rule_spec, rule_spec2;
+    SecurityPolicyDeleteRequest             pol_del_req;
+    SecurityPolicyDeleteResponse            pol_del_rsp;
 
-    pre = hal_test_utils_collect_slab_stats();
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+    rule_spec = pol_spec.add_rule();
 
-    // Create nwsec with no profile id
-    // sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec.set_ipsg_en(true);
-    sp_spec.set_ip_normalization_en(true);
+    // Create nwsec
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    types::RuleMatch *match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_NONE);
+
+    //Rule:(0/32, 0/32, NONE)
+    types::IPAddressObj *dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(32);
+
+    types::IPAddressObj *src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(32);
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securitypolicy_create(pol_spec, &res);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t policy_handle = res.policy_status().key_or_handle().security_policy_handle();
 
-    // Create nwsec with no profile id but with handle
-    sp_spec.mutable_key_or_handle()->set_profile_handle(1);
-    sp_spec.set_ipsg_en(true);
-    sp_spec.set_ip_normalization_en(true);
+    /* (0,0, TCP) pkt rule: (0/32, 0/32, NONE) : ALLOW */ 
+    ipv4_tuple v4_tuple = {};
+    v4_tuple.ip_dst = 0x0; // server
+    v4_tuple.ip_src = 0x0;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    ipv4_rule_t *rule = NULL;
+    nwsec_policy_t *res_policy;
+    res_policy = find_nwsec_policy_by_key(11, vrf->vrf_id);
+    const char *ctx_name = nwsec_acl_ctx_name(res_policy->key.vrf_id);
+    const acl_ctx_t *acl_ctx = acl::acl_get(ctx_name);
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x0;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+
+
+    v4_tuple.ip_dst = 0x0;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+
+
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+    acl::acl_deref(acl_ctx);
+
+
+    // Delete policy
+    pol_del_req.mutable_key_or_handle()->set_security_policy_handle(policy_handle);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_NWSEC_ID_INVALID);
-
-
-    // Create 256 nwsecs
-    for (int i = 0; i < 256; i++) {
-        sp_spec.mutable_key_or_handle()->set_profile_id(i);
-        sp_spec.set_ipsg_en(true);
-        sp_spec.set_ip_normalization_en(true);
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-        ret = hal::security_profile_create(sp_spec, &sp_rsp);
-        hal::hal_cfg_db_close();
-        ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_NO_RESOURCE || HAL_RET_ENTRY_EXISTS);
-    }
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
-    // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec.set_ipsg_en(true);
-    sp_spec.set_ip_normalization_en(true);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
-
-    // Update nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec.set_ipsg_en(true);
-    sp_spec.set_ip_normalization_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
-    // Update nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_handle(nwsec_hdl);
-    sp_spec.set_ipsg_en(false);
-    sp_spec.set_ip_normalization_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
+    svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
+    hal::hal_wait();
 #endif
 
-
-    for ( int i = 0; i < 256; i++) {
-        // Delete nwsec
-        del_req.mutable_key_or_handle()->set_profile_id(i);
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-        ret = hal::security_profile_delete(del_req, &del_rsp);
-        hal::hal_cfg_db_close();
-        ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
-    }
 
     // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
-    post = hal_test_utils_collect_slab_stats();
-    hal_test_utils_check_slab_leak(pre, post, &is_leak);
-    ASSERT_TRUE(is_leak == false);
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
 }
 
-namespace hal {
-namespace plugins {
-namespace sfw {
-extern hal_ret_t
-net_sfw_match_rules(fte::ctx_t& ctx,
-                    hal::nwsec_policy_rules_t *rules,
-                    hal::plugins::sfw::net_sfw_match_result_t *rslt);
-extern hal_ret_t
-net_sfw_check_policy_pair(fte::ctx_t                    &ctx,
-                          uint32_t                      src_sg,
-                          uint32_t                      dst_sg,
-                          net_sfw_match_result_t   *match_rslt);
-}
-}
-}
 
-// test ctx with access to protected members
-class test_ctx_t :  public ctx_t {
-public:
-    using ctx_t::init;
+//Valid rules ( any, any,      TCP     allow) => 
+// validate (0.0.0.0, 0.0.0.0, TCP allow)
+// validate (0.0.0.0, <dst_ip>, TCP, allow)
+// validate (<src_ip>, 0.0.0.0, TCP, allow)
+// validate (0.0.0.0, 0.0.0.0, ICMP  deny)
+// validate (0.0.0.0, <dst_ip>, ICMP, deny)
+// validate (<src_ip>, 0.0.0.0, ICMP, deny)
+TEST_F(nwsec_policy_test, test9) {
+    hal_ret_t                               ret;
+    SecurityPolicySpec                      pol_spec;
+    SecurityPolicyResponse                  res;
+    SecurityRule                           *rule_spec, rule_spec2;
+    SecurityPolicyDeleteRequest             pol_del_req;
+    SecurityPolicyDeleteResponse            pol_del_rsp;
 
-};
-// Test to validate the appid logic in firewall.cc
-TEST_F(nwsec_policy_test, test5)
-{
-    hal_ret_t ret;
-    test_ctx_t ctx1 = {};
-    hal::nwsec_policy_rules_t rules;
-    hal::plugins::sfw::net_sfw_match_result_t rslt;
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+    rule_spec = pol_spec.add_rule();
 
-    nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
-    nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
-    if (nwsec_plcy_appid == NULL) ASSERT_TRUE(0);
-
-    nwsec_plcy_appid->appid = 747;
-
-    fte::feature_info_t info = {};
-
-    info.state_size = sizeof(app_redir_ctx_t);
-    auto fn1 = [](fte::ctx_t& ctx) {
-        return fte::PIPELINE_CONTINUE;
-    };
-    fte::add_feature(FTE_FEATURE_APP_REDIR_APPID);
-    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, fn1, info);
-    uint16_t num_features = 1;
-    size_t sz = fte::feature_state_size(&num_features);
-    fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
-    ctx1.init({2,1,1}, st, num_features);
-    nwsec_policy_svc_t* nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
-    if (nwsec_plcy_svc == NULL) ASSERT_TRUE(0);
-    nwsec_plcy_svc->ipproto = types::IPPROTO_NONE;
-    nwsec_plcy_svc->dst_port = 0;
-
-    dllist_add_tail(&rules.fw_svc_list_head,
-                    &nwsec_plcy_svc->lentry);
-
-    //To Do: Check to Get lock on nwsec_plcy_rules ??
-    dllist_add_tail(&rules.appid_list_head,
-                    &nwsec_plcy_appid->lentry);
-
-    ret = hal::plugins::sfw::net_sfw_match_rules(ctx1, &rules, &rslt);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(app_redir_ctx(ctx1, false)->appid_needed());
-}
-
-TEST_F(nwsec_policy_test, test6)
-{
-    hal_ret_t ret;
-    SecurityGroupPolicySpec sp_spec;
-    SecurityGroupPolicyResponse sp_rsp;
-    test_ctx_t ctx = {};
-    hal::nwsec_policy_rules_t rules;
-    hal::plugins::sfw::net_sfw_match_result_t rslt;
-
-    // Create SecurityGroupPolicySpec
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(100);
-    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(102);
-
-    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_in_fw_rules();
-    Service *svc =  fw_rule->add_svc();
-    svc->set_ip_protocol(types::IPPROTO_NONE);
-    svc->set_dst_port(0);
-    fw_rule->add_apps("MYSQL");
+    // Create nwsec
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    types::RuleMatch *match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_group_policy_create(sp_spec, &sp_rsp);
+    ret = hal::securitypolicy_create(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t policy_handle = res.policy_status().key_or_handle().security_policy_handle();
+
+    /* (0,0, TCP) pkt ALLOW */ 
+    ipv4_tuple v4_tuple = {};
+    v4_tuple.ip_dst = 0x0; // server
+    v4_tuple.ip_src = 0x0;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    ipv4_rule_t *rule = NULL;
+    nwsec_policy_t *res_policy;
+    res_policy = find_nwsec_policy_by_key(11, vrf->vrf_id);
+    const char *ctx_name = nwsec_acl_ctx_name(res_policy->key.vrf_id);
+    const acl_ctx_t *acl_ctx = acl::acl_get(ctx_name);
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+    /*  (0,dip, TCP) pkt ALLOW */
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x0;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+    /*  (sip,0, TCP) pkt ALLOW */ 
+    v4_tuple.ip_dst = 0x0;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+    /*  (sip,dip, TCP) pkt ALLOW */ 
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_TCP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_NE(rule, nullptr);
+
+
+    /*  (sip,dip, TCP) pkt ALLOW */ 
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_ICMP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+
+    /*  (0,dip, ICMP) pkt DENY */
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x0;
+    v4_tuple.proto = types::IPPROTO_ICMP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+
+    /*  (sip,0, ICMP) pkt DENY */ 
+    v4_tuple.ip_dst = 0x0;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_ICMP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+
+    /*  (sip,dip, ICMP) pkt DENY*/ 
+    v4_tuple.ip_dst = 0xAABBCCDD;
+    v4_tuple.ip_src = 0x01020304;
+    v4_tuple.proto = types::IPPROTO_ICMP;
+    acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
+    EXPECT_EQ(rule, nullptr);
+    acl::acl_deref(acl_ctx);
+
+
+    // Delete policy
+    pol_del_req.mutable_key_or_handle()->set_security_policy_handle(policy_handle);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ctx = {};
-    fte::feature_info_t info = {};
-
-    info.state_size = sizeof(app_redir_ctx_t);
-    auto fn1 = [](fte::ctx_t& ctx) {
-        return fte::PIPELINE_CONTINUE;
-    };
-    fte::add_feature(FTE_FEATURE_APP_REDIR_APPID);
-    fte::register_feature(FTE_FEATURE_APP_REDIR_APPID, fn1, info);
-    uint16_t num_features = 1;
-    size_t sz = fte::feature_state_size(&num_features);
-    fte::feature_state_t *st = (fte::feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
-    ctx.init({2,1,1}, st, num_features);
-
-    ret = net_sfw_check_policy_pair(ctx, 100, 102, &rslt);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(app_redir_ctx(ctx, false)->appid_needed());
-}
+#if 0
+    svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
+    hal::hal_wait();
 #endif
+
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

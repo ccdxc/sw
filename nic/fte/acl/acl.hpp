@@ -43,6 +43,7 @@ struct acl_field_t {
 	union acl_field_val_t value;
 	/**< a 1,2,4, or 8 byte value of the field. */
 	union acl_field_val_t mask_range;
+	bool  empty;
 	/**<
 	 * depending on field type:
 	 * prefix -> 1.2.3.4/32 value=0x1020304, mask_range=32,
@@ -50,10 +51,15 @@ struct acl_field_t {
 	 * exact -> 0x06/0xff value=6, mask_range=0xff.
 	 */
 };
+/** Used to identify if a rule is empty or not.
+ *  Do not use 0. We need a valid value here
+ */
+#define ACL_DEF_EMPTY   1
+/**  #define EMPTY_FIELD(fld) \
+  *((fld).value.u32 == 0 && (fld).mask_range.u32 == 0)
+  */
 
-#define EMPTY_FIELD(fld) \
-    ((fld).value.u32 == 0 && (fld).mask_range.u32 == 0)
-
+#define EMPTY_FIELD(fld) ((fld).empty)
 /**
  * Miscellaneous data for ACL rule.
  */

@@ -647,18 +647,27 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
     if (sa_entry && sa_entry->num_addrs) {
         rule->field[IP_SRC].value.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_lo;
         rule->field[IP_SRC].mask_range.u32 = sa_entry->ip_range.vx_range[0].v4_range.ip_hi;
+    } else {
+        rule->field[IP_SRC].empty = ACL_DEF_EMPTY;
     }
     if (da_entry && da_entry->num_addrs) {
         rule->field[IP_DST].value.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_lo;
         rule->field[IP_DST].mask_range.u32 = da_entry->ip_range.vx_range[0].v4_range.ip_hi;
+    } else {
+        rule->field[IP_DST].empty = ACL_DEF_EMPTY;
     }
     if (sp_entry && (sp_entry->port_range.port_lo || sp_entry->port_range.port_hi)) {
         rule->field[PORT_SRC].value.u32 = sp_entry->port_range.port_lo;
         rule->field[PORT_SRC].mask_range.u32 = sp_entry->port_range.port_hi;
+    } else {
+        rule->field[PORT_SRC].empty = ACL_DEF_EMPTY;
     }
+     
     if (dp_entry && (dp_entry->port_range.port_lo || dp_entry->port_range.port_hi)) {
         rule->field[PORT_DST].value.u32 = dp_entry->port_range.port_lo;
         rule->field[PORT_DST].mask_range.u32 = dp_entry->port_range.port_hi;
+    } else {
+        rule->field[PORT_DST].empty = ACL_DEF_EMPTY;
     }
     if (proto != types::IPPROTO_NONE) {
         rule->field[PROTO].value.u8 = proto;
@@ -687,26 +696,38 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
             rule->field[PORT_DST].value.u32 = spi & 0xFFFF;
             rule->field[PORT_DST].mask_range.u32 = spi & 0xFFFF;
         }
+    } else {
+        rule->field[PROTO].empty = ACL_DEF_EMPTY;
     }
     if (mac_sa_entry && mac_sa_entry->addr != 0) {
         rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
         rule->field[MAC_SRC].mask_range.u32 = 0xFFFFFFFF;
+    } else {
+        rule->field[MAC_SRC].empty = ACL_DEF_EMPTY;
     }
     if (mac_da_entry && mac_da_entry->addr != 0) {
         rule->field[MAC_DST].value.u32 = mac_da_entry->addr;
         rule->field[MAC_DST].mask_range.u32 = 0xFFFFFFFF;
+    } else {
+        rule->field[MAC_DST].empty = ACL_DEF_EMPTY;
     }
     if (src_sg_entry && src_sg_entry->sg_id != 0) {
         rule->field[SRC_SG].value.u32 = src_sg_entry->sg_id;
         rule->field[SRC_SG].mask_range.u32 = 0xFFFFFFFF;
+    } else {
+        rule->field[SRC_SG].empty = ACL_DEF_EMPTY;
     }
     if (dst_sg_entry && dst_sg_entry->sg_id != 0) {
         rule->field[DST_SG].value.u32 = dst_sg_entry->sg_id;
         rule->field[DST_SG].mask_range.u32 = 0xFFFFFFFF;
+    } else {
+        rule->field[DST_SG].empty = ACL_DEF_EMPTY;
     }
     if (ethertype != 0) {
         rule->field[ETHERTYPE].value.u16 = ethertype;
         rule->field[ETHERTYPE].mask_range.u16 = 0xFFFF;
+    } else {
+        rule->field[ETHERTYPE].empty = ACL_DEF_EMPTY;
     }
 
     return rule;
