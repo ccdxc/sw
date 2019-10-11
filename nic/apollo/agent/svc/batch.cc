@@ -30,16 +30,18 @@ BatchSvcImpl::BatchStart(ServerContext *context,
             return Status::OK;
         }
     }
-    proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-    return Status::CANCELLED;
+    proto_status->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
 }
 
 Status
 BatchSvcImpl::BatchCommit(ServerContext *context,
                           const types::BatchCtxt *ctxt,
                           Empty *proto_status) {
-    if (pds_batch_commit(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
-        return Status::OK;
+    if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
+        if (pds_batch_commit(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
+            return Status::OK;
+        }
     }
     return Status::CANCELLED;
 }
@@ -48,8 +50,10 @@ Status
 BatchSvcImpl::BatchAbort(ServerContext *context,
                          const types::BatchCtxt *ctxt,
                          Empty *proto_status) {
-    if (pds_batch_destroy(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
-        return Status::OK;
+    if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
+        if (pds_batch_destroy(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
+            return Status::OK;
+        }
     }
     return Status::CANCELLED;
 }

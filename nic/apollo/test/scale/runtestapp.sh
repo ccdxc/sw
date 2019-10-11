@@ -3,6 +3,7 @@ TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
 DOLDIR=`readlink -f $NICDIR/../dol/`
 echo $NICDIR
+#export GDB='gdb --args'
 
 cleanup() {
     pkill agent

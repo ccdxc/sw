@@ -174,16 +174,9 @@ create_objects_init (test_params_t *test_params)
 sdk_ret_t
 create_objects_end (void)
 {
-    sdk_ret_t ret;
-
     if (pds_batching_enabled()) {
         g_bctxt = batch_start_grpc(PDS_EPOCH_INVALID);
-        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
-                                SDK_RET_ERR,
-                                "Batch start failed!");
-        ret = batch_commit_grpc(g_bctxt);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch commit failed!, ret %u", ret);
+        batch_commit_grpc(g_bctxt);
     }
     return SDK_RET_OK;
 }

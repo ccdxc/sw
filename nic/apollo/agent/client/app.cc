@@ -471,7 +471,7 @@ batch_start_grpc (int epoch)
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
         printf("%s failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+        return PDS_BATCH_CTXT_INVALID;
     }
     return status.batchcontext().batchcookie();
 }
