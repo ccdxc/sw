@@ -149,7 +149,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", rc, logger.WithContext("submodule", "pen-npm"), false)
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, rc, logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 	it.resolverClient = rc

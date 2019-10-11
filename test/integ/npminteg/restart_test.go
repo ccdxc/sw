@@ -203,7 +203,7 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	}
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 
@@ -345,7 +345,7 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	}
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 
@@ -428,7 +428,7 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	}
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 

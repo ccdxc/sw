@@ -67,7 +67,7 @@ type Netctrler struct {
 }
 
 // NewNetctrler returns a controller instance
-func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger, enableDiagnostics bool) (*Netctrler, error) {
+func NewNetctrler(serverURL, restURL, apisrvURL string, resolver resolver.Interface, logger log.Logger, enableDiagnostics bool) (*Netctrler, error) {
 
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{

@@ -64,74 +64,9 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	}, "Network still found in agent", "100ms", it.pollTimeout())
 }
 
-// TODO: Re-enable test once Orch API is refactored
-// Verify basic vchub functionality
-// func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
-// 	// setup vchub client
-// 	rpcClient, err := rpckit.NewRPCClient("venice_integ_test", vchTestURL, rpckit.WithRemoteServerName(globals.VCHub))
-// 	defer rpcClient.Close()
-// 	c.Assert(err, IsNil)
-
-// 	vcHubClient := orch.NewOrchApiClient(rpcClient.ClientConn)
-// 	// verify number of smartnics
-// 	filter := &orch.Filter{}
-// 	AssertEventually(c, func() (bool, interface{}) {
-// 		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
-// 		if err == nil && len(nicList.GetItems()) == it.config.NumHosts {
-// 			return true, nil
-// 		}
-// 		return false, nil
-// 	}, "Unable to find expected snics")
-
-// 	// add a nwif and verify it is seen by client.
-// 	addReq := &simapi.NwIFSetReq{
-// 		WLName:    "Venice-TestVM",
-// 		IPAddr:    "22.2.2.3",
-// 		Vlan:      "301",
-// 		PortGroup: "userNet101",
-// 	}
-
-// 	snicMac := it.vcHub.snics[0]
-// 	addResp, err := it.vcHub.vcSim.CreateNwIF(snicMac, addReq)
-// 	c.Assert(err, IsNil)
-
-// 	AssertEventually(c, func() (bool, interface{}) {
-// 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
-// 		if err != nil {
-// 			return false, nil
-// 		}
-
-// 		for _, nwif := range nwifList.GetItems() {
-// 			s := nwif.GetStatus()
-// 			if s.MacAddress != addResp.MacAddr || s.Network != "userNet101" || s.SmartNIC_ID != snicMac || s.WlName != "Venice-TestVM" {
-// 				continue
-// 			}
-
-// 			return true, nil
-// 		}
-
-// 		return false, nil
-// 	}, "Unable to find expected nwif")
-
-// 	// delete and verify
-// 	it.vcHub.vcSim.DeleteNwIF(snicMac, addResp.UUID)
-// 	AssertEventually(c, func() (bool, interface{}) {
-// 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
-// 		if err != nil {
-// 			return false, nil
-// 		}
-
-// 		for _, nwif := range nwifList.GetItems() {
-// 			s := nwif.GetStatus()
-// 			if s.MacAddress == addResp.MacAddr {
-// 				return false, nil
-// 			}
-// 		}
-
-// 		return true, nil
-// 	}, "Deleted nwif still exists")
-
-// }
+// TODO: Implement test once Orch API is refactored
+func (it *veniceIntegSuite) TestVeniceIntegOCH(c *C) {
+}
 
 // test tenant watch
 func (it *veniceIntegSuite) TestTenantWatch(c *C) {

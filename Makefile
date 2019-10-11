@@ -26,7 +26,7 @@ nic/agent/protos/tsproto \
 nic/agent/protos/nmd \
 nic/agent/protos/evtprotos \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
-venice/orch venice/cmd/grpc/server/certificates/certapi \
+venice/cmd/grpc/server/certificates/certapi \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
@@ -60,7 +60,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./venice/utils/doctool
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa vchub
+TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa orchhub
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash

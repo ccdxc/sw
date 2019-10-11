@@ -10,7 +10,7 @@ const (
 	Etcd                  = "pen-etcd"
 	Filebeat              = "pen-filebeat"
 	Ntp                   = "pen-ntp"
-	VCHub                 = "pen-vchub"
+	OrchHub               = "pen-orchhub"
 	Npm                   = "pen-npm"
 	Influx                = "pen-influx"
 	EvtsMgr               = "pen-evtsmgr"

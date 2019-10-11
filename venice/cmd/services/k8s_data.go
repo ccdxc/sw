@@ -635,31 +635,33 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
-	globals.VCHub: {
+	globals.OrchHub: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: globals.VCHub,
+			Name: globals.OrchHub,
 		},
 		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_DaemonSet,
 			NumCopies: 1,
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
-					Name:    globals.VCHub,
+					Name:    globals.OrchHub,
 					EnvVars: map[string]string{},
 					Args:    []string{"-resolver-urls", "$RESOLVER_URLS"},
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
-							Name: globals.VCHub,
-							Port: runtime.MustUint32(globals.VCHubAPIPort),
+							Name: globals.OrchHub,
+							Port: runtime.MustUint32(globals.OrchHubAPIPort),
 						},
 					},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},

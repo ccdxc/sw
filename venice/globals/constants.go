@@ -127,8 +127,8 @@ const (
 	APIServerPort     = "9003"
 	APIServerRESTPort = "9103"
 
-	// VC Hub
-	VCHubAPIPort = "9004"
+	// Orch Hub
+	OrchHubAPIPort = "9004"
 
 	// NPM
 	NpmRPCPort  = "9005"

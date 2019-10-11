@@ -1,5 +1,5 @@
 # this is the base image for Venice components:
-# ApiServer, ApiGw, VcHub, NPM, n4sagent
+# ApiServer, ApiGw, OrchHub, NPM, n4sagent
 # includes libtool which is needed by keymgr for PKCS#11 backend
 FROM alpine:3.10
 RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/main > /etc/apk/repositories
