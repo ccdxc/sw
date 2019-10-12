@@ -121,24 +121,22 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
 
-    // install NACL for ARM to uplink traffic (all vlans)
-    key.capri_intrinsic_lif = key_;
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-
-    // program the nexthop
+    // program the nexthop for ARM to uplink traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.port =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
                       "at idx %u", key_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
-    // program the NACL
+    // install NACL for ARM to uplink traffic (all vlans)
+    key.capri_intrinsic_lif = key_;
+    mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
@@ -152,29 +150,27 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
-    // install for NACL for uplink to ARM (untagged) traffic
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
-
-    key.capri_intrinsic_lif =
-        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-
-    // program the nexthop
+    // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.lif = key_;
+    nh_data.nexthop_info.port = TM_PORT_DMA;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
                       "at idx %u", key_, nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
-    // program the NACL
+    // install for NACL for uplink to ARM (untagged) traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
+    key.capri_intrinsic_lif =
+        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
+    mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
@@ -237,24 +233,22 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
 
-    // install NACL for ARM to uplink traffic (all vlans)
-    key.capri_intrinsic_lif = key_;
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-
-    // program the nexthop
+    // program the nexthop for ARM to uplink traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.port =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for inb lif %u at "
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for inb lif %u at "
                       "idx %u", key_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
-    // program the NACL
+    // install NACL for ARM to uplink traffic (all vlans)
+    key.capri_intrinsic_lif = key_;
+    mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
@@ -268,33 +262,29 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
 
-    // install for NACL for uplink to ARM (untagged) traffic
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
-
-    key.capri_intrinsic_lif =
-        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
-    //key.ctag_1_valid = 0;
-    //mask.ctag_1_valid_mask = 0xF;
-    key.control_metadata_tunneled_packet = 0;
-    mask.control_metadata_tunneled_packet_mask = 0xF;
-
-    // program the nexthop
+    // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.lif = key_;
+    nh_data.nexthop_info.port = TM_PORT_DMA;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
                       "at idx %u", key_, nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
-    // program the NACL
+    // install for NACL for uplink to ARM (untagged) traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    memset(&tparams, 0, sizeof(tparams));
+    key.capri_intrinsic_lif =
+        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
+    mask.capri_intrinsic_lif_mask = ~0;
+    key.control_metadata_tunneled_packet = 0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
@@ -337,26 +327,45 @@ error:
     return ret;
 }
 
+#define nacl_flow_miss_action    action_u.nacl_nacl_flow_miss
 sdk_ret_t
-lif_impl::create_flow_miss_mnic_(pds_lif_spec_t *spec) {
-#if 0
-    sdk_ret_t              ret;
-    nacl_swkey_t           key = { 0 };
-    nacl_swkey_mask_t      mask = { 0 };
-    nacl_actiondata_t      data =  { 0 };
+lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+    nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    // flow Miss -> CPU
-    // flow miss packet coming back from txdma -> CPU
-    key.cps_blob_valid = 1;
-    mask.cps_blob_valid_mask = 0xFF;
-    data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_ARM;
-    data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
-    data.action_u.nacl_nacl_redirect.lif = key_;
-    data.action_u.nacl_nacl_redirect.qtype = 0;
-    data.action_u.nacl_nacl_redirect.qid = 0;
-    data.action_u.nacl_nacl_redirect.vlan_strip = 0;
+    // allocate required nexthop to point to ARM datapath lif
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entry for flow miss, "
+                      "lif %u, err %u", key_, ret);
+        return ret;
+    }
+
+    // program the nexthop
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.lif = key_;
+    nh_data.nexthop_info.port = TM_PORT_DMA;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for datapath lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // flow miss packet coming back from txdma to s/w datapath
+    // lif (i.e., dpdk/vpp lif)
+    key.control_metadata_flow_miss = 1;
+    mask.control_metadata_flow_miss_mask = ~0;
+    data.action_id = NACL_NACL_FLOW_MISS_ID;
+    data.nacl_flow_miss_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_flow_miss_action.nexthop_id = nh_idx_;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -364,75 +373,142 @@ lif_impl::create_flow_miss_mnic_(pds_lif_spec_t *spec) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for redirect to arm, "
                       "lif %u, err %u", key_, ret);
+        goto error;
     }
-    return ret;
-#endif
     return SDK_RET_OK;
+
+error:
+
+    nexthop_impl_db()->nh_idxr()->free(nh_idx_);
+    nh_idx_ = 0xFFFFFFFF;
+    return ret;
+}
+
+typedef struct lif_internal_mgmt_ctx_s {
+    lif_impl **lif;
+    lif_type_t type;
+} __PACK__ lif_internal_mgmt_ctx_t;
+
+static bool
+lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
+    lif_impl *lif = (lif_impl *)api_obj;
+    lif_internal_mgmt_ctx_t *cb_ctx = (lif_internal_mgmt_ctx_t *)ctxt;
+
+    if (lif->type() == cb_ctx->type) {
+        *cb_ctx->lif = lif;
+        return true;
+    }
+    return false;
 }
 
 sdk_ret_t
 lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
-#if 0
-    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t idx;
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
-    uint32_t idx;
-    lif_impl *host_mgmt_lif = NULL, *mnic_int_mgmt_lif = NULL;
-    lif_internal_mgmt_ctx_t cb_ctx = {0};
+    nexthop_actiondata_t nh_data = { 0 };
+    lif_internal_mgmt_ctx_t cb_ctx = { 0 };
     sdk_table_api_params_t  tparams = { 0 };
+    lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
 
-    if (lif_params->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
+    if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
         host_mgmt_lif = this;
-        mnic_int_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
-    } else if (lif_params->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
-        mnic_int_mgmt_lif = this;
+        int_mgmt_lif =
+            lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
+    } else if (spec->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
+        int_mgmt_lif = this;
         host_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_HOST_MGMT);
     }
-    if (!host_mgmt_lif || !mnic_int_mgmt_lif) {
-        return ret;
+    if (!host_mgmt_lif || !int_mgmt_lif) {
+        // we will program when both lifs are available
+        return SDK_RET_OK;
     }
 
     PDS_TRACE_DEBUG("Programming NACLs for internal management");
-    // program host mgmt lif internal mgmt lif pinning NACL
+    // allocate required nexthops
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entries for internal mgmt. "
+                      "lifs %u, %u, err %u", host_mgmt_lif->key(),
+                      int_mgmt_lif->key(), ret);
+        return ret;
+    }
+
+    // program the nexthop for host mgmt. lif to internal mgmt. lif traffic
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.lif = int_mgmt_lif->key();
+    nh_data.nexthop_info.port = TM_PORT_DMA;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for host mgmt. lif %u to "
+                      "internal mgmt. lif %u traffic at idx %u",
+                      host_mgmt_lif->key(), int_mgmt_lif->key(), nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // program NACL for host mgmt lif to internal mgmt lif traffic
     key.capri_intrinsic_lif = host_mgmt_lif->key();
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
-    data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = mnic_int_mgmt_lif->key();
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to install NACL entry for host mgmt lif to "
-                      "internal mgmt lif pinning, err %u", ret);
+        PDS_TRACE_ERR("Failed to install NACL entry for host mgmt lif %u to "
+                      "internal mgmt lif %u traffic, err %u",
+                      host_mgmt_lif->key(), int_mgmt_lif->key(), ret);
+        goto error;
     }
 
+    // program the nexthop for internal mgmt. lif to host mgmt. lif traffic
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.lif = host_mgmt_lif->key();
+    nh_data.nexthop_info.port = TM_PORT_DMA;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for internal mgmt. lif %u to "
+                      "host mgmt. lif %u traffic at idx %u",
+                      int_mgmt_lif->key(), host_mgmt_lif->key(), nh_idx_ + 1);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // program NACL for internal mgmt lif to host mgmt lif traffic
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     memset(&tparams, 0, sizeof(tparams));
-
-    // program internal mgmt lif to host mgmt lif pinning NACL
-    key.capri_intrinsic_lif = mnic_int_mgmt_lif->key();
-    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    key.capri_intrinsic_lif = int_mgmt_lif->key();
+    mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
-    data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = host_mgmt_lif->key();
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
-    ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to install NACL entry for internal mgmt lif "
-                      "to host mgmt lif pinning, err %u", ret);
+        PDS_TRACE_ERR("Failed to install NACL entry for internal mgmt lif %u to "
+                      "host mgmt lif %u traffic, err %u",
+                      int_mgmt_lif->key(), host_mgmt_lif->key(), ret);
+        goto error;
     }
-    return ret;
-#endif
     return SDK_RET_OK;
+
+error:
+
+    nexthop_impl_db()->nh_idxr()->free(nh_idx_, 2);
+    nh_idx_ = 0xFFFFFFFF;
+    return ret;
 }
 
 sdk_ret_t
@@ -476,7 +552,7 @@ lif_impl::create(pds_lif_spec_t *spec) {
         ret = create_inb_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_MNIC_CPU:
-        ret = create_flow_miss_mnic_(spec);
+        ret = create_datapath_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
@@ -489,23 +565,6 @@ lif_impl::create(pds_lif_spec_t *spec) {
         return SDK_RET_INVALID_ARG;
     }
     return ret;
-}
-
-typedef struct lif_internal_mgmt_ctx_s {
-    lif_impl **lif;
-    lif_type_t type;
-} __PACK__ lif_internal_mgmt_ctx_t;
-
-static bool
-lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
-    lif_impl *lif = (lif_impl *)api_obj;
-    lif_internal_mgmt_ctx_t *cb_ctx = (lif_internal_mgmt_ctx_t *)ctxt;
-
-    if (lif->type() == cb_ctx->type) {
-        *cb_ctx->lif = lif;
-        return true;
-    }
-    return false;
 }
 
 /// \@}

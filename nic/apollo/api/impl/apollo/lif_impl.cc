@@ -208,7 +208,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
 }
 
 sdk_ret_t
-lif_impl::create_flow_miss_mnic_(pds_lif_spec_t *spec) {
+lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t              ret;
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
@@ -336,7 +336,7 @@ lif_impl::create(pds_lif_spec_t *spec) {
         ret = create_inb_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_MNIC_CPU:
-        ret = create_flow_miss_mnic_(spec);
+        ret = create_datapath_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:

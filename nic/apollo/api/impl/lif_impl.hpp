@@ -100,10 +100,10 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t create_inb_mnic_(pds_lif_spec_t *spec);
 
-    ///< \brief    program necessary h/w entries for flow miss lif(s)
+    ///< \brief    program necessary h/w entries for datapath lif(s)
     ///< \param[in] spec    lif configuration parameters
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create_flow_miss_mnic_(pds_lif_spec_t *spec);
+    sdk_ret_t create_datapath_mnic_(pds_lif_spec_t *spec);
 
     ///< \brief    program necessary entries for internal mgmt. mnic lif(s)
     ///< \param[in] spec    lif configuration parameters
