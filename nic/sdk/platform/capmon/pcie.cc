@@ -22,22 +22,186 @@
 
 #include "capmon.hpp"
 
+
 void
-pxb_read_target_status()
+capmon_asic_data_store1(uint64_t axi_wr, uint64_t axi_wr_64,
+                        uint64_t axi_wr_256, uint64_t axi_wr_bytes,
+                        uint64_t axi_rd, uint64_t axi_rd_64,
+                        uint64_t axi_rd_256, uint64_t axi_rd_bytes,
+                        uint64_t atomic_req)
 {
-    uint32_t pending_ids, port0_pending_ids;
+    asic->axi_wr = axi_wr;
+    asic->axi_wr64 = axi_wr_64;
+    asic->axi_wr256 = axi_wr_256;
+    asic->axi_wr_bytes = axi_wr_bytes;
+    asic->axi_rd = axi_rd;
+    asic->axi_rd64 = axi_rd_64;
+    asic->axi_rd256 = axi_rd_256;
+    asic->axi_rd_bytes = axi_rd_bytes;
+    asic->atomic_req = atomic_req;
+}
 
-    // Pending counters (per pcie-port)
+void
+capmon_asic_data_store2(uint32_t axi_wr_pending, uint32_t axi_rd_pending,
+                        uint64_t tags_pending, uint64_t fifo_depth[2],
+                        uint64_t rd_lat0, uint64_t rd_lat1, uint64_t rd_lat2,
+                        uint64_t rd_lat3,
+                        uint16_t *cfg_rdlat,
+                        double wr_bw, double wr_pct, double wr64_pct, double wr256_pct,
+                        double rd_bw, double rd_pct, double rd64_pct, double rd256_pct)
+{
+    asic->axi_wr_pend = axi_wr_pending;
+    asic->axi_rd_pend = axi_rd_pending;
+    memcpy(asic->tags_pend, &tags_pending, sizeof(tags_pending));
+    memcpy(asic->fifo_depth, &fifo_depth, sizeof(*fifo_depth));
+    asic->rd_lat0 = rd_lat0;
+    asic->rd_lat1 = rd_lat1;
+    asic->rd_lat2 = rd_lat2;
+    asic->rd_lat3 = rd_lat3;
+    asic->rd_total = rd_lat0 + rd_lat1 + rd_lat2 + rd_lat3;
+
+    asic->cfg_rdlat[0] = cfg_rdlat[0];
+    asic->cfg_rdlat[1] = cfg_rdlat[1];
+    asic->cfg_rdlat[2] = cfg_rdlat[2];
+    asic->cfg_rdlat[3] = cfg_rdlat[3];
+
+    asic->wr_bw = wr_bw;
+    asic->wr_pct = wr_pct;
+    asic->wr64_pct = wr64_pct;
+    asic->wr256_pct = wr256_pct;
+    asic->rd_bw = rd_bw;
+    asic->rd_pct = rd_pct;
+    asic->rd64_pct = rd64_pct;
+    asic->rd256_pct = rd256_pct;
+}
+
+void
+capmon_asic_data_store3(uint64_t rx_bad_tlp, uint64_t rx_bad_dllp,
+                        uint64_t rx_nak_received, uint64_t rx_nullified,
+                        uint64_t rxbfr_overflow, uint64_t tx_nak_sent,
+                        uint64_t txbuf_ecc_err)
+{
+    asic->rx_bad_tlp = rx_bad_tlp;
+    asic->rx_bad_dllp = rx_bad_dllp;
+    asic->rx_nak_received = rx_nak_received;
+    asic->rx_nullified = rx_nullified;
+    asic->rxbfr_overflow = rxbfr_overflow;
+    asic->tx_nak_sent = tx_nak_sent;
+    asic->txbuf_ecc_err = txbuf_ecc_err;
+}
+
+void
+capmon_asic_data_store4(uint64_t fcpe, uint64_t fc_timeout,
+                        uint64_t replay_num_err, uint64_t replay_timer_err)
+{
+    asic->fcpe = fcpe;
+    asic->fc_timeout = fc_timeout;
+    asic->replay_num_err = replay_num_err;
+    asic->replay_timer_err = replay_timer_err;
+}
+
+void
+capmon_asic_data_store5(uint8_t core_initiated_recovery,
+                        uint8_t ltssm_state_changed, uint64_t skp_os_err,
+                        uint64_t deskew_err, uint64_t phystatus_err)
+{
+    asic->core_initiated_recovery = core_initiated_recovery;
+    asic->ltssm_state_changed = ltssm_state_changed;
+    asic->skp_os_err = skp_os_err;
+    asic->deskew_err = deskew_err;
+    asic->phystatus_err = phystatus_err;
+}
+
+void
+capmon_asic_data_store6(uint64_t rx_malform_tlp, uint64_t rx_framing_err,
+                        uint64_t rx_ecrc_err, uint64_t rx_nullified,
+                        uint64_t rx_watchdog_nullify, uint64_t rx_unsupp,
+                        uint64_t rxbuf_ecc_err, uint64_t tx_drop,
+                        uint64_t txbfr_overflow)
+{
+    asic->rx_malform_tlp = rx_malform_tlp;
+    asic->rx_framing_err = rx_framing_err;
+    asic->rx_ecrc_err = rx_ecrc_err;
+    asic->rxbuf_ecc_err = rxbuf_ecc_err;
+    asic->rx_nullified = rx_nullified;
+    asic->rx_watchdog_nullify = rx_watchdog_nullify;
+    asic->rx_unsupp = rx_unsupp;
+    asic->tx_drop = tx_drop;
+    asic->txbfr_overflow = txbfr_overflow;
+}
+
+void
+capmon_asic_data_store7(
+    double wr_bw, double wr_pct, double wr64_pct,
+    double rd_bw, double rd_pct, double rd64_pct,
+    double db32_rate, double db64_rate)
+{
+    asic->tgt_wr_bw = wr_bw;
+    asic->tgt_wr_pct = wr_pct;
+    asic->tgt_wr64_pct = wr64_pct;
+    asic->tgt_rd_bw = rd_bw;
+    asic->tgt_rd_pct = rd_pct;
+    asic->tgt_rd64_pct = rd64_pct;
+    asic->tgt_db32_rate = db32_rate;
+    asic->tgt_db64_rate = db64_rate;
+}
+
+void
+capmon_asic_data_store8(
+    uint64_t axi_wr_bytes, uint64_t axi_wr, uint64_t axi_wr64,
+    uint64_t axi_rd_bytes, uint64_t axi_rd, uint64_t axi_rd64,
+    uint64_t axi_wr_db32, uint64_t axi_wr_db64)
+{
+    asic->axi_wr_tgt = axi_wr;
+    asic->axi_wr_bytes_tgt = axi_wr_bytes;
+    asic->axi_rd_tgt = axi_rd;
+    asic->axi_rd_bytes_tgt = axi_rd_bytes;
+    asic->axi_wr_64_tgt = axi_wr64;
+    asic->axi_rd_64_tgt = axi_rd64;
+    asic->axi_wr_db64 = axi_wr_db64;
+    asic->axi_wr_db32 = axi_wr_db32;
+}
+
+void
+pxb_bwmon_target(
+    uint64_t *axi_wr_bytes, uint64_t *axi_wr, uint64_t *axi_wr64,
+    uint64_t *axi_rd_bytes, uint64_t *axi_rd, uint64_t *axi_rd64,
+    uint64_t *axi_wr_db32, uint64_t *axi_wr_db64)
+{
+    // Write counters
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
-                      CAP_PXB_CSR_STA_TGT_AXI_PENDING_BYTE_ADDRESS,
-                  &pending_ids, 1);
+                      CAP_PXB_CSR_CNT_TGT_TOT_AXI_WR_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr, 2);
 
-    port0_pending_ids =
-        CAP_PXB_CSR_STA_TGT_AXI_PENDING_STA_TGT_AXI_PENDING_0_2_IDS_P0_GET(
-            pending_ids);
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_TGT_TOT_AXI_WR_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr_bytes, 2);
 
-    asic->target_pending = port0_pending_ids;
-    // Show
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_TGT_AXI_WR64_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr64, 2);
+
+    // Read counters
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_TGT_TOT_AXI_RD_BYTE_ADDRESS,
+                  (uint32_t *)axi_rd, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_TGT_TOT_AXI_RD_BYTE_ADDRESS,
+                  (uint32_t *)axi_rd_bytes, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_TGT_AXI_RD64_BYTE_ADDRESS,
+                  (uint32_t *)axi_rd64, 2);
+
+    // Doorbell transaction counters
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_TGT_DB64_AXI_WR_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr_db64, 2);
+
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_CNT_TGT_DB32_AXI_WR_BYTE_ADDRESS,
+                  (uint32_t *)axi_wr_db32, 2);
 }
 
 void
@@ -82,17 +246,11 @@ pxb_read_target_counters()
                       CAP_PXB_CSR_CNT_TGT_DB32_AXI_WR_BYTE_ADDRESS,
                   (uint32_t *)&axi_wr_db32, 2);
 
-    // Fetch
-    asic->axi_wr_tgt = axi_wr;
-    asic->axi_wr_bytes_tgt = axi_wr_bytes;
-    asic->axi_rd_tgt = axi_rd;
-    asic->axi_rd_bytes_tgt = axi_rd_bytes;
-    asic->axi_wr_64_tgt = axi_wr64;
-    asic->axi_rd_64_tgt = axi_rd64;
-    asic->axi_wr_db64 = axi_wr_db64;
-    asic->axi_wr_db32 = axi_wr_db32;
-
-    // Show
+    capmon_asic_data_store8(
+        axi_wr_bytes, axi_wr, axi_wr64,
+        axi_rd_bytes, axi_rd, axi_rd64,
+        axi_wr_db32, axi_wr_db64
+    );
 }
 
 void
@@ -137,6 +295,73 @@ pxb_reset_target_counters()
 }
 
 void
+pxb_reset_target_status()
+{
+    pxb_reset_target_counters();
+}
+
+void
+pxb_read_target_status()
+{
+    uint32_t pending_ids, port0_pending_ids;
+
+    // Pending counters (per pcie-port)
+    pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
+                      CAP_PXB_CSR_STA_TGT_AXI_PENDING_BYTE_ADDRESS,
+                  &pending_ids, 1);
+
+    port0_pending_ids =
+        CAP_PXB_CSR_STA_TGT_AXI_PENDING_STA_TGT_AXI_PENDING_0_2_IDS_P0_GET(
+            pending_ids);
+
+    asic->target_pending = port0_pending_ids;
+
+    uint64_t axi_wr, axi_rd_bytes, axi_rd64;
+    uint64_t axi_rd, axi_wr_bytes, axi_wr64;
+    uint64_t axi_wr_db64, axi_wr_db32;
+    uint64_t next_axi_wr, next_axi_rd_bytes, next_axi_rd64;
+    uint64_t next_axi_rd, next_axi_wr_bytes, next_axi_wr64;
+    uint64_t next_axi_wr_db64, next_axi_wr_db32;
+
+#define INTVL       (10000)     // US
+
+    pxb_reset_target_counters();
+
+    pxb_bwmon_target(
+        &axi_wr_bytes, &axi_wr, &axi_wr64,
+        &axi_rd_bytes, &axi_rd, &axi_rd64,
+        &axi_wr_db32, &axi_wr_db64);
+
+    usleep(INTVL);
+
+    pxb_bwmon_target(
+        &next_axi_wr_bytes, &next_axi_wr, &next_axi_wr64,
+        &next_axi_rd_bytes, &next_axi_rd, &next_axi_rd64,
+        &next_axi_wr_db32, &next_axi_wr_db64);
+
+    double wr_bw = ((((next_axi_wr_bytes - axi_wr_bytes) / INTVL) * 1e6) * 8) / 1e9;
+    double rd_bw = ((((next_axi_rd_bytes - axi_rd_bytes) / INTVL) * 1e6) * 8) / 1e9;
+
+    double delta_wr = (next_axi_wr - axi_wr);
+    double delta_rd = (next_axi_rd - axi_rd);
+    double delta_rw = (delta_wr + delta_rd);
+    double delta_wr64 = (next_axi_wr64 - axi_wr64);
+    double delta_rd64 = (next_axi_rd64 - axi_rd64);
+    double wr_pct = (delta_wr * 100.0) / delta_rw;
+    double rd_pct = (delta_rd * 100.0) / delta_rw;
+    double wr64_pct = (delta_wr64 * 100.0) / delta_wr;
+    double rd64_pct = (delta_rd64 * 100.0) / delta_rd;
+    double db32_rate = ((next_axi_wr_db32 - axi_wr_db32) * 1e6) / INTVL;
+    double db64_rate = ((next_axi_wr_db64 - axi_wr_db64) * 1e6) / INTVL;
+
+    capmon_asic_data_store7(
+        wr_bw, wr_pct, wr64_pct,
+        rd_bw, rd_pct, rd64_pct,
+        db32_rate, db64_rate
+    );
+}
+
+void
 pxb_read_target_err_counters()
 {
     uint64_t tlp_drop, ur_cpl;
@@ -162,24 +387,6 @@ pxb_read_target_err_counters()
     asic->ind_cnxt_mismatch = pxb_sat_tgt_rsp_err & 0xff;
     asic->rresp_err = pxb_sat_tgt_rsp_err >> 8 & 0xff;
     asic->bresp_err = pxb_sat_tgt_rsp_err >> 16 & 0xff;
-}
-
-void
-capmon_asic_data_store1(uint64_t axi_wr, uint64_t axi_wr_64,
-                        uint64_t axi_wr_256, uint64_t axi_wr_bytes,
-                        uint64_t axi_rd, uint64_t axi_rd_64,
-                        uint64_t axi_rd_256, uint64_t axi_rd_bytes,
-                        uint64_t atomic_req)
-{
-    asic->axi_wr = axi_wr;
-    asic->axi_wr64 = axi_wr_64;
-    asic->axi_wr256 = axi_wr_256;
-    asic->axi_wr_bytes = axi_wr_bytes;
-    asic->axi_rd = axi_rd;
-    asic->axi_rd64 = axi_rd_64;
-    asic->axi_rd256 = axi_rd_256;
-    asic->axi_rd_bytes = axi_rd_bytes;
-    asic->atomic_req = atomic_req;
 }
 
 void
@@ -299,40 +506,6 @@ pxb_reset_initiator_counters()
     pal_reg_wr32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
                       CAP_PXB_CSR_CNT_ITR_TOT_ATOMIC_REQ_BYTE_OFFSET,
                   (uint32_t *)&zero, 2);
-}
-
-void
-capmon_asic_data_store2(uint32_t axi_wr_pending, uint32_t axi_rd_pending,
-                        uint64_t tags_pending, uint64_t fifo_depth[2],
-                        uint64_t rd_lat0, uint64_t rd_lat1, uint64_t rd_lat2,
-                        uint64_t rd_lat3,
-                        uint16_t *cfg_rdlat,
-                        double wr_bw, double wr_pct, double wr64_pct, double wr256_pct,
-                        double rd_bw, double rd_pct, double rd64_pct, double rd256_pct)
-{
-    asic->axi_wr_pend = axi_wr_pending;
-    asic->axi_rd_pend = axi_rd_pending;
-    memcpy(asic->tags_pend, &tags_pending, sizeof(tags_pending));
-    memcpy(asic->fifo_depth, &fifo_depth, sizeof(*fifo_depth));
-    asic->rd_lat0 = rd_lat0;
-    asic->rd_lat1 = rd_lat1;
-    asic->rd_lat2 = rd_lat2;
-    asic->rd_lat3 = rd_lat3;
-    asic->rd_total = rd_lat0 + rd_lat1 + rd_lat2 + rd_lat3;
-
-    asic->cfg_rdlat[0] = cfg_rdlat[0];
-    asic->cfg_rdlat[1] = cfg_rdlat[1];
-    asic->cfg_rdlat[2] = cfg_rdlat[2];
-    asic->cfg_rdlat[3] = cfg_rdlat[3];
-
-    asic->wr_bw = wr_bw;
-    asic->wr_pct = wr_pct;
-    asic->wr64_pct = wr64_pct;
-    asic->wr256_pct = wr256_pct;
-    asic->rd_bw = rd_bw;
-    asic->rd_pct = rd_pct;
-    asic->rd64_pct = rd64_pct;
-    asic->rd256_pct = rd256_pct;
 }
 
 void
@@ -513,61 +686,6 @@ pxb_read_pport_counters(uint8_t port)
 }
 
 void
-capmon_asic_data_store3(uint64_t rx_bad_tlp, uint64_t rx_bad_dllp,
-                        uint64_t rx_nak_received, uint64_t rx_nullified,
-                        uint64_t rxbfr_overflow, uint64_t tx_nak_sent,
-                        uint64_t txbuf_ecc_err)
-{
-    asic->rx_bad_tlp = rx_bad_tlp;
-    asic->rx_bad_dllp = rx_bad_dllp;
-    asic->rx_nak_received = rx_nak_received;
-    asic->rx_nullified = rx_nullified;
-    asic->rxbfr_overflow = rxbfr_overflow;
-    asic->tx_nak_sent = tx_nak_sent;
-    asic->txbuf_ecc_err = txbuf_ecc_err;
-}
-
-void
-capmon_asic_data_store4(uint64_t fcpe, uint64_t fc_timeout,
-                        uint64_t replay_num_err, uint64_t replay_timer_err)
-{
-    asic->fcpe = fcpe;
-    asic->fc_timeout = fc_timeout;
-    asic->replay_num_err = replay_num_err;
-    asic->replay_timer_err = replay_timer_err;
-}
-
-void
-capmon_asic_data_store5(uint8_t core_initiated_recovery,
-                        uint8_t ltssm_state_changed, uint64_t skp_os_err,
-                        uint64_t deskew_err, uint64_t phystatus_err)
-{
-    asic->core_initiated_recovery = core_initiated_recovery;
-    asic->ltssm_state_changed = ltssm_state_changed;
-    asic->skp_os_err = skp_os_err;
-    asic->deskew_err = deskew_err;
-    asic->phystatus_err = phystatus_err;
-}
-
-void
-capmon_asic_data_store6(uint64_t rx_malform_tlp, uint64_t rx_framing_err,
-                        uint64_t rx_ecrc_err, uint64_t rx_nullified,
-                        uint64_t rx_watchdog_nullify, uint64_t rx_unsupp,
-                        uint64_t rxbuf_ecc_err, uint64_t tx_drop,
-                        uint64_t txbfr_overflow)
-{
-    asic->rx_malform_tlp = rx_malform_tlp;
-    asic->rx_framing_err = rx_framing_err;
-    asic->rx_ecrc_err = rx_ecrc_err;
-    asic->rxbuf_ecc_err = rxbuf_ecc_err;
-    asic->rx_nullified = rx_nullified;
-    asic->rx_watchdog_nullify = rx_watchdog_nullify;
-    asic->rx_unsupp = rx_unsupp;
-    asic->tx_drop = tx_drop;
-    asic->txbfr_overflow = txbfr_overflow;
-}
-
-void
 pxb_read_pport_err_counters(uint8_t port)
 {
     uint64_t rx_bad_tlp, rx_bad_dllp, rx_nak_received, rx_nullified,
@@ -734,6 +852,7 @@ pxb_read_counters(int verbose)
 void
 pxb_reset_counters(int verbose)
 {
+    pxb_reset_target_status();
     if (verbose) {
         pxb_reset_target_counters();
     }

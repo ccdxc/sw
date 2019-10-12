@@ -200,10 +200,11 @@ capmon_stage_mpu_basic_display(stage_t *stage)
     for (int i = 0; i < MPU_COUNT; i++) {
         mpu = &stage->mpus[i];
         if (verbose) {
-            CAPMON_REPORT("  mpu %u  processing %2d%%, stalls: hazard %2d%% "
-                          "phvwr %2d%% tblwr %2d%% memwr "
-                          "%2d%%\n",
-                          mpu->index, mpu->processing_pc, mpu->stall[3],
+            CAPMON_REPORT("  mpu %u  processing %2d%% tblwr_valid %.2f, "
+                          "stalls: hazard %2d%% "
+                          "phvwr %2d%% tblwr %2d%% memwr %2d%%\n",
+                          mpu->index, mpu->processing_pc, mpu->tblwr_valid,
+                          mpu->stall[3],
                           mpu->stall[2], mpu->stall[1], mpu->stall[0]);
         } else {
             CAPMON_REPORT(" m%1d=%3d%%", i, mpu->processing_pc);
@@ -466,6 +467,14 @@ static inline void
 capmon_asic_display_target_status()
 {
     CAPMON_REPORT("  pending [0]=%u\n", asic->target_pending);
+    CAPMON_REPORT("  wr_bw %3.2f rd_bw %3.2f\n",
+        asic->tgt_rd_bw, asic->tgt_wr_bw);
+    CAPMON_REPORT("  rd_dist rd_pct %3.2f rd64_pct %3.2f\n",
+        asic->tgt_rd_pct, asic->tgt_rd64_pct);
+    CAPMON_REPORT("  wr_dist wr_pct %3.2f wr64_pct %3.2f\n",
+        asic->tgt_wr_pct, asic->tgt_wr64_pct);
+    CAPMON_REPORT("  db32/s %.2f db64/s %.2f\n",
+        asic->tgt_db32_rate, asic->tgt_db64_rate);
 }
 
 static inline void

@@ -294,6 +294,7 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
 
     for (mpu = 0; mpu < 4; mpu++) {
         mpu_processing[mpu] = 0;
+        tblwr_valid[mpu] = 0;
         stall[mpu][0] = 0;
         stall[mpu][1] = 0;
         stall[mpu][2] = 0;
@@ -367,11 +368,12 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
                           latency[mpu])
                           ? TABLE_SRAM
                           : TABLE_HBM;
-            tblwr_valid[mpu] +=
-                CAP_MPU_CSR_STA_PEND_STA_PEND_1_2_PENDING_TABLE_WRITE_VALID0_GET(
-                    sta_pend[mpu]) +
-                CAP_MPU_CSR_STA_PEND_STA_PEND_1_2_PENDING_TABLE_WRITE_VALID1_GET(
-                    sta_pend[mpu]);
+            tblwr_valid[mpu] += (
+                (CAP_MPU_CSR_STA_PEND_STA_PEND_1_2_PENDING_TABLE_WRITE_VALID0_GET(
+                    sta_pend[mpu]) ? 1 : 0) +
+                (CAP_MPU_CSR_STA_PEND_STA_PEND_1_2_PENDING_TABLE_WRITE_VALID1_GET(
+                    sta_pend[mpu]) ? 1 : 0)
+                );
         }
 
         // Only use MPU[3] for latency as it is used first in distribution
@@ -452,6 +454,7 @@ stg_poll(int verbose, uint8_t pipeline, uint8_t stage)
     for (mpu = 0; mpu < 4; mpu++) {
         mpu_ptr = &asic->pipelines[pipeline].stages[stage].mpus[mpu];
         mpu_ptr->processing_pc = mpu_processing[mpu] * 100 / polls;
+        mpu_ptr->tblwr_valid = tblwr_valid[mpu] / (polls * 1.0);
         mpu_ptr->stall[0] = stall[mpu][0];
         mpu_ptr->stall[1] = stall[mpu][1];
         mpu_ptr->stall[2] = stall[mpu][2];

@@ -69,6 +69,8 @@ typedef struct mpu_ {
     uint8_t phv_data_depth;
     uint8_t phv_cmd_depth;
 
+    float tblwr_valid;
+
     uint32_t inst_executed;
     uint32_t icache_miss;
     uint32_t icache_fill_stall;
@@ -207,6 +209,9 @@ typedef struct asic_data_ {
     uint64_t axi_wr_tgt, axi_wr_64_tgt, axi_wr_bytes_tgt;
     uint64_t axi_rd_tgt, axi_rd_64_tgt, axi_rd_bytes_tgt;
     uint64_t axi_wr_db64, axi_wr_db32;
+    double tgt_wr_bw, tgt_wr_pct, tgt_wr64_pct;
+    double tgt_rd_bw, tgt_rd_pct, tgt_rd64_pct;
+    double tgt_db32_rate, tgt_db64_rate;
 
     uint64_t ur_cpl, tlp_drop;
     uint8_t rresp_err, bresp_err, ind_cnxt_mismatch;
