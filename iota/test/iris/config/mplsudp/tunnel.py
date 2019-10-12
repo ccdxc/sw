@@ -113,8 +113,8 @@ class MplsOverUdpTunnelManager:
         self.__tunnels = tunnels
         return self.__process_req(req)
 
-    def DeleteTunnels(self):
-        req = api.Trigger_CreateAllParallelCommandsRequest()
+    def DeleteTunnels(self, serial = True):
+        req = api.Trigger_CreateExecuteCommandsRequest(serial)
         for tunnel in self.__tunnels:
             tunnel.Delete(req)
         return self.__process_req(req)
