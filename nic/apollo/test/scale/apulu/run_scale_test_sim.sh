@@ -13,12 +13,17 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
 #export TCID="1"
-
 export PATH=${PATH}:${BUILD_DIR}/bin
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_sim.json -f apulu --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"
+
+cfgfile=apulu/scale_cfg_sim.json
+if [[ "$1" ==  --cfg ]]; then
+    cfgfile=$2
+fi
+
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f apulu --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"
 
 # Valgrind with XML output
-#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile
 
 # Valgrind with text output
-#valgrind --track-origins=yes apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+#valgrind --track-origins=yes apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile

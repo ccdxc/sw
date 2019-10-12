@@ -12,7 +12,7 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
 
-cfgfile=scale_cfg.json
+cfgfile=apulu/scale_cfg.json
 if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
