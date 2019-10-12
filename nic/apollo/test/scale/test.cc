@@ -1381,12 +1381,10 @@ create_objects (void)
         }
     }
 
-    if (!apulu()) {
-        // create TEPs including MyTEP
-        ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create TEPs including MyTEP
+    ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
     if (artemis()) {

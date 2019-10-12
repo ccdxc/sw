@@ -220,7 +220,7 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                     assert(test_params->device_ip.af == IP_AF_IPV6);
                     assert(test_params->device_gw_ip.af == IP_AF_IPV6);
                 }
-                if (!obj.second.get<std::string>("encap").compare("vxlan")) {
+                if (!obj.second.get<std::string>("encap", "").compare("vxlan")) {
                     test_params->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                 } else {
                     test_params->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
@@ -309,11 +309,11 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
             } else if (kind == "vnic") {
                 string tag;
                 test_params->num_vnics = std::stol(obj.second.get<std::string>("count"));
-                test_params->vlan_start =
-                    std::stol(obj.second.get<std::string>("vlan-start"));
                 tag = obj.second.get<std::string>("tagged", "");
                 if (tag.empty() || !tag.compare("true")) {
                     test_params->tag_vnics = true;
+                    test_params->vlan_start =
+                        std::stol(obj.second.get<std::string>("vlan-start"));
                 } else if (!tag.compare("false")) {
                     test_params->tag_vnics = false;
                 } else {
@@ -330,10 +330,14 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                     std::stol(obj.second.get<std::string>("remotes"));
                 test_params->num_ip_per_vnic =
                     std::stol(obj.second.get<std::string>("locals"));
-                pfxstr = obj.second.get<std::string>("provider-prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->provider_pfx) == 0);
-                pfxstr = obj.second.get<std::string>("v6-provider-prefix");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_provider_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("provider-prefix", "");
+                if (!pfxstr.empty()) {
+                    assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->provider_pfx) == 0);
+                }
+                pfxstr = obj.second.get<std::string>("v6-provider-prefix", "");
+                if (!pfxstr.empty()) {
+                    assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_provider_pfx) == 0);
+                }
             } else if (kind == "flows") {
                 test_params->num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 test_params->num_udp = std::stol(obj.second.get<std::string>("num_udp"));
