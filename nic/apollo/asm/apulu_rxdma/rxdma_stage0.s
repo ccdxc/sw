@@ -18,10 +18,8 @@
 struct phv_ p;
 
 %%
-#if 0
     .param      eth_rx_app_header
     .param      eth_rx_drop
-#endif
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -30,7 +28,6 @@ rx_dummy:
     phvwr.e     p.capri_intr_drop, 1
     nop
 
-#if 0
 //Do not change the order of this entry
 //This has to align with the txdma_stage0.s program
 .align
@@ -44,4 +41,3 @@ eth_rx_stage0:
 eth_tx_stage0_dummy:
     j eth_rx_drop
     nop
-#endif

@@ -3,11 +3,10 @@
           before including the common p4 defines.
 */
 
-#if defined(APOLLO)
-#include "nic/p4/common-p4+/common_rxdma_dummy.p4"
-//#include "nic/apollo/p4/rxdma/common_rxdma_dummy.p4"
-#elif defined(ARTEMIS)
+#if defined(ARTEMIS)
 #include "nic/apollo/p4/artemis_rxdma/common_rxdma_dummy.p4"
+#elif defined(APULU)
+#include "nic/apollo/p4/apulu_rxdma/common_rxdma_dummy.p4"
 #else
 #include "nic/p4/common-p4+/common_rxdma_dummy.p4"
 #endif
@@ -25,11 +24,10 @@
 #define rx_table_s7_t0_action eth_rx_completion
 #define rx_table_s7_t1_action eth_rx_stats
 
-#if defined(APOLLO)
-#include "nic/p4/common-p4+/common_rxdma.p4"
-//#include "nic/apollo/p4/rxdma/common_rxdma.p4"
-#elif defined(ARTEMIS)
+#if defined(ARTEMIS)
 #include "nic/apollo/p4/artemis_rxdma/common_rxdma.p4"
+#elif defined(APULU)
+#include "nic/apollo/p4/apulu_rxdma/common_rxdma.p4"
 #else
 #include "nic/p4/common-p4+/common_rxdma.p4"
 #endif

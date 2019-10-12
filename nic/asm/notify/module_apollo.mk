@@ -1,8 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = notify_apollo.asmbin
+MODULE_TARGET       = notify_$(PIPELINE).asmbin
 MODULE_PREREQS      = notify.p4bin
-MODULE_PIPELINE     = apollo
+MODULE_PIPELINE     = apollo artemis apulu
 MODULE_INCS         = ${BLD_P4GEN_DIR}/notify_txdma_actions/asm_out \
                       ${BLD_P4GEN_DIR}/notify_txdma_actions/alt_asm_out \
                       ${TOPDIR}/nic/asm/common-p4+/include \

@@ -11,5 +11,4 @@ control session2flow {}
 #define lpm1_enable             table0_valid
 #define lpm2_enable             table1_valid
 #define vnic_info_en            table2_valid
-#define cps_path_en             table3_valid
-#define aging_enable            table0_valid
+#define apulu_p4plus            table3_valid
