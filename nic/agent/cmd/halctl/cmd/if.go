@@ -468,6 +468,50 @@ func ifGetAllStr() map[uint64]string {
 	return m
 }
 
+func ifGetAllIdxStr() map[uint32]string {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c)
+
+	defer c.Close()
+
+	var req *halproto.InterfaceGetRequest
+	req = &halproto.InterfaceGetRequest{}
+
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	var m map[uint32]string
+	m = make(map[uint32]string)
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting if failed. %v\n", err)
+		return m
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			return m
+		}
+
+		if resp.GetSpec().GetType() != halproto.IfType_IF_TYPE_UPLINK {
+			continue
+		}
+		id := resp.GetStatus().GetUplinkInfo().GetUplinkIdx()
+		m[id] = ifRespToStr(resp)
+	}
+
+	return m
+}
+
 func ifGetStrFromID(ifID []uint64) (int, []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()

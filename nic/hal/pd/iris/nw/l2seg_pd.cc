@@ -1658,9 +1658,13 @@ pd_l2seg_get (pd_func_args_t *pd_func_args)
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
         if (l2seg_pd->inp_prop_tbl_idx[i] != INVALID_INDEXER_INDEX) {
             l2seg_info->add_inp_prop_idx(l2seg_pd->inp_prop_tbl_idx[i]);
+        } else {
+            l2seg_info->add_inp_prop_idx(0);
         }
         if (l2seg_pd->inp_prop_tbl_idx_pri[i] != INVALID_INDEXER_INDEX) {
             l2seg_info->add_inp_prop_idx_pr_tag(l2seg_pd->inp_prop_tbl_idx_pri[i]);
+        } else {
+            l2seg_info->add_inp_prop_idx_pr_tag(0);
         }
     }
 

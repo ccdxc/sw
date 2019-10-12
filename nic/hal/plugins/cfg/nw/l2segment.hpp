@@ -80,6 +80,7 @@ typedef struct l2seg_s {
     BroadcastFwdPolicy    bcast_fwd_policy;             // broadcast policy
     ip_addr_t             gipo;                         // gipo for vxlan
     bool                  is_shared_inband_mgmt;       
+    bool                  have_shared_oifls;            // have shared oifls
     hal_handle_t          other_shared_mgmt_l2seg_hdl[HAL_MAX_UPLINKS];  
 
 

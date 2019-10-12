@@ -86,9 +86,10 @@ flow_miss:
   seq           c1, r5[0], 0
   nop.!c1.e
   seq           c1, k.control_metadata_mode_switch_en, FALSE
-  seq           c2, k.control_metadata_registered_mac_miss, FALSE
-  seq           c3, k.control_metadata_registered_mac_nic_mode, NIC_MODE_SMART
-  orcf          c1, [c2&c3]
+  crestore      [c3-c2], k.{control_metadata_registered_mac_nic_mode, \
+                            control_metadata_registered_mac_miss}, 0x3
+  // mode_swich_en == FALSE || [reg_mac_miss == FALSE && nic_mode == SMART]
+  orcf          c1, [!c2 & !c3]
   bcf           [!c1], flow_miss_classic
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key

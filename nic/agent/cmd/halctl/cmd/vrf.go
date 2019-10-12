@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -108,12 +109,21 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	vrfShowHeader()
 
 	// Print vrfs
+	m := make(map[uint64]*halproto.VrfGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		vrfShowOneResp(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetVrfId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		vrfShowOneResp(m[k])
 	}
 }
 
@@ -157,6 +167,7 @@ func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print vrfs
+	m := make(map[uint64]*halproto.VrfGetResponse)
 	for i, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
@@ -166,7 +177,15 @@ func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 			// Print Header
 			vrfPdShowHeader(resp)
 		}
-		vrfPdShowOneResp(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetVrfId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		vrfPdShowOneResp(m[k])
 	}
 }
 
@@ -235,21 +254,21 @@ func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func vrfShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:         Vrf's ID                                Handle:     Vrf Handle\n")
-	fmt.Printf("Type:       Vrf's Type                              #L2Segs:    Num. of L2Segments\n")
-	fmt.Printf("#SGs:       Num. of Security Groups                 #EPs:       Num. of EPs\n")
-	fmt.Printf("#LBSVCs:    Num. of L4 LB Services                  NwSecId:    Security Profile ID\n")
-	hdrLine := strings.Repeat("-", 77)
+	fmt.Printf("Id:         Vrf's ID                     Uplink:     Designated uplink\n")
+	fmt.Printf("Type:       Vrf's Type                   #L2Segs:    Num. of L2Segments\n")
+	fmt.Printf("#SGs:       Num. of Security Groups      #EPs:       Num. of EPs\n")
+	fmt.Printf("#LBSVCs:    Num. of L4 LB Services       NwSecId:    Security Profile ID\n")
+	hdrLine := strings.Repeat("-", 60)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-7s\n",
-		"Id", "Handle", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs", "NwSecId")
+	fmt.Printf("%-5s%-7s%-10s%-8s%-5s%-5s%-8s%-7s\n",
+		"Id", "Uplink", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs", "NwSecId")
 	fmt.Println(hdrLine)
 }
 
 func vrfShowOneResp(resp *halproto.VrfGetResponse) {
-	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d%-7d\n",
+	fmt.Printf("%-5d%-7d%-10s%-8d%-5d%-5d%-8d%-7d\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
-		resp.GetStatus().GetKeyOrHandle().GetVrfHandle(),
+		resp.GetSpec().GetDesignatedUplink().GetInterfaceId(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
 		resp.GetStats().GetNumL2Segments(),
 		resp.GetStats().GetNumSecurityGroups(),
@@ -321,4 +340,42 @@ func vrfEPdShowOneResp(resp *halproto.VrfGetResponse) {
 		epdStatus.GetVrfVlanIdCpu(),
 		epdStatus.GetInpPropCpuIdx(),
 		imnStr, imtStr)
+}
+
+func vrfGetType(vIdx uint64) halproto.VrfType {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewVrfClient(c)
+	var req *halproto.VrfGetRequest
+	req = &halproto.VrfGetRequest{
+		KeyOrHandle: &halproto.VrfKeyHandle{
+			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+				VrfId: vIdx,
+			},
+		},
+	}
+	vrfGetReqMsg := &halproto.VrfGetRequestMsg{
+		Request: []*halproto.VrfGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting vrf failed. %v\n", err)
+		return halproto.VrfType_VRF_TYPE_NONE
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+		return resp.GetSpec().GetVrfType()
+	}
+	return halproto.VrfType_VRF_TYPE_NONE
 }

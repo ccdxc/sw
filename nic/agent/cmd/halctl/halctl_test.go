@@ -330,7 +330,7 @@ func (h *halCtlSuite) TestVrfGet(c *C) {
 		resp, err = h.getVrfs(vrfGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get VRFs")
-	AssertEquals(c, true, strings.Contains(resp, "1         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "1    0"), fmt.Sprintf("halctl returned: %v", resp))
 	// AssertEquals(c, true, strings.Contains(resp, "vrfid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
@@ -353,7 +353,7 @@ func (h *halCtlSuite) TestL2SegmentGet(c *C) {
 		resp, err = h.getL2Segments(l2SegGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get L2Segments")
-	AssertEquals(c, true, strings.Contains(resp, "1         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "1       CL"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 

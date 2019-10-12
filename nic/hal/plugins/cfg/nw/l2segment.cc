@@ -325,6 +325,7 @@ l2seg_create_oiflists (l2seg_t *l2seg)
     //   L2seg with encap of 8192. TODO: May be we need to have a new type
     //   for these L2segs which are created for inband mgmt.
     if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
+        l2seg->have_shared_oifls = true;
         ret = oif_list_create_block(&l2seg->base_oif_list_id, HAL_OIFLIST_BLOCK);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to create broadcast list[3], err : {}", ret);
@@ -2929,8 +2930,12 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
         oif_list_get(l2seg_get_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_bcast_lst());
         oif_list_get(l2seg_get_mcast_oif_list(l2seg), rsp->mutable_status()->mutable_mcast_lst());
         oif_list_get(l2seg_get_prmsc_oif_list(l2seg), rsp->mutable_status()->mutable_prom_lst());
-        oif_list_get(l2seg_get_shared_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_shared_bcast_lst());
-        oif_list_get(l2seg_get_shared_mcast_oif_list(l2seg), rsp->mutable_status()->mutable_shared_mcast_lst());
+        if (l2seg->have_shared_oifls) {
+            oif_list_get(l2seg_get_shared_bcast_oif_list(l2seg), 
+                         rsp->mutable_status()->mutable_shared_bcast_lst());
+            oif_list_get(l2seg_get_shared_mcast_oif_list(l2seg), 
+                         rsp->mutable_status()->mutable_shared_mcast_lst());
+        }
     } else {
         oif_list_get(l2seg_get_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_bcast_lst());
     }
