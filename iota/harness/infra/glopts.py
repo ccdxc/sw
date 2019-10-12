@@ -53,6 +53,8 @@ parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Only run regression Testsuites.')
 parser.add_argument('--skip-sanity', dest='skip_sanity',
                     action='store_true', help='Skip sanity testbundles.')
+parser.add_argument('--skip-setup', dest='skip_setup',
+                    action='store_true', help='Skip iota setup')
 parser.add_argument('--stress', dest='stress',
                     action='store_true', help='Enable stress test mode.')
 parser.add_argument('--bundle-stress', dest='bundle_stress',type=int, default=1,

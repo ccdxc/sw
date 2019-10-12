@@ -97,10 +97,22 @@ def InitTestbed(req):
     Logger.debug("Initializing Testbed:")
     return __rpc(req, gl_topo_svc_stub.InitTestBed)
 
+
+def GetTestbed(req):
+    global gl_topo_svc_stub
+    Logger.debug("Getting Testbed:")
+    return __rpc(req, gl_topo_svc_stub.GetTestBed)
+
+
 def AddNodes(req):
     global gl_topo_svc_stub
     Logger.debug("Add Nodes:")
     return __rpc(req, gl_topo_svc_stub.AddNodes)
+
+def GetAddedNodes(req):
+    global gl_topo_svc_stub
+    Logger.debug("Get Nodes:")
+    return __rpc(req, gl_topo_svc_stub.GetNodes)
 
 def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
@@ -115,6 +127,18 @@ def IsWorkloadRunning(wl):
 
 def __bringup_workloads(req):
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
+    if IsApiResponseOk(resp):
+        #make testcase directory for new workloads
+        if CurrentTestcase:
+            cur_dir = GetCurrentDirectory()
+            ChangeDirectory("")
+            CurrentTestcase.MakeTestcaseDirectory()
+            ChangeDirectory(cur_dir)
+        return resp, types.status.SUCCESS
+    return None, types.status.FAILURE
+
+def __get_workloads(req):
+    resp = __rpc(req, gl_topo_svc_stub.GetWorkloads)
     if IsApiResponseOk(resp):
         #make testcase directory for new workloads
         if CurrentTestcase:
@@ -145,6 +169,16 @@ def AddWorkloads(req, skip_store=False, skip_bringup=False):
         Logger.debug("Skipping workload bring up.")
         resp = req
         running = False
+    if not skip_store and resp is not None:
+        store.AddWorkloads(resp, running=running)
+
+    return resp
+
+def RestoreWorkloads(req, skip_store=False):
+    global gl_topo_svc_stub
+    Logger.debug("Get Workloads:")
+    running = True
+    resp, ret = __get_workloads(req)
     if not skip_store and resp is not None:
         store.AddWorkloads(resp, running=running)
 
@@ -282,6 +316,7 @@ def GetWorkloadCpusForNode(node_name):
 
 def GetWorkloadMemoryForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadMemoryForNode(node_name)
+
 def GetNodes():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
 

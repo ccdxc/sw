@@ -1,9 +1,12 @@
 import os
 import iota.harness.api as api
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 source_file = api.GetTopDir() + '/iota/images/arm-iperf'
 
 def Main(step):
+    if GlobalOptions.skip_setup:
+        return api.types.status.SUCCESS
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.ChangeDirectory("iperf")

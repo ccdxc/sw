@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 import glob
+import json
+import pdb
 
 from iota.harness.infra.utils.logger import Logger as Logger
 import iota.harness.infra.utils.parser as parser
@@ -9,8 +11,11 @@ import iota.harness.api as api
 import iota.harness.infra.types as types
 #import iota.harness.infra.store as store
 
+
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.exceptions import *
+
+SuiteRunFile = GlobalOptions.logdir +  "/" +   "testsuite.log"
 
 class YmlObject(object):
     def __init__(self, d):
@@ -30,6 +35,25 @@ def __discover_testsuites():
         suites.append(data)
     return suites
 
+def SkipSetupValid():
+    if len(GlobalOptions.testsuites) != 1:
+        return False
+
+    try:
+        with open(SuiteRunFile, 'r') as json_file:
+            data = json.load(json_file)
+            return data.get("name", None) == GlobalOptions.testsuites[0] and data.get("setupDone", False)
+    except:
+        pass
+    Logger.info("Skip setup not valid...")
+    return False
+
+def SaveSuiteInfo(suite):
+    testsuiteInfo = {"setupDone" : True,
+                    "name" : suite.meta.name }
+    with open(SuiteRunFile, 'w') as outfile:
+        json.dump(testsuiteInfo, outfile, indent=4)
+
 def Main():
     api.Init()
 
@@ -41,6 +65,8 @@ def Main():
     for ts_spec in ts_specs:
         ts = testsuite.TestSuite(ts_spec)
         testsuites.append(ts)
+        if ts.IsSkipped():
+            continue
         try:
             ret = ts.Main()
         except TestbedFailureException:
@@ -50,7 +76,9 @@ def Main():
             result = ret
             if GlobalOptions.no_keep_going:
                 break
-
+        #Help in skip setup option
+        if ts.SetupComplete():
+           SaveSuiteInfo(ts_spec)
     for ts in testsuites:
         ts.PrintReport()
 

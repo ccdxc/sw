@@ -4,6 +4,7 @@ import os
 import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as common
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
 def __penctl_exec(node):
@@ -64,8 +65,10 @@ def Main(step):
         ret = __installPenCtl(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret
-        ret = __installNaplesFwImage(naplesHost)
-        if ret != api.types.status.SUCCESS:
-            return ret
+
+        if not GlobalOptions.skip_setup:
+            ret = __installNaplesFwImage(naplesHost)
+            if ret != api.types.status.SUCCESS:
+                return ret
 
     return api.types.status.SUCCESS

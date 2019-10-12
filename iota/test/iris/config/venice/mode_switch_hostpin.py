@@ -4,9 +4,13 @@ import time
 import datetime
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
 def Main(step):
+    if GlobalOptions.skip_setup:
+        #No mode switch required for skeip setup
+        return api.types.status.SUCCESS
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     uuidMap = api.GetNaplesNodeUuidMap()
     nodes = api.GetNaplesHostnames()

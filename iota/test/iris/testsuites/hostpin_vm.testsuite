@@ -23,7 +23,6 @@ setup:
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
         - step : testcases.drivers.install_iperf
-        - step : testcases.penctl.install
         - step : testcases.naples_upgrade.install
 
 common:

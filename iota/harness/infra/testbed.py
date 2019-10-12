@@ -172,11 +172,11 @@ class _Testbed:
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
             else:
-                resp = self.SetupTestBedNetwork()
-                if resp != types.status.SUCCESS:
-                    Logger.info("Vlan programming failed, ignoring")
-                    #assert(0)
-
+                if not GlobalOptions.skip_setup:
+                    resp = self.SetupTestBedNetwork()
+                    if resp != types.status.SUCCESS:
+                        Logger.info("Vlan programming failed, ignoring")
+                        #assert(0)
         return msg
 
     def __cleanup_testbed(self):
@@ -204,7 +204,7 @@ class _Testbed:
         return getattr(resource, "NICType", "pensando-sim")
 
     def __recover_testbed(self):
-        if GlobalOptions.dryrun:
+        if GlobalOptions.dryrun or GlobalOptions.skip_setup:
             return
         proc_hdls = []
         logfiles = []
@@ -333,19 +333,23 @@ class _Testbed:
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
-        self.__recover_testbed()
-        if GlobalOptions.dryrun:
-            status = types.status.SUCCESS
-        else:
-            status = self.__cleanup_testbed()
-            if status != types.status.SUCCESS:
-                return status
-            #status = self.__cleanup_testbed_script()
-            #if status != types.status.SUCCESS:
-            #    return status
-
+        resp = None
         msg = self.__prepare_TestBedMsg(self.curr_ts)
-        resp = api.InitTestbed(msg)
+        if not GlobalOptions.skip_setup:
+            self.__recover_testbed()
+            if GlobalOptions.dryrun:
+                status = types.status.SUCCESS
+            else:
+                status = self.__cleanup_testbed()
+                if status != types.status.SUCCESS:
+                    return status
+                #status = self.__cleanup_testbed_script()
+                #if status != types.status.SUCCESS:
+                #    return status
+
+            resp = api.InitTestbed(msg)
+        else:
+            resp = api.GetTestbed(msg)
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
             raise TestbedFailureException

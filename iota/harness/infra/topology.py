@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import pdb
+import json
 import sys
 import re
 
@@ -18,6 +19,8 @@ import iota.harness.infra.testcase as testcase
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.iota_types_pb2 as types_pb2
+
+node_log_file = GlobalOptions.logdir + "/nodes.log"
 
 def formatMac(mac: str) -> str:
     mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
@@ -52,6 +55,7 @@ class Node(object):
         self.__node_type = GetNodeType(spec.role)
         self.__inst = store.GetTestbed().AllocateInstance(self.__node_type)
         self.__role = self.__get_instance_role(spec.role)
+        self.__node_id = getattr(self.__inst, "ID", 0)
 
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
@@ -110,13 +114,25 @@ class Node(object):
 
     def __read_mgmt_ip_from_console(self):
         if self.__nic_console_ip != "" and self.__nic_console_port != "":
-            self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port)
-            output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
-            ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-            x = re.findall(ifconfig_regexp, str(output))
-            if len(x) > 0:
-                Logger.info("Read management IP %s %s" % (self.__name, x[0]))
-                self.__nic_mgmt_ip = x[0]
+            try:
+                ip_read = False
+                with open(node_log_file, 'r') as json_file:
+                    data = json.load(json_file)
+                    for node in data:
+                        if node["NicConsoleIP"] == self.__nic_console_ip and \
+                            node["NicConsolePort"] == self.__nic_console_port:
+                            self.__nic_mgmt_ip = node["NicMgmtIP"]
+                            ip_read = True
+                if not ip_read:
+                    raise
+            except:
+                    self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
+                    output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
+                    ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+                    x = re.findall(ifconfig_regexp, str(output))
+                    if len(x) > 0:
+                        Logger.info("Read management IP %s %s" % (self.__name, x[0]))
+                        self.__nic_mgmt_ip = x[0]
         else:
             Logger.info("Skipping management IP read as no console info %s" % self.__name)
 
@@ -329,6 +345,16 @@ class Node(object):
             return api.HOST_NAPLES_DIR + "/" + "nodeinit.sh"
         return None
 
+    def GetNodeInfo(self):
+        info = {
+            "Name" : self.__name,
+            "NicMgmtIP" : self.__nic_mgmt_ip,
+            "NicConsoleIP" : self.__nic_console_ip,
+            "NicConsolePort" : self.__nic_console_port,
+            "InstanceID" : self.__node_id
+        }
+        return info
+
 class Topology(object):
     def __init__(self, spec):
         self.__nodes = {}
@@ -417,6 +443,34 @@ class Topology(object):
             assert(ret == types.status.SUCCESS)
 
         resp = api.AddNodes(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        for node_resp in resp.nodes:
+            node = self.__nodes[node_resp.name]
+            node.ProcessResponse(node_resp)
+
+        #save node info for future ref
+        node_infos = []
+        for n in self.__nodes.values():
+            node_infos.append(n.GetNodeInfo())
+
+        with open(node_log_file, 'w') as outfile:
+            json.dump(node_infos, outfile, indent=4)
+
+        return types.status.SUCCESS
+
+    def Build(self, testsuite):
+        Logger.info("Getting Nodes:")
+        req = topo_pb2.NodeMsg()
+        req.node_op = topo_pb2.ADD
+
+        for name,node in self.__nodes.items():
+            msg = req.nodes.add()
+            ret = node.AddToNodeMsg(msg, self, testsuite)
+            assert(ret == types.status.SUCCESS)
+
+        resp = api.GetAddedNodes(req)
         if not api.IsApiResponseOk(resp):
             return types.status.FAILURE
 

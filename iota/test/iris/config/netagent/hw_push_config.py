@@ -11,6 +11,7 @@ import iota.harness.api as api
 import iota.harness.infra.utils.parser as parser
 import iota.test.iris.config.netagent.api as netagent_api
 import iota.harness.infra.resmgr as resmgr
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
@@ -425,8 +426,17 @@ def __add_workloads(target_node = None):
         if resp is None:
             sys.exit(1)
 
+def __recover_workloads(target_node = None):
+    req = topo_svc.WorkloadMsg()
+    resp = api.RestoreWorkloads(req)
+    if resp is None:
+        sys.exit(1)
+
 def AddWorkloads():
     __add_workloads()
+
+def RestoreWorkloads():
+    __recover_workloads()
 
 def AddNaplesWorkloads(target_node=None):
     req = topo_svc.WorkloadMsg()
@@ -524,7 +534,7 @@ def ReAddWorkloads(node):
 
 
 
-def Main(step):
+def Main(args):
     #time.sleep(120)
     agent_nodes = api.GetNaplesHostnames()
     netagent_api.Init(agent_nodes, hw = True)
@@ -532,11 +542,13 @@ def Main(step):
     netagent_api.ReadConfigs(api.GetTopologyDirectory())
     #Delete path is not stable yet
     #netagent_api.DeleteBaseConfig()
-    if api.GetNicMode() != 'classic':
-        netagent_api.PushBaseConfig()
 
-
-    __add_workloads()
+    if GlobalOptions.skip_setup:
+        RestoreWorkloads()
+    else:
+        if api.GetNicMode() != 'classic':
+            netagent_api.PushBaseConfig()
+        __add_workloads()
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

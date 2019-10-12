@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import json
 import pdb
 import traceback
 
@@ -17,6 +18,7 @@ import iota.harness.infra.utils.timeprofiler as timeprofiler
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
+
 class TestSuite:
     def __init__(self, spec):
         self.__spec = spec
@@ -24,6 +26,7 @@ class TestSuite:
         self.__verifs = []
         self.__debugs = []
         self.__setups = []
+        self.__setup_complete = False
 
         self.__aborted = False
         self.__attrs = {}
@@ -36,6 +39,7 @@ class TestSuite:
         self.__stats_total = 0
         self.__stats_target = 0
         self.result = types.status.FAILURE
+        self.__skip = self.__apply_skip_filters()
         return
 
     def Abort(self):
@@ -54,6 +58,9 @@ class TestSuite:
 
     def GetPackages(self):
         return self.__spec.packages
+
+    def SetupComplete(self):
+        return self.__setup_complete
 
     def GetImages(self):
         return self.__spec.images
@@ -136,8 +143,9 @@ class TestSuite:
             s.name = s.step
             args = getattr(s, "args", None)
             s.step = loader.Import(s.step, self.__spec.packages)
-            s.step.args = getattr(s, "args", None)
+            s.args = getattr(s, "args", None)
         return types.status.SUCCESS
+
 
     def __parse_setup(self):
         ret = self.__parse_setup_topology()
@@ -154,20 +162,29 @@ class TestSuite:
             # Reset the running directory before every step
             Logger.info("Starting Config Step: ", s.step)
             api.ChangeDirectory(None)
-            status = loader.RunCallback(s.step, 'Main', True, getattr(s.step, "args", None))
+            status = loader.RunCallback(s.step, 'Main', True, getattr(s, "args", None))
             if status != types.status.SUCCESS:
                 Logger.error("ERROR: Failed to run config step", s.step)
                 return status
         return types.status.SUCCESS
 
+
     def __setup(self):
-        ret = self.__topology.Setup(self)
-        if ret != types.status.SUCCESS:
-            return ret
+        ret = None
+
+        if GlobalOptions.skip_setup:
+            ret = self.__topology.Build(self)
+            if ret != types.status.SUCCESS:
+                return ret
+        else:
+            ret = self.__topology.Setup(self)
+            if ret != types.status.SUCCESS:
+                return ret
         ret = self.__setup_config()
         if ret != types.status.SUCCESS:
             return ret
 
+        self.__setup_complete = True
         return types.status.SUCCESS
 
     def __update_stats(self):
@@ -233,8 +250,10 @@ class TestSuite:
         enable = getattr(self.__spec.meta, 'enable', True)
         return not enable
 
+    def IsSkipped(self):
+        return self.__skip
+
     def Main(self):
-        self.__skip = self.__apply_skip_filters()
         if self.__skip:
             Logger.debug("Skipping Testsuite: %s due to filters." % self.Name())
             return types.status.SUCCESS

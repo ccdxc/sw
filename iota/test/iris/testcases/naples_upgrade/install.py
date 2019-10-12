@@ -9,6 +9,7 @@ import iota.harness.api as api
 import iota.test.iris.testcases.naples_upgrade.common as common
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as pencommon
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 def __installNaplesFwLatestImage(node, img):
 
@@ -38,6 +39,9 @@ def __installBinary(node, img):
 
 
 def Main(step):
+    if GlobalOptions.skip_setup:
+        return api.types.status.SUCCESS
+
     #time.sleep(10)
     naplesHosts = api.GetNaplesHostnames()
 

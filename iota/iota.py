@@ -16,6 +16,7 @@ for p in paths:
     fullpath = os.path.join(topdir, p)
     sys.path.append(fullpath)
 
+__iota_server_port = 60000
 
 # This import will parse all the command line options.
 import iota.harness.infra.glopts as glopts
@@ -62,11 +63,18 @@ def __find_free_port():
     s.close()
     return port
 
+def __is_port_up(port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ret = sock.connect_ex(('%s' % '127.0.0.1', port))
+    sock.settimeout(1)
+    if ret == 0:
+        return True
+    return False
+
 def __start_server():
     Logger.debug("setting default SIGINT handler")
     signal.signal(signal.SIGINT, signal.default_int_handler)
     global gl_srv_process
-    glopts.GlobalOptions.svcport = __find_free_port()
     srv_binary = "VENICE_DEV=1 %s/iota/bin/server/iota_server" % topdir
     srv_logfile = "%s/server.log" % glopts.GlobalOptions.logdir
     srv_args = "--port %d" % glopts.GlobalOptions.svcport
@@ -79,7 +87,7 @@ def __start_server():
 def __exit_cleanup():
     global gl_srv_process
     Logger.debug("ATEXIT: Stopping IOTA Server")
-    gl_srv_process.Stop()
+    #gl_srv_process.Stop()
     if glopts.GlobalOptions.dryrun or glopts.GlobalOptions.skip_logs:
         return
     Logger.info("Saving logs to iota_sanity_logs.tar.gz")
@@ -89,7 +97,14 @@ def __exit_cleanup():
 def Main():
     atexit.register(__exit_cleanup)
     InitLogger()
-    __start_server()
+    glopts.GlobalOptions.svcport = __iota_server_port
+    if not glopts.GlobalOptions.skip_setup or not __is_port_up(__iota_server_port) or not engine.SkipSetupValid():
+        #Kill the server if running
+        os.system("pkill -9 iota_server")
+        os.system("sleep 1")
+        __start_server()
+        #Since IOTA server was down, we can't do skip setup anymore
+        glopts.GlobalOptions.skip_setup = False
     ret = engine.Main()
     return ret
 

@@ -10,11 +10,12 @@ CONSOLE_SVR_PASSWORD = 'N0isystem$'
 
 
 class Console(object):
-    def __init__(self, console_ip, console_port):
+    def __init__(self, console_ip, console_port, disable_log=False):
         self.console_ip = console_ip
         self.console_port = console_port
         self.console_svr_username = CONSOLE_SVR_USERNAME
         self.console_svr_password = CONSOLE_SVR_PASSWORD
+        self.__disable_log = disable_log
         self.__clear_line()
         self.hdl = self.__get_handle()
 
@@ -22,7 +23,8 @@ class Console(object):
         print (command)
         hdl = pexpect.spawn(command)
         hdl.timeout = TIMEOUT
-        hdl.logfile = sys.stdout.buffer
+        if not self.__disable_log:
+           hdl.logfile = sys.stdout.buffer
         return hdl
 
     def __sendline_expect(self, line, expect, hdl, timeout = TIMEOUT):
@@ -58,7 +60,6 @@ class Console(object):
     def __clear_line(self):
         print("%sClearing Console Server Line" % self.__log_pfx)
         hdl = self.__spawn("telnet %s -l %s" % (self.console_ip, self.console_svr_username))
-        hdl.logfile = sys.stdout.buffer
         hdl.expect_exact("Password:")
         self.__sendline_expect(self.console_svr_password, "#", hdl = hdl)
 
