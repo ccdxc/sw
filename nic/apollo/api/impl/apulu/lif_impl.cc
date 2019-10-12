@@ -113,6 +113,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
+    PDS_TRACE_DEBUG("Creating oob lif %u", key_);
     // allocate required nexthops
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
     if (ret != SDK_RET_OK) {
@@ -225,6 +226,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
+    PDS_TRACE_DEBUG("Creating inband lif %u", key_);
     // allocate required nexthops
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
     if (ret != SDK_RET_OK) {
@@ -338,6 +340,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
+    PDS_TRACE_DEBUG("Creating s/w datapath lif %u", key_);
     // allocate required nexthop to point to ARM datapath lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
@@ -415,10 +418,12 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
+        PDS_TRACE_DEBUG("Creating host mgmt. lif %u", key_);
         host_mgmt_lif = this;
         int_mgmt_lif =
             lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
     } else if (spec->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
+        PDS_TRACE_DEBUG("Creating internal mgmt. lif %u", key_);
         int_mgmt_lif = this;
         host_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_HOST_MGMT);
     }

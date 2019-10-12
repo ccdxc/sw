@@ -11,11 +11,8 @@ import click
 from click_repl import register_repl
 import cli
 from apollo_frontend import *
-
-from apollo_txdma_frontend import *
-from apollo_rxdma_frontend import *
-#from common_txdma_actions_frontend import *
-#from common_rxdma_actions_frontend import *
+from p4plus_txdma_frontend import *
+from p4plus_rxdma_frontend import *
 
 register_repl(dbg_cli)
 dbg_cli.add_command(debug)

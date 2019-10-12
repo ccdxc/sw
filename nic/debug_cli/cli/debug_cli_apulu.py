@@ -10,7 +10,7 @@ import os
 import click
 from click_repl import register_repl
 import cli
-from artemis_frontend import *
+from apulu_frontend import *
 from p4plus_txdma_frontend import *
 from p4plus_rxdma_frontend import *
 

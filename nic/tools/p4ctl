@@ -5,7 +5,7 @@ if ! [ -x "$(command -v locale)" ]; then
   exit 1
 fi
 repl=1
-platform=
+pipeline=
 while getopts ":c:p:h" opt; do
   case ${opt} in
     c )
@@ -15,12 +15,11 @@ while getopts ":c:p:h" opt; do
       #echo $repl
       ;;
     p )
-      platform=$OPTARG
-      if [ $platform != "iris" ] && [ $platform != "apollo" ] && [ $platform != "apulu" ] && [ $platform != "artemis" ]; then
-        echo -e "-p <platform can be iris or apollo or artemis> \n Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
+      pipeline=$OPTARG
+      if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ]; then
+        echo -e "-p <pipeline can be iris or apollo or artemis> \n Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
         exit
       fi
-      #echo $platform
       ;;
     h )
       echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
@@ -37,21 +36,21 @@ while getopts ":c:p:h" opt; do
   esac
 done
 shift $((OPTIND -1))
-if [ -z "$platform" ]; then
-   echo -e " -p <platform is mandatory> \n Usage:  p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
+if [ -z "$pipeline" ]; then
+   echo -e " -p <pipeline is mandatory> \n Usage:  p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
    exit
 fi
 
 localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
-export LD_LIBRARY_PATH=/nic/lib:/platform/lib:/nic/cli
+export LD_LIBRARY_PATH=/nic/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
 export ASIC_SLAVE_INIT=1
 if [[ "$repl" -eq 0 ]]; then
-        echo "python3 /nic/cli/debug_cli_$platform.py cmd"
-        python3 /nic/cli/debug_cli_$platform.py $cmd
+        echo "python3 /nic/cli/debug_cli_$pipeline.py cmd"
+        python3 /nic/cli/debug_cli_$pipeline.py $cmd
 else
-        #echo "python3 /nic/cli/debug_cli_$platform.py repl"
-        python3 /nic/cli/debug_cli_$platform.py repl
+        #echo "python3 /nic/cli/debug_cli_$pipeline.py repl"
+        python3 /nic/cli/debug_cli_$pipeline.py repl
 fi

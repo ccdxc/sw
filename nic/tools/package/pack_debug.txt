@@ -7,6 +7,8 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/*.py    /nic/cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/*.py    /nic/cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/cli/*.py         /nic/cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/cli/*.py         /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_txdma/cli/*.py            /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_rxdma/cli/*.py            /nic/cli/
 nic/build/$ARCH/$PIPELINE/lib/_$PIPELINE_*_p4pdcli.so                /nic/cli/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                       /nic/cli/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                            /nic/cli/
