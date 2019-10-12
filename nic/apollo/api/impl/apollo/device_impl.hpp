@@ -15,6 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/device.hpp"
 
 namespace api {
 namespace impl {
@@ -112,6 +113,11 @@ private:
     /// \param[out] egr_drop_stats Egress drop statistics
     /// \return     Number of stats entries
     uint32_t fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats);
+
+    /// \brief      program hardware with mytep/device information
+    /// \param[in]  device information
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_mytep_(device_entry *device);
 };
 
 /// \@}

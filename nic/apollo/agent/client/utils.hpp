@@ -125,8 +125,7 @@ populate_route_table_request (RouteTableRequest *req,
         if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             route->set_vpcid(rt->routes[i].vpc.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
-            ipaddr_api_spec_to_proto_spec(route->mutable_nexthop(),
-                                          &rt->routes[i].nh_ip);
+            route->set_tunnelid(rt->routes[i].nh_tep.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_IP) {
             route->set_nexthopid(rt->routes[i].nh.id);
         }
@@ -177,8 +176,7 @@ populate_remote_mapping_request (MappingRequest *req,
     ipaddr_api_spec_to_proto_spec(spec->mutable_id()->mutable_ipaddr(),
                                   &remote_spec->key.ip_addr);
     spec->set_subnetid(remote_spec->subnet.id);
-    ipaddr_api_spec_to_proto_spec(spec->mutable_tunnelip(),
-                                  &remote_spec->tep.ip_addr);
+    spec->set_tunnelid(remote_spec->tep.id);
     spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &remote_spec->fabric_encap);
     if (remote_spec->provider_ip_valid == true) {
@@ -262,7 +260,6 @@ populate_tunnel_request (TunnelRequest *req,
         return;
     }
     spec = req->add_request();
-    spec->set_id(tep_id);
     pds_tep_api_spec_to_proto(spec, tep);
     return;
 }

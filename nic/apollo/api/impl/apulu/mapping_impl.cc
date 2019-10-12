@@ -72,7 +72,6 @@ mapping_impl::factory(pds_mapping_spec_t *spec) {
     device = device_db()->find();
     if (spec->is_local) {
         impl->is_local_ = true;
-        spec->tep.ip_addr = device->ip_addr();
     } else {
         impl->is_local_ = false;
     }
@@ -272,11 +271,11 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
-                    "local %u, subnet %u, tep %s, vnic %u, "
+                    "local %u, subnet %u, tep %u, vnic %u, "
                     "pub_ip_valid %u, pub_ip %s, "
                     "prov_ip_valid %u, prov_ip %s",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
+                    spec->subnet.id, ipaddr2str(&spec->tep.id),
                     spec->vnic.id, spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip),
                     spec->provider_ip_valid, ipaddr2str(&spec->provider_ip));
@@ -454,11 +453,11 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
-    PDS_TRACE_DEBUG("Programming mapping (vpc %u, ip %s), subnet %u, tep %s, "
+    PDS_TRACE_DEBUG("Programming mapping (vpc %u, ip %s), subnet %u, tep %u, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
+                    spec->subnet.id, spec->tep.id,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
     if (is_local_) {

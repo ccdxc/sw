@@ -109,7 +109,8 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "tep-"  + string(ipaddr2str(&key_.ip_addr));
+        return "tep-"  + std::to_string(key_.id) + "-" +
+                        string(ipaddr2str(&remote_ip_));
     }
 
     ///\brief read config
@@ -146,7 +147,7 @@ public:
 
     /// \brief    return TEP IPv4 address
     /// \return    IPv4 address of the TEP
-    ip_addr_t& ip(void) { return key_.ip_addr; }
+    ip_addr_t& ip(void) { return remote_ip_; }
 
     /// \brief    return the MAC address corresponding to this TEP
     /// \return    ethernet MAC address of this TEP (configured/learnt)
@@ -174,6 +175,7 @@ private:
     ///        s/w, we will directly refresh the TEP_TX table
     pds_tep_key_t  key_;        ///< TEP key
     pds_tep_type_t type_;       ///< TEP type
+    ip_addr_t      remote_ip_;  ///< TEP IP
     bool           remote_svc_; ///< true if this is remote (service) TEP
     mac_addr_t     mac_;        ///< (learnt/configured) MAC address of this TEP
     ht_ctxt_t      ht_ctxt_;    ///< hash table context

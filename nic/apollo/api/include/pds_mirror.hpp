@@ -30,7 +30,7 @@ typedef struct pds_rspan_spec_s {
 /// \brief    ERSPAN configuration
 typedef struct pds_erspan_spec_s {
     pds_vpc_key_t vpc;    ///< vpc of the destination IP
-    ip_addr_t dst_ip;     ///< IP address of ERSPAN destination
+    pds_tep_key_t tep;    ///< tep ID of ERSPAN destination
     ip_addr_t src_ip;     ///< IP address of ERSPAN source
     uint32_t dscp;        ///< DSCP value to use in the packet
     uint32_t span_id;     ///< SPAN ID to use in packet / ERSPAN Header

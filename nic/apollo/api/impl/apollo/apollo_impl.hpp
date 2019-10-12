@@ -18,6 +18,8 @@
 #include "nic/apollo/p4/include/defines.h"
 
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
+#define PDS_IMPL_MYTEP_NEXTHOP_HW_ID          1
+#define PDS_IMPL_MYTEP_HW_ID                  0
 #define PDS_IMPL_TEP_INVALID_INDEX            0xFFFF
 
 // nexthop types

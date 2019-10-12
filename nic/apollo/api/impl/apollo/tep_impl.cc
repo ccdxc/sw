@@ -103,21 +103,23 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     tep_actiondata_t        tep_data = { 0 };
     nexthop_actiondata_t    nh_data = { 0 };
 
+
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
     tep = (tep_entry *)api_obj;
+    ip_addr_t &tep_ip_addr = tep_spec->remote_ip;
     switch (tep_spec->encap.type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_data.action_id = TEP_MPLS_UDP_TEP_ID;
-        tep_data.tep_mpls_udp_action.dipo = tep_spec->key.ip_addr.addr.v4_addr;
+        tep_data.tep_mpls_udp_action.dipo = tep_ip_addr.addr.v4_addr;
         memcpy(tep_data.tep_mpls_udp_action.dmac, tep->mac(), ETH_ADDR_LEN);
         break;
 
     case PDS_ENCAP_TYPE_VXLAN:
-        if (tep_spec->key.ip_addr.af == IP_AF_IPV4) {
+        if (tep_ip_addr.af == IP_AF_IPV4) {
             tep_data.action_id = TEP_IPV4_VXLAN_TEP_ID;
             tep_data.tep_ipv4_vxlan_action.dipo =
-                tep_spec->key.ip_addr.addr.v4_addr;
+                tep_ip_addr.addr.v4_addr;
             memcpy(tep_data.tep_ipv4_vxlan_action.dmac,
                    tep->mac(), ETH_ADDR_LEN);
         } else {
@@ -127,7 +129,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                              device->ip_addr().addr.v6_addr.addr8,
                              IP6_ADDR8_LEN);
             sdk::lib::memrev(tep_data.tep_ipv6_vxlan_action.dipo,
-                             tep_spec->key.ip_addr.addr.v6_addr.addr8,
+                             tep_ip_addr.addr.v6_addr.addr8,
                              IP6_ADDR8_LEN);
             memcpy(tep_data.tep_ipv6_vxlan_action.dmac,
                    tep->mac(), ETH_ADDR_LEN);
@@ -173,7 +175,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                       nh_id_, ret);
     }
     PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
-                    ipaddr2str(&tep_spec->key.ip_addr),
+                    ipaddr2str(&tep_ip_addr),
                     PDS_REMOTE_TEP_MAC, hw_id_, nh_id_);
     return ret;
 }
@@ -229,8 +231,8 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
 {
     if (tep_data->action_id == TEP_MPLS_UDP_TEP_ID) {
         spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec->key.ip_addr.af = IP_AF_IPV4;
-        spec->key.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
+        // spec->key.ip_addr.af = IP_AF_IPV4;
+        // spec->key.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
         switch (nh_data->nh_action.encap_type) {
         case GW_ENCAP:
             spec->type = PDS_TEP_TYPE_IGW;
@@ -245,8 +247,8 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
         spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->encap.val.vnid =
             nh_data->action_u.nexthop_nexthop_info.dst_slot_id;
-        spec->key.ip_addr.af = IP_AF_IPV4;
-        spec->key.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
+        // spec->key.ip_addr.af = IP_AF_IPV4;
+        // spec->key.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
     }
     spec->nat = nh_data->action_u.nexthop_nexthop_info.snat_required;
 }

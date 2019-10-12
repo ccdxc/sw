@@ -37,6 +37,8 @@ uint32_t g_subnet_id = 1;
 uint16_t g_vnic_id = 1;
 uint32_t g_encap_val = 1;
 uint64_t g_base_vnic_mac = 0x000000030b020a01;
+uint32_t g_mytep_id = 1;
+uint32_t g_tep_id = g_mytep_id + 1;
 std::string g_vpc_cidr_v4("5.5.0.0/16");
 std::string g_vnic_cidr_v4("5.5.0.2/16");
 std::string g_subnet_cidr_v4("5.5.0.0/16");
@@ -95,8 +97,8 @@ protected:
                         PDS_MAX_VPC);
         many_create(vpc_feeder);
 
-        sample_tep_setup(k_device_ip, 1);
-        sample_tep_setup(api_test::g_tep_cidr_v4, num_teps);
+        // sample_tep_setup(g_mytep_id, k_device_ip, 1);
+        sample_tep_setup(g_tep_id, api_test::g_tep_cidr_v4, num_teps);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             sample_route_table_setup(
                 nr_pfx, rt_addr, IP_AF_IPV4, 1, 1, rt_id_v4+idx);
@@ -139,8 +141,8 @@ protected:
         }
 
         sample_device_setup_validate();
-        sample_tep_validate(k_device_ip, 1);
-        sample_tep_validate(api_test::g_tep_cidr_v4, num_teps);
+        // sample_tep_validate(g_mytep_id, k_device_ip, 1);
+        sample_tep_validate(g_tep_id, api_test::g_tep_cidr_v4, num_teps);
         many_read(vnic_feeder);
     }
     static void TearDownTestCase() {
@@ -813,9 +815,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_1) {
 
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed.num_vnics = k_max_vnic;
-    seed.num_teps = PDS_MAX_TEP - 1;
+    seed.num_teps = PDS_MAX_TEP - 1 -1;
     workflow_1<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
@@ -826,9 +828,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_2) {
 
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed.num_vnics = k_max_vnic;
-    seed.num_teps = PDS_MAX_TEP - 1;
+    seed.num_teps = PDS_MAX_TEP - 1 -1;
     workflow_2<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
@@ -846,7 +848,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
 
     REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     s1.num_vnics = num_vnics_per_set;
     s1.num_teps = num_teps_per_set;
 
@@ -858,7 +860,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     s2.num_vnics = num_vnics_per_set;
     s2.num_teps = num_teps_per_set;
 
@@ -868,7 +872,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
                              g_subnet_id + (num_teps_per_set * 2),
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
-                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + (stepper * 2),
+                             g_tep_id + (2 * num_teps_per_set),
+                             ippfx2str(&tip_pfx));
     s3.num_vnics = num_vnics_per_set;
     s3.num_teps = num_teps_per_set - 1;
 
@@ -882,9 +888,9 @@ TEST_F(mapping_test, v4_remote_mapping_workflow_4) {
 
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed.num_vnics = k_max_vnic;
-    seed.num_teps = PDS_MAX_TEP - 1;
+    seed.num_teps = PDS_MAX_TEP - 1 - 1;
     workflow_4<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
@@ -902,7 +908,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
 
     REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     s1.num_vnics = num_vnics_per_set;
     s1.num_teps = num_teps_per_set;
 
@@ -914,7 +920,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper, 
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     s2.num_vnics = num_vnics_per_set;
     s2.num_teps = num_teps_per_set;
 
@@ -924,7 +932,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
                              g_subnet_id + (num_teps_per_set * 2),
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
-                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + (stepper * 2),
+                             g_tep_id + (2 * num_teps_per_set),
+                             ippfx2str(&tip_pfx));
     s3.num_vnics = num_vnics_per_set;
     s3.num_teps = num_teps_per_set;
 
@@ -940,21 +950,21 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_6) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
-    seed1A.num_teps = PDS_MAX_TEP - 1;
+    seed1A.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 200,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1B.num_vnics = k_max_vnic;
-    seed1B.num_teps = PDS_MAX_TEP - 1;
+    seed1B.num_teps = PDS_MAX_TEP - 1 -1;
 
     workflow_6<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
@@ -968,21 +978,21 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_7) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
-    seed1A.num_teps = PDS_MAX_TEP - 1;
+    seed1A.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 200,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1B.num_vnics = k_max_vnic;
-    seed1B.num_teps = PDS_MAX_TEP - 1;
+    seed1B.num_teps = PDS_MAX_TEP - 1 -1;
 
     workflow_7<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
@@ -996,21 +1006,21 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_8) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
-    seed1A.num_teps = PDS_MAX_TEP - 1;
+    seed1A.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1B, g_vpc_id, g_subnet_id + 20, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 20,
-                            g_base_vnic_mac + 20, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 20, g_tep_id, g_tep_cidr_v4.c_str());
     seed1B.num_vnics = k_max_vnic;
-    seed1B.num_teps = PDS_MAX_TEP - 1;
+    seed1B.num_teps = PDS_MAX_TEP - 1 -1;
 
     workflow_8<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
@@ -1023,15 +1033,15 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_9) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id + 10, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + 100,
-                            g_base_vnic_mac + 1000, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 1000, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
-    seed1A.num_teps = PDS_MAX_TEP - 1;
+    seed1A.num_teps = PDS_MAX_TEP - 1 -1;
 
     workflow_9<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A);
 }
@@ -1053,7 +1063,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
 
     REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     s1.num_vnics = num_vnics_per_set;
     s1.num_teps = num_teps_per_set;
 
@@ -1065,7 +1075,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     s2.num_vnics = num_vnics_per_set;
     s2.num_teps = num_teps_per_set;
 
@@ -1073,7 +1085,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
-                             g_base_vnic_mac + 100, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + 100,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     s2A.num_vnics = num_vnics_per_set;
     s2A.num_teps = num_teps_per_set;
 
@@ -1083,7 +1097,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
                              g_subnet_id + (num_teps_per_set * 2),
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 2),
-                             g_base_vnic_mac + (stepper * 2), ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + (stepper * 2),
+                             g_tep_id + (2 * num_teps_per_set),
+                             ippfx2str(&tip_pfx));
     s3.num_vnics = num_vnics_per_set;
     s3.num_teps = num_teps_per_set - 1;
 
@@ -1091,7 +1107,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
                              g_subnet_id + (num_teps_per_set * 2),
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_VXLAN, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + (2 * num_teps_per_set),
+                             ippfx2str(&tip_pfx));
     s3A.num_vnics = num_vnics_per_set;
     s3A.num_teps = num_teps_per_set - 1;
 
@@ -1101,7 +1119,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_10) {
                              g_subnet_id + (num_teps_per_set * 3),
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + (stepper * 3),
-                             g_base_vnic_mac + (stepper * 3), ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + (stepper * 3),
+                             g_tep_id + (3 * num_teps_per_set),
+                             ippfx2str(&tip_pfx));
     s4.num_vnics = num_vnics_per_set;
     s4.num_teps = num_teps_per_set - 2; // total = 256 + 256 + 256 + 254 = 1022
 
@@ -1116,9 +1136,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
 
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed.num_vnics = k_max_vnic;
-    seed.num_teps = PDS_MAX_TEP - 1;
+    seed.num_teps = PDS_MAX_TEP - 1 -1;
     workflow_neg_1<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
@@ -1130,11 +1150,11 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
     std::string dummy_vnic_ip("9.6.8.1/16");
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
 
     REMOTE_MAPPING_SEED_INIT(&dummy_seed, g_vpc_id, g_subnet_id, dummy_vnic_ip.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
 
     pds_batch_ctxt_t bctxt = batch_start();
     dummy_seed.num_vnics = 1;
@@ -1143,7 +1163,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
     batch_commit(bctxt);
 
     seed.num_vnics = k_max_vnic;
-    seed.num_teps = PDS_MAX_TEP - 1;
+    seed.num_teps = PDS_MAX_TEP - 1 -1;
     workflow_neg_2<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
 }
 
@@ -1158,7 +1178,7 @@ TEST_F(mapping_test, v4_remote_mapping_workflow_neg_3) {
 
     REMOTE_MAPPING_SEED_INIT(&seed, g_vpc_id, g_subnet_id, vnic_cidr,
                             PDS_ENCAP_TYPE_MPLSoUDP, 4000,
-                            vnic_mac, tep_cidr);
+                            vnic_mac, g_tep_id, tep_cidr);
     seed.num_vnics = 1;
     seed.num_teps = 1;
     workflow_neg_3<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed);
@@ -1177,7 +1197,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
 
     REMOTE_MAPPING_SEED_INIT(&s1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     s1.num_vnics = num_vnics_per_set;
     s1.num_teps = num_teps_per_set;
 
@@ -1189,7 +1209,9 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     s2.num_vnics = num_vnics_per_set;
     s2.num_teps = num_teps_per_set;
 
@@ -1204,15 +1226,15 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_5) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
-    seed1A.num_teps = PDS_MAX_TEP - 1;
+    seed1A.num_teps = PDS_MAX_TEP - 1 -1;
 
     workflow_neg_5<remote_mapping_util, remote_mapping_stepper_seed_t>(&seed1, &seed1A);
 }
@@ -1225,13 +1247,13 @@ TEST_F(mapping_test, v4_remote_mapping_workflow_neg_6) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = k_max_vnic;
-    seed1.num_teps = PDS_MAX_TEP - 1;
+    seed1.num_teps = PDS_MAX_TEP - 1 -1;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = k_max_vnic;
     seed1A.num_teps = PDS_MAX_TEP;
 
@@ -1252,13 +1274,13 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_7) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = num_vnics_per_set;
     seed1.num_teps = num_teps_per_set;
 
     REMOTE_MAPPING_SEED_INIT(&seed1A, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_VXLAN, g_encap_val + 100,
-                            g_base_vnic_mac + 200, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac + 200, g_tep_id, g_tep_cidr_v4.c_str());
     seed1A.num_vnics = num_vnics_per_set;
     seed1A.num_teps = num_teps_per_set;
 
@@ -1270,7 +1292,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_7) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     seed2.num_vnics = num_vnics_per_set;
     seed2.num_teps = num_teps_per_set;
 
@@ -1290,7 +1314,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
 
     REMOTE_MAPPING_SEED_INIT(&seed1, g_vpc_id, g_subnet_id, g_vnic_cidr_v4.c_str(),
                             PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val,
-                            g_base_vnic_mac, g_tep_cidr_v4.c_str());
+                            g_base_vnic_mac, g_tep_id, g_tep_cidr_v4.c_str());
     seed1.num_vnics = num_vnics_per_set;
     seed1.num_teps = num_teps_per_set;
 
@@ -1302,7 +1326,9 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
                              g_subnet_id + num_teps_per_set,
                              ippfx2str(&vip_pfx),
                              PDS_ENCAP_TYPE_MPLSoUDP, g_encap_val + stepper,
-                             g_base_vnic_mac + stepper, ippfx2str(&tip_pfx));
+                             g_base_vnic_mac + stepper,
+                             g_tep_id + num_teps_per_set,
+                             ippfx2str(&tip_pfx));
     seed2.num_vnics = num_vnics_per_set;
     seed2.num_teps = num_teps_per_set;
 

@@ -36,6 +36,7 @@ typedef struct pds_tep_spec_s {
     pds_vpc_key_t  vpc;        ///< VPC this tunnel belongs to
     ip_addr_t      ip_addr;    ///< outer source IP to be used
                                ///< (unused currently)
+    ip_addr_t      remote_ip;  ///< TEP IP
     mac_addr_t     mac;        ///< MAC address of this TEP
     pds_tep_type_t type;       ///< type/role of the TEP
     /// encap to be used, if specified

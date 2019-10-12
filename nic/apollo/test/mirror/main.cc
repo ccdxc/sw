@@ -23,8 +23,11 @@ namespace api_test {
 /// \cond
 static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 static constexpr uint32_t k_base_ms = 1;
+static const uint32_t k_tep_id1 = 2;
 static const char * const k_tep_ip1 = "10.1.1.1";
+static const uint32_t k_tep_id2 = 100;
 static const char * const k_tep_ip2 = "10.1.2.1";
+static const uint32_t k_tep_id3 = 200;
 static const char * const k_tep_ip3 = "10.1.3.1";
 
 //----------------------------------------------------------------------------
@@ -43,17 +46,17 @@ protected:
         pds_batch_ctxt_t bctxt = batch_start();
         sample_vpc_setup(PDS_VPC_TYPE_SUBSTRATE);
         sample_subnet_setup();
-        sample_tep_setup(k_tep_ip1, 1);
-        sample_tep_setup(k_tep_ip2, 1);
-        sample_tep_setup(k_tep_ip3, 1);
+        sample_tep_setup(k_tep_id1, k_tep_ip1, 1);
+        sample_tep_setup(k_tep_id2, k_tep_ip2, 1);
+        sample_tep_setup(k_tep_id3, k_tep_ip3, 1);
         sample_device_setup();
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_tep_teardown(k_tep_ip1, 1);
-        sample_tep_teardown(k_tep_ip2, 1);
-        sample_tep_teardown(k_tep_ip3, 1);
+        sample_tep_teardown(k_tep_id1, k_tep_ip1, 1);
+        sample_tep_teardown(k_tep_id2, k_tep_ip2, 1);
+        sample_tep_teardown(k_tep_id3, k_tep_ip3, 1);
         sample_subnet_teardown();
         sample_vpc_teardown(PDS_VPC_TYPE_SUBSTRATE);
         sample_device_teardown();
@@ -86,14 +89,18 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
             (count * PDS_MAX_MIRROR_SESSION);
         seed->vpc_id = 1;
         std::string dst_ip;
+        uint32_t tep_id;
         std::string src_ip;
         if (count == 1) {
+            tep_id = k_tep_id2;
             dst_ip = k_tep_ip2;
             src_ip = "20.1.2.1";
         } else {
+            tep_id = k_tep_id3;
             dst_ip = k_tep_ip3;
             src_ip = "20.1.3.1";
         }
+        seed->tep_id = tep_id;
         extract_ip_addr((char *)dst_ip.c_str(), &seed->dst_ip);
         extract_ip_addr((char *)src_ip.c_str(), &seed->src_ip);
         seed->span_id = PDS_MAX_MIRROR_SESSION * count;
@@ -103,10 +110,12 @@ mirror_session_stepper_seed_init (int seed_base, uint8_t max_ms,
         seed->encap.type = PDS_ENCAP_TYPE_DOT1Q;
         seed->encap.val.vlan_tag = seed_base;
         seed->vpc_id = 1;
+        uint32_t tep_id = k_tep_id1;
         std::string dst_ip = k_tep_ip1;
         std::string src_ip = "20.1.1.1";
         memset(&seed->dst_ip, 0x0, sizeof(ip_addr_t));
         memset(&seed->src_ip, 0x0, sizeof(ip_addr_t));
+        seed->tep_id = tep_id;
         extract_ip_addr((char *)dst_ip.c_str(), &seed->dst_ip);
         extract_ip_addr((char *)src_ip.c_str(), &seed->src_ip);
         seed->span_id = 1;

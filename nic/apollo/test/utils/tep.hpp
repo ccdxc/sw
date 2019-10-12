@@ -20,7 +20,8 @@ extern const pds_encap_t k_zero_encap;
 // NH test feeder class
 class tep_feeder : public feeder {
 public:
-    ip_addr_t ip;
+    uint32_t id;
+    ip_addr_t remote_ip;
     ip_addr_t dipi;
     uint64_t dmac;
     pds_tep_type_t type;
@@ -30,12 +31,12 @@ public:
     // Constructor
     tep_feeder() { };
     tep_feeder(const tep_feeder& feeder) {
-        init(ipaddr2str(&feeder.ip), feeder.num_obj, feeder.encap, feeder.nat,
+        init(feeder.id, ipaddr2str(&feeder.remote_ip), feeder.num_obj, feeder.encap, feeder.nat,
              feeder.type, ipaddr2str(&feeder.dipi), feeder.dmac);
     }
 
     // Initialize feeder with the base set of values
-    void init(std::string ip_str, uint32_t num_tep=PDS_MAX_TEP,
+    void init(uint32_t id, std::string ip_str, uint32_t num_tep=PDS_MAX_TEP,
               pds_encap_t encap=k_default_tep_encap, bool nat=FALSE,
               pds_tep_type_t type=k_default_tep_type,
               std::string dipi_str="0.0.0.0", uint64_t dmac=0);
@@ -56,7 +57,8 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const tep_feeder& obj) {
     os << "TEP feeder =>"
-       << " IP: " << obj.ip
+       << " ID: " << obj.id
+       << " IP: " << obj.remote_ip
        << " type: " << obj.type
        << " DIPi: " << obj.dipi
        << " dmac: " << mac2str(obj.dmac)
@@ -72,11 +74,11 @@ API_UPDATE(tep);
 API_DELETE(tep);
 
 // Misc function prototypes
-void sample_tep_setup(std::string ip_str="30.30.30.1",
+void sample_tep_setup(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
                       uint32_t num_tep=PDS_MAX_TEP);
-void sample_tep_validate(std::string ip_str="30.30.30.1",
+void sample_tep_validate(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
                          uint32_t num_tep=PDS_MAX_TEP);
-void sample_tep_teardown(std::string ip_str="30.30.30.1",
+void sample_tep_teardown(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
                          uint32_t num_tep=PDS_MAX_TEP);
 
 }    // namespace api_test

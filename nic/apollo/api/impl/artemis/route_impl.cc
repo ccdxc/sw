@@ -106,7 +106,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_vpc_key_t             vpc_key;
     route_table_t             *rtable;
     vpc_entry                 *vpc;
-    pds_tep_key_t             tep_key;
+    pds_tep_key_t             *tep_key;
     tep_entry                 *tep;
     nexthop                   *nh;
 
@@ -156,14 +156,14 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid);
             break;
         case PDS_NH_TYPE_TEP:
-            PDS_TRACE_DEBUG("Processing route %s -> TEP %s",
+            PDS_TRACE_DEBUG("Processing route %s -> TEP %u",
                             ippfx2str(&rtable->routes[i].prefix),
-                            ipaddr2str(&spec->routes[i].nh_ip));
-            tep_key.ip_addr = spec->routes[i].nh_ip;
-            tep = tep_db()->find(&tep_key);
+                            spec->routes[i].nh_tep.id);
+            tep_key = &spec->routes[i].nh_tep;
+            tep = tep_db()->find(tep_key);
             if (tep == NULL) {
-                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
-                              "route table %u", ipaddr2str(&tep_key.ip_addr),
+                PDS_TRACE_ERR("TEP %u not found while processing route %s in "
+                              "route table %u", tep_key->id,
                               ippfx2str(&spec->routes[i].prefix), spec->key.id);
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;

@@ -46,8 +46,9 @@ public:
     /// return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
-private:
     directmap *tep_tbl(void) { return tep_tbl_; }
+
+private:
     friend class tep_impl;         ///< tep_impl, friend of tep_impl_state
     friend class mapping_impl;     ///< mapping_impl, friend of tep_impl_state
 

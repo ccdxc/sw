@@ -291,16 +291,24 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
 
+    /// \brief     returns the tep ip address based on local or remote mapping spec
+    /// \param[in] mapping spec object
+    /// \return    TEP ip address
+
+    ip_addr_t tep_ipaddr(pds_mapping_spec_t *spec);
+    // encap for the local mappings must match the mytep encap
+    static pds_encap_t mytep_encap_;
+
 private:
-    bool              is_local_;
+    bool               is_local_;
     // need to save the below for entry removal as the memhash handle is
     // not valid b/w the transactions.
-    uint32_t          vnic_hw_id_;
-    uint32_t          vpc_hw_id_;
-    pds_mapping_key_t key_;
-    pds_encap_t       fabric_encap_;
-    pds_tep_key_t     tep_;
-    ip_addr_t         public_ip_;
+    uint32_t           vnic_hw_id_;
+    uint32_t           vpc_hw_id_;
+    pds_mapping_key_t  key_;
+    pds_encap_t        fabric_encap_;
+    ip_addr_t          tep_ip_;
+    ip_addr_t          public_ip_;
     union handle_s {
         // table handles for local mapping
         struct local_s {

@@ -15,11 +15,18 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/apollo/device_impl.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
+#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
 namespace impl {
+
+#define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
+#define tep_ipv4_vxlan_action     action_u.tep_ipv4_vxlan_tep
+#define tep_ipv6_vxlan_action     action_u.tep_ipv6_vxlan_tep
+#define nh_action                 action_u.nexthop_nexthop_info
 
 /// \defgroup PDS_DEVICE_IMPL - device entry datapath implementation
 /// \ingroup PDS_DEVICE
@@ -122,10 +129,54 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 }
 
 sdk_ret_t
+device_impl::program_mytep_(device_entry *device) {
+    sdk_ret_t            ret;
+    tep_actiondata_t     tep_data = { 0 };
+    nexthop_actiondata_t nh_data  = { 0 };
+    uint32_t             tep_hw_id = PDS_IMPL_MYTEP_HW_ID;
+    uint32_t             nh_hw_id  = PDS_IMPL_MYTEP_NEXTHOP_HW_ID;
+    ip_addr_t            tep_ip_addr = device->ip_addr();
+
+    if (getenv("APOLLO_TEST_TEP_ENCAP")) {
+        tep_data.action_id = TEP_IPV4_VXLAN_TEP_ID;
+        tep_data.tep_ipv4_vxlan_action.dipo = tep_ip_addr.addr.v4_addr;
+        memcpy(tep_data.tep_ipv4_vxlan_action.dmac, device->mac(), ETH_ADDR_LEN);
+    } else {
+        tep_data.action_id = TEP_MPLS_UDP_TEP_ID;
+        tep_data.tep_mpls_udp_action.dipo = tep_ip_addr.addr.v4_addr;
+        memcpy(tep_data.tep_mpls_udp_action.dmac, device->mac(), ETH_ADDR_LEN);
+    }
+
+    ret = tep_impl_db()->tep_tbl()->insert_atid(&tep_data, tep_hw_id);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("TEP Tx table programming failed for TEP %s, "
+                      "TEP hw id %u, err %u", ipaddr2str(&tep_ip_addr),
+                      tep_hw_id, ret);
+        return ret;
+    }
+
+    // program nexthop table
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.action_u.nexthop_nexthop_info.tep_index = tep_hw_id;
+
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_hw_id);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
+                      "nexthop hw id %u, err %u", ipaddr2str(&tep_ip_addr),
+                      nh_hw_id, ret);
+    }
+    PDS_TRACE_DEBUG("Programmed TEP %s, MAC %s, hw id %u, nexthop id %u",
+                    ipaddr2str(&tep_ip_addr),
+                    macaddr2str(device->mac()), tep_hw_id, nh_hw_id);
+    return ret;
+}
+
+sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     device_entry *device;
     ip_addr_t ip_addr;
+    sdk_ret_t ret = SDK_RET_OK;
 
     switch (api_op) {
     case API_OP_CREATE:
@@ -143,6 +194,7 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         }
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP,
                                                      MAC_TO_UINT64(device->mac()));
+        ret = program_mytep_(device);
         break;
 
     case API_OP_DELETE:
@@ -155,7 +207,7 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     default:
         return SDK_RET_INVALID_OP;
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 /// \@}

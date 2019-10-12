@@ -45,11 +45,6 @@ atexit_handler (void)
 static void
 pds_sig_handler (int sig, siginfo_t *info, void *ptr)
 {
-    PDS_TRACE_DEBUG("PDS received signal {}", sig);
-    if (trace_logger()) {
-        trace_logger()->flush();
-    }
-
     switch (sig) {
     case SIGINT:
     case SIGTERM:

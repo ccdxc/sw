@@ -17,11 +17,12 @@ constexpr pds_encap_t k_zero_encap = {PDS_ENCAP_TYPE_NONE, 0};
 //----------------------------------------------------------------------------
 
 void
-tep_feeder::init(std::string ip_str, uint32_t num_tep, pds_encap_t encap,
-                 bool nat, pds_tep_type_t type, std::string dipi_str,
-                 uint64_t dmac) {
+tep_feeder::init(uint32_t id, std::string ip_str, uint32_t num_tep,
+                 pds_encap_t encap, bool nat, pds_tep_type_t type,
+                 std::string dipi_str, uint64_t dmac) {
+    this->id = id;
     this->type = type;
-    extract_ip_addr(ip_str.c_str(), &this->ip);
+    extract_ip_addr(ip_str.c_str(), &this->remote_ip);
     extract_ip_addr(dipi_str.c_str(), &this->dipi);
     this->dmac = dmac;
     this->encap = encap;
@@ -31,7 +32,8 @@ tep_feeder::init(std::string ip_str, uint32_t num_tep, pds_encap_t encap,
 
 void
 tep_feeder::iter_next(int width) {
-    ip.addr.v4_addr += width;
+    id++;
+    remote_ip.addr.v4_addr += width;
     if (!ip_addr_is_zero(&dipi))
         dipi.addr.v6_addr.addr64[1] += width;
     if (dmac)
@@ -42,7 +44,7 @@ tep_feeder::iter_next(int width) {
 void
 tep_feeder::key_build(pds_tep_key_t *key) const {
     memset(key, 0, sizeof(pds_tep_key_t));
-    key->ip_addr = this->ip;
+    key->id = this->id;
 }
 
 void
@@ -52,16 +54,14 @@ tep_feeder::spec_build(pds_tep_spec_t *spec) const {
     spec->type = this->type;
     spec->encap = this->encap;
     spec->nat = this->nat;
-    spec->key.ip_addr = this->ip;
+    spec->remote_ip = this->remote_ip;
     spec->ip_addr = this->dipi;
     MAC_UINT64_TO_ADDR(spec->mac, this->dmac);
 }
 
 bool
 tep_feeder::key_compare(const pds_tep_key_t *key) const {
-    ip_addr_t tep_ip = this->ip, key_ip = key->ip_addr;
-
-    return (IPADDR_EQ(&key_ip, &tep_ip));
+    return key->id == this->id;
 }
 
 bool
@@ -95,19 +95,19 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 // do not modify these sample values as rest of system is sync with these
 static tep_feeder k_tep_feeder;
 
-void sample_tep_setup(std::string ip_str, uint32_t num_tep) {
+void sample_tep_setup(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
     // setup and teardown parameters should be in sync
-    k_tep_feeder.init(ip_str, num_tep);
+    k_tep_feeder.init(tep_id, ip_str, num_tep);
     many_create(k_tep_feeder);
 }
 
-void sample_tep_validate(std::string ip_str, uint32_t num_tep) {
-    k_tep_feeder.init(ip_str, num_tep);
+void sample_tep_validate(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
+    k_tep_feeder.init(tep_id, ip_str, num_tep);
     many_read(k_tep_feeder);
 }
 
-void sample_tep_teardown(std::string ip_str, uint32_t num_tep) {
-    k_tep_feeder.init(ip_str, num_tep);
+void sample_tep_teardown(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
+    k_tep_feeder.init(tep_id, ip_str, num_tep);
     many_delete(k_tep_feeder);
 }
 

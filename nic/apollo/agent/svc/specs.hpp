@@ -551,8 +551,9 @@ static inline void
 pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
                            const pds_tep_spec_t *api_spec)
 {
+    proto_spec->set_id(api_spec->key.id);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
-                                  &api_spec->key.ip_addr);
+                                  &api_spec->remote_ip);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
                                   &api_spec->ip_addr);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
@@ -621,7 +622,8 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
                            const pds::TunnelSpec &proto_spec)
 {
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
-    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr,
+    api_spec->key.id = proto_spec.id();
+    ipaddr_proto_spec_to_api_spec(&api_spec->remote_ip,
                                   proto_spec.remoteip());
     ipaddr_proto_spec_to_api_spec(&api_spec->ip_addr,
                                   proto_spec.localip());
@@ -1433,8 +1435,8 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
                                      proto_route.prefix());
         switch (proto_route.Nh_case()) {
         case pds::Route::kNextHop:
-            ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip,
-                                          proto_route.nexthop());
+        case pds::Route::kTunnelId:
+            api_spec->routes[i].nh_tep.id = proto_route.tunnelid();
             api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
             break;
         case pds::Route::kNexthopId:
@@ -1812,8 +1814,7 @@ pds_mirror_session_api_spec_to_proto (pds::MirrorSessionSpec *proto_spec,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         {
             pds::ERSpanSpec *proto_erspan = proto_spec->mutable_erspanspec();
-            ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_dstip(),
-                                          &api_spec->erspan_spec.dst_ip);
+            proto_erspan->set_tunnelid(api_spec->erspan_spec.tep.id);
             ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_srcip(),
                                           &api_spec->erspan_spec.src_ip);
             proto_erspan->set_dscp(api_spec->erspan_spec.dscp);
@@ -1885,16 +1886,15 @@ pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         api_spec->rspan_spec.interface =
             proto_spec.rspanspec().interfaceid();
     } else if (proto_spec.has_erspanspec()) {
-        if (!proto_spec.erspanspec().has_dstip() ||
+        if ((proto_spec.erspanspec().tunnelid() == 0) ||
             !proto_spec.erspanspec().has_srcip()) {
-            PDS_TRACE_ERR("src IP or dst IP missing in mirror session {} spec",
+            PDS_TRACE_ERR("src IP or dst ID missing in mirror session {} spec",
                           api_spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
-        types::IPAddress dstip = proto_spec.erspanspec().dstip();
         types::IPAddress srcip = proto_spec.erspanspec().srcip();
         api_spec->type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
-        ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.dst_ip, dstip);
+        api_spec->erspan_spec.tep.id = proto_spec.erspanspec().tunnelid();
         ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.src_ip, srcip);
         api_spec->erspan_spec.dscp = proto_spec.erspanspec().dscp();
         api_spec->erspan_spec.span_id = proto_spec.erspanspec().spanid();
@@ -2173,8 +2173,7 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     remote_spec->key.vpc.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
     remote_spec->subnet.id = proto_spec.subnetid();
-    ipaddr_proto_spec_to_api_spec(&remote_spec->tep.ip_addr,
-                                  proto_spec.tunnelip());
+    remote_spec->tep.id = proto_spec.tunnelid();
     MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
     remote_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
     if (proto_spec.has_providerip()) {

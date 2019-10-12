@@ -35,8 +35,8 @@ message MappingSpec {
   // subnet this mapping is in
   uint32              SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   oneof dstinfo {
-      // Tunnel IP of the TEP, if the mapping is remote, none for local mappings
-      types.IPAddress TunnelIP       = 3;
+      // Tunnel ID of the TEP, if the mapping is remote, 0 for local mappings
+      uint32          TunnelID       = 3;
       // nexthop identifier for reachability information
       uint32          NexthopId      = 4 [(gogoproto.moretags) = "meta:mandatory"];
       // mappings can point to underlay nexthop group, but not overlay as one

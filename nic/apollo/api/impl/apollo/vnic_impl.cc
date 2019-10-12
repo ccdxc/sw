@@ -104,7 +104,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                                    NULL, NULL, 0, sdk::table::handle_t::null());
     ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_VNIC_BY_VLAN_TX "
+        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_VNIC_BY_SLOT_RX "
                       "table for vnic %u, err %u", spec->key.id, ret);
         return ret;
     }
@@ -442,6 +442,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
                       "epoch %u, vnic %s , err %u", epoch,
                        vnic->key2str().c_str(), ret);
     }
+
     return ret;
 }
 

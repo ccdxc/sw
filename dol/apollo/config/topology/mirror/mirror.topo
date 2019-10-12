@@ -68,6 +68,7 @@ mirror:
       snaplen    : 1
       dscp       : 0
       vpcid      : 1
+      tunnelid   : 3
       # TODO: Check why srcip is configurable. Until then hardcoding device ip
       srcip      : '172.16.0.1'
       dstip      : '172.16.0.3'
@@ -77,6 +78,7 @@ mirror:
       snaplen    : 4294967295
       dscp       : 0
       vpcid      : 1
+      tunnelid   : 3
       srcip      : '172.16.0.1'
       dstip      : '172.16.0.3'
 

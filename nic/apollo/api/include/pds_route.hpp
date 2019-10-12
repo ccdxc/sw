@@ -31,7 +31,7 @@ typedef struct pds_route_s {
     pds_nh_type_t            nh_type;    ///< nexthop type
     union {
         // PDS_NH_TYPE_TEP specific data
-        ip_addr_t            nh_ip;      ///< nexthop TEP IP address
+        pds_tep_key_t        nh_tep;      ///< nexthop TEP
         // PDS_NH_TYPE_PEER_VPC specific data
         pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering
         // PDS_NH_TYPE_IP specific data

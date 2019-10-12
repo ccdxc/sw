@@ -22,6 +22,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
         self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
+        self.TunID = tunobj.Id
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
         self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
@@ -61,7 +62,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.Id.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
-        utils.GetRpcIPAddr(self.TunIPAddr, spec.TunnelIP)
+        spec.TunnelID = self.TunID
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
@@ -78,8 +79,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
-                (str(self.IPAddr), str(self.TunIPAddr), self.MACAddr,
+        logger.info("- IPAddr:%s|TunID:%u|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
+                (str(self.IPAddr), self.TunID, str(self.TunIPAddr), self.MACAddr,
                 self.MplsSlot, self.Vnid, self.ProviderIPAddr))
         return
 

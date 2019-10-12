@@ -70,8 +70,8 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         // reserve an entry in REMOTE_46_TEP table for service type TEPs
         if (tep_impl_db()->remote_46_tep_idxr()->alloc(&idx) !=
                 sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate hw id for TEP %s",
-                          ipaddr2str(&spec->key.ip_addr));
+            PDS_TRACE_ERR("Failed to allocate hw id for TEP id %u, ip %s",
+                          spec->key.id, ipaddr2str(&spec->remote_ip));
             return sdk::SDK_RET_NO_RESOURCE;
         }
         remote46_hw_id_ = idx & 0xFFFF;
@@ -101,7 +101,7 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
             tep2_rx_key.vxlan_2_vni = spec->encap.val.value;
             tep2_rx_mask.vxlan_2_vni_mask = ~0;
             memcpy(tep2_rx_key.tunnel_metadata_tep2_dst,
-                   &spec->key.ip_addr.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
+                   &spec->remote_ip.addr.v6_addr.addr32[3], IP4_ADDR8_LEN);
             memset(tep2_rx_mask.tunnel_metadata_tep2_dst_mask, 0xFF,
                    sizeof(tep2_rx_mask.tunnel_metadata_tep2_dst_mask));
             memset(&api_params, 0, sizeof(api_params));
@@ -202,7 +202,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         PDS_TRACE_DEBUG("Programming service TEP %s, DIPo %s, mac %s remote %s,"
                         " public IP %s, nh hw id %u, remote_46 hw id %u",
                         api_obj->key2str().c_str(),
-                        ipv4addr2str(spec->key.ip_addr.addr.v6_addr.addr32[3]),
+                        ipv4addr2str(spec->remote_ip.addr.v6_addr.addr32[3]),
                         macaddr2str(spec->mac),
                         spec->remote_svc ? "true" : "false",
                         ipv4addr2str(spec->remote_svc_public_ip.addr.v4_addr),
@@ -215,7 +215,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             memcpy(nh_data.nexthop_info.dipo,
                    &spec->remote_svc_public_ip.addr.v4_addr, IP4_ADDR8_LEN);
         } else {
-            st_v4_dipo = ntohl(spec->key.ip_addr.addr.v6_addr.addr32[3]);
+            st_v4_dipo = ntohl(spec->remote_ip.addr.v6_addr.addr32[3]);
             memcpy(nh_data.nexthop_info.dipo, &st_v4_dipo, IP4_ADDR8_LEN);
         }
         sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
@@ -230,7 +230,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // program REMOTE_46_MAPPING table entry
         remote_46_mapping_data.action_id = REMOTE_46_MAPPING_REMOTE_46_INFO_ID;
         sdk::lib::memrev(remote_46_mapping_data.remote_46_info.ipv6_tx_da,
-                         spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+                         spec->remote_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
         remote_46_mapping_data.remote_46_info.nh_id = nh_idx_;
         p4pd_ret =
             p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_REMOTE_46_MAPPING,
@@ -305,14 +305,14 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
         nh_data.nexthop_info.vni = spec->encap.val.value;
-        if (spec->key.ip_addr.af == IP_AF_IPV6) {
+        if (spec->remote_ip.af == IP_AF_IPV6) {
             nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
             sdk::lib::memrev(nh_data.nexthop_info.dipo,
-                             spec->key.ip_addr.addr.v6_addr.addr8,
+                             spec->remote_ip.addr.v6_addr.addr8,
                              IP6_ADDR8_LEN);
         } else {
             nh_data.nexthop_info.ip_type = IPTYPE_IPV4;
-            memcpy(nh_data.nexthop_info.dipo, &spec->key.ip_addr.addr.v4_addr,
+            memcpy(nh_data.nexthop_info.dipo, &spec->remote_ip.addr.v4_addr,
                    IP4_ADDR8_LEN);
         }
         sdk::lib::memrev(nh_data.nexthop_info.dmaco, spec->mac, ETH_ADDR_LEN);
@@ -331,8 +331,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-    PDS_TRACE_DEBUG("Programmed TEP %s, hw id %u",
-                    ipaddr2str(&spec->key.ip_addr), remote46_hw_id_);
+    PDS_TRACE_DEBUG("Programmed TEP id %u, ip %s, hw id %u",
+                    spec->key.id, ipaddr2str(&spec->remote_ip),
+                    remote46_hw_id_);
     return ret;
 }
 
@@ -366,8 +367,8 @@ tep_impl::fill_spec_(pds_tep_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
     spec->type = PDS_TEP_TYPE_SERVICE;
-    spec->key.ip_addr.af = IP_AF_IPV6;
-    sdk::lib::memrev(spec->key.ip_addr.addr.v6_addr.addr8,
+    spec->remote_ip.af = IP_AF_IPV6;
+    sdk::lib::memrev(spec->remote_ip.addr.v6_addr.addr8,
                      remote_46_mapping_data.action_u.
                      remote_46_mapping_remote_46_info.ipv6_tx_da,
                      IP6_ADDR8_LEN);

@@ -91,10 +91,6 @@ mapping_impl::factory(pds_mapping_spec_t *spec) {
     new (impl) mapping_impl();
     device = device_db()->find();
     impl->is_local_ = spec->is_local;
-    if (spec->is_local) {
-        spec->tep.ip_addr.af = IP_AF_IPV4;
-        spec->tep.ip_addr = device->ip_addr();
-    }
     return impl;
 }
 
@@ -283,10 +279,10 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     vpc = vpc_db()->find(&spec->key.vpc);
 
     PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
-                    "local %u, subnet %u, tep %s, vnic %u, "
+                    "local %u, subnet %u, tep %u, vnic %u, "
                     "pub_ip_valid %u pub_ip %s",
                     spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, ipaddr2str(&spec->tep.ip_addr),
+                    spec->subnet.id, spec->tep.id,
                     spec->vnic.id, spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip));
 
@@ -413,10 +409,13 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
     sdk_ret_t ret;
     tep_entry *tep;
     ip_addr_t *dipo;
+    ip_addr_t ip_addr;
+    mac_addr_t *mac;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t api_params;
     nexthop_actiondata_t nh_data = { 0 };
+    device_entry *device;
 
     PDS_IMPL_FILL_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                 &spec->key.ip_addr);
@@ -432,18 +431,22 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
         goto error;
     }
 
+    tep = tep_db()->find(&spec->tep);
+    device = device_db()->find();
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    if (is_local_) {
+    if (is_local()) {
+        ip_addr = device->ip_addr();
+        dipo = &ip_addr;
+        mac = &device->mac();
         nh_data.nexthop_info.port = TM_PORT_UPLINK_0;
     } else {
+        dipo = &tep->ip();
+        mac = &tep->mac();
         nh_data.nexthop_info.port = TM_PORT_UPLINK_1;
     }
     nh_data.nexthop_info.vni = vpc->fabric_encap().val.vnid;
-    tep = tep_db()->find(&spec->tep);
     if (spec->provider_ip_valid) {
         dipo = &spec->provider_ip;
-    } else {
-        dipo = &spec->tep.ip_addr;
     }
     if (dipo->af == IP_AF_IPV6) {
         nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
@@ -454,8 +457,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
         memcpy(nh_data.nexthop_info.dipo,
                &dipo->addr.v4_addr, IP4_ADDR8_LEN);
     }
-    sdk::lib::memrev(nh_data.nexthop_info.dmaco,
-                     tep->mac(), ETH_ADDR_LEN);
+    sdk::lib::memrev(nh_data.nexthop_info.dmaco, *mac, ETH_ADDR_LEN);
     sdk::lib::memrev(nh_data.nexthop_info.dmaci,
                      spec->overlay_mac, ETH_ADDR_LEN);
     ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_idx_);
@@ -610,17 +612,21 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t    *spec;
     vpc_entry             *vpc;
     subnet_entry          *subnet;
+    tep_entry             *tep;
+    ip_addr_t             ip_addr;
 
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
+    tep = tep_db()->find(&spec->tep);
+    ip_addr = device_db()->find()->ip_addr();
     if (is_local_) {
         PDS_TRACE_DEBUG("Programming local mapping (vpc %u, ip %s), vnic %u, "
                         "subnet %u, tep %s, overlay mac %s, "
                         "fabric encap (%u, %u), public IP %s, provider IP %s",
                         spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
                         spec->vnic.id, spec->subnet.id,
-                        ipaddr2str(&spec->tep.ip_addr),
+                        ipaddr2str(&ip_addr),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,
                         spec->public_ip_valid ?
@@ -633,7 +639,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                         "fabric encap (%u, %u), provider IP %s",
                         spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
                         spec->vnic.id, spec->subnet.id,
-                        ipaddr2str(&spec->tep.ip_addr),
+                        ipaddr2str(&tep->ip()),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,
                         spec->provider_ip_valid ?

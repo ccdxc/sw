@@ -89,7 +89,7 @@ class RouteObject(base.ConfigObjectBase):
             if self.NextHopType == "vpcpeer":
                 rtspec.VPCId = self.PeerVPCId
             elif self.NextHopType == "tep":
-                utils.GetRpcIPAddr(self.TunIPAddr, rtspec.NextHop)
+                rtspec.TunnelId = self.TunnelId
             elif self.NextHopType == "nh":
                 rtspec.NexthopId = self.NexthopId
         return grpcmsg

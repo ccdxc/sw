@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/apollo/tep_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
@@ -30,6 +31,9 @@ tep_impl_state::tep_impl_state(pds_state *state) {
                                   tinfo.tabledepth,
                                   tinfo.actiondata_struct_size,
                                   false, true, NULL);
+    // reserve entry for mytep
+    tep_tbl_->reserve_index(PDS_IMPL_MYTEP_HW_ID);
+
     SDK_ASSERT(tep_tbl_ != NULL);
 }
 

@@ -17,7 +17,7 @@ mirror_session_util::mirror_session_util(mirror_session_stepper_seed_t *seed) {
         this->rspan_spec.interface = seed->interface;
         memcpy(&this->rspan_spec.encap, &seed->encap, sizeof(pds_encap_t));
     } else if (seed->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-        memcpy(&this->erspan_spec.dst_ip, &seed->dst_ip, sizeof(ip_addr_t));
+        this->erspan_spec.tep.id = seed->tep_id;
         memcpy(&this->erspan_spec.src_ip, &seed->src_ip, sizeof(ip_addr_t));
         this->erspan_spec.vpc.id = seed->vpc_id;
         this->erspan_spec.dscp = seed->dscp;
@@ -84,8 +84,7 @@ mirror_session_util::read(pds_mirror_session_info_t *info) const {
             this->erspan_spec.src_ip.addr.v4_addr) {
             return sdk::SDK_RET_ERR;
         }
-        if (info->spec.erspan_spec.dst_ip.addr.v4_addr !=
-            this->erspan_spec.dst_ip.addr.v4_addr) {
+        if (info->spec.erspan_spec.tep.id != this->erspan_spec.tep.id) {
             return sdk::SDK_RET_ERR;
         }
     }

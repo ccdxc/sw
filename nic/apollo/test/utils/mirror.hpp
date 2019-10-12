@@ -15,6 +15,7 @@ typedef struct mirror_session_stepper_seed_s {
     pds_mirror_session_key_t key;
     pds_vpc_id_t vpc_id;
     pds_mirror_session_type_t type;
+    uint32_t tep_id;
     ip_addr_t dst_ip;
     ip_addr_t src_ip;
     uint32_t span_id;

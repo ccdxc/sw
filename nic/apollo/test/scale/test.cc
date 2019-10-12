@@ -27,9 +27,13 @@ extern char *g_input_cfg_file;
 extern std::string g_pipeline;
 pds_device_spec_t g_device = {0};
 test_params_t g_test_params;
+uint32_t tep_id = 0;
 
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
+
+#define TEP_ID_START 1
+#define TEP_ID_MYTEP TEP_ID_START
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -41,13 +45,14 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                         ip_prefix_t *v6_route_pfx, uint32_t num_nh)
 {
     uint32_t ntables = num_vpcs * num_subnets;
-    uint32_t tep_offset = 3;
+    uint32_t tep_id_start = TEP_ID_MYTEP + 1; // skip MyTEP and gateway IPs
+    uint32_t tep_id_max = tep_id_start + num_teps;
+    uint32_t tep_id = tep_id_start;
     uint32_t nh_id = 1;
     uint32_t v6rtnum;
     pds_route_table_spec_t v6route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
-    tep_offset = 3;
     v6route_table.af = IP_AF_IPV6;
     v6route_table.routes =
             (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
@@ -58,23 +63,12 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
             if (apollo()) {
+                // In apollo, use TEPs as nexthop
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 120);
-                if (g_test_params.v4_outer) {
-                    v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-                    v6route_table.routes[j].nh_ip.addr.v4_addr =
-                            tep_pfx->addr.addr.v4_addr + tep_offset++;
-                } else {
-                    v6route_table.routes[j].nh_ip.af = IP_AF_IPV6;
-                    v6route_table.routes[j].nh_ip.addr.v6_addr =
-                        tep_pfx->addr.addr.v6_addr;
-                    v6route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                        htonl(ntohl(v6route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset++);
-                }
-                tep_offset %= (num_teps + 3);
-                if (tep_offset == 0) {
-                    // skip MyTEP and gateway IPs
-                    tep_offset += 3;
+                v6route_table.routes[j].nh_tep.id = tep_id++;
+                if (tep_id == tep_id_max) {
+                    tep_id = tep_id_start;
                 }
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
             } else if (artemis()) {
@@ -104,7 +98,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_remote_svc_teps)
 {
     uint32_t ntables = num_vpcs * num_subnets;
-    uint32_t tep_offset = 3;
+    uint32_t tep_id_start = TEP_ID_MYTEP + 1; // skip MyTEP and gateway IPs
+    uint32_t tep_id_max = tep_id_start + num_teps;
+    uint32_t tep_id = tep_id_start;
     uint32_t nh_id = 1;
     uint32_t rtnum;
     pds_route_table_spec_t route_table;
@@ -125,21 +121,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                if (g_test_params.v4_outer) {
-                    route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-                    route_table.routes[j].nh_ip.addr.v4_addr =
-                        tep_pfx->addr.addr.v4_addr + tep_offset++;
-                } else {
-                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
-                    route_table.routes[j].nh_ip.addr.v6_addr =
-                        tep_pfx->addr.addr.v6_addr;
-                    route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                        htonl(ntohl(route_table.routes[j].nh_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset++);
-                }
-                tep_offset %= (num_teps + 3);
-                if (tep_offset == 0) {
-                    // skip MyTEP and gateway IPs
-                    tep_offset += 3;
+                route_table.routes[j].nh_tep.id = tep_id++;
+                if (tep_id == tep_id_max) {
+                    tep_id = tep_id_start;
                 }
             } else if (artemis()) {
                 route_table.routes[j].prefix.len =
@@ -149,16 +133,12 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
-                    compute_remote46_addr(&route_table.routes[j].nh_ip,
-                        &g_test_params.svc_tep_pfx,
-                        (j % TESTAPP_MAX_SERVICE_TEP));
+                    route_table.routes[j].nh_tep.id =
+                                        j % TESTAPP_MAX_SERVICE_TEP;
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
-                    route_table.routes[j].nh_ip.af = IP_AF_IPV6;
-                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                    compute_remote46_addr(&route_table.routes[j].nh_ip,
-                        &g_test_params.svc_tep_pfx,
-                        (j % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP);
+                   route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                   route_table.routes[j].nh_tep.id =
+                       (j % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP;
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                     route_table.routes[j].nh.id = nh_id++;
@@ -384,7 +364,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     // create remote mappings
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vpcs; i++) {
-        tep_offset = 3;
+        tep_offset = 2;
         v6_tep_offset = tep_offset + num_teps / 2;
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
@@ -406,17 +386,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.fabric_encap.val.mpls_tag =
                         remote_slot++;
                 }
-                if (g_test_params.v4_outer) {
-                    pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV4;
-                    pds_remote_mapping.tep.ip_addr.addr.v4_addr =
-                        teppfx->addr.addr.v4_addr + tep_offset;
-                } else {
-                    pds_remote_mapping.tep.ip_addr.af = IP_AF_IPV6;
-                    pds_remote_mapping.tep.ip_addr.addr.v6_addr =
-                        teppfx->addr.addr.v6_addr;
-                    pds_remote_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                        htonl(ntohl(pds_remote_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset);
-                }
+                pds_remote_mapping.tep.id = tep_offset;
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
@@ -448,15 +418,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_remote_mapping.key.ip_addr.addr.v4_addr);
                     if (g_test_params.v4_outer) {
-                        pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV4;
-                        pds_remote_v6_mapping.tep.ip_addr.addr.v4_addr =
-                            teppfx->addr.addr.v4_addr + v6_tep_offset;
+                        pds_remote_v6_mapping.tep.id = v6_tep_offset;
                     } else {
-                        pds_remote_v6_mapping.tep.ip_addr.af = IP_AF_IPV6;
-                        pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr =
-                            teppfx->addr.addr.v6_addr;
-                        pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                            htonl(ntohl(pds_remote_v6_mapping.tep.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + tep_offset);
+                        pds_remote_v6_mapping.tep.id = tep_offset;
                     }
                     if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
                         pds_remote_v6_mapping.provider_ip_valid = true;
@@ -478,10 +442,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 }
                 tep_offset++;
                 tep_offset %= num_teps;
-                tep_offset = tep_offset ? tep_offset : 3;
+                tep_offset = tep_offset ? tep_offset : 2;
                 v6_tep_offset++;
                 v6_tep_offset %= num_teps;
-                v6_tep_offset = v6_tep_offset ? v6_tep_offset : 3;
+                v6_tep_offset = v6_tep_offset ? v6_tep_offset : 2;
             }
         }
     }
@@ -1058,27 +1022,27 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
                      ip_prefix_t *tep_pfx, bool remote_svc)
 {
     sdk_ret_t rv;
-    uint32_t addr_offset;
     pds_tep_spec_t pds_tep;
     uint32_t tep_vnid = g_test_params.svc_tep_vnid_base;
     uint32_t remote_svc_vnid = g_test_params.remote_svc_tep_vnid_base;
-    static uint32_t tep_id = g_test_params.num_teps + 2;
+    uint32_t v6_ipaddr_offset;
 
     if (!num_teps) {
         return SDK_RET_OK;
     }
 
-    // skip MyTEP + GW TEP
-    addr_offset = 2;
     if (remote_svc) {
         tep_vnid += TESTAPP_MAX_SERVICE_TEP;
-        addr_offset += TESTAPP_MAX_SERVICE_TEP;
     }
+
+    // service teps start after initial teps
+    tep_id += 1;
 
     for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        compute_remote46_addr(&pds_tep.key.ip_addr, svc_tep_pfx,
-                              remote_svc ? TESTAPP_MAX_SERVICE_TEP + (i-1) : (i-1));
+        pds_tep.key.id = tep_id;
+        v6_ipaddr_offset = remote_svc ? TESTAPP_MAX_SERVICE_TEP + (i-1) : (i-1);
+        compute_remote46_addr(&pds_tep.remote_ip, svc_tep_pfx, v6_ipaddr_offset);
         MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | tep_id));
         pds_tep.type = PDS_TEP_TYPE_SERVICE;
         pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
@@ -1110,21 +1074,26 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
     sdk_ret_t      rv;
     pds_tep_spec_t pds_tep;
+    uint32_t       ipaddr_offset;
+
+    tep_id = TEP_ID_MYTEP;
 
     // leave the 1st IP in this prefix for MyTEP
-    for (uint32_t i = 1; i <= num_teps; i++) {
+    for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
+        pds_tep.key.id = tep_id;
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
         // so we skip the 1st (even for MyTEP we create a TEP)
+        ipaddr_offset = i + 1;
         if (g_test_params.v4_outer) {
-            pds_tep.key.ip_addr.af = IP_AF_IPV4;
-            pds_tep.key.ip_addr.addr.v4_addr =
-                ip_pfx->addr.addr.v4_addr + 1 + i;
+            pds_tep.remote_ip.af = IP_AF_IPV4;
+            pds_tep.remote_ip.addr.v4_addr =
+                ip_pfx->addr.addr.v4_addr + ipaddr_offset;
         } else {
-            pds_tep.key.ip_addr.af = IP_AF_IPV6;
-            pds_tep.key.ip_addr.addr.v6_addr = ip_pfx->addr.addr.v6_addr;
-            pds_tep.key.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                htonl(ntohl(pds_tep.key.ip_addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + 1 + i);
+            pds_tep.remote_ip.af = IP_AF_IPV6;
+            pds_tep.remote_ip.addr.v6_addr = ip_pfx->addr.addr.v6_addr;
+            pds_tep.remote_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                htonl(ntohl(pds_tep.remote_ip.addr.v6_addr.addr32[IP6_ADDR32_LEN-1]) + ipaddr_offset);
         }
         MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | i));
         if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
@@ -1134,7 +1103,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
             pds_tep.encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
             pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
         }
-        rv = create_tunnel(i, &pds_tep);
+        rv = create_tunnel(tep_id, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }

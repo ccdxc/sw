@@ -46,7 +46,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i++) {
         pds_local_mapping_spec_t local_spec = { 0 };
         pds_remote_mapping_spec_t remote_spec = { 0 };
-        if (proto_req->request(i).has_tunnelip() == false) {
+        if (proto_req->request(i).tunnelid() == 0) {
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
             hooks::local_mapping_create(&local_spec);
@@ -57,7 +57,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
         }
 
         if (!core::agent_state::state()->pds_mock_mode()) {
-            if (proto_req->request(i).has_tunnelip() == false) {
+            if (proto_req->request(i).tunnelid() == 0) {
                 ret = pds_local_mapping_create(&local_spec, bctxt);
                 if (ret != SDK_RET_OK) {
                     goto end;
@@ -119,7 +119,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i++) {
         pds_local_mapping_spec_t local_spec = { 0 };
         pds_remote_mapping_spec_t remote_spec = { 0 };
-        if (proto_req->request(i).has_tunnelip() == false) {
+        if (proto_req->request(i).tunnelid() == 0) {
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
         } else {
@@ -127,7 +127,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
                                                  proto_req->request(i));
         }
         if (!core::agent_state::state()->pds_mock_mode()) {
-            if (proto_req->request(i).has_tunnelip() == false) {
+            if (proto_req->request(i).tunnelid() == 0) {
                 ret = pds_local_mapping_update(&local_spec, bctxt);
                 if (ret != SDK_RET_OK) {
                     goto end;

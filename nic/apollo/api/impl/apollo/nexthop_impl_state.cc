@@ -32,6 +32,9 @@ nexthop_impl_state::nexthop_impl_state(pds_state *state) {
     SDK_ASSERT(nh_tbl_ != NULL);
     // reserve system default blackhole/drop nexthop entry
     nh_tbl_->reserve_index(PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
+
+    // reserve mytep nexthop entry
+    nh_tbl_->reserve_index(PDS_IMPL_MYTEP_NEXTHOP_HW_ID);
 }
 
 nexthop_impl_state::~nexthop_impl_state() {

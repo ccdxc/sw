@@ -13,6 +13,7 @@
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
@@ -62,10 +63,13 @@ sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    PDS_TRACE_DEBUG("Initializing TEP %s", ipaddr2str(&spec->key.ip_addr));
+    PDS_TRACE_DEBUG("Initializing TEP id %d, ip %s",
+                    spec->key.id, ipaddr2str(&spec->remote_ip));
+
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     this->type_ = spec->type;
     this->remote_svc_ = spec->remote_svc;
+    this->remote_ip_ = spec->remote_ip;
     if (is_mac_set(spec->mac)) {
         memcpy(mac_, spec->mac, ETH_ADDR_LEN);
     }
@@ -126,21 +130,21 @@ tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     switch (api_op) {
     case API_OP_CREATE:
-        PDS_TRACE_DEBUG("Created TEP %s", ipaddr2str(&key_.ip_addr));
+        PDS_TRACE_DEBUG("Created TEP %s", ipaddr2str(&remote_ip_));
         break;
 
     case API_OP_DELETE:
-        PDS_TRACE_DEBUG("Deleted TEP %s", ipaddr2str(&key_.ip_addr));
+        PDS_TRACE_DEBUG("Deleted TEP %s", ipaddr2str(&remote_ip_));
         break;
 
     case API_OP_UPDATE:
-        PDS_TRACE_DEBUG("Updated TEP %s", ipaddr2str(&key_.ip_addr));
+        PDS_TRACE_DEBUG("Updated TEP %s", ipaddr2str(&remote_ip_));
         break;
 
     case API_OP_NONE:
     default:
         PDS_TRACE_DEBUG("Invalid op %u for TEP %s", api_op,
-                        ipaddr2str(&key_.ip_addr));
+                        ipaddr2str(&remote_ip_));
         return sdk::SDK_RET_INVALID_OP;
     }
     return sdk::SDK_RET_OK;
@@ -163,13 +167,13 @@ tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_entry::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding TEP %s to db", ipaddr2str(&key_.ip_addr));
+    PDS_TRACE_VERBOSE("Adding TEP %s to db", ipaddr2str(&remote_ip_));
     return tep_db()->insert(this);
 }
 
 sdk_ret_t
 tep_entry::del_from_db(void) {
-    PDS_TRACE_VERBOSE("Deleting TEP %s from db", ipaddr2str(&key_.ip_addr));
+    PDS_TRACE_VERBOSE("Deleting TEP %s from db", ipaddr2str(&remote_ip_));
     if (tep_db()->remove(this)) {
         return SDK_RET_OK;
     }

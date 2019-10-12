@@ -127,10 +127,9 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
         // if the vpc is substrate VPC, dst IP must be a known TEP
         if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
-            tep_key.ip_addr = spec->erspan_spec.dst_ip;
+            tep_key.id = spec->erspan_spec.tep.id;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
-                PDS_TRACE_ERR("Unknown TEP IP %s",
-                              ipaddr2str(&tep_key.ip_addr));
+                PDS_TRACE_ERR("Unknown TEP IP %u", tep_key.id);
                 return SDK_RET_INVALID_ARG;
             }
             // TODO: what if this TEP is local TEP itself ?
@@ -141,8 +140,7 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                    device_db()->find()->mac(), ETH_ADDR_LEN);
             mirror_data.erspan_action.sip =
                 spec->erspan_spec.src_ip.addr.v4_addr;
-            mirror_data.erspan_action.dip =
-                spec->erspan_spec.dst_ip.addr.v4_addr;
+            mirror_data.erspan_action.dip = tep->ip().addr.v4_addr;
             mirror_data.erspan_action.truncate_len = spec->snap_len;
         } else {
 #if 0
@@ -244,8 +242,8 @@ mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         minfo->spec.snap_len = mirror_data.erspan_action.truncate_len;
         minfo->spec.erspan_spec.src_ip.addr.v4_addr =
             mirror_data.erspan_action.sip;
-        minfo->spec.erspan_spec.dst_ip.addr.v4_addr =
-            mirror_data.erspan_action.dip;
+        // minfo->spec.erspan_spec.dst_ip.addr.v4_addr =
+           //  mirror_data.erspan_action.dip;
         break;
 
     default:

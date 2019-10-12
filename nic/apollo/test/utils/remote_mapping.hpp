@@ -38,6 +38,7 @@ typedef struct remote_mapping_stepper_seed_s {
     uint32_t subnet_id;
     std::string vnic_ip_stepper;
     uint64_t vnic_mac_stepper;
+    uint32_t tep_id_stepper;
     std::string tep_ip_stepper;
     pds_encap_type_t encap_type;
     uint32_t encap_val_stepper;
@@ -54,6 +55,7 @@ public:
     uint32_t vpc_id;
     uint32_t sub_id;
     std::string vnic_ip;
+    uint32_t tep_id;
     std::string tep_ip;
     std::string vnic_mac;
     pds_encap_type_t encap_type;
@@ -65,7 +67,7 @@ public:
     remote_mapping_util();
 
     remote_mapping_util(uint32_t vpc_id, uint32_t sub_id,
-                        std::string vnic_ip, std::string tep_ip,
+                        std::string vnic_ip, uint32_t tep_id, std::string tep_ip,
                         uint64_t vnic_mac,
                         pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
                         uint32_t encap_val = 1);
@@ -117,7 +119,7 @@ public:
                                        uint32_t vpc_id, uint32_t subnet_id,
                                        std::string base_vnic_ip, pds_encap_type_t encap_type,
                                        uint32_t base_encap_val, uint64_t base_mac_64,
-                                       std::string tep_ip_cidr);
+                                       uint32_t base_tep_id, std::string tep_ip_cidr);
 
     /// \brief Indicates whether mapping is stateful
     /// \returns TRUE for mapping which is stateful

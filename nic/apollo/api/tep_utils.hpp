@@ -18,7 +18,7 @@
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_key_t *key) {
-    os << " IP: " << key->ip_addr;
+    os << " ID: " << key->id;
     return os;
 }
 
@@ -26,6 +26,7 @@ inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
     os << &spec->key
        << " type: " << spec->type
+       << " remote ip: " << spec->remote_ip
        << " DIPi: " << spec->ip_addr
        << " dmac: " << macaddr2str(spec->mac)
        << " nat: " << spec->nat

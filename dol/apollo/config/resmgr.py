@@ -15,7 +15,8 @@ HostMemoryAllocator = None
 Lif2QstateMap = None
 
 EpochAllocator = iter(irange(1,4096))
-TunnelIdAllocator = iter(irange(1,1024))
+# tunnel id=1 is mytep
+TunnelIdAllocator = iter(irange(2,1024))
 VpcIdAllocator = iter(irange(1,1024))
 SubnetIdAllocator = iter(irange(1,1024))
 RemoteMappingIdAllocator = iter(irange(1,1*1024*1024))

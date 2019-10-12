@@ -19,6 +19,7 @@ extern pds_nh_type_t g_rt_def_nh_type;
 class route_util {
 public:
     ip_prefix_t ip_pfx;
+    uint32_t nh_id;
     ip_addr_t nh_ip;
     pds_nexthop_key_t nh;
     pds_nh_type_t nh_type;

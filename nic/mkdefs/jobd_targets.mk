@@ -165,7 +165,7 @@ jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/vxlan
 jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
-	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
+	APOLLO_TEST_TEP_ENCAP=1 NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
 
 .PHONY: jobd/dol/apollo/lpm
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}

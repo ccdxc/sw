@@ -13,7 +13,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class MirrorSessionObject(base.ConfigObjectBase):
-    def __init__(self, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip):
+    def __init__(self, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
         super().__init__()
         self.Id = next(resmgr.MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
@@ -30,6 +30,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             self.Dscp = dscp
             self.SrcIP = srcip
             self.DstIP = dstip
+            self.TunnelID = tunnel_id
         else:
             assert(0)
         ################# PRIVATE ATTRIBUTES OF MIRROR OBJECT #####################
@@ -51,7 +52,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.RspanSpec.Encap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.RspanSpec.Encap.value.VlanId = self.VlanId
         elif self.SpanType == 'ERSPAN':
-            utils.GetRpcIPAddr(self.DstIP, spec.ErspanSpec.DstIP)
+            spec.ErspanSpec.TunnelID = self.TunnelID
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID
@@ -72,8 +73,8 @@ class MirrorSessionObject(base.ConfigObjectBase):
             logger.info("- InterfaceId:0x%x|vlanId:%d" %\
                         (self.Interface, self.VlanId))
         elif self.SpanType == 'ERSPAN':
-            logger.info("- VPCId:%d|DstIP:%s|SrcIP:%s|Dscp:%d|SpanID:%d" %\
-                        (self.VPCId, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
+            logger.info("- VPCId:%d|TunnelId:%d|DstIP:%s|SrcIP:%s|Dscp:%d|SpanID:%d" %\
+                        (self.VPCId, self.TunnelID, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
         else:
             assert(0)
         return
@@ -103,13 +104,14 @@ class MirrorSessionObjectClient:
             if msspec.spantype == "RSPAN":
                 interface = msspec.interface
                 vlanid = msspec.vlanid
-                obj = MirrorSessionObject(spantype, snaplen, interface, vlanid, 0, 0, 0, 0)
+                obj = MirrorSessionObject(spantype, snaplen, interface, vlanid, 0, 0, 0, 0, 0)
             elif msspec.spantype == "ERSPAN":
                 vpcid = msspec.vpcid
                 dscp = msspec.dscp
+                tunnel_id = msspec.tunnelid
                 srcip = ipaddress.ip_address(msspec.srcip)
                 dstip = ipaddress.ip_address(msspec.dstip)
-                obj = MirrorSessionObject(spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip)
+                obj = MirrorSessionObject(spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip, tunnel_id)
             else:
                 assert(0)
             self.__objs.update({obj.Id: obj})

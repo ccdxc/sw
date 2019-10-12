@@ -21,7 +21,7 @@ route_table_feeder::init(std::string base_route_pfx_str,
                          uint32_t id, pds_nh_type_t nh_type,
                          pds_vpc_id_t peer_vpc_id,
                          pds_nexthop_id_t base_nh_id) {
-    uint32_t nh_offset = 0, nh_offset_max = PDS_MAX_TEP - 1;
+    uint32_t nh_offset = 2, nh_offset_max = PDS_MAX_TEP - 1;
     uint32_t nh_id_offset = 0, nh_id_offset_max = PDS_MAX_NEXTHOP - 1;
     ip_prefix_t base_route_pfx;
     ip_addr_t route_addr, base_nh_ip;
@@ -50,6 +50,7 @@ route_table_feeder::init(std::string base_route_pfx_str,
             }
             break;
         case PDS_NH_TYPE_TEP:
+            this->routes[i].nh_id = nh_offset;
             this->routes[i].nh_ip.addr.v4_addr =
                 base_nh_ip.addr.v4_addr + nh_offset;
             nh_offset += 1;
@@ -96,7 +97,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
             spec->routes[i].nh = this->routes[i].nh;
             break;
         case PDS_NH_TYPE_TEP:
-            spec->routes[i].nh_ip = this->routes[i].nh_ip;
+            spec->routes[i].nh_tep.id = this->routes[i].nh_id;
             break;
         case PDS_NH_TYPE_PEER_VPC:
             spec->routes[i].vpc.id = this->routes[i].peer_vpc_id;

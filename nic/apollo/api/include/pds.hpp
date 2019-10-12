@@ -100,7 +100,7 @@ typedef struct pds_subnet_key_s {
 
 /// \brief    TEP key
 typedef struct pds_tep_key_s {
-    ip_addr_t ip_addr;    ///< TEP IP address
+    pds_tep_id_t id;    ///< TEP ID
 } __PACK__ pds_tep_key_t;
 
 /// \brief    interface key

@@ -15,8 +15,10 @@ tep_create_validate (pds_tep_spec_t *spec)
         // service TEPs must have vxlan encap
         if ((spec->encap.type != PDS_ENCAP_TYPE_VXLAN) ||
             (spec->encap.val.vnid == 0)) {
-            PDS_TRACE_ERR("Service TEP {} has invalid vxlan encap ({}, {})",
-                          ipaddr2str(&spec->key.ip_addr),
+            PDS_TRACE_ERR("Service TEP id {}, tunnel ip {} has invalid "
+                          "vxlan encap ({}, {})",
+                          spec->key.id,
+                          ipaddr2str(&spec->remote_ip),
                           spec->encap.type, spec->encap.val.vnid);
             return sdk::SDK_RET_INVALID_ARG;
         }
@@ -34,8 +36,8 @@ tep_create (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = tep_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create tunnel {}, err {}",
-                      ipaddr2str(&spec->key.ip_addr), ret);
+        PDS_TRACE_ERR("Failed to create tunnel id {}, tunnel ip {}, err {}",
+                      spec->key.id, ipaddr2str(&spec->remote_ip), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
