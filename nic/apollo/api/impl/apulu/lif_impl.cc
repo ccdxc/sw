@@ -204,8 +204,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
                                        NULL, NULL, &lif_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
-                      "at idx %u", key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program LIF table for oob lif %u", key_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -325,8 +324,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
                                        NULL, NULL, &lif_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
-                      "at idx %u", key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program LIF table for inb lif 0x%x", key_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -460,8 +458,7 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, key_,
                                        NULL, NULL, &lif_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop table for oob lif %u "
-                      "at idx %u", key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program LIF table for host lif %u", key_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;

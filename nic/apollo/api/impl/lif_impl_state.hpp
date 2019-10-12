@@ -12,6 +12,7 @@
 #define __LIF_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"

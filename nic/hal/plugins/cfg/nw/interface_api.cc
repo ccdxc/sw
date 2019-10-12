@@ -114,7 +114,7 @@ is_l2seg_native (l2seg_t *l2seg, if_t *pi_if)
     // Valid only for Uplink
     if ((pi_if->if_type == intf::IF_TYPE_UPLINK ||
             pi_if->if_type == intf::IF_TYPE_UPLINK_PC) &&
-            (pi_if->native_l2seg == l2seg->seg_id || 
+            (pi_if->native_l2seg == l2seg->seg_id ||
              (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q &&
               l2seg->wire_encap.val == NATIVE_VLAN_ID))) {
         return TRUE;
@@ -402,7 +402,7 @@ if_allocate_hwlif_id (void)
         HAL_TRACE_ERR("Failed to allocate hw_lif_id : {}", hw_lif_id);
         return INVALID_INDEXER_INDEX;
     }
-    return (uint32_t)hw_lif_id;
+    return hw_lif_id;
 }
 
 void

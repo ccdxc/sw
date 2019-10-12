@@ -30,8 +30,8 @@ BatchSvcImpl::BatchStart(ServerContext *context,
             return Status::OK;
         }
     }
-    proto_status->set_apistatus(types::ApiStatus::API_STATUS_OK);
-    return Status::OK;
+    proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+    return Status::CANCELLED;
 }
 
 Status

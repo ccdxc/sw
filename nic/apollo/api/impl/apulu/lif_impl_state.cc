@@ -9,8 +9,9 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 /// \defgroup PDS_LIF_IMPL_STATE - lif state functionality
 /// \ingroup PDS_LIF
@@ -29,7 +30,6 @@ lif_impl_state::lif_impl_state(pds_state *state) {
                           lif_impl::lif_key_func_get,
                           sizeof(lif_impl));
     SDK_ASSERT(lif_ht_ != NULL);
-
 #if 0
     p4pluspd_txdma_table_properties_get(
                 P4_APULU_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,

@@ -31,17 +31,18 @@ enum {
 #define IF_TYPE_MASK                             0xF
 #define IF_SLOT_MASK                             0xF
 #define IF_PARENT_PORT_MASK                      0xFF
-#define IF_CHILD_PORT_MASK                       0xFF
+#define IF_CHILD_PORT_MASK                       0xFFFF
 #define IF_DEFAULT_CHILD_PORT                    1
 
 ///< interface index is formed from
 ///<     t_ --> type of the interface (4 bits)
 ///<     s_ --> physical slot of the card  (4 bits)
 ///<     p_ --> parent port (1 based) (8 bits)
-///<     c_ --> child port (1 based) (16 bits)
+///<     c_ --> child port (0 based) (16 bits)
 ///< based on the type of the interface, the slot bits will be
 ///< used for a running identifier of that type of interface
 ///< e.g. IF_TYPE_UPLINK or IF_TYPE_TUNNEL etc.
+///< NOTE: child port 0 ==> non-broken port
 #define IFINDEX(t_, s_, p_, c_)                      \
             ((t_ << IF_TYPE_SHIFT)        |          \
              ((s_) << IF_SLOT_SHIFT)      |          \

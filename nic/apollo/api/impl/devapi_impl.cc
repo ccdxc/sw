@@ -15,6 +15,7 @@
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
+// TODO: replace this with asic pd
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -175,6 +176,7 @@ devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
 sdk_ret_t
 devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
                            pds_ifindex_t ifidx, bool is_oob) {
+#if 0
     sdk_ret_t ret;
     if_entry *intf;
     uint32_t logical_port, tm_port;
@@ -198,6 +200,8 @@ devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
                       "in TM, err %u", ret);
     }
     return ret;
+#endif
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
