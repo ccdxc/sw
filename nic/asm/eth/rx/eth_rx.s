@@ -18,9 +18,9 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 
 %%
 
+.param eth_rx_sg_start
 .param eth_rx_completion
 .param eth_rx_stats
-.param eth_rx_sg_start
 
 .align
 eth_rx:
@@ -76,32 +76,12 @@ eth_rx_sg:
     // Save DMA command pointer
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
+    // Launch sg action
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
     phvwri          p.common_te1_phv_table_pc, eth_rx_sg_start[38:6]
     phvwr.e         p.common_te1_phv_table_addr, k.eth_rx_global_sg_desc_addr
     phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
-
-eth_rx_desc_addr_error:
-    SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
-    phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
-
-    DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
-    DMA_CMD_NEXT(_r_index)
-
-    b               eth_rx_done
-    phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
-
-eth_rx_desc_data_error:
-    SET_STAT(_r_stats, _C_TRUE, desc_data_error)
-    phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
-
-    DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
-    DMA_CMD_NEXT(_r_index)
-
-    b               eth_rx_done
-    phvwri          p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
 
 eth_rx_done:
     SAVE_STATS(_r_stats)
@@ -109,12 +89,51 @@ eth_rx_done:
     // Save DMA command pointer
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
+    // Launch stats & completion action
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
 
-    // Launch eth_rx_stats action
-    phvwri          p.common_te1_phv_table_pc, eth_rx_stats[38:6]
-    phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+    phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
+    phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-    // Launch eth_rx_completion stage
-    phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
-    phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+    phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+    phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
+eth_rx_desc_addr_error:
+    SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+
+    b               eth_rx_error
+    phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
+
+eth_rx_desc_data_error:
+    SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+
+    b               eth_rx_error
+    phvwri          p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
+
+eth_rx_error:
+    SAVE_STATS(_r_stats)
+
+    // Reset the DMA command stack to discard existing DMA commands
+    addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+
+    // Discard the packet data but not the phv
+    DMA_CMD_PTR(_r_ptr, _r_index, r7)
+    DMA_CMD_RESET(_r_ptr, _C_TRUE)
+    DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
+    DMA_CMD_NEXT(_r_index)
+
+    // Increment pkt drop counters but don't drop the phv because we have
+    // claimed a completion entry.
+    phvwr           p.eth_rx_global_drop, 1
+
+    // Save DMA command pointer
+    phvwr           p.eth_rx_global_dma_cur_index, _r_index
+
+    // Launch stats & completion action
+    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
+
+    phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
+    phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
+    phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+    phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

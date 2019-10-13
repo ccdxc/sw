@@ -109,7 +109,6 @@ eth_rx_sg_next:   // Continue SG in next stage
   setcf           c3, [c1 & c2]
   bcf             [c3], eth_rx_sg_data_error
   nop
-  //SET_STAT(_r_stats, c3, desc_data_error)
 
   // Calculate the next SG descriptor address
   add             _r_addr, k.eth_rx_global_sg_desc_addr, 1, LG2_RX_SG_MAX_READ_SIZE
@@ -122,11 +121,12 @@ eth_rx_sg_next:   // Continue SG in next stage
   // Save DMA command pointer
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-  // Launch eth_rx_sg stage
+  // Launch sg action
   phvwr.e         p.common_te1_phv_table_addr, _r_addr
   phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
 
 eth_rx_sg_done:   // We are done with SG
+  //SAVE_STATS(_r_stats)
 
   // Update completion descriptor
   sub             r7, k.eth_rx_t1_s2s_sg_max_elems, _r_rem_sg
@@ -135,44 +135,51 @@ eth_rx_sg_done:   // We are done with SG
   // Save DMA command pointer
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  // Launch stats & completion action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
 
-  // Launch eth_rx_stats action
-  phvwri          p.common_te1_phv_table_pc, eth_rx_stats[38:6]
-  phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
+  phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-  // Launch eth_completion action
-  phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
-  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_rx_sg_addr_error:
   //SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
 
+  b               eth_rx_sg_error
+  phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
+
 eth_rx_sg_data_error:
+  //SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+
+  b               eth_rx_sg_error
+  phvwr           p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
+
+eth_rx_sg_error:
   //SAVE_STATS(_r_stats)
 
-  // Don't drop the phv, because, we have claimed the completion entry.
-  // Generate an error completion.
-  phvwr           p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
-  phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
-
-  // Reset the DMA command stack to discard existing DMA commands.
+  // Reset the DMA command stack to discard existing DMA commands
   addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
+  // Discard the packet data but not the phv
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_CMD_RESET(_r_ptr, _C_TRUE)
   DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
   DMA_CMD_NEXT(_r_index)
 
+  // Increment pkt drop counters but don't drop the phv because we have
+  // claimed a completion entry
+  phvwr           p.eth_rx_global_drop, 1
+
   // Save DMA command pointer
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
+  // Launch stats & completion action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
 
-  // Launch eth_rx_stats action
-  phvwri          p.common_te1_phv_table_pc, eth_rx_stats[38:6]
-  phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
+  phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-  // Launch eth_completion action
-  phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
-  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

@@ -103,17 +103,16 @@ eth_tx_sg_next:   // Continue SG in next stage
 
 eth_tx_sg_done:   // We are done with SG
   phvwri          p.eth_tx_global_sg_in_progress, 0
+  SAVE_STATS(_r_stats)
 
   // Save DMA command pointer
   phvwr           p.eth_tx_global_dma_cur_index, _r_index
 
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
-  // Launch eth_tx_stats action
   phvwri          p.common_te1_phv_table_pc, eth_tx_stats[38:6]
   phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-  // Launch eth_completion action
   phvwri.e        p.common_te0_phv_table_pc, eth_tx_completion[38:6]
   phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
@@ -133,10 +132,8 @@ eth_tx_sg_error:
 
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (TABLE_VALID_0 | TABLE_VALID_1)
 
-  // Launch eth_tx_completion stage
-  phvwri          p.common_te0_phv_table_pc, eth_tx_completion[38:6]
-  phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te1_phv_table_pc, eth_tx_stats[38:6]
+  phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-  // Launch eth_tx_stats action
-  phvwri.e        p.common_te1_phv_table_pc, eth_tx_stats[38:6]
-  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te0_phv_table_pc, eth_tx_completion[38:6]
+  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

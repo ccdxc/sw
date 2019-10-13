@@ -71,5 +71,5 @@ eth_rx_completion_done:
     SAVE_STATS(_r_stats)
 
     // End of pipeline - Make sure no more tables will be launched
-    phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri.e.f      p.app_header_table0_valid, 0
     nop

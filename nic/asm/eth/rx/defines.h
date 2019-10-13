@@ -5,6 +5,8 @@
 
 #define LG2_RX_SG_MAX_READ_SIZE     (6)
 
+#define LG2_RX_STATS_BLOCK_SZ       (6)
+
 #define L2_PKT_TYPE_UNICAST     0
 #define L2_PKT_TYPE_MULTICAST   1
 #define L2_PKT_TYPE_BROADCAST   2

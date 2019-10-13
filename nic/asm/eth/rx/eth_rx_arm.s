@@ -15,8 +15,8 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 %%
 
-.param  eth_rx_event
-.param  eth_rx_stats
+.param eth_rx_event
+.param eth_rx_stats
 
 .align
 eth_rx_arm:
@@ -62,9 +62,11 @@ eth_rx_arm_error:
 
   SAVE_STATS(_r_stats)
 
+  phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
   phvwr           p.p4_intr_global_drop, 1
 
-  // Launch eth_rx_stats action
+  // Launch stats action
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
   phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
   phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

@@ -22,7 +22,8 @@
 #define rx_table_s3_t2_action eth_rx_event
 #define rx_table_s4_t1_action eth_rx_sg
 #define rx_table_s7_t0_action eth_rx_completion
-#define rx_table_s7_t1_action eth_rx_stats
+#define rx_table_s7_t1_action eth_rx_stats_packet
+#define rx_table_s7_t2_action eth_rx_stats_queue
 
 #if defined(ARTEMIS)
 #include "nic/apollo/p4/artemis_rxdma/common_rxdma.p4"
@@ -146,6 +147,22 @@ action eth_rx_completion()
 }
 
 action eth_rx_stats()
+{
+    // --- For K+I struct generation
+    MODIFY_ETH_RX_GLOBAL
+
+    // --- For D-struct generation
+}
+
+action eth_rx_stats_packet()
+{
+    // --- For K+I struct generation
+    MODIFY_ETH_RX_GLOBAL
+
+    // --- For D-struct generation
+}
+
+action eth_rx_stats_queue()
 {
     // --- For K+I struct generation
     MODIFY_ETH_RX_GLOBAL

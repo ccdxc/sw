@@ -14,7 +14,6 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 
 .param  eth_tx_commit
 .param  eth_tx_commit_tso
-.param  eth_tx_stats
 
 #define  _c_sg            c2  // SG
 #define  _c_tso           c3  // TSO

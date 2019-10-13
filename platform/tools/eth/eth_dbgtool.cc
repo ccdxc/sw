@@ -617,11 +617,13 @@ print_eth_tx_qstate(eth_tx_qstate_t *tx)
            "comp_index=%#x\n"           "color=%#x\n"
            "armed=%#x\n"                "rsvd_sta=%#x\n"
            "lg2_desc_sz=%#x\n"          "lg2_cq_desc_sz=%#x\n"
+           "lg2_sg_desc_sz=%#x\n"
            "ring_base=%#lx\n"           "cq_ring_base=%#lx\n"
            "sg_ring_base=%#lx\n"        "intr_index_or_eq_addr=%#lx\n",
            tx->comp_index,              tx->sta.color,
            tx->sta.armed,               tx->sta.rsvd,
            tx->lg2_desc_sz,             tx->lg2_cq_desc_sz,
+           tx->lg2_sg_desc_sz,
            tx->ring_base,               tx->cq_ring_base,
            tx->sg_ring_base,            tx->intr_index_or_eq_addr);
 }

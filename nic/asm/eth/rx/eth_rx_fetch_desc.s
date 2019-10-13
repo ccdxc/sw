@@ -10,6 +10,7 @@ struct rx_table_s2_t0_k_ k;
 struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 #define  _c_queue_empty       c1
+#define  _c_queue_disabled    c2
 
 #define  _r_ci                r1    // Current ci and comp index
 #define  _r_color             r3    // Current color
@@ -19,18 +20,25 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 %%
 
-.param  eth_rx
-.param  eth_rx_event
-.param  eth_rx_stats
+.param eth_rx
+.param eth_rx_event
+.param eth_rx_stats
 
 .align
 eth_rx_fetch_desc:
-  // LOAD_STATS(_r_stats)
+
+#ifdef PHV_DEBUG
+  seq             c7, d.debug, 1
+  phvwr.c7        p.p4_intr_global_debug_trace, 1
+  trace.c7        0x1
+#endif
+
+  LOAD_STATS(_r_stats)
 
   bcf             [c2 | c3 | c7], eth_rx_queue_error
-  nop
 
-  bbeq            d.enable, 0, eth_rx_queue_disabled
+  seq             _c_queue_disabled, d.enable, 0
+  bcf             [_c_queue_disabled], eth_rx_queue_disabled
   seq             _c_queue_empty, d.p_index0, d.comp_index
   bcf             [_c_queue_empty], eth_rx_queue_empty
   ori             _r_tbl_valid, r0, 0 // BD Slot
@@ -115,18 +123,19 @@ eth_rx_fetch_desc_eq:
   phvwri          p.common_te2_phv_table_raw_table_size, LG2_EQ_QSTATE_SIZE
 
 eth_rx_queue_error:
-  // SET_STAT(_r_stats, _C_TRUE, queue_error)
+  SET_STAT(_r_stats, _C_TRUE, queue_error)
 eth_rx_queue_empty:
-  // SET_STAT(_r_stats, _c_queue_empty, queue_empty)
+  SET_STAT(_r_stats, _c_queue_empty, queue_empty)
 eth_rx_queue_disabled:
-  // SET_STAT(_r_stats, _c_queue_disabled, queue_disabled)
+  SET_STAT(_r_stats, _c_queue_disabled, queue_disabled)
 
-  // SAVE_STATS(_r_stats)
+  SAVE_STATS(_r_stats)
 
-  phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
+  phvwr           p.eth_rx_global_drop, 1   // increment pkt drop counters
   phvwr           p.p4_intr_global_drop, 1
 
-  // Launch eth_rx_stats action
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
+  // Launch stats action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
   phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
   phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

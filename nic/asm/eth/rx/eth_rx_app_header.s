@@ -16,7 +16,7 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 
 .align
 eth_rx_app_header:
-  tblwr.l.f       d.rsvd_cfg, 0
+  tblwr.f         d.rsvd_cfg, 0
   // !!! No table updates after this point !!!
 
   // Is this something other than normal rx?

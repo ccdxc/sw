@@ -76,7 +76,8 @@
         {
             "name": "lif_stats",
             "size": "1024K",
-            "reset": true
+            "reset": true,
+            "cache": "p4plus-all"
         },
         {
             "name": "rss_indir_table",

@@ -8,55 +8,42 @@
 struct phv_ p;
 struct tx_table_s7_t1_k_ k;
 
-#define _r_base                 r1  // Stats base address
-#define _r_lif_offset           r2  // Offset of LIF's stats relative to global stats base
-#define _r_offset               r3  // Offset of the cache group relative to global stats base
-#define _r_addr                 r4  // Update address
-#define _r_val                  r5  // Update value
+#define _r_base    r1
 
 %%
 
-.param  lif_stats_base
+.param lif_stats_base
+.param eth_tx_stats_queue_accept
+.param eth_tx_stats_queue_drop
 
 .align
 eth_tx_stats:
+    // bubble until stage 6
+    mfspr           r7, spr_mpuid
+    seq             c7, r7[4:2], 6
+    // bubble exit
+    nop.e.!c7
 
-#ifdef GFT
-    b               eth_tx_stats_done
+    // calculate stats base addr
+    addi            _r_base, r0, loword(lif_stats_base)
+    addui           _r_base, _r_base, hiword(lif_stats_base)
+    add             _r_base, _r_base, k.eth_tx_global_lif, LIF_STATS_SIZE_SHIFT
+
+    seq             c7, k.eth_tx_global_drop, 1     // exit slot
+    bcf             [c7], eth_tx_stats_drop
     nop
-#endif
 
-    bbne            k.eth_tx_global_drop, 1, eth_tx_stats_done
+eth_tx_stats_accept:
+    phvwri.e        p.app_header_table1_valid, 0x0
     nop
 
-    addi            _r_base, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
-    addi            _r_lif_offset, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
-    add             _r_lif_offset, _r_lif_offset, k.eth_tx_global_lif, LIF_STATS_SIZE_SHIFT
+eth_tx_stats_drop:
+    phvwri          p.app_header_table1_valid, 0x1
 
-eth_tx_stats_incr_drop:
-    // Update queue & desc counters
-    addi            _r_offset, _r_lif_offset, LIF_STATS_TX_QUEUE_DISABLED_OFFSET
-    ATOMIC_INC_VAL_5(_r_base, _r_offset, _r_addr, _r_val,
-                    k.eth_tx_global_stats[STAT_queue_disabled],
-                    k.eth_tx_global_stats[STAT_queue_error],
-                    k.eth_tx_global_stats[STAT_desc_fetch_error],
-                    k.eth_tx_global_stats[STAT_desc_data_error],
-                    k.eth_tx_global_stats[STAT_queue_empty])
-
-#if 0
-    // Update operation counters
-    addi            _r_offset, _r_lif_offset, LIF_STATS_TX_CSUM_HW_OFFSET
-    ATOMIC_INC_VAL_7(_r_base, _r_offset, _r_addr, _r_val,
-                    k.eth_tx_global_stats[STAT_oper_csum_hw],
-                    k.eth_tx_global_stats[STAT_oper_csum_hw_inner],
-                    k.eth_tx_global_stats[STAT_oper_vlan_insert],
-                    k.eth_tx_global_stats[STAT_oper_sg],
-                    k.eth_tx_global_stats[STAT_oper_tso_sg],
-                    k.eth_tx_global_stats[STAT_oper_tso_sot],
-                    k.eth_tx_global_stats[STAT_oper_tso_eot])
-#endif
-
-eth_tx_stats_done:
-    // End of pipeline - Make sure no more tables will be launched
-    phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
-    nop
+    phvwr           p.common_te1_phv_table_lock_en, 1
+    add.!c7         r7, _r_base, LIF_STATS_TX_QUEUE_DISABLED_OFFSET
+    phvwri.!c7      p.common_te1_phv_table_pc, eth_tx_stats_queue_accept[38:6]
+    add.c7          r7, _r_base, LIF_STATS_TX_CSUM_HW_OFFSET
+    phvwri.c7       p.common_te1_phv_table_pc, eth_tx_stats_queue_drop[38:6]
+    phvwr.e         p.common_te1_phv_table_addr, r7
+    phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_TX_STATS_BLOCK_SZ

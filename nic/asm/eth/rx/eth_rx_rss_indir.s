@@ -28,8 +28,8 @@ eth_rx_rss_indir:
     add             r5, k.toeplitz_key2_data[33:0], d.qid, LG2_RX_QSTATE_SIZE
 
     // Zero-out the flits used for Toeplitz
-    phvwr           p.{toeplitz_input0_data...toeplitz_key1_data}, r0
-    phvwr           p.{toeplitz_input2_data...toeplitz_key2_data}, r0
+    //phvwr           p.{toeplitz_input0_data...toeplitz_key1_data}, r0
+    //phvwr           p.{toeplitz_input2_data...toeplitz_key2_data}, r0
 
     // Pass RSS hash to the driver in the completion entry
     phvwr           p.cq_desc_rss_hash, r1.wx

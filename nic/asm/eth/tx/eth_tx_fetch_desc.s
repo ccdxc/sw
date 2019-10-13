@@ -30,13 +30,14 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 .align
 eth_tx_fetch_desc:
-  // INIT_STATS(_r_stats)
 
 #ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
 #endif
+
+  // INIT_STATS(_r_stats)
 
   bbeq            d.enable, 0, eth_tx_queue_disabled
   // Use this phv to arm the cq, or do tx fetch?

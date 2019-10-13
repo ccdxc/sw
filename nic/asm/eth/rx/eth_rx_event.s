@@ -21,7 +21,7 @@ struct rx_table_s3_t2_eth_rx_event_d d;
 
 %%
 
-.param  eth_rx_stats
+.param eth_rx_stats
 
 .align
 eth_rx_event:
@@ -97,7 +97,10 @@ eth_rx_event_done:
 
     // If this is event-only, then there is no rx action.  The table bits are
     // under control of this action, which will launch the stats action.
+
+    // Launch stats action
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
     phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
     phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
@@ -113,8 +116,10 @@ eth_rx_event_error:
 
     // Event-only: drop this phv
     phvwr           p.p4_intr_global_drop, 1
+    phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
 
-    // Launch eth_rx_stats action
+    // Launch stats action
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1
+
     phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
     phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

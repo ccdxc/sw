@@ -73,7 +73,8 @@
         {
             "name": "lif_stats",
             "size": "1024K",
-            "reset": true
+            "reset": true,
+            "cache": "p4plus-all"
         },
         {
             "name": "p4_program",
@@ -176,7 +177,8 @@
         },
         {
             "name": "rss_indir_table",
-            "size": "1024K"
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "qos-hbm-fifo",

@@ -1348,14 +1348,24 @@ control common_p4plus_stage0 {
 
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
         apply(eth_rx_rss_params);
+        if (app_header.table0_valid == 0) {
+            if (app_header.table1_valid == 0) {
+                if (app_header.table2_valid == 0) {
+                    if (app_header.table3_valid == 0) {
+                        apply(eth_rx_rss_indir);
+                    }
+                }
+            }
+        }
     }
 
-    if(app_header.table0_valid == 0) {
-        if(app_header.table1_valid == 0) {
-            if(app_header.table2_valid == 0) {
-                if(app_header.table3_valid == 0) {
-                    apply(rx_table_cpu_hash);
-                    apply(eth_rx_rss_indir);
+    if (app_header.app_type == P4PLUS_APPTYPE_CPU) {
+        if (app_header.table0_valid == 0) {
+            if (app_header.table1_valid == 0) {
+                if (app_header.table2_valid == 0) {
+                    if (app_header.table3_valid == 0) {
+                        apply(rx_table_cpu_hash);
+                    }
                 }
             }
         }
@@ -1363,12 +1373,6 @@ control common_p4plus_stage0 {
 
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         apply(rx_stage0_load_rdma_params);
-        // apply(rx_table_s0_t0);
-        // apply(rx_table_s0_t1);
-        // apply(rx_table_s0_t2);
-        if (app_header.table3_valid == 1) {
-            apply(rx_table_s0_t3);
-        }
     }
 }
 

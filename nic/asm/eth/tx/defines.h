@@ -5,6 +5,8 @@
 
 #define LG2_TX_SG_MAX_READ_SIZE     (6)
 
+#define LG2_TX_STATS_BLOCK_SZ       (6)
+
 // TX limits
 #define MAX_DESC_SPEC               (64)
 #define MAX_BYTES_PER_PHV           (16384)
@@ -53,10 +55,10 @@
 
 // queue & descriptor error counters
 #define STAT_queue_disabled                 0
-#define STAT_queue_empty                    1
-#define STAT_queue_error                    2
-#define STAT_desc_fetch_error               3
-#define STAT_desc_data_error                4
+#define STAT_queue_error                    1
+#define STAT_desc_fetch_error               2
+#define STAT_desc_data_error                3
+#define STAT_queue_empty                    4
 #define STAT_event_disabled                 5
 #define STAT_event_error                    6
 // DEBUG: operation counters
