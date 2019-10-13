@@ -104,6 +104,8 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	if !cmd.Flags().Changed("odir") {
 		tarFileDir = "./"
+	} else {
+		tarFileDir += "/"
 	}
 	createDestDir(tarFileDir)
 	tarFile = tarFileDir + tarFile + ".tar.gz"
