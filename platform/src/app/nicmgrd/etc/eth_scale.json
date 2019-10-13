@@ -68,15 +68,15 @@
             "name" : "eth0",
             "dev_uuid" : 1,
             "type": "host",
-            "lif_count" : 33,
-            "rxq_count" : 1,
-            "txq_count" : 1,
+            "lif_count" : 32,
+            "rxq_count" : 4,
+            "txq_count" : 4,
             "eq_count" : 1,
             "adminq_count" : 1,
-            "intr_count" : 256,
+            "intr_count" : 130,
             "pcie" : {
                 "port" : 0,
-                "total_vfs" : 0,
+                "total_vfs" : 2,
                 "oprom": "uefi"
             },
             "network" : {
@@ -87,15 +87,15 @@
             "name" : "eth1",
             "dev_uuid" : 2,
             "type": "host",
-            "lif_count" : 33,
-            "rxq_count" : 1,
-            "txq_count" : 1,
+            "lif_count" : 32,
+            "rxq_count" : 4,
+            "txq_count" : 4,
             "eq_count" : 1,
             "adminq_count" : 1,
-            "intr_count" : 256,
+            "intr_count" : 130,
             "pcie" : {
                 "port" : 0,
-                "total_vfs" : 0,
+                "total_vfs" : 2,
                 "oprom": "uefi"
             },
             "network" : {
