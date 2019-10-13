@@ -134,6 +134,10 @@ public:
         return sizeof(pds_vpc_key_t);
     }
 
+    /// \brief  return the key of VPC
+    /// \return key of the VPC
+    pds_vpc_key_t key(void) const { return key_; }
+
     /// \brief  return the type of VPC
     /// \return PDS_VPC_TYPE_SUBSTRATE or PDS_VPC_TYPE_TENANT
     pds_vpc_type_t type(void) const { return type_; }

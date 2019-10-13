@@ -350,6 +350,10 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // NOTE: delete is same as updating the h/w entries with latest
         //       epoch, which will be activated later in the commit()
         //       stage (by programming tables in stage 0, if needed)
+        // TODO: this doesn't sound correct --> for delete we should
+        // program stage0 1st and then update non-stage0 tables, so
+        // activate_config() is the right thing here and then we should
+        // call cleanup_config() in the next stage of API processing
         ret = api_obj->cleanup_config(obj_ctxt);
         break;
 
