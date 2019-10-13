@@ -31,3 +31,6 @@
 [submodule "platform/src/third-party/rdma/rdma-core"]
 	path = platform/src/third-party/rdma/rdma-core
 	url = git@github.com:pensando/rdma-core.git
+[submodule "nic/third-party/metaswitch"]
+	path = nic/third-party/metaswitch
+	url = git@github.com:pensando/metaswitch.git
