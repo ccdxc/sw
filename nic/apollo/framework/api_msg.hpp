@@ -12,7 +12,6 @@
 #define __FRAMEWORK_API_MSG_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 
 namespace api {
@@ -48,7 +47,6 @@ typedef struct api_msg_s {
 } api_msg_t;
 
 slab *api_msg_slab(void);
-sdk::lib::ipc::ipc_client *api_ipc_client(void);
 
 /// \brief start the batch for commit
 /// \param[in] batch_params Batch specific information

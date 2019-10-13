@@ -21,8 +21,6 @@ namespace api {
 static slab *g_api_params_slab_ = NULL;
 static slab *g_api_ctxt_slab_ = NULL;
 static slab *g_api_msg_slab_ = NULL;
-// TODO: move this out of api_thread
-static sdk::lib::ipc::ipc_client *g_api_ipc_client_;
 
 /// \defgroup PDS_API_ENGINE Framework for processing APIs
 /// @{
@@ -57,13 +55,6 @@ pds_epoch_t
 get_current_epoch (void)
 {
     return g_current_epoch_;
-}
-
-// TODO: move this out of api_thread
-sdk::lib::ipc::ipc_client *
-api_ipc_client (void)
-{
-    return g_api_ipc_client_;
 }
 
 sdk_ret_t
@@ -836,9 +827,6 @@ api_engine_init (void)
     g_api_msg_slab_ =
         slab::factory("api-msg", PDS_SLAB_ID_API_MSG,
                       sizeof(api_msg_t), 512, true, true, true, NULL);
-    // TODO: move this out of api_thread
-    g_api_ipc_client_ = sdk::lib::ipc::ipc_client::factory(core::THREAD_ID_CFG);
-    SDK_ASSERT(g_api_ipc_client_ != NULL);
     return SDK_RET_OK;
 }
 

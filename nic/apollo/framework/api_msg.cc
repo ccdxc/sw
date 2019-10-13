@@ -113,9 +113,10 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         }
         batched_internally = true;
     }
-    rsp = api_ipc_client()->send_recv(core::THREAD_ID_API,
-                                      &api_msg, sizeof(api_msg));
-    PDS_TRACE_DEBUG("status %u", *(sdk_ret_t *)rsp->data());
+    rsp = sdk::lib::ipc::ipc_client::send_recv_once(core::THREAD_ID_API,
+                                                    &api_msg, sizeof(api_msg));
+    PDS_TRACE_DEBUG("Rcvd response from API thread, status %u",
+                    *(sdk_ret_t *)rsp->data());
 
     if (batched_internally) {
         // destroy the batch we created
