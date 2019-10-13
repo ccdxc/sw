@@ -437,3 +437,8 @@ jobd/apollo/gtests-valgrind: ${JOBD_PREREQS}
 jobd/artemis/gtests-valgrind: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/run_gtests_valgrind_artemis.sh ${COVERAGE_OPTS}
 
+.PHONY: jobd/apulu/pds_scale_test_mock
+jobd/apulu/pds_scale_test_mock: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/scale/apulu/run_scale_test_mock.sh
+	${NICDIR}/apollo/test/scale/apulu/runtestapp.sh
+

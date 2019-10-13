@@ -79,7 +79,8 @@ main (int argc, char **argv)
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:f:s:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hdc:i:f:s:W;",
+                             longopts, NULL)) != -1) {
         switch (oc) {
         case 'd':
             g_daemon_mode = true;
@@ -106,7 +107,8 @@ main (int argc, char **argv)
 
         case 'f':
             g_pipeline = std::string(optarg);
-            if (g_pipeline != "apollo" && g_pipeline != "artemis") {
+            if ((g_pipeline != "apollo") && (g_pipeline != "artemis") &&
+                (g_pipeline != "apulu")) {
                 fprintf(stderr, "Pipeline specified is invalid\n");
                 print_usage(argv);
                 exit(1);
@@ -127,7 +129,8 @@ main (int argc, char **argv)
     }
 
     // copy the input cfg file for the agent to read
-    cmd = "cp " + string(g_input_cfg_file) + " /tmp/" + string(get_cfg_json_name());
+    cmd = "cp " + string(g_input_cfg_file) + " /tmp/" +
+              string(get_cfg_json_name());
     system(cmd.c_str());
 
     // Init app

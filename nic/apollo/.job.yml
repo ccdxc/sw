@@ -148,23 +148,23 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
-  #artemis/pds_scale_test_mock:
-  #  commands: ["make", "PIPELINE=artemis", "jobd/artemis/pds_scale_test_mock"]
-  #  owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
-  #  area:
-  #  sub-area:
-  #  feature:
-  #  build-dependencies:
-  #  - build-artemis-x86
+  artemis/pds_scale_test_mock:
+    commands: ["make", "PIPELINE=artemis", "jobd/artemis/pds_scale_test_mock"]
+    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-artemis-x86
 
-  #artemis/scale_test_sim:
-  #  commands: ["make", "PIPELINE=artemis", "jobd/artemis/scale_test_sim"]
-  #  owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
-  #  area:
-  #  sub-area:
-  #  feature:
-  #  build-dependencies:
-  #  - build-artemis-x86
+  artemis/scale_test_sim:
+    commands: ["make", "PIPELINE=artemis", "jobd/artemis/scale_test_sim"]
+    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-artemis-x86
 
   artemis/valgrind:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/gtests-valgrind"]
@@ -187,6 +187,15 @@ targets:
   apulu/gtest:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest"]
     owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
+  apulu/pds_scale_test_mock:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_scale_test_mock"]
+    owners: ["email:saratk@pensando.io", "email:akoradha@pensando.io" ]
     area:
     sub-area:
     feature:
