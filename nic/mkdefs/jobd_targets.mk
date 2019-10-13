@@ -250,6 +250,10 @@ jobd/apollo/gtest_1: ${JOBD_PREREQS}
 jobd/apollo/gtest_2: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/run_gtests_apollo_2.sh ${COVERAGE_OPTS}
 
+.PHONY: jobd/apollo/doc
+jobd/apollo/doc: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/gendoc.sh
+
 .PHONY: jobd/artemis/gtest
 jobd/artemis/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_gtest

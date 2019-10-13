@@ -105,8 +105,6 @@ jobs:
     labels: ["hourly"]
   nic/apollo:
     labels: ["hourly"]
-  nic/apollo/doc:
-    labels: ["hourly"]
   nic/sdk:
     labels: ["hourly"]
   nic/utils/ftlite:
@@ -165,8 +163,6 @@ dependencies:
   nic/agent:
     - reference: api
     - reference: test/ci_targets/e2e
-  nic/apollo:
-    - reference: nic/apollo/doc
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:
