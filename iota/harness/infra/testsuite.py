@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import atexit
 import json
 import pdb
 import traceback
@@ -258,6 +259,8 @@ class TestSuite:
             Logger.debug("Skipping Testsuite: %s due to filters." % self.Name())
             return types.status.SUCCESS
 
+        atexit.register(logcollector.CollectLogs)
+
         # Start the testsuite timer
         self.__timer.Start()
 
@@ -290,7 +293,8 @@ class TestSuite:
         self.__update_stats()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
 
-        logcollector.CollectLogs()
+        #moved to atexit() call
+        #logcollector.CollectLogs()
         self.__timer.Stop()
         return self.result
 
