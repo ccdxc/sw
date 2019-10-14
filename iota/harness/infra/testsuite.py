@@ -57,6 +57,16 @@ class TestSuite:
             return types.tbtype.HYBRID
         return types.tbtype.ANY
 
+    def GetFirmwareType(self):
+        if hasattr(self._TestSuite__spec.meta,"firmware"):
+            fmw=self._TestSuite__spec.meta.firmware.lower()
+            if fmw == "gold":
+                return types.firmware.GOLD
+            elif fmw == "main":
+                return types.firmware.MAIN
+            else:
+                raise ValueError("firmware must be gold or main. user specified: {0}".format(fmw))
+
     def GetPackages(self):
         return self.__spec.packages
 
@@ -267,6 +277,10 @@ class TestSuite:
         # Update logger
         Logger.SetTestsuite(self.Name())
         Logger.info("Starting Testsuite: %s" % self.Name())
+
+        if self.GetFirmwareType() == types.firmware.GOLD:
+            Logger.debug("setting global firmware type to gold")
+            GlobalOptions.use_gold_firmware = True
 
         # Initialize Testbed for this testsuite
         status = store.GetTestbed().InitForTestsuite(self)

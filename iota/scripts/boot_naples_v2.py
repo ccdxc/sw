@@ -21,7 +21,6 @@ HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
 
 
-
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
 parser.add_argument('--console-ip', dest='console_ip', required = True,
@@ -94,6 +93,8 @@ parser.add_argument('--naples-only-setup', dest="naples_only_setup",
                     action='store_true', help='Setup only naples')
 parser.add_argument('--esx-script', dest='esx_script',
                     default="", help='ESX start up script')
+parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
+                    action='store_true', help='Only use gold firmware')
 
 
 GlobalOptions = parser.parse_args()
@@ -1010,9 +1011,14 @@ def Main():
     if naples.IsSSHUP():
         #OOb is present and up install right away,
         naples.RebootGoldFw()
-        naples.InstallMainFirmware()
-        if not IsNaplesGoldFWLatest():
+        if GlobalOptions.use_gold_firmware:
+            print("installing and running tests with gold firmware {0}".format(GlobalOptions.gold_fw_img))
             naples.InstallGoldFirmware()
+        else:
+            print("installing and running tests with firmware {0}".format(GlobalOptions.image))
+            naples.InstallMainFirmware()
+            if not IsNaplesGoldFWLatest():
+                naples.InstallGoldFirmware()
         naples.Reboot()
     else:
         host.InitForUpgrade()
@@ -1020,10 +1026,13 @@ def Main():
         naples.Close()
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
         host.Init(driver_pkg =  gold_pkg, cleanup = False)
-        host.InstallMainFirmware()
-        #Install gold fw if required.
-        if not IsNaplesGoldFWLatest():
-            host.InstallGoldFirmware()
+        if GlobalOptions.use_gold_firmware:
+            naples.InstallGoldFirmware()
+        else:
+            host.InstallMainFirmware()
+            #Install gold fw if required.
+            if not IsNaplesGoldFWLatest():
+                host.InstallGoldFirmware()
 
     #Script that might have to run just before reboot
     # ESX would require drivers to be installed here to avoid

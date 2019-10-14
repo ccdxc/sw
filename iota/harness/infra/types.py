@@ -42,6 +42,11 @@ __tbtype = [
 ]
 tbtype = utils.List2Enum(__tbtype)
 
+__fwtype = [
+    'GOLD',
+    'MAIN'
+]
+firmware = utils.List2Enum(__fwtype)
 
 HEADER_SUMMARY = "-" * 140
 FORMAT_TESTCASE_SUMMARY = "%-15s %-70s %-32s %-7s %-8s"

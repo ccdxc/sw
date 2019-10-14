@@ -254,6 +254,8 @@ class _Testbed:
                 cmd.extend(["--gold-drivers-latest-pkg", latest_gold_driver])
                 cmd.extend(["--gold-firmware-old-version", _get_driver_version(old_gold_driver)])
                 cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
+                if GlobalOptions.use_gold_firmware: 
+                    cmd.extend(["--use-gold-firmware"]) 
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if getattr(instance.Resource, "ServerType", "server-a") == "hpe":
@@ -302,7 +304,6 @@ class _Testbed:
         try:
             for idx in range(len(proc_hdls)):
                 proc_hdl = proc_hdls[idx]
-                #TODO: why not run in parallel ?
                 while proc_hdl.poll() is None:
                     time.sleep(5)
                     continue

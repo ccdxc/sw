@@ -65,6 +65,8 @@ parser.add_argument('--logdir', dest='logdir', default=None,
                     help='Save logs in a specific directory. (Relative to IOTA directory)')
 parser.add_argument('--skip-logs', dest='skip_logs', help='Skip log collection.',
                     action='store_true')
+parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
+                    action='store_true', help='Use gold firmware for testing')
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"
