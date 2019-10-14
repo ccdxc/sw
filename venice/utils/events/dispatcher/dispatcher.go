@@ -341,6 +341,13 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 		e.Stop()
 		return nil, nil, errors.Wrap(err, "failed to register exporter")
 	}
+
+	// update exporter offset to be up to date as the failed/pending events are sent
+	if exporterOffset.BytesRead != esCurrOffset.BytesRead {
+		exporterOffset.BytesRead = esCurrOffset.BytesRead
+		offsetTracker.UpdateOffset(exporterOffset)
+	}
+
 	d.logger.Debugf("exporter {%s} registered with the dispatcher successfully, will start receiving events from offset: {%v: %v}", exporterName,
 		exporterOffset.Filename, exporterOffset.BytesRead)
 	return e, offsetTracker, nil
