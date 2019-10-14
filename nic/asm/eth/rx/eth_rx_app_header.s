@@ -19,13 +19,13 @@ eth_rx_app_header:
   tblwr.f         d.rsvd_cfg, 0
   // !!! No table updates after this point !!!
 
+  // Save required information from APP header
+  phvwr           p.eth_rx_global_lif, k.p4_intr_global_lif
+  phvwr           p.eth_rx_t0_s2s_cq_desc_addr, k.p4_rxdma_intr_qid // s0..s2 use cq_desc_addr for qid
   // Is this something other than normal rx?
   bbeq            k.p4_to_p4plus_pad, 1, eth_rx_app_header_other
-  nop // INIT_STATS(_r_stats) // BD Slot
-
-  // Save all required information from APP header
-  phvwr           p.eth_rx_global_lif, k.p4_intr_global_lif
-  phvwr           p.eth_rx_to_s1_qstate_addr, k.p4_rxdma_intr_qstate_addr
+  phvwr           p.eth_rx_to_s1_qstate_addr, k.p4_rxdma_intr_qstate_addr // BD Slot
+  // Save required information from APP header for normal packet processing
   phvwr           p.eth_rx_t1_s2s_l2_pkt_type, k.p4_to_p4plus_l2_pkt_type
   phvwr           p.eth_rx_t1_s2s_pkt_type, k.p4_to_p4plus_pkt_type
   phvwr           p.eth_rx_t1_s2s_pkt_len, k.p4_to_p4plus_packet_len
@@ -68,7 +68,6 @@ eth_rx_app_header_other:
 
 eth_rx_app_header_arm:
   // See eth_rx_rss_skip: from there we will launch arm instead of fetch
-  phvwr           p.eth_rx_to_s1_qstate_addr, k.p4_rxdma_intr_qstate_addr
   // Using do_eq, indicate this is a request to arm
   phvwri.e        p.eth_rx_global_do_eq, 1
   // Arm index comes from txdma as csum, now pass it along as intr_index

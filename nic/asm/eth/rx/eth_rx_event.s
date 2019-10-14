@@ -48,7 +48,7 @@ eth_rx_event:
 
     // Advance the color generation when the ring wraps
     seq             c7, d.eq_index, 0
-    tblmincri.c7    d.eq_gen, 1, 8
+    tblmincri.c7    d.eq_gen, 8, 1
 
     // Post an event only?  then proceed
     seq             c7, k.eth_rx_global_do_intr, 1

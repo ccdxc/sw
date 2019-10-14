@@ -47,7 +47,7 @@ eth_rx_arm_event:
 
   // Init fields in eq desc, except gen_color to be set by eth_rx_event action
   phvwri          p.eq_desc_code, EQ_CODE_RX_COMP_HX
-  add             r7, r0, k.eth_rx_to_s2_qid
+  add             r7, r0, k.eth_rx_t0_s2s_cq_desc_addr // s0..s2 use cq_desc_addr for qid
   phvwrpair       p.eq_desc_lif_index, d.lif_index, p.eq_desc_qid, r7.wx
 
   // Launch eth_rx_event action

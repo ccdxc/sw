@@ -12,5 +12,6 @@ struct phv_ p;
 
 .align
 eth_tx_prep_arm:
+  phvwri          p.common_te0_phv_table_lock_en, 1
   phvwri.e        p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE
   phvwri.f        p.common_te0_phv_table_pc, eth_tx_commit_arm[38:6]

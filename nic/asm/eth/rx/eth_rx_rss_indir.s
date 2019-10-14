@@ -25,6 +25,7 @@ eth_rx_rss_indir:
     bcf             [c1], eth_rx_rss_indir_drop
 
     // Compute Qstate address for d.qid
+    phvwr           p.eth_rx_t0_s2s_cq_desc_addr, d.qid // s0..s2 use cq_desc_addr for qid
     add             r5, k.toeplitz_key2_data[33:0], d.qid, LG2_RX_QSTATE_SIZE
 
     // Zero-out the flits used for Toeplitz

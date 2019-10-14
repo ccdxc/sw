@@ -5,11 +5,6 @@
 
 #include "../../asm/adminq/defines.h"
 
-#define __ASSEMBLY__
-
-#include "cap_top_csr_defines.h"
-#include "cap_intr_c_hdr.h"
-
 struct phv_ p;
 struct tx_table_s3_t0_k_ k;
 struct tx_table_s3_t0_nicmgr_commit_d d;

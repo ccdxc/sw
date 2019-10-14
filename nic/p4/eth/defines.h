@@ -207,9 +207,6 @@
 #define MODIFY_ETH_RX_TO_S1 \
     modify_field(eth_rx_to_s1_scratch.qstate_addr, eth_rx_to_s1.qstate_addr); \
 
-#define MODIFY_ETH_RX_TO_S2 \
-    modify_field(eth_rx_to_s2_scratch.qid, eth_rx_to_s2.qid);
-
 #define PARAM_RX_DESC(n) \
     opcode##n, rsvd##n, len##n, addr##n
 

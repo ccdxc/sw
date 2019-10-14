@@ -94,7 +94,6 @@ action eth_rx_fetch_desc(PARAMS_ETH_RX_QSTATE)
     // --- For K+I struct generation
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
-    MODIFY_ETH_RX_TO_S2
 
     // --- For D-struct generation
     MODIFY_ETH_RX_QSTATE

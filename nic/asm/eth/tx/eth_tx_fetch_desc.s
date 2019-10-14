@@ -42,7 +42,7 @@ eth_tx_fetch_desc:
   bbeq            d.enable, 0, eth_tx_queue_disabled
   // Use this phv to arm the cq, or do tx fetch?
   seq             _c_eq, d.eq_enable, 1 // BD Slot for branch not taken
-  sne             _c_arm, d.p_index1, d.c_index1
+  sne             _c_arm, d.p_index1, 0xffff
   bcf             [ _c_eq & _c_arm ], eth_tx_fetch_arm
   // If not arming, is there anything to transmit?
   sne             _c_tx, d.p_index0, d.c_index0 // BD Slot, for both
@@ -59,6 +59,7 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_global_lif, k.p4_intr_global_lif
   phvwr           p.eth_tx_to_s1_qstate_addr[33:0], k.p4_txdma_intr_qstate_addr
   phvwr           p.eth_tx_to_s2_my_ci, _r_ci
+  phvwr           p.eth_tx_to_s2_qid, k.p4_txdma_intr_qid
 
   // Compute the descriptor fetch address
   sll             r7, _r_ci, d.lg2_desc_sz
@@ -107,6 +108,10 @@ eth_tx_fetch_arm:
   // Replace Arm Host PI to out-of-range index (will be equal to CI)
   tblwr.f         d.p_index1, 0xffff
 
+  // XXX the tblwr to p_index1 must flush before the eq is posted,
+  // otherwise we can miss a doorbell to arm after the event
+  wrfence
+
   // Ring doorbell to re-eval if there is nothing to transmit after arming
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
@@ -116,6 +121,7 @@ eth_tx_fetch_arm:
   phvwr           p.eth_tx_global_host_queue, d.host_queue
   phvwr           p.eth_tx_global_cpu_queue, d.cpu_queue
   phvwr           p.eth_tx_global_lif, k.p4_intr_global_lif
+  phvwr           p.eth_tx_to_s2_qid, k.p4_txdma_intr_qid
 
   // Setup same qstate table address for commit_arm, but next stage is prep_arm
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0

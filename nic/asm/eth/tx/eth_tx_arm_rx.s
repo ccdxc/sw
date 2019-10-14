@@ -158,19 +158,18 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 eth_tx_arm_rx:
   bbeq            d.enable, 0, eth_tx_arm_rx_queue_disabled
   add             _r_arm_index, r0, d.{p_index1}.hx // BD Slot
-  tblwr           d.c_index0, d.p_index0
-  tblwr.f         d.p_index1, 0xffff
+  bbeq            d.eq_enable, 0, eth_tx_arm_rx_no_eq
+  tblwr           d.c_index0, d.p_index0 // BD Slot
+  sne             _c_arm, _r_arm_index, 0xffff // BD Slot
+  tblwr._c_arm    d.p_index1, 0xffff
+  bcf             [ !_c_arm ], eth_tx_arm_rx_no_eq
+  tblwr.f         d.rsvd_cfg, 0
 
 #ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
 #endif
-
-  bbeq            d.eq_enable, 0, eth_tx_arm_rx_no_eq
-  sne             _c_arm, _r_arm_index, 0xffff // BD Slot
-  bcf             [ !_c_arm ], eth_tx_arm_rx_no_eq
-  nop             // BD Slot
 
 eth_tx_arm_rx_eq:
   // Setup packet headers to invoke rxdma, with rss_type = None
@@ -191,6 +190,10 @@ eth_tx_arm_rx_eq:
   CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(phv2pkt_dma_cmd, pkt_p4_intr_global_tm_iport, pkt_p4_to_p4plus_ip_sa);
   phvwri          p.p4_txdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(phv2pkt_dma_cmd_type) / 16)
   phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_DMA
+
+  // XXX the tblwr to p_index1 must flush before the eq is posted,
+  // otherwise we can miss a doorbell to arm after the event
+  wrfence
 
   // Done with txdma, reeval the doobell, but don't drop the phv
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR

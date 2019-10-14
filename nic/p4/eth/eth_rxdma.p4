@@ -137,7 +137,7 @@ header_type eth_rx_global_k {
 
 header_type eth_rx_t0_s2s_k {
     fields {
-        cq_desc_addr : 64;
+        cq_desc_addr : 64; // in s0..s2 use for qid
         eq_desc_addr : 64;
         intr_index : 16;
         pkt_len : 16;
@@ -158,12 +158,6 @@ header_type eth_rx_t1_s2s_k {
 header_type eth_rx_to_s1_k {
     fields {
         qstate_addr : 64;
-    }
-}
-
-header_type eth_rx_to_s2_k {
-    fields {
-        qid : 24;
     }
 }
 
@@ -202,11 +196,6 @@ metadata eth_rx_global_k eth_rx_global_scratch;
 metadata eth_rx_to_s1_k eth_rx_to_s1;
 @pragma scratch_metadata
 metadata eth_rx_to_s1_k eth_rx_to_s1_scratch;
-
-@pragma pa_header_union ingress to_stage_2
-metadata eth_rx_to_s2_k eth_rx_to_s2;
-@pragma scratch_metadata
-metadata eth_rx_to_s2_k eth_rx_to_s2_scratch;
 
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
