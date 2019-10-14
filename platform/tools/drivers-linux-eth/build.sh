@@ -7,4 +7,4 @@
 DIR=$(dirname "$0")
 DIR=$(readlink -f "$DIR")
 
-make -j12 -C "$DIR/drivers" || exit
+make -j -C "$DIR/drivers" || exit

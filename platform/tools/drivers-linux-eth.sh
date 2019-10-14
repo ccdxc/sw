@@ -48,6 +48,11 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="*.o" \
   --exclude="*.ko" \
   --exclude="*.mod.c" \
+  --exclude="*.ur-safe" \
+  --exclude=".*.swp" \
+  --exclude="cscope.out" \
+  --exclude="tags" \
+  --exclude=".gitignore" \
   --exclude="modules.order" \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
@@ -62,6 +67,11 @@ rsync -r --copy-links \
   --exclude="*.o" \
   --exclude="*.ko" \
   --exclude="*.mod.c" \
+  --exclude="*.ur-safe" \
+  --exclude=".*.swp" \
+  --exclude="cscope.out" \
+  --exclude="tags" \
+  --exclude=".gitignore" \
   --exclude="modules.order" \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
