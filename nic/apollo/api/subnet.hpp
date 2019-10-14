@@ -171,7 +171,14 @@ public:
     /// \brief          return h/w index for this subnet
     /// \return         h/w table index for this subnet
     uint16_t hw_id(void) const { return hw_id_; }
+
+    /// \brief     return vpc of this subnet
+    /// \return    vpc key of this subnet
     pds_vpc_key_t vpc(void) const { return vpc_; }
+
+    /// \brief      return fabric encap of this subnet
+    /// \return     fabric encap of this subnet
+    pds_encap_t fabric_encap(void) const { return fabric_encap_; }
     pds_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
     pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
     pds_policy_key_t ing_v4_policy(void) const { return ing_v4_policy_; }
@@ -194,6 +201,7 @@ private:
 private:
     pds_subnet_key_t key_;                    ///< subnet key
     pds_vpc_key_t vpc_;                       ///< vpc of this subnet
+    pds_encap_t fabric_encap_;                ///< fabric encap of this subnet
     pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
     pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
     pds_policy_key_t ing_v4_policy_;          ///< ingress IPv4 policy id

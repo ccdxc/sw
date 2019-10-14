@@ -77,6 +77,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 
     key_.id = spec->key.id;
     vpc_ = spec->vpc;
+    fabric_encap_ = spec->fabric_encap;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;
     ing_v4_policy_.id = spec->ing_v4_policy.id;

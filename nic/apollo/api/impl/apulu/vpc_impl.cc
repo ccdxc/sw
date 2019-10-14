@@ -88,8 +88,8 @@ sdk_ret_t
 vpc_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
-    sdk_table_api_params_t tparams = { 0 };
     vpc_entry *vpc = (vpc_entry *)api_obj;
+    sdk_table_api_params_t tparams = { 0 };
 
     vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
@@ -177,7 +177,6 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
 sdk_ret_t
 vpc_impl::activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
     sdk_ret_t ret;
-    pds_vpc_key_t key;
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
