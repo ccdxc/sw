@@ -44,6 +44,13 @@ IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
 IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
+class InterfaceTypes(enum.IntEnum):
+    NONE = 0
+    HOST = 1
+    UPLINK = 2
+    UPLINKPC = 3
+    L3INTERFACE = 4
+
 class PortTypes(enum.IntEnum):
     NONE = 0
     HOST = 1
@@ -53,7 +60,9 @@ class PortTypes(enum.IntEnum):
     # Eth1/1 0x11010001 ==> 1 Hostport
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
-INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH}
+INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH }
+MODE2INTF_TBL = { 'host' : InterfaceTypes.HOST, 'switch': InterfaceTypes.UPLINK,
+        'uplink': InterfaceTypes.UPLINK }
 
 class L3MatchType(enum.IntEnum):
     PFX = 0
@@ -355,6 +364,11 @@ def IsPipelineArtemis():
     return False
 
 def IsHostLifSupported():
+    if IsPipelineArtemis():
+        return False
+    return True
+
+def IsInterfaceSupported():
     if IsPipelineArtemis():
         return False
     return True

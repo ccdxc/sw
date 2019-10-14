@@ -19,6 +19,7 @@ import nh_pb2_grpc as nh_pb2_grpc
 import service_pb2_grpc as service_pb2_grpc
 import tags_pb2_grpc as tags_pb2_grpc
 import meter_pb2_grpc as meter_pb2_grpc
+import interface_pb2_grpc as interface_pb2_grpc
 import infra.common.defs as defs
 
 from infra.common.glopts  import GlobalOptions
@@ -53,7 +54,8 @@ class ObjectTypes(enum.IntEnum):
     SVCMAPPING = 12
     METER = 13
     TAG = 14
-    MAX = 15
+    INTERFACE = 15
+    MAX = 16
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):

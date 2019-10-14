@@ -30,6 +30,8 @@ import apollo.config.objects.tag as tag
 import apollo.config.objects.tunnel as tunnel
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.vpc as vpc
+import apollo.config.objects.interface as interface
+import apollo.config.objects.port as port
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
@@ -66,6 +68,12 @@ def __validate():
     return
 
 def __generate(topospec):
+    # Generate Port Configuration
+    port.client.GenerateObjects(topospec)
+
+    # Generate Interface Configuration
+    interface.client.GenerateObjects(topospec)
+
     # Generate Batch Object
     batch.client.GenerateObjects(topospec)
 
@@ -80,7 +88,7 @@ def __generate(topospec):
 
     # Validate configuration
     __validate()
-    
+
     return
 
 def __create():

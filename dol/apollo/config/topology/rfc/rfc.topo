@@ -4,13 +4,13 @@ meta:
 
 uplink:
     - entry:
-        id      : host
+        id      : uplink0
         port    : 1
         mode    : host
         status  : UP
 
     - entry:
-        id      : switch
+        id      : uplink1
         port    : 2
         mode    : switch
         status  : UP
@@ -71,7 +71,7 @@ vpc:
                count : 48
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
-               nv4routes   : 1023     # Max routes per route table 
+               nv4routes   : 1023     # Max routes per route table
                v6base: '2002::\65'
                v6prefixlen: 120
                nv6routes   : 1023
@@ -90,7 +90,7 @@ vpc:
                     - priority : 1
                       tag : 1
                       prefixes :
-                            - '0.0.0.0\0'                
+                            - '0.0.0.0\0'
               v6rules :
                     - priority : 1
                       tag : 1
@@ -1851,7 +1851,7 @@ vpc:
               #   direction  : bidir
               #   rule:
               #     - protocol: tcp
-              #       stateful: true 
+              #       stateful: true
               #       v4pfx: '0.0.0.0\0'
               #       v6pfx: '0::0\0'
               #       sportlow: 10

@@ -269,8 +269,8 @@ class PolicyObject(base.ConfigObjectBase):
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.tunnel = obj.route.TUNNEL
-        obj.hostport = utils.PortTypes.HOST
-        obj.switchport = utils.PortTypes.SWITCH
+        obj.hostport = Store.GetHostPort()
+        obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
         # select a random rule for this testcase
         if utils.IsPipelineArtemis():

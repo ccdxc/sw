@@ -4,13 +4,13 @@ meta:
 
 uplink:
     - entry:
-        id      : host
+        id      : uplink0
         port    : 1
         mode    : host
         status  : UP
 
     - entry:
-        id      : switch
+        id      : uplink1
         port    : 2
         mode    : switch
         status  : UP
@@ -68,18 +68,18 @@ vpc:
                       tag : 1
                       prefixes :
                             - '10.10.0.0\16'
-                
+
                     - priority : 2
                       tag : 2
                       prefixes :
                             - '11.11.0.0\16'
-                
+
               v6rules :
                     - priority : 1
                       tag : 1
                       prefixes :
                             - '1234:5678:4321:8765:1111::\80'
-                
+
                     - priority : 2
                       tag : 2
                       prefixes :

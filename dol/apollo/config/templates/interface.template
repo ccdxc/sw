@@ -1,0 +1,13 @@
+# Interface Object Template
+meta:
+    id      : INTERFACE
+    package : config.objects
+    module  : interface
+    feature_set:
+        - apollo
+
+id      : None
+port    : None
+type    : UPLINK
+status  : UP
+lif     : None  # Object Reference ref://store/object/id=LIFxxx

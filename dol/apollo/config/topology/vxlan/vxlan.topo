@@ -4,21 +4,35 @@ meta:
 
 uplink:
     - entry:
-        id      : host
+        id      : uplink0
         port    : 1
         mode    : host
         status  : UP
 
     - entry:
-        id      : switch
+        id      : uplink1
         port    : 2
         mode    : switch
         status  : UP
 
+interface:
+    - entry:
+        id      : eth0
+        port    : 1
+        mode    : host
+        status  : UP
+        lif     : ref://store/specs/id=LIF_ETH
+        lifns   : range/70/70
+
+    - entry:
+        id      : eth1
+        port    : 2
+        mode    : host
+        status  : UP
+        lif     : ref://store/specs/id=LIF_ETH
+        lifns   : range/71/71
+
 device:
-    # host lif
-    lif         : ref://store/specs/id=LIF_ETH
-    lifns       : range/70/71
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
     macaddress  : macaddr/0002.0100.0001

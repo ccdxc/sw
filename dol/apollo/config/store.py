@@ -14,9 +14,11 @@ class ApolloConfigStore:
         self.tunnels = ObjectDatabase()
         self.device = None
         self.substrate_vpc = None
-
         # Batch client
         self.batchClient = None
+        self.hostport = None
+        self.switchport = None
+        self.hostinterfaces = {}
         return
 
     def SetBatchClient(self, obj):
@@ -33,6 +35,24 @@ class ApolloConfigStore:
 
     def GetDevice(self):
         return self.device
+
+    def SetHostPort(self, port):
+        self.hostport = port
+
+    def GetHostPort(self):
+        return self.hostport
+
+    def SetSwitchPort(self, port):
+        self.switchport = port
+
+    def GetSwitchPort(self):
+        return self.switchport
+
+    def AddHostInterface(self, key, obj):
+        self.hostinterfaces[key] = obj
+
+    def GetHostInterface(self, key):
+        return self.hostinterfaces.get(key, None)
 
     def SetSubstrateVPC(self, obj):
         self.substrate_vpc = obj

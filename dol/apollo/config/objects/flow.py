@@ -47,8 +47,10 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.route = self.__routeTblObj
         obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
-        obj.hostport = utils.PortTypes.HOST
-        obj.switchport = utils.PortTypes.SWITCH
+        obj.hostport = Store.GetHostPort()
+        obj.switchport = Store.GetSwitchPort()
+        obj.eth0 = Store.GetHostInterface('eth0')
+        obj.eth1 = Store.GetHostInterface('eth1')
         return
 
     def __repr__(self):

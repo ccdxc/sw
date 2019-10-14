@@ -4,13 +4,13 @@ meta:
 
 uplink:
     - entry:
-        id      : host
+        id      : uplink0
         port    : 1
         mode    : host
         status  : UP
 
     - entry:
-        id      : switch
+        id      : uplink1
         port    : 2
         mode    : switch
         status  : UP

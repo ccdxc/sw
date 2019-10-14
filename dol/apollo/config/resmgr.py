@@ -46,6 +46,8 @@ IGWVxlanIdAllocator = iter(irange(50001, 51024))
 VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
+InterfaceIdAllocator = iter(irange(1, 2))
+PortIdAllocator = iter(irange(1, 2))
 
 # ---------------------------------------------------------------------------------
 # Artemis specific configs

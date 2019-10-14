@@ -158,8 +158,8 @@ class RouteObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.route = self
         obj.tunnel = self.TUNNEL
-        obj.hostport = utils.PortTypes.HOST
-        obj.switchport = utils.PortTypes.SWITCH
+        obj.hostport = Store.GetHostPort()
+        obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
         return
 
