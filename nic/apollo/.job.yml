@@ -184,8 +184,17 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
-  apulu/gtest:
-    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest"]
+  apulu/gtest_1:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_1"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
+  apulu/gtest_2:
+    commands: ["make", "PIPELINE=apollo", "jobd/apulu/gtest_2"]
     owners: ["email:jcruz@pensando.io"]
     area:
     sub-area:
