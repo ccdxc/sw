@@ -1917,6 +1917,19 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
     proto_spec->set_macaddr(MAC_TO_UINT64(api_spec->device_mac_addr));
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_gatewayip(),
                                   &api_spec->gateway_ip_addr);
+    proto_spec->set_bridgingen(api_spec->bridging_en);
+    proto_spec->set_learningen(api_spec->learning_en);
+    switch (api_spec->dev_oper_mode) {
+    case PDS_DEV_OPER_MODE_BITW:
+        proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_BITW);
+        break;
+    case PDS_DEV_OPER_MODE_HOST:
+        proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_HOST);
+        break;
+    default:
+        proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_NONE);
+        break;
+    }
 }
 
 // populate proto buf status from device API status
@@ -1971,6 +1984,17 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     }
     api_spec->bridging_en = proto_spec.bridgingen();
     api_spec->learning_en = proto_spec.learningen();
+    switch (proto_spec.devopermode()) {
+    case pds::DEVICE_OPER_MODE_BITW:
+        api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
+        break;
+    case pds::DEVICE_OPER_MODE_HOST:
+        api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
+        break;
+    default:
+        api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_NONE;
+        break;
+    }
     return SDK_RET_OK;
 }
 

@@ -24,20 +24,30 @@ enum DeviceProfile {
   DEVICE_PROFILE_P2      = 2;
 }
 
+enum DeviceOperMode {
+  DEVICE_OPER_MODE_NONE = 0;
+  ///< bump-in-the-wire mode with workloads on uplink port(s)
+  DEVICE_OPER_MODE_BITW = 1;
+  ///< host path mode with workloads on pcie
+  DEVICE_OPER_MODE_HOST = 2;
+}
+
 // device configuration
 message DeviceSpec {
   // local IP address in the substrate (i.e. MyTEP IP)
-  types.IPAddress IPAddr     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress IPAddr      = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // system MAC
-  uint64          MACAddr    = 2;
+  uint64          MACAddr     = 2;
   // IP address of the gateway in the substrate
-  types.IPAddress GatewayIP  = 3;
+  types.IPAddress GatewayIP   = 3;
   // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
-  DeviceProfile   Profile    = 4;
+  DeviceProfile   Profile     = 4;
   // if BridgingEn is true, L2 functionality based on MAC addresses kicks in
-  bool            BridgingEn = 5;
+  bool            BridgingEn  = 5;
   // if LearningEn is true, MAC and IP learning is enabled
-  bool            LearningEn = 6;
+  bool            LearningEn  = 6;
+  // operational mode of the device
+  DeviceOperMode  DevOperMode = 7;
 }
 
 // device operational status
@@ -56,13 +66,13 @@ message DeviceStatus {
 
 // stats of the device, if any
 message DeviceStatsEntry {
-    string Name = 1;
+    string Name  = 1;
     uint64 Count = 2;
 }
 
 message DeviceStats {
     repeated DeviceStatsEntry Ingress = 1;
-    repeated DeviceStatsEntry Egress = 2;
+    repeated DeviceStatsEntry Egress  = 2;
 }
 
 // device object

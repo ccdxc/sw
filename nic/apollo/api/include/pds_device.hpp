@@ -21,13 +21,23 @@
 /// \defgroup PDS_DEVICE Device API
 /// \@{
 
+///< operational mode of the device
+typedef enum pds_device_oper_mode_e {
+    PDS_DEV_OPER_MODE_NONE = 0,
+    ///< bump-in-the-wire mode with workloads on uplink port(s)
+    PDS_DEV_OPER_MODE_BITW = 1,
+    ///< host path mode with workloads on pcie
+   PDS_DEV_OPER_MODE_HOST  = 2,
+} pds_device_oper_mode_t;
+
 /// \brief device specification
 typedef struct pds_device_s {
-    ip_addr_t     device_ip_addr;     ///< device IP address
-    mac_addr_t    device_mac_addr;    ///< device MAC address
-    ip_addr_t     gateway_ip_addr;    ///< gateway IP address
-    bool          bridging_en;        ///< enable or disable L2 functionality
-    bool          learning_en;        ///< enable or disable L2/IP learning
+    ip_addr_t              device_ip_addr;  ///< device IP address
+    mac_addr_t             device_mac_addr; ///< device MAC address
+    ip_addr_t              gateway_ip_addr; ///< gateway IP address
+    bool                   bridging_en;     ///< enable or disable L2 functionality
+    bool                   learning_en;     ///< enable or disable L2/IP learning
+    pds_device_oper_mode_t dev_oper_mode;   ///< device operational mode
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status

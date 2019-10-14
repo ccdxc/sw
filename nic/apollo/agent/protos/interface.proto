@@ -150,17 +150,19 @@ message LifSpec {
 }
 
 message LifStatus {
+  // encoded ifindex of this Lif
+  uint32 IfIndex = 1;
 }
 
 message LifStats {
 }
 
 message Lif {
-  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  LifSpec         Spec     = 3;
-  LifStatus       Status   = 4;
-  LifStats        Stats    = 5;
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  LifSpec       Spec     = 3;
+  LifStatus     Status   = 4;
+  LifStats      Stats    = 5;
 }
 
 message LifGetRequest {
