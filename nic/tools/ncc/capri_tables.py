@@ -3802,7 +3802,7 @@ class capri_stage:
                 km_profile = km.combined_profile
                 km_hw_id = km.hw_id
                 if km.is_shared:
-                    if not ct.is_raw:
+                    if not ct.is_raw and not ct.is_raw_index:
                         # XXX multi-way sharing... need to check and operate on shared key-maker
                         self.gtm.tm.logger.debug("km is already shared with another table")
                         continue
@@ -3924,10 +3924,31 @@ class capri_stage:
             if set(km.combined_profile.byte_sel) == ct_byte_sel and \
                 set(km.combined_profile.bit_sel) == ct_bit_sel:
                 identical_km = True
-                # this is not handled in many subsequent routines.. so not supported for now
-                self.gtm.tm.logger.debug(\
-                    "key-maker are identical for tables %s and %s.. but may not be shared - TBD" %
-                    (kt.p4_table.name, ct.p4_table.name))
+                if not ct.is_raw and not ct.is_raw_index:
+                    # this is not handled in many subsequent routines.. so not supported for now
+                    self.gtm.tm.logger.debug(\
+                        "key-maker are identical for tables %s and %s.. but may not be shared - TBD" %
+                        (kt.p4_table.name, ct.p4_table.name))
+                    continue
+
+                if km.shared_km:
+                    shared_km = km.shared_km
+                else:
+                    shared_km = capri_key_maker(self, [])
+                    shared_km._merge(km_found)
+
+                ncc_assert(km_found.hw_id != -1)
+                shared_km.hw_id = km_found.hw_id
+                km.hw_id = -1
+                new_km.hw_id = -1
+                new_km.is_shared = True
+                km.is_shared = True
+                shared_km.is_shared = True
+                new_km.shared_km = shared_km
+                km.shared_km = shared_km
+
+                return True
+
             # additional checks based on table types
             if kt.is_hash_table() and ct.is_hash_table():
                 # need to worry about key ordering in both...

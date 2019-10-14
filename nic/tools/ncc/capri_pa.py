@@ -1348,6 +1348,8 @@ class capri_gress_pa:
             fld_union_storage = None
             # try to get headers, followed meta followed by deparse_only headers
             fld_union_list = self.fld_unions[cf][0]
+            # get stable sorting by sorting by names before applying other criteria
+            fld_union_list = sorted(fld_union_list, key=lambda xf: xf.p4_fld.instance.name)
             fld_union_list = sorted(fld_union_list, key=lambda xf: 100 if xf.is_meta else \
                         50 if xf.p4_fld.instance in self.pa.be.parsers[self.d].deparse_only_hdrs \
                         else 0)
@@ -1366,8 +1368,10 @@ class capri_gress_pa:
             for uf in self.fld_unions[cf][0]:
                 self.fld_unions[uf] = (self.fld_unions[uf][0], fld_union_storage)
                 if uf != fld_union_storage:
+                    ncc_assert(uf.is_fld_union_storage == False, "Invalid fld union storage flag")
                     uf.is_fld_union = True
                 else:
+                    ncc_assert(uf.is_fld_union == False, "Invalid fld union flag")
                     uf.is_fld_union_storage = True
 
             self.logger.debug("%s:union %s => %s" % \
