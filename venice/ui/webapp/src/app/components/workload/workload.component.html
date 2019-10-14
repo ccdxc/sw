@@ -6,44 +6,41 @@
   <div *ngIf="!hideWorkloadWidgets" fxLayout="row wrap" fxLayoutAlign="start"
        class="workload-widgetcontainer">
     <div *ngFor="let widget of widgets">
-      <app-workloadwidget
-                          [id]="widget"
-                          [selected]="selectedWorkloadWidget"
+      <app-workloadwidget [id]="widget" [selected]="selectedWorkloadWidget"
                           [collapsedView]="!heroStatsToggled">
       </app-workloadwidget>
     </div>
   </div>
-  <app-tableviewedit fxLayout="column" class="workload-widget"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [runDoCheck]="true"
-                     [virtualRowHeight]="95"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
+  <app-tableviewedit fxLayout="column" class="workload-widget" [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
+                     [runDoCheck]="true" [virtualRowHeight]="95"
+                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate"
-                     [createTemplate]="createTemplate"
+                     [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
                      [expandTemplate]="expandTemplate"
+                     [enableCheckbox]="true"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon" [enableColumnSelect]="true"
-                   fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
-                   [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+                   fxFlex="auto"
+                   fxLayout="row" [tableMenuItems]="tableMenuItems" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)">
+    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
   </app-tableheader>
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newworkload (formClose)="creationFormClose()" fxFlex="none">
+  <app-newworkload (formClose)="creationFormClose()" fxFlex="none" [hostOptions]="hostOptions"
+                   [existingObjects]='dataObjects'>
   </app-newworkload>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newworkload [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+                   [hostOptions]="hostOptions"
                    fxFlex="none">
   </app-newworkload>
 </ng-template>
@@ -68,23 +65,30 @@
     </ng-container>
     <ng-container *ngSwitchCase="'spec.host-name'">
       <div>
-        <a routerLink="/cluster/hosts"> {{rowData.spec["host-name"]}}</a>
+        <a routerLink="/cluster/hosts" [matTooltip]="'Host machine'">
+          {{rowData.spec["host-name"]}}</a>
+      </div>
+      <div>DSC:
+        <ng-container *ngFor="let dsc of getDSCs(rowData)">
+          <a [matTooltip]="'Disctributed Services Card'"
+             routerLink="/cluster/naples/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
+        </ng-container>
+
       </div>
     </ng-container>
     <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">
       <ng-container *ngFor="let index of getKeys(rowData.spec.interfaces)">
         <ng-container
                       *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[index] != null && rowData.status.interfaces[index]['ip-addresses'] != null">
-          <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
-            {{rowData.status.interfaces[index]["ip-addresses"].join(', ')}}</div>
+          <ng-container *ngTemplateOutlet="ipmacTemplate; context:{rowData:rowData, index:index}">
+          </ng-container>
         </ng-container>
         <ng-container
                       *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[index] == null || rowData.status.interfaces[index]['ip-addresses'] == null">
-          <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
-            {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}</div>
+          <ng-container *ngTemplateOutlet="ipmacTemplate; context:{rowData:rowData, index:index}">
+          </ng-container>
         </ng-container>
-        <div @fastSlideInOut *ngIf="hovered"
-             class="workload-column-values">Micro-seg vlan:
+        <div @fastSlideInOut *ngIf="hovered" class="workload-column-values">Micro-seg vlan:
           {{rowData.spec.interfaces[index]["micro-seg-vlan"]}} External vlan:
           {{rowData.spec.interfaces[index]["external-vlan"]}}</div>
       </ng-container>
@@ -99,9 +103,34 @@
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
     <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit policy"
               class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
-              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+              (click)="expandRowRequest($event, rowData)">
+      edit</mat-icon>
     <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete policy"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
+</ng-template>
+
+<ng-template #ipmacTemplate let-rowData="rowData" let-index="index">
+  <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
+    {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}
+  </div>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div fxFlex="none" fxLayoutAlign="start center">
+    <mat-icon class="naples-add-label-button" *ngIf="hasSelectedRows()"
+              [matTooltip]="'Add labels to selected workloads'" (click)="editLabels()">label
+    </mat-icon>
+    <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
+                     (saveEmitter)="handleEditSave($event)"
+                     (cancelEmitter)="handleEditCancel($event)" [objects]="getSelectedDataObjects()"
+                     [nameKey]="'meta.name'">
+    </app-labeleditor>
+    <mat-icon class="global-multi-records-delete-icon" *ngIf="hasSelectedRows()"
+              [matTooltip]="'Delete selected workloads'" (click)="onDeleteSelectedRows($event)">
+      delete</mat-icon>
+  </div>
+
+
 </ng-template>

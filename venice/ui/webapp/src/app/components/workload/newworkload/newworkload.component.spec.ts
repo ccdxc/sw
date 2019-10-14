@@ -87,13 +87,14 @@ describe('NewworkloadComponent', () => {
 
   it('should create', () => {
     const workloadService = TestBed.get(WorkloadService);
-    const clusterService = TestBed.get(ClusterService);
     const spy = spyOn(workloadService, 'AddWorkload');
-    spyOn(clusterService, 'WatchHost').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        host1,
-      ])
-    );
+    // newWorkload has @Input variables. We build them here
+    const hosts = [];
+    hosts.push(host1);
+    component.existingObjects = hosts;
+    component.hostOptions = hosts.map( x => {
+      return { label: x.meta.name, value: x.meta.name };
+    });
     fixture.detectChanges();
 
     const workload: IWorkloadWorkload = {

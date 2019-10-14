@@ -574,7 +574,8 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
    * @param partialSuccessSummary
    * @param msg
    */
-  invokeAPIonMultipleRecords(observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string
+  invokeAPIonMultipleRecords(observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string,
+    successCallback: () => void = null, errorCallback: (error: any) =>  void = null
   ) {
     if (observables.length <= 0) {
       return;
@@ -584,18 +585,34 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
         const isAllOK = Utility.isForkjoinResultAllOK(results);
         if (isAllOK) {
           this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
+          // clear the selectedObjects array
+          this.clearSelectedDataObjects();
+          if (successCallback) {
+            successCallback();
+          }
         } else {
           const error = Utility.joinErrors(results);
           this._controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
-        }
-        // clear the selectedObjects array
-        if (this.tableContainer && this.tableContainer.selectedDataObjects) {
-          this.tableContainer.selectedDataObjects.length = 0;
+          if (errorCallback) {
+            errorCallback(error);
+          }
         }
       },
-      this._controllerService.restErrorHandler(allSuccessSummary + ' Failed')
+      (error) => {
+        this._controllerService.invokeRESTErrorToaster('Failure', error);
+        if (errorCallback) {
+          errorCallback(error);
+        }
+      }
     );
     this.subscriptions.push(sub);
+  }
+
+  public clearSelectedDataObjects() {
+    if (this.tableContainer && this.tableContainer.selectedDataObjects) {
+      this.tableContainer.selectedDataObjects.length = 0;
+      this.tableContainer.selectedDataObjects = [];
+    }
   }
 
   /**

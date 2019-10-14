@@ -249,20 +249,20 @@ describe('ControllerService', () => {
         ],
       },
       {
-        description: 'no status code',
+        description: 'error status code 0',
         testFunction: () => {
-          service.invokeRESTErrorToaster('error summary', createError('error detail', null), false);
+          service.invokeRESTErrorToaster('error summary', createError('error detail', 0), false);
         },
         addToasterCalls: [
           {
             severity: 'error',
             summary: Utility.VENICE_CONNECT_FAILURE_SUMMARY,
-            detail: 'Your credentials are expired/insufficient or Venice is temporarily unavailable.\nPlease sign in again or contact system administrator.',
+            detail: 'Please clear your browser cache and sign in again.',
             sticky: true,
             buttons: [signoutButton]
           },
         ],
-      },
+      }
     ];
 
 

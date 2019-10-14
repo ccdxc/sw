@@ -69,3 +69,8 @@
   padding: 3px 0px 0px 0px;
   float: left;
 }
+
+/** Make table row hyperlink text not turn white when the row is selected */
+.tableviewedit-widget .tableviewedit-tr.ui-state-highlight td a {
+  color: #007bff;
+}

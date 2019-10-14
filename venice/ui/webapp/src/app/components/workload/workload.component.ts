@@ -14,6 +14,11 @@ import { Subscription, Observable } from 'rxjs';
 import { TableCol } from '../shared/tableviewedit';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
+import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { ObjectsRelationsUtility, WorkloadDSCHostTuple } from '@app/common/ObjectsRelationsUtility';
+import { LabelEditorMetadataModel } from '../shared/labeleditor';
+import { SelectItem } from 'primeng/primeng';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -73,8 +78,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true, width: 15 },
     { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: true, width: 15 },
-    { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false, width: 15},
-    { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false},
+    { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false, width: 15 },
+    { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: true, width: '180px' },
   ];
@@ -89,11 +94,20 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
 
   isTabComponent: boolean = false;
-  disableTableWhenRowExpanded: boolean  = true;
+  disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
   exportFilename: string = 'Venice-workloads';
 
+  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  workloadDSCHostTupleMap: { [key: string]: WorkloadDSCHostTuple } = {};
+  labelEditorMetaData: LabelEditorMetadataModel;
+  inLabelEditMode: boolean = false;
 
+
+  hostsEventUtility: HttpEventUtility<ClusterHost>;
+  hostObjects: ReadonlyArray<ClusterHost>;
+  hostOptions: SelectItem[] = [];
 
   constructor(
     private workloadService: WorkloadService,
@@ -101,6 +115,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
     protected cdr: ChangeDetectorRef,
+    private clusterService: ClusterService
   ) {
     super(_controllerService, cdr, uiconfigsService);
   }
@@ -109,9 +124,37 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     this.getWorkloads();
   }
 
+  getHosts() {
+    this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
+    this.hostObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
+    const subscription = this.clusterService.WatchHost().subscribe(
+      response => {
+        this.hostOptions = this.hostsEventUtility.processEvents(response).map( x => {
+          return { label: x.meta.name, value: x.meta.name };
+        });
+        this.getNaples();
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
+    );
+    this.subscriptions.push(subscription);
+  }
+
+  getNaples() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
+      response => {
+        this.naplesEventUtility.processEvents(response);
+        this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostMap(this.dataObjects, this.naples, this.hostObjects );
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get Naples')
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) ) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD WORKLOAD',
@@ -222,12 +265,16 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     }
   }
 
+  /**
+   * Chain REST callss to get  workloads -> hosts -> DSCs
+   */
   getWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.dataObjects = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
+        this.getHosts();
       },
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
@@ -255,5 +302,70 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     } else {
       return [];
     }
+  }
+
+  /**
+   * This API serves html template
+   */
+  getDSCs(workload: WorkloadWorkload): ClusterDistributedServiceCard[] {
+    if (this.workloadDSCHostTupleMap[workload.meta.name]) {
+      return this.workloadDSCHostTupleMap[workload.meta.name].dscs;
+    } else {
+      return [];
+    }
+  }
+
+  editLabels() {
+    this.labelEditorMetaData = {
+      title: 'Editing worload objects',
+      keysEditable: true,
+      valuesEditable: true,
+      propsDeletable: true,
+      extendable: true,
+      save: true,
+      cancel: true,
+    };
+
+    if (!this.inLabelEditMode) {
+      this.inLabelEditMode = true;
+    }
+  }
+
+  handleEditSave(updatedWorkloads: WorkloadWorkload[]) {
+    this.updateWithForkjoin(updatedWorkloads);
+  }
+
+
+  updateWithForkjoin(updatedWorkloads: WorkloadWorkload[]) {
+     const observables = this.getObservables(updatedWorkloads);
+     if (observables.length > 0 ) {
+      const allSuccessSummary = 'Update';
+      const partialSuccessSummary = 'Partially update';
+      const msg = 'Marked selected ' + updatedWorkloads.length + '  updated.';
+      const self = this;
+      this.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg,
+        () => {
+          self.handleEditCancel(null);
+        }, // onSuccess callback
+        () => {
+          self.handleEditCancel(null);
+         }  // onFailure call back
+      );
+     }
+  }
+
+  getObservables(updatedWorkloads: WorkloadWorkload[]): Observable<any>[] {
+    const observables: Observable<any>[] = [];
+    for (const workloadObj of updatedWorkloads) {
+      const name = workloadObj.meta.name;
+      const sub = this.workloadService.UpdateWorkload(name, workloadObj);
+      observables.push(sub);
+    }
+    return observables;
+  }
+
+
+  handleEditCancel($event) {
+    this.inLabelEditMode = false;
   }
 }

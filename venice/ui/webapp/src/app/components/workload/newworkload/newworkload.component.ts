@@ -1,16 +1,14 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
 import { IWorkloadWorkload, WorkloadWorkload, WorkloadWorkloadIntfSpec } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterHost } from '@sdk/v1/models/generated/cluster';
-import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { FormArray } from '@angular/forms';
+import { FormArray, ValidatorFn } from '@angular/forms';
 import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-newworkload',
@@ -21,12 +19,11 @@ import { IPUtility } from '@app/common/IPUtility';
 })
 export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, WorkloadWorkload> implements OnInit, AfterViewInit {
 
-  hostsEventUtility: HttpEventUtility<ClusterHost>;
-  hostObjects: ReadonlyArray<ClusterHost>;
-  hostOptions: SelectItem[] = [];
+  // Let workload.component pass in hostOptions
+  @Input() hostOptions: SelectItem[] = [];
+  @Input() existingObjects: IWorkloadWorkload[] = [];
 
   constructor(protected _controllerService: ControllerService,
-    protected clusterService: ClusterService,
     protected uiconfigsService: UIConfigsService,
     protected workloadService: WorkloadService,
   ) {
@@ -45,7 +42,15 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     if (interfaces.length === 0) {
       this.addInterface();
     }
-    this.getHosts();
+
+    this.newObject.$formGroup.get(['meta', 'name']).setValidators([
+      this.newObject.$formGroup.get(['meta', 'name']).validator,
+      this.isNewHostNameValid(this.existingObjects) ]);
+  }
+
+  isNewHostNameValid(existingObjects: IWorkloadWorkload[]): ValidatorFn {
+    // checks if name field is valid
+    return Utility.isModelNameUniqueValidator(existingObjects, 'neWorkload-name');
   }
 
   addInterface() {
@@ -68,22 +73,12 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   // Empty Hook
   isFormValid() {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return false;
+    }
     return this.newObject.$formGroup.valid;
   }
 
-  getHosts() {
-    this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
-    this.hostObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
-    const subscription = this.clusterService.WatchHost().subscribe(
-      response => {
-        this.hostOptions = this.hostsEventUtility.processEvents(response).map( x => {
-          return { label: x.meta.name, value: x.meta.name };
-        });
-      },
-      this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
-    );
-    this.subscriptions.push(subscription);
-  }
 
   setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();

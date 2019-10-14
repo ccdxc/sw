@@ -12,6 +12,7 @@ import { Observable, Subscription } from 'rxjs';
 import { Animations } from '@app/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { ObjectsRelationsUtility, DSCsNameMacMap } from '@app/common/ObjectsRelationsUtility';
 
 @Component({
   selector: 'app-hosts',
@@ -84,15 +85,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        // name to mac-address map
-        this.nameToMacMap = {};
-        this.macToNameMap = {};
-        for (const smartnic of this.naples) {
-          if (smartnic.spec.id != null && smartnic.spec.id !== '') {
-            this.nameToMacMap[smartnic.spec.id] = smartnic.meta.name;
-            this.macToNameMap[smartnic.meta.name] = smartnic.spec.id;
-          }
-        }
+        const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naples);
+        this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
+        this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
       },
       this.controllerService.webSocketErrorHandler('Failed to get NAPLES info')
     );

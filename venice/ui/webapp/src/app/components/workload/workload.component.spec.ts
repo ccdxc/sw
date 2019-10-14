@@ -250,7 +250,7 @@ describe('WorkloadComponent', () => {
         });
       }
     };
-    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap, 'editdelete');
+    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap, ' editdelete', true);
     fixture.destroy();
     discardPeriodicTasks();
     flush();

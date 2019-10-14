@@ -10,7 +10,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { Table } from 'primeng/table';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, forkJoin, Observable } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { NaplesConditionValues } from '.';
@@ -524,8 +524,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
   }
 
-  updateWithForkjoin(updatedNaples) {
-    const observables = [];
+  updateWithForkjoin(updatedNaples: ClusterDistributedServiceCard[]) {
+    const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
       const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
@@ -533,33 +533,33 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
 
     const summary = 'Distributed Services Card update';
+    const objectType = 'naples';
+    this.handleForkJoin(observables, summary, objectType );
+  }
 
-    forkJoin(observables).subscribe(
-      (results: any[]) => {
-
-        let successCount: number = 0;
-        let failCount: number = 0;
-        const errors: string[] = [];
-        for (let i = 0; i < results.length; i++) {
-          if (results[i]['statusCode'] === 200) {
-            successCount += 1;
-          } else {
-            failCount += 1;
-            errors.push(results[i].body.message);
-          }
+  private handleForkJoin(observables: Observable<any>[] , summary: string, objectType: string) {
+    forkJoin(observables).subscribe((results: any[]) => {
+      let successCount: number = 0;
+      let failCount: number = 0;
+      const errors: string[] = [];
+      for (let i = 0; i < results.length; i++) {
+        if (results[i]['statusCode'] === 200) {
+          successCount += 1;
+        }  else {
+          failCount += 1;
+          errors.push(results[i].body.message);
         }
-
-        if (successCount > 0) {
-          const msg = 'Successfully updated ' + successCount.toString() + ' naples.';
-          this._controllerService.invokeSuccessToaster(summary, msg);
-          this.inLabelEditMode = false;
-        }
-        if (failCount > 0) {
-          this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));
-        }
+      }
+      if (successCount > 0) {
+        const msg = 'Successfully updated ' + successCount.toString() + ' ' + objectType + '.';
+        this._controllerService.invokeSuccessToaster(summary, msg);
+        this.inLabelEditMode = false;
+      }
+      if (failCount > 0) {
+        this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));
+      }
     },
-    this._controllerService.restErrorHandler(summary + ' Failed')
-    );
+    this._controllerService.restErrorHandler(summary + ' Failed'));
   }
 
   // The save emitter from labeleditor returns the updated objects here.
