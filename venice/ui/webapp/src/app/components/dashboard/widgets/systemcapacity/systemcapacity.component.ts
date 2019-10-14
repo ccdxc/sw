@@ -166,7 +166,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       percent: 0,
       statColor: '#b592e3',
     },
-    fieldName: 'mean_CPUUsedPercent',
+    fieldName: 'CPUUsedPercent',
     barChart: null,
     id: 'systemcapacity-bargraph-cpu'
   };
@@ -178,7 +178,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       percent: 0,
       statColor: '#b592e3',
     },
-    fieldName: 'mean_MemUsedPercent',
+    fieldName: 'MemUsedPercent',
     barChart: null,
     id: 'systemcapacity-bargraph-memory'
   };
@@ -190,14 +190,14 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       percent: 0,
       statColor: '#b592e3',
     },
-    fieldName: 'mean_DiskUsedPercent',
+    fieldName: 'DiskUsedPercent',
     barChart: null,
     id: 'systemcapacity-bargraph-storage'
   };
 
   networkGraphStat: NetworkGraphStat = {
     lineGraphStat: this.networkLineGraphStat,
-    fieldNames: ['mean_InterfaceRxBytes', 'mean_InterfaceTxBytes'],
+    fieldNames: ['InterfaceRxBytes', 'InterfaceTxBytes'],
     currentValue: {
       arrowDirection: StatArrowDirection.HIDDEN,
       value: '10.6 Mb',

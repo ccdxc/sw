@@ -346,7 +346,7 @@ export class MetricsUtility {
     }
     const objMaxList = [];
     data.series.forEach((s) => {
-      const index = s.columns.indexOf(fieldName);
+      const index = MetricsUtility.findFieldIndex(s.columns, fieldName);
       const tags = s.tags as any;
       const key = tags.reporterID;
       let max;
@@ -435,6 +435,7 @@ export class MetricsUtility {
         hoverDescription: '',
         isPercentage: true,
         scaleMin: 0,
+        valueFormatter: MetricsUtility.percentFormatter
       },
       backgroundIcon: {
         svgIcon: 'cpu',
@@ -705,7 +706,7 @@ export class MetricsUtility {
     return retData;
   }
 
-  public static findFieldIndex(cols: string[], field: string) {
+  public static findFieldIndex(cols: string[], field: string): number {
     return cols.findIndex((f) => {
       return f.toLowerCase().includes(field.toLowerCase());
     });

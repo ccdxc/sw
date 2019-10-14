@@ -227,9 +227,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     // before we show the cards
     if (MetricsUtility.resultHasData(this.avgData) &&
       MetricsUtility.resultHasData(this.avgDayData)) {
-      this.genCharts('mean_CPUUsedPercent', this.cpuChartData);
-      this.genCharts('mean_MemUsedPercent', this.memChartData);
-      this.genCharts('mean_DiskUsedPercent', this.diskChartData);
+      this.genCharts('CPUUsedPercent', this.cpuChartData);
+      this.genCharts('MemUsedPercent', this.memChartData);
+      this.genCharts('DiskUsedPercent', this.diskChartData);
     } else {
       MetricsUtility.setCardStatesNoData(this.heroCards);
     }
@@ -249,7 +249,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
     // current avg
     if (MetricsUtility.resultHasData(this.avgData)) {
-      const index = this.avgData.series[0].columns.indexOf(fieldName);
+      const index = MetricsUtility.findFieldIndex(this.avgData.series[0].columns, fieldName);
       heroCard.firstStat.numericValue = Math.round(this.avgData.series[0].values[0][index]);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
     }
@@ -257,7 +257,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     // Avg day
     const avgDayData = this.avgDayData;
     if (avgDayData.series[0].values.length !== 0) {
-      const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+      const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName);
       heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
       heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
     }

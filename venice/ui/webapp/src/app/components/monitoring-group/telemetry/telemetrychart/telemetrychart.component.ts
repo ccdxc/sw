@@ -669,14 +669,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       // Should be one to one with response length
       const source = this.dataSources[index];
 
-      // Rename columns - Influx gives inconsistent names for returned columns based on the function used
-      // Ex. last, last_1, last_2 if using last and specifiying fields
-      res.series.forEach( (s) => {
-        source.fields.forEach((field, i) => {
-          s.columns[i + 1] = field;
-        });
-      });
-
       source.transformMetricData({ result: res });
 
       const singleResultDatasets: TransformDatasets = [];

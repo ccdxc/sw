@@ -88,6 +88,7 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
     const sub = this.PostMetrics(queryList).subscribe(
       (resp) => {
         const respBody = new Telemetry_queryMetricsQueryResponse(resp.body as any);
+
         const poll = this.pollingUtility.pollingHandlerMap[key];
         const pollBody: TelemetryPollingMetricQueries = poll.body;
         if (poll == null) {
@@ -99,6 +100,17 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
 
         respBody.results.forEach((r, i) => {
           const options = pollingOptions[i];
+          // Influx may rename columns, so we set them
+          // back to what they were in the query.
+          if (r.series != null) {
+            r.series.forEach((s) => {
+              pollBody.queries[i].query.fields.forEach((field, ii) => {
+                // First column is always time
+                s.columns[ii + 1] = field;
+              });
+            });
+          }
+
           if (poll.isFirstPoll) {
             // Don't append data
             resValue.results[i] = respBody.results[i];
