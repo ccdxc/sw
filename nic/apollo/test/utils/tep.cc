@@ -95,20 +95,23 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 // do not modify these sample values as rest of system is sync with these
 static tep_feeder k_tep_feeder;
 
-void sample_tep_setup(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
+void sample_tep_setup(pds_batch_ctxt_t bctxt, uint32_t tep_id,
+                      std::string ip_str, uint32_t num_tep) {
     // setup and teardown parameters should be in sync
     k_tep_feeder.init(tep_id, ip_str, num_tep);
-    many_create(k_tep_feeder);
+    many_create(bctxt, k_tep_feeder);
 }
 
-void sample_tep_validate(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
+void sample_tep_validate(uint32_t tep_id, std::string ip_str,
+                         uint32_t num_tep) {
     k_tep_feeder.init(tep_id, ip_str, num_tep);
     many_read(k_tep_feeder);
 }
 
-void sample_tep_teardown(uint32_t tep_id, std::string ip_str, uint32_t num_tep) {
+void sample_tep_teardown(pds_batch_ctxt_t bctxt, uint32_t tep_id, 
+                         std::string ip_str, uint32_t num_tep) {
     k_tep_feeder.init(tep_id, ip_str, num_tep);
-    many_delete(k_tep_feeder);
+    many_delete(bctxt, k_tep_feeder);
 }
 
 }    // namespace api_test

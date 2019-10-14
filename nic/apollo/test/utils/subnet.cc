@@ -126,15 +126,15 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
 pds_subnet_key_t k_subnet_key = {.id = 1};
 static subnet_feeder k_subnet_feeder;
 
-void sample_subnet_setup() {
+void sample_subnet_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16");
-    create(k_subnet_feeder);
+    create(bctxt, k_subnet_feeder);
 }
 
-void sample_subnet_teardown() {
+void sample_subnet_teardown(pds_batch_ctxt_t bctxt) {
     k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16");
-    del(k_subnet_feeder);
+    del(bctxt, k_subnet_feeder);
 }
 
 }    // namespace api_test

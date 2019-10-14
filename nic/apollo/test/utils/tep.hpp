@@ -74,11 +74,13 @@ API_UPDATE(tep);
 API_DELETE(tep);
 
 // Misc function prototypes
-void sample_tep_setup(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
+void sample_tep_setup(pds_batch_ctxt_t bctxt, uint32_t tep_id=2,
+                      std::string ip_str="30.30.30.1",
                       uint32_t num_tep=PDS_MAX_TEP);
 void sample_tep_validate(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
                          uint32_t num_tep=PDS_MAX_TEP);
-void sample_tep_teardown(uint32_t tep_id=2, std::string ip_str="30.30.30.1",
+void sample_tep_teardown(pds_batch_ctxt_t bctx, uint32_t tep_id=2,
+                         std::string ip_str="30.30.30.1",
                          uint32_t num_tep=PDS_MAX_TEP);
 
 }    // namespace api_test

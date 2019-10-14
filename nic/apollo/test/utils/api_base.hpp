@@ -60,11 +60,11 @@ sdk::sdk_ret_t api_info_compare_singleton(
 /// \brief Invokes the PDS create apis for test objects
 #define API_CREATE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
-create(_api_str##_feeder& feeder) {                                          \
+create(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
     feeder.spec_build(&spec);                                                \
-    return (pds_##_api_str##_create(&spec));                                 \
+    return (pds_##_api_str##_create(&spec, bctxt));                          \
 }
 
 /// \brief Dummy function for Read
@@ -111,28 +111,28 @@ read(_api_str##_feeder& feeder) {                                            \
 /// \brief Invokes the PDS update apis for test objects
 #define API_UPDATE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
-update(_api_str##_feeder& feeder) {                                          \
+update(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
     feeder.spec_build(&spec);                                                \
-    return (pds_##_api_str##_update(&spec));                                 \
+    return (pds_##_api_str##_update(&spec, bctxt));                          \
 }
 
 /// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE(_api_str)                                                 \
 inline sdk::sdk_ret_t                                                        \
-del(_api_str##_feeder& feeder) {                                             \
+del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
     pds_##_api_str##_key_t key;                                              \
                                                                              \
     feeder.key_build(&key);                                                  \
-    return (pds_##_api_str##_delete(&key));                                  \
+    return (pds_##_api_str##_delete(&key, bctxt));                           \
 }
 
 /// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE_SINGLETON(_api_str)                                       \
 inline sdk::sdk_ret_t                                                        \
-del(_api_str##_feeder& feeder) {                                             \
-    return (pds_##_api_str##_delete());                                      \
+del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
+    return (pds_##_api_str##_delete(bctxt));                                 \
 }
 
 // TODO - Defining the following APIs temporarily till all objects are changed
@@ -187,15 +187,17 @@ del(_api_str##_feeder& feeder) {                                             \
 
 /// \brief Invokes the create apis for all the config objects
 template <typename feeder_T>
-void many_create(feeder_T& feeder) {
+void many_create(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(create(tmp) == sdk::SDK_RET_OK);
+        SDK_ASSERT(create(bctxt, tmp) == sdk::SDK_RET_OK);
     }
+#if 0 // till we fix agent
     if (agent_mode()) {
         tmp.num_obj = 0;
         SDK_ASSERT(create(tmp) == sdk::SDK_RET_OK);
     }
+#endif
 }
 
 /// \brief Invokes the read apis for all the config objects
@@ -213,28 +215,32 @@ void many_read(feeder_T& feeder,
 
 /// \brief Invokes the update apis for all the config objects
 template <typename feeder_T>
-void many_update(feeder_T& feeder) {
+void many_update(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(update(tmp) == sdk::SDK_RET_OK);
+        SDK_ASSERT(update(bctxt, tmp) == sdk::SDK_RET_OK);
     }
+#if 0
     if (agent_mode()) {
         tmp.num_obj = 0;
-        SDK_ASSERT(update(tmp) == sdk::SDK_RET_OK);
+        SDK_ASSERT(update(bctxt, tmp) == sdk::SDK_RET_OK);
     }
+#endif
 }
 
 /// \brief Invokes the delete apis for all the config objects
 template <typename feeder_T>
-void many_delete(feeder_T& feeder) {
+void many_delete(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(del(tmp) == sdk::SDK_RET_OK);
+        SDK_ASSERT(del(bctxt, tmp) == sdk::SDK_RET_OK);
     }
+#if 0
     if (agent_mode()) {
         tmp.num_obj = 0;
-        SDK_ASSERT(del(tmp) == sdk::SDK_RET_OK);
+        SDK_ASSERT(del(bctxt, tmp) == sdk::SDK_RET_OK);
     }
+#endif
 }
 
 /// @}

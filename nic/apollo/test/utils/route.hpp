@@ -86,13 +86,13 @@ API_UPDATE(route_table);
 API_DELETE(route_table);
 
 // Misc function prototypes
-void sample_route_table_setup(ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
-                              uint8_t af=IP_AF_IPV4,
-                              uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
-                              uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE,
-                              uint32_t id=1);
-void sample_route_table_teardown(uint32_t id=1,
-                                 uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE);
+void sample_route_table_setup(
+    pds_batch_ctxt_t bctxt, ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
+    uint8_t af=IP_AF_IPV4, uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
+    uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE, uint32_t id=1);
+void sample_route_table_teardown(
+    pds_batch_ctxt_t bctxt, uint32_t id=1,
+    uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE);
 
 }    // namespace api_test
 

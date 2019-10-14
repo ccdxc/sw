@@ -38,8 +38,6 @@ echo "Running device test"
 $GDB apollo_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml" > apollo_device_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_device_test failed!" && exit 1
 
-exit 0
-
 echo "Running vpc test"
 $GDB apollo_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml" > apollo_vpc_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1

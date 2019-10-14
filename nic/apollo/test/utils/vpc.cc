@@ -74,10 +74,10 @@ vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
 pds_vpc_key_t k_vpc_key = {.id = 1};
 static vpc_feeder k_vpc_feeder;
 
-void sample_vpc_setup(pds_vpc_type_t type) {
+void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
-    create(k_vpc_feeder);
+    create(bctxt, k_vpc_feeder);
 }
 
 void sample_vpc_setup_validate(pds_vpc_type_t type) {
@@ -85,15 +85,15 @@ void sample_vpc_setup_validate(pds_vpc_type_t type) {
     read(k_vpc_feeder);
 }
 
-void sample_vpc_teardown(pds_vpc_type_t type) {
+void sample_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
-    del(k_vpc_feeder);
+    del(bctxt, k_vpc_feeder);
 }
 
-void sample1_vpc_setup(pds_vpc_type_t type) {
+void sample1_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
-    many_create(k_vpc_feeder);
+    many_create(bctxt, k_vpc_feeder);
 }
 
 void sample1_vpc_setup_validate(pds_vpc_type_t type) {
@@ -101,9 +101,9 @@ void sample1_vpc_setup_validate(pds_vpc_type_t type) {
     many_read(k_vpc_feeder);
 }
 
-void sample1_vpc_teardown(pds_vpc_type_t type) {
+void sample1_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
-    many_delete(k_vpc_feeder);
+    many_delete(bctxt, k_vpc_feeder);
 }
 
 }    // namespace api_test

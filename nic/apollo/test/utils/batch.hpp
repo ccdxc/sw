@@ -22,7 +22,6 @@ batch_start (void)
                                         .async = false,
                                         .cookie = 0
                                       };
-
 #ifdef AGENT_MODE
     if (!agent_mode()) {
         bctxt = pds_batch_start(&batch_params);

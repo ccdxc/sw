@@ -98,15 +98,15 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 // do not modify these sample values as rest of system is sync with these
 static nexthop_feeder k_nexthop_feeder;
 
-void sample_nexthop_setup(void) {
+void sample_nexthop_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_nexthop_feeder.init("30.30.30.1");
-    many_create(k_nexthop_feeder);
+    many_create(bctxt, k_nexthop_feeder);
 }
 
-void sample_nexthop_teardown(void) {
+void sample_nexthop_teardown(pds_batch_ctxt_t bctxt) {
     k_nexthop_feeder.init("30.30.30.1");
-    many_delete(k_nexthop_feeder);
+    many_delete(bctxt, k_nexthop_feeder);
 }
 
 }    // namespace api_test

@@ -59,10 +59,10 @@ device_feeder::spec_compare(const pds_device_spec_t *spec) const {
 std::string k_device_ip("91.0.0.1");
 static device_feeder k_device_feeder;
 
-void sample_device_setup() {
+void sample_device_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
-    many_create(k_device_feeder);
+    many_create(bctxt, k_device_feeder);
 }
 
 void sample_device_setup_validate() {
@@ -70,10 +70,10 @@ void sample_device_setup_validate() {
     many_read(k_device_feeder);
 }
 
-void sample_device_teardown() {
+void sample_device_teardown(pds_batch_ctxt_t bctxt) {
     // this feeder base values doesn't matter in case of deletes
     k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
-    many_delete(k_device_feeder);
+    many_delete(bctxt, k_device_feeder);
 }
 
 }    // namespace api_test

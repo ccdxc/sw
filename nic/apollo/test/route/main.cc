@@ -39,24 +39,24 @@ protected:
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
+        sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
         if (apollo()) {
             // create max TEPs which can be used as NHs for routes
-            sample_tep_setup();
+            sample_tep_setup(bctxt);
         } else {
             // create max NHs which can be used as NHs for routes
-            sample_nexthop_setup();
+            sample_nexthop_setup(bctxt);
         }
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
         if (apollo()) {
-            sample_tep_teardown();
+            sample_tep_teardown(bctxt);
         } else {
-            sample_nexthop_teardown();
+            sample_nexthop_teardown(bctxt);
         }
-        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
+        sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();

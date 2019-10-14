@@ -132,20 +132,21 @@ route_table_feeder::spec_compare(const pds_route_table_spec_t *spec) const {
 // do not modify these sample values as rest of system is sync with these
 static route_table_feeder k_route_table_feeder;
 
-void sample_route_table_setup(ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
-                              uint8_t af, uint32_t num_routes,
-                              uint32_t num_route_tables, uint32_t id) {
+void sample_route_table_setup(
+    pds_batch_ctxt_t bctxt, ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
+    uint8_t af, uint32_t num_routes, uint32_t num_route_tables, uint32_t id) {
     // setup and teardown parameters should be in sync
     k_route_table_feeder.init(ippfx2str(&base_route_pfx),
                               ipaddr2str(&base_nh_ip), af, num_routes,
                               num_route_tables, id);
-    many_create(k_route_table_feeder);
+    many_create(bctxt, k_route_table_feeder);
 }
 
-void sample_route_table_teardown(uint32_t id, uint32_t num_route_tables) {
+void sample_route_table_teardown(pds_batch_ctxt_t bctxt, uint32_t id,
+                                 uint32_t num_route_tables) {
     k_route_table_feeder.init("0.0.0.0/0", "0.0.0.0", IP_AF_IPV4,
                               PDS_MAX_ROUTE_PER_TABLE, num_route_tables, id);
-    many_delete(k_route_table_feeder);
+    many_delete(bctxt, k_route_table_feeder);
 }
 
 }    // namespace api_test

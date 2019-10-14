@@ -58,18 +58,18 @@ operator<<(std::ostream& os, const vpc_feeder& obj) {
 }
 
 // CRUD prototypes
-API_CREATE1(vpc);
-API_READ1(vpc);
-API_UPDATE1(vpc);
-API_DELETE1(vpc);
+API_CREATE(vpc);
+API_READ(vpc);
+API_UPDATE(vpc);
+API_DELETE(vpc);
 
 // Misc function prototypes
-void sample_vpc_setup(pds_vpc_type_t type);
+void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type);
 void sample_vpc_setup_validate(pds_vpc_type_t type);
-void sample_vpc_teardown(pds_vpc_type_t type);
-void sample1_vpc_setup(pds_vpc_type_t type);
+void sample_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type);
+void sample1_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type);
 void sample1_vpc_setup_validate(pds_vpc_type_t type);
-void sample1_vpc_teardown(pds_vpc_type_t type);
+void sample1_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type);
 
 }    // namespace api_test
 

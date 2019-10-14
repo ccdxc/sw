@@ -64,9 +64,9 @@ API_DELETE_SINGLETON(device);
 extern std::string k_device_ip;
 
 // Function prototypes
-void sample_device_setup();
+void sample_device_setup(pds_batch_ctxt_t bctxt);
 void sample_device_setup_validate();
-void sample_device_teardown();
+void sample_device_teardown(pds_batch_ctxt_t bctxt);
 
 }    // namespace api_test
 

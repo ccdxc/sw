@@ -31,7 +31,7 @@ template <typename feeder_T>
 inline void workflow_tmp_1(feeder_T &feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
@@ -46,8 +46,8 @@ template <typename feeder_T>
 inline void workflow_1(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
-    many_delete<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
+    many_delete<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -60,16 +60,16 @@ template <typename feeder_T>
 inline void workflow_2(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
-    many_delete<feeder_T>(feeder);
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
+    many_delete<feeder_T>(bctxt, feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder);
+    many_delete<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -83,10 +83,10 @@ inline void workflow_3(feeder_T& feeder1, feeder_T& feeder2,
                        feeder_T& feeder3) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder2);
-    many_delete<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder3);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder2);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder3);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -95,8 +95,8 @@ inline void workflow_3(feeder_T& feeder1, feeder_T& feeder2,
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder2);
-    many_delete<feeder_T>(feeder3);
+    many_delete<feeder_T>(bctxt, feeder2);
+    many_delete<feeder_T>(bctxt, feeder3);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -104,44 +104,42 @@ inline void workflow_3(feeder_T& feeder1, feeder_T& feeder2,
 }
 
 /// \brief WF_4: [ Create SetMax ] - Read - [ Delete SetMax ] - Read
-/// Create and delete mirror sessions in two batches.
-/// The hardware should create and delete mirror sessions correctly.
-/// Validate using reads at each batch end
+/// Create and delete max entries in two batches.
 /// \anchor WF_4
 template <typename feeder_T>
 inline void workflow_4(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder);
+    many_delete<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief WF_5: [ Create Set1, Set2 ] - Read - [ Delete Set1 - Create Set3 ] - Read
-/// Create and delete mix and match of mirror sessions in two batches
+/// Create and delete mix and match of entries in two batches
 /// \anchor WF_5
 template <typename feeder_T>
 inline void workflow_5(feeder_T& feeder1, feeder_T& feeder2,
                        feeder_T& feeder3) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder2);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder2);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
     many_read<feeder_T>(feeder2);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder3);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder3);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -150,16 +148,17 @@ inline void workflow_5(feeder_T& feeder1, feeder_T& feeder2,
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder2);
-    many_delete<feeder_T>(feeder3);
+    many_delete<feeder_T>(bctxt, feeder2);
+    many_delete<feeder_T>(bctxt, feeder3);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
     many_read<feeder_T>(feeder3, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief WF_6: [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ] - Read
-/// Create update, update and delete max mirror sessions in the same batch
+/// \brief WF_6: [ Create SetMax - Update SetMax - Update SetMax -
+///                Delete SetMax ] - Read
+/// Create update, update and delete max entries in the same batch
 /// NO-OP kind of result from hardware perspective
 /// \anchor WF_6
 template <typename feeder_T>
@@ -167,45 +166,43 @@ inline void workflow_6(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder1A);
-    many_update<feeder_T>(feeder1B);
-    many_delete<feeder_T>(feeder1B);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder1A);
+    many_update<feeder_T>(bctxt, feeder1B);
+    many_delete<feeder_T>(bctxt, feeder1B);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief WF_7: [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
-///         Update SetMax ] - Read
-/// Create delete create update and update max mirror sessions in the same batch
-/// Last update should be retained
+/// \brief WF_7: [ Create SetMax - Delete SetMax - Create SetMax -
+///                Update SetMax]  - [ Update SetMax ] - Read
 /// \anchor WF_7
 template <typename feeder_T>
 inline void workflow_7(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_delete<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder1A);
-    many_update<feeder_T>(feeder1B);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder1A);
+    many_update<feeder_T>(bctxt, feeder1B);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1B);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1B);
+    many_delete<feeder_T>(bctxt, feeder1B);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief WF_8: [ Create SetMax - Update SetMax ] - Read - [ Update SetMax ] - Read -
-//       [ Delete SetMax ] - Read
-/// Create update in a batch, update in a batch delete in a batch max mirror sessions
+/// \brief WF_8: [ Create SetMax - Update SetMax ] - Read - [ Update SetMax ]
+///              - Read - [ Delete SetMax ] - Read
+/// Create update in a batch, update in a batch, delete in a batch max
 /// checking multiple updates, each in different batch
 /// \anchor WF_8
 template <typename feeder_T>
@@ -213,20 +210,20 @@ inline void workflow_8(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder1A);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder1A);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1A);
 
     bctxt = batch_start();
-    many_update<feeder_T>(feeder1B);
+    many_update<feeder_T>(bctxt, feeder1B);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1B);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1B);
+    many_delete<feeder_T>(bctxt, feeder1B);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -240,21 +237,21 @@ template <typename feeder_T>
 inline void workflow_9(feeder_T& feeder1, feeder_T& feeder1A) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_update<feeder_T>(feeder1A);
-    many_delete<feeder_T>(feeder1A);
+    many_update<feeder_T>(bctxt, feeder1A);
+    many_delete<feeder_T>(bctxt, feeder1A);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief WF_10: [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ] - Read -
-///        [ Update Set3 - Delete Set2 - Create Set4] - Read
+/// \brief WF_10: [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ]
+///               - Read - [ Update Set3 - Delete Set2 - Create Set4] - Read
 /// Create and delete mix and match of mirror sessions in two batches
 /// \anchor WF_10
 template <typename feeder_T>
@@ -263,11 +260,11 @@ inline void workflow_10(feeder_T& feeder1, feeder_T& feeder2,
                         feeder_T& feeder3A, feeder_T& feeder4) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
-    many_create<feeder_T>(feeder2);
-    many_create<feeder_T>(feeder3);
-    many_delete<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder2A);
+    many_create<feeder_T>(bctxt, feeder1);
+    many_create<feeder_T>(bctxt, feeder2);
+    many_create<feeder_T>(bctxt, feeder3);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder2A);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -275,9 +272,9 @@ inline void workflow_10(feeder_T& feeder1, feeder_T& feeder2,
     many_read<feeder_T>(feeder3);
 
     bctxt = batch_start();
-    many_update<feeder_T>(feeder3A);
-    many_delete<feeder_T>(feeder2A);
-    many_create<feeder_T>(feeder4);
+    many_update<feeder_T>(bctxt, feeder3A);
+    many_delete<feeder_T>(bctxt, feeder2A);
+    many_create<feeder_T>(bctxt, feeder4);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder3A);
@@ -286,8 +283,8 @@ inline void workflow_10(feeder_T& feeder1, feeder_T& feeder2,
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder4);
-    many_delete<feeder_T>(feeder3A);
+    many_delete<feeder_T>(bctxt, feeder4);
+    many_delete<feeder_T>(bctxt, feeder3A);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder4, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -301,20 +298,20 @@ template <typename feeder_T>
 inline void workflow_neg_1(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder);
 
     bctxt = batch_start();
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder);
+    many_delete<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -327,7 +324,7 @@ template <typename feeder_T>
 inline void workflow_neg_2(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder);
+    many_create<feeder_T>(bctxt, feeder);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -343,12 +340,12 @@ inline void workflow_neg_3(feeder_T& feeder) {
 
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_delete<feeder_T>(feeder);
+    many_delete<feeder_T>(bctxt, feeder);
     batch_commit_fail(bctxt);
 
     // trigger
     bctxt = batch_start();
-    many_update<feeder_T>(feeder);
+    many_update<feeder_T>(bctxt, feeder);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -361,14 +358,14 @@ template <typename feeder_T>
 inline void workflow_neg_4(feeder_T& feeder1, feeder_T& feeder2) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
-    many_delete<feeder_T>(feeder2);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_delete<feeder_T>(bctxt, feeder2);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder1);
@@ -376,7 +373,7 @@ inline void workflow_neg_4(feeder_T& feeder1, feeder_T& feeder2) {
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -390,47 +387,47 @@ template <typename feeder_T>
 inline void workflow_neg_5(feeder_T& feeder1, feeder_T& feeder1A) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder1A);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder1A);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief WF_N_6: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
-/// Updation of more than max mirror sessions should fail leaving old state unchanged
+/// Updation of more than max entries should fail leaving old state unchanged
 /// \anchor WF_N_6
 template <typename feeder_T>
 inline void workflow_neg_6(feeder_T& feeder1, feeder_T& feeder1A) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_update<feeder_T>(feeder1A);
+    many_update<feeder_T>(bctxt, feeder1A);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -445,21 +442,21 @@ inline void workflow_neg_7(feeder_T& feeder1, feeder_T& feeder1A,
                            feeder_T& feeder2) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_update<feeder_T>(feeder1A);
-    many_update<feeder_T>(feeder2);
+    many_update<feeder_T>(bctxt, feeder1A);
+    many_update<feeder_T>(bctxt, feeder2);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -473,21 +470,21 @@ template <typename feeder_T>
 inline void workflow_neg_8(feeder_T& feeder1, feeder_T& feeder2) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(feeder1);
+    many_create<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
-    many_update<feeder_T>(feeder2);
+    many_delete<feeder_T>(bctxt, feeder1);
+    many_update<feeder_T>(bctxt, feeder2);
     batch_commit_fail(bctxt);
 
     many_read<feeder_T>(feeder1);
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(feeder1);
+    many_delete<feeder_T>(bctxt, feeder1);
     batch_commit(bctxt);
 
     many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);

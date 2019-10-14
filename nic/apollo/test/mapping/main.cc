@@ -90,18 +90,18 @@ protected:
         rt_addr = rt_pfx.addr;
 
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_device_setup();
+        sample_device_setup(bctxt);
 
         vpc_feeder vpc_feeder;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
                         PDS_MAX_VPC);
-        many_create(vpc_feeder);
+        many_create(bctxt, vpc_feeder);
 
         // sample_tep_setup(g_mytep_id, k_device_ip, 1);
-        sample_tep_setup(g_tep_id, api_test::g_tep_cidr_v4, num_teps);
+        sample_tep_setup(bctxt, g_tep_id, api_test::g_tep_cidr_v4, num_teps);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             sample_route_table_setup(
-                nr_pfx, rt_addr, IP_AF_IPV4, 1, 1, rt_id_v4+idx);
+                bctxt, nr_pfx, rt_addr, IP_AF_IPV4, 1, 1, rt_id_v4+idx);
             ip_prefix_ip_next(&rt_pfx, &rt_addr);
             rt_pfx.addr = rt_addr;
 
@@ -114,7 +114,7 @@ protected:
         vpc_key.id = api_test::g_vpc_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
             subnet_feeder.init(subnet_key, vpc_key, subnet_cidr, 1);
-            many_create(subnet_feeder);
+            many_create(bctxt, subnet_feeder);
             subnet_key.id += 1;
             vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
@@ -124,7 +124,7 @@ protected:
 
         vnic_feeder vnic_feeder;
         vnic_feeder.init(1, num_vnics, vnic_stepper_mac);
-        many_create(vnic_feeder);
+        many_create(bctxt, vnic_feeder);
         batch_commit(bctxt);
 
         vpc_key.id = api_test::g_vpc_id;

@@ -31,14 +31,14 @@ protected:
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_vpc_setup(PDS_VPC_TYPE_TENANT);
-        sample_subnet_setup();
+        sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
+        sample_subnet_setup(bctxt);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_subnet_teardown();
-        sample_vpc_teardown(PDS_VPC_TYPE_TENANT);
+        sample_subnet_teardown(bctxt);
+        sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
