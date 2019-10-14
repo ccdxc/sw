@@ -411,12 +411,30 @@ static bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 	return true;
 }
 
-static inline u64 ionic_pgtbl_dma(struct ionic_tbl_buf *buf)
+static inline __le64 ionic_pgtbl_dma(struct ionic_tbl_buf *buf, u64 va)
 {
-	if (buf->tbl_pages == 1 && buf->tbl_buf)
-		return buf->tbl_buf[0];
-	else
+	u64 dma;
+
+	if (!buf->tbl_pages)
+		return cpu_to_le64(0);
+
+	if (buf->tbl_pages > 1)
 		return cpu_to_le64(buf->tbl_dma);
+
+	if (buf->tbl_buf)
+		dma = le64_to_cpu(buf->tbl_buf[0]);
+	else
+		dma = buf->tbl_dma;
+
+	return cpu_to_le64(dma + (va & ~PAGE_MASK));
+}
+
+static inline __le64 ionic_pgtbl_off(struct ionic_tbl_buf *buf, u64 va)
+{
+	if (buf->tbl_pages > 1)
+		return cpu_to_le64(va & ~PAGE_MASK);
+	else
+		return 0;
 }
 
 static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
@@ -432,22 +450,6 @@ static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
 	++buf->tbl_pages;
 
 	return 0;
-}
-
-static void ionic_pgtbl_chk_contiguous(struct ionic_tbl_buf *buf, u64 offset)
-{
-	if (buf->tbl_pages != 1)
-		return;
-
-	/* treat single page as contiguous, no page size or offset */
-	buf->page_size_log2 = 0;
-
-	if (buf->tbl_buf) {
-		offset += le64_to_cpu(buf->tbl_buf[0]);
-		buf->tbl_buf[0] = cpu_to_le64(offset);
-	} else {
-		buf->tbl_dma += offset;
-	}
 }
 
 static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
@@ -470,8 +472,6 @@ static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 	}
 
 	buf->page_size_log2 = PAGE_SHIFT;
-
-	ionic_pgtbl_chk_contiguous(buf, ib_umem_offset(umem));
 
 out:
 	return rc;
@@ -2253,7 +2253,8 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 				.page_size_log2 = mr->buf.page_size_log2,
 				.tbl_index = cpu_to_le32(mr->res.tbl_pos),
 				.map_count = cpu_to_le32(mr->buf.tbl_pages),
-				.dma_addr = ionic_pgtbl_dma(&mr->buf),
+				//.offset = ionic_pgtbl_off(&mr->buf, addr),
+				.dma_addr = ionic_pgtbl_dma(&mr->buf, addr),
 			}
 		}
 	};
@@ -2614,8 +2615,6 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 
 	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
 
-	ionic_pgtbl_chk_contiguous(&mr->buf, page_off);
-
 	if (mr->buf.tbl_buf)
 		dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
 					   mr->buf.tbl_size, DMA_TO_DEVICE);
@@ -2703,7 +2702,7 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev,
 				.page_size_log2 = buf->page_size_log2,
 				.tbl_index = cpu_to_le32(cq->res.tbl_pos),
 				.map_count = cpu_to_le32(buf->tbl_pages),
-				.dma_addr = ionic_pgtbl_dma(buf),
+				.dma_addr = ionic_pgtbl_dma(buf, 0),
 			}
 		}
 	};
@@ -3766,7 +3765,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.qp.sq_tbl_index_xrcd_id =
 			cpu_to_le32(qp->sq_res.tbl_pos);
 		wr.wqe.qp.sq_map_count = cpu_to_le32(sq_buf->tbl_pages);
-		wr.wqe.qp.sq_dma_addr = ionic_pgtbl_dma(sq_buf);
+		wr.wqe.qp.sq_dma_addr = ionic_pgtbl_dma(sq_buf, 0);
 	} else if (attr->xrcd) {
 		wr.wqe.qp.sq_tbl_index_xrcd_id = 0; /* TODO */
 	}
@@ -3779,7 +3778,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.qp.rq_tbl_index_srq_id =
 			cpu_to_le32(qp->rq_res.tbl_pos);
 		wr.wqe.qp.rq_map_count = cpu_to_le32(rq_buf->tbl_pages);
-		wr.wqe.qp.rq_dma_addr = ionic_pgtbl_dma(rq_buf);
+		wr.wqe.qp.rq_dma_addr = ionic_pgtbl_dma(rq_buf, 0);
 	} else if (attr->srq) {
 		wr.wqe.qp.rq_tbl_index_srq_id =
 			cpu_to_le32(to_ionic_srq(attr->srq)->qpid);
@@ -5450,10 +5449,8 @@ static int ionic_prep_reg(struct ionic_qp *qp,
 	wqe->base.imm_data_key = cpu_to_be32(mr->ibmr.lkey);
 	wqe->reg_mr.va = cpu_to_be64(mr->ibmr.iova);
 	wqe->reg_mr.length = cpu_to_be64(mr->ibmr.length);
-	wqe->reg_mr.offset =
-		cpu_to_be64(mr->ibmr.iova & (mr->ibmr.page_size - 1));
-
-	wqe->reg_mr.dma_addr = ionic_pgtbl_dma(&mr->buf);
+	wqe->reg_mr.offset = ionic_pgtbl_off(&mr->buf, mr->ibmr.iova),
+	wqe->reg_mr.dma_addr = ionic_pgtbl_dma(&mr->buf, mr->ibmr.iova);
 
 	wqe->reg_mr.map_count = cpu_to_be32(mr->buf.tbl_pages);
 	wqe->reg_mr.flags = cpu_to_be16(flags);
