@@ -1,9 +1,13 @@
 #! /usr/bin/python3
 import pdb
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
+import apollo.config.objects.base as base
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
@@ -12,20 +16,15 @@ import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
-import ipaddress
 
 import vpc_pb2 as vpc_pb2
-import types_pb2 as types_pb2
-
-from infra.common.logging import logger
-from apollo.config.store import Store
 
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, spec, index, maxcount):
         super().__init__()
+        self.SetBaseClassAttr()
 
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
-        self.deleted = False
         self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
@@ -100,6 +99,10 @@ class VpcObject(base.ConfigObjectBase):
 
         return
 
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.VPC
+        return
+
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
         self.__ip_subnet_prefix_pool[0][poolid] =  resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
         self.__ip_subnet_prefix_pool[1][poolid] =  resmgr.CreateIPv4SubnetPool(self.IPPrefix[1], v4pfxlen, poolid)
@@ -143,9 +146,11 @@ class VpcObject(base.ConfigObjectBase):
             self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
         return __get()
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = vpc_pb2.VPCRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.VPCId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
@@ -155,39 +160,7 @@ class VpcObject(base.ConfigObjectBase):
             utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
             utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = vpc_pb2.VPCGetRequest()
-        grpcmsg.Id.append(self.VPCId)
-        return grpcmsg
-
-    def GetGrpcDeleteMessage(self, cookie):
-        grpcmsg = vpc_pb2.VPCDeleteRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        grpcmsg.Id.append(self.VPCId)
-        return grpcmsg
-
-    def Create(self, spec=None):
-        utils.CreateObject(self, api.ObjectTypes.VPC)
-
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, api.ObjectTypes.VPC, expRetCode)
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
-
-    def Delete(self, spec=None):
-        utils.DeleteObject(self, api.ObjectTypes.VPC)
-
-    def Equals(self, obj, spec):
-        return True
-
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-
-    def IsDeleted(self):
-        return self.deleted
+        return
 
     def Show(self):
         logger.info("VPC Object:", self)

@@ -6,7 +6,6 @@ import inspect
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.common.utils       as utils
-import types_pb2 as types_pb2
 
 from infra.common.glopts   import GlobalOptions as GlobalOptions
 from infra.common.logging  import logger as logger
@@ -117,9 +116,6 @@ class ConfigObjectBase(objects.FrameworkObject):
                      (utils.GetFunctionName(), self.__class__))
         assert(0)
         return
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
 
     def SetupTestcaseConfig(self, obj):
         obj.root = self

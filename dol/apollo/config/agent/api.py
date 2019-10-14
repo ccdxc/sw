@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import os
-import sys
 import pdb
 import grpc
 import enum
@@ -20,7 +19,9 @@ import service_pb2_grpc as service_pb2_grpc
 import tags_pb2_grpc as tags_pb2_grpc
 import meter_pb2_grpc as meter_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
-import infra.common.defs as defs
+
+import vpc_pb2 as vpc_pb2
+import vnic_pb2 as vnic_pb2
 
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
@@ -56,6 +57,28 @@ class ObjectTypes(enum.IntEnum):
     TAG = 14
     INTERFACE = 15
     MAX = 16
+
+class ClientModule:
+    def __init__(self, module, msg_prefix):
+        self.__module = module
+        self.__msg_reqs = [None] * ApiOps.MAX
+        self.__set_msg_reqs(msg_prefix)
+        return
+
+    def __set_one_msg_req(self, op, msgreq):
+        self.__msg_reqs[op] = getattr(self.__module, msgreq, None)
+        logger.info("Setting %s for OP: %d" % (self.__msg_reqs[op], op))
+        return
+
+    def __set_msg_reqs(self, p):
+        self.__set_one_msg_req(ApiOps.CREATE, "%sRequest"%p)
+        self.__set_one_msg_req(ApiOps.DELETE, "%sDeleteRequest"%p)
+        self.__set_one_msg_req(ApiOps.UPDATE, "%sUpdateRequest"%p)
+        self.__set_one_msg_req(ApiOps.GET, "%sGetRequest"%p)
+        return
+
+    def MsgReq(self, op):
+        return self.__msg_reqs[op]
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -95,6 +118,8 @@ class ApolloAgentClient:
     def __init__(self):
         self.__channel = None
         self.__stubs = [None] * ObjectTypes.MAX
+        self.__msgreqs = [None] * ObjectTypes.MAX
+        self.__create_msgreq_table()
         self.__connect()
         self.__create_stubs()
         return
@@ -155,6 +180,14 @@ class ApolloAgentClient:
         self.__stubs[ObjectTypes.METER] = ClientStub(meter_pb2_grpc.MeterSvcStub,
                                                       self.__channel, 'Meter')
         return
+
+    def __create_msgreq_table(self):
+        self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
+        self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
+        return
+
+    def GetGRPCMsgReq(self, objtype, op):
+        return self.__msgreqs[objtype].MsgReq(op)
 
     def Create(self, objtype, objs):
         if GlobalOptions.dryrun: return

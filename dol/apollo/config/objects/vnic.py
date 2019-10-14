@@ -2,25 +2,26 @@
 import pdb
 import sys
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
+import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.meter as meter
 import apollo.config.utils as utils
-import vnic_pb2 as vnic_pb2
-import tunnel_pb2 as tunnel_pb2
-import types_pb2 as types_pb2
 
-from infra.common.logging import logger
-from apollo.config.store import Store
+import vnic_pb2 as vnic_pb2
+import types_pb2 as types_pb2
 
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
-        self.deleted = False
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
         self.SUBNET = parent
@@ -63,9 +64,15 @@ class VnicObject(base.ConfigObjectBase):
         return "VnicID:%d|SubnetID:%d|VPCId:%d" %\
                (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = vnic_pb2.VnicRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.VNIC
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.VnicId.append(self.VnicId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
@@ -85,18 +92,7 @@ class VnicObject(base.ConfigObjectBase):
             spec.TxMirrorSessionId.append(int(txmirror))
         spec.V4MeterId = self.V4MeterId
         spec.V6MeterId = self.V6MeterId
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = vnic_pb2.VnicGetRequest()
-        grpcmsg.VnicId.append(self.VnicId)
-        return grpcmsg
-
-    def GetGrpcDeleteMessage(self, cookie):
-        grpcmsg = vnic_pb2.VnicDeleteRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        grpcmsg.VnicId.append(self.VnicId)
-        return grpcmsg
+        return
 
     def ValidateSpec(self, spec):
         if spec.VnicId != self.VnicId:
@@ -117,27 +113,6 @@ class VnicObject(base.ConfigObjectBase):
             return False
         return True
 
-    def ValidateStats(self, stats):
-        return True
-
-    def ValidateStatus(self, status):
-        return True
-
-    def Create(self, spec=None):
-        utils.CreateObject(self, api.ObjectTypes.VNIC)
-
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, api.ObjectTypes.VNIC, expRetCode)
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
-
-    def Delete(self, spec=None):
-        utils.DeleteObject(self, api.ObjectTypes.VNIC)
-
-    def Equals(self, obj, spec):
-        return True
-
     def Show(self):
         logger.info("VNIC object:", self)
         logger.info("- %s" % repr(self))
@@ -147,12 +122,6 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         return
-
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-
-    def IsDeleted(self):
-        return self.deleted
 
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
