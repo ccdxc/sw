@@ -22,12 +22,6 @@ struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 #define   _r_ptr              r5        // Current DMA byte offset in PHV
 #define   _r_index            r6        // Current DMA command index in PHV
 
-#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
-#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
-#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
-#define INTR_ASSERT_STRIDE      0x4
-#define LG2_INTR_ASSERT_STRIDE  0x2
-
 %%
 
 .param  adminq_commit

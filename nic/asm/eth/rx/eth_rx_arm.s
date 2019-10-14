@@ -62,7 +62,7 @@ eth_rx_arm_error:
 
   SAVE_STATS(_r_stats)
 
-  phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
+  phvwr           p.eth_rx_global_drop, 1     // increment error counters
   phvwr           p.p4_intr_global_drop, 1
 
   // Launch stats action

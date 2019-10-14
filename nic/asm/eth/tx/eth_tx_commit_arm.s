@@ -57,6 +57,7 @@ eth_tx_commit_arm_error:
 
   SAVE_STATS(_r_stats)
 
+  phvwr           p.eth_tx_global_drop, 1     // increment error counters
   phvwr           p.p4_intr_global_drop, 1
 
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_1

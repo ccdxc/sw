@@ -25,12 +25,6 @@ struct tx_table_s3_t0_nicmgr_commit_d d;
 #define   _c_intr_enable      c2
 #define   _c_ring_empty       c3
 
-#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
-#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
-#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
-#define INTR_ASSERT_STRIDE      0x4
-#define LG2_INTR_ASSERT_STRIDE  0x2
-
 %%
 
 .align
