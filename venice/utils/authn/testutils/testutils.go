@@ -588,8 +588,7 @@ func SetAuthBootstrapFlag(apicl apiclient.Services) (*cluster.Cluster, error) {
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		clusterObj, err = apicl.ClusterV1().Cluster().AuthBootstrapComplete(ctx, &cluster.ClusterAuthBootstrapRequest{})
 		// 401 when auth is already bootstrapped.
-		if err == nil || strings.HasPrefix(err.Error(), "Status:(401)") ||
-			strings.Contains(err.Error(), "Status:(409)") {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(401)") {
 			err = nil
 			return true, nil
 		}

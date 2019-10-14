@@ -214,6 +214,11 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 	timer := time.Now()
 	timeout := time.After(timeoutInterval)
 
+	// evaluate once before start polling
+	if c, _ := eval(); c {
+		return true
+	}
+
 	// loop till we reach timeout interval
 	for {
 		select {

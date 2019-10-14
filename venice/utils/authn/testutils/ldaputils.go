@@ -1,15 +1,19 @@
 package testutils
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
+	"time"
 
 	"gopkg.in/ldap.v2"
 
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils"
 )
@@ -117,9 +121,16 @@ type LdapConfig struct {
 }
 
 // StartOpenLdapServer starts OpenLDAP container with the specified name and returns host:port string
-func StartOpenLdapServer(name string) (string, error) {
+func StartOpenLdapServer(name string, skipPorts ...int) (string, int, error) {
 	log.Infof("starting openldap container [%s]", name)
+	sort.Ints(skipPorts)
 	for port := 49152; port < 65535; port++ {
+		i := sort.Search(len(skipPorts), func(i int) bool {
+			return skipPorts[i] >= port
+		})
+		if i < len(skipPorts) && skipPorts[i] == port {
+			continue // skip port if present in skipPorts
+		}
 		cmd := []string{
 			"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, 389),
 			fmt.Sprintf("--name=%s", name),
@@ -149,26 +160,34 @@ func StartOpenLdapServer(name string) (string, error) {
 		}
 
 		if err != nil {
-			return "", fmt.Errorf("%s, err: %v", out, err)
+			return "", 0, fmt.Errorf("%s, err: %v", out, err)
 		}
 
 		ldapAddr := fmt.Sprintf("%s:%d", ldapHost, port)
 		log.Infof("started openldap: %s", ldapAddr)
 		if !testutils.CheckEventually(func() (bool, interface{}) {
-			_, err = getConnection(ldapAddr, true)
+			getConnectionFn := func(ctx context.Context) (interface{}, error) {
+				if _, err := getConnection(ldapAddr, true); err != nil {
+					return false, err
+				}
+				return true, nil
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := utils.ExecuteWithContext(ctx, getConnectionFn)
 			if err != nil {
 				return false, nil
 			}
 			return true, nil
-		}) {
+		}, "2s", "10s") {
 			log.Errorf("failed to get connection to openldap [%s], err: %v", ldapAddr, err)
 			StopOpenLdapServer(ldapAddr)
-			return "", err
+			return "", 0, err
 		}
-		return ldapAddr, nil
+		return ldapAddr, port, nil
 	}
 
-	return "", fmt.Errorf("exhausted all the ports from 49512-65534, failed to start openldap server")
+	return "", 0, fmt.Errorf("exhausted all the ports from 49152-65534, failed to start openldap server")
 }
 
 // StopOpenLdapServer stops OpenLDAP container with the specified name

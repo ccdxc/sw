@@ -46,15 +46,26 @@ func getOpenLdapConfig() *LdapConfig {
 func setupOpenLdap() error {
 	var err error
 	config := getOpenLdapConfig()
+	var usedPort int
 	// start ldap server
-	tinfo.ldapAddr, err = StartOpenLdapServer(config.LdapServer)
-	if err != nil {
+	if !CheckEventually(func() (bool, interface{}) {
+		tinfo.ldapAddr, usedPort, err = StartOpenLdapServer(config.LdapServer)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, "15s", "45s") {
 		log.Errorf("Error creating LDAP Server: %v", err)
 		return err
 	}
 	// start referral server
-	tinfo.referralAddr, err = StartOpenLdapServer(config.ReferralServer)
-	if err != nil {
+	if !CheckEventually(func() (bool, interface{}) {
+		tinfo.referralAddr, _, err = StartOpenLdapServer(config.ReferralServer, usedPort)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, "15s", "45s") {
 		StopOpenLdapServer(config.LdapServer)
 		log.Errorf("Error creating referral LDAP Server: %v", err)
 		return err
