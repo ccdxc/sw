@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
 
 //========================================================================================
 // Packet Mirroring
@@ -41,6 +42,9 @@ message MirrorSessionSpec {
         FIREWALL_POLICY_DROP    = 3 [(venice.enumValueStr) = "firewall-policy-drop"];
     }
     repeated string PacketFilters           = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+
+    // If specified, will pick up interface matching the selector
+    repeated labels.Selector InterfaceSelector   = 7 [(gogoproto.jsontag) = "interface-selector,omitempty"];
 }
 
 // MirrorStartConditions - Conditions to start mirroring

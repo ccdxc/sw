@@ -14288,6 +14288,13 @@
             "firewall-policy-drop": "Firewall Policy Drops",
             "network-policy-drop": "Network Policy Drops"
           }
+        },
+        "interface-selector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labelsSelector"
+          },
+          "title": "If specified, will pick up interface matching the selector"
         }
       },
       "title": "MirrorSessionSpec"

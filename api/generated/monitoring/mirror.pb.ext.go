@@ -651,6 +651,16 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool, ignore
 			ret = append(ret, errs...)
 		}
 	}
+	for k, v := range m.InterfaceSelector {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sInterfaceSelector[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	for k, v := range m.MatchRules {
 		dlmtr := "."
 		if path == "" {
@@ -683,6 +693,13 @@ func (m *MirrorSessionSpec) Normalize() {
 		v.Normalize()
 		m.Collectors[k] = v
 
+	}
+
+	for k, v := range m.InterfaceSelector {
+		if v != nil {
+			v.Normalize()
+			m.InterfaceSelector[k] = v
+		}
 	}
 
 	for k, v := range m.MatchRules {

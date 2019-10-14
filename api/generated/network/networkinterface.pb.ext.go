@@ -28,26 +28,6 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// NetworkInterfaceStatus_IFStatus_normal is a map of normalized values for the enum
-var NetworkInterfaceStatus_IFStatus_normal = map[string]string{
-	"down": "down",
-	"up":   "up",
-}
-
-var NetworkInterfaceStatus_IFStatus_vname = map[int32]string{
-	0: "up",
-	1: "down",
-}
-
-var NetworkInterfaceStatus_IFStatus_vvalue = map[string]int32{
-	"up":   0,
-	"down": 1,
-}
-
-func (x NetworkInterfaceStatus_IFStatus) String() string {
-	return NetworkInterfaceStatus_IFStatus_vname[int32(x)]
-}
-
 // NetworkInterfaceStatus_IFType_normal is a map of normalized values for the enum
 var NetworkInterfaceStatus_IFType_normal = map[string]string{
 	"host-pf":     "host-pf",
@@ -72,6 +52,202 @@ var NetworkInterfaceStatus_IFType_vvalue = map[string]int32{
 
 func (x NetworkInterfaceStatus_IFType) String() string {
 	return NetworkInterfaceStatus_IFType_vname[int32(x)]
+}
+
+// TransceiverStatus_State_normal is a map of normalized values for the enum
+var TransceiverStatus_State_normal = map[string]string{
+	"state_inserted":       "state_inserted",
+	"state_na":             "state_na",
+	"state_pending":        "state_pending",
+	"state_removed":        "state_removed",
+	"state_sprom_read":     "state_sprom_read",
+	"state_sprom_read_err": "state_sprom_read_err",
+}
+
+var TransceiverStatus_State_vname = map[int32]string{
+	0: "state_na",
+	1: "state_removed",
+	2: "state_inserted",
+	3: "state_pending",
+	4: "state_sprom_read",
+	5: "state_sprom_read_err",
+}
+
+var TransceiverStatus_State_vvalue = map[string]int32{
+	"state_na":             0,
+	"state_removed":        1,
+	"state_inserted":       2,
+	"state_pending":        3,
+	"state_sprom_read":     4,
+	"state_sprom_read_err": 5,
+}
+
+func (x TransceiverStatus_State) String() string {
+	return TransceiverStatus_State_vname[int32(x)]
+}
+
+// TransceiverStatus_CableType_normal is a map of normalized values for the enum
+var TransceiverStatus_CableType_normal = map[string]string{
+	"copper": "copper",
+	"fiber":  "fiber",
+	"none":   "none",
+}
+
+var TransceiverStatus_CableType_vname = map[int32]string{
+	0: "none",
+	1: "copper",
+	2: "fiber",
+}
+
+var TransceiverStatus_CableType_vvalue = map[string]int32{
+	"none":   0,
+	"copper": 1,
+	"fiber":  2,
+}
+
+func (x TransceiverStatus_CableType) String() string {
+	return TransceiverStatus_CableType_vname[int32(x)]
+}
+
+// TransceiverStatus_Pid_normal is a map of normalized values for the enum
+var TransceiverStatus_Pid_normal = map[string]string{
+	"pid_na":           "pid_na",
+	"qsfp_100g_acc":    "qsfp_100g_acc",
+	"qsfp_100g_aoc":    "qsfp_100g_aoc",
+	"qsfp_100g_cr4":    "qsfp_100g_cr4",
+	"qsfp_100g_cwdm4":  "qsfp_100g_cwdm4",
+	"qsfp_100g_er4":    "qsfp_100g_er4",
+	"qsfp_100g_lr4":    "qsfp_100g_lr4",
+	"qsfp_100g_psm4":   "qsfp_100g_psm4",
+	"qsfp_100g_sr4":    "qsfp_100g_sr4",
+	"qsfp_40gbase_aoc": "qsfp_40gbase_aoc",
+	"qsfp_40gbase_cr4": "qsfp_40gbase_cr4",
+	"qsfp_40gbase_er4": "qsfp_40gbase_er4",
+	"qsfp_40gbase_lr4": "qsfp_40gbase_lr4",
+	"qsfp_40gbase_sr4": "qsfp_40gbase_sr4",
+	"sfp_10gbase_aoc":  "sfp_10gbase_aoc",
+	"sfp_10gbase_cu":   "sfp_10gbase_cu",
+	"sfp_10gbase_er":   "sfp_10gbase_er",
+	"sfp_10gbase_lr":   "sfp_10gbase_lr",
+	"sfp_10gbase_lrm":  "sfp_10gbase_lrm",
+	"sfp_10gbase_sr":   "sfp_10gbase_sr",
+	"sfp_25gbase_aoc":  "sfp_25gbase_aoc",
+	"sfp_25gbase_cr_l": "sfp_25gbase_cr_l",
+	"sfp_25gbase_cr_n": "sfp_25gbase_cr_n",
+	"sfp_25gbase_cr_s": "sfp_25gbase_cr_s",
+	"sfp_25gbase_er":   "sfp_25gbase_er",
+	"sfp_25gbase_lr":   "sfp_25gbase_lr",
+	"sfp_25gbase_sr":   "sfp_25gbase_sr",
+	"unknown":          "unknown",
+}
+
+var TransceiverStatus_Pid_vname = map[int32]string{
+	0:    "unknown",
+	1:    "qsfp_100g_cr4",
+	2:    "qsfp_40gbase_cr4",
+	3:    "sfp_25gbase_cr_s",
+	4:    "sfp_25gbase_cr_l",
+	5:    "sfp_25gbase_cr_n",
+	50:   "qsfp_100g_aoc",
+	51:   "qsfp_100g_acc",
+	52:   "qsfp_100g_sr4",
+	53:   "qsfp_100g_lr4",
+	54:   "qsfp_100g_er4",
+	55:   "qsfp_40gbase_er4",
+	56:   "qsfp_40gbase_sr4",
+	57:   "qsfp_40gbase_lr4",
+	58:   "qsfp_40gbase_aoc",
+	59:   "sfp_25gbase_sr",
+	60:   "sfp_25gbase_lr",
+	61:   "sfp_25gbase_er",
+	62:   "sfp_25gbase_aoc",
+	63:   "sfp_10gbase_sr",
+	64:   "sfp_10gbase_lr",
+	65:   "sfp_10gbase_lrm",
+	66:   "sfp_10gbase_er",
+	67:   "sfp_10gbase_aoc",
+	68:   "sfp_10gbase_cu",
+	69:   "qsfp_100g_cwdm4",
+	70:   "qsfp_100g_psm4",
+	1000: "pid_na",
+}
+
+var TransceiverStatus_Pid_vvalue = map[string]int32{
+	"unknown":          0,
+	"qsfp_100g_cr4":    1,
+	"qsfp_40gbase_cr4": 2,
+	"sfp_25gbase_cr_s": 3,
+	"sfp_25gbase_cr_l": 4,
+	"sfp_25gbase_cr_n": 5,
+	"qsfp_100g_aoc":    50,
+	"qsfp_100g_acc":    51,
+	"qsfp_100g_sr4":    52,
+	"qsfp_100g_lr4":    53,
+	"qsfp_100g_er4":    54,
+	"qsfp_40gbase_er4": 55,
+	"qsfp_40gbase_sr4": 56,
+	"qsfp_40gbase_lr4": 57,
+	"qsfp_40gbase_aoc": 58,
+	"sfp_25gbase_sr":   59,
+	"sfp_25gbase_lr":   60,
+	"sfp_25gbase_er":   61,
+	"sfp_25gbase_aoc":  62,
+	"sfp_10gbase_sr":   63,
+	"sfp_10gbase_lr":   64,
+	"sfp_10gbase_lrm":  65,
+	"sfp_10gbase_er":   66,
+	"sfp_10gbase_aoc":  67,
+	"sfp_10gbase_cu":   68,
+	"qsfp_100g_cwdm4":  69,
+	"qsfp_100g_psm4":   70,
+	"pid_na":           1000,
+}
+
+func (x TransceiverStatus_Pid) String() string {
+	return TransceiverStatus_Pid_vname[int32(x)]
+}
+
+// IFStatus_normal is a map of normalized values for the enum
+var IFStatus_normal = map[string]string{
+	"down": "down",
+	"up":   "up",
+}
+
+var IFStatus_vname = map[int32]string{
+	0: "up",
+	1: "down",
+}
+
+var IFStatus_vvalue = map[string]int32{
+	"up":   0,
+	"down": 1,
+}
+
+func (x IFStatus) String() string {
+	return IFStatus_vname[int32(x)]
+}
+
+// PauseType_normal is a map of normalized values for the enum
+var PauseType_normal = map[string]string{
+	"disable":  "disable",
+	"link":     "link",
+	"priority": "priority",
+}
+
+var PauseType_vname = map[int32]string{
+	0: "disable",
+	1: "link",
+	2: "priority",
+}
+
+var PauseType_vvalue = map[string]int32{
+	"disable":  0,
+	"link":     1,
+	"priority": 2,
+}
+
+func (x PauseType) String() string {
+	return PauseType_vname[int32(x)]
 }
 
 var _ validators.DummyVar
@@ -111,6 +287,7 @@ func (m *NetworkInterface) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
+	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -154,7 +331,16 @@ func (m *NetworkInterfaceSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkInterfaceSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	if m.Pause != nil {
+		ret = m.Pause.Defaults(ver) || ret
+	}
+	ret = true
+	switch ver {
+	default:
+		m.AdminStatus = "up"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -176,6 +362,9 @@ func (m *NetworkInterfaceStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *NetworkInterfaceStatus) Defaults(ver string) bool {
 	var ret bool
+	if m.IFUplinkStatus != nil {
+		ret = m.IFUplinkStatus.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
@@ -203,7 +392,67 @@ func (m *NetworkInterfaceUplinkStatus) Clone(into interface{}) (interface{}, err
 
 // Default sets up the defaults for the object
 func (m *NetworkInterfaceUplinkStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	if m.TransceiverStatus != nil {
+		ret = m.TransceiverStatus.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *PauseSpec) Clone(into interface{}) (interface{}, error) {
+	var out *PauseSpec
+	var ok bool
+	if into == nil {
+		out = &PauseSpec{}
+	} else {
+		out, ok = into.(*PauseSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*PauseSpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PauseSpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = "disable"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *TransceiverStatus) Clone(into interface{}) (interface{}, error) {
+	var out *TransceiverStatus
+	var ok bool
+	if into == nil {
+		out = &TransceiverStatus{}
+	} else {
+		out, ok = into.(*TransceiverStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*TransceiverStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TransceiverStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.TranceiverCableType = "none"
+		m.TranceiverPid = "unknown"
+		m.TransceiverState = "state_na"
+	}
+	return ret
 }
 
 // Validators and Requirements
@@ -233,6 +482,29 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool, ignoreS
 		}
 	}
 
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -250,6 +522,8 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool, ignoreS
 func (m *NetworkInterface) Normalize() {
 
 	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
 
 	m.Status.Normalize()
 
@@ -274,10 +548,42 @@ func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[s
 
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.Pause != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Pause"
+			if errs := m.Pause.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	if vs, ok := validatorMapNetworkinterface["NetworkInterfaceSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *NetworkInterfaceSpec) Normalize() {
+
+	m.AdminStatus = IFStatus_normal[strings.ToLower(m.AdminStatus)]
+
+	if m.Pause != nil {
+		m.Pause.Normalize()
+	}
 
 }
 
@@ -287,6 +593,19 @@ func (m *NetworkInterfaceStatus) References(tenant string, path string, resp map
 
 func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.IFUplinkStatus != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "IFUplinkStatus"
+			if errs := m.IFUplinkStatus.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	if vs, ok := validatorMapNetworkinterface["NetworkInterfaceStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -305,7 +624,11 @@ func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool, i
 
 func (m *NetworkInterfaceStatus) Normalize() {
 
-	m.OperStatus = NetworkInterfaceStatus_IFStatus_normal[strings.ToLower(m.OperStatus)]
+	if m.IFUplinkStatus != nil {
+		m.IFUplinkStatus.Normalize()
+	}
+
+	m.OperStatus = IFStatus_normal[strings.ToLower(m.OperStatus)]
 
 	m.Type = NetworkInterfaceStatus_IFType_normal[strings.ToLower(m.Type)]
 
@@ -317,10 +640,87 @@ func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, re
 
 func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.TransceiverStatus != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "TransceiverStatus"
+			if errs := m.TransceiverStatus.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *NetworkInterfaceUplinkStatus) Normalize() {
+
+	if m.TransceiverStatus != nil {
+		m.TransceiverStatus.Normalize()
+	}
+
+}
+
+func (m *PauseSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *PauseSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapNetworkinterface["PauseSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetworkinterface["PauseSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *PauseSpec) Normalize() {
+
+	m.Type = PauseType_normal[strings.ToLower(m.Type)]
+
+}
+
+func (m *TransceiverStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *TransceiverStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapNetworkinterface["TransceiverStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetworkinterface["TransceiverStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *TransceiverStatus) Normalize() {
+
+	m.TranceiverCableType = TransceiverStatus_CableType_normal[strings.ToLower(m.TranceiverCableType)]
+
+	m.TranceiverPid = TransceiverStatus_Pid_normal[strings.ToLower(m.TranceiverPid)]
+
+	m.TransceiverState = TransceiverStatus_State_normal[strings.ToLower(m.TransceiverState)]
 
 }
 
@@ -334,13 +734,27 @@ func init() {
 
 	validatorMapNetworkinterface = make(map[string]map[string][]func(string, interface{}) error)
 
+	validatorMapNetworkinterface["NetworkInterfaceSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkInterfaceSpec)
+
+		if _, ok := IFStatus_vvalue[m.AdminStatus]; !ok {
+			vals := []string{}
+			for k1, _ := range IFStatus_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdminStatus", vals)
+		}
+		return nil
+	})
+
 	validatorMapNetworkinterface["NetworkInterfaceStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkInterfaceStatus)
 
-		if _, ok := NetworkInterfaceStatus_IFStatus_vvalue[m.OperStatus]; !ok {
+		if _, ok := IFStatus_vvalue[m.OperStatus]; !ok {
 			vals := []string{}
-			for k1, _ := range NetworkInterfaceStatus_IFStatus_vvalue {
+			for k1, _ := range IFStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperStatus", vals)
@@ -365,6 +779,60 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["PauseSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetworkinterface["PauseSpec"]["all"] = append(validatorMapNetworkinterface["PauseSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*PauseSpec)
+
+		if _, ok := PauseType_vvalue[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range PauseType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["TransceiverStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetworkinterface["TransceiverStatus"]["all"] = append(validatorMapNetworkinterface["TransceiverStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*TransceiverStatus)
+
+		if _, ok := TransceiverStatus_CableType_vvalue[m.TranceiverCableType]; !ok {
+			vals := []string{}
+			for k1, _ := range TransceiverStatus_CableType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"TranceiverCableType", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["TransceiverStatus"]["all"] = append(validatorMapNetworkinterface["TransceiverStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*TransceiverStatus)
+
+		if _, ok := TransceiverStatus_Pid_vvalue[m.TranceiverPid]; !ok {
+			vals := []string{}
+			for k1, _ := range TransceiverStatus_Pid_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"TranceiverPid", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["TransceiverStatus"]["all"] = append(validatorMapNetworkinterface["TransceiverStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*TransceiverStatus)
+
+		if _, ok := TransceiverStatus_State_vvalue[m.TransceiverState]; !ok {
+			vals := []string{}
+			for k1, _ := range TransceiverStatus_State_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"TransceiverState", vals)
 		}
 		return nil
 	})

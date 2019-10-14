@@ -804,6 +804,51 @@
             "type": "string"
           },
           {
+            "name": "spec.admin-status",
+            "description": "desired Admin state of the port.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.speed",
+            "description": "Intefaae speed.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.mtu",
+            "description": "Mtu of the interface.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pause.type",
+            "description": "Pause type.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pause.tx-pause-enabled",
+            "description": "TX Pause enabled.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "pause.rx-pause-enabled",
+            "description": "RX Pause enabled.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
             "name": "status.dsc",
             "in": "query",
             "required": false,
@@ -841,6 +886,31 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "transceiver-status.state",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "transceiver-status.cable-type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "transceiver-status.pid",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.mirror-enabled",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3713,6 +3783,33 @@
     },
     "networkNetworkInterfaceSpec": {
       "type": "object",
+      "required": [
+        "admin-status"
+      ],
+      "properties": {
+        "admin-status": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ],
+          "default": "up",
+          "title": "desired Admin state of the port"
+        },
+        "speed": {
+          "type": "string",
+          "title": "Intefaae speed"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Mtu of the interface"
+        },
+        "pause": {
+          "$ref": "#/definitions/networkPauseSpec",
+          "title": "Pause Spec"
+        }
+      },
       "title": "NetworkInterfaceSpec"
     },
     "networkNetworkInterfaceStatus": {
@@ -3753,6 +3850,10 @@
         },
         "if-uplink-status": {
           "$ref": "#/definitions/networkNetworkInterfaceUplinkStatus"
+        },
+        "mirror-enabled": {
+          "type": "boolean",
+          "format": "boolean"
         }
       },
       "title": "NetworkInterfaceStatus"
@@ -3763,6 +3864,9 @@
         "link-speed": {
           "type": "string",
           "title": "LinkSpeed auto-negotiated"
+        },
+        "transceiver-status": {
+          "$ref": "#/definitions/networkTransceiverStatus"
         }
       }
     },
@@ -3841,6 +3945,34 @@
         }
       },
       "title": "status part of network object"
+    },
+    "networkPauseSpec": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "disable",
+            "link",
+            "priority"
+          ],
+          "default": "disable",
+          "title": "Pause type"
+        },
+        "tx-pause-enabled": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "TX Pause enabled"
+        },
+        "rx-pause-enabled": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "RX Pause enabled"
+        }
+      }
     },
     "networkService": {
       "type": "object",
@@ -3999,6 +4131,71 @@
         }
       },
       "description": "The Service TLS configuration for inbound connections.\nIt is used on all ports specified in the Service spec.\nMultiple Service objects can select the same workload and provide different\nserver TLS configurations for disjoint sets of ports."
+    },
+    "networkTransceiverStatus": {
+      "type": "object",
+      "required": [
+        "state",
+        "cable-type",
+        "pid"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "state_na",
+            "state_removed",
+            "state_inserted",
+            "state_pending",
+            "state_sprom_read",
+            "state_sprom_read_err"
+          ],
+          "default": "state_na"
+        },
+        "cable-type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "copper",
+            "fiber"
+          ],
+          "default": "none"
+        },
+        "pid": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "qsfp_100g_cr4",
+            "qsfp_40gbase_cr4",
+            "sfp_25gbase_cr_s",
+            "sfp_25gbase_cr_l",
+            "sfp_25gbase_cr_n",
+            "qsfp_100g_aoc",
+            "qsfp_100g_acc",
+            "qsfp_100g_sr4",
+            "qsfp_100g_lr4",
+            "qsfp_100g_er4",
+            "qsfp_40gbase_er4",
+            "qsfp_40gbase_sr4",
+            "qsfp_40gbase_lr4",
+            "qsfp_40gbase_aoc",
+            "sfp_25gbase_sr",
+            "sfp_25gbase_lr",
+            "sfp_25gbase_er",
+            "sfp_25gbase_aoc",
+            "sfp_10gbase_sr",
+            "sfp_10gbase_lr",
+            "sfp_10gbase_lrm",
+            "sfp_10gbase_er",
+            "sfp_10gbase_aoc",
+            "sfp_10gbase_cu",
+            "qsfp_100g_cwdm4",
+            "qsfp_100g_psm4",
+            "pid_na"
+          ],
+          "default": "unknown"
+        }
+      }
     },
     "networkVirtualRouter": {
       "type": "object",

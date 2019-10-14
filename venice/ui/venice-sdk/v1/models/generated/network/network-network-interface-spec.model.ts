@@ -7,13 +7,41 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { NetworkNetworkInterfaceSpec_admin_status,  } from './enums';
+import { NetworkPauseSpec, INetworkPauseSpec } from './network-pause-spec.model';
 
 export interface INetworkNetworkInterfaceSpec {
+    'admin-status': NetworkNetworkInterfaceSpec_admin_status;
+    'speed'?: string;
+    'mtu'?: number;
+    'pause'?: INetworkPauseSpec;
 }
 
 
 export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNetworkInterfaceSpec {
+    'admin-status': NetworkNetworkInterfaceSpec_admin_status = null;
+    'speed': string = null;
+    'mtu': number = null;
+    'pause': NetworkPauseSpec = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceSpec]: PropInfoItem } = {
+        'admin-status': {
+            enum: NetworkNetworkInterfaceSpec_admin_status,
+            default: 'up',
+            required: true,
+            type: 'string'
+        },
+        'speed': {
+            required: false,
+            type: 'string'
+        },
+        'mtu': {
+            required: false,
+            type: 'number'
+        },
+        'pause': {
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -38,6 +66,7 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['pause'] = new NetworkPauseSpec();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -47,6 +76,32 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['admin-status'] != null) {
+            this['admin-status'] = values['admin-status'];
+        } else if (fillDefaults && NetworkNetworkInterfaceSpec.hasDefaultValue('admin-status')) {
+            this['admin-status'] = <NetworkNetworkInterfaceSpec_admin_status>  NetworkNetworkInterfaceSpec.propInfo['admin-status'].default;
+        } else {
+            this['admin-status'] = null
+        }
+        if (values && values['speed'] != null) {
+            this['speed'] = values['speed'];
+        } else if (fillDefaults && NetworkNetworkInterfaceSpec.hasDefaultValue('speed')) {
+            this['speed'] = NetworkNetworkInterfaceSpec.propInfo['speed'].default;
+        } else {
+            this['speed'] = null
+        }
+        if (values && values['mtu'] != null) {
+            this['mtu'] = values['mtu'];
+        } else if (fillDefaults && NetworkNetworkInterfaceSpec.hasDefaultValue('mtu')) {
+            this['mtu'] = NetworkNetworkInterfaceSpec.propInfo['mtu'].default;
+        } else {
+            this['mtu'] = null
+        }
+        if (values) {
+            this['pause'].setValues(values['pause'], fillDefaults);
+        } else {
+            this['pause'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -54,6 +109,15 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'admin-status': CustomFormControl(new FormControl(this['admin-status'], [required, enumValidator(NetworkNetworkInterfaceSpec_admin_status), ]), NetworkNetworkInterfaceSpec.propInfo['admin-status']),
+                'speed': CustomFormControl(new FormControl(this['speed']), NetworkNetworkInterfaceSpec.propInfo['speed']),
+                'mtu': CustomFormControl(new FormControl(this['mtu']), NetworkNetworkInterfaceSpec.propInfo['mtu']),
+                'pause': CustomFormGroup(this['pause'].$formGroup, NetworkNetworkInterfaceSpec.propInfo['pause'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('pause') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('pause').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -65,6 +129,10 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['admin-status'].setValue(this['admin-status']);
+            this._formGroup.controls['speed'].setValue(this['speed']);
+            this._formGroup.controls['mtu'].setValue(this['mtu']);
+            this['pause'].setFormGroupValuesToBeModelValues();
         }
     }
 }

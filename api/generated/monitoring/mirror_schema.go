@@ -125,6 +125,8 @@ var typesMapMirror = map[string]*api.Struct{
 			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{ID: "match-rules", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
 			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{ID: "packet-filters", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"InterfaceSelector": api.Field{Name: "InterfaceSelector", CLITag: api.CLIInfo{ID: "interface-selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interface-selector", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{

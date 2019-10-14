@@ -326,6 +326,8 @@ func (s *snetworkNetworkinterfaceBackend) regMsgsFunc(l log.Logger, scheme *runt
 		"network.NetworkInterfaceSpec":         apisrvpkg.NewMessage("network.NetworkInterfaceSpec"),
 		"network.NetworkInterfaceStatus":       apisrvpkg.NewMessage("network.NetworkInterfaceStatus"),
 		"network.NetworkInterfaceUplinkStatus": apisrvpkg.NewMessage("network.NetworkInterfaceUplinkStatus"),
+		"network.PauseSpec":                    apisrvpkg.NewMessage("network.PauseSpec"),
+		"network.TransceiverStatus":            apisrvpkg.NewMessage("network.TransceiverStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

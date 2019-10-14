@@ -186,3 +186,71 @@ func EncodeGrpcRespNetworkInterfaceUplinkStatus(ctx context.Context, response in
 func DecodeGrpcRespNetworkInterfaceUplinkStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPPauseSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPauseSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PauseSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPauseSpec encodes GRPC request
+func EncodeGrpcReqPauseSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PauseSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqPauseSpec decodes GRPC request
+func DecodeGrpcReqPauseSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PauseSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespPauseSpec encodes GRC response
+func EncodeGrpcRespPauseSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPauseSpec decodes GRPC response
+func DecodeGrpcRespPauseSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTransceiverStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTransceiverStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TransceiverStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTransceiverStatus encodes GRPC request
+func EncodeGrpcReqTransceiverStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TransceiverStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqTransceiverStatus decodes GRPC request
+func DecodeGrpcReqTransceiverStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TransceiverStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespTransceiverStatus encodes GRC response
+func EncodeGrpcRespTransceiverStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTransceiverStatus decodes GRPC response
+func DecodeGrpcRespTransceiverStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

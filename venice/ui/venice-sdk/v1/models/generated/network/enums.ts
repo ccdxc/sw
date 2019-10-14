@@ -22,6 +22,11 @@ export enum NetworkIPAMPolicySpec_type {
     'dhcp-relay' = "dhcp-relay",
 }
 
+export enum NetworkNetworkInterfaceSpec_admin_status {
+    'up' = "up",
+    'down' = "down",
+}
+
 export enum NetworkNetworkInterfaceStatus_type {
     'none' = "none",
     'host-pf' = "host-pf",
@@ -34,10 +39,62 @@ export enum NetworkNetworkInterfaceStatus_oper_status {
     'down' = "down",
 }
 
+export enum NetworkPauseSpec_type {
+    'disable' = "disable",
+    'link' = "link",
+    'priority' = "priority",
+}
+
 export enum NetworkTLSServerPolicySpec_client_authentication {
     'mandatory' = "mandatory",
     'optional' = "optional",
     'none' = "none",
+}
+
+export enum NetworkTransceiverStatus_state {
+    'state_na' = "state_na",
+    'state_removed' = "state_removed",
+    'state_inserted' = "state_inserted",
+    'state_pending' = "state_pending",
+    'state_sprom_read' = "state_sprom_read",
+    'state_sprom_read_err' = "state_sprom_read_err",
+}
+
+export enum NetworkTransceiverStatus_cable_type {
+    'none' = "none",
+    'copper' = "copper",
+    'fiber' = "fiber",
+}
+
+export enum NetworkTransceiverStatus_pid {
+    'unknown' = "unknown",
+    'qsfp_100g_cr4' = "qsfp_100g_cr4",
+    'qsfp_40gbase_cr4' = "qsfp_40gbase_cr4",
+    'sfp_25gbase_cr_s' = "sfp_25gbase_cr_s",
+    'sfp_25gbase_cr_l' = "sfp_25gbase_cr_l",
+    'sfp_25gbase_cr_n' = "sfp_25gbase_cr_n",
+    'qsfp_100g_aoc' = "qsfp_100g_aoc",
+    'qsfp_100g_acc' = "qsfp_100g_acc",
+    'qsfp_100g_sr4' = "qsfp_100g_sr4",
+    'qsfp_100g_lr4' = "qsfp_100g_lr4",
+    'qsfp_100g_er4' = "qsfp_100g_er4",
+    'qsfp_40gbase_er4' = "qsfp_40gbase_er4",
+    'qsfp_40gbase_sr4' = "qsfp_40gbase_sr4",
+    'qsfp_40gbase_lr4' = "qsfp_40gbase_lr4",
+    'qsfp_40gbase_aoc' = "qsfp_40gbase_aoc",
+    'sfp_25gbase_sr' = "sfp_25gbase_sr",
+    'sfp_25gbase_lr' = "sfp_25gbase_lr",
+    'sfp_25gbase_er' = "sfp_25gbase_er",
+    'sfp_25gbase_aoc' = "sfp_25gbase_aoc",
+    'sfp_10gbase_sr' = "sfp_10gbase_sr",
+    'sfp_10gbase_lr' = "sfp_10gbase_lr",
+    'sfp_10gbase_lrm' = "sfp_10gbase_lrm",
+    'sfp_10gbase_er' = "sfp_10gbase_er",
+    'sfp_10gbase_aoc' = "sfp_10gbase_aoc",
+    'sfp_10gbase_cu' = "sfp_10gbase_cu",
+    'qsfp_100g_cwdm4' = "qsfp_100g_cwdm4",
+    'qsfp_100g_psm4' = "qsfp_100g_psm4",
+    'pid_na' = "pid_na",
 }
 
 
@@ -86,9 +143,14 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     NetworkIPAMPolicySpec_type = NetworkIPAMPolicySpec_type;
+    NetworkNetworkInterfaceSpec_admin_status = NetworkNetworkInterfaceSpec_admin_status;
     NetworkNetworkInterfaceStatus_type = NetworkNetworkInterfaceStatus_type;
     NetworkNetworkInterfaceStatus_oper_status = NetworkNetworkInterfaceStatus_oper_status;
+    NetworkPauseSpec_type = NetworkPauseSpec_type;
     NetworkTLSServerPolicySpec_client_authentication = NetworkTLSServerPolicySpec_client_authentication;
+    NetworkTransceiverStatus_state = NetworkTransceiverStatus_state;
+    NetworkTransceiverStatus_cable_type = NetworkTransceiverStatus_cable_type;
+    NetworkTransceiverStatus_pid = NetworkTransceiverStatus_pid;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
 }

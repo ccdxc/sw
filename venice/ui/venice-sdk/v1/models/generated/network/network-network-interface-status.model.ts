@@ -19,6 +19,7 @@ export interface INetworkNetworkInterfaceStatus {
     'primary-mac'?: string;
     'if-host-status'?: INetworkNetworkInterfaceHostStatus;
     'if-uplink-status'?: INetworkNetworkInterfaceUplinkStatus;
+    'mirror-enabled'?: boolean;
 }
 
 
@@ -30,6 +31,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'primary-mac': string = null;
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
+    'mirror-enabled': boolean = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
         'dsc': {
             required: false,
@@ -60,6 +62,10 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         'if-uplink-status': {
             required: false,
             type: 'object'
+        },
+        'mirror-enabled': {
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -134,6 +140,13 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         } else {
             this['if-uplink-status'].setValues(null, fillDefaults);
         }
+        if (values && values['mirror-enabled'] != null) {
+            this['mirror-enabled'] = values['mirror-enabled'];
+        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('mirror-enabled')) {
+            this['mirror-enabled'] = NetworkNetworkInterfaceStatus.propInfo['mirror-enabled'].default;
+        } else {
+            this['mirror-enabled'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -147,6 +160,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
                 'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), NetworkNetworkInterfaceStatus.propInfo['primary-mac']),
                 'if-host-status': CustomFormGroup(this['if-host-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-host-status'].required),
                 'if-uplink-status': CustomFormGroup(this['if-uplink-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-uplink-status'].required),
+                'mirror-enabled': CustomFormControl(new FormControl(this['mirror-enabled']), NetworkNetworkInterfaceStatus.propInfo['mirror-enabled']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('if-host-status') as FormGroup).controls).forEach(field => {
@@ -174,6 +188,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this['if-host-status'].setFormGroupValuesToBeModelValues();
             this['if-uplink-status'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['mirror-enabled'].setValue(this['mirror-enabled']);
         }
     }
 }

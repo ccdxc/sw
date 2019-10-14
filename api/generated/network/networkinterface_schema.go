@@ -52,20 +52,29 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
+			"admin-status":     api.CLIInfo{Path: "Spec.AdminStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
 			"dsc":              api.CLIInfo{Path: "Status.DSC", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
+			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
+			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"oper-status":      api.CLIInfo{Path: "Status.OperStatus", Skip: false, Insert: "", Help: ""},
+			"pid":              api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverPid", Skip: false, Insert: "", Help: ""},
 			"primary-mac":      api.CLIInfo{Path: "Status.PrimaryMac", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"rx-pause-enabled": api.CLIInfo{Path: "Spec.Pause.RxPauseEnabled", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"speed":            api.CLIInfo{Path: "Spec.Speed", Skip: false, Insert: "", Help: ""},
+			"state":            api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TransceiverState", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"tx-pause-enabled": api.CLIInfo{Path: "Spec.Pause.TxPauseEnabled", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
@@ -78,7 +87,15 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 	},
 	"network.NetworkInterfaceSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceSpec{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"AdminStatus": api.Field{Name: "AdminStatus", CLITag: api.CLIInfo{ID: "admin-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Speed": api.Field{Name: "Speed", CLITag: api.CLIInfo{ID: "speed", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "speed", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MTU": api.Field{Name: "MTU", CLITag: api.CLIInfo{ID: "mtu", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mtu", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Pause": api.Field{Name: "Pause", CLITag: api.CLIInfo{ID: "pause", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pause", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.PauseSpec"},
+		},
 	},
 	"network.NetworkInterfaceStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceStatus{}) },
@@ -94,12 +111,36 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"IFHostStatus": api.Field{Name: "IFHostStatus", CLITag: api.CLIInfo{ID: "if-host-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-host-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.NetworkInterfaceHostStatus"},
 
 			"IFUplinkStatus": api.Field{Name: "IFUplinkStatus", CLITag: api.CLIInfo{ID: "if-uplink-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-uplink-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.NetworkInterfaceUplinkStatus"},
+
+			"MirrorEnabled": api.Field{Name: "MirrorEnabled", CLITag: api.CLIInfo{ID: "mirror-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"network.NetworkInterfaceUplinkStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceUplinkStatus{}) },
 		Fields: map[string]api.Field{
 			"LinkSpeed": api.Field{Name: "LinkSpeed", CLITag: api.CLIInfo{ID: "link-speed", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TransceiverStatus": api.Field{Name: "TransceiverStatus", CLITag: api.CLIInfo{ID: "transceiver-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "transceiver-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.TransceiverStatus"},
+		},
+	},
+	"network.PauseSpec": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PauseSpec{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TxPauseEnabled": api.Field{Name: "TxPauseEnabled", CLITag: api.CLIInfo{ID: "tx-pause-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tx-pause-enabled", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"RxPauseEnabled": api.Field{Name: "RxPauseEnabled", CLITag: api.CLIInfo{ID: "rx-pause-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rx-pause-enabled", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+		},
+	},
+	"network.TransceiverStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TransceiverStatus{}) },
+		Fields: map[string]api.Field{
+			"TransceiverState": api.Field{Name: "TransceiverState", CLITag: api.CLIInfo{ID: "state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TranceiverCableType": api.Field{Name: "TranceiverCableType", CLITag: api.CLIInfo{ID: "cable-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cable-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TranceiverPid": api.Field{Name: "TranceiverPid", CLITag: api.CLIInfo{ID: "pid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pid", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

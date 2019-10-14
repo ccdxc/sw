@@ -13,7 +13,43 @@ import (
 )
 
 // CreateNetworkInterfaceFlags specifies flags for NetworkInterface create operation
-var CreateNetworkInterfaceFlags = []gen.CliFlag{}
+var CreateNetworkInterfaceFlags = []gen.CliFlag{
+	{
+		ID:     "admin-status",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "mtu",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "rx-pause-enabled",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "speed",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "tx-pause-enabled",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
 
 func removeNetworkInterfaceOper(obj interface{}) error {
 	if v, ok := obj.(*network.NetworkInterface); ok {
@@ -29,6 +65,7 @@ func removeNetworkInterfaceOper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 
+	cl.AddCliInfo("network.NetworkInterface", "create", CreateNetworkInterfaceFlags)
 	cl.AddRemoveObjOperFunc("network.NetworkInterface", removeNetworkInterfaceOper)
 
 }

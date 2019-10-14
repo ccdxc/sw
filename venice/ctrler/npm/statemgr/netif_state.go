@@ -28,11 +28,11 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 
 	switch agentNetif.Status.OperStatus {
 	case "UP":
-		netif.Status.OperStatus = network.NetworkInterfaceStatus_UP.String()
+		netif.Status.OperStatus = network.IFStatus_UP.String()
 	case "DOWN":
-		netif.Status.OperStatus = network.NetworkInterfaceStatus_DOWN.String()
+		netif.Status.OperStatus = network.IFStatus_DOWN.String()
 	default:
-		netif.Status.OperStatus = network.NetworkInterfaceStatus_UP.String() // TBD: should default be modeled to vencie user?
+		netif.Status.OperStatus = network.IFStatus_UP.String() // TBD: should default be modeled to vencie user?
 	}
 
 	switch agentNetif.Spec.Type {

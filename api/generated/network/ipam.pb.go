@@ -31,6 +31,8 @@
 		NetworkInterfaceSpec
 		NetworkInterfaceStatus
 		NetworkInterfaceUplinkStatus
+		PauseSpec
+		TransceiverStatus
 		Service
 		ServiceSpec
 		ServiceStatus
