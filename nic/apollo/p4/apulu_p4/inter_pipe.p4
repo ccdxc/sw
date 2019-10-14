@@ -105,6 +105,14 @@ action egress_to_rxdma() {
     add_header(p4e_to_p4plus_classic_nic);
     add_header(p4e_to_p4plus_classic_nic_ip);
 
+    // l2 checksum code in ASM
+    if (ctag_1.valid == TRUE) {
+    }
+
+    if (p4e_to_arm.valid == TRUE) {
+        add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
+    }
+
     modify_field(p4e_to_p4plus_classic_nic.packet_len,
                  capri_p4_intrinsic.packet_len);
     modify_field(p4e_to_p4plus_classic_nic.p4plus_app_id,

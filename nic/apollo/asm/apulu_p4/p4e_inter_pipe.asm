@@ -20,11 +20,16 @@ p4e_inter_pipe:
     nop.!c1.e
 
 egress_to_rxdma:
-    add             r1, r0, k.capri_p4_intrinsic_packet_len
+    // r7 actual packet len
+    add             r7, r0, k.capri_p4_intrinsic_packet_len
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.{p4e_to_p4plus_classic_nic_ip_valid, \
                         p4e_to_p4plus_classic_nic_valid}, 0x3
-    phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r1
+    seq             c1, k.p4e_to_arm_valid, TRUE
+    add             r6, r0, r7
+    add.c1          r6, r6, APULU_P4_TO_ARM_HDR_SZ
+    phvwr.c1        p.capri_p4_intrinsic_packet_len, r6
+    phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
