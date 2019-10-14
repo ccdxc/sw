@@ -82,16 +82,16 @@ TEST_F(tep_test, tep_workflow_3) {
     tep_feeder feeder1, feeder2, feeder3;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        feeder2.init(g_tep_id, "20.20.1.1", 10, k_zero_encap,
+        feeder2.init(40, "20.20.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        feeder3.init(g_tep_id, "30.30.1.1", 10, k_zero_encap,
+        feeder3.init(70, "30.30.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, "10.10.1.1", 10);
-        feeder2.init(g_tep_id, "20.20.1.1", 20);
-        feeder3.init(g_tep_id, "30.30.1.1", 30);
+        feeder1.init(10, "10.10.1.1", 10);
+        feeder2.init(40, "20.20.1.1", 20);
+        feeder3.init(70, "30.30.1.1", 30);
     }
     workflow_3<tep_feeder>(feeder1, feeder2, feeder3);
 }
@@ -115,16 +115,16 @@ TEST_F(tep_test, tep_workflow_5) {
     tep_feeder feeder1, feeder2, feeder3;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        feeder2.init(g_tep_id, "20.20.1.1", 20, k_zero_encap,
+        feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        feeder3.init(g_tep_id, "30.30.1.1", 30, k_zero_encap,
+        feeder3.init(70, "30.30.1.1", 30, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, "10.10.1.1", 10);
-        feeder2.init(g_tep_id, "20.20.1.1", 20);
-        feeder3.init(g_tep_id, "30.30.1.1", 30);
+        feeder1.init(10, "10.10.1.1", 10);
+        feeder2.init(40, "20.20.1.1", 20);
+        feeder3.init(70, "30.30.1.1", 30);
     }
     workflow_5<tep_feeder>(feeder1, feeder2, feeder3);
 }
@@ -230,26 +230,26 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
     tep_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        feeder2.init(g_tep_id, "20.20.1.1", 20, k_zero_encap,
+        feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
-        feeder2A.init(g_tep_id, "20.20.1.1", 20, k_zero_encap,
+        feeder2A.init(40, "20.20.1.1", 20, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:20:21", 0);
-        feeder3.init(g_tep_id, "30.30.1.1", 30, k_zero_encap,
+        feeder3.init(70, "30.30.1.1", 30, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
-        feeder3A.init(g_tep_id, "30.30.1.1", 30, k_zero_encap,
+        feeder3A.init(70, "30.30.1.1", 30, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:30:31", 0);
-        feeder4.init(g_tep_id, "40.40.1.1", 40, k_zero_encap,
+        feeder4.init(100, "40.40.1.1", 40, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "40::40:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, "10.10.1.1", 10);
-        feeder2.init(g_tep_id, "20.20.1.1", 20);
-        feeder2A.init(g_tep_id, "20.20.1.1", 20, k_mplsoudp_encap,
+        feeder1.init(10, "10.10.1.1", 10);
+        feeder2.init(40, "20.20.1.1", 20);
+        feeder2A.init(40, "20.20.1.1", 20, k_mplsoudp_encap,
                       k_nat, PDS_TEP_TYPE_IGW);
-        feeder3.init(g_tep_id, "30.30.1.1", 30);
-        feeder3A.init(g_tep_id, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
-        feeder4.init(g_tep_id, "40.40.1.1", 40);
+        feeder3.init(70, "30.30.1.1", 30);
+        feeder3A.init(70, "30.30.1.1", 30, k_mplsoudp_encap, k_nat);
+        feeder4.init(100, "40.40.1.1", 40);
     }
     workflow_10<tep_feeder>(feeder1, feeder2, feeder2A,
                             feeder3, feeder3A, feeder4);
@@ -300,13 +300,13 @@ TEST_F(tep_test, tep_workflow_neg_4) {
     tep_feeder feeder1, feeder2;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, k_base_nh_ip, 10, k_zero_encap,
+        feeder1.init(10, k_base_nh_ip, 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
-        feeder2.init(g_tep_id, "60.60.1.1", 10, k_zero_encap,
+        feeder2.init(40, "60.60.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, k_base_nh_ip, 10);
-        feeder2.init(g_tep_id, "60.60.1.1", 10);
+        feeder1.init(10, k_base_nh_ip, 10);
+        feeder2.init(40, "60.60.1.1", 10);
     }
     workflow_neg_4<tep_feeder>(feeder1, feeder2);
 }
@@ -355,17 +355,17 @@ TEST_F(tep_test, tep_workflow_neg_7) {
     tep_feeder feeder1, feeder1A, feeder2;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        feeder1A.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1A.init(10, "10.10.1.1", 10, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
-        feeder2.init(g_tep_id, "20.20.1.1", 20, k_zero_encap,
+        feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_mplsoudp_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_mplsoudp_encap,
                      k_nat, PDS_TEP_TYPE_IGW);
-        feeder1A.init(g_tep_id, "10.10.1.1", 10);
-        feeder2.init(g_tep_id, "20.20.1.1", 20);
+        feeder1A.init(10, "10.10.1.1", 10);
+        feeder2.init(40, "20.20.1.1", 20);
     }
     workflow_neg_7<tep_feeder>(feeder1, feeder1A, feeder2);
 }
@@ -376,14 +376,14 @@ TEST_F(tep_test, tep_workflow_neg_8) {
     tep_feeder feeder1, feeder2;
 
     if (artemis()) {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_zero_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
-        feeder2.init(g_tep_id, "20.20.1.1", 20, k_zero_encap,
+        feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
     } else {
-        feeder1.init(g_tep_id, "10.10.1.1", 10, k_mplsoudp_encap,
+        feeder1.init(10, "10.10.1.1", 10, k_mplsoudp_encap,
                      k_nat, PDS_TEP_TYPE_IGW);
-        feeder2.init(g_tep_id, "20.20.1.1", 20);
+        feeder2.init(40, "20.20.1.1", 20);
     }
     workflow_neg_8<tep_feeder>(feeder1, feeder2);
 }

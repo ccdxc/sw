@@ -94,6 +94,7 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
     sdk::lib::ipc::ipc_msg_ptr rsp;
     pds_batch_params_t batch_params = { 0 };
     api_msg_t *api_msg = (api_msg_t *)bctxt;
+    sdk_ret_t ret;
 
     if (api_msg) {
         if (api_ctxt) {
@@ -115,14 +116,14 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
     }
     rsp = sdk::lib::ipc::ipc_client::send_recv_once(core::THREAD_ID_API,
                                                     &api_msg, sizeof(api_msg));
-    PDS_TRACE_DEBUG("Rcvd response from API thread, status %u",
-                    *(sdk_ret_t *)rsp->data());
+    ret = *(sdk_ret_t *)rsp->data();
+    PDS_TRACE_DEBUG("Rcvd response from API thread, status %u", ret);
 
     if (batched_internally) {
         // destroy the batch we created
         api_batch_destroy((pds_batch_ctxt_t)api_msg);
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 }    // namespace api

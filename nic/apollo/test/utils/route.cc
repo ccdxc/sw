@@ -56,6 +56,7 @@ route_table_feeder::init(std::string base_route_pfx_str,
             nh_offset += 1;
             if (nh_offset > nh_offset_max) {
                 nh_offset %= nh_offset_max;
+                nh_offset += 1;
             }
             break;
         case PDS_NH_TYPE_PEER_VPC:
