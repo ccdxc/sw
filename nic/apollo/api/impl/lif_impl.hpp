@@ -56,6 +56,11 @@ public:
         return sizeof(pds_lif_key_t);
     }
 
+    /// \brief    handle all programming during lif creation
+    ///< \param[in] spec    lif configuration parameters
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t create(pds_lif_spec_t *spec);
+
     ///< \brief    program lif tx policer for given lif
     ///< param[in] lif_id     h/w lif id
     ///< param[in] policer    policer parameters
@@ -69,18 +74,17 @@ public:
         return pinned_if_idx_;
     }
 
-    /// \brief     get function for lif type
+    /// \brief     return type of the lif
     /// \return    lif type
-    lif_type_t type(void);
+    lif_type_t type(void) const { return type_; }
 
-    /// \brief     get function for lif key
-    /// \return    key
-    pds_lif_key_t key(void);
+    /// \brief     return lif key
+    /// \return    key of the lif
+    pds_lif_key_t key(void) const { return key_; }
 
-    /// \brief    handle all programming during lif creation
-    ///< \param[in] spec    lif configuration parameters
-    /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(pds_lif_spec_t *spec);
+    /// \brief     return vnic hw id of this lif
+    /// \return    vnic hw id
+    uint16_t vnic_hw_id(void) const { return vnic_hw_id_; }
 
 private:
     ///< constructor
@@ -133,4 +137,4 @@ private:
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __LIF_IMPL_HPP__ */
+#endif    //    __LIF_IMPL_HPP__

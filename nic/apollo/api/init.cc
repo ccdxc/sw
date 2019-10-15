@@ -89,16 +89,19 @@ create_uplinks (void)
 {
     sdk_ret_t        ret;
     pds_if_spec_t    spec = { 0 };
-    pds_ifindex_t    ifindex;
+    pds_ifindex_t    ifindex, eth_ifindex;
 
     PDS_TRACE_DEBUG("Creating uplinks ...");
     for (uint32_t port = 1;
          port <= g_pds_state.catalogue()->num_fp_ports(); port++) {
-        ifindex = UPLINK_IFINDEX(port);
+        eth_ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
+                                  port, ETH_IF_DEFAULT_CHILD_PORT);
+        ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
         spec.key.id = ifindex;
         spec.type = PDS_IF_TYPE_UPLINK;
         spec.admin_state = PDS_IF_STATE_UP;
-        spec.uplink_info.port_num = port;
+        spec.uplink_info.port_num =
+            sdk::lib::catalog::ifindex_to_logical_port(eth_ifindex);
         ret = pds_if_create(&spec, PDS_BATCH_CTXT_INVALID);
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Uplink if 0x%x creation failed", ifindex);
@@ -178,7 +181,7 @@ pds_init (pds_init_params_t *params)
     std::string   mem_json;
 
     // TODO read from device.conf
-    sdk::lib::device_profile_t device_profile = {0};
+    sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
 
     // initialize the logger

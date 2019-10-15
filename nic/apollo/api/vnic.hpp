@@ -119,7 +119,8 @@ public:
     /// \param[in] orig_obj    old version of the unmodified object
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return   SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t update_db(api_base *orig_obj,
+                                obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
@@ -200,6 +201,10 @@ public:
     /// \return    ethernet MAC address of this vnic
     mac_addr_t& mac(void) { return mac_; }
 
+    /// \brief     return the associated host lif's ifindex
+    /// \return    ifindex of the host lif corresponding to this vnic
+    pds_ifindex_t host_ifindex(void) const { return host_ifindex_; }
+
 private:
     /// \brief    constructor
     vnic_entry();
@@ -221,6 +226,7 @@ private:
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     bool              switch_vnic_;      ///< TRUE if this is switch vnic
     mac_addr_t        mac_;              ///< MAC address of this vnic
+    pds_ifindex_t     host_ifindex_;     ///< PF/VF this vnic is behind
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
 

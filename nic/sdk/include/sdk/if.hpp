@@ -26,13 +26,14 @@ enum {
 #define IFINDEX_INVALID                          0x0
 
 #define IF_TYPE_SHIFT                            28
-#define IF_SLOT_SHIFT                            24
-#define IF_PARENT_PORT_SHIFT                     16
 #define IF_TYPE_MASK                             0xF
-#define IF_SLOT_MASK                             0xF
-#define IF_PARENT_PORT_MASK                      0xFF
-#define IF_CHILD_PORT_MASK                       0xFFFF
-#define IF_DEFAULT_CHILD_PORT                    1
+#define ETH_IF_SLOT_SHIFT                        24
+#define ETH_IF_PARENT_PORT_SHIFT                 16
+#define ETH_IF_SLOT_MASK                         0xF
+#define ETH_IF_PARENT_PORT_MASK                  0xFF
+#define ETH_IF_CHILD_PORT_MASK                   0xFFFF
+#define ETH_IF_DEFAULT_CHILD_PORT                1
+#define LIF_IF_LIF_ID_MASK                       0xFFFFFF
 
 ///< interface index is formed from
 ///<     t_ --> type of the interface (4 bits)
@@ -43,14 +44,12 @@ enum {
 ///< used for a running identifier of that type of interface
 ///< e.g. IF_TYPE_UPLINK or IF_TYPE_TUNNEL etc.
 ///< NOTE: child port 0 ==> non-broken port
-#define IFINDEX(t_, s_, p_, c_)                      \
-            ((t_ << IF_TYPE_SHIFT)        |          \
-             ((s_) << IF_SLOT_SHIFT)      |          \
-             (p_ << IF_PARENT_PORT_SHIFT) | (c_))
+#define IFINDEX(t_, s_, p_, c_)                          \
+            ((t_ << IF_TYPE_SHIFT)        |              \
+             ((s_) << ETH_IF_SLOT_SHIFT)      |          \
+             (p_ << ETH_IF_PARENT_PORT_SHIFT) | (c_))
 
 #define ETH_IFINDEX(s_, p_, c_)    IFINDEX(IF_TYPE_ETH, (s_), (p_), (c_))
-#define UPLINK_IFINDEX(if_id_)     ((IF_TYPE_UPLINK << IF_TYPE_SHIFT) | \
-                                    (if_id_))
 #define UPLINK_PC_IFINDEX(pc_id_)  ((IF_TYPE_UPLINK_PC << IF_TYPE_SHIFT) | \
                                     (pc_id_))
 #define L3_IFINDEX(if_id_)         ((IF_TYPE_L3 << IF_TYPE_SHIFT) | (if_id_))
@@ -59,10 +58,21 @@ enum {
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
 
-#define IFINDEX_TO_PARENT_PORT(ifindex_)    \
-            ((ifindex >> IF_PARENT_PORT_SHIFT) & IF_PARENT_PORT_MASK)
+#define ETH_IFINDEX_TO_PARENT_PORT(ifindex_)    \
+            ((ifindex_ >> ETH_IF_PARENT_PORT_SHIFT) & ETH_IF_PARENT_PORT_MASK)
 
-#define IFINDEX_TO_CHILD_PORT(ifindex_)    \
-            (ifindex & IF_CHILD_PORT_MASK)
+#define ETH_IFINDEX_TO_CHILD_PORT(ifindex_)    \
+            (ifindex_ & ETH_IF_CHILD_PORT_MASK)
+
+#define ETH_IFINDEX_TO_UPLINK_IFINDEX(ifindex_)      \
+            ((IF_TYPE_UPLINK << IF_TYPE_SHIFT) |     \
+             ((ifindex_) & ~(IF_TYPE_MASK << IF_TYPE_SHIFT)))
+
+#define UPLINK_IFINDEX_TO_ETH_IFINDEX(ifindex_)      \
+            ((IF_TYPE_ETH << IF_TYPE_SHIFT) |        \
+             ((ifindex_) & ~(IF_TYPE_MASK << IF_TYPE_SHIFT)))
+
+#define LIF_IFINDEX_TO_LIF_ID(ifindex_)    \
+            (ifindex_ & LIF_IF_LIF_ID_MASK)
 
 #endif    // __IF_HPP__

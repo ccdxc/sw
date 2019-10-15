@@ -962,15 +962,15 @@ catalog::ch_mode(mac_mode_t mac_mode, uint32_t ch)
 uint32_t
 catalog::ifindex_to_logical_port(uint32_t ifindex)
 {
-    uint32_t parent = IFINDEX_TO_PARENT_PORT(ifindex);
-    uint32_t child = IFINDEX_TO_CHILD_PORT(ifindex);
+    uint32_t parent = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
+    uint32_t child = ETH_IFINDEX_TO_CHILD_PORT(ifindex);
     return ((parent - 1) * MAX_PORT_LANES) + child;
 }
 
 uint32_t
 catalog::ifindex_to_phy_port(uint32_t ifindex)
 {
-    return IFINDEX_TO_PARENT_PORT(ifindex);
+    return ETH_IFINDEX_TO_PARENT_PORT(ifindex);
 }
 
 uint32_t

@@ -51,6 +51,11 @@ typedef struct pds_vnic_spec_s {
     ///< egress IPv6 policy table(s)
     uint8_t num_egr_v6_policy;
     pds_policy_key_t egr_v6_policy[PDS_MAX_VNIC_POLICY];
+    ///< when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
+    ///< PFs/VFs present, datapath should be told which VF/PF (aka. lif or
+    ///< host interface) a particular vnic is attached to by passing
+    ///< host_ifindex (of type IF_TYPE_LIF)
+    pds_ifindex_t host_ifindex;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

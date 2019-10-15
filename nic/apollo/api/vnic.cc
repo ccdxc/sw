@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
@@ -25,6 +26,8 @@ namespace api {
 
 vnic_entry::vnic_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    switch_vnic_ = false;
+    host_ifindex_ = IFINDEX_INVALID;
     ht_ctxt_.reset();
 }
 
@@ -74,6 +77,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
+    this->host_ifindex_ = spec->host_ifindex;
     return SDK_RET_OK;
 }
 

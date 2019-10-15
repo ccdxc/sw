@@ -148,7 +148,7 @@ create_ports (void)
     num_phy_ports = hal::g_hal_state->catalog()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {
         ifindex = ETH_IFINDEX(hal::g_hal_state->catalog()->slot(),
-                              phy_port, IF_DEFAULT_CHILD_PORT);
+                              phy_port, ETH_IF_DEFAULT_CHILD_PORT);
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(ifindex, phy_port, &port_args);
         create_port(ifindex, &port_args);

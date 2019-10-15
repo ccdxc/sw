@@ -107,6 +107,7 @@ if_impl::nuke_resources(api_base *api_obj) {
 sdk_ret_t
 if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    uint32_t tm_port;
     pds_if_spec_t *spec;
     p4pd_error_t p4pd_ret;
     lif_actiondata_t lif_data = { 0 };
@@ -114,7 +115,12 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->if_spec;
     if (spec->type == PDS_IF_TYPE_UPLINK) {
         // program the lif id in the TM
-        ret = sdk::platform::capri::capri_tm_uplink_lif_set(spec->uplink_info.port_num, hw_id_);
+        tm_port =
+            g_pds_state.catalogue()->logical_port_to_tm_port(spec->uplink_info.port_num);
+        PDS_TRACE_DEBUG("Creating uplink if 0x%x, port %u, hw_id_ %u, "
+                        "tm_port %u", spec->key.id, spec->uplink_info.port_num,
+                        hw_id_, tm_port);
+        ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, hw_id_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program uplink 0x%s's lif %u in TM "
                           "register", spec->key.id, hw_id_);

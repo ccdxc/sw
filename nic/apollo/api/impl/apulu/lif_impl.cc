@@ -9,9 +9,11 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
+#include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
@@ -47,16 +49,6 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     type_ = spec->type;
     nh_idx_ = 0xFFFFFFFF;
     vnic_hw_id_ = 0xFFFF;
-}
-
-lif_type_t
-lif_impl::type(void) {
-    return type_;
-}
-
-pds_lif_key_t
-lif_impl::key(void) {
-    return key_;
 }
 
 #define lif_action              action_u.lif_lif_info
@@ -126,8 +118,10 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 sdk_ret_t
 lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
+    if_impl *intf;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
+    pds_ifindex_t if_index;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data = { 0 };
@@ -190,8 +184,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     memset(&tparams, 0, sizeof(tparams));
-    key.capri_intrinsic_lif =
-        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
+    if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
+    intf = (if_impl *)if_db()->find(&if_index)->impl();
+    key.capri_intrinsic_lif = intf->hw_id();
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -229,7 +224,9 @@ error:
 sdk_ret_t
 lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
+    if_impl *intf;
     sdk_ret_t ret;
+    pds_ifindex_t if_index;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
@@ -294,8 +291,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     memset(&tparams, 0, sizeof(tparams));
-    key.capri_intrinsic_lif =
-        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
+    if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
+    intf = (if_impl *)if_db()->find(&if_index)->impl();
+    key.capri_intrinsic_lif = intf->hw_id();
     mask.capri_intrinsic_lif_mask = ~0;
     key.control_metadata_tunneled_packet = 0;
     mask.control_metadata_tunneled_packet_mask = ~0;

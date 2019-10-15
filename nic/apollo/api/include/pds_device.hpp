@@ -27,7 +27,7 @@ typedef enum pds_device_oper_mode_e {
     ///< bump-in-the-wire mode with workloads on uplink port(s)
     PDS_DEV_OPER_MODE_BITW = 1,
     ///< host path mode with workloads on pcie
-   PDS_DEV_OPER_MODE_HOST  = 2,
+    PDS_DEV_OPER_MODE_HOST = 2,
 } pds_device_oper_mode_t;
 
 /// \brief device specification

@@ -60,6 +60,12 @@ public:
     /// \return     pointer to the interface instance found or NULL
     if_entry *find(pds_if_key_t *key) const;
 
+    /// \brief      walk the interface database and invoke the callback per
+    ///             interface
+    /// \param[in]  if_type    type of the interface
+    /// \param[in]  walk_cb    callback invoked per interface
+    /// \param[in]  ctxt       opaque context passed back to the callback
+    /// \return     pointer to the interface instance found or NULL
     sdk_ret_t walk(uint32_t if_type, sdk::lib::ht::ht_walk_cb_t walk_cb,
                    void *ctxt);
 

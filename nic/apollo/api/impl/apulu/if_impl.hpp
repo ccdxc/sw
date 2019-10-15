@@ -125,6 +125,10 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief      return h/w id of this interface
+    /// \return     h/w id corresponding to this interface
+    uint16_t hw_id(void) const { return hw_id_; }
+
 private:
     /// \brief  constructor
     if_impl() {

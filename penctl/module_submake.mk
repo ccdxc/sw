@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := penctl.submake
-MODULE_PIPELINE := iris apollo
+MODULE_PIPELINE := iris
 include ${MKDEFS}/post.mk

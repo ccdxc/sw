@@ -75,6 +75,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
                     spec->key.id, spec->type);
      memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
      type_ = spec->type;
+     ifindex_ = spec->key.id;
      switch (type_) {
      case PDS_IF_TYPE_UPLINK:
          if_info_.uplink_.port_ = spec->uplink_info.port_num;

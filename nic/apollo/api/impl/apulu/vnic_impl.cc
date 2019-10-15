@@ -10,6 +10,7 @@
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -27,6 +28,8 @@
 
 #define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
+#define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
+#define txdma_vnic_info               action_u.vnic_info_txdma_vnic_info_txdma
 
 namespace api {
 namespace impl {
@@ -56,19 +59,41 @@ sdk_ret_t
 vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
+    lif_impl *lif;
     subnet_entry *subnet;
+    pds_lif_key_t lif_key;
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key = { 0 };
     local_mapping_swkey_t local_mapping_key = { 0 };
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
-    // allocate hw id for this vnic
-    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to allocate hw id for vnic %u, err %u",
-                      spec->key.id, ret);
-        return ret;
+    subnet = subnet_db()->find(&spec->subnet);
+    if (subnet == NULL) {
+        PDS_TRACE_ERR("Unable to find subnet %u, vpc %u", spec->subnet.id,
+                      spec->vpc.id);
+        return sdk::SDK_RET_INVALID_ARG;
     }
-    hw_id_ = idx;
+    if (spec->host_ifindex == IFINDEX_INVALID) {
+        // allocate hw id for this vnic
+        if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate hw id for vnic %u, err %u",
+                          spec->key.id, ret);
+            return ret;
+        }
+        hw_id_ = idx;
+    } else {
+        // inherit vnic hw id of the corresponding lif
+        if (IFINDEX_TO_IFTYPE(spec->host_ifindex) != IF_TYPE_LIF) {
+            PDS_TRACE_ERR("Incorrect interface type %u vnic %u spec, "
+                          "ifindext 0x%x",
+                          IFINDEX_TO_IFTYPE(spec->host_ifindex),
+                          spec->key.id, spec->host_ifindex);
+            return SDK_RET_INVALID_ARG;
+        }
+        lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        lif = lif_impl_db()->find(&lif_key);
+        hw_id_ = lif->vnic_hw_id();
+    }
 
     // reserve an entry in LOCAL_MAPPING table
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
@@ -111,10 +136,7 @@ error:
 sdk_ret_t
 vnic_impl::release_resources(api_base *api_obj) {
     sdk_table_api_params_t tparams;
-
-    if (hw_id_ != 0xFFFF) {
-        vnic_impl_db()->vnic_idxr()->free(hw_id_);
-    }
+    vnic_entry *vnic = (vnic_entry *)api_obj;
 
     memset(&tparams, 0, sizeof(tparams));
     if (local_mapping_hdl_.valid()) {
@@ -126,23 +148,64 @@ vnic_impl::release_resources(api_base *api_obj) {
         tparams.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&tparams);
     }
+
+    // if the vnic_hw_id_ is not inherited from the lif, release it
+    if ((vnic->host_ifindex() == IFINDEX_INVALID) && (hw_id_ != 0xFFFF)) {
+        vnic_impl_db()->vnic_idxr()->free(hw_id_);
+    }
+
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vnic_impl::nuke_resources(api_base *api_obj) {
+    sdk_ret_t ret;
+    subnet_entry *subnet;
     sdk_table_api_params_t tparams;
+    mapping_swkey_t mapping_key = { 0 };
+    vnic_entry *vnic = (vnic_entry *)api_obj;
+    local_mapping_swkey_t local_mapping_key = { 0 };
 
-    if (hw_id_ != 0xFFFF) {
+    //subnet = subnet_db()->find(&spec->subnet);
+
+    // remove entry from LOCAL_MAPPING table
+    local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
+    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+    sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
+                      vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
+                                   0, sdk::table::handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING"
+                      "table for vnic %u, err %u", vnic->key().id, ret);
+        // fall thru
+    }
+
+    // remove entry from MAPPING table
+    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+    sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
+                     vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
+                                   0, sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to remote entry in MAPPING "
+                      "table for vnic %u, err %u", vnic->key().id, ret);
+        // fall thru
+    }
+
+#if 0
+    // free the vnic hw id, if its not inherited from lif
+    if ((spec->host_ifindex == IFINDEX_INVALID) && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
-    memset(&tparams, 0, sizeof(tparams));
-    // TODO:
+#endif
+
     return SDK_RET_OK;
 }
 
-#define rxdma_vnic_info    action_u.vnic_info_rxdma_vnic_info_rxdma
-#define txdma_vnic_info    action_u.vnic_info_txdma_vnic_info_txdma
 sdk_ret_t
 vnic_impl::populate_rxdma_vnic_info_policy_root_(
                vnic_info_rxdma_actiondata_t *tx_vnic_info_data,
@@ -207,7 +270,6 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_rxdma_actiondata_t rxdma_rx_vnic_info_v6_data = { 0 };
     vnic_info_rxdma_actiondata_t rxdma_tx_vnic_info_v4_data = { 0 };
     vnic_info_rxdma_actiondata_t rxdma_tx_vnic_info_v6_data = { 0 };
-
 
     hw_id = hw_id_ << 1;
     rxdma_rx_vnic_info_v4_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
@@ -335,8 +397,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
 
     spec = &obj_ctxt->api_params->vnic_spec;
-
-    // fetch the relevant objects
+    // get the subnet of this vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
         PDS_TRACE_ERR("Failed to find subnet %u, vpc %u",
@@ -428,7 +489,7 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                    local_mapping_hdl_);
     ret = mapping_impl_db()->local_mapping_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program LOCAL_MAPPING entry for vnic %u "
+        PDS_TRACE_ERR("Failed to program LOCAL_MAPPING entry for vnic %u, "
                       "(subnet %u, mac %s)", spec->key.id, spec->subnet.id,
                       macaddr2str(spec->mac_addr));
         goto error;
@@ -463,7 +524,7 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                    mapping_hdl_);
     ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program MAPPING entry for vnic %u"
+        PDS_TRACE_ERR("Failed to program MAPPING entry for vnic %u, "
                       "(subnet %u, mac %s)", spec->key.id, spec->subnet.id,
                       macaddr2str(spec->mac_addr));
         goto error;

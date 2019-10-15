@@ -244,7 +244,7 @@ create_ports (void)
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {
         ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
-                              phy_port, IF_DEFAULT_CHILD_PORT);
+                              phy_port, ETH_IF_DEFAULT_CHILD_PORT);
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(ifindex, phy_port, &port_args);
         create_port(ifindex, &port_args);
