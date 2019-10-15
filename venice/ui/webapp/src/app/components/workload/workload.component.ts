@@ -32,6 +32,8 @@ import { SelectItem } from 'primeng/primeng';
   encapsulation: ViewEncapsulation.None
 })
 export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, WorkloadWorkload> implements OnInit, OnDestroy {
+
+  public static WORKLOAD_FIELD_DSCS: string = 'dscs';
   // Feature Flags
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
@@ -120,8 +122,13 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     super(_controllerService, cdr, uiconfigsService);
   }
 
+  /**
+   * Fetch data.
+   */
   postNgInit() {
-    this.getWorkloads();
+    this.getHosts() ; // prepare hostOptions needed by newworkload component.
+    this.getNaples(); // get DSC cards
+    this.getWorkloads(); // Once workloads are available, it will build object-maps
   }
 
   getHosts() {
@@ -132,7 +139,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
         this.hostOptions = this.hostsEventUtility.processEvents(response).map( x => {
           return { label: x.meta.name, value: x.meta.name };
         });
-        this.getNaples();
       },
       this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
     );
@@ -145,7 +151,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostMap(this.dataObjects, this.naples, this.hostObjects );
       },
       this.controllerService.webSocketErrorHandler('Failed to get Naples')
     );
@@ -266,7 +271,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   }
 
   /**
-   * Chain REST callss to get  workloads -> hosts -> DSCs
+   * Fetch workloads.
    */
   getWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
@@ -274,11 +279,16 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
-        this.getHosts();
+        this.buildObjectsMap();
       },
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
     this.subscriptions.push(subscription);
+  }
+
+  public buildObjectsMap() {
+    this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostMap(this.dataObjects, this.naples, this.hostObjects);
+    this.buildWorkloadDSCS();
   }
 
   deleteRecord(object: WorkloadWorkload): Observable<{ body: IWorkloadWorkload | IApiStatus | Error, statusCode: number }> {
@@ -313,6 +323,13 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     } else {
       return [];
     }
+  }
+
+  buildWorkloadDSCS() {
+    this.dataObjects.forEach( (workload) => {
+      const dscs = this.getDSCs(workload);
+      workload[WorkloadComponent.WORKLOAD_FIELD_DSCS] = (dscs || dscs.length > 0) ? dscs : [];
+    });
   }
 
   editLabels() {

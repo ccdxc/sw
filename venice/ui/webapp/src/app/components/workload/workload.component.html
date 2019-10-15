@@ -68,8 +68,8 @@
         <a routerLink="/cluster/hosts" [matTooltip]="'Host machine'">
           {{rowData.spec["host-name"]}}</a>
       </div>
-      <div>DSC:
-        <ng-container *ngFor="let dsc of getDSCs(rowData)">
+      <div *ngIf="rowData.dscs && rowData.dscs.length>0"> DSC:
+        <ng-container *ngFor="let dsc of rowData.dscs">
           <a [matTooltip]="'Disctributed Services Card'"
              routerLink="/cluster/naples/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
         </ng-container>
