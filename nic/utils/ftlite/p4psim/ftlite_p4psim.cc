@@ -6,22 +6,17 @@
 #include "nic/utils/ftlite/ftlite.hpp"
 #include "lib/utils/crc_fast.hpp"
 
-using sdk::utils::crcFast;
-
 namespace ftlite {
 namespace p4psim {
 
 using namespace ftlite;
 static state_t g_state;
-static sdk::utils::crcFast *crc32gen;
 
 sdk_ret_t
 init(init_params_t *ips) {
     auto ret = g_state.init(ips);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    crc32gen = crcFast::factory();
-    SDK_ASSERT(crc32gen);
     return SDK_RET_OK;
 }
 
@@ -31,7 +26,7 @@ calchash_(T* flow) {
     memset(key, 0, sizeof(key));
     memcpy(key, &flow->lentry, sizeof(T));
     ((T*)key)->lentry.swizzle();
-    return crc32gen->compute_crc(key, 64, 0);
+    return sdk::utils::crc32(key, 64, 0);
 }
 
 template<class T> static void

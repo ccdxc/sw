@@ -154,12 +154,6 @@ HbmHash::init()
 {
     initialize_slabs();
 
-    // Initialize CRC Fast
-    crc_ = crcFast::factory();
-    if (crc_ == NULL) {
-        return SDK_RET_OOM;
-    }
-
     return SDK_RET_OK;
 }
 
@@ -252,7 +246,6 @@ HbmHash::HbmHash(std::string table_name,
     entry_map_ = (HbmHashEntry **)SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRIES,
                                       sizeof(HbmHashEntry *) * hash_capacity_);
 
-    crc_ = NULL;
     hbm_hash_entry_slab_ = NULL;
     hbm_sw_key_slab_ = NULL;
     hbm_hw_key_slab_ = NULL;
@@ -662,7 +655,7 @@ HbmHash::remove(uint32_t index)
 uint32_t
 HbmHash::generate_hash_(void *key, uint32_t key_len, bool log)
 {
-    return crc_->compute_crc((uint8_t *)key, key_len, hash_poly_);
+    return sdk::utils::crc32((uint8_t *)key, key_len, hash_poly_);
 }
 
 // ---------------------------------------------------------------------------

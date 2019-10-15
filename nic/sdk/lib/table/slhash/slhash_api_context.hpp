@@ -42,9 +42,6 @@ public:
     // Output Handle
     sdk::table::handle_t ohandle;
 
-    // CRC32 Generator
-    sdk::utils::crcFast *crc32gen_;
-
     // Params for tcam apis
     bool tcam_params_valid;
     sdk_table_api_params_t tcam_params;

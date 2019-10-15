@@ -5,7 +5,6 @@
 
 sdk::table::properties_t * FTL_AFPFX()::props_ = NULL;
 void * FTL_AFPFX()::main_table_                = NULL;
-sdk::utils::crcFast * FTL_AFPFX()::crc32gen_   = NULL;
 uint32_t hw_entry_count_                       = 0;
 
 #define FTL_API_BEGIN(_name) {\
@@ -145,9 +144,6 @@ skip_props:
                    props_->stable_base_mem_pa, props_->stable_base_mem_va);
 
 skip_tables:
-    // Initialize CRC Fast
-    crc32gen_ = crcFast::factory();
-    SDK_ASSERT(crc32gen_);
 
     return SDK_RET_OK;
 }
@@ -163,7 +159,6 @@ FTL_AFPFX()::destroy(FTL_AFPFX() *t) {
     FTL_API_END("DestroyTable", SDK_RET_OK);
     t->main_table_ = NULL;
     t->props_ = NULL;
-    t->crc32gen_ = NULL;
 }
 
 //---------------------------------------------------------------------------
@@ -182,9 +177,9 @@ FTL_AFPFX()::genhash_(sdk_table_api_params_t *params) {
         static thread_local char buff[256];
         ((FTL_MAKE_AFTYPE(entry_t)*)params->entry)->tostr(buff, sizeof(buff));
         FTL_TRACE_VERBOSE("Input Entry = [%s]", buff);
-        params->hash_32b = crc32gen_->compute_crc((uint8_t *)&hashkey,
-                                                  sizeof(ftlv6_entry_t),
-                                                  props_->hash_poly);
+        params->hash_32b = sdk::utils::crc32((uint8_t *)&hashkey,
+                                             sizeof(ftlv6_entry_t),
+                                             props_->hash_poly);
 #else
         params->hash_32b = crc32_aarch64((uint64_t *)&hashkey);
 #endif

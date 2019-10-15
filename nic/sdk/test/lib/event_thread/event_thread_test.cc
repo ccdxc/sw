@@ -15,6 +15,7 @@ using namespace sdk::lib;
 #define THREAD_T4 4
 #define THREAD_T5 5
 #define THREAD_T6 6
+#define THREAD_T7 7
 
 class event_thread_test : public ::testing::Test {
 public:
@@ -22,6 +23,7 @@ public:
     event_thread *t2;
     event_thread *t3;
     event_timer timer;
+    event_timer timer2;
     event_io    io;
     int         fd[2];
     bool got_ping = false;
@@ -129,13 +131,13 @@ exit2 (void *ctx)
 
 TEST_F (event_thread_test, basic_functionality) {
     this->t1 = event_thread::factory("t1", THREAD_T1, THREAD_ROLE_CONTROL,
-                                     0x0, init1, exit1, msg1, NULL, 0,
+                                     0x0, init1, exit1, msg1, NULL, NULL, 0,
                                      SCHED_OTHER, true);
     this->t2 = event_thread::factory("t2", THREAD_T2, THREAD_ROLE_CONTROL,
-                                     0x0, NULL, exit2, msg2, NULL, 0,
+                                     0x0, NULL, exit2, msg2, NULL, NULL, 0,
                                      SCHED_OTHER, true);
     this->t3 = event_thread::factory("t3", THREAD_T3, THREAD_ROLE_CONTROL,
-                                     0x0, init3, NULL, NULL, NULL, 0,
+                                     0x0, init3, NULL, NULL, NULL, NULL, 0,
                                      SCHED_OTHER, true);
     
     this->t1->start(this);
@@ -163,31 +165,72 @@ TEST_F (event_thread_test, basic_functionality) {
 void
 ipc_cb (ipc::ipc_msg_ptr msg, void *ctx)
 {
-    printf("%s\n", (char *)msg->data());
-    event_ipc_reply(msg, "ipc pong", 9);
+    printf("Server got: %s\n", (char *)msg->data());
+    event_ipc_reply(msg, msg->data(), msg->length());
+}
+
+void
+timer2_callback (event_timer_t *timer)
+{
+    const char message[] = "echo from event";
+    event_ipc_send(THREAD_T4, (void *)message, sizeof(message),
+                   (const void *)0x1234);
+}
+
+void
+init_ipc_client(void *ctx)
+{
+    event_thread_test *test = (event_thread_test *)ctx;
+    test->timer2.ctx = ctx;
+    event_timer_init(&test->timer2, timer2_callback, 1., 0.);
+    event_timer_start(&test->timer2);
+}
+
+void
+ipc_client_cb (uint32_t sender, ipc::ipc_msg_ptr msg, void *ctx,
+               const void *cookie)
+{
+    printf("Client got: %s, cookie: %p\n", (char *)msg->data(),
+           cookie);
 }
 
 TEST_F (event_thread_test, ipc_functionality) {
     event_thread *t4 = event_thread::factory("t4", THREAD_T4,
                                              THREAD_ROLE_CONTROL, 0x0,
-                                             NULL, NULL, NULL, ipc_cb,
+                                             NULL, NULL, NULL, ipc_cb, NULL,
                                              0, SCHED_OTHER, true);
     t4->start(NULL);
 
-    ipc::ipc_client::factory(THREAD_T5);
-
+    //
     //
     // IF WE SEND MESSAGE BEFORE THE LISTENER BINDS THE MESSAGE WILL BE LOST
     //
+    //
     sleep(2);
+
+    //
+    // async client
+    //
+    event_thread *t5 = event_thread::factory("t5", THREAD_T5,
+                                             THREAD_ROLE_CONTROL, 0x0,
+                                             init_ipc_client, NULL, NULL,
+                                             ipc_cb,
+                                             ipc_client_cb,
+                                             0, SCHED_OTHER, true);
+    t5->start(this);
+    sleep(2);
+    
+    //
+    // sync client
+    //
     ipc::ipc_msg_ptr msg;
-    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
+    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
+    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
+    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::ipc_client::send_recv_once(THREAD_T4, "ipc ping", 9);
+    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
     sleep(2);
 }

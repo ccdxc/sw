@@ -19,11 +19,8 @@ int main()
     };
 
     unsigned int crc = 0;
-    sdk::utils::crcFast *crcgen;
-
-    crcgen = sdk::utils::crcFast::factory(0);
     for (int i = 0; i < 1024*1024; i++) {
-        crc = crcgen->compute_crc(buf, sizeof(buf), 0);
+        crc = sdk::utils::crc32(buf, sizeof(buf), 0);
     }
     printf("%#x\n", crc);
     return 0;

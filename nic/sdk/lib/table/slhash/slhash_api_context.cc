@@ -42,8 +42,7 @@ slhctx::calchash() {
                                                       hwkey, NULL);
         SDK_ASSERT(p4pdret == P4PD_SUCCESS);
         SLHASH_TRACE_PRINT("HW Key:[%s]", rawstr(hwkey, props->hwkey_len));
-        hash_32b = crc32gen_->compute_crc(hwkey, props->hwkey_len,
-                                          props->hash_poly);
+        hash_32b = sdk::utils::crc32(hwkey, props->hwkey_len, props->hash_poly);
         hash_valid = true;
     } else {
         SLHASH_TRACE_VERBOSE("Using Hash32b value from input params");
@@ -211,10 +210,6 @@ sdk_ret_t
 slhctx::init(sdk_table_api_op_t op,
              sdk::table::sdk_table_api_params_t *params,
              sdk::table::slhash_internal::properties *props) {
-    if (this->crc32gen_ == NULL) {
-        this->crc32gen_ = sdk::utils::crcFast::factory();
-        SDK_ASSERT(crc32gen_);
-    }
 
     this->params = params;
     this->props = props;

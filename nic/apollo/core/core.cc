@@ -265,6 +265,7 @@ spawn_api_thread (pds_state *state)
                                         api::api_thread_exit_fn,
                                         api::api_thread_event_cb,
                                         api::api_thread_ipc_cb,
+                                        NULL, // ipc client cb
                                         sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                                         sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                                         NULL);

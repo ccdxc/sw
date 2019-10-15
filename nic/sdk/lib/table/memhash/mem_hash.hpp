@@ -22,7 +22,6 @@ using namespace std;
 namespace sdk {
 namespace table {
 
-using sdk::utils::crcFast;
 using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
 using sdk::table::memhash::mem_hash_txn;
@@ -32,7 +31,6 @@ class mem_hash {
 private:
     sdk::table::properties_t *props_;
     void *main_table_;
-    crcFast *crc32gen_;
     mem_hash_api_stats api_stats_;
     mem_hash_table_stats table_stats_;
     mem_hash_txn txn_;

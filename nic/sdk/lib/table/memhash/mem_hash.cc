@@ -128,10 +128,6 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
 
     props_->hash_poly = tinfo.hash_type;
 
-    // Initialize CRC Fast
-    crc32gen_ = crcFast::factory();
-    SDK_ASSERT(crc32gen_);
-
     props_->stable_id = tinfo.oflow_table_id;
     SDK_ASSERT(props_->stable_id);
 
@@ -180,7 +176,6 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
 mem_hash::mem_hash() {
     props_ = NULL;
     main_table_ = NULL;
-    crc32gen_ = NULL;
     SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
 }
 
@@ -202,9 +197,6 @@ mem_hash::destroy(mem_hash *table) {
 }
 
 mem_hash::~mem_hash() {
-    if (crc32gen_) {
-        crcFast::destroy(crc32gen_);
-    }
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES, props_);
     SDK_SPINLOCK_DESTROY(&slock_);
 }
@@ -232,8 +224,7 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
                                                hwkey, NULL);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
 //#ifdef SIM
-    hash_32b = crc32gen_->compute_crc(hwkey, props_->hwkey_len,
-                                      props_->hash_poly);
+    hash_32b = sdk::utils::crc32(hwkey, props_->hwkey_len, props_->hash_poly);
 //#else
 //    hash_32b = crc32_aarch64((uint64_t *)hwkey, props_->hwkey_len);
 //#endif

@@ -59,7 +59,6 @@
 
 using namespace std;
 using sdk::lib::indexer;
-using sdk::utils::crcFast;
 using sdk::table::table_health_state_t;
 using sdk::table::table_health_monitor_func_t;
 
@@ -112,7 +111,6 @@ private:
     uint32_t            entire_data_len_;               // entire data len
     uint32_t            max_recircs_;                   // max. recircs
     HashPoly            hash_poly_;                     // hash polynomial
-    crcFast             *crc_;                          // crc Table for fast comput.
 
     slab                *hbm_hash_entry_slab_;          // hbm_hash_entry slab
     slab                *hbm_sw_key_slab_;              // sw key slab

@@ -68,7 +68,6 @@ using sdk::table::ftlint::apistats;
 using sdk::table::ftlint::tablestats;
 using ftlindexer = sdk::table::ftlint::indexer;
 
-using sdk::utils::crcFast;
 using sdk::table::sdk_table_factory_params_t;
 using sdk::table::sdk_table_api_params_t;
 

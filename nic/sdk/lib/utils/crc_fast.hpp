@@ -11,47 +11,15 @@ namespace utils {
 
 typedef uint32_t crc;
 
-class crcFast {
-public:
-    enum crc32_polynomial_type_ {
-        // CRC_32,
-        CRC32_POLYNOMIAL_TYPE_CRC32     = 0,
-        CRC32_POLYNOMIAL_TYPE_CRC32C    = 1,
-        CRC32_POLYNOMIAL_TYPE_CRC32K    = 2,
-        CRC32_POLYNOMIAL_TYPE_CRC32Q    = 3,
-        CRC32_POLYNOMIAL_TYPE_MAX,
-    } crc32_polynomial_type_t;
+typedef enum crc32_polynomial_type_ {
+    CRC32_POLYNOMIAL_TYPE_CRC32     = 0,
+    CRC32_POLYNOMIAL_TYPE_CRC32C    = 1,
+    CRC32_POLYNOMIAL_TYPE_CRC32K    = 2,
+    CRC32_POLYNOMIAL_TYPE_CRC32Q    = 3,
+    CRC32_POLYNOMIAL_TYPE_MAX,
+} crc32_polynomial_type_t;
 
-    static crcFast *factory(bool thread_safe=false);
-    static void destroy(crcFast *crc);
-    crc compute_crc(uint8_t const message[], int nBytes,
-                    uint8_t poly_index);
-
-private:
-    sdk_spinlock_t    slock_;          // lock for thread safety
-    bool              thread_safe_;    // TRUE if thread safety is needed
-    uint8_t           num_polys_;
-    uint32_t          **crcTable_;
-    // crc               crcTable[CRC_POLY_MAX][256];
-
-    crcFast() {};
-    ~crcFast();
-    sdk_ret_t init_(bool thread_safe);
-    sdk_ret_t init_poly_(uint8_t poly_index, uint32_t poly);
-
-    void lock_(void) {
-        if (thread_safe_) {
-          SDK_SPINLOCK_LOCK(&slock_);
-        }
-    }
-
-    void unlock_(void) {
-        if (thread_safe_) {
-          SDK_SPINLOCK_UNLOCK(&slock_);
-        }
-    }
-
-};
+extern crc crc32(uint8_t const message[], int nBytes, uint8_t poly_index);
 
 }   // namespace utils
 }   // namespace sdk

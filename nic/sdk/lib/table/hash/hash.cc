@@ -120,9 +120,6 @@ hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
     // uint32_t hwdatalen_bits = hwdata_len_;
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
-
-    crc32gen_ = crcFast::factory();
-    SDK_ASSERT(crc32gen_);
 }
 
 // ---------------------------------------------------------------------------
@@ -137,10 +134,6 @@ hash::~hash()
     // freeing up ht
     if (entry_ht_) {
         ht::destroy(entry_ht_);
-    }
-    // freeing up crcFast
-    if (crc32gen_) {
-        crcFast::destroy(crc32gen_);
     }
     // delete[] stats_;
     SDK_FREE(SDK_MEM_ALLOC_HASH_STATS, stats_);
@@ -733,7 +726,7 @@ uint32_t
 hash::generate_hash_(void *key, uint32_t key_len)
 {
     uint32_t hash_val = 0;
-    hash_val = crc32gen_->compute_crc((uint8_t *)key, key_len, hash_poly_);
+    hash_val = sdk::utils::crc32((uint8_t *)key, key_len, hash_poly_);
 
 #if 0
     uint32_t crc_init_val = 0x00000000;

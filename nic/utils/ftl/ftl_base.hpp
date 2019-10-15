@@ -15,7 +15,6 @@ class FTL_AFPFX() {
 private:
     static sdk::table::properties_t *props_;
     static void *main_table_;
-    static crcFast *crc32gen_;
     apistats api_stats_;
     tablestats tstats_;
     FTL_MAKE_AFTYPE(apictx) apictx_[FTL_MAX_API_CONTEXTS + 1];

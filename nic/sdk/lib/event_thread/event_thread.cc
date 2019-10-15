@@ -51,6 +51,7 @@ event_thread::factory(const char *name, uint32_t thread_id,
                       thread_role_t thread_role, uint64_t cores_mask,
                       loop_init_func_t init_func, loop_exit_func_t exit_func,
                       event_message_cb message_cb, event_ipc_cb ipc_cb,
+                      event_ipc_client_cb ipc_client_cb,
                       uint32_t prio, int sched_policy, bool can_yield) {
     int          rv;
     void         *mem;
@@ -63,8 +64,8 @@ event_thread::factory(const char *name, uint32_t thread_id,
 
     new_thread = new (mem) event_thread();
     rv = new_thread->init(name, thread_id, thread_role, cores_mask,
-                          init_func, exit_func, message_cb, ipc_cb, prio,
-                          sched_policy, can_yield);
+                          init_func, exit_func, message_cb, ipc_cb,
+                          ipc_client_cb, prio, sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~event_thread();
         SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, new_thread);
@@ -79,6 +80,7 @@ event_thread::init(const char *name, uint32_t thread_id,
                    thread_role_t thread_role, uint64_t cores_mask,
                    loop_init_func_t init_func, loop_exit_func_t exit_func,
                    event_message_cb message_cb, event_ipc_cb ipc_cb,
+                   event_ipc_client_cb ipc_client_cb,
                    uint32_t prio, int sched_policy, bool can_yield) {
     int rc;
 
@@ -102,6 +104,7 @@ event_thread::init(const char *name, uint32_t thread_id,
     this->exit_func_ = exit_func;
     this->message_cb_ = message_cb;
     this->ipc_cb_ = ipc_cb;
+    this->ipc_client_cb_ = ipc_client_cb;
     this->user_ctx_ = NULL;
 
     // The async watcher is for getting messages from different threads
@@ -110,6 +113,10 @@ event_thread::init(const char *name, uint32_t thread_id,
     ev_async_start(this->loop_, &this->async_watcher_);
 
     g_event_thread_table[thread_id] = this;
+
+    for (int i = 0; i < IPC_MAX_ID + 1; i++) {
+        this->ipc_clients_[i] = NULL;
+    }
 
     return 0;
 }
@@ -166,9 +173,9 @@ event_thread::run_(void) {
     }
 
     // IPC
-    this->ipc_client_ = ipc::ipc_client::factory(this->thread_id());
+    this->ipc_server_ = ipc::ipc_server::factory(this->thread_id());
     ev_io_init(&this->ipc_watcher_, &this->ipc_callback_,
-               this->ipc_client_->fd(), EV_READ);
+               this->ipc_server_->fd(), EV_READ);
     this->ipc_watcher_.data = this;
 
     ev_io_start(this->loop_, &this->ipc_watcher_);
@@ -338,13 +345,35 @@ event_thread::message_send(void *message) {
 void
 event_thread::handle_ipc_(void) {
     while (1) {
-        ipc::ipc_msg_ptr msg = this->ipc_client_->recv();
+        ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
         if (msg == nullptr) {
             return;
         }
         // We received an IPC message but don't have a handler
         assert(this->ipc_cb_ != NULL);
         this->ipc_cb_(msg, this->user_ctx_);
+    }
+}
+
+void
+event_thread::handle_ipc_client_(ev_io *watcher) {
+    // Todo: Fixme: Stavros: Inefficient
+    uint32_t sender;
+    for (sender = 0; sender < IPC_MAX_ID + 1; sender++) {
+        if (watcher == &this->ipc_client_watchers_[sender]) {
+            break;
+        }
+    }
+    assert(sender < IPC_MAX_ID + 1);
+    while (1) {
+        const void *cookie;
+        ipc::ipc_msg_ptr msg = this->ipc_clients_[sender]->recv(&cookie);
+        if (msg == nullptr) {
+            return;
+        }
+        // We received an IPC reply but don't have a handler
+        assert(this->ipc_client_cb_ != NULL);
+        this->ipc_client_cb_(sender, msg, this->user_ctx_, cookie);
     }
 }
 
@@ -360,13 +389,52 @@ void
 event_thread::ipc_reply(ipc::ipc_msg_ptr msg, const void *data,
                         size_t data_length) {
     assert(t_event_thread_ == this);
-    this->ipc_client_->reply(msg, data, data_length);
+    this->ipc_server_->reply(msg, data, data_length);
 }
 
 
 void
 event_thread::ipc_callback_(struct ev_loop *loop, ev_io *watcher, int revents) {
     ((event_thread *)watcher->data)->handle_ipc_();
+}
+
+void
+event_ipc_send (uint32_t recipient, const void *data, size_t data_length,
+                const void *cookie)
+{
+    assert(t_event_thread_ != NULL);
+    t_event_thread_->ipc_send(recipient, data, data_length, cookie);
+}
+
+void
+event_thread::ipc_send(uint32_t recipient, const void *data, size_t data_length,
+                       const void *cookie)
+{
+    ipc::ipc_client *client;
+    
+    assert(t_event_thread_ == this);
+
+    client = this->ipc_clients_[recipient];
+    if (client == NULL) {
+        ev_io *watcher = &this->ipc_client_watchers_[recipient];
+
+        client = ipc::ipc_client::factory(recipient);
+        this->ipc_clients_[recipient] = client;
+        ev_io_init(watcher, &this->ipc_client_callback_, client->fd(), EV_READ);
+        watcher->data = this;
+        ev_io_start(this->loop_, watcher);
+
+        // If we don't do this we don't get any events coming from ZMQ
+        // It doesn't play ver well with libevent
+        client->recv(NULL);
+    }
+    client->send(data, data_length, cookie);
+}
+
+void
+event_thread::ipc_client_callback_(struct ev_loop *loop, ev_io *watcher,
+                                   int revents) {
+    ((event_thread *)watcher->data)->handle_ipc_client_(watcher);
 }
 
 } // namespace lib

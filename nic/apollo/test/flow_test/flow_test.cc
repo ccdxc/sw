@@ -28,7 +28,6 @@
 #include "flow_test.hpp"
 
 using std::string;
-using sdk::utils::crcFast;
 namespace pt = boost::property_tree;
 
 char                *g_cfg_file = NULL;
@@ -124,11 +123,8 @@ TEST_F(flow_gtest, DISABLED_p4pd_hwkey_hwmask_build) {
 
 TEST_F(flow_gtest, DISABLED_crc_perf) {
     uint8_t hwkey[64];
-    crcFast *crc32gen_;
-    crc32gen_ = crcFast::factory();
-    SDK_ASSERT(crc32gen_);
     for (uint32_t i = 0; i < PERF_TEST_SCALE; i++) {
-        crc32gen_->compute_crc(hwkey, 64, 0);
+        sdk::utils::crc32(hwkey, 64, 0);
     }
 }
 
