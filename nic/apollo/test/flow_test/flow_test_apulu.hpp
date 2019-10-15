@@ -77,19 +77,18 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, ktype %d, lkp_id %d\n",
+        fprintf(d_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
+                "nexthop_group_index %d, flow_role %d, ktype %d, bd_id %d\n",
                 entry->proto,
-                entry->session_index,
+                entry->session_id,
                 src_ip_str,
                 dst_ip_str,
                 entry->sport,
                 entry->dport,
-                entry->nexthop_group_index_sbit0_ebit6,
-                entry->nexthop_group_index_sbit7_ebit9,
+                entry->nexthop_id,
                 entry->flow_role,
                 entry->ktype,
-                entry->lkp_id);
+                entry->bd_id);
         fflush(d_fp);
     }
 }
@@ -102,18 +101,17 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, lkp_id %d\n",
+        fprintf(d_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
+                "nexthop_group_index %d, flow_role %d, bd_id %d\n",
                 entry->proto,
-                entry->session_index,
+                entry->session_id,
                 src_ip_str,
                 dst_ip_str,
                 entry->sport,
                 entry->dport,
-                entry->nexthop_group_index_sbit0_ebit6,
-                entry->nexthop_group_index_sbit7_ebit9,
+                entry->nexthop_id,
                 entry->flow_role,
-                entry->lkp_id);
+                entry->bd_id);
         fflush(d_fp);
     }
 }
@@ -162,7 +160,7 @@ private:
     ftlv6 *v6table;
     ftlv4 *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
-    uint32_t session_index;
+    uint32_t session_id;
     uint32_t nexthop_group_index;
     uint32_t hash;
     uint16_t sport_base;
@@ -298,7 +296,7 @@ public:
 
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
-        session_index = 1;
+        session_id = 1;
         nexthop_group_index = 1;
         hash = 0;
         with_hash = w;
@@ -466,13 +464,13 @@ public:
                           uint16_t sport, uint16_t dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
         v6entry.ktype = 2;
-        v6entry.lkp_id = vpc - 1;
+        v6entry.bd_id = vpc - 1;
         v6entry.sport = sport;
         v6entry.dport = dport;
         v6entry.proto = proto;
         sdk::lib::memrev(v6entry.src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
         sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
-        v6entry.session_index = session_index++;
+        v6entry.session_id = session_id++;
         v6entry.set_nhgroup_index(nexthop_group_index++);
 
         // reset nexthop_group_index if it reaches max
@@ -492,13 +490,13 @@ public:
                           ipv4_addr_t v4_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.lkp_id = vpc - 1;
+        v4entry.bd_id = vpc - 1;
         v4entry.sport = sport;
         v4entry.dport = dport;
         v4entry.proto = proto;
         v4entry.src = v4_addr_sip;
         v4entry.dst = v4_addr_dip;
-        v4entry.session_index = session_index++;
+        v4entry.session_id = session_id++;
         v4entry.set_nhgroup_index(nexthop_group_index++);
 
         // reset nexthop_group_index if it reaches max

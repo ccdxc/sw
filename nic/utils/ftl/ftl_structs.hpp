@@ -12,9 +12,8 @@
 #include "ftlv6_structs_artemis.hpp"
 #include "ftlv4_structs_artemis.hpp"
 #elif APULU
-// this is temporary
-#include "ftlv6_structs_apollo.hpp"
-#include "ftlv4_structs_apollo.hpp"
+#include "ftlv6_structs_apulu.hpp"
+#include "ftlv4_structs_apulu.hpp"
 #else
 #error FTL is not suppored on IRIS pipeline (Yet!!).
 #endif
