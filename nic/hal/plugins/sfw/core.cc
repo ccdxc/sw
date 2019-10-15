@@ -9,7 +9,7 @@
 #include "core.hpp"
 #include "sfw_pkt_utils.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
-#include "nic/hal/plugins/alg_utils/alg_db.hpp"
+#include "nic/hal/plugins/sfw/alg_utils/alg_db.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/fte/fte_flow.hpp"
 

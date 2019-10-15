@@ -38,12 +38,6 @@ export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
 
 export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \
-                                plugin_alg_sip \
-                                plugin_alg_tftp \
-                                plugin_alg_dns \
-                                plugin_alg_rpc \
-                                plugin_alg_rtsp \
-                                plugin_alg_ftp \
                                 plugin_ep_learn \
                                 plugin_lb \
                                 plugin_nat \

@@ -19,26 +19,21 @@
             ]
         },
         {
-            "name"      : "alg_utils",
-            "provider"  : "pensando.io",
-            "lib"       : "libplugin_alg_utils.so",
-            "init_func" : "alg_utils_init",
-            "exit_func" : "alg_utils_exit",
-            "auto_load" : "true",
-            "deps"      : [],
-            "features"  : ["alg_utils"]
-        },
-        {
             "name"      : "sfw",
             "provider"  : "pensando.io",
             "lib"       : "libplugin_sfw.so",
             "init_func" : "sfw_init",
             "exit_func" : "sfw_exit",
             "auto_load" : "true",
-            "deps"      : ["pensando.io/alg_utils"],
             "features"  : [
                 "sfw",
-                "conntrack"
+                "conntrack",
+                "alg_ftp",
+                "alg_sip",
+                "alg_tftp",
+                "alg_dns",
+                "alg_rpc",
+                "alg_rtsp"
             ]
         },
         {
@@ -98,11 +93,11 @@
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/sfw:sfw",
                 "pensando.io/sfw:conntrack",
-                "pensando.io/alg_ftp:alg_ftp",
-                "pensando.io/alg_tftp:alg_tftp",
-                "pensando.io/alg_dns:alg_dns",
-                "pensando.io/alg_rpc:alg_rpc",
-                "pensando.io/alg_rtsp:alg_rtsp",
+                "pensando.io/sfw:alg_ftp",
+                "pensando.io/sfw:alg_tftp",
+                "pensando.io/sfw:alg_dns",
+                "pensando.io/sfw:alg_rpc",
+                "pensando.io/sfw:alg_rtsp",
                 "pensando.io/proxy:tcp",
                 "pensando.io/sfw:sfw",
                 "pensando.io/network:qos",
@@ -179,11 +174,11 @@
             "name": "alg-cflow",
             "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
             "outbound_features": [
-                "pensando.io/alg_ftp:alg_ftp",
-                "pensando.io/alg_tftp:alg_tftp",
-                "pensando.io/alg_rpc:alg_rpc",
-                "pensando.io/alg_rtsp:alg_rtsp",
-                "pensando.io/alg_dns:alg_dns"
+                "pensando.io/sfw:alg_ftp",
+                "pensando.io/sfw:alg_tftp",
+                "pensando.io/sfw:alg_rpc",
+                "pensando.io/sfw:alg_rtsp",
+                "pensando.io/sfw:alg_dns"
             ]
         },
         {

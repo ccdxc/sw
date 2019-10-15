@@ -11,7 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
-#include "nic/hal/plugins/alg_utils/alg_db.hpp"
+#include "nic/hal/plugins/sfw/alg_utils/alg_db.hpp"
 
 namespace hal {
 
