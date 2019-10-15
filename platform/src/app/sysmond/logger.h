@@ -1,7 +1,7 @@
 // {C} Copyright 201 Pensando Systems Inc. All rights reserved.
 
-#ifndef _LOGGER_H_
-#define _LOGGER_H_
+#ifndef __SYSMOND_LOGGER_H__
+#define __SYSMOND_LOGGER_H__
 
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/utils/trace/trace.hpp"
@@ -19,4 +19,4 @@ void sysmond_flush_logger(void);
 std::shared_ptr<spdlog::logger> GetLogger(void);
 std::shared_ptr<spdlog::logger> GetObflLogger(void);
 
-#endif
+#endif    // __SYSMOND_LOGGER_H__

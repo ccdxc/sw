@@ -47,3 +47,20 @@ memory_event_cb (uint64_t total_mem, uint64_t available_mem,
 {
     delphi_memory_event_cb(total_mem, available_mem, free_mem);
 }
+
+void
+intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
+{
+    switch (field->severity) {
+    case INTR_SEV_TYPE_HW_RMA:
+    case INTR_SEV_TYPE_FATAL:
+    case INTR_SEV_TYPE_ERR:
+        TRACE_INFO(GetObflLogger(), "name: {}_{}, count: {}, severity: {}, desc: {}",
+                   reg->name, field->name, field->count,
+                   get_severity_str(field->severity).c_str(), field->desc);
+        break;
+    case INTR_SEV_TYPE_INFO:
+    default:
+        break;
+    }
+}

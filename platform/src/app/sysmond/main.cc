@@ -4,6 +4,7 @@
 #include "lib/thread/thread.hpp"
 #include "lib/periodic/periodic.hpp"
 #include "platform/sysmon/sysmon.hpp"
+#include "platform/asicerror/interrupts.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
 #include "platform/evutils/include/evutils.h"
 #include "logger.h"
@@ -31,8 +32,28 @@ static sdk_ret_t
 sysmond_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     sysmon_monitor();
+    // traverse_interrupts(cap0);
     sysmond_flush_logger();
     return SDK_RET_OK;
+}
+
+static void
+sig_handler (int sig, siginfo_t *info, void *ptr)
+{
+    print_interrupts(cap0);
+    sysmond_flush_logger();
+}
+
+static void
+siginit (void)
+{
+    struct sigaction act;
+
+    memset(&act, 0, sizeof(act));
+    act.sa_sigaction = sig_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGUSR1, &act, NULL);
+    return;
 }
 
 int
@@ -42,6 +63,7 @@ main(int argc, char *argv[])
     int rv = 0;
     int thread_id = 0;
     sysmon_cfg_t sysmon_cfg;
+    intr_cfg_t intr_cfg;
 
     //initialize the logger
     initializeLogger();
@@ -72,6 +94,9 @@ main(int argc, char *argv[])
 
     // init the lib
     sysmon_init(&sysmon_cfg);
+
+    intr_cfg.intr_event_cb = intr_event_cb;
+    intr_init(&intr_cfg);
 
     // set the CPU cores for control threads
     sdk::lib::thread::control_cores_mask_set(0xf);
@@ -104,6 +129,8 @@ main(int argc, char *argv[])
                     SYSMOND_TIMER_ID_POLL, SYSMOND_POLL_TIME, NULL,
                     (sdk::lib::twheel_cb_t)sysmond_timer_cb,
                     true);
+
+    siginit();
 
     // event loop needed for callbacks
     evutil_run(EV_DEFAULT);

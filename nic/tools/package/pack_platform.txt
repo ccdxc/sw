@@ -49,6 +49,7 @@ nic/build/aarch64/iris/lib/libgtest.so                                          
 nic/build/aarch64/iris/lib/libpal.so                                            /platform/lib/
 nic/build/aarch64/iris/lib/libsensor.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libsysmon.so                                         /platform/lib/
+nic/build/aarch64/iris/lib/libasicerror.so                                      /platform/lib/
 
 # Third-Party Libraries
 nic/sdk/third-party/edit/aarch64/*.so                                          /platform/lib/
