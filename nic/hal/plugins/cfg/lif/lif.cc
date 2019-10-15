@@ -1130,6 +1130,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         strcpy(lif_clone->name, spec->name().c_str());
     }
 
+    if (app_ctxt->status_changed) {
+        lif_clone->admin_status = spec->admin_status();
+    }
+
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_update_args_init(&args);
     args.lif                   = lif;
@@ -1268,6 +1272,11 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->name_changed) {
         g_hal_state->lif_name_id_map_delete(lif->name);
         g_hal_state->lif_name_id_map_insert(lif_clone->name, lif_clone->lif_id);
+    }
+
+    // TBD trigger a LIF GET here
+    if (app_ctxt->status_changed) {
+        lif_clone->admin_status = lif->admin_status; 
     }
 
     // Free PD
@@ -1460,6 +1469,10 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->name_changed = true;
     }
 
+    if (lif->admin_status != spec->admin_status()) {
+        app_ctxt->status_changed = true;
+    }
+
     return ret;
 }
 
@@ -1537,7 +1550,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.pkt_filter_bcast_changed ||
           app_ctxt.pkt_filter_allmc_changed ||
           app_ctxt.pinned_uplink_changed ||
-          app_ctxt.name_changed)) {
+          app_ctxt.name_changed ||
+          app_ctxt.status_changed)) {
         HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }

@@ -857,6 +857,14 @@ devapi_lif::upd_name(std::string name)
 }
 
 sdk_ret_t
+devapi_lif::upd_state(sdk::platform::lif_state_t state)
+{
+    NIC_LOG_DEBUG("devapi_lif: {} state: {} -> {}", info_.lif_id, info_.lif_state, state);
+    info_.lif_state = state;
+    return lif_halupdate();
+}
+
+sdk_ret_t
 devapi_lif::create_macvlan_filter(mac_t mac, vlan_t vlan)
 {
 
@@ -1062,14 +1070,15 @@ devapi_lif::lif_halcreate(void)
     }
 
     NIC_LOG_DEBUG("Creating devapi_lif: id: {}, name: {}, prom: {}, oob: {}, "
-                  "int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
+                  "int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}, "
+                  "admin_status: {}",
                   lif_info->lif_id,
                   lif_info->name,
                   lif_info->receive_promiscuous,
                   is_oobmnic(),
                   is_intmgmtmnic(),
                   is_hostmgmt(),
-                  lif_info->enable_rdma);
+                  lif_info->enable_rdma, lif_info->lif_state);
 
     populate_req(req_msg, &req);
 
@@ -1198,7 +1207,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
     req->set_is_management(is_oobmnic() ||
                            is_intmgmt());
-    req->set_admin_status(::intf::IF_STATUS_UP);
+    req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
     req->set_enable_rdma(lif_info->enable_rdma);
 
     if (lif_info->rx_limit_bytes) {

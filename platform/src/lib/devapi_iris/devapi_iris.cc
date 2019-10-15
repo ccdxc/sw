@@ -676,5 +676,24 @@ end:
     return ret;
 }
 
+sdk_ret_t
+devapi_iris::lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update name. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->upd_state(state);
+
+end:
+    return ret;
+}
+
 
 }    // namespace iris

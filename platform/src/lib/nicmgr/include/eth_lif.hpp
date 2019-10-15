@@ -234,6 +234,7 @@ private:
 
     const char *lif_state_to_str(enum eth_lif_state state);
     const char *opcode_to_str(cmd_opcode_t opcode);
+    sdk::platform::lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
 };
 
 #endif   /* __ETH_LIF_HPP__ */

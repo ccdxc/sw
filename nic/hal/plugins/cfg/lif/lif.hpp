@@ -152,6 +152,7 @@ typedef struct lif_update_app_ctxt_s {
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;
     bool         name_changed:1;
+    bool         status_changed:1;
 } __PACK__ lif_update_app_ctxt_t;
 
 typedef struct lif_sched_control_cb_ctxt_s {

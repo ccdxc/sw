@@ -4,15 +4,19 @@ import (
 	"strconv"
 
 	"github.com/pensando/sw/api"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
 func init() {
 	tstr := ntranslate.MustGetTranslator()
 
-	tstr.Register("LifMetricsKey", &metricsTranslatorFns{})
+	tstr.Register("LifMetricsKey", &lifMetricsXlate{})
 	tstr.Register("MacMetricsKey", &macMetricsXlate{})
 }
+
+// delphi client
+var delphiClient clientApi.Client
 
 type metricsTranslatorFns struct{}
 
@@ -27,4 +31,9 @@ func (n *metricsTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
 // MetaToKey converts meta to network key
 func (n *metricsTranslatorFns) MetaToKey(meta *api.ObjectMeta) interface{} {
 	return meta.Name
+}
+
+// SetDelphiClient sets the delphi client to be used for ntranslate
+func SetDelphiClient(dclient clientApi.Client) {
+	delphiClient = dclient
 }

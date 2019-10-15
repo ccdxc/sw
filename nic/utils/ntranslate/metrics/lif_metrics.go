@@ -8,12 +8,12 @@ import (
 	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 )
 
-type macMetricsXlate struct{}
+type lifMetricsXlate struct{}
 
 // KeyToMeta converts network key to meta
-func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if portID, ok := key.(uint32); ok {
-		intfName := strconv.FormatUint(uint64(portID), 10)
+func (n *lifMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
+	if lifID, ok := key.(uint64); ok {
+		intfName := strconv.FormatUint(uint64(lifID), 10)
 		if delphiClient != nil {
 			nodeUUID := ""
 			nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
@@ -22,7 +22,7 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 			}
 			intfList := dnetproto.InterfaceList(delphiClient)
 			for _, intf := range intfList {
-				if intf.Interface.Status.UplinkPortID == portID {
+				if intf.Interface.Status.InterfaceID == lifID {
 					if nodeUUID != "" {
 						intfName = nodeUUID + "-" + intf.Interface.ObjectMeta.Name
 					} else {
@@ -38,6 +38,6 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 }
 
 // MetaToKey converts meta to network key
-func (n *macMetricsXlate) MetaToKey(meta *api.ObjectMeta) interface{} {
+func (n *lifMetricsXlate) MetaToKey(meta *api.ObjectMeta) interface{} {
 	return meta.Name
 }

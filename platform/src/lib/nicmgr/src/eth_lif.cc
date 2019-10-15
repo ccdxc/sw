@@ -354,6 +354,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         state = LIF_STATE_INITING;
 
+        hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state); 
         rs = dev_api->lif_create(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
@@ -2743,9 +2744,12 @@ EthLif::LinkEventHandler(port_status_t *evd)
         hal_lif_info_.name,
         lif_state_to_str(state),
         (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
-        lif_state_to_str(state));
+        lif_state_to_str(next_state));
 
     state = next_state;
+    // Notify HAL
+    dev_api->lif_upd_state(hal_lif_info_.lif_id,
+                           (sdk::platform::lif_state_t)ConvertEthLifStateToLifState(state));
 
     if (notify_enabled == 0) {
         return;
@@ -2895,6 +2899,7 @@ EthLif::SendFWDownEvent()
         lif_state_to_str(state),
         "RESET",
         lif_state_to_str(state));
+
 }
 
 void
@@ -2967,4 +2972,13 @@ EthLif::GenerateQstateInfoJson(pt::ptree &lifs)
     qstates.clear();
     lif.clear();
     return 0;
+}
+
+sdk::platform::lif_state_t
+EthLif::ConvertEthLifStateToLifState(enum eth_lif_state lif_state)
+{
+    switch (lif_state) {
+        case LIF_STATE_UP: return sdk::platform::LIF_STATE_UP;
+        default: return sdk::platform::LIF_STATE_DOWN;
+    }
 }

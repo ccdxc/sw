@@ -43,6 +43,12 @@ typedef enum lif_type_e {
     LIF_TYPE_MNIC_CPU
 } lif_type_t;
 
+typedef enum lif_state {
+    LIF_STATE_NONE = 0,
+    LIF_STATE_UP,
+    LIF_STATE_DOWN,
+} lif_state_t;
+
 typedef struct lif_queue_info_s {
     uint32_t type_num;           /* HW Queue Type */
     uint32_t size;               /* Qstate Size: 2^size */
@@ -75,6 +81,7 @@ typedef struct lif_info_s {
     bool pushed_to_hal;  // TODO: Remove from here
     lif_queue_info_t queue_info[NUM_QUEUE_TYPES];
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
+    lif_state_t lif_state;
 } __PACK__ lif_info_t;
 
 
