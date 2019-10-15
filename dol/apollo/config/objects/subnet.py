@@ -2,20 +2,22 @@
 import pdb
 import ipaddress
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
+import apollo.config.objects.base as base
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.utils as utils
+
 import subnet_pb2 as subnet_pb2
-import types_pb2 as types_pb2
 
-from infra.common.logging import logger
-from apollo.config.store import Store
-
+#TODO: move these protos
 PROTO_TCP = 6
 PROTO_UDP = 17
 protos = {PROTO_TCP, PROTO_UDP}
@@ -23,6 +25,7 @@ protos = {PROTO_TCP, PROTO_UDP}
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
@@ -56,6 +59,20 @@ class SubnetObject(base.ConfigObjectBase):
         vnic.client.GenerateObjects(self, spec)
         rmapping.client.GenerateObjects(self, spec)
 
+        return
+
+    def __repr__(self):
+        return "SubnetID:%d|VPCId:%d|PfxSel:%d|MAC:%s" %\
+               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMACAddr.get())
+
+    def Show(self):
+        logger.info("SUBNET object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- Prefix %s" % self.IPPrefix)
+        logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
+        logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
+        logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
+                    (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
         return
 
     def __fill_default_rules_in_policy(self):
@@ -108,13 +125,15 @@ class SubnetObject(base.ConfigObjectBase):
     def AllocIPv4Address(self):
         return next(self.__ip_address_pool[1])
 
-    def __repr__(self):
-        return "SubnetID:%d|VPCId:%d|PfxSel:%d|MAC:%s" %\
-               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMACAddr.get())
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.SUBNET
+        return
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = subnet_pb2.SubnetRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.SubnetId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
         spec.VPCId = self.VPC.VPCId
@@ -129,25 +148,8 @@ class SubnetObject(base.ConfigObjectBase):
         spec.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
         spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
         spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = subnet_pb2.SubnetGetRequest()
-        grpcmsg.Id.append(self.SubnetId)
-        return grpcmsg
-
-    def Show(self):
-        logger.info("SUBNET object:", self)
-        logger.info("- %s" % repr(self))
-        logger.info("- Prefix %s" % self.IPPrefix)
-        logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
-        logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
-        logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
-                    (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
         return
 
-    def SetupTestcaseConfig(self, obj):
-        return
 
 class SubnetObjectClient:
     def __init__(self):

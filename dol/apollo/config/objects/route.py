@@ -3,22 +3,25 @@ import pdb
 import ipaddress
 import sys
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nexthop as nexthop
+
 import route_pb2 as route_pb2
 import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 
-from infra.common.logging import logger
-from apollo.config.store import Store
-
 class RouteObject(base.ConfigObjectBase):
     def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
@@ -77,62 +80,6 @@ class RouteObject(base.ConfigObjectBase):
                %(self.RouteTblId, self.VPCId, self.AddrFamily,\
                  len(self.routes), self.RouteType)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = route_pb2.RouteTableRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        spec = grpcmsg.Request.add()
-        spec.Id = self.RouteTblId
-        spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
-        for route in self.routes:
-            rtspec = spec.Routes.add()
-            utils.GetRpcIPPrefix(route, rtspec.Prefix)
-            if self.NextHopType == "vpcpeer":
-                rtspec.VPCId = self.PeerVPCId
-            elif self.NextHopType == "tep":
-                rtspec.TunnelId = self.TunnelId
-            elif self.NextHopType == "nh":
-                rtspec.NexthopId = self.NexthopId
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = route_pb2.RouteTableGetRequest()
-        grpcmsg.Id.append(self.RouteTblId)
-        return grpcmsg
-
-    def GetGrpcDeleteMessage(self, cookie):
-        grpcmsg = route_pb2.RouteTableDeleteRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        grpcmsg.Id.append(self.RouteTblId)
-        return grpcmsg
-
-    def ValidateSpec(self, spec):
-        if spec.Id != self.RouteTblId:
-            return False
-        if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
-            return False
-        return True
-
-    def ValidateStats(self, stats):
-        return True
-
-    def ValidateStatus(self, status):
-        return True
-
-    def Create(self, spec=None):
-        utils.CreateObject(self, api.ObjectTypes.ROUTE)
-
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, api.ObjectTypes.ROUTE, expRetCode)
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
-
-    def Delete(self, spec=None):
-        utils.DeleteObject(self, api.ObjectTypes.ROUTE)
-
-    def Equals(self, obj, spec):
-        return True
-
     def Show(self):
         logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
@@ -145,14 +92,38 @@ class RouteObject(base.ConfigObjectBase):
             logger.info(" -- %s" % str(route))
         return
 
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-
-    def IsDeleted(self):
-        return self.deleted
-
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.route.filters)
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.ROUTE
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.RouteTblId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.RouteTblId
+        spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
+        for route in self.routes:
+            rtspec = spec.Routes.add()
+            utils.GetRpcIPPrefix(route, rtspec.Prefix)
+            if self.NextHopType == "vpcpeer":
+                rtspec.VPCId = self.PeerVPCId
+            elif self.NextHopType == "tep":
+                rtspec.TunnelId = self.TunnelId
+            elif self.NextHopType == "nh":
+                rtspec.NexthopId = self.NexthopId
+        return
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.RouteTblId:
+            return False
+        if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        return True
 
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj

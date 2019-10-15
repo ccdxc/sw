@@ -1,23 +1,22 @@
 #! /usr/bin/python3
-import enum
 import pdb
-import ipaddress
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
+import apollo.config.objects.base as base
 import apollo.config.objects.tunnel as tunnel
 import apollo.config.utils as utils
 
-import device_pb2 as device_pb2
 import types_pb2 as types_pb2
-
-from infra.common.logging import logger
-from apollo.config.store import Store
 
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
+        self.SetBaseClassAttr()
         self.GID("Device1")
 
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
@@ -38,25 +37,29 @@ class DeviceObject(base.ConfigObjectBase):
                (self.IPAddr, self.GatewayAddr, self.MACAddr.get(),
                utils.GetEncapTypeString(self.EncapType))
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = device_pb2.DeviceRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def Show(self):
+        logger.info("Device Object: %s" % self)
+        logger.info("- %s" % repr(self))
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.SWITCH
+        return
+
+    def PopulateKey(self, grpcmsg):
+        return
+
+    def PopulateSpec(self, grpcmsg):
         grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
         grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
         grpcmsg.Request.MACAddr = self.MACAddr.getnum()
-        return grpcmsg
+        return
 
     def GetGrpcReadMessage(self):
-        grpcmsg = device_pb2.DeviceRequest()
+        grpcmsg = types_pb2.Empty()
         return grpcmsg
-
-    def Update(self):
-        self.old = copy.deepcopy(self)
-        self.IPAddr = next(resmgr.TepIpAddressAllocator)
-        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
-        self.IP = str(self.IPAddr) # For testspec
 
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
@@ -68,20 +71,12 @@ class DeviceObject(base.ConfigObjectBase):
             return True
         return False
 
-    def Show(self):
-        logger.info("Device Object: %s" % self)
-        logger.info("- %s" % repr(self))
-        return
-
     def GetDropStats(self):
         grpcmsg = types_pb2.Empty()
         resp = api.client.Get(api.ObjectTypes.SWITCH, [ grpcmsg ])
         if resp != None:
             return resp[0]
         return None
-
-    def Equals(self, obj, spec):
-        return True
 
 class DeviceObjectClient:
     def __init__(self):

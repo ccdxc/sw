@@ -1,21 +1,22 @@
 #! /usr/bin/python3
 import pdb
-import ipaddress
-
-import infra.config.base as base
-import apollo.config.resmgr as resmgr
-import apollo.config.agent.api as api
-import apollo.config.utils as utils
-import mapping_pb2 as mapping_pb2
-import service_pb2 as service_pb2
-import types_pb2 as types_pb2
 
 from infra.common.logging import logger
+
 from apollo.config.store import Store
+
+import apollo.config.resmgr as resmgr
+import apollo.config.agent.api as api
+import apollo.config.objects.base as base
+import apollo.config.utils as utils
+
+import service_pb2 as service_pb2
+import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, ipversion, count, stack):
         super().__init__()
+        self.SetBaseClassAttr()
 
         ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
         self.MappingId = next(resmgr.LocalMappingIdAllocator)
@@ -60,12 +61,27 @@ class LocalMappingObject(base.ConfigObjectBase):
         return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|VPCId:%d" %\
                (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.VPC.VPCId)
 
+    def Show(self):
+        logger.info("LocalMapping Object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- IPAddr:%s|PublicIP:%s|PIP:%s|VIP:%s" \
+            %(str(self.IPAddr), str(self.PublicIPAddr), str(self.ProviderIPAddr), str(self.SvcIPAddr)))
+        return
+
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = mapping_pb2.MappingRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.MAPPING
+        return
+
+    def PopulateKey(self, grpcmsg):
+        key = grpcmsg.Id.add()
+        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id.VPCId = self.VNIC.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
@@ -78,14 +94,7 @@ class LocalMappingObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.PublicIPAddr, spec.PublicIP)
         if utils.IsPipelineArtemis():
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = mapping_pb2.MappingGetRequest()
-        key = grpcmsg.Id.add()
-        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
-        return grpcmsg
+        return
 
     def GetGrpcSvcMappingCreateMessage(self, cookie):
         grpcmsg = service_pb2.SvcMappingRequest()
@@ -107,15 +116,6 @@ class LocalMappingObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.SvcIPAddr, key.IPAddr)
         return grpcmsg
 
-    def Show(self):
-        logger.info("LocalMapping Object:", self)
-        logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|PublicIP:%s|PIP:%s|VIP:%s" \
-            %(str(self.IPAddr), str(self.PublicIPAddr), str(self.ProviderIPAddr), str(self.SvcIPAddr)))
-        return
-
-    def SetupTestcaseConfig(self, obj):
-        return
 
 class LocalMappingObjectClient:
     def __init__(self):

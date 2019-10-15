@@ -1,24 +1,22 @@
 #! /usr/bin/python3
-import enum
 import pdb
-import ipaddress
-import sys
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 import apollo.config.agent.api as api
-import tunnel_pb2 as tunnel_pb2
-import types_pb2 as types_pb2
+import apollo.config.objects.base as base
 
-from infra.common.logging import logger
-from apollo.config.store import Store
+import tunnel_pb2 as tunnel_pb2
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, local):
         super().__init__()
+        self.SetBaseClassAttr()
         self.__spec = spec
-        self.deleted = False
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
 
@@ -69,9 +67,20 @@ class TunnelObject(base.ConfigObjectBase):
                utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
                self.Nat, self.MACAddr)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = tunnel_pb2.TunnelRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def Show(self):
+        logger.info("Tunnel Object: %s" % self)
+        logger.info("- %s" % repr(self))
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.TUNNEL
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.Id)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.VPCId = 0 # TODO: Create Substrate VPC
@@ -86,18 +95,7 @@ class TunnelObject(base.ConfigObjectBase):
                 spec.RemoteService = self.Remote
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = tunnel_pb2.TunnelGetRequest()
-        grpcmsg.Id.append(self.Id)
-        return grpcmsg
-
-    def GetGrpcDeleteMessage(self, cookie):
-        grpcmsg = tunnel_pb2.TunnelDeleteRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        grpcmsg.Id.append(self.Id)
-        return grpcmsg
+        return
 
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
@@ -118,32 +116,6 @@ class TunnelObject(base.ConfigObjectBase):
         if self.Nat is True:
             return True
         return False
-
-    def Create(self, spec=None):
-        utils.CreateObject(self, api.ObjectTypes.TUNNEL)
-
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, api.ObjectTypes.TUNNEL, expRetCode)
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
-
-    def Delete(self, spec=None):
-        utils.DeleteObject(self, api.ObjectTypes.TUNNEL)
-
-    def Equals(self, obj, spec):
-        return True
-
-    def Show(self):
-        logger.info("Tunnel Object: %s" % self)
-        logger.info("- %s" % repr(self))
-        return
-
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-
-    def IsDeleted(self):
-        return self.deleted
 
 class TunnelObjectClient:
     def __init__(self):

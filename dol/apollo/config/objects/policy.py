@@ -6,11 +6,12 @@ import random
 import sys
 
 from infra.common.logging import logger
-import infra.config.base as base
 
 from apollo.config.store import Store
+
 import apollo.config.agent.api as api
 import apollo.config.resmgr as resmgr
+import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.tag as tag
 import apollo.config.utils as utils
@@ -103,6 +104,7 @@ class RuleObject:
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, parent, af, direction, rules, policytype, overlaptype):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
         self.VPCId = parent.VPCId
         self.Direction = direction
@@ -123,6 +125,25 @@ class PolicyObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "PolicyID:%d" % (self.PolicyId)
+
+    def Show(self):
+        logger.info("Policy Object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- Vpc%d" % self.VPCId)
+        logger.info("- Direction:%s" % self.Direction)
+        logger.info("- PolicyType:%s" % self.PolicyType)
+        logger.info("- OverlapType:%s" % self.OverlapType)
+        logger.info("- Number of rules:%d" % len(self.rules))
+        for rule in self.rules:
+            rule.Show()
+        return
+
+    def IsFilterMatch(self, selectors):
+        return super().IsFilterMatch(selectors.policy.filters)
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.POLICY
+        return
 
     def FillRuleSpec(self, spec, rule):
         proto = 0
@@ -157,27 +178,18 @@ class PolicyObject(base.ConfigObjectBase):
                 specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
                 specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = policy_pb2.SecurityPolicyRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.PolicyId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.PolicyId
         spec.Direction = utils.GetRpcDirection(self.Direction)
         spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.rules:
             self.FillRuleSpec(spec, rule)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = policy_pb2.SecurityPolicyGetRequest()
-        grpcmsg.Id.append(self.PolicyId)
-        return grpcmsg
-
-    def GetGrpcDeleteMessage(self, cookie):
-        grpcmsg = policy_pb2.SecurityPolicyDeleteRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
-        grpcmsg.Id.append(self.PolicyId)
-        return grpcmsg
+        return
 
     def ValidateSpec(self, spec):
         if spec.Id != self.PolicyId:
@@ -187,48 +199,6 @@ class PolicyObject(base.ConfigObjectBase):
         if spec.AddrFamily != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
         return True
-
-    def ValidateStats(self, stats):
-        return True
-
-    def ValidateStatus(self, status):
-        return True
-
-    def Create(self, spec=None):
-        utils.CreateObject(self, api.ObjectTypes.POLICY)
-
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, api.ObjectTypes.POLICY, expRetCode)
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
-
-    def Delete(self, spec=None):
-        utils.DeleteObject(self, api.ObjectTypes.POLICY)
-
-    def Equals(self, obj, spec):
-        return True
-
-    def Show(self):
-        logger.info("Policy Object:", self)
-        logger.info("- %s" % repr(self))
-        logger.info("- Vpc%d" % self.VPCId)
-        logger.info("- Direction:%s" % self.Direction)
-        logger.info("- PolicyType:%s" % self.PolicyType)
-        logger.info("- OverlapType:%s" % self.OverlapType)
-        logger.info("- Number of rules:%d" % len(self.rules))
-        for rule in self.rules:
-            rule.Show()
-        return
-
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-
-    def IsDeleted(self):
-        return self.deleted
-
-    def IsFilterMatch(self, selectors):
-        return super().IsFilterMatch(selectors.policy.filters)
 
     def __get_random_rule(self):
         rules = self.rules
