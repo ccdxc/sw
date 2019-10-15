@@ -10,6 +10,7 @@
 #include "l2seg.hpp"
 #include "vrf.hpp"
 #include "enic.hpp"
+#include "endpoint.hpp"
 #include "multicast.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
@@ -80,6 +81,7 @@ devapi_swm::swm_configure(uint32_t port_num, uint32_t vlan, mac_t mac)
     devapi_uplink *oob_up = NULL, *swm_up = NULL; 
     devapi_vrf *oob_vrf = NULL, *swm_vrf = NULL;
     devapi_l2seg *oob_l2seg = NULL, *swm_l2seg = NULL;
+    devapi_ep *bmc_ep = NULL;
 
     api_trace("swm configure");
     NIC_LOG_DEBUG("SWM configuration for port: {}, vlan: {}, mac: {} ",
@@ -142,12 +144,20 @@ devapi_swm::swm_configure(uint32_t port_num, uint32_t vlan, mac_t mac)
                   swm_up->get_id(), 
                   swm_l2seg->get_id());
     swm_l2seg->set_single_wire_mgmt(true);
-    swm_l2seg->set_undesignated_up(oob_up);
-    swm_l2seg->add_uplink(oob_up);                  // retrigger l2mcast
+    swm_l2seg->add_uplink(oob_up);              // retrigger l2seg update
+    swm_l2seg->set_undesignated_up(oob_up);     // for mcast triggers
     NIC_LOG_DEBUG("Adding oob to mcast groups for swm uplink's uplink: {} l2seg: {}",
                   swm_up->get_id(), 
                   swm_l2seg->get_id());
     devapi_mcast::trigger_l2seg_mcast(swm_l2seg);   // retrigger mcast. Adds undesignated uplink 
+    // Create BMC's EP in uplink's swm l2seg
+    bmc_ep = devapi_ep::factory(swm_l2seg, swm->mac(), NULL, oob_up);
+    if (bmc_ep == NULL) {
+        NIC_LOG_ERR("Failed to create BMC EP: vlan: {}, mac: {}, uplink: {}",
+                    swm->vlan(), macaddr2str(swm->mac()), oob_up->get_id());
+    }
+    swm->set_bmc_ep(bmc_ep);
+
 
     // On OOB Uplink, 
     // - L2Seg New / Existing
@@ -212,6 +222,11 @@ devapi_swm::swm_unconfigure(void)
                     swm_vrf->get_id(), swm_->vlan());
         return SDK_RET_ERR;
     }
+
+    // Remove BMC EP
+    devapi_ep::destroy(swm_->bmc_ep());
+    swm_->set_bmc_ep(NULL);
+
     NIC_LOG_DEBUG("swm vlan: {}, uplink: {},  num_enics: {}, num_lifs: {}",
                   swm_l2seg->get_id(), swm_up->get_id(), 
                   swm_l2seg->num_enics(), swm_up->get_num_lifs());

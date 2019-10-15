@@ -237,7 +237,7 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
     }
 
     if (is_forwarding_mode_classic_nic() ||
-        l2seg->is_shared_inband_mgmt) {
+        l2seg_is_mgmt(l2seg)) {
         // Shared l2seg may not have attached yet, but all mcast repl. oiflists
         //  are attached to l2seg's ALL_MC which inturn will attach to
         //  customer l2seg's WLs
@@ -273,7 +273,7 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
     }
 
     if (is_forwarding_mode_classic_nic() ||
-        l2seg->is_shared_inband_mgmt) {
+        l2seg_is_mgmt(l2seg)) {
         ret = oif_list_detach(mc_entry->oif_list);
         SDK_ASSERT(ret == HAL_RET_OK);
 

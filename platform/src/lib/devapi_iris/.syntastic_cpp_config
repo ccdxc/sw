@@ -3,4 +3,5 @@
 -I ../../../../nic/sdk
 -I ../../../../nic/sdk/platform/devapi
 -I ../../../../nic/build/aarch64/iris
+-D__FNAME__
 -std=c++11

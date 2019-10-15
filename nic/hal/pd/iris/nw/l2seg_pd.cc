@@ -12,6 +12,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_uplink_pd.hpp"
 #include "nic/hal/pd/iris/nw/enicif_pd.hpp"
+#include "nic/hal/pd/iris/nw/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
@@ -340,14 +341,42 @@ pd_l2seg_update (pd_func_args_t *pd_func_args)
     pd_l2seg_update_args_t *args = pd_func_args->pd_l2seg_update;
 
     if (args->swm_change) {
-        // Generally swm change will result change of if list as well.
+        if (l2seg_is_oob_mgmt(args->l2seg)) {
+            // Pkts. from OOB:
+            // - UUC: Should go to swm uplink. Make clear_promiscuos_en: 0
+            ret = l2seg_pd_repgm_mbr_ifs(args->agg_iflist, args->l2seg);
+        }
+#if 0
+        if (args->shared_mgmt_change) {
+            // Shared mgmt change 
+            if (args->shared_mgmt) {
+                // - Unshared -> Shared
+                //   - attachment of l2segs, oifls would have happened in PI
+                //   - Reprogram input properties
+                ret = l2seg_pd_repgm_mbr_ifs(args->agg_iflist, args->l2seg);
+            } else {
+                // - Shared -> Unshared
+                //   - Detachment of oifls would have happened in PI
+                //   - Detachment of l2segs
+                //   - Reprogram input properties
+                ret = l2seg_pd_depgm_ifs_inp_prop_tbl(args->l2seg);
+            }
+        } else {
+            // Update existing IFs & Program newly added IFs. Setting clear_prom.
+            ret = l2seg_pd_repgm_mbr_ifs(args->agg_iflist, args->l2seg);
+        }
+#endif
 
+#if 0
+        // Generally swm change will result change of if list as well.
         // Update existing IFs & Program newly added IFs
         ret = l2seg_pd_repgm_mbr_ifs(args->agg_iflist, args->l2seg);
+
         // Remove deleted IFs
         ret = l2seg_pd_depgm_mbr_ifs(args->del_iflist, args->l2seg);
         // Reprogram ENIC's on this l2seg for promiscous flag change
         ret = l2seg_pd_repgm_enics(args->l2seg);
+#endif
 
     } else if (args->iflist_change) {
         HAL_TRACE_DEBUG("If list change: Input props table change. "
@@ -502,6 +531,8 @@ l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg)
                 shared_l2seg_hdl = l2seg->other_shared_mgmt_l2seg_hdl[if_idx];
                 shared_l2seg = l2seg_lookup_by_handle(shared_l2seg_hdl);
                 shared_l2seg->other_shared_mgmt_l2seg_hdl[0] = HAL_HANDLE_INVALID;
+                HAL_TRACE_DEBUG("detaching shared mgmt l2seg: l2seg:{} <-> l2seg:{}::if:{}",
+                                shared_l2seg->seg_id, l2seg->seg_id, uplink_if->if_id);
                 up_args.l2seg = shared_l2seg;
                 up_args.intf = uplink_if;
                 ret = l2seg_uplink_upd_input_properties_tbl(&up_args, 0, NULL, 0, NULL);
@@ -520,6 +551,8 @@ l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg)
             shared_l2seg_hdl = l2seg->other_shared_mgmt_l2seg_hdl[0];
             shared_l2seg = l2seg_lookup_by_handle(shared_l2seg_hdl);
             shared_l2seg->other_shared_mgmt_l2seg_hdl[if_idx] = HAL_HANDLE_INVALID;
+            HAL_TRACE_DEBUG("detaching shared mgmt l2seg: l2seg:{} <-> l2seg:{}::if:{}",
+                            l2seg->seg_id, shared_l2seg->seg_id, uplink_if->if_id);
             up_args.l2seg = shared_l2seg;
             up_args.intf = uplink_if;
             ret = l2seg_uplink_upd_input_properties_tbl(&up_args, 0, NULL, 0, NULL);
@@ -603,7 +636,7 @@ hal_ret_t
 l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    l2seg_t     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
+    l2seg_t     *l2seg = (l2seg_t *)l2seg_pd->l2seg, *l2seg_cust = NULL;
 
     // de-program Input properties Table
     ret = l2seg_pd_depgm_cpu_tx_inp_prop_tbl(l2seg_pd);
@@ -612,12 +645,22 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
                       ret);
     }
 
+    if (l2seg_is_mgmt(l2seg)) {
+        l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
+        if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
+            HAL_TRACE_DEBUG("l2seg {} is becoming detached. Delete EPs from reg_mac", 
+                            l2seg_cust->seg_id);
+            ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_REMOVE);
+        }
+    }
+
     // de-program member IFs
     ret = l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to deprogram ifs inp. prop. tbl. ret: {}",
                       ret);
     }
+
 
     return ret;
 }
@@ -1182,15 +1225,26 @@ l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg,
         switch(if_type) {
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
+
+            // Skip for non-designated 
+            if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
+                l2seg->single_wire_mgmt) {
+                vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+                if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
+                    HAL_TRACE_DEBUG("Skipping for non-designated uplink: l2seg: {}, if: {}",
+                                    l2seg->seg_id, hal_if->if_id);
+                    continue;
+                }
+            }
+
             uplink_ifpc_id = if_get_uplink_ifpc_id(hal_if);
             // for shared mgmt l2seg, check if entry already exists
-            if (l2seg->is_shared_inband_mgmt) {
+            if (l2seg_is_shared_mgmt_attached(l2seg)) {
                 // get shared mgmt idx
                 if (l2seg_is_cust(l2seg)) {
                     shared_mgmt_idx = uplink_ifpc_id;
                 }
-                HAL_TRACE_DEBUG("is_sh: {}, if_idx: {}, sh_mgmt_idx: {}, sh_mgmt_hdl: {}, tbl_idx: {}",
-                                l2seg->is_shared_inband_mgmt,
+                HAL_TRACE_DEBUG("if_idx: {}, sh_mgmt_idx: {}, sh_mgmt_hdl: {}, tbl_idx: {}",
                                 uplink_ifpc_id, shared_mgmt_idx,
                                 l2seg->other_shared_mgmt_l2seg_hdl[shared_mgmt_idx],
                                 l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
@@ -1199,14 +1253,6 @@ l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg,
                     l2seg_pd_copy_inp_prop_tbl_idx(l2seg, 
                                                    l2seg->other_shared_mgmt_l2seg_hdl[shared_mgmt_idx], 
                                                    uplink_ifpc_id);
-                }
-            }
-            // Skip for non-designated 
-            if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
-                l2seg->single_wire_mgmt) {
-                vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
-                if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
-                    continue;
                 }
             }
 
@@ -1249,6 +1295,7 @@ hal_ret_t
 l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 {
     l2seg_t     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
+    l2seg_t     *l2seg_cust = NULL;
     hal_ret_t   ret;
 
     // program Input properties Table for CPU TX traffic
@@ -1265,7 +1312,48 @@ l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
         goto end;
     }
 
+    // L2seg : attached:
+    // - Get customer l2seg and program EPs into reg. mac
+    if (l2seg_is_mgmt(l2seg)) {
+        l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
+        if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
+            HAL_TRACE_DEBUG("l2seg {} is becoming attached. Creating EPs in reg_mac", 
+                            l2seg_cust->seg_id);
+            ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_INSERT);
+        }
+    }
+
 end:
+    return ret;
+}
+
+hal_ret_t
+l2seg_program_eps_reg_mac (l2seg_t *l2seg, table_oper_t oper)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL, *p_hdl = NULL;
+    if_t            *hal_if = NULL;
+    ep_t            *ep = NULL;
+    pd_ep_t         *pd_ep = NULL;
+
+    // walk-thru enics
+    for (const void *ptr : *l2seg->if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        // walk-thru eps
+        if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+            for (const void *ptr : *(hal_if->ep_list)) {
+                p_hdl = (hal_handle_t *)ptr;
+                ep = find_ep_by_handle(*p_hdl);
+                pd_ep = (pd_ep_t *)ep->pd;
+                if (oper == TABLE_OPER_INSERT) {
+                    pd_ep_pgm_registered_mac(pd_ep, oper);
+                } else {
+                    ep_pd_depgm_registered_mac(pd_ep);
+                }
+            }
+        }
+    }
     return ret;
 }
 
@@ -1894,7 +1982,7 @@ get_clear_prom_repl (l2seg_t *l2seg, uint32_t num_prom_lifs,
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
         l2seg_is_mgmt(l2seg))) {
-        if (l2seg->single_wire_mgmt) {
+        if (l2seg->single_wire_mgmt && l2seg_is_oob_mgmt(l2seg)) {
             *clear_prom = 0;
         } else {
             if (num_prom_lifs == 0) {

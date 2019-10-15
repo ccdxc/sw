@@ -580,7 +580,8 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
     // - Workload EPs to support shared inband mgmt traffic
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
     if (is_forwarding_mode_classic_nic() || 
-        (l2seg_is_cust(l2seg) && l2seg->is_shared_inband_mgmt) ||
+        (l2seg->single_wire_mgmt) ||    // For Uplink -> OOB SWM traffic
+        (l2seg_is_cust(l2seg) && l2seg_is_shared_mgmt_attached(l2seg)) ||
         is_ep_classic(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
@@ -905,7 +906,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_classic_vrf = 
         ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
-    if (l2seg->is_shared_inband_mgmt && l2seg_is_cust(l2seg)) {
+    if (l2seg_is_shared_mgmt_attached(l2seg) && l2seg_is_cust(l2seg)) {
         data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_SMART;
         direct_to_otcam = true;
         memset(&key_mask, ~0, sizeof(key_mask));

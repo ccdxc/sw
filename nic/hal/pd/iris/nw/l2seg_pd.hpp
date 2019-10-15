@@ -10,6 +10,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 
 using sdk::lib::ht_ctxt_t;
 
@@ -143,6 +144,7 @@ hal_ret_t l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t 
                                  uint32_t num_prom_lifs,
                                  if_t *prom_enic_if,
                                  input_properties_actiondata_t &data);
+hal_ret_t l2seg_program_eps_reg_mac(l2seg_t *l2seg, table_oper_t oper);
 }   // namespace pd
 }   // namespace hal
 

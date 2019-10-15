@@ -328,7 +328,9 @@ if_get_uplink_ifpc_id(if_t *pi_if)
     intf::IfType    if_type;
     uint32_t        upifpc_id = 0;
 
-    SDK_ASSERT(pi_if != NULL);
+    if (!pi_if) {
+        return 0;
+    }
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {

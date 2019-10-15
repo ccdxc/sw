@@ -179,6 +179,8 @@ typedef struct pd_l2seg_update_args_s {
     l2seg_t     *l2seg;
     bool        iflist_change;
     bool        swm_change;
+    bool        shared_mgmt_change;
+    bool        shared_mgmt;
     block_list  *agg_iflist;
     block_list  *add_iflist;
     block_list  *del_iflist;

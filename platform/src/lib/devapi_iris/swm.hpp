@@ -9,11 +9,13 @@
 
 namespace iris {
 
+class devapi_ep;
 class devapi_swm : public devapi_object {
 private:
     uint32_t port_num_;
     uint32_t vlan_;
     mac_t mac_;
+    devapi_ep *bmc_ep_;
 
     // Single ton class
     static devapi_swm *swm_;
@@ -35,6 +37,9 @@ public:
     uint32_t port_num() { return port_num_; }
     uint32_t vlan() { return vlan_; }
     mac_t mac() { return mac_; }
+    devapi_ep *bmc_ep() { return bmc_ep_; }
+
+    void set_bmc_ep(devapi_ep *ep) { bmc_ep_ = ep; }
 };
 
 }     // namespace iris

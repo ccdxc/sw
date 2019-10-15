@@ -158,6 +158,7 @@ hal_ret_t ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep,
                                         pd_ep_if_update_args_t *if_args,
                                         table_oper_t oper);
 hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper);
+hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
 
 hal_ret_t ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep,
                                           dllist_ctxt_t *pi_ep_list);

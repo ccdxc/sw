@@ -220,7 +220,7 @@ export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
 
 export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
                                ${NIC_HAL_DLOPEN_SOLIBS} \
-                               haltestutils
+                               haltestutils hal_calls
 
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=

@@ -235,20 +235,62 @@ mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg)
     return NULL;
 }
 
+#if 0
+//----------------------------------------------------------------------------
+// l2seg is a shared mgmt l2seg.
+// Type: customer:
+//       - Wire encap : mgmt_vlan
+//       - Wire encap : swm_vlan
+// Type: Inband:
+//       - Wire encap : mgmt_vlan
+//       - swm set 
+//----------------------------------------------------------------------------
+bool
+l2seg_is_shared_mgmt (l2seg_t *l2seg)
+{
+    if (l2seg && (l2seg->is_shared_inband_mgmt ||
+                  l2seg->single_wire_mgmt ||
+                  l2seg->single_wire_mgmt_cust)) {
+        return true;
+    }
+    return false;
+}
+#endif
+
 //----------------------------------------------------------------------------
 // l2seg is a shared mgmt l2seg and it also has the corresponding l2seg
 //----------------------------------------------------------------------------
 bool 
-l2seg_is_shared_mgmt_attached(l2seg_t *l2seg)
+l2seg_is_shared_mgmt_attached (l2seg_t *l2seg)
 {
-    if (l2seg && l2seg->is_shared_inband_mgmt) {
+    for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+        if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+            return true;
+        }
+    }
+#if 0
+    if (l2seg_is_shared_mgmt(l2seg)) {
         for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
             if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
                 return true;
             }
         }
     }
+#endif
     return false;
+}
+
+uint32_t 
+l2seg_num_attached_l2segs (l2seg_t *l2seg)
+{
+    uint32_t count = 0;
+
+    for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+        if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+            count++;
+        }
+    }
+    return count;
 }
 
 

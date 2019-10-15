@@ -79,7 +79,9 @@ typedef struct l2seg_s {
     MulticastFwdPolicy    mcast_fwd_policy;             // multicast policy
     BroadcastFwdPolicy    bcast_fwd_policy;             // broadcast policy
     ip_addr_t             gipo;                         // gipo for vxlan
-    bool                  is_shared_inband_mgmt;       
+    // bool                  is_shared_inband_mgmt;        // vrf is cust or inband
+    bool                  single_wire_mgmt;             // vrf is inband
+    // bool                  single_wire_mgmt_cust;        // vrf is cust 
     bool                  have_shared_oifls;            // have shared oifls
     hal_handle_t          other_shared_mgmt_l2seg_hdl[HAL_MAX_UPLINKS];  
 
@@ -104,7 +106,6 @@ typedef struct l2seg_s {
     // PD state
     void                  *pd;                          // all PD specific state
     bool                   proxy_arp_enabled;
-    bool                   single_wire_mgmt;
 
     ht_ctxt_t              uplink_oif_list_ht_ctxt;     // hash table for uplink OIF lists
 
@@ -130,6 +131,7 @@ typedef struct l2seg_update_app_ctxt_s {
     bool                nwlist_change;
     bool                iflist_change;
     bool                swm_change;
+    bool                shared_mgmt_change;
 
     MulticastFwdPolicy  new_mcast_fwd_policy;
     BroadcastFwdPolicy  new_bcast_fwd_policy;
@@ -143,6 +145,7 @@ typedef struct l2seg_update_app_ctxt_s {
     block_list          *agg_iflist;
     // swm change
     bool                new_single_wire_mgmt;
+    bool                new_shared_mgmt;
 
 } __PACK__ l2seg_update_app_ctxt_t;
 
@@ -208,15 +211,18 @@ typedef struct l2_seg_uplink_oif_list_s {
     ht_ctxt_t                    ht_ctxt;
 } __PACK__ l2_seg_uplink_oif_list_t;
 
-void *
-l2seg_uplink_oif_get_key_func (void *entry);
-uint32_t l2seg_uplink_oif_key_size (void);
-bool l2seg_is_mbr_if (l2seg_t *l2seg, if_id_t if_id);
+void *l2seg_uplink_oif_get_key_func(void *entry);
+uint32_t l2seg_uplink_oif_key_size(void);
+bool l2seg_is_mbr_if(l2seg_t *l2seg, if_id_t if_id);
 bool l2seg_is_oob_mgmt(l2seg_t *l2seg);
+bool l2seg_is_inband_mgmt(l2seg_t *l2seg);
 bool l2seg_is_mgmt(l2seg_t *l2seg);
 bool l2seg_is_cust(l2seg_t *l2seg);
 hal_ret_t l2seg_select_pinned_uplink(l2seg_t *l2seg);
-hal_ret_t l2seg_handle_repin (l2seg_t *l2seg);
+hal_ret_t l2seg_handle_repin(l2seg_t *l2seg);
+hal_ret_t l2seg_attach_mgmt(l2seg_t *l2seg);
+hal_ret_t l2seg_detach_mgmt_oifls(l2seg_t *l2seg);
+// hal_ret_t l2seg_update_swm_cust(l2seg_t *l2seg);
 
 }    // namespace hal
 

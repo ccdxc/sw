@@ -26,7 +26,9 @@ oif_list_id_t l2seg_get_shared_mcast_oif_list(l2seg_t *pi_l2seg);
 ip_addr_t *l2seg_get_gipo(l2seg_t *pi_l2seg);
 mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg);
 hal_handle_t l2seg_get_pinned_uplink(l2seg_t *seg);
+// bool l2seg_is_shared_mgmt (l2seg_t *l2seg);
 bool l2seg_is_shared_mgmt_attached(l2seg_t *l2seg);
+uint32_t l2seg_num_attached_l2segs(l2seg_t *l2seg);
 
 } // namespace hal
 

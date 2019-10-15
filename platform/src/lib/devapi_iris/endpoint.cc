@@ -11,6 +11,7 @@
 #include "hal_grpc.hpp"
 #include "l2seg.hpp"
 #include "enic.hpp"
+#include "uplink.hpp"
 #include "vrf.hpp"
 
 namespace iris {
@@ -18,7 +19,7 @@ namespace iris {
 std::map<ep_key_t, devapi_ep*> devapi_ep::ep_db_;
 
 devapi_ep *
-devapi_ep::factory(devapi_l2seg *l2seg, mac_t mac, devapi_enic *enic)
+devapi_ep::factory(devapi_l2seg *l2seg, mac_t mac, devapi_enic *enic, devapi_uplink *uplink)
 {
     sdk_ret_t ret = SDK_RET_OK;
     ep_key_t key(l2seg, mac);
@@ -26,19 +27,19 @@ devapi_ep::factory(devapi_l2seg *l2seg, mac_t mac, devapi_enic *enic)
     devapi_ep *ep = NULL;
 
     if (ep_db_.find(key) != ep_db_.end()) {
-        NIC_LOG_WARN("Duplicate Create of EP with l2seg: {}, mac: {}, enic: {}",
-                     l2seg->get_id(), macaddr2str(mac), enic->get_id());
+        NIC_LOG_WARN("Duplicate Create of EP with l2seg: {}, mac: {}, if: {}",
+                     l2seg->get_id(), macaddr2str(mac), enic ? enic->get_id() : uplink->get_id());
         return NULL;
     }
 
-    NIC_LOG_DEBUG("EP Create: l2seg: {}, mac: {}, enic: {}",
-                  l2seg->get_id(), macaddr2str(mac), enic->get_id());
+    NIC_LOG_DEBUG("EP Create: l2seg: {}, mac: {}, if: {}",
+                  l2seg->get_id(), macaddr2str(mac), enic ? enic->get_id() : uplink->get_id());
 
     mem = (devapi_ep *)DEVAPI_CALLOC(DEVAPI_MEM_ALLOC_EP,
                                   sizeof(devapi_ep));
     if (mem) {
         ep = new (mem) devapi_ep();
-        ret = ep->init_(l2seg, mac, enic);
+        ret = ep->init_(l2seg, mac, enic, uplink);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -61,11 +62,12 @@ end:
 }
 
 sdk_ret_t
-devapi_ep::init_(devapi_l2seg *l2seg, mac_t mac, devapi_enic *enic)
+devapi_ep::init_(devapi_l2seg *l2seg, mac_t mac, devapi_enic *enic, devapi_uplink *uplink)
 {
     mac_   = mac;
     l2seg_ = l2seg;
     enic_  = enic;
+    uplink_ = uplink;
 
     return SDK_RET_OK;
 }
@@ -115,7 +117,7 @@ devapi_ep::ep_halcreate(void)
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->
         mutable_l2segment_key_handle()->set_segment_id(l2seg_->get_id());
     req->mutable_endpoint_attrs()->mutable_interface_key_handle()->
-        set_interface_id(enic_->get_id());
+        set_interface_id(enic_ ? enic_->get_id() : uplink_->get_id());
     VERIFY_HAL();
     status = hal->endpoint_create(req_msg, rsp_msg);
     if (status.ok()) {
@@ -151,8 +153,9 @@ devapi_ep::ep_haldelete(void)
     EndpointDeleteRequestMsg    req_msg;
     EndpointDeleteResponseMsg   rsp_msg;
 
-    NIC_LOG_DEBUG("EP delete: l2seg: {}, mac: {}, enic: {}",
-                  l2seg_->get_id(), macaddr2str(mac_), enic_->get_id());
+    NIC_LOG_DEBUG("EP delete: l2seg: {}, mac: {}, if: {}",
+                  l2seg_->get_id(), macaddr2str(mac_), 
+                  enic_ ? enic_->get_id() : uplink_->get_id());
 
     req = req_msg.add_request();
     req->mutable_vrf_key_handle()->set_vrf_id(l2seg_->get_vrf()->get_id());

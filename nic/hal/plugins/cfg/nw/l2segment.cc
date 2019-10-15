@@ -129,7 +129,7 @@ l2seg_init (l2seg_t *l2seg)
     for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
         l2seg->other_shared_mgmt_l2seg_hdl[i] = HAL_HANDLE_INVALID;
     }
-    l2seg->is_shared_inband_mgmt = false;
+    // l2seg->is_shared_inband_mgmt = false;
 
     // initialize meta information
     l2seg->if_list = block_list::factory(sizeof(hal_handle_t),
@@ -167,6 +167,26 @@ l2seg_free (l2seg_t *l2seg)
 }
 
 bool
+l2seg_is_oob_mgmt (l2seg_t *l2seg)
+{
+    vrf_t *vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+    if (vrf) {
+        return (vrf->vrf_type == types::VRF_TYPE_OOB_MANAGEMENT);
+    }
+    return false;
+}
+
+bool
+l2seg_is_inband_mgmt (l2seg_t *l2seg)
+{
+    vrf_t *vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+    if (vrf) {
+        return (vrf->vrf_type == types::VRF_TYPE_INBAND_MANAGEMENT);
+    }
+    return false;
+}
+
+bool
 l2seg_is_mgmt (l2seg_t *l2seg)
 {
     vrf_t *vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
@@ -184,16 +204,6 @@ l2seg_is_cust (l2seg_t *l2seg)
     vrf_t *vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     if (vrf) {
         return (vrf->vrf_type == types::VRF_TYPE_CUSTOMER);
-    }
-    return false;
-}
-
-bool
-l2seg_is_shared_inband_mgmt (l2seg_t *l2seg)
-{
-    if (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q &&
-        l2seg->wire_encap.val == g_hal_state->mgmt_vlan()) {
-        return true;
     }
     return false;
 }
@@ -903,6 +913,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                     *l2seg = NULL;
     l2seg_create_app_ctxt_t     *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {};
+#if 0
     l2seg_t                     *tmp_l2seg = NULL;
     uint32_t                    if_idx = 0;
     hal_handle_t                *p_hdl_id = NULL;
@@ -910,6 +921,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                       *vrf = NULL;
     oif_list_id_t               cl_oifl_id, hp_oifl_id;
     bool                        shared_mgmt_l2seg_exists = false;
+#endif
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -931,11 +943,34 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // populate classic mgmt l2seg if this l2seg has an encap of mgmt vlan
+#if 0
     if (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q && 
         l2seg->wire_encap.val == g_hal_state->mgmt_vlan()) {
-        HAL_TRACE_DEBUG("shared mgmt l2seg: {}", l2seg->seg_id);
         l2seg->is_shared_inband_mgmt = true;
+    }
+
+    if (l2seg_is_cust(l2seg) &&
+        l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q && 
+        l2seg->wire_encap.val == g_hal_state->swm_vlan()) {
+        l2seg->single_wire_mgmt_cust = true;
+    }
+#endif
+
+    // Attached L2segs:
+    // - Customer L2seg
+    // - Inband L2seg
+    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
+        if (l2seg_is_cust(l2seg) || l2seg_is_inband_mgmt(l2seg)) {
+            ret = l2seg_attach_mgmt(l2seg);
+        }
+    }
+
+#if 0
+    // populate classic mgmt l2seg if this l2seg has an encap of mgmt vlan
+    if (l2seg_is_shared_mgmt(l2seg)) {
+        HAL_TRACE_DEBUG("shared mgmt l2seg: {}", l2seg->seg_id);
+        ret = l2seg_attach_mgmt(l2seg);
+#if 0
         if (l2seg_is_cust(l2seg)) {
             for (const void *ptr : *l2seg->mbrif_list) {
                 p_hdl_id = (hal_handle_t *)ptr;
@@ -978,6 +1013,9 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                                 l2seg->seg_id, uplink_if->if_id,
                                 tmp_l2seg->seg_id, if_idx);
                 tmp_l2seg->other_shared_mgmt_l2seg_hdl[if_idx] = l2seg->hal_handle;
+                if (l2seg->single_wire_mgmt) {
+                    tmp_l2seg->single_wire_mgmt_cust = true;
+                }
                 // attach useg repls to classic repls.
                 // Bcast
                 cl_oifl_id = l2seg_get_shared_bcast_oif_list(l2seg);
@@ -991,7 +1029,9 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                 HAL_TRACE_DEBUG("First shared mgmt l2seg: {}", l2seg->seg_id);
             }
         }
+#endif
     }
+#endif
     
     // PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_create_args_init(&pd_l2seg_args);
@@ -1667,6 +1707,11 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
     l2seg->proxy_arp_enabled = spec.proxy_arp_enabled();
     l2seg->single_wire_mgmt = spec.single_wire_management();
 
+    if (l2seg->single_wire_mgmt) {
+        g_hal_state->set_swm_vlan(l2seg->wire_encap.val);
+        HAL_TRACE_DEBUG("Setting swm vlan: {}", l2seg->wire_encap.val);
+    }
+
 end:
     return ret;
 }
@@ -1904,6 +1949,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {};
+    bool                        is_shared = false, is_shared_clone = false;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1929,6 +1975,37 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.swm_change = app_ctxt->swm_change;
     if (pd_l2seg_args.swm_change) {
         l2seg_clone->single_wire_mgmt = app_ctxt->new_single_wire_mgmt;
+
+        // Changing the customer l2seg's state only if its attached
+        // ret = l2seg_update_swm_cust(l2seg_clone);
+
+#if 0
+        is_shared = l2seg_is_shared_mgmt(l2seg);
+        is_shared_clone = l2seg_is_shared_mgmt(l2seg_clone);
+
+        HAL_TRACE_DEBUG("l2seg shared change: {} => {}",
+                        is_shared, is_shared_clone);
+        app_ctxt->shared_mgmt_change = false;
+        pd_l2seg_args.shared_mgmt_change = false;
+        if (is_shared != is_shared_clone) {
+            app_ctxt->shared_mgmt_change = true;
+            pd_l2seg_args.shared_mgmt_change = true;
+            if (is_shared && !is_shared_clone) {
+                // Transtion : shared -> unshared
+                ret = l2seg_detach_mgmt_oifls(l2seg_clone);
+                app_ctxt->new_shared_mgmt = false;
+                pd_l2seg_args.shared_mgmt = false;
+            } else {
+                // Transtion : Unshared -> shared
+                ret = l2seg_attach_mgmt(l2seg_clone);
+                app_ctxt->new_shared_mgmt = true;
+                pd_l2seg_args.shared_mgmt = true;
+            }
+        } else {
+            HAL_TRACE_DEBUG("l2seg shared no change. still {}",
+                            is_shared ? "shared" : "unshared");
+        }
+#endif
     }
     // pd_l2seg_args.curr_iflist = l2seg->mbrif_list;
     pd_l2seg_args.agg_iflist = app_ctxt->agg_iflist;
@@ -2041,6 +2118,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_update_app_ctxt_t         *app_ctxt = NULL;
     l2seg_t                         *l2seg = NULL, *l2seg_clone = NULL;
     pd::pd_func_args_t              pd_func_args = {};
+    bool                            update_prom = false;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2087,23 +2165,25 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, 
                                    false, false,
                                    true, false, false);
-    } else if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
-               l2seg_clone->single_wire_mgmt) {
+    } else if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         /*
          * Handling change on non-designated uplinks for SWM
          * Assumption:
          * - A non-designated uplink can be added only when we enable swm.
          * - A non-designated uplink can be removed only when we disable swm.
+         * - Adding non-designated uplink only to bcast and mcast. 
+         *   Non-designated uplink may not want to receive UUC.
          */
         if (app_ctxt->swm_change) {
+            update_prom = l2seg_is_oob_mgmt(l2seg_clone) ? true : false;
             if (l2seg_clone->single_wire_mgmt) {
                 ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, 
                                            true, true,
-                                           true, true, true);
+                                           true, true, update_prom);
             } else {
                 ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, 
                                            false, true,
-                                           true, true, true);
+                                           true, true, update_prom);
             }
         }
     }
@@ -2628,6 +2708,8 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                     l2seg->seg_id);
 
     if (l2seg_is_shared_mgmt_attached(l2seg)) {
+        ret = l2seg_detach_mgmt_oifls(l2seg);
+#if 0
         if (l2seg_is_cust(l2seg)) {
             for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
                 if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
@@ -2653,6 +2735,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                 ret = oif_list_detach(cl_oifl_id);
             }
         }
+#endif
     }
 
     // TODO: Check the dependency ref count for the l2seg. whoever is refering
@@ -2774,6 +2857,11 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         g_hal_state->set_infra_l2seg(NULL);
     }
 #endif
+
+    if (l2seg->single_wire_mgmt) {
+        g_hal_state->set_swm_vlan(0);
+        HAL_TRACE_DEBUG("Setting swm vlan: {}", 0);
+    }
 
     // b. Remove object from handle id based hash table
     hal_handle_free(hal_handle);
@@ -3477,5 +3565,147 @@ find_l2seg_by_wire_encap(encap_t encap, types::VrfType vrf_type,
 
     return ctxt.l2seg;
 }
+
+//------------------------------------------------------------------------------
+// Detaching mgmt l2segs.
+//------------------------------------------------------------------------------
+hal_ret_t
+l2seg_detach_mgmt_oifls (l2seg_t *l2seg)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    oif_list_id_t               cl_oifl_id;
+    l2seg_t                     *shared_mgmt_l2seg = NULL;
+
+    if (l2seg_is_cust(l2seg)) {
+        for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+            if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+                shared_mgmt_l2seg = 
+                    l2seg_lookup_by_handle(l2seg->other_shared_mgmt_l2seg_hdl[i]);
+                // detach useg repls to classic repls.
+                // Bcast
+                cl_oifl_id = l2seg_get_shared_bcast_oif_list(shared_mgmt_l2seg);
+                ret = oif_list_detach(cl_oifl_id);
+                // Mcast
+                cl_oifl_id = l2seg_get_shared_mcast_oif_list(shared_mgmt_l2seg);
+                ret = oif_list_detach(cl_oifl_id);
+            }
+        }
+    } else {
+        if (l2seg->other_shared_mgmt_l2seg_hdl[0] != HAL_HANDLE_INVALID) {
+            shared_mgmt_l2seg = 
+                l2seg_lookup_by_handle(l2seg->other_shared_mgmt_l2seg_hdl[0]);
+            // Detaching, so cust l2seg will not have corresponding mgmt l2seg.
+            // shared_mgmt_l2seg->single_wire_mgmt_cust = false;
+            // detach useg repls to classic repls.
+            // Bcast
+            cl_oifl_id = l2seg_get_shared_bcast_oif_list(l2seg);
+            ret = oif_list_detach(cl_oifl_id);
+            // Mcast
+            cl_oifl_id = l2seg_get_shared_mcast_oif_list(l2seg);
+            ret = oif_list_detach(cl_oifl_id);
+        }
+    }
+}
+
+hal_ret_t
+l2seg_attach_mgmt (l2seg_t *l2seg)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    l2seg_t                     *tmp_l2seg = NULL;
+    uint32_t                    if_idx = 0;
+    hal_handle_t                *p_hdl_id = NULL;
+    if_t                        *uplink_if = NULL;
+    vrf_t                       *vrf = NULL;
+    oif_list_id_t               cl_oifl_id, hp_oifl_id;
+    bool                        shared_mgmt_l2seg_exists = false;
+
+    if (l2seg_is_cust(l2seg)) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            uplink_if = find_if_by_handle(*p_hdl_id);
+            if_idx = uplink_if_get_idx(uplink_if);
+            tmp_l2seg = find_l2seg_by_wire_encap(l2seg->wire_encap, 
+                                                 types::VRF_TYPE_INBAND_MANAGEMENT,
+                                                 uplink_if->hal_handle);
+            if (tmp_l2seg) {
+                HAL_TRACE_DEBUG("attaching shared mgmt l2seg: l2seg:{} <-> l2seg:{}::if:{}", 
+                                tmp_l2seg->seg_id, l2seg->seg_id, uplink_if->if_id);
+                l2seg->other_shared_mgmt_l2seg_hdl[if_idx] = tmp_l2seg->hal_handle;
+                tmp_l2seg->other_shared_mgmt_l2seg_hdl[0] = l2seg->hal_handle;
+                // attach useg repls to classic repls.
+                // Bcast
+                cl_oifl_id = l2seg_get_shared_bcast_oif_list(tmp_l2seg);
+                hp_oifl_id = l2seg->base_oif_list_id;
+                ret = oif_list_attach(cl_oifl_id, hp_oifl_id);
+                // Mcast
+                cl_oifl_id = l2seg_get_shared_mcast_oif_list(tmp_l2seg);
+                hp_oifl_id = l2seg->base_oif_list_id;
+                ret = oif_list_attach(cl_oifl_id, hp_oifl_id);
+                shared_mgmt_l2seg_exists = true;
+            }
+        }
+        if (!shared_mgmt_l2seg_exists) {
+            HAL_TRACE_DEBUG("No shared l2seg: {}", l2seg->seg_id);
+        }
+    } else {
+        tmp_l2seg = find_l2seg_by_wire_encap(l2seg->wire_encap, 
+                                             types::VRF_TYPE_CUSTOMER, 
+                                             HAL_HANDLE_INVALID);
+        if (tmp_l2seg) {
+            l2seg->other_shared_mgmt_l2seg_hdl[0] = tmp_l2seg->hal_handle;
+            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+            uplink_if = find_if_by_handle(vrf->designated_uplink);
+            if_idx = uplink_if_get_idx(uplink_if);
+            HAL_TRACE_DEBUG("attaching shared mgmt l2sg: l2seg:{}::if:{} <-> l2seg:{}, uplink_ifpc_idx: {}", 
+                            tmp_l2seg->seg_id, uplink_if->if_id,
+                            l2seg->seg_id, if_idx);
+            tmp_l2seg->other_shared_mgmt_l2seg_hdl[if_idx] = l2seg->hal_handle;
+#if 0
+            if (l2seg->single_wire_mgmt) {
+                tmp_l2seg->single_wire_mgmt_cust = true;
+            }
+#endif
+            // attach useg repls to classic repls.
+            // Bcast
+            cl_oifl_id = l2seg_get_shared_bcast_oif_list(l2seg);
+            hp_oifl_id = tmp_l2seg->base_oif_list_id;
+            ret = oif_list_attach(cl_oifl_id, hp_oifl_id);
+            // Mcast
+            cl_oifl_id = l2seg_get_shared_mcast_oif_list(l2seg);
+            hp_oifl_id = tmp_l2seg->base_oif_list_id;
+            ret = oif_list_attach(cl_oifl_id, hp_oifl_id);
+        } else {
+            HAL_TRACE_DEBUG("No shared l2seg: {}", l2seg->seg_id);
+        }
+    }
+    return ret;
+}
+
+#if 0
+//------------------------------------------------------------------------------
+// Updates the customer l2seg when swm config changes on classic l2seg
+//------------------------------------------------------------------------------
+hal_ret_t
+l2seg_update_swm_cust (l2seg_t *l2seg)
+{
+    l2seg_t *l2seg_cust;
+    hal_handle_t l2seg_cust_hdl = l2seg->other_shared_mgmt_l2seg_hdl[0];
+
+    if (l2seg_cust_hdl != HAL_HANDLE_INVALID) {
+        l2seg_cust = l2seg_lookup_by_handle(l2seg_cust_hdl);
+        if (l2seg_cust == NULL) {
+            HAL_TRACE_ERR("Unable to find shared cust. l2seg: {}", 
+                          l2seg_cust_hdl);
+            return HAL_RET_ERR;
+        }
+        if (l2seg->single_wire_mgmt) {
+            l2seg_cust->single_wire_mgmt_cust = true;
+        } else {
+            l2seg_cust->single_wire_mgmt_cust = false;
+        }
+    }
+    return HAL_RET_OK;
+}
+#endif
 
 }    // namespace hal

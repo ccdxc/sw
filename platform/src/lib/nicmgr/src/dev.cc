@@ -506,7 +506,7 @@ DeviceManager::HalEventHandler(bool status)
         init_done = true;
 
         // Setup swm on native vlan
-        // dev_api->swm_update(true, 1, 0, 0);
+        // dev_api->swm_update(true, 1, 0, 0x00AECD0005CF);
     }
 
     for (auto it = devices.begin(); it != devices.end(); it++) {

@@ -119,7 +119,7 @@ devapi_filter::filter_halcreate()
             }
             mcast_->add_enic(enic);
         } else {
-            ep_ = devapi_ep::factory(l2seg, mac_, enic);
+            ep_ = devapi_ep::factory(l2seg, mac_, enic, NULL);
             if (ep_ == NULL) {
                 NIC_LOG_ERR("Failed to create EP: vlan: {}, mac: {}, enic: {}, lif: {}",
                             vlan_, macaddr2str(mac_), enic->get_id(), lif_->get_id());
