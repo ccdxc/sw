@@ -42,38 +42,38 @@ tep_impl::destroy(tep_impl *impl) {
 
 sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::nuke_resources(api_base *api_obj) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                     obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /// \@}

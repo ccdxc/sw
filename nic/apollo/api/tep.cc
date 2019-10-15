@@ -63,7 +63,7 @@ sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    PDS_TRACE_DEBUG("Initializing TEP id %d, ip %s",
+    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s",
                     spec->key.id, ipaddr2str(&spec->remote_ip));
 
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
