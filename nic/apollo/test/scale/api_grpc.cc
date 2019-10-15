@@ -36,8 +36,9 @@ create_route_table (pds_route_table_spec_t *route_table)
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Batch commit failed!, ret %u", ret);
         g_bctxt = batch_start_grpc(g_epoch++);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch start failed!, ret %u", ret);
+        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
+                                SDK_RET_ERR,
+                                "Batch start failed!");
     }
     return ret;
 }
@@ -174,9 +175,14 @@ create_objects_init (test_params_t *test_params)
 sdk_ret_t
 create_objects_end (void)
 {
+    sdk_ret_t ret;
+
     if (pds_batching_enabled()) {
-        g_bctxt = batch_start_grpc(PDS_EPOCH_INVALID);
-        batch_commit_grpc(g_bctxt);
+        // TODO: hack until hooks is cleaned up
+        (void)batch_start_grpc(PDS_EPOCH_INVALID);
+        ret = batch_commit_grpc(g_bctxt);
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "Batch commit failed!, ret %u", ret);
     }
     return SDK_RET_OK;
 }

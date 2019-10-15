@@ -101,6 +101,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     uint32_t tep_id_start = TEP_ID_MYTEP + 1; // skip MyTEP and gateway IPs
     uint32_t tep_id_max = tep_id_start + num_teps;
     uint32_t tep_id = tep_id_start;
+    uint32_t svc_tep_id_start = num_teps + 3; // service tunnel starts after teps
+    uint32_t svc_tep_id_max = svc_tep_id_start + num_svc_teps;
+    uint32_t svc_tep_id = svc_tep_id_start;
     uint32_t nh_id = 1;
     uint32_t rtnum;
     pds_route_table_spec_t route_table;
@@ -133,18 +136,19 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                    route_table.routes[j].nh_tep.id =
-                                        j % TESTAPP_MAX_SERVICE_TEP;
+                    route_table.routes[j].nh_tep.id = svc_tep_id++;
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                   route_table.routes[j].nh_tep.id =
-                       (j % TESTAPP_MAX_SERVICE_TEP) + TESTAPP_MAX_SERVICE_TEP;
+                   route_table.routes[j].nh_tep.id = num_svc_teps + svc_tep_id++;
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                     route_table.routes[j].nh.id = nh_id++;
                     if (nh_id > num_nh) {
                         nh_id = 1;
                     }
+                }
+                if (svc_tep_id == svc_tep_id_max) {
+                    svc_tep_id = svc_tep_id_start;
                 }
             }
         }

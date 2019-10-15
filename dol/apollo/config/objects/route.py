@@ -66,7 +66,7 @@ class RouteObject(base.ConfigObjectBase):
             self.NextHopType = "vpcpeer"
         else:
             if utils.IsPipelineArtemis() and\
-               self.HasServiceTunnel == False:
+               self.HasServiceTunnel == False and self.HasNexthop:
                 self.NextHopType = "nh"
             else:
                 self.NextHopType = "tep"

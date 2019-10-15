@@ -29,9 +29,13 @@ BatchSvcImpl::BatchStart(ServerContext *context,
             proto_status->mutable_batchcontext()->set_batchcookie(bctxt);
             return Status::OK;
         }
+        proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+        proto_status->mutable_batchcontext()->set_batchcookie(PDS_BATCH_CTXT_INVALID);
+        return Status::CANCELLED;
     }
-    proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-    return Status::CANCELLED;
+    // TODO: return OK until hooks is cleaned up
+    proto_status->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
 }
 
 Status

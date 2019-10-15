@@ -454,7 +454,6 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
     return SDK_RET_OK;
 }
 
-//static uint64_t g_batch_cookie = PDS_BATCH_CTXT_INVALID;
 pds_batch_ctxt_t
 batch_start_grpc (int epoch)
 {
