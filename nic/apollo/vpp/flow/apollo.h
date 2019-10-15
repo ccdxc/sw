@@ -207,6 +207,7 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
         }
     }
 }
+
 always_inline void
 pds_flow_program_hw_ip6 (pds_flow_params_t *key,
                          int size, u16 *next, u32 *counter)

@@ -73,6 +73,8 @@ mkdir -p /usr/lib/vpp_plugins/
 ln -s $VPP_PKG_DIR/lib/vpp_plugins/dpdk_plugin.so /usr/lib/vpp_plugins/dpdk_plugin.so
 ln -s $NICDIR/build/x86_64/$PIPELINE/lib/infra_plugin.so /usr/lib/vpp_plugins/infra_plugin.so
 ln -s $NICDIR/build/x86_64/$PIPELINE/lib/flow_plugin.so /usr/lib/vpp_plugins/flow_plugin.so
+ln -s $NICDIR/build/x86_64/$PIPELINE/lib/infra_plugin.so /usr/lib/vpp_plugins/infra_plugin.so
+ln -s $NICDIR/build/x86_64/$PIPELINE/lib/arp_proxy.so /usr/lib/vpp_plugins/arp_proxy.so
 export ZMQ_SOC_DIR=$NICDIR
 
 echo "Starting VPP"

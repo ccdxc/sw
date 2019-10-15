@@ -16,6 +16,7 @@
         _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(ARP_PROXY, "pds-arp-proxy")                                   \
         _(DROP, "error-drop")                                       \
 
 #define foreach_p4cpu_hdr_lookup_counter                            \
@@ -23,6 +24,7 @@
         _(IP6_FLOW, "IPv6 flow packets" )                           \
         _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
+        _(ARP_PROXY, "Arp-proxy")                                   \
         _(UNKOWN, "Unknown flow packets")                           \
 
 typedef enum
@@ -51,4 +53,3 @@ typedef struct p4cpu_hdr_lookup_trace_s {
 } p4cpu_hdr_lookup_trace_t;
 
 #endif    // __VPP_INFRA_NODE_H__
-

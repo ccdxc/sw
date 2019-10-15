@@ -166,6 +166,9 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else if (flags0 & VPP_CPU_FLAGS_IPV6_2_VALID) {
             *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
             counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 2;
+        } else if (flags0 & 0) { // TODO ARP_PROXY
+            *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_ARP_PROXY;
+            counter[P4CPU_HDR_LOOKUP_COUNTER_ARP_PROXY] += 2;
         } else {
             *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
             counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 2;
@@ -185,6 +188,9 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     } else if (flags0 & VPP_CPU_FLAGS_IPV6_2_VALID) {
         *next0 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
         counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
+    } else if (flags0 & 0) { // TODO ARP_PROXY
+        *next0 = P4CPU_HDR_LOOKUP_NEXT_ARP_PROXY;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_ARP_PROXY] += 1;
     } else {
         *next0 = P4CPU_HDR_LOOKUP_NEXT_DROP;
         counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
@@ -202,6 +208,9 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     } else if (flags1 & VPP_CPU_FLAGS_IPV6_2_VALID) {
         *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
         counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
+    } else if (flags1 & 0) { // TODO ARP_PROXY
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_ARP_PROXY;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_ARP_PROXY] += 1;
     } else {
         *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
         counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
@@ -215,7 +224,7 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     u16 flag_orig;
 
     flag_orig = clib_net_to_host_u16(hdr->flags);
-    u16 flags = flag_orig & 
+    u16 flags = flag_orig &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
@@ -244,6 +253,9 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     } else if (flags & VPP_CPU_FLAGS_IPV6_2_VALID) {
         *next = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
         counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
+    } else if (0) { // TODO ARP_PROXY
+        *next = P4CPU_HDR_LOOKUP_NEXT_ARP_PROXY;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_ARP_PROXY] += 1;
     } else {
         *next = P4CPU_HDR_LOOKUP_NEXT_DROP;
         counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
