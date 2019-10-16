@@ -62,23 +62,33 @@ char *heads_or_tails(int i, int head, int tail)
 
 void dump_rxq(char *path)
 {
-	FILE *file;
+	char *fpath;
+	FILE *file, *file_sg;
 	struct rxq_desc desc;
-	int i;
+	struct rxq_sg_desc sg_desc;
+	int i, j;
 
 	int head = get_val(path, "head");
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 
-	path = make_path(path, "desc_blob");
-	file = fopen(path, "rb");
+	fpath = make_path(path, "desc_blob");
+	file = fopen(fpath, "rb");
 	if (!file) {
-		perror(path);
+		perror(fpath);
+		exit(1);
+	}
+
+	fpath = make_path(path, "sg_desc_blob");
+	file_sg = fopen(fpath, "rb");
+	if (!file_sg) {
+		perror(fpath);
 		exit(1);
 	}
 
 	for (i = 0; i < num_descs; i++) {
 		fread(&desc, sizeof(desc), 1, file);
+		fread(&sg_desc, sizeof(sg_desc), 1, file_sg);
 
 		printf("%s", heads_or_tails(i, head, tail));
 		printf("[%04x]", i);
@@ -86,6 +96,12 @@ void dump_rxq(char *path)
 		       (u64)desc.addr, (u16)desc.len);
 
 		printf("\n");
+
+		for (j = 0; j < IONIC_RX_MAX_SG_ELEMS; j++) {
+			printf("           addr 0x%lx len %d\n",
+			       (u64)sg_desc.elems[j].addr,
+			       sg_desc.elems[j].len);
+		}
 	}
 
 	fclose(file);
@@ -112,9 +128,10 @@ void dump_rxcq(char *path)
 		printf("%s", heads_or_tails(i, -1, tail));
 		printf("[%04x]", i);
 
-		printf(" status %d comp_index 0x%x color %d",
+		printf(" status %d comp_index 0x%x color %d num_sg %d",
 		       comp.status, comp.comp_index,
-			   comp.pkt_type_color & IONIC_COMP_COLOR_MASK ? 1 : 0);
+			   comp.pkt_type_color & IONIC_COMP_COLOR_MASK ? 1 : 0,
+			   comp.num_sg_elems);
 		printf(" len %4d", comp.len);
 
 		printf(" csum %d", comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC);
