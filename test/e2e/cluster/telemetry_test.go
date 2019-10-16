@@ -121,7 +121,7 @@ func testQueryingFwlogs() {
 			DestPort:  uint32(9000 + i),
 			Action:    "allow",
 			Direction: "from_host",
-			RuleID:    "1234",
+			RuleID:    "5678",
 			Time:      timestamp,
 		}
 		logs = append(logs, log)
@@ -544,7 +544,7 @@ var _ = Describe("telemetry tests", func() {
 func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  "default",
-		Precision: "s",
+		Precision: "ns",
 	})
 	if err != nil {
 		return err
@@ -567,6 +567,7 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 		tags := map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt}
 		flds := map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID}
 
+		By(fmt.Sprintf("adding tags %+v", tags))
 		pt, err := client.NewPoint("Fwlogs", tags, flds, timestamp)
 		if err != nil {
 			return err
