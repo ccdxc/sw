@@ -6,6 +6,7 @@ import atexit
 import signal
 import socket
 
+
 topdir = os.path.dirname(sys.argv[0]) + '/../'
 topdir = os.path.abspath(topdir)
 sys.path.insert(0, topdir)

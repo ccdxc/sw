@@ -584,7 +584,8 @@ class HostManagement(EntityManagement):
         self.naples = naples
 
     def PciSensitive(self):
-        return self.server == "hpe"
+        #return self.server == "hpe"
+        return True
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
     def Init(self, driver_pkg = None, cleanup = True):
