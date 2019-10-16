@@ -2,16 +2,15 @@
 import pdb
 import ipaddress
 
-from infra.common.glopts import GlobalOptions
-import infra.config.base as base
+from infra.common.logging import logger
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.objects.base as base
 import apollo.config.objects.route as route
-import types_pb2 as types_pb2
-import meter_pb2 as meter_pb2
 
-from infra.common.logging import logger
+import meter_pb2 as meter_pb2
 
 class MeterStats:
     def __init__(self):
@@ -58,7 +57,7 @@ class MeterStatsHelper:
     def IncrMeterStats(self, meterid, rxbytes, txbytes):
         self.PreStats[meterid].RxBytes += rxbytes
         self.PreStats[meterid].TxBytes += txbytes
-        if GlobalOptions.dryrun:
+        if utils.IsDryRun():
             self.PostStats[meterid].RxBytes += rxbytes
             self.PostStats[meterid].TxBytes += txbytes
 
@@ -107,6 +106,7 @@ class MeterRuleObject(base.ConfigObjectBase):
 class MeterObject(base.ConfigObjectBase):
     def __init__(self, parent, af, rules):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF METER OBJECT #####################
         self.VPCId = parent.VPCId
         if af == utils.IP_VERSION_6:
@@ -123,6 +123,21 @@ class MeterObject(base.ConfigObjectBase):
     def __repr__(self):
         return "MeterID:%d|VPCId:%d" % (self.MeterId, self.VPCId)
 
+    def Show(self):
+        logger.info("Meter object:", self)
+        logger.info("- %s" % repr(self))
+        for rule in self.Rules:
+            rule.Show()
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.METER
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.MeterId)
+        return
+
     def FillMeterRulePrefixes(self, rulespec, rule):
         for pfx in rule.Prefixes:
             pfxobj = rulespec.Prefix.add()
@@ -132,36 +147,17 @@ class MeterObject(base.ConfigObjectBase):
     def FillMeterRuleSpec(self, spec, rule):
         ruleobj = spec.rules.add()
         self.FillMeterRulePrefixes(ruleobj, rule)
-        #ruleobj.PPSPolicer = 0
-        #ruleobj.BPSPolicer = 0
         ruleobj.Priority = rule.Priority
         return
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = meter_pb2.MeterRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.MeterId
         spec.Af = utils.GetRpcIPAddrFamily(self.Af)
-        #spec.VPCId = self.VPCId
         for rule in self.Rules:
             self.FillMeterRuleSpec(spec, rule)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = meter_pb2.MeterGetRequest()
-        grpcmsg.Id.append(self.MeterId)
-        return grpcmsg
-
-    def Show(self):
-        logger.info("Meter object:", self)
-        logger.info("- %s" % repr(self))
-        for rule in self.Rules:
-            rule.Show()
         return
 
-    def SetupTestcaseConfig(self, obj):
-        return
 
 class MeterObjectClient:
     def __init__(self):
@@ -196,7 +192,8 @@ class MeterObjectClient:
 
     def GenerateObjects(self, parent, vpcspecobj):
         vpcid = parent.VPCId
-        stack = parent.Stack
+        isV4Stack = utils.IsV4Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack)
         self.__v4objs[vpcid] = []
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
@@ -209,16 +206,6 @@ class MeterObjectClient:
 
         if utils.IsPipelineArtemis() == False:
             return
-
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
 
         def __add_specific_meter_prefixes(rulespec, af):
             prefixes = []
@@ -281,13 +268,13 @@ class MeterObjectClient:
             v4_count = 0
             v6_count = 0
             if meter.auto_fill:
-                if __is_v4stack():
+                if isV4Stack:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_4)
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
                     self.__objs.append(obj)
                     v4_count += len(rules)
-                if __is_v6stack():
+                if isV6Stack:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_6)
                     obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                     self.__v6objs[vpcid].append(obj)
@@ -295,13 +282,13 @@ class MeterObjectClient:
                     v6_count += len(rules)
             else:
                 while c < meter.count:
-                    if __is_v4stack():
+                    if isV4Stack:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_4, c)
                         obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                         self.__v4objs[vpcid].append(obj)
                         self.__objs.append(obj)
                         v4_count += len(rules)
-                    if __is_v6stack():
+                    if isV6Stack:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
                         obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                         self.__v6objs[vpcid].append(obj)

@@ -14,7 +14,7 @@ import service_pb2 as service_pb2
 import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, ipversion, count, stack):
+    def __init__(self, parent, spec, ipversion, count):
         super().__init__()
         self.SetBaseClassAttr()
 
@@ -126,18 +126,19 @@ class LocalMappingObjectClient:
         return self.__objs
 
     def GenerateObjects(self, parent, vnic_spec_obj):
-        stack = parent.SUBNET.VPC.Stack
+        isV4Stack = utils.IsV4Stack(parent.SUBNET.VPC.Stack)
+        isV6Stack = utils.IsV6Stack(parent.SUBNET.VPC.Stack)
         c = 0
         v6c = 0
         v4c = 0
         while c < vnic_spec_obj.ipcount:
-            if stack == "dual" or stack == 'ipv6':
-                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6, v6c, stack)
+            if isV6Stack:
+                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6, v6c)
                 self.__objs.append(obj)
                 c = c + 1
                 v6c = v6c + 1
-            if c < vnic_spec_obj.ipcount and (stack == "dual" or stack == 'ipv4'):
-                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4, v4c, stack)
+            if c < vnic_spec_obj.ipcount and isV4Stack:
+                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4, v4c)
                 self.__objs.append(obj)
                 c = c + 1
                 v4c = v4c + 1

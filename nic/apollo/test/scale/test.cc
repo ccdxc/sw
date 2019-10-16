@@ -139,7 +139,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     route_table.routes[j].nh_tep.id = svc_tep_id++;
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                   route_table.routes[j].nh_tep.id = num_svc_teps + svc_tep_id++;
+                   route_table.routes[j].nh_tep.id = num_svc_teps + ++svc_tep_id;
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                     route_table.routes[j].nh.id = nh_id++;

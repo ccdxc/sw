@@ -2,19 +2,23 @@
 import pdb
 import ipaddress
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.objects.base as base
+
 import mirror_pb2 as mirror_pb2
 import types_pb2 as types_pb2
 
-from infra.common.logging import logger
-from apollo.config.store import Store
 
 class MirrorSessionObject(base.ConfigObjectBase):
     def __init__(self, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
         super().__init__()
+        self.SetBaseClassAttr()
         self.Id = next(resmgr.MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
 
@@ -41,9 +45,28 @@ class MirrorSessionObject(base.ConfigObjectBase):
         return "MirrorSession%d|SnapLen:%s|SpanType:%s" %\
                (self.Id, self.SnapLen, self.SpanType)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = mirror_pb2.MirrorSessionRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def Show(self):
+        logger.info("Mirror session Object: %s" % self)
+        logger.info("- %s" % repr(self))
+        if self.SpanType == 'RSPAN':
+            logger.info("- InterfaceId:0x%x|vlanId:%d" %\
+                        (self.Interface, self.VlanId))
+        elif self.SpanType == 'ERSPAN':
+            logger.info("- VPCId:%d|TunnelId:%d|DstIP:%s|SrcIP:%s|Dscp:%d|SpanID:%d" %\
+                        (self.VPCId, self.TunnelID, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
+        else:
+            assert(0)
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.MIRROR
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.Id)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.SnapLen = self.SnapLen
@@ -59,25 +82,8 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.ErspanSpec.VPCId = self.VPCId
         else:
             assert(0)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = mirror_pb2.MirrorSessionGetRequest()
-        grpcmsg.Id.append(self.Id)
-        return grpcmsg
-
-    def Show(self):
-        logger.info("Mirror session Object: %s" % self)
-        logger.info("- %s" % repr(self))
-        if self.SpanType == 'RSPAN':
-            logger.info("- InterfaceId:0x%x|vlanId:%d" %\
-                        (self.Interface, self.VlanId))
-        elif self.SpanType == 'ERSPAN':
-            logger.info("- VPCId:%d|TunnelId:%d|DstIP:%s|SrcIP:%s|Dscp:%d|SpanID:%d" %\
-                        (self.VPCId, self.TunnelID, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
-        else:
-            assert(0)
         return
+
 
 class MirrorSessionObjectClient:
     def __init__(self):

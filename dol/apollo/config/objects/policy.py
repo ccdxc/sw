@@ -116,7 +116,6 @@ class PolicyObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
-        self.deleted = False
         self.PolicyType = policytype
         self.OverlapType = overlaptype
         self.rules = copy.deepcopy(rules)
@@ -349,9 +348,8 @@ class PolicyObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
-        stack = parent.Stack
-        isV4Stack = True if ((stack == "dual") or (stack == 'ipv4')) else False
-        isV6Stack = True if ((stack == "dual") or (stack == 'ipv6')) else False
+        isV4Stack = utils.IsV4Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack)
         self.__v4ingressobjs[vpcid] = []
         self.__v6ingressobjs[vpcid] = []
         self.__v4egressobjs[vpcid] = []

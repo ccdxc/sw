@@ -64,6 +64,16 @@ class VnicObject(base.ConfigObjectBase):
         return "VnicID:%d|SubnetID:%d|VPCId:%d" %\
                (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
 
+    def Show(self):
+        logger.info("VNIC object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
+             % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
+        logger.info("- RxMirror:", self.RxMirror)
+        logger.info("- TxMirror:", self.TxMirror)
+        logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
+        return
+
     def SetBaseClassAttr(self):
         self.ObjType = api.ObjectTypes.VNIC
         return
@@ -113,21 +123,8 @@ class VnicObject(base.ConfigObjectBase):
             return False
         return True
 
-    def Show(self):
-        logger.info("VNIC object:", self)
-        logger.info("- %s" % repr(self))
-        logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
-             % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
-        logger.info("- RxMirror:", self.RxMirror)
-        logger.info("- TxMirror:", self.TxMirror)
-        logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
-        return
-
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
-
-    def SetupTestcaseConfig(self, obj):
-        return
 
 class VnicObjectClient:
     def __init__(self):

@@ -6,8 +6,8 @@ from infra.common.defs          import status
 from infra.common.logging       import logger
 import infra.config.base        as base
 
-import apollo.config.objects.eth.queue    as eth_queue
-import apollo.config.objects.eth.doorbell as doorbell
+import apollo.config.objects.host.eth.queue    as eth_queue
+import apollo.config.objects.host.eth.doorbell as doorbell
 
 eth_queue_type_ids = {'RX', 'TX', 'ADMIN', 'EQ'}
 

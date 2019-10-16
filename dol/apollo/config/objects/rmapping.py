@@ -11,7 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 
 class RemoteMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, tunobj, ipversion, count, stack):
+    def __init__(self, parent, spec, tunobj, ipversion, count):
         super().__init__()
         self.SetBaseClassAttr()
 
@@ -96,7 +96,8 @@ class RemoteMappingObjectClient:
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
 
-        stack = parent.VPC.Stack
+        isV4Stack = utils.IsV4Stack(parent.VPC.Stack)
+        isV6Stack = utils.IsV6Stack(parent.VPC.Stack)
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
             c = 0
@@ -104,13 +105,13 @@ class RemoteMappingObjectClient:
             v4c = 0
             while c < rmap_spec_obj.count:
                 tunobj = resmgr.RemoteMplsVnicTunAllocator.rrnext()
-                if stack == "dual" or stack == 'ipv6':
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c, stack)
+                if isV6Stack:
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
                     self.__objs.append(obj)
                     c = c + 1
                     v6c = v6c + 1
-                if c < rmap_spec_obj.count and (stack == "dual" or stack == 'ipv4'):
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c, stack)
+                if c < rmap_spec_obj.count and isV4Stack:
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c)
                     self.__objs.append(obj)
                     c = c + 1
                     v4c = v4c + 1

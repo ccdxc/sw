@@ -47,7 +47,6 @@ class RouteObject(base.ConfigObjectBase):
         self.PeerVPCId = vpcpeerid
         self.AppPort = resmgr.TransportDstPort
         ##########################################################################
-        self.deleted = False
         self._derive_oper_info()
         self.Show()
         return
@@ -196,9 +195,8 @@ class RouteObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
         vpcid = parent.VPCId
-        stack = parent.Stack
-        isV4Stack = True if ((stack == "dual") or (stack == 'ipv4')) else False
-        isV6Stack = True if ((stack == "dual") or (stack == 'ipv6')) else False
+        isV4Stack = utils.IsV4Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack)
         self.__v4objs[vpcid] = dict()
         self.__v6objs[vpcid] = dict()
         self.__v4iter[vpcid] = None

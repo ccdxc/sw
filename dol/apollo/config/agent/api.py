@@ -21,10 +21,15 @@ import meter_pb2_grpc as meter_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
 
 import device_pb2 as device_pb2
+import interface_pb2 as interface_pb2
 import mapping_pb2 as mapping_pb2
+import meter_pb2 as meter_pb2
+import mirror_pb2 as mirror_pb2
+import nh_pb2 as nh_pb2
 import policy_pb2 as policy_pb2
 import route_pb2 as route_pb2
 import subnet_pb2 as subnet_pb2
+import tags_pb2 as tags_pb2
 import tunnel_pb2 as tunnel_pb2
 import vpc_pb2 as vpc_pb2
 import vnic_pb2 as vnic_pb2
@@ -189,10 +194,15 @@ class ApolloAgentClient:
 
     def __create_msgreq_table(self):
         self.__msgreqs[ObjectTypes.SWITCH] = ClientModule(device_pb2, 'Device')
+        self.__msgreqs[ObjectTypes.INTERFACE] = ClientModule(interface_pb2, 'Interface')
         self.__msgreqs[ObjectTypes.MAPPING] = ClientModule(mapping_pb2, 'Mapping')
+        self.__msgreqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')
+        self.__msgreqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
+        self.__msgreqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')
         self.__msgreqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
         self.__msgreqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
         self.__msgreqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')
+        self.__msgreqs[ObjectTypes.TAG] = ClientModule(tags_pb2, 'Tag')
         self.__msgreqs[ObjectTypes.TUNNEL] = ClientModule(tunnel_pb2, 'Tunnel')
         self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')

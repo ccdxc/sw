@@ -9,7 +9,7 @@ from infra.common.defs          import status
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
-from apollo.config.objects.queue       import QueueObject
+from apollo.config.objects.host.queue       import QueueObject
 
 def log2(x):
     return (x - 1).bit_length()

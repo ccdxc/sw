@@ -373,6 +373,12 @@ def IsInterfaceSupported():
         return False
     return True
 
+def IsV4Stack(stack):
+    return True if ((stack == "dual") or (stack == 'ipv4')) else False
+
+def IsV6Stack(stack):
+    return True if ((stack == "dual") or (stack == 'ipv6')) else False
+
 def GetVlanHeaderSize(packet):
     pkt = packet.GetScapyPacket()
     if Dot1Q in pkt:

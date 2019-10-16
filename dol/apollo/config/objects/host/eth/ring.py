@@ -5,7 +5,7 @@ from infra.common.logging            import logger
 from infra.common.glopts             import GlobalOptions
 
 import apollo.config.resmgr          as resmgr
-import apollo.config.objects.ring    as ring
+import apollo.config.objects.host.ring    as ring
 from factory.objects.eth.descriptor  import *
 
 

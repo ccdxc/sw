@@ -3,7 +3,7 @@
 from infra.common.logging import logger
 import model_sim.src.model_wrap as model_wrap
 
-import apollo.config.objects.doorbell as doorbell
+import apollo.config.objects.host.doorbell as doorbell
 
 class Doorbell(doorbell.Doorbell):
 

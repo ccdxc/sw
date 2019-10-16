@@ -1,14 +1,15 @@
 #! /usr/bin/python3
+import ipaddress
 import pdb
 
-import infra.config.base as base
+from infra.common.logging import logger
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
-import tags_pb2 as tags_pb2
-import ipaddress
+import apollo.config.objects.base as base
 
-from infra.common.logging import logger
+import tags_pb2 as tags_pb2
 
 class TagRuleObject:
     def __init__(self, prefixes, tag_id, priority=0):
@@ -30,6 +31,7 @@ class TagRuleObject:
 class TagObject(base.ConfigObjectBase):
     def __init__(self, af, rules):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF TAG TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.TagTblId = next(resmgr.V6TagIdAllocator)
@@ -48,9 +50,22 @@ class TagObject(base.ConfigObjectBase):
         return "TagTblID:%dAddrFamily:%s|NumRules:%d"\
                %(self.TagTblId, self.AddrFamily, len(self.Rules))
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = tags_pb2.TagRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def Show(self):
+        logger.info("TagTbl object:", self)
+        logger.info("- %s" % repr(self))
+        for rule in self.Rules:
+            rule.Show()
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.TAG
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.TagTblId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.TagTblId
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
@@ -61,23 +76,8 @@ class TagObject(base.ConfigObjectBase):
             for prefix in rule.Prefixes:
                 tagprefix = tagrulespec.Prefix.add()
                 utils.GetRpcIPPrefix(prefix, tagprefix)
-
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = tags_pb2.TagGetRequest()
-        grpcmsg.Id.append(self.TagTblId)
-        return grpcmsg
-
-    def Show(self):
-        logger.info("TagTbl object:", self)
-        logger.info("- %s" % repr(self))
-        for rule in self.Rules:
-            rule.Show()
         return
 
-    def IsFilterMatch(self, selectors):
-        return super().IsFilterMatch(selectors.route.filters)
 
 class TagObjectClient:
     def __init__(self):
@@ -141,7 +141,8 @@ class TagObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
-        stack = parent.Stack
+        isV4Stack = utils.IsV4Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack)
         self.__v4objs[vpcid] = dict()
         self.__v6objs[vpcid] = dict()
         self.__v4iter[vpcid] = None
@@ -170,16 +171,6 @@ class TagObjectClient:
                 return (ip)
             return
 
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
-
         def __add_v4tagtable(v4rules):
             obj = TagObject(utils.IP_VERSION_4, v4rules)
             self.__v4objs[vpcid].update({obj.TagTblId: obj})
@@ -202,10 +193,10 @@ class TagObjectClient:
             return rules
 
         def __add_user_specified_tagtable(tagtablespec, pfxtype):
-            if __is_v4stack():
+            if isV4Stack:
                 __add_v4tagtable(__get_user_specified_rules(tagtablespec.v4rules))
 
-            if __is_v6stack():
+            if isV6Stack:
                 __add_v6tagtable(__get_user_specified_rules(tagtablespec.v6rules))
 
         if not hasattr(vpc_spec_obj, 'tagtbl'):

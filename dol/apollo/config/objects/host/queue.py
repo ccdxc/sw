@@ -3,7 +3,7 @@
 import infra.common.objects     as objects
 from infra.common.logging       import logger
 
-import apollo.config.objects.eth.ring  as ring
+import apollo.config.objects.host.eth.ring  as ring
 
 class QueueObject(objects.FrameworkObject):
     def __init__(self):

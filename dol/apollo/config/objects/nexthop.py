@@ -1,20 +1,19 @@
 #! /usr/bin/python3
 import pdb
-import ipaddress
 
-import infra.config.base as base
+from infra.common.logging import logger
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
-import nh_pb2 as nh_pb2
-import types_pb2 as types_pb2
+import apollo.config.objects.base as base
 
-from infra.common.logging import logger
-from apollo.config.store import Store
+import nh_pb2 as nh_pb2
 
 class NexthopObject(base.ConfigObjectBase):
     def __init__(self, parent, spec):
         super().__init__()
+        self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.NexthopId = next(resmgr.NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
@@ -33,29 +32,28 @@ class NexthopObject(base.ConfigObjectBase):
                (self.NexthopId, self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
                 self.MACAddr, self.VlanId)
 
-    def GetGrpcCreateMessage(self, cookie):
-        grpcmsg = nh_pb2.NexthopRequest()
-        grpcmsg.BatchCtxt.BatchCookie = cookie
+    def Show(self):
+        logger.info("Nexthop object:", self)
+        logger.info("- %s" % repr(self))
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.NEXTHOP
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.NexthopId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.NexthopId
         spec.IPNhInfo.VPCId = self.VPC.VPCId
         spec.IPNhInfo.Mac = self.MACAddr.getnum()
         spec.IPNhInfo.Vlan = self.VlanId
         utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
-        return grpcmsg
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = nh_pb2.NexthopGetRequest()
-        grpcmsg.Id.append(self.NexthopId)
-        return grpcmsg
-
-    def Show(self):
-        logger.info("Nexthop object:", self)
-        logger.info("- %s" % repr(self))
         return
 
-    def SetupTestcaseConfig(self, obj):
-        return
 
 class NexthopObjectClient:
     def __init__(self):
@@ -92,7 +90,8 @@ class NexthopObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
-        stack = parent.Stack
+        isV4Stack = utils.IsV4Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack)
         self.__v4objs[vpcid] = []
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
@@ -105,23 +104,13 @@ class NexthopObjectClient:
             self.__num_nh_per_vpc.append(0)
             return
 
-        def __is_v4stack():
-            if stack == "dual" or stack == 'ipv4':
-                return True
-            return False
-
-        def __is_v6stack():
-            if stack == "dual" or stack == 'ipv6':
-                return True
-            return False
-
         for nh_spec_obj in vpc_spec_obj.nexthop:
             for c in range(nh_spec_obj.count):
                 obj = NexthopObject(parent, nh_spec_obj)
                 self.__objs.update({obj.NexthopId: obj})
-                if __is_v4stack():
+                if isV4Stack:
                     self.__v4objs[vpcid].append(obj)
-                if __is_v6stack():
+                if isV6Stack:
                     self.__v6objs[vpcid].append(obj)
         if len(self.__v4objs[vpcid]):
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])

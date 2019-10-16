@@ -10,7 +10,7 @@ import infra.config.base        as base
 
 import apollo.config.resmgr     as resmgr
 from apollo.config.store        import Store
-import apollo.config.objects.queue_type     as queue_type
+import apollo.config.objects.host.queue_type as queue_type
 
 class LifObject(base.ConfigObjectBase):
     def __init__(self):

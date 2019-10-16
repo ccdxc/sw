@@ -1,18 +1,17 @@
 #! /usr/bin/python3
 import pdb
-import ipaddress
-import sys
 
-import infra.config.base as base
+from infra.common.logging import logger
+
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
-import interface_pb2 as interface_pb2
+import apollo.config.objects.base as base
+import apollo.config.objects.host.lif as lif
 
-from infra.common.logging import logger
-from apollo.config.store import Store
-import apollo.config.utils as utils
-import apollo.config.objects.lif as lif
+import interface_pb2 as interface_pb2
 
 class InterfaceInfoObject(base.ConfigObjectBase):
     def __init__(self, iftype, ifinfo):
@@ -32,7 +31,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
     def __repr__(self):
         return "Interface InfoType:%d" % (self.__type)
 
-    def show(self):
+    def Show(self):
         res = ""
         logger.info("- %s" % repr(self))
         if (self.__type == utils.InterfaceTypes.UPLINK):
@@ -48,7 +47,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
 class InterfaceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
-        ################# PUBLIC ATTRIBUTES OF PORT OBJECT #####################
+        self.SetBaseClassAttr()
+        ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         self.InterfaceId = next(resmgr.InterfaceIdAllocator)
         self.ifname = spec.id
         self.Type = utils.MODE2INTF_TBL.get(spec.mode)
@@ -64,20 +64,23 @@ class InterfaceObject(base.ConfigObjectBase):
         # TODO: Add support for UPLINKPC and L3_INTERFACE
         self.IfInfo = info
         self.GID("Interface ID:%s"%self.InterfaceId)
-        ################# PRIVATE ATTRIBUTES OF PORT OBJECT #####################
-        self.deleted = False
-        self.show()
+        ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
+        self.Show()
         return
 
     def __repr__(self):
         return "InterfaceId:%d|Type:%d|AdminState:%s" % \
                 (self.InterfaceId, self.Type, self.AdminState)
 
-    def show(self):
+    def Show(self):
         logger.info("InterfaceObject:")
         logger.info("- %s" % repr(self))
         if self.IfInfo:
-            logger.info("- %s" % self.IfInfo.show())
+            logger.info("- %s" % self.IfInfo.Show())
+        return
+
+    def SetBaseClassAttr(self):
+        self.ObjType = api.ObjectTypes.INTERFACE
         return
 
     def __create_lifs(self, spec):
@@ -91,22 +94,20 @@ class InterfaceObject(base.ConfigObjectBase):
 
 class InterfaceObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
 
     def GenerateObjects(self, topospec):
         if utils.IsInterfaceSupported() is False:
             return
         iflist = getattr(topospec, 'interface', None)
-        if iflist is None:
-            return
-        else:
+        if iflist:
             for spec in iflist:
                 ifobj = InterfaceObject(spec.entry)
-                self.__objs.append(ifobj)
+                self.__objs.update({ifobj.InterfaceId: ifobj})
                 if ifobj.Type ==  utils.InterfaceTypes.HOST:
                     Store.AddHostInterface(ifobj.ifname, ifobj)
         return
@@ -118,7 +119,7 @@ class InterfaceObjectClient:
     def CreateObjects(self):
         if utils.IsInterfaceSupported() is False:
             return
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.INTERFACE, msgs)
         return
 
