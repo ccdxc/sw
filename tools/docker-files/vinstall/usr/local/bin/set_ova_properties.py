@@ -11,6 +11,7 @@ import pycurl
 import json
 import re
 import datetime
+import md5
 import time
 from StringIO import StringIO
 from xml.dom.minidom import parseString
@@ -97,7 +98,8 @@ def get_ovf_properties():
     else:
         properties["addrconf"] = "static"
         properties["masklen"] = calculate_cidr_len(properties["netmask"])
-        properties["conname"] = "static-" + properties["ifname"]
+        # properties["conname"] = "static-" + properties["ifname"]
+        properties["conname"] = get_con_name()
         # Generate the DNS config
         dns_id = 1
         dns_list = [d.strip() for d in properties["dns"].split(',')]
@@ -141,6 +143,11 @@ def write_log(msg):
     msg = str(datetime.datetime.now()) + ": " + msg + "\n"
     print msg 
     log_fd.write(str(datetime.datetime.now()) + ": " + msg)
+
+def get_con_name():
+    m = md5.new()
+    m.update(str(time.time()))
+    return m.hexdigest()
 
 # Start here
 if os.path.exists(state_file):
