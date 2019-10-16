@@ -143,6 +143,10 @@ public:
     /// \return gateway IP address of the device
     ip_addr_t gw_ip_addr(void) const { return gw_ip_addr_; }
 
+    /// \brief  return the device's operational mode
+    /// \return operational mode of the device
+    pds_device_oper_mode_t oper_mode(void) const { return oper_mode_; }
+
 private:
     /// \brief constructor
     device_entry() {
@@ -161,10 +165,16 @@ private:
     }
 
 private:
-    ip_addr_t     ip_addr_;       ///< physical IP (aka. MyTEP IP) in substrate
-    mac_addr_t    mac_addr_;      ///< MyTEP mac address
-    ip_addr_t     gw_ip_addr_;    ///< IPv4 addres of default gw in substrate
-    impl_base     *impl_;         ///< impl object instance
+    ///< physical IP (aka. MyTEP IP) in substrate
+    ip_addr_t ip_addr_;
+    ///< MyTEP mac address
+    mac_addr_t mac_addr_;
+    ///< IPv4 addres of default gw in substrate
+    ip_addr_t gw_ip_addr_;
+    ///< operational mode of the device
+    pds_device_oper_mode_t oper_mode_;
+    ///< impl object instance
+    impl_base *impl_;
 } __PACK__;
 
 /// \@}

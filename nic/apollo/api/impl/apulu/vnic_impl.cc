@@ -30,6 +30,7 @@
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
 #define txdma_vnic_info               action_u.vnic_info_txdma_vnic_info_txdma
+#define nexthop_info                  action_u.nexthop_nexthop_info
 
 namespace api {
 namespace impl {
@@ -66,6 +67,15 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     mapping_swkey_t mapping_key = { 0 };
     local_mapping_swkey_t local_mapping_key = { 0 };
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
+
+    // reserve an entry in the NEXTHOP table for this local vnic
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entry for vnic %u, err %u",
+                      spec->key.id, ret);
+        return ret;
+    }
+    nh_idx_ = idx;
 
     subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
@@ -139,14 +149,21 @@ vnic_impl::release_resources(api_base *api_obj) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
 
     memset(&tparams, 0, sizeof(tparams));
+    // release the reserved LOCAL_MAPPING table entry
     if (local_mapping_hdl_.valid()) {
         tparams.handle = local_mapping_hdl_;
         mapping_impl_db()->local_mapping_tbl()->release(&tparams);
     }
 
+    // release the reserved MAPPING table entry
     if (mapping_hdl_.valid()) {
         tparams.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&tparams);
+    }
+
+    // release the NEXTHOP table entry
+    if (nh_idx_ != 0xFFFF) {
+        nexthop_impl_db()->nh_idxr()->free(nh_idx_);
     }
 
     // if the vnic_hw_id_ is not inherited from the lif, release it
@@ -197,6 +214,11 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         PDS_TRACE_ERR("Failed to remote entry in MAPPING "
                       "table for vnic %u, err %u", vnic->key().id, ret);
         // fall thru
+    }
+
+    // release the NEXTHOP table entry
+    if (nh_idx_ != 0xFFFF) {
+        nexthop_impl_db()->nh_idxr()->free(nh_idx_);
     }
 
     // free the vnic hw id, if its not inherited from lif
@@ -275,6 +297,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     pds_route_table_key_t route_table_key;
     vnic_info_rxdma_actiondata_t vnic_info_data;
 
+    // TODO: WTH is this ?
     hw_id = hw_id_ << 1;
 
     // program IPv4 ingress entry
@@ -436,10 +459,12 @@ sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
+    device_entry *device;
     subnet_entry *subnet;
     pds_vpc_key_t vpc_key;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data = { 0 };
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
 
@@ -481,6 +506,26 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+    // program the nexthop table
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    device = device_db()->find();
+    if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
+        nh_data.nexthop_info.port = 0;
+        if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+            nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
+        }
+    } else {
+        nh_data.nexthop_info.lif = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        nh_data.nexthop_info.port = TM_PORT_DMA;
+    }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for vnic %u at idx %u",
+                      spec->key.id, nh_idx_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
     // program vnic info tables (in rxdma and txdma pipes)
     ret = program_vnic_info_(vpc, subnet, spec);
     return SDK_RET_OK;
@@ -488,16 +533,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    sdk_ret_t ret;
-    pds_subnet_key_t subnet_key;
-    vnic_entry *vnic = (vnic_entry *)api_obj;
-    subnet_entry *subnet;
-
-    subnet_key = vnic->subnet();
-    subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
-
-    // TODO
-    return ret;
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
@@ -563,6 +599,10 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                      spec->mac_addr, ETH_ADDR_LEN);
 
     // fill the data
+    mapping_data.nexthop_valid = true;
+    mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    mapping_data.nexthop_id = nh_idx_;
+    mapping_data.egress_bd_id = subnet->hw_id();
     sdk::lib::memrev(mapping_data.dmaci, spec->mac_addr, ETH_ADDR_LEN);
 
     // program MAPPING table entry
@@ -616,13 +656,50 @@ error:
 
 sdk_ret_t
 vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
-    sdk_ret_t              ret;
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_ret_t ret;
+    subnet_entry *subnet;
+    pds_subnet_key_t subnet_key;
+    sdk_table_api_params_t tparams;
+    mapping_swkey_t mapping_key = { 0 };
+    mapping_appdata_t mapping_data = { 0 };
+    local_mapping_swkey_t local_mapping_key = { 0 };
+    local_mapping_appdata_t local_mapping_data = { 0 };
 
-    // TODO: read LOCAL_MAPPING table entry and cleanup the entry
+    subnet_key = vnic->subnet();
+    subnet = subnet_db()->find(&subnet_key);
 
-    // TODO: read MAPPING table entry and cleanup the entry
+    // invalidate LOCAL_MAPPING table entry
+    local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
+    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+    sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
+                     vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
+                                   &local_mapping_data,
+                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->update(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update LOCAL_MAPPING entry for vnic %u, "
+                      "(subnet %u, mac %s), err %u", vnic->key().id,
+                      subnet_key.id, macaddr2str(vnic->mac()), ret);
+        return ret;
+    }
 
+
+    // invalidate MAPPING table entry
+    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+    sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
+                     vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
+                                   MAPPING_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update MAPPING entry for vnic %u, "
+                      "(subnet %u, mac %s), ret %u", vnic->key().id,
+                      subnet_key.id, macaddr2str(vnic->mac()), ret);
+    }
     return ret;
 }
 

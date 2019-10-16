@@ -53,11 +53,12 @@ device_entry::destroy(device_entry *device) {
 
 sdk_ret_t
 device_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_device_spec_t *pds_device = &api_ctxt->api_params->device_spec;
+    pds_device_spec_t *spec = &api_ctxt->api_params->device_spec;
 
-    memcpy(&ip_addr_, &pds_device->device_ip_addr, sizeof(ip_addr_));
-    memcpy(mac_addr_, pds_device->device_mac_addr, ETH_ADDR_LEN);
-    memcpy(&gw_ip_addr_, &pds_device->gateway_ip_addr, sizeof(gw_ip_addr_));
+    memcpy(&ip_addr_, &spec->device_ip_addr, sizeof(ip_addr_));
+    memcpy(mac_addr_, spec->device_mac_addr, ETH_ADDR_LEN);
+    memcpy(&gw_ip_addr_, &spec->gateway_ip_addr, sizeof(gw_ip_addr_));
+    oper_mode_ = spec->dev_oper_mode;
     return SDK_RET_OK;
 }
 
