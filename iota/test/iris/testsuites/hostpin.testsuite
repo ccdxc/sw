@@ -54,6 +54,7 @@ testbundles:
         - post_diag/post_diag.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - ipsec/ipsec.testbundle
+        - cpld/cpldupgrade.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

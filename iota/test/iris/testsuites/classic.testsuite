@@ -68,6 +68,7 @@ testbundles:
         - post_diag/post_diag.testbundle
         - asic_tools/asic_tools.testbundle
         - system/obfl_check.testbundle
+        - cpld/cpldupgrade.testbundle
 
     sanity_ext:
         # Relative paths from iota/test/iris/testbundles/
