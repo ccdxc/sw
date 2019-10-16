@@ -89,6 +89,7 @@ func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content
 	return written, nil
 
 }
+var names []string
 
 // VerifyRolloutStatus verifies status of rollout in the iota cluster
 func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
@@ -123,16 +124,19 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 		return fmt.Errorf("Failed to create rollout object")
 	}
 
-	/*// Verify pre-install rollout Node status
+	// Verify pre-install rollout Node status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetControllerNodesStatus()
+		if r1.Spec.DSCsOnly {
+			break
+		}
+		status := r1.Status.GetControllerNodesStatus()
 		if len(status) == 0 {
 			log.Errorf("ts:%s Pre-install in progress", time.Now().String())
 			time.Sleep(time.Second * 5)
@@ -149,14 +153,17 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	// Verify pre-install Node status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
 		var numNodes int
-		status := rollout.Status.GetControllerNodesStatus()
+		if r1.Spec.DSCsOnly {
+			break
+		}
+		status := r1.Status.GetControllerNodesStatus()
 		if len(status) == 0 {
 			log.Errorf("ts:%s Pre-install in progress", time.Now().String())
 			time.Sleep(time.Second * 5)
@@ -165,12 +172,12 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 
 		for i := 0; i < len(status); i++ {
 			log.Errorf("ts:%s Controller node status %+v", time.Now().String(), status[i])
-			if status[i].Phase == "PROGRESSING" || status[i].Phase == "progressing" {
+			if status[i].Phase == rollout.RolloutPhase_PROGRESSING.String() {
 				log.Errorf("ts:%s Controller node Pre-install Complete", time.Now().String())
 				numNodes = len(act.model.VeniceNodes().nodes)
 				break
 			}
-			if status[i].Phase == "waiting-for-turn" {
+			if status[i].Phase == rollout.RolloutPhase_WAITING_FOR_TURN.String() {
 				numNodes++
 				continue
 			}
@@ -188,51 +195,41 @@ func (act *ActionCtx) VerifyRolloutStatus(rolloutName string) error {
 	if numRetries != 0 {
 		return fmt.Errorf("rollout pre-check not completed for all nodes")
 	}
-	*/
+
 	// Verify pre-install of Naples
 outerLoop:
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Errorf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetDSCsStatus()
+		status := r1.Status.GetDSCsStatus()
 		log.Infof("ts:%s Precheck smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
 		var numNodes int
-		if len(status) == 0 {
+		if len(status) == 0 || r1.Status.OperationalState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String(){
 			log.Infof("ts:%s Precheck smartNIC in progress", time.Now().String())
 			time.Sleep(time.Second * 5)
 			continue
 		}
+		if r1.Status.OperationalState == rollout.RolloutStatus_PROGRESSING.String() ||
+					r1.Status.OperationalState == rollout.RolloutStatus_FAILURE.String() ||
+					r1.Status.OperationalState == rollout.RolloutStatus_SUCCESS.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+	        numRetries = 0
+		    break
+	    }
 
 		for i := 0; i < len(status); i++ {
-			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
-			if status[i].Phase == "fail" {
-				log.Errorf("ts:%. Naples Pre Install Failed %+v", time.Now().String(), status[i])
-				break outerLoop
-			}
-		}
-
-		for i := 0; i < len(status); i++ {
-			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
-			if status[i].Phase == "progressing" || status[i].Phase == "complete" {
-				log.Errorf("ts:%. Naples Pre Install Complete %+v", time.Now().String(), status[i])
-				numRetries = 0
-				break outerLoop
-			}
-		}
-
-		for i := 0; i < len(status); i++ {
-			log.Errorf("ts:%. Naples Pre Install %+v", time.Now().String(), status[i])
-			if status[i].Phase == "waiting-for-turn" {
+			log.Errorf("ts:%s. Naples Pre Install %+v", time.Now().String(), status[i])
+			if status[i].Phase == rollout.RolloutPhase_WAITING_FOR_TURN.String() {
 				numNodes++
 			}
 		}
 
-		if numNodes != len(act.model.Naples().nodes) {
+		if numNodes < len(act.model.Naples().nodes) {
 			log.Errorf("ts:%s Pre-install completed for : %d naples", time.Now().String(), numNodes)
 			time.Sleep(time.Second * 5)
 			continue
@@ -268,17 +265,20 @@ outerLoop:
 		return fmt.Errorf("rollout failed to trigger")
 	}
 
-	/*// Verify rollout Node status
+	// Verify rollout Node status
 	for numRetries = 0; numRetries < 120; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Infof("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Infof("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
+		if r1.Spec.DSCsOnly {
+			break
+		}
 
-		status := rollout.Status.GetControllerNodesStatus()
+		status := r1.Status.GetControllerNodesStatus()
 		var numNodes int
 		if len(status) == 0 {
 			log.Infof("ts:%s Rollout controller node status: not found", time.Now().String())
@@ -287,7 +287,7 @@ outerLoop:
 		}
 
 		for i := 0; i < len(status); i++ {
-			if status[i].Phase == "complete" {
+			if status[i].Phase == rollout.RolloutPhase_COMPLETE.String() {
 				numNodes++
 			}
 		}
@@ -307,19 +307,22 @@ outerLoop:
 	// Verify rollout service status
 	for numRetries = 0; numRetries < 180; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetControllerServicesStatus()
+		if r1.Spec.DSCsOnly {
+			break
+		}
+		status := r1.Status.GetControllerServicesStatus()
 		if len(status) == 0 {
 			log.Infof("ts:%s Rollout controller services status: Not Found", time.Now().String())
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		if status[0].Phase != "complete" {
+		if status[0].Phase != rollout.RolloutPhase_COMPLETE.String() {
 			log.Infof("ts:%s Rollout controller services status: : %+v", time.Now().String(), status[0].Phase)
 			time.Sleep(time.Second * 5)
 			continue
@@ -331,7 +334,7 @@ outerLoop:
 	if numRetries != 0 {
 		return fmt.Errorf("rollout services failed on some nodes")
 	}
-	*/
+
 	// Verify rollout smartNIC status
 	for numRetries = 0; numRetries < 180; numRetries++ {
 		restcls, err := act.model.VeniceRestClient()
@@ -341,13 +344,13 @@ outerLoop:
 			continue
 		}
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		status := rollout.Status.GetDSCsStatus()
+		status := r1.Status.GetDSCsStatus()
 		log.Infof("ts:%s Rollout smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
 		var numNodes int
 		if len(status) == 0 {
@@ -358,47 +361,92 @@ outerLoop:
 
 		for i := 0; i < len(status); i++ {
 			log.Infof("ts:%s SmartNIC Rollout status %s", time.Now().String(), status[i].Phase)
-			if status[i].Phase == "complete" {
+			if status[i].Phase == rollout.RolloutPhase_COMPLETE.String() {
 				numNodes++
 			}
 		}
+
+		if r1.Status.OperationalState != rollout.RolloutStatus_PROGRESSING.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+			numRetries = 0
+			break
+		}
+
 		if numNodes != len(status) {
 			log.Infof("ts:%s SmartNIC Rollout completed for : %d nodes", time.Now().String(), numNodes)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		log.Infof("ts:%s Rollout Smart NIC Status: Complete", time.Now().String())
+		log.Infof("ts:%s Rollout Smart NIC Status: %s", time.Now().String(), r1.Status.OperationalState)
 		numRetries = 0
 		break
 	}
 	if numRetries != 0 {
 		return fmt.Errorf("rollout smartNIC node failed")
 	}
+	var opState string
+	// Verify rollout in retry states status
+	for numRetries = 0; numRetries < 60; numRetries++ {
+		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		if err != nil {
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		opState = r1.Status.OperationalState
 
+		if opState == rollout.RolloutStatus_PROGRESSING.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		if opState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+			break
+		}
+		if opState == rollout.RolloutStatus_FAILURE.String() || opState == rollout.RolloutStatus_SUSPENDED.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+			break
+		}
+	}
+
+	if opState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String() {
+
+		go func() {
+			if err := act.model.AddNaplesNodes(names); err != nil {
+				log.Errorf("Failed to add naples nodes %v error %v", names, err)
+			}
+		}()
+
+		log.Infof("Rollout is scheduled for retry.. Going to precheck SmartNIC")
+		time.Sleep(5*time.Minute)//wait for rollout to trigger retry
+		goto outerLoop
+	}
 	// Verify rollout overall status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-		rollout, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
+		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
-			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout)
+			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		opState := rollout.Status.OperationalState
+		opState := r1.Status.OperationalState
 
-		if opState == "progressing" || opState == "PROGRESSING" || opState == "SUSPEND_IN_PROGRESS" {
-			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+		if opState == rollout.RolloutStatus_PROGRESSING.String() || opState == rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			time.Sleep(time.Second * 5)
 			continue
 		}
 
-		if opState == "failure" || opState == "FAILURE" || opState == "DEADLINE_EXCEEDED" {
-			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+		if opState == rollout.RolloutStatus_FAILURE.String() || opState == rollout.RolloutStatus_DEADLINE_EXCEEDED.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			return fmt.Errorf("rollout smartNIC node failed")
 		}
 
-		if opState == "success" || opState == "SUCCESS" || opState == "SUSPENDED" {
-			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), rollout.Status.OperationalState)
+		if opState == rollout.RolloutStatus_SUCCESS.String() || opState == rollout.RolloutStatus_SUSPENDED.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			break
 		}
 
@@ -465,6 +513,17 @@ func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
 	err = act.PerformImageUpload()
 	if err != nil {
 		log.Infof("Errored PerformImageUpload")
+		return err
+	}
+	names = make([]string, 0)
+	for _, obj := range act.model.Naples().nodes {
+		names = append(names, obj.iotaNode.Name)
+		//just add one naples to simulate intent based rollout
+		break
+	}
+
+	if err := act.model.DeleteNaplesNodes(names); err != nil {
+		log.Errorf("Failed to delete naples nodes %v", names)
 		return err
 	}
 	//create the rollout object

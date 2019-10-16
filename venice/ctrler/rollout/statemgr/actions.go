@@ -41,6 +41,14 @@ func getVenicePendingRolloutIssue(version string, veniceRollouts []*VeniceRollou
 	return pendingVenice
 }
 
+func isPrecheckInProgress(op protos.DSCOp) bool {
+	if op == protos.DSCOp_DSCPreCheckForDisruptive ||
+		op == protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot {
+		return true
+	}
+	return false
+}
+
 // This function bins the smartNICs based on the user-requested labels and returns the slice of bins
 // Each bin of smartnics are expected to complete in that order
 func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bool, sn []*SmartNICState, version string) [][]*SmartNICState {
@@ -524,7 +532,7 @@ func (ros *RolloutState) issueDSCOpLinear(snStates []*SmartNICState, op protos.D
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
 		log.Infof("Status is %+s", snStatusList[sn.Name])
-		if len(snStatusList) != 0 && (snStatusList[sn.Name] == "" ||
+		if len(snStatusList) != 0 && isPrecheckInProgress(op) == false && (snStatusList[sn.Name] == "" ||
 			snStatusList[sn.Name] != opStatusSuccess) {
 			//A new node may have joined or become active or failed precheck. skip it
 			log.Infof("Status not found for %v. Or pre-check not done on this node earlier or precheck failed.", sn.Name)
@@ -565,7 +573,7 @@ func (ros *RolloutState) issueDSCOpExponential(snStates []*SmartNICState, op pro
 		for i := 0; i < numJobs; i++ {
 			sm.smartNICWG.Add(1)
 			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, op)
-			if len(snStatusList) != 0 && (snStatusList[snStates[curIndex].Name] == "" ||
+			if len(snStatusList) != 0 && isPrecheckInProgress(op) == false && (snStatusList[snStates[curIndex].Name] == "" ||
 				snStatusList[snStates[curIndex].Name] != opStatusSuccess) {
 				log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", snStates[curIndex].Name)
 				curIndex++

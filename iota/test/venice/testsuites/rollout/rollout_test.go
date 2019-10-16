@@ -2,6 +2,7 @@ package rollout_test
 
 import (
 	"errors"
+	"github.com/pensando/sw/venice/utils/log"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -35,36 +36,41 @@ var _ = Describe("rollout tests", func() {
 
 		It("Perform Rollout", func() {
 
-			rollout, err := ts.model.GetRolloutObject()
+			rollout, err := ts.model.GetRolloutObject(ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultSGPolicy(), "any")
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)
+			log.Infof(" Length workloadPairs %v", len(workloadPairs.ListIPAddr()))
 			Expect(len(workloadPairs.ListIPAddr()) != 0).Should(BeTrue())
 
 			err = ts.model.Action().PerformRollout(rollout)
 			Expect(err).ShouldNot(HaveOccurred())
-
-			rerr := make(chan error)
-
+			rerr := make(chan bool)
 			go func() {
-				rerr <- ts.model.Action().TCPSessionWithOptions(workloadPairs, 8000, "240s", 100)
+				_ = ts.model.Action().TCPSessionWithOptions(workloadPairs, 8000, "180s", 100)
+				log.Infof("TCP SESSION TEST COMPLETE")
+				rerr <- true
+				return
 			}()
 
 			// verify rollout is successful
 			Eventually(func() error {
 				return ts.model.Action().VerifyRolloutStatus(rollout.Name)
 			}).Should(Succeed())
-
-			//Readd workloads
-			ts.model.Action().WorkloadsSayHelloToDataPath()
-
-			select {
-			case err = <-rerr:
-			case <-time.After(time.Duration(600) * time.Second):
-				err = errors.New("Test timed out")
+			log.Infof("Rollout Completed. Waiting for Fuz tests to complete..")
+			errWaitingForFuz := func() error {
+				select {
+				case <-rerr:
+					log.Infof("Verified DataPlane using fuz connections")
+					return nil
+				case <-time.After(time.Duration(900) * time.Second):
+					log.Infof("Timeout while waiting for fuz api to return")
+					return errors.New("Timeout while waiting for fuz api to return")
+				}
 			}
+			Expect(errWaitingForFuz()).ShouldNot(HaveOccurred())
+			return
 
-			Expect(err == nil).To(Equal(true))
 		})
 	})
 })

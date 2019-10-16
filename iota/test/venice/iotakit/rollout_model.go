@@ -4,7 +4,6 @@ package iotakit
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -53,7 +52,7 @@ func getCmdGitVersion(metadataFile string) string {
 }
 
 // GetRolloutObject gets rollout instance
-func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
+func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 
 	seconds := time.Now().Unix()
 	scheduledStartTime := &api.Timestamp{
@@ -79,12 +78,6 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 		return nil, err
 
 	}*/
-	//TODO hardcoding it for now to make asset-pull work
-
-	metafile := fmt.Sprintf("%s/src/github.com/pensando/sw/bin/upgrade-bundle/metadata.json", os.Getenv("GOPATH"))
-
-	version := getCmdGitVersion(metafile)
-
 	var req labels.Requirement
 	req.Key = "type"
 	req.Operator = "in"
@@ -96,25 +89,61 @@ func (sm *SysModel) GetRolloutObject() (*rollout.Rollout, error) {
 	var order []*labels.Selector
 	order = append(order, &orderelem)
 
-	return &rollout.Rollout{
-		TypeMeta: api.TypeMeta{
-			Kind: "Rollout",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: rolloutName,
-		},
-		Spec: rollout.RolloutSpec{
-			Version:                     version,
-			ScheduledStartTime:          scheduledStartTime,
-			Duration:                    "",
-			Strategy:                    "LINEAR",
-			MaxParallel:                 9,
-			MaxNICFailuresBeforeAbort:   0,
-			OrderConstraints:            order,
-			Suspend:                     false,
-			DSCsOnly:                    true,
-			DSCMustMatchConstraint:      true, // hence venice upgrade only
-			UpgradeType: "Disruptive",
-		},
-	}, nil
+	version := "1.2.0-140"
+
+	if scaleData {
+		var req labels.Requirement
+		req.Key = "type"
+		req.Operator = "in"
+		req.Values = append(req.Values, "bm")
+
+		var orderelem labels.Selector
+		orderelem.Requirements = append(orderelem.Requirements, &req)
+
+		var order []*labels.Selector
+		order = append(order, &orderelem)
+
+		return &rollout.Rollout{
+			TypeMeta: api.TypeMeta{
+				Kind: "Rollout",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: rolloutName,
+			},
+			Spec: rollout.RolloutSpec{
+				Version:                   version,
+				ScheduledStartTime:        scheduledStartTime,
+				Duration:                  "",
+				Strategy:                  "LINEAR",
+				MaxParallel:               10,
+				MaxNICFailuresBeforeAbort: 0,
+				OrderConstraints:          order,
+				Suspend:                   false,
+				DSCsOnly:                  true,
+				UpgradeType:               "Disruptive",
+			},
+		}, nil
+	} else {
+		return &rollout.Rollout{
+			TypeMeta: api.TypeMeta{
+				Kind: "Rollout",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: rolloutName,
+			},
+			Spec: rollout.RolloutSpec{
+				Version:                   version,
+				ScheduledStartTime:        scheduledStartTime,
+				Duration:                  "",
+				Strategy:                  "LINEAR",
+				MaxParallel:               1,
+				MaxNICFailuresBeforeAbort: 0,
+				OrderConstraints:          nil,
+				Suspend:                   false,
+				DSCsOnly:                  false,
+				UpgradeType:               "Disruptive",
+			},
+		}, nil
+	}
+
 }

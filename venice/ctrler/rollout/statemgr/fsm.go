@@ -475,6 +475,7 @@ func fsmAcRetry(ros *RolloutState) {
 		log.Infof("Rollout retry begin")
 		ros.numPreUpgradeFailures = 0
 		ros.numSkipped = 0
+		ros.numFailuresSeen = 0
 		smartNICROs, err := ros.Statemgr.ListDSCRollouts()
 		if err != nil {
 			log.Errorf("Error %v listing DSCRollouts", err)
