@@ -321,3 +321,24 @@ DebugSvcImpl::QueueCreditsGet(ServerContext *context, const Empty *req,
     rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
+
+Status
+DebugSvcImpl::StartAacsServer(ServerContext *context,
+                              const pds::AacsRequest *proto_req,
+                              Empty *proto_rsp) {
+    PDS_TRACE_VERBOSE("Received AACS Server Start");
+    if (proto_req) {
+        debug::start_aacs_server(proto_req->aacsserverport());
+    }
+
+    return Status::OK;
+}
+
+Status
+DebugSvcImpl::StopAacsServer(ServerContext *context,
+                             const Empty *proto_req,
+                             Empty *proto_rsp) {
+    PDS_TRACE_VERBOSE("Received AACS Server Stop");
+    debug::stop_aacs_server();
+    return Status::OK;
+}

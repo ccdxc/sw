@@ -45,23 +45,3 @@ PortSvcImpl::PortUpdate(ServerContext *context,
 
     return Status::OK;
 }
-
-Status
-PortSvcImpl::StartAacsServer(ServerContext *context,
-                             const pds::AacsRequest *proto_req,
-                             Empty *proto_rsp) {
-    PDS_TRACE_VERBOSE("Received AACS Server Start");
-    if (proto_req) {
-        api::start_aacs_server(proto_req->aacsserverport());
-    }
-    return Status::OK;
-}
-
-Status
-PortSvcImpl::StopAacsServer(ServerContext *context,
-                            const Empty *proto_req,
-                            Empty *proto_rsp) {
-    PDS_TRACE_VERBOSE("Received AACS Server Stop");
-    api::stop_aacs_server();
-    return Status::OK;
-}

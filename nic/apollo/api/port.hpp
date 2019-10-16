@@ -52,19 +52,6 @@ void xcvr_event_cb(xcvr_event_info_t *xcvr_event_info);
  */
 void port_event_cb(port_event_info_t *port_event_info);
 
-/**
-  * @brief    start aacs server
-  * @param[in]    aacs_server_port     AACS server port
-  * @return       SDK_RET_OK on success, failure status code on error
-  */
-sdk_ret_t start_aacs_server(uint32_t aacs_server_port);
-
-/**
-  * @brief    stop aacs server
-  * @return       SDK_RET_OK on success, failure status code on error
-  */
-sdk_ret_t stop_aacs_server(void);
-
 }    // namespace api
 
 #endif    /** __PORT_HPP__ */

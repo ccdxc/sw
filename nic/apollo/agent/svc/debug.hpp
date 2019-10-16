@@ -31,6 +31,7 @@ using pds::FteStatsGetResponse;
 using pds::FteStatsClearRequest;
 using pds::FteStatsGetResponse;
 using pds::QueueCreditsGetResponse;
+using pds::AacsRequest;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -67,6 +68,10 @@ public:
                       Empty *rsp) override;
     Status QueueCreditsGet(ServerContext *context, const Empty *req,
                            QueueCreditsGetResponse *rsp) override;
+    Status StartAacsServer(ServerContext *context, const pds::AacsRequest *req,
+                           Empty *rsp) override;
+    Status StopAacsServer(ServerContext *context, const Empty *req,
+                           Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

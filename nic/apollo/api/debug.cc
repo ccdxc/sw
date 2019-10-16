@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/linkmgr/port_mac.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/include/sdk/fd.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -169,6 +170,29 @@ sdk_ret_t
 pds_flow_clear (uint32_t idx)
 {
     return impl_base::pipeline_impl()->flow_clear(idx);
+}
+
+/**
+ * @brief    start AACS server
+ * @param[in]    aacs_server_port     AACS server port
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+start_aacs_server (uint32_t aacs_server_port)
+{
+    sdk::linkmgr::start_aacs_server(aacs_server_port);
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    stop AACS server
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+stop_aacs_server (void)
+{
+    sdk::linkmgr::stop_aacs_server();
+    return SDK_RET_OK;
 }
 
 }    // namespace debug

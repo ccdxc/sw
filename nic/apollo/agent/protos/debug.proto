@@ -31,6 +31,9 @@ service DebugSvc {
   rpc FteStatsClear (FteStatsClearRequest) returns (FteStatsClearResponse) {}
   rpc MemoryTrim (types.Empty) returns (types.Empty) {}
   rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
+  rpc StartAacsServer (AacsRequest) returns (types.Empty) {}
+  rpc StopAacsServer (types.Empty) returns (types.Empty) {}
+
 }
 
 enum TraceLevel {
@@ -449,4 +452,8 @@ message CommandCtxt {
 
 message CommandResponse {
   types.ApiStatus ApiStatus = 1;
+}
+
+message AacsRequest {
+  uint32 AacsServerPort = 1;
 }
