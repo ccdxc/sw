@@ -141,7 +141,7 @@ control local_mapping {
 /******************************************************************************/
 /* All mappings (local and remote)                                            */
 /******************************************************************************/
-@pragma capi appdatafields dmaci
+@pragma capi appdatafields nexthop_valid nexthop_type nexthop_id egress_bd_id dmaci
 @pragma capi hwfields_access_api
 action mapping_info(entry_valid,
                     pad12, nexthop_valid, nexthop_type, nexthop_id,
