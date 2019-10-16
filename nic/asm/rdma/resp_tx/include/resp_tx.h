@@ -81,8 +81,8 @@ struct resp_tx_phv_t {
     pad      :  24;                             //  3B
     icrc     :  32;                             //  4B
 
-    //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
-    //ICRC data does not need to be given as zero as Capri overtites icrc after computation
+    //***NOTE: Keep 4 bytes after pad within this flit so that it can be copied as ICRC data into phv
+    //ICRC data does not need to be zeroed as Capri overwrites icrc after computation
 
     // common tx (flit 0 - 5)
     struct phv_ common;

@@ -17,7 +17,7 @@ struct rdma_stage0_table_k k;
 #define TO_S6_P to_s6_rqpt_info
 #define BT_TO_S_INFO_P to_s1_bt_info
 #define RQCB_TO_DCQCN_CFG_P t1_s2s_dcqcn_config_info
-#define RQCB_TO_PREF_P t2_s2s_prefetch_info
+#define RQCB_TO_PREFETCH_P t2_s2s_prefetch_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -59,8 +59,8 @@ resp_tx_rqcb_process:
         //resp_rx can use this variable from rqcb1 to compare
         //against proxy_cindex for queue full/empty conditions
         //proxy_c_index would track the real c_index
-    
         tblwr           RQ_C_INDEX, RQ_P_INDEX
+
         // if prefetch is enabled, skip memwr of proxy pindex
         // in prefetch case, proxy pindex will be written using DMA
         // after WQE's are actually prefetched
@@ -68,9 +68,8 @@ resp_tx_rqcb_process:
         add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
         add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
         // we do not need to load RQCB1 to populate this value.
-        // we can use memwr
         // There is always a possibility of RxDMA seeing this
-        // change in a delayed manner, irrespective of whether we 
+        // change in a delayed manner, irrespective of whether we
         // update using tblwr, memwr or DMA.
         memwr.hx        r2, RQ_P_INDEX
         phvwr.e         p.common.p4_intr_global_drop, 1
@@ -81,7 +80,7 @@ skip_memwr:
 
         seq             c2, d.serv_type, RDMA_SERV_TYPE_UD
         bcf             [!c2], prefetch
-        CAPRI_SET_FIELD2(RQCB_TO_PREF_P, cmd_eop, 1) // BD Slot
+        CAPRI_SET_FIELD2(RQCB_TO_PREFETCH_P, cmd_eop, 1) // BD Slot
 
         phvwr.e         p.common.p4_intr_global_drop, 1
         nop // Exit Slot
@@ -278,14 +277,14 @@ bt_in_progress:
 prefetch:
     add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
 
-    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREF_P, log_rq_page_size), d.log_rq_page_size, \
-                    CAPRI_PHV_FIELD(RQCB_TO_PREF_P, log_wqe_size), d.log_wqe_size
+    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREFETCH_P, log_rq_page_size), d.log_rq_page_size, \
+                    CAPRI_PHV_FIELD(RQCB_TO_PREFETCH_P, log_wqe_size), d.log_wqe_size
 
     add             r1, r0, RQ_P_INDEX
-    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREF_P, pt_base_addr), d.pt_base_addr, \
-                    CAPRI_PHV_FIELD(RQCB_TO_PREF_P, rq_pindex), r1
+    phvwrpair       CAPRI_PHV_FIELD(RQCB_TO_PREFETCH_P, pt_base_addr), d.pt_base_addr, \
+                    CAPRI_PHV_FIELD(RQCB_TO_PREFETCH_P, rq_pindex), r1
 
-    CAPRI_SET_FIELD2(RQCB_TO_PREF_P, log_num_wqes, d.log_num_wqes)
+    CAPRI_SET_FIELD2(RQCB_TO_PREFETCH_P, log_num_wqes, d.log_num_wqes)
 
     // load setup_checkout_process
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_setup_checkout_process, RQCB2_P) // Exit Slot

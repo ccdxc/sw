@@ -10,17 +10,16 @@ struct resp_tx_s3_t2_k k;
 
 // assumption is that this program gets invoked thru table 2,
 // only when resp_tx_rqprefetch_process eventually needs to be invoked.
-// this program keeps bubbling down as mpu_only program 
-// till stage_3 and then invokes resp_tx_rqprefetch_process for stage 4.
+// this program keeps bubbling down as mpu_only program
+// till stage 3 and then invokes resp_tx_rqprefetch_process for stage 4.
 
     .param  resp_tx_rqprefetch_process
 
 .align
 resp_tx_rqprefetch_mpu_only_process:
-
-    mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_3
-    bcf              [!c1], bubble_to_next_stage
+    mfspr       r1, spr_mpuid
+    seq         c1, r1[4:2], STAGE_3
+    bcf         [!c1], bubble_to_next_stage
 
     CAPRI_GET_TABLE_2_K(resp_tx_phv_t, r7) // BD Slot
 

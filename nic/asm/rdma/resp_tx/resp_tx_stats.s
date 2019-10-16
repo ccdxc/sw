@@ -16,8 +16,8 @@ struct rqcb4_t d;
 #define K_LAST_MSN CAPRI_KEY_FIELD(IN_P, last_msn)
 #define K_LAST_PSN CAPRI_KEY_FIELD(IN_P, last_psn)
 #define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_resp_rx)
-#define K_INCR_PREF_CNT CAPRI_KEY_FIELD(IN_P, incr_prefetch_cnt)
-#define K_PREF_ONLY CAPRI_KEY_FIELD(IN_P, prefetch_only)
+#define K_INCR_PREFETCH_CNT CAPRI_KEY_FIELD(IN_P, incr_prefetch_cnt)
+#define K_PREFETCH_ONLY CAPRI_KEY_FIELD(IN_P, prefetch_only)
 
 #define GLOBAL_FLAGS r7
 #define RQCB4_ADDR   r3
@@ -37,9 +37,9 @@ resp_tx_stats_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_7
     bcf              [!c1], bubble_to_next_stage
-    seq              c2, K_INCR_PREF_CNT, 1 // BD Slot
+    seq              c2, K_INCR_PREFETCH_CNT, 1 // BD Slot
 
-    bbeq             K_PREF_ONLY, 1, exit
+    bbeq             K_PREFETCH_ONLY, 1, exit
     tblmincri.c2     d.num_prefetch, MASK_16, 1 // BD Slot
 
     // if already error disabled, do not update the stats anymore

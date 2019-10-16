@@ -80,7 +80,7 @@ resp_rx_rqcb1_write_back_process:
     bbeq            d.prefetch_en, 0, skip_prefetch_update
     // memwr prefetch proxy cindex in rqcb2
     RQCB2_ADDR_GET(RQCB2_ADDR) // BD Slot
-    add.c1          r3, RQCB2_ADDR, FIELD_OFFSET(rqcb2_t, pref_proxy_cindex)
+    add.c1          r3, RQCB2_ADDR, FIELD_OFFSET(rqcb2_t, prefetch_proxy_cindex)
     memwr.hx.c1     r3, SPEC_RQ_C_INDEX
 
 skip_prefetch_update:
@@ -96,11 +96,9 @@ skip_prefetch_update:
     bcf             [c4], skip_updates_for_only
     tblwr           d.in_progress, CAPRI_KEY_FIELD(IN_TO_S_P, in_progress)   //BD Slot
 
-//#if 0
     // If atomic request, set busy to 0
     # c1: atomic
     tblwr.c1        d.busy, 0
-//#endif
 
     seq         c2, CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt), 1
     // updates for multi-packet case
@@ -156,7 +154,7 @@ check_ack_nak:
     RQ_CREDITS_GET(ACK_CREDITS, TMP1, TMP2, c2) // BD Slot
     phvwrpair   p.s1.ack_info.msn, d.msn, \
                 p.s1.ack_info.credits, ACK_CREDITS
-                
+
     // ACK/NAK generation
     RQCB2_ADDR_GET(RQCB2_ADDR)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c4)

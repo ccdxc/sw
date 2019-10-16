@@ -44,8 +44,8 @@
 
 // rqcb2 fields related to prefetch
 #define RQ_PROXY_C_INDEX d.{proxy_cindex}.hx
-#define PREF_P_INDEX d.{pref_pindex}.hx
-#define PREF_PROXY_C_INDEX d.{pref_proxy_cindex}.hx
+#define PREFETCH_P_INDEX d.{prefetch_pindex}.hx
+#define PREFETCH_PROXY_C_INDEX d.{prefetch_proxy_cindex}.hx
 
 #define RSQ_C_INDEX_OFFSET          FIELD_OFFSET(rqcb0_t, ring1.cindex)
 #define RQCB0_CURR_READ_RSP_PSN     FIELD_OFFSET(rqcb0_t, curr_read_rsp_psn)
@@ -175,7 +175,7 @@ struct rqcb1_t {
     rsvd2: 7;
     spec_cindex: 16;  // cindex used for speculation
                       // rw by S0
-                      
+
     e_psn: 24;        //rw by S0
     next_op_type: 2;  //rw by S0
     next_pkt_type: 1; //rw by S0
@@ -206,7 +206,7 @@ struct rqcb1_t {
     // hence it should be at 16-bit boundary.
     proxy_cindex: 16;   // written by S4, read by S0
     proxy_pindex: 16;   // written by TxDMA, read by RxDMA
-                       
+
     srq_id: 24;
 
     serv_type: 3;           //Ronly
@@ -236,14 +236,14 @@ struct rqcb2_t {
 
     // RQ prefetch related fields
     proxy_cindex: 16;
-    pref_pindex: 16;
-    pref_proxy_cindex: 16;
+    prefetch_pindex: 16;
+    prefetch_proxy_cindex: 16;
     prefetch_base_addr: 32; //Ronly
-    log_num_pref_wqes: 5;
+    log_num_prefetch_wqes: 5;
     rsvd3       : 3;
-    pref_buff_index: 16;
+    prefetch_buf_index: 16;
     checkout_done: 1;
-    pref_init_done: 1;
+    prefetch_init_done: 1;
 
     pad: 134;   //17B
 };
@@ -392,13 +392,13 @@ struct rqcb_t {
     struct rqcb5_t rqcb5;
 };
 
-struct pref_cb_t {
+struct prefetch_cb_t {
     p_index: 16;
     c_index: 16;
     pad: 480; // 60B
 };
 
-struct pref_ring_t {
+struct prefetch_ring_t {
     val: 16;
     rsvd: 496; // 62B
 };

@@ -103,8 +103,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     hal_ret_t   ret;
     pd::pd_func_args_t pd_func_args = {0};
 
-	hal::pd::pd_rxdma_table_entry_add_args_s rx_args;
-	rx_args.idx = lif;
+    hal::pd::pd_rxdma_table_entry_add_args_s rx_args;
+    rx_args.idx = lif;
     rx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
     rx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     rx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
@@ -123,8 +123,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.rq_qtype = entry_p->rq_qtype;
     rx_args.aq_qtype = entry_p->aq_qtype;
     pd_func_args.pd_rxdma_table_entry_add = &rx_args;
-	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, &pd_func_args);
 
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for rxdma, idx : {}, err : {}",
                       lif, ret);
@@ -132,8 +132,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         return ret;
     }
 
-	hal::pd::pd_txdma_table_entry_add_args_s tx_args;
-	tx_args.idx = lif;
+    hal::pd::pd_txdma_table_entry_add_args_s tx_args;
+    tx_args.idx = lif;
     tx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
     tx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     tx_args.ah_base_addr_page_id = entry_p->ah_base_addr_page_id;
@@ -155,7 +155,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.barmap_base_addr = entry_p->barmap_base_addr;
     tx_args.barmap_size = entry_p->barmap_size;
     pd_func_args.pd_txdma_table_entry_add = &tx_args;
-	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, &pd_func_args);
+
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for txdma, idx : {}, err : {}",
                       lif, ret);
@@ -418,8 +419,6 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.barmap_base_addr = size >> HBM_BARMAP_BASE_SHIFT;
     size += hbm_bar_size;
     sram_lif_entry.barmap_size = hbm_bar_size >> HBM_BARMAP_SIZE_SHIFT;
-
-    // TODO: Fill prefetch data and add corresponding code
 
     sram_lif_entry.rdma_en_qtype_mask =
         ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ) | (1 << Q_TYPE_ADMINQ));

@@ -99,13 +99,13 @@ sdk_ret_t
 rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                        uint32_t max_ahs, uint32_t max_ptes,
                        uint64_t mem_bar_addr, uint32_t mem_bar_size,
-                       uint32_t max_pref)
+                       uint32_t max_prefetch)
 {
     sdk_ret_t           ret = SDK_RET_OK;
     sram_lif_entry_t    sram_lif_entry;
     uint32_t            pt_size, key_table_size, ah_table_size;
-    uint32_t            pref_cb_size = 0, pref_ring_size = 0;
-    uint32_t            pref_size = 0;
+    uint32_t            prefetch_cb_size = 0, prefetch_ring_size = 0;
+    uint32_t            prefetch_size = 0;
     uint32_t            total_size;
     uint64_t            base_addr;
     uint64_t            size;
@@ -115,7 +115,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory
-    uint64_t            pref_cb_base_addr = 0; //address in HBM memory
+    uint64_t            prefetch_cb_base_addr = 0; //address in HBM memory
 
     NIC_FUNC_DEBUG("lif-{}: RDMA lif init", lif);
 
@@ -170,24 +170,24 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     key_table_size += sizeof(dcqcn_config_cb_t) * num_dcqcn_profiles;
     key_table_size = HBM_PAGE_ALIGN(key_table_size);
 
-    if (max_pref > 0) {
-        pref_cb_size = sizeof(rq_pref_cb_t); // 64 bytes for LIF level cb
+    if (max_prefetch > 0) {
+        prefetch_cb_size = sizeof(rq_prefetch_cb_t); // 64 bytes for LIF level cb
         //adjust to page boundary
-        if (pref_cb_size & (HBM_PAGE_SIZE - 1)) {
-            pref_cb_size = ((pref_cb_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+        if (prefetch_cb_size & (HBM_PAGE_SIZE - 1)) {
+            prefetch_cb_size = ((prefetch_cb_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
 
-        pref_ring_size = sizeof(rq_pref_ring_t) * MAX_RQ_PREF_ACTIVE_QPS; // 2 byte entries * 1024 active QP's
+        prefetch_ring_size = sizeof(rq_prefetch_ring_t) * MAX_RQ_PREFETCH_ACTIVE_QPS; // 2 byte entries * 1024 active QP's
         //adjust to page boundary
-        if (pref_ring_size & (HBM_PAGE_SIZE - 1)) {
-            pref_ring_size = ((pref_ring_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+        if (prefetch_ring_size & (HBM_PAGE_SIZE - 1)) {
+            prefetch_ring_size = ((prefetch_ring_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
 
         // TODO hard code to 64 for now. With this, WQE's > 64 bytes will have < 32 prefetch WQE entries per QP
-        pref_size = 64 * max_pref;
+        prefetch_size = 64 * max_prefetch;
         //adjust to page boundary
-        if (pref_size & (HBM_PAGE_SIZE - 1)) {
-            pref_size = ((pref_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+        if (prefetch_size & (HBM_PAGE_SIZE - 1)) {
+            prefetch_size = ((prefetch_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
     }
 
@@ -196,28 +196,28 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     ah_table_size = AT_ENTRY_SIZE_BYTES * max_ahs;
     ah_table_size = HBM_PAGE_ALIGN(ah_table_size);
 
-    total_size = pt_size + key_table_size + pref_cb_size + pref_ring_size + pref_size + ah_table_size + HBM_PAGE_SIZE;
+    total_size = pt_size + key_table_size + prefetch_cb_size + prefetch_ring_size + prefetch_size + ah_table_size + HBM_PAGE_SIZE;
 
     base_addr = rdma_mem_alloc_(total_size);
 
     NIC_FUNC_DEBUG("lif-{}: pt_size: {}, key_table_size: {}, "
                   "ah_table_size: {}, base_addr: {:#x}, "
-                  "pref_cb_size: {}, pref_ring_size: {}, pref_size: {}",
+                  "prefetch_cb_size: {}, prefetch_ring_size: {}, prefetch_size: {}",
                   lif,
                   pt_size, key_table_size,
                   ah_table_size, base_addr,
-                  pref_cb_size, pref_ring_size, pref_size);
+                  prefetch_cb_size, prefetch_ring_size, prefetch_size);
 
     size = base_addr;
     sram_lif_entry.pt_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     size += pt_size + key_table_size;
 
-    if (max_pref > 0) {
+    if (max_prefetch > 0) {
         // init LIF level prefetch CB
-        pref_cb_base_addr = size;
-        uint16_t p_index = MAX_RQ_PREF_ACTIVE_QPS - 1;
-        WRITE_MEM(pref_cb_base_addr, (uint8_t *)&p_index, sizeof(p_index), 0);
-        size += pref_cb_size;
+        prefetch_cb_base_addr = size;
+        uint16_t p_index = MAX_RQ_PREFETCH_ACTIVE_QPS - 1;
+        WRITE_MEM(prefetch_cb_base_addr, (uint8_t *)&p_index, sizeof(p_index), 0);
+        size += prefetch_cb_size;
 
         // init prefetch ring
         uint64_t addr = size;
@@ -225,12 +225,12 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
             WRITE_MEM(addr, (uint8_t *)&i, sizeof(uint16_t), 0);
             addr += sizeof(uint16_t);
         }
-        size += pref_ring_size;
+        size += prefetch_ring_size;
 
         // populate prefetch related fields
         sram_lif_entry.prefetch_pool_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
-        sram_lif_entry.log_num_prefetch_pool_entries = log2(pref_size/MAX_RQ_PREF_ACTIVE_QPS);
-        size += pref_size;
+        sram_lif_entry.log_num_prefetch_pool_entries = log2(prefetch_size / MAX_RQ_PREFETCH_ACTIVE_QPS);
+        size += prefetch_size;
     }
 
     sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;

@@ -721,15 +721,15 @@ class RdmaRQCB2state(Packet):
         IntField("pd", 0),
 
         LEShortField("proxy_cindex", 0),
-        LEShortField("pref_pindex", 0),
-        LEShortField("pref_proxy_cindex", 0),
+        LEShortField("prefetch_pindex", 0),
+        LEShortField("prefetch_proxy_cindex", 0),
         XIntField("prefetch_base_addr", 0),
-        BitField("log_num_pref_wqes", 0, 5),
+        BitField("log_num_prefetch_wqes", 0, 5),
         BitField("rqcb2_rsvd3", 0, 3),
 
-        ShortField("pref_buff_index", 0),
+        ShortField("prefetch_buff_index", 0),
         BitField("checkout_done", 0, 1),
-        BitField("pref_init_done", 0, 1),
+        BitField("prefetch_init_done", 0, 1),
         BitField("rqcb2_pad", 0, 134),
     ]
 

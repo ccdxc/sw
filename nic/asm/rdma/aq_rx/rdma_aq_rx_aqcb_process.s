@@ -142,19 +142,19 @@ exit:
     phvwr.e       p.common.p4_intr_global_drop, 1   
     nop         //Exit Slot
 
-create_qp: 
+create_qp:
+
+    // RQCB0
 
     phvwr       p.{rqcb0.intrinsic.total_rings, rqcb0.intrinsic.host_rings}, (MAX_RQ_RINGS<<4|MAX_RQ_HOST_RINGS)
 
     phvwr       p.rqcb0.state, QP_STATE_RESET
 
-        //TODO: RQ in HBM still need to be implemented
-
     phvwr       p.rqcb0.log_rq_page_size, k.rdma_aq_feedback_cqp_rq_page_size_log2[4:0]
     phvwrpair   p.rqcb0.log_wqe_size, K_CQP_RQ_STRIDE_LOG2[4:0], p.rqcb0.log_num_wqes , K_CQP_RQ_DEPTH_LOG2[4:0]
     phvwrpair   p.rqcb0.serv_type, k.rdma_aq_feedback_cqp_rq_type_state[2:0], p.rqcb0.log_pmtu, K_CQP_LOG_PMTU
 
-    //RQCB1
+    // RQCB1
 
     phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_cqp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RESET
     phvwrpair   p.rqcb1.log_wqe_size, K_CQP_RQ_STRIDE_LOG2[4:0], p.rqcb1.log_num_wqes , K_CQP_RQ_DEPTH_LOG2[4:0]
@@ -162,8 +162,8 @@ create_qp:
     phvwrpair   p.rqcb1.priv_oper_enable, K_CQP_RQ_PRIVILEGED, p.rqcb1.cq_id, K_CQP_RQ_CQ_ID
     phvwrpair   p.rqcb1.pd, K_CQP_PD, p.rqcb1.access_flags, K_CQP_RQ_ACCESS_FLAGS
 
-    //RQCB2
-    
+    // RQCB2
+
     phvwrpair   p.rqcb2.rnr_timeout, 0xb, p.rqcb2.pd, K_CQP_PD
 
     //populate the PC in RQCB0, RQCB1

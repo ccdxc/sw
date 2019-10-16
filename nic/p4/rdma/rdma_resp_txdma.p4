@@ -281,7 +281,7 @@ header_type resp_tx_to_stage_bt_info_t {
 
 header_type resp_tx_to_stage_precheckout_info_t {
     fields {
-        pref_cb_addr                     :   22;
+        prefetch_cb_addr                 :   22;
         rsvd                             :  106;
     }
 }
@@ -294,8 +294,8 @@ header_type resp_tx_prefetch_info_t {
         log_wqe_size                     :    5;
         log_num_wqes                     :    5;
         cmd_eop                          :    1;
-        pref_cb_or_base_addr             :   32;
-        pref_buff_index                  :   16;
+        prefetch_cb_or_base_addr         :   32;
+        prefetch_buf_index               :   16;
         check_in                         :    1;
         rsvd                             :   47;
     }
@@ -382,12 +382,12 @@ header_type resp_tx_rqcb2_to_rsqwqe_info_t {
     }
 }
 
-header_type resp_tx_to_stage_rqpt_info_t {                                                                                                                                
+header_type resp_tx_to_stage_rqpt_info_t {
     fields {
         prefetch_base_addr               :   32;
         page_offset                      :   16;
-        pref_pindex_pre                  :   16;
-        pref_pindex_post                 :   16;
+        prefetch_pindex_pre              :   16;
+        prefetch_pindex_post             :   16;
         transfer_num_wqes                :   16;
         page_seg_offset                  :    3;
         log_wqe_size                     :    5;
@@ -817,7 +817,7 @@ action resp_tx_setup_checkout_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s1_precheckout_info_scr.pref_cb_addr, to_s1_precheckout_info.pref_cb_addr);
+    modify_field(to_s1_precheckout_info_scr.prefetch_cb_addr, to_s1_precheckout_info.prefetch_cb_addr);
     modify_field(to_s1_precheckout_info_scr.rsvd, to_s1_precheckout_info.rsvd);
 
     // stage to stage
@@ -827,8 +827,8 @@ action resp_tx_setup_checkout_process () {
     modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
     modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
     modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
-    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
-    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_cb_or_base_addr, t2_s2s_prefetch_info.prefetch_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_buf_index, t2_s2s_prefetch_info.prefetch_buf_index);
     modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
     modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
 }
@@ -846,8 +846,8 @@ action resp_tx_pre_checkout_process () {
     modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
     modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
     modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
-    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
-    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_cb_or_base_addr, t2_s2s_prefetch_info.prefetch_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_buf_index, t2_s2s_prefetch_info.prefetch_buf_index);
     modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
     modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
 }
@@ -865,8 +865,8 @@ action resp_tx_checkout_process () {
     modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
     modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
     modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
-    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
-    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_cb_or_base_addr, t2_s2s_prefetch_info.prefetch_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_buf_index, t2_s2s_prefetch_info.prefetch_buf_index);
     modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
     modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
 }
@@ -893,8 +893,8 @@ action resp_tx_rqprefetch_process () {
     modify_field(t2_s2s_prefetch_info_scr.log_wqe_size, t2_s2s_prefetch_info.log_wqe_size);
     modify_field(t2_s2s_prefetch_info_scr.log_num_wqes, t2_s2s_prefetch_info.log_num_wqes);
     modify_field(t2_s2s_prefetch_info_scr.cmd_eop, t2_s2s_prefetch_info.cmd_eop);
-    modify_field(t2_s2s_prefetch_info_scr.pref_cb_or_base_addr, t2_s2s_prefetch_info.pref_cb_or_base_addr);
-    modify_field(t2_s2s_prefetch_info_scr.pref_buff_index, t2_s2s_prefetch_info.pref_buff_index);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_cb_or_base_addr, t2_s2s_prefetch_info.prefetch_cb_or_base_addr);
+    modify_field(t2_s2s_prefetch_info_scr.prefetch_buf_index, t2_s2s_prefetch_info.prefetch_buf_index);
     modify_field(t2_s2s_prefetch_info_scr.check_in, t2_s2s_prefetch_info.check_in);
     modify_field(t2_s2s_prefetch_info_scr.rsvd, t2_s2s_prefetch_info.rsvd);
 }
@@ -906,8 +906,8 @@ action resp_tx_rqpt_process () {
     // to stage
     modify_field(to_s6_rqpt_info_scr.prefetch_base_addr, to_s6_rqpt_info.prefetch_base_addr);
     modify_field(to_s6_rqpt_info_scr.page_offset, to_s6_rqpt_info.page_offset);
-    modify_field(to_s6_rqpt_info_scr.pref_pindex_pre, to_s6_rqpt_info.pref_pindex_pre);
-    modify_field(to_s6_rqpt_info_scr.pref_pindex_post, to_s6_rqpt_info.pref_pindex_post);
+    modify_field(to_s6_rqpt_info_scr.prefetch_pindex_pre, to_s6_rqpt_info.prefetch_pindex_pre);
+    modify_field(to_s6_rqpt_info_scr.prefetch_pindex_post, to_s6_rqpt_info.prefetch_pindex_post);
     modify_field(to_s6_rqpt_info_scr.transfer_num_wqes, to_s6_rqpt_info.transfer_num_wqes);
     modify_field(to_s6_rqpt_info_scr.page_seg_offset, to_s6_rqpt_info.page_seg_offset);
     modify_field(to_s6_rqpt_info_scr.log_wqe_size, to_s6_rqpt_info.log_wqe_size);

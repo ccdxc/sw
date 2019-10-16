@@ -14,8 +14,8 @@ struct resp_tx_rqcb_to_precheckout_info_t {
     log_wqe_size                     :    5;
     log_num_wqes                     :    5;
     cmd_eop                          :    1;
-    pref_cb_or_base_addr             :   32;
-    pref_buff_index                  :   16;
+    prefetch_cb_or_base_addr         :   32;
+    prefetch_buf_index               :   16;
     check_in                         :    1;
     rsvd                             :   47;
 };

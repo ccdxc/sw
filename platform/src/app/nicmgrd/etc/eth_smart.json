@@ -92,7 +92,7 @@
 				"num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
                 "pte_count" : 1048576,
-                "pref_count" : 0,
+                "prefetch_count" : 0,
                 "key_count" : 262144,
                 "ah_count"  : 8192,
                 "barmap_size" : 1
@@ -125,7 +125,7 @@
 				"num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
                 "pte_count" : 1048576,
-                "pref_count" : 0,
+                "prefetch_count" : 0,
                 "key_count" : 262144,
                 "ah_count"  : 8192,
                 "barmap_size" : 1

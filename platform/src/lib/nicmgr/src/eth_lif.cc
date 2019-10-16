@@ -384,11 +384,11 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
 
         if (spec->enable_rdma) {
-            NIC_LOG_DEBUG("pref_count: {}", spec->pref_count);
+            NIC_LOG_DEBUG("prefetch_count: {}", spec->prefetch_count);
             pd->rdma_lif_init(hal_lif_info_.lif_id, spec->key_count,
                             spec->ah_count, spec->pte_count,
                             res->cmb_mem_addr, res->cmb_mem_size,
-                            spec->pref_count);
+                            spec->prefetch_count);
             // TODO: Handle error
         }
     }

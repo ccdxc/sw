@@ -12,10 +12,10 @@ struct resp_tx_s6_t2_k k;
 
 #define K_PAGE_OFFSET CAPRI_KEY_FIELD(IN_P, page_offset)
 #define K_PAGE_SEG_OFFSET CAPRI_KEY_FIELD(IN_P, page_seg_offset)
-#define K_PREF_BASE_ADDR CAPRI_KEY_FIELD(IN_P, prefetch_base_addr)
+#define K_PREFETCH_BASE_ADDR CAPRI_KEY_FIELD(IN_P, prefetch_base_addr)
 #define K_LOG_WQE_SIZE CAPRI_KEY_FIELD(IN_P, log_wqe_size)
-#define K_PREF_PINDEX_PRE CAPRI_KEY_FIELD(IN_P, pref_pindex_pre)
-#define K_PREF_PINDEX_POST CAPRI_KEY_FIELD(IN_P, pref_pindex_post)
+#define K_PREFETCH_PINDEX_PRE CAPRI_KEY_FIELD(IN_P, prefetch_pindex_pre)
+#define K_PREFETCH_PINDEX_POST CAPRI_KEY_FIELD(IN_P, prefetch_pindex_post)
 #define K_CMD_EOP CAPRI_KEY_FIELD(IN_P, cmd_eop)
 #define K_TRANSFER_NUM_WQES CAPRI_KEY_FIELD(IN_P, transfer_num_wqes)
 #define K_INVOKE_STATS CAPRI_KEY_FIELD(IN_P, invoke_stats)
@@ -55,16 +55,16 @@ resp_tx_rqpt_process:
     DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, TRANSFER_SIZE, r3)
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_RQ_PREFETCH_WQE_TO_HBM)
-    // pref_base_addr = pref_base_addr + (pref_pindex << log_wqe_size)
-    sll     r3, K_PREF_PINDEX_PRE, K_LOG_WQE_SIZE
-    add     r3, r3, K_PREF_BASE_ADDR, PT_BASE_ADDR_SHIFT
+    // prefetch_base_addr = prefetch_base_addr + (prefetch_pindex << log_wqe_size)
+    sll     r3, K_PREFETCH_PINDEX_PRE, K_LOG_WQE_SIZE
+    add     r3, r3, K_PREFETCH_BASE_ADDR, PT_BASE_ADDR_SHIFT
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, TRANSFER_SIZE, r3)
 
     // Update proxy_pindex in rqcb1_t and set write-fence
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_SET_PROXY_PINDEX)
     RQCB1_ADDR_GET(r2)
     add     r3, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
-    phvwr   p.rq_prefetch.proxy_pindex, K_PREF_PINDEX_POST
+    phvwr   p.rq_prefetch.proxy_pindex, K_PREFETCH_PINDEX_POST
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, rq_prefetch.proxy_pindex, rq_prefetch.proxy_pindex, r3)
     DMA_SET_WR_FENCE(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE)
 

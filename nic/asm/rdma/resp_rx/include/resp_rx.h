@@ -9,12 +9,6 @@
 
 #define RESP_RX_MAX_DMA_CMDS        20
 
-#define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s5_wb1_info, cqcb_base_addr_hi));
-
-#define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s6_cqcb_info_cqcb_base_addr_hi}, k.{to_s6_cqcb_info_log_num_cq_entries});
-
 // Non Atomic DMA command layout
 // [0]:     ACK
 // [1]:     ACK_DB
@@ -44,11 +38,11 @@
 //
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
-// accommodate a packet spaning upto 4 SGEs where each SGE can generate
-// upto 3 DMA instructions.
-// In cases of error (KEY permissions, VA offset mismatch etc.,) or 
-// in case of pad bytes where one do not want to transfer payload, 
-// skip to eop should be marked thru a DMA instruction. 
+// accommodate a packet spanning up to 4 SGEs where each SGE can
+// generate up to 3 DMA instructions.
+// In cases of error (KEY permissions, VA offset mismatch etc.,) or
+// in case of pad bytes where one does not want to transfer payload,
+// skip to eop should be marked using a DMA instruction.
 
 #define RESP_RX_DMA_CMD_PYLD_BASE                   2
 #define RESP_RX_DMA_CMD_RSQWQE                      2
@@ -75,10 +69,9 @@
 #define RESP_RX_DMA_CMD_CQ             (RESP_RX_MAX_DMA_CMDS - 3)
 #define RESP_RX_DMA_CMD_EQ             (RESP_RX_MAX_DMA_CMDS - 2)
 #define RESP_RX_DMA_CMD_EQ_INT         (RESP_RX_MAX_DMA_CMDS - 1)
-#define RESP_RX_DMA_CMD_ASYNC_EQ       (RESP_RX_MAX_DMA_CMDS - 2) // Set same as completion eq for now
-#define RESP_RX_DMA_CMD_ASYNC_EQ_INT   (RESP_RX_MAX_DMA_CMDS - 1) // Set same as completion eq_int for now
-//wakeup dpath and EQ are mutually exclusive
-#define RESP_RX_DMA_CMD_WAKEUP_DPATH RESP_RX_DMA_CMD_EQ
+#define RESP_RX_DMA_CMD_ASYNC_EQ       (RESP_RX_MAX_DMA_CMDS - 2) // EQ
+#define RESP_RX_DMA_CMD_ASYNC_EQ_INT   (RESP_RX_MAX_DMA_CMDS - 1) // EQ_INT
+#define RESP_RX_DMA_CMD_WAKEUP_DPATH   RESP_RX_DMA_CMD_EQ         // mut. excl.
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   7 // flits 7-11 are used for dma cmds
 
@@ -147,7 +140,6 @@
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, s1.immdt_as_dbell_data, s1.immdt_as_dbell_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
 
-      
 #define RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(_pindex) \
     phvwr       p.s1.immdt_as_dbell_data[63:48], _pindex;
 
@@ -157,6 +149,12 @@
     PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
     phvwr       p.db_data1, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r);
+
+#define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
+    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s5_wb1_info, cqcb_base_addr_hi));
+
+#define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s6_cqcb_info_cqcb_base_addr_hi}, k.{to_s6_cqcb_info_log_num_cq_entries});
 
 #define RSQ_EVAL_MIDDLE     0
 #define RSQ_WALK_FORWARD    1
@@ -187,19 +185,18 @@ struct resp_rx_phv_s2_t {
     rsvd: 24;                       //3B
     struct resp_bt_info_t bt_info;  //20B
 };
-    
-// phv 
+
+// phv
 struct resp_rx_phv_t {
     /* flit 11 */
     struct resp_rx_dma_cmds_flit_t flit_11;
 
     /* flit 10 */
-    
     struct resp_rx_dma_cmds_flit_t  flit_10;
 
     /* flit 9 */
     struct resp_rx_dma_cmds_flit_t flit_9;
- 
+
     /* flit 8 */
     struct resp_rx_dma_cmds_flit_t  flit_8;
 
@@ -208,12 +205,12 @@ struct resp_rx_phv_t {
         struct resp_rx_dma_cmds_flit_t  flit_7;
         struct rdma_pcie_atomic_reg_t   pcie_atomic;
     };
-    
+
     // scratch (flit 6):
     // size: 8+1+23+32
     db_data1: 64;                   //8B
     my_token_id: 8;                 //1B
-    
+
     //23B
     union {
         struct resp_rx_phv_s1_t s1;

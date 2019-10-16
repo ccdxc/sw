@@ -42,7 +42,7 @@ rq:
     // prefetch related work
     add r2, r0, offsetof(struct phv_, common_t2_s2s_s2s_data)
     sll r1, d.u.tx_stage0_lif_rdma_params_d.prefetch_pool_base_addr_page_id, (HBM_PAGE_SIZE_SHIFT - PT_BASE_ADDR_SHIFT)
-    CAPRI_SET_FIELD(r2, RESP_TX_T2_S2S_T, pref_cb_or_base_addr, r1)
+    CAPRI_SET_FIELD(r2, RESP_TX_T2_S2S_T, prefetch_cb_or_base_addr, r1)
 
     // r3 = PT table size
     add r3, CAPRI_LOG_SIZEOF_U64, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries

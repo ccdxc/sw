@@ -385,7 +385,7 @@ create_ah:
 create_qp:
 
     // SQCB0:
-    
+
     phvwr       p.{sqcb0.intrinsic.total_rings, sqcb0.intrinsic.host_rings}, (MAX_SQ_DOORBELL_RINGS<<4|MAX_SQ_HOST_RINGS)
     phvwr       p.sqcb0.log_num_wqes, d.qp.sq_depth_log2[4:0]
 
@@ -395,8 +395,6 @@ create_qp:
 
     phvwr       p.sqcb0.state, QP_STATE_RESET
     phvwr       p.sqcb0.color, 1
-
-    //TODO: SQ in HBM still need to be implemented
 
     phvwr       p.sqcb0.log_sq_page_size, d.qp.sq_page_size_log2[4:0]
     phvwr       p.sqcb0.log_wqe_size, d.qp.sq_stride_log2[4:0]
@@ -420,7 +418,7 @@ create_qp:
     phvwr       p.sqcb1.max_ssn, 1
     phvwr.!c3   p.sqcb1.log_pmtu, 12
 
-    //infinite  retries                 
+    // infinite retries
     phvwr.c3    p.sqcb1.credits, 0x1F
     phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x4<<3|0x4)
     phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
