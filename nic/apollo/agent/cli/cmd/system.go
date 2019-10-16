@@ -5,8 +5,10 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -85,6 +87,13 @@ var pbShowCmd = &cobra.Command{
 	Run:   pbShowCmdHandler,
 }
 
+var pbDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "show packet buffer stats detail",
+	Long:  "show packet buffer stats detail",
+	Run:   pbDetailShowCmdHandler,
+}
+
 var tableShowCmd = &cobra.Command{
 	Use:   "table-stats",
 	Short: "show system table stats",
@@ -121,6 +130,7 @@ func init() {
 	systemShowCmd.AddCommand(pbShowCmd)
 
 	pbShowCmd.AddCommand(systemQueueCreditsShowCmd)
+	pbShowCmd.AddCommand(pbDetailShowCmd)
 }
 
 func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -1153,4 +1163,233 @@ func systemArmClockFrequencySet(client pds.DebugSvcClient) {
 	}
 
 	fmt.Printf("ARM Clock-frequency set to %dMhz. Please reboot for changes to take effect\n", armClockFreq)
+}
+
+// InputQueueInfo defines the input queue details
+type InputQueueInfo struct {
+	queueIndex      uint32
+	bufferOccupancy uint32
+	peakOccupancy   uint32
+	portMonitor     uint64
+	valid           bool
+}
+
+// OutputQueueInfo defines the output queue details
+type OutputQueueInfo struct {
+	queueIndex  uint32
+	queueDepth  uint32
+	portMonitor uint64
+	valid       bool
+}
+
+func pbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ uint32, endQ uint32) {
+	var dashes bytes.Buffer
+
+	fmt.Printf("%-9s", "Queue | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-18d | ", iQ)
+		dashes.WriteString(strings.Repeat("-", 21))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+	dashes.Reset()
+
+	fmt.Printf("%-9s", "Port  | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-8s%-10s | ", "depth", "port_mon")
+		dashes.WriteString(strings.Repeat("-", 21))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+
+	for pbPort := 0; pbPort < 12; pbPort++ {
+		fmt.Printf("%-9d", pbPort)
+		for iQ := startQ; iQ <= endQ; iQ++ {
+			if outputQueueInfo[pbPort][iQ].valid == true {
+				fmt.Printf("%-8d%-10d | ",
+					outputQueueInfo[pbPort][iQ].queueDepth,
+					outputQueueInfo[pbPort][iQ].portMonitor)
+			} else {
+				fmt.Printf("%-18s | ", "-")
+			}
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf(dashes.String() + "\n")
+}
+
+func pbOqCountersShow(outputQueueInfo [][]OutputQueueInfo) {
+	fmt.Printf("Output Queue Depth and Port monitor\n")
+	fmt.Printf("-----------------------------------\n")
+	pbOqCountersShowInternal(outputQueueInfo, 0, 7)
+	fmt.Printf("\n")
+	pbOqCountersShowInternal(outputQueueInfo, 8, 15)
+	fmt.Printf("\n")
+	pbOqCountersShowInternal(outputQueueInfo, 16, 23)
+	fmt.Printf("\n")
+	pbOqCountersShowInternal(outputQueueInfo, 24, 31)
+	fmt.Printf("\n")
+}
+
+func pbIqPortMonShowInternal(inputQueueInfo [][]InputQueueInfo, startQ uint32, endQ uint32) {
+	var dashes bytes.Buffer
+
+	fmt.Printf("%-9s", "Queue | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-10d | ", iQ)
+		dashes.WriteString(strings.Repeat("-", 13))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+	dashes.Reset()
+
+	fmt.Printf("%-9s", "Port  | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-10s | ", "port_mon")
+		dashes.WriteString(strings.Repeat("-", 13))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+
+	for pbPort := 0; pbPort < 12; pbPort++ {
+		fmt.Printf("%-9d", pbPort)
+		for iQ := startQ; iQ <= endQ; iQ++ {
+			if inputQueueInfo[pbPort][iQ].valid == true {
+				fmt.Printf("%-10d | ",
+					inputQueueInfo[pbPort][iQ].portMonitor)
+			} else {
+				fmt.Printf("%-10s | ", "-")
+			}
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf(dashes.String() + "\n")
+}
+
+func pbOccupancyCounterShowInternal(inputQueueInfo [][]InputQueueInfo, startQ uint32, endQ uint32) {
+	var dashes bytes.Buffer
+
+	fmt.Printf("%-9s", "Queue | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-16d | ", iQ)
+		dashes.WriteString(strings.Repeat("-", 19))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+	dashes.Reset()
+
+	fmt.Printf("%-9s", "Port  | ")
+	dashes.WriteString(strings.Repeat("-", 9))
+	for iQ := startQ; iQ <= endQ; iQ++ {
+		fmt.Printf("%-8s%-8s | ", "occ", "peak")
+		dashes.WriteString(strings.Repeat("-", 19))
+	}
+	fmt.Printf("\n" + dashes.String() + "\n")
+
+	for pbPort := 0; pbPort < 12; pbPort++ {
+		fmt.Printf("%-9d", pbPort)
+		for iQ := startQ; iQ <= endQ; iQ++ {
+			if inputQueueInfo[pbPort][iQ].valid == true {
+				fmt.Printf("%-8d%-8d | ",
+					inputQueueInfo[pbPort][iQ].bufferOccupancy,
+					inputQueueInfo[pbPort][iQ].peakOccupancy)
+			} else {
+				fmt.Printf("%-8s%-8s | ", "-", "-")
+			}
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf(dashes.String() + "\n")
+}
+
+func pbOccupancyCountersShow(inputQueueInfo [][]InputQueueInfo) {
+	fmt.Printf("Input Queue Occupancy, Peak\n")
+	fmt.Printf("--------------------------------------------\n")
+	pbOccupancyCounterShowInternal(inputQueueInfo, 0, 7)
+	fmt.Printf("\n")
+	pbOccupancyCounterShowInternal(inputQueueInfo, 8, 15)
+	fmt.Printf("\n")
+	pbOccupancyCounterShowInternal(inputQueueInfo, 16, 23)
+	fmt.Printf("\n")
+	pbOccupancyCounterShowInternal(inputQueueInfo, 24, 31)
+	fmt.Printf("\n")
+
+	fmt.Printf("Input Queue Port monitor\n")
+	fmt.Printf("--------------------------------------------\n")
+	pbIqPortMonShowInternal(inputQueueInfo, 0, 7)
+	fmt.Printf("\n")
+	pbIqPortMonShowInternal(inputQueueInfo, 8, 15)
+	fmt.Printf("\n")
+	pbIqPortMonShowInternal(inputQueueInfo, 16, 23)
+	fmt.Printf("\n")
+	pbIqPortMonShowInternal(inputQueueInfo, 24, 31)
+	fmt.Printf("\n")
+}
+
+func pbOccupancyOqCountersPopulate(portStats *pds.PacketBufferPortStats,
+	inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo) {
+	portNum := portStats.GetPacketBufferPort().GetPortNum()
+
+	for _, inputQueueStats := range portStats.GetQosQueueStats().GetInputQueueStats() {
+		inputQueueIndex := inputQueueStats.GetInputQueueIdx()
+		bufferOccupancy := inputQueueStats.GetBufferOccupancy()
+		peakOccupancy := inputQueueStats.GetPeakOccupancy()
+		portMonitor := inputQueueStats.GetPortMonitor()
+		inputQueueInfo[portNum][inputQueueIndex].valid = true
+		inputQueueInfo[portNum][inputQueueIndex].bufferOccupancy = bufferOccupancy
+		inputQueueInfo[portNum][inputQueueIndex].peakOccupancy = peakOccupancy
+		inputQueueInfo[portNum][inputQueueIndex].portMonitor = portMonitor
+	}
+	for _, outputQueueStats := range portStats.GetQosQueueStats().GetOutputQueueStats() {
+		outputQueueIndex := outputQueueStats.GetOutputQueueIdx()
+		outputQueueDepth := outputQueueStats.GetQueueDepth()
+		portMonitor := outputQueueStats.GetPortMonitor()
+		outputQueueInfo[portNum][outputQueueIndex].valid = true
+		outputQueueInfo[portNum][outputQueueIndex].queueDepth = outputQueueDepth
+		outputQueueInfo[portNum][outputQueueIndex].portMonitor = portMonitor
+	}
+}
+
+func pbDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	resp, err := client.PbStatsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("PB stats get failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	inputQueueInfo := make([][]InputQueueInfo, 12)
+	for i := range inputQueueInfo {
+		inputQueueInfo[i] = make([]InputQueueInfo, 32)
+	}
+
+	outputQueueInfo := make([][]OutputQueueInfo, 12)
+	for i := range outputQueueInfo {
+		outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+	}
+
+	for _, entry := range resp.GetPbStats().GetPortStats() {
+		pbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
+	}
+
+	pbOccupancyCountersShow(inputQueueInfo)
+	pbOqCountersShow(outputQueueInfo)
 }
