@@ -20,7 +20,8 @@ import (
 const (
 	halGRPCDefaultBaseURL = "localhost"
 	halGRPCDefaultPort    = "50054"
-	halGRPCWaitTimeout    = time.Duration(time.Minute * 10)
+	halGRPCWaitTimeout    = time.Minute * 10
+	halGRPCTickerDuration = time.Millisecond * 500
 )
 
 // String returns string value of the datapath kind
@@ -203,40 +204,50 @@ func (hd *Hal) setExpectations() {
 }
 
 func (hd *Hal) createNewGRPCClient() (*grpc.ClientConn, error) {
-	halPort := os.Getenv("HAL_GRPC_PORT")
-	if halPort == "" {
-		halPort = halGRPCDefaultPort
-	}
-	srvURL := halGRPCDefaultBaseURL + ":" + halPort
 	// create a grpc client
 	// ToDo Use AgentID for mysvcName
-	return hd.waitForHAL(srvURL)
+	return hd.waitForHAL()
 }
 
-func (hd *Hal) waitForHAL(halURL string) (rpcClient *grpc.ClientConn, err error) {
+func (hd *Hal) waitForHAL() (rpcClient *grpc.ClientConn, err error) {
+
 	halUP := make(chan bool, 1)
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(halGRPCTickerDuration)
 	timeout := time.After(halGRPCWaitTimeout)
+	rpcClient, err = hd.isHalConnected()
+	if err == nil {
+		log.Info("HAL Connected on 1st tick")
+		return
+	}
 
 	for {
 		select {
 		case <-ticker.C:
-			log.Debugf("Trying to connect to HAL at %s", halURL)
-			var grpcOpts []grpc.DialOption
-			grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
-			grpcOpts = append(grpcOpts, grpc.WithInsecure())
-			rpcClient, err = grpc.Dial(halURL, grpcOpts...)
-			if err == nil {
+			rpcClient, err = hd.isHalConnected()
+			if err != nil {
 				halUP <- true
 			}
 		case <-halUP:
 			log.Info("Agent is connected to HAL")
 			return
 		case <-timeout:
-			log.Errorf("Agent could not connect to HAL on %s. Err: %v", halURL, err)
+			log.Errorf("Agent could not connect to HAL. Err: %v", err)
 			return nil, ErrHALUnavailable
 		}
 	}
+}
+
+func (hd *Hal) isHalConnected() (*grpc.ClientConn, error) {
+	halPort := os.Getenv("HAL_GRPC_PORT")
+	if halPort == "" {
+		halPort = halGRPCDefaultPort
+	}
+	halURL := halGRPCDefaultBaseURL + ":" + halPort
+	log.Debugf("Trying to connect to HAL at %s", halURL)
+	var grpcOpts []grpc.DialOption
+	grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
+	grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	return grpc.Dial(halURL, grpcOpts...)
 }
 
 // SetAgent sets the agent for this datapath
