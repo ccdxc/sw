@@ -355,6 +355,14 @@ class Node(object):
         }
         return info
 
+    def RunConsoleCmd(self,cmd):
+        if not self.__nic_console_ip:
+            raise ValueError('no nic console ip configured at time of call to RunConsoleCmd()')
+        console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
+        output = console_hdl.RunCmdGetOp(cmd)
+        return re.split(cmd,output.decode("utf-8"),1)[1]
+
+
 class Topology(object):
     def __init__(self, spec):
         self.__nodes = {}
