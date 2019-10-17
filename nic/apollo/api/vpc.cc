@@ -63,7 +63,6 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
                     ippfx2str(&spec->nat46_prefix));
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
     type_ = spec->type;
-    memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     fabric_encap_ = spec->fabric_encap;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;

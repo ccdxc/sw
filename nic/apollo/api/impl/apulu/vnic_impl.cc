@@ -372,8 +372,12 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // populate IPv4 route table root address in Tx direction entry
     i = 0;
     route_table_key = subnet->v4_route_table();
-    rtable = route_table_db()->find(&route_table_key);
-    if (rtable) {
+    if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
+        // try the vpc route table
+        route_table_key = vpc->v4_route_table();
+    }
+    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+        rtable = route_table_db()->find(&route_table_key);
         addr =
             ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
@@ -413,12 +417,12 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // populate IPv6 route table root address in Tx direction entry
     i = 0;
     route_table_key = subnet->v6_route_table();
+    if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
+        // try the vpc route table
+        route_table_key = vpc->v4_route_table();
+    }
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_db()->find(&route_table_key);
-    } else {
-        rtable = NULL;
-    }
-    if (rtable) {
         addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
