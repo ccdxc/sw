@@ -206,13 +206,21 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 		c.logger.Infof("received watch event %#v", event)
 		switch obj := event.Object.(type) {
 		case *monitoring.AlertPolicy:
-			c.processAlertPolicy(event.Type, obj)
+			if err := c.processAlertPolicy(event.Type, obj); err != nil {
+				c.logger.Errorf("[alertPolicy] failed to add/update/delete memDb, err: %v", err)
+			}
 		case *monitoring.Alert:
-			c.processAlert(event.Type, obj)
+			if err := c.processAlert(event.Type, obj); err != nil {
+				c.logger.Errorf("[alert] failed to add/update/delete memDb, err: %v", err)
+			}
 		case *monitoring.AlertDestination:
-			c.processAlertDestination(event.Type, obj)
+			if err := c.processAlertDestination(event.Type, obj); err != nil {
+				c.logger.Errorf("[alertDestination] failed to add/update/delete memDb, err: %v", err)
+			}
 		case *monitoring.EventPolicy:
-			c.processEventPolicy(event.Type, obj)
+			if err := c.processEventPolicy(event.Type, obj); err != nil {
+				c.logger.Errorf("[eventPolicy] failed to add/update/delete memDb, err: %v", err)
+			}
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid watch event type")

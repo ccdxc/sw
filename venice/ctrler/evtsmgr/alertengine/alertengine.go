@@ -304,12 +304,12 @@ func (a *alertEngineImpl) runPolicy(reqID string, apCl apiclient.Services, ap *m
 		}
 
 		if created {
-			a.logger.Infof("{req: %s} alert created from event {%s:%s} for the policy {%s/%s}", reqID, evt.GetName(),
-				evt.GetMessage(), ap.GetName(), ap.GetUUID())
+			a.logger.Infof("{req: %s} alert created from event {%s: %s, %s, %v} for the policy {%s/%s}", reqID,
+				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
 			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
 		} else {
-			a.logger.Infof("{req: %s} existing open alert found for event {%s:%s}  for the policy {%s/%s}", reqID, evt.GetName(),
-				evt.GetMessage(), ap.GetName(), ap.GetUUID())
+			a.logger.Infof("{req: %s} existing open alert found for event {%s: %s, %s, %v}  for the policy {%s/%s}", reqID,
+				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
 			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 0) //update only hits, // alert exists already,
 		}
 
@@ -327,6 +327,7 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 	creationTime, _ := types.TimestampProto(time.Now())
 
 	// create alert object
+	policyID := fmt.Sprintf("%s/%s", alertPolicy.GetName(), alertPolicy.GetUUID())
 	alert := &monitoring.Alert{
 		TypeMeta: api.TypeMeta{Kind: "Alert"},
 		ObjectMeta: api.ObjectMeta{
@@ -348,7 +349,7 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 			Severity: alertPolicy.Spec.GetSeverity(),
 			Message:  evt.GetMessage(),
 			Reason: monitoring.AlertReason{
-				PolicyID:            fmt.Sprintf("%s/%s", alertPolicy.GetName(), alertPolicy.GetUUID()),
+				PolicyID:            policyID,
 				MatchedRequirements: matchedRequirements,
 			},
 			Source: &monitoring.AlertSource{
@@ -363,14 +364,14 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 
 	alertCreated, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		// check there is an existing alert from the same event
-		if a.memDb.AnyOutstandingAlertsByURI(alertPolicy.GetTenant(), alertPolicy.GetName(), evt.GetSelfLink()) {
+		if a.memDb.AnyOutstandingAlertsByURI(alertPolicy.GetTenant(), policyID, evt.GetSelfLink()) {
 			a.logger.Infof("{req: %s} outstanding alert found that matches the event URI", reqID)
 			return false, nil
 		}
 
 		// if there is no alert from the same event, check if there is an alert from some other event.
 		if evt.GetObjectRef() != nil {
-			if a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), alertPolicy.GetName(), evt.GetMessage(), evt.GetObjectRef()) {
+			if a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), policyID, evt.GetMessage(), evt.GetObjectRef()) {
 				a.logger.Infof("{req: %s} outstanding alert found that matches the message and object ref. ", reqID)
 				return false, nil
 			}
