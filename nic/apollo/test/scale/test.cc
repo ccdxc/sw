@@ -1479,6 +1479,7 @@ create_objects (void)
                 }
             }
         }
+    }
 
         // create vnics
         ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
@@ -1488,6 +1489,7 @@ create_objects (void)
             return ret;
         }
 
+    if (!apulu()) {
         // create mappings
         ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
                               g_test_params.num_subnets, g_test_params.num_vnics,

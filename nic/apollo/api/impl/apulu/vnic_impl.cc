@@ -285,9 +285,9 @@ vnic_impl::populate_rxdma_vnic_info_policy_root_(
 sdk_ret_t
 vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                               pds_vnic_spec_t *spec) {
+    uint32_t i;
     sdk_ret_t ret;
     mem_addr_t addr;
-    uint32_t i, hw_id;
     policy *sec_policy;
     route_table *rtable;
     p4pd_error_t p4pd_ret;
@@ -296,9 +296,6 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     policy *egr_v4_policy, *egr_v6_policy;
     pds_route_table_key_t route_table_key;
     vnic_info_rxdma_actiondata_t vnic_info_data;
-
-    // TODO: WTH is this ?
-    hw_id = hw_id_ << 1;
 
     // program IPv4 ingress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
@@ -322,14 +319,14 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
     }
 
-    // program v4 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id
+    // program v4 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id_
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
     // populating them
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       hw_id, NULL, NULL, &vnic_info_data);
+                                       hw_id_, NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program v4 entry in VNIC_INFO_RXDMA table "
-                      "at %u", hw_id);
+                      "at %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -355,14 +352,14 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
     }
 
-    // program v6 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id + 1
+    // program v6 VNIC_INFO_RXDMA entry for Rx direction at index = hw_id_ + 1
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
     // populating them
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       hw_id + 1, NULL, NULL, &vnic_info_data);
+                                       hw_id_ + 1, NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program v6 entry in VNIC_INFO_RXDMA table "
-                      "at %u", hw_id + 1);
+                      "at %u", hw_id_ + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -378,10 +375,12 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_db()->find(&route_table_key);
-        addr =
-            ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-        populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
+        if (rtable) {
+            addr =
+                ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+            PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
+            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
+        }
     }
 
     // populate egress IPv4 policy roots in the Tx direction entry
@@ -402,12 +401,13 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program v4 VNIC_INFO_RXDMA entry for Tx direction in 2nd half of the
-    // table at VNIC_INFO_TABLE_SIZE + hw_id index
+    // table at VNIC_INFO_TABLE_SIZE + hw_id_ index
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       VNIC_INFO_TABLE_SIZE + hw_id,
+                                       VNIC_INFO_TABLE_SIZE + hw_id_,
                                        NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u", hw_id);
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
+                      VNIC_INFO_TABLE_SIZE + hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -419,13 +419,15 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     route_table_key = subnet->v6_route_table();
     if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
-        route_table_key = vpc->v4_route_table();
+        route_table_key = vpc->v6_route_table();
     }
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_db()->find(&route_table_key);
-        addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-        PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
-        populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
+        if (rtable) {
+            addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
+            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
+        }
     }
 
     // populate egress IPv6 policy roots in the Tx direction entry
@@ -446,13 +448,13 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // program v6 TXDMA_VNIC_INFO entry for Tx direction in 2nd half of the
-    // table at VNIC_INFO_TABLE_SIZE + hw_id + 1 index
-    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_VNIC_INFO_TXDMA,
-                                       VNIC_INFO_TABLE_SIZE + hw_id + 1,
+    // table at VNIC_INFO_TABLE_SIZE + hw_id_ + 1 index
+    p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
+                                       VNIC_INFO_TABLE_SIZE + hw_id_ + 1,
                                        NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u",
-                      VNIC_INFO_TABLE_SIZE + hw_id + 1);
+                      VNIC_INFO_TABLE_SIZE + hw_id_ + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;

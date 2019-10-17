@@ -21,6 +21,8 @@ namespace api {
 vpc_entry::vpc_entry() {
     // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     type_ = PDS_VPC_TYPE_NONE;
+    v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
+    v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
     impl_ = NULL;
