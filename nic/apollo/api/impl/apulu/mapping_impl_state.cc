@@ -49,17 +49,10 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(mapping_tbl_ != NULL);
 
-#if 0
-    // NAT_TX table bookkeeping
+    // NAT table bookkeeping (reserve 0th entry for no xlation)
     p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
-    nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
-                                  tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size,
-                                  false, false, NULL);
-    SDK_ASSERT(nat_tbl_ != NULL);
-    // reserve 0th entry for no xlation
-    nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
-#endif
+    nat_tbl_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    SDK_ASSERT(nat_tbl_idxr_ != NULL);
 
     // create a slab for mapping impl entries
     mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
@@ -70,7 +63,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(local_mapping_tbl_);
     mem_hash::destroy(mapping_tbl_);
-    //directmap::destroy(nat_tbl_);
+    rte_indexer::destroy(nat_tbl_idxr_);
     slab::destroy(mapping_impl_slab_);
 }
 
@@ -88,7 +81,6 @@ sdk_ret_t
 mapping_impl_state::table_transaction_begin(void) {
     local_mapping_tbl_->txn_start();
     mapping_tbl_->txn_start();
-    //nat_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
@@ -96,7 +88,6 @@ sdk_ret_t
 mapping_impl_state::table_transaction_end(void) {
     local_mapping_tbl_->txn_end();
     mapping_tbl_->txn_end();
-    //nat_tbl_->txn_end();
     return SDK_RET_OK;
 }
 

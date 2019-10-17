@@ -131,12 +131,11 @@ public:
 private:
     /// \brief constructor
     mapping_impl() {
-        nh_idx_ = 0xFFFF;
-        to_public_ip_nat_hdl_ = 0xFFFF;
-        to_overlay_ip_nat_hdl_ = 0xFFFF;
+        to_public_ip_nat_idx_ = 0xFFFF;
+        to_overlay_ip_nat_idx_ = 0xFFFF;
         local_mapping_overlay_ip_hdl_ = handle_t::null();
         local_mapping_public_ip_hdl_ = handle_t::null();
-        mapping_overlay_ip_hdl_ = handle_t::null();
+        mapping_hdl_ = handle_t::null();
         mapping_public_ip_hdl_ = handle_t::null();
     }
 
@@ -217,17 +216,15 @@ private:
     pds_encap_t       fabric_encap_;
     ip_addr_t         public_ip_;
 
-    // nexthop index (TODO: we need this here ?)
-    uint32_t          nh_idx_;
-
     // handles or indices for NAT table
-    uint32_t    to_public_ip_nat_hdl_;
-    uint32_t    to_overlay_ip_nat_hdl_;
+    uint32_t    to_public_ip_nat_idx_;
+    uint32_t    to_overlay_ip_nat_idx_;
 
-    // handles or indices for LOCAL_MAPPING and MAPPING tables
+    // handles for LOCAL_MAPPING table
     handle_t    local_mapping_overlay_ip_hdl_;
     handle_t    local_mapping_public_ip_hdl_;
-    handle_t    mapping_overlay_ip_hdl_;
+    // handles for MAPPING table
+    handle_t    mapping_hdl_;    // could be L2 or IP handle
     handle_t    mapping_public_ip_hdl_;
 };
 
