@@ -19,6 +19,7 @@
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/vnic.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::handle_t;
@@ -150,10 +151,14 @@ private:
     /// \brief     reserve necessary entries in local mapping table
     /// \param[in] api_obj API object being processed
     /// \param[in] vpc     VPC of this mapping
+    /// \param[in] subnet  subnet of this mapping
+    /// \param[in] vnic    vnic of this mapping
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_local_mapping_resources_(api_base *api_obj,
                                                vpc_entry *vpc,
+                                               subnet_entry *subnet,
+                                               vnic_entry *vnic,
                                                pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for local mappings
