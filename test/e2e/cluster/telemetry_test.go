@@ -278,6 +278,7 @@ var _ = Describe("telemetry tests", func() {
 		testQueryingMetrics("DistributedServiceCard")
 	})
 	It("telemetry Fwlogs query", func() {
+		Skip("Skip until it gets stabilized") // FIXME
 		testQueryingFwlogs()
 	})
 
