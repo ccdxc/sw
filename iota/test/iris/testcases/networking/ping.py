@@ -3,6 +3,7 @@ import pdb
 
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
+from iota.harness.infra.exceptions import *
 
 def Setup(tc):
     tc.skip = False
@@ -71,6 +72,11 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else: 
                 result = api.types.status.FAILURE
+            #for future use
+            #elif tc.args.type == 'local_only':
+            #    return api.types.status.CRITICAL
+            #else:
+            #    raise TestbedFailureException
         cookie_idx += 1
     return result
 

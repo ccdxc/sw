@@ -13,7 +13,7 @@ import iota.harness.infra.types as types
 
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
-from iota.exceptions import *
+from iota.harness.infra.exceptions import *
 
 SuiteRunFile = GlobalOptions.logdir +  "/" +   "testsuite.log"
 
@@ -75,6 +75,8 @@ def Main():
         if ret != types.status.SUCCESS:
             result = ret
             if GlobalOptions.no_keep_going:
+                break
+            if result == types.status.TESTBED_FAILURE:
                 break
         #Help in skip setup option
         if ts.SetupComplete():

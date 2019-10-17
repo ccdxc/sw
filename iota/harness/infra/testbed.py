@@ -18,7 +18,7 @@ import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
-from iota.exceptions import *
+from iota.harness.infra.exceptions import *
 
 ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.topdir)
 

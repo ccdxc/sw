@@ -12,6 +12,7 @@ import iota.harness.infra.utils.utils as utils
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from iota.harness.infra.exceptions import *
 
 gl_owner_db = {}
 
@@ -506,7 +507,13 @@ class Testcase:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     Logger.error("Error: STOPPING ON CRITICAL FAILURE.")
                     iter_data.SetStatus(result)
-                    return types.status.FAILURE
+                    return types.status.CRITICAL
+
+                if result == types.status.TESTBED_FAILURE:
+                    Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
+                    Logger.error("Error: STOPPING ON TESTBED FAILURE.")
+                    iter_data.SetStatus(result)
+                    raise TestbedFailureException
 
                 iter_data.SetStatus(result)
                 Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
@@ -577,6 +584,10 @@ class Testcase:
             self.__timer.Start()
             try:
                 self.status = self.__execute()
+            except TestbedFailureException:
+                utils.LogException(Logger)
+                Logger.error("EXCEPTION: Aborting Testcase Execution. Reason: testbed failure")
+                raise
             except:
                 utils.LogException(Logger)
                 Logger.error("EXCEPTION: Aborting Testcase Execution.")
