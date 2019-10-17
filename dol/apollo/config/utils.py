@@ -363,6 +363,11 @@ def IsPipelineArtemis():
         return True
     return False
 
+def IsPipelineApulu():
+    if GlobalOptions.pipeline == 'apulu':
+        return True
+    return False
+
 def IsHostLifSupported():
     if IsPipelineArtemis():
         return False

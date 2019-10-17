@@ -57,12 +57,18 @@ class NexthopObject(base.ConfigObjectBase):
 
 class NexthopObjectClient:
     def __init__(self):
+        def __isObjSupported():
+            if utils.IsPipelineArtemis() or utils.IsPipelineApulu():
+                return True
+            return False
+
         self.__objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
         self.__num_nh_per_vpc = []
+        self.__supported = __isObjSupported()
         return
 
     def Objects(self):
@@ -89,6 +95,9 @@ class NexthopObjectClient:
         return self.__num_nh_per_vpc
 
     def GenerateObjects(self, parent, vpc_spec_obj):
+        if not self.__supported:
+            return
+
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
@@ -96,9 +105,6 @@ class NexthopObjectClient:
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
-
-        if utils.IsPipelineArtemis() == False:
-            return
 
         if getattr(vpc_spec_obj, 'nexthop', None) == None:
             self.__num_nh_per_vpc.append(0)
@@ -120,10 +126,11 @@ class NexthopObjectClient:
         return
 
     def CreateObjects(self):
-        if utils.IsPipelineArtemis():
-            cookie = utils.GetBatchCookie()
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-            api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
+        if not self.__supported:
+            return
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
+        api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
         return
 
     def GetGrpcReadAllMessage(self):
@@ -131,9 +138,10 @@ class NexthopObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
-        if utils.IsPipelineArtemis():
-            msg = self.GetGrpcReadAllMessage()
-            api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
+        if not self.__supported:
+            return
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
         return
 
 client = NexthopObjectClient()
