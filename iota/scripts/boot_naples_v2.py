@@ -505,6 +505,10 @@ class NaplesManagement(EntityManagement):
             except:
                 msg = "Did not match any available gold fw"
                 print(msg)
+                if self.IsSSHUP():
+                    print("SSH working, skipping gold fw version check")
+                    gold_fw_latest = False
+                    return
                 raise Exception(msg)
 
     def CleanUpOldFiles(self):
