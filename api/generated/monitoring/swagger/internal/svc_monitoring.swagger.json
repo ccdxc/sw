@@ -372,7 +372,7 @@
             "type": "string"
           },
           {
-            "name": "mirror-session-spec.packet-size",
+            "name": "spec.packet-size",
             "description": "PacketSize: Max size of a mirrored packet.\nPacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.\nFor packets mirrored to Venice, max mirror packet size allowed is 256 B.",
             "in": "query",
             "required": false,
@@ -387,7 +387,7 @@
             "format": "date-time"
           },
           {
-            "name": "mirror-session-spec.packet-filters",
+            "name": "spec.packet-filters",
             "in": "query",
             "required": false,
             "type": "array",
@@ -5436,7 +5436,7 @@
             "type": "string"
           },
           {
-            "name": "mirror-session-spec.packet-size",
+            "name": "spec.packet-size",
             "description": "PacketSize: Max size of a mirrored packet.\nPacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.\nFor packets mirrored to Venice, max mirror packet size allowed is 256 B.",
             "in": "query",
             "required": false,
@@ -5451,7 +5451,7 @@
             "format": "date-time"
           },
           {
-            "name": "mirror-session-spec.packet-filters",
+            "name": "spec.packet-filters",
             "in": "query",
             "required": false,
             "type": "array",
@@ -14210,7 +14210,7 @@
         "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "mirror-session-spec": {
+        "spec": {
           "$ref": "#/definitions/monitoringMirrorSessionSpec"
         },
         "status": {

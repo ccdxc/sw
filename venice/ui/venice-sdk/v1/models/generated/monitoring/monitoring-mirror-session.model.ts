@@ -15,7 +15,7 @@ export interface IMonitoringMirrorSession {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'mirror-session-spec'?: IMonitoringMirrorSessionSpec;
+    'spec'?: IMonitoringMirrorSessionSpec;
     'status'?: IMonitoringMirrorSessionStatus;
 }
 
@@ -24,7 +24,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'mirror-session-spec': MonitoringMirrorSessionSpec = null;
+    'spec': MonitoringMirrorSessionSpec = null;
     'status': MonitoringMirrorSessionStatus = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSession]: PropInfoItem } = {
         'kind': {
@@ -39,7 +39,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
             required: false,
             type: 'object'
         },
-        'mirror-session-spec': {
+        'spec': {
             required: false,
             type: 'object'
         },
@@ -72,7 +72,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['mirror-session-spec'] = new MonitoringMirrorSessionSpec();
+        this['spec'] = new MonitoringMirrorSessionSpec();
         this['status'] = new MonitoringMirrorSessionStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
@@ -103,9 +103,9 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
             this['meta'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['mirror-session-spec'].setValues(values['mirror-session-spec'], fillDefaults);
+            this['spec'].setValues(values['spec'], fillDefaults);
         } else {
-            this['mirror-session-spec'].setValues(null, fillDefaults);
+            this['spec'].setValues(null, fillDefaults);
         }
         if (values) {
             this['status'].setValues(values['status'], fillDefaults);
@@ -122,7 +122,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
                 'kind': CustomFormControl(new FormControl(this['kind']), MonitoringMirrorSession.propInfo['kind']),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringMirrorSession.propInfo['api-version']),
                 'meta': CustomFormGroup(this['meta'].$formGroup, MonitoringMirrorSession.propInfo['meta'].required),
-                'mirror-session-spec': CustomFormGroup(this['mirror-session-spec'].$formGroup, MonitoringMirrorSession.propInfo['mirror-session-spec'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, MonitoringMirrorSession.propInfo['spec'].required),
                 'status': CustomFormGroup(this['status'].$formGroup, MonitoringMirrorSession.propInfo['status'].required),
             });
             // We force recalculation of controls under a form group
@@ -131,8 +131,8 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('mirror-session-spec') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('mirror-session-spec').get(field);
+            Object.keys((this._formGroup.get('spec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('spec').get(field);
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
@@ -153,7 +153,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this['meta'].setFormGroupValuesToBeModelValues();
-            this['mirror-session-spec'].setFormGroupValuesToBeModelValues();
+            this['spec'].setFormGroupValuesToBeModelValues();
             this['status'].setFormGroupValuesToBeModelValues();
         }
     }
