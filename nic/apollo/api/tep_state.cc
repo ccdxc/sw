@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/tep_state.hpp"
 
 using sdk::lib::ht;
@@ -44,11 +45,13 @@ tep_state::alloc(void) {
 
 sdk_ret_t
 tep_state::insert(tep_entry *tep) {
+    PDS_TRACE_VERBOSE("Adding TEP %s to db", tep->key2str());
     return tep_ht()->insert_with_key(&tep->key_, tep, &tep->ht_ctxt_);
 }
 
 tep_entry *
 tep_state::remove(tep_entry *tep) {
+    PDS_TRACE_VERBOSE("Deleting TEP %s from db", tep->key2str());
     return (tep_entry *)(tep_ht()->remove(&tep->key_));
 }
 

@@ -27,27 +27,24 @@ tep_impl_state::tep_impl_state(pds_state *state) {
 
     // instantiate P4 tables for bookkeeping
     p4pd_table_properties_get(P4TBL_ID_TEP, &tinfo);
-    tep_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_TEP,
-                                  tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size,
-                                  false, true, NULL);
-    SDK_ASSERT(tep_tbl_ != NULL);
+    tep_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, false);
+    SDK_ASSERT(tep_idxr_ != NULL);
 #endif
 }
 
 tep_impl_state::~tep_impl_state() {
-    //directmap::destroy(tep_tbl_);
+#if 0
+    rte_indexer::destroy(tep_idxr_);
+#endif
 }
 
 sdk_ret_t
 tep_impl_state::table_transaction_begin(void) {
-    //tep_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl_state::table_transaction_end(void) {
-    //tep_tbl_->txn_end();
     return SDK_RET_OK;
 }
 

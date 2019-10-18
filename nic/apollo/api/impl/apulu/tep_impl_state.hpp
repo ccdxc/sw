@@ -11,7 +11,7 @@
 #ifndef __TEP_IMPL_STATE_HPP__
 #define __TEP_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -47,7 +47,12 @@ public:
     sdk_ret_t table_transaction_end(void);
 
 private:
+    rte_indexer *tep_idxr(void) { return tep_idxr_; }
     friend class tep_impl;    ///< tep_impl, friend of tep_impl_state
+
+private:
+    ///< indexer to allocate h/w indices for TEPs
+    rte_indexer *tep_idxr_;
 };
 
 ///   \@}

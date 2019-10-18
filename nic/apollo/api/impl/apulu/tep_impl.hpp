@@ -17,6 +17,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -92,22 +93,48 @@ public:
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief     return nexthop index for this TEP
-    /// \return    nexthop index for this TEP
-    uint16_t nh_idx(void) const { return nh_idx_; }
+    /// \brief     activate the epoch in the dataplane by programming stage 0
+    ///            tables, if any
+    /// \param[in] epoch    epoch being activated
+    /// \param[in] api_op   api operation
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_hw(api_base *api_obj, pds_epoch_t epoch,
+                                  api_op_t api_op,
+                                  obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief     return h/w index for this TEP
+    /// \return    h/w table index for this TEP
+    uint16_t hw_id(void) const { return hw_id_; }
 
 private:
     /// \brief constructor
     tep_impl() {
-        nh_idx_ = 0xFFFF;
+        hw_id_ = 0xFFFF;
     }
 
     /// \brief destructor
     ~tep_impl() {}
 
+    /// \brief     program TEP related tables during TEP create by enabling
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being programmed
+    /// \param[in] spec TEP configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_tep_create_(pds_epoch_t epoch, tep_entry *tep,
+                                    pds_tep_spec_t *spec);
+
+    /// \brief     program TEP related tables during TEP delete by disabling
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep   TEP obj being programmed
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_tep_delete_(pds_epoch_t epoch, tep_entry *tep);
+
 private:
     // P4 datapath specific state
-    uint16_t   nh_idx_;    ///< nexthop index for this tep
+    uint16_t   hw_id_;    ///< hardware id for this tep
 } __PACK__;
 
 /// \@}

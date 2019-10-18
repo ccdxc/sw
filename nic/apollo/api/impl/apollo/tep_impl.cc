@@ -53,7 +53,7 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // reserve an entry in TEP_table
     ret = tep_impl_db()->tep_tbl()->reserve(&idx);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in TEP_table, err %u", ret);
+        PDS_TRACE_ERR("Failed to reserve entry in TEP table, err %u", ret);
         return ret;
     }
     hw_id_ = idx & 0xFFFF;
