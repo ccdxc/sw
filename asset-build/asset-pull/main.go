@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -52,6 +53,14 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
+	name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
+	f, err := os.Create(filename)
+	if err != nil {
+		// no point retrying
+		return err
+	}
+	defer f.Close()
+
 	for i := 0; i < maxRetries; i++ {
 		mc, err := minio.New(ctx.GlobalString("assets-server"), asset.AccessKeyID, asset.SecretAccessKey, false)
 		if err != nil {
@@ -68,15 +77,6 @@ func action(ctx *cli.Context) error {
 			// no point retrying
 			return errors.New("bucket does not exist")
 		}
-
-		name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
-
-		f, err := os.Create(filename)
-		if err != nil {
-			// no point retrying
-			return err
-		}
-		defer f.Close()
 
 		path := path.Join(name, version, "asset.tgz")
 
@@ -96,7 +96,38 @@ func action(ctx *cli.Context) error {
 			continue
 		}
 
-		if _, err := io.Copy(f, obj); err != nil {
+		// GetObject only gets a handle to the object in the form of a Reader;
+		// the actual downloading happens when Copy reads from the Reader,
+		// so Copy can fail if the download is interrupted.
+		// To make the operation retriable, we need to make sure that we don't
+		// write anything to output file unless the download is succesfull,
+		// otherwise the caller may start consuming it.
+		// In order to do that, we first download the asset to a temporary
+		// file and then copy it to output when it is complete.
+		tmpFile, err := ioutil.TempFile("", fmt.Sprintf("asset-pull-%s", name))
+		if err != nil {
+			// no point retrying
+			return fmt.Errorf("Error creating temporary file: %v", err)
+		}
+
+		cleanupTmpFile := func() {
+			tmpFile.Close()
+			os.RemoveAll(tmpFile.Name())
+		}
+
+		// copy to temporary file
+		if _, err := io.Copy(tmpFile, obj); err != nil {
+			logrus.Errorf("Error downloading minio object: %v", err)
+			cleanupTmpFile()
+			time.Sleep(retryInterval)
+			continue
+		}
+
+		// copy from tmpFile to output and clean up
+		tmpFile.Seek(0, io.SeekStart)
+		_, err = io.Copy(f, tmpFile)
+		cleanupTmpFile()
+		if err != nil {
 			// no point retrying
 			return err
 		}
