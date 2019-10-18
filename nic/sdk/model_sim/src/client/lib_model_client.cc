@@ -18,8 +18,8 @@
 
 #define MODEL_ZMQ_SOCK_TIMEOUT_SEC      300
 
-void *__zmq_sock;
-void *__zmq_context;
+static thread_local void *__zmq_sock;
+static thread_local void *__zmq_context;
 const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
 const char* __lmodel_mock_memory_mode = getenv("CAPRI_MOCK_MEMORY_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
@@ -144,6 +144,14 @@ int lib_model_connect ()
     return (rc);
 }
 
+#define SOCK_OP_GUARD { \
+    if(!__zmq_sock) { \
+        if (!(__lmodel_mock_memory_mode || __lmodel_env)) { \
+            lib_model_connect(); \
+        } \
+    } \
+    std::lock_guard<std::mutex> lock(g_zmq_mutex); \
+}
 
 int lib_model_conn_close ()
 {
@@ -151,9 +159,11 @@ int lib_model_conn_close ()
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
     if (__lmodel_env)
         return 0;
-    
+
     zmq_close(__zmq_sock);
     zmq_ctx_destroy(__zmq_context);
+    __zmq_sock = NULL;
+    __zmq_context = NULL;
     return 0;
 }
 
@@ -161,7 +171,7 @@ void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
 {
     int rc;
     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -183,7 +193,7 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
     int rc;
     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -208,7 +218,7 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 {
     int rc;
     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -232,7 +242,7 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -252,12 +262,11 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
     return true;
 }
 
-
 bool read_reg (uint64_t addr, uint32_t& data)
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -281,7 +290,7 @@ bool write_reg (uint64_t addr, uint32_t data)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -314,7 +323,7 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -344,7 +353,7 @@ bool write_mem_pcie (uint64_t addr, uint8_t * data, uint32_t size)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -383,7 +392,7 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -419,7 +428,7 @@ void step_doorbell (uint64_t addr, uint64_t data)
 {
     int rc;
      // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -467,10 +476,9 @@ int lib_model_mac_msg_send (uint32_t port_num,
                             uint32_t num_lanes,
                             uint32_t val)
 {
-    // thread safe
     int rc = 0;
-
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -499,8 +507,8 @@ int lib_model_mac_msg_send (uint32_t port_num,
 void register_mem_addr(uint64_t addr)
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -521,8 +529,8 @@ void register_mem_addr(uint64_t addr)
 void exit_simulation()
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -542,8 +550,8 @@ void exit_simulation()
 void config_done()
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -563,8 +571,8 @@ void config_done()
 void testcase_begin(int tcid, int loopid)
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -586,8 +594,8 @@ void testcase_begin(int tcid, int loopid)
 void testcase_end(int tcid, int loopid)
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
@@ -609,8 +617,8 @@ void testcase_end(int tcid, int loopid)
 void eos_ignore_addr(uint64_t addr, uint32_t size)
 {
     int rc;
-     // thread safe
-    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+    // thread safe
+    SOCK_OP_GUARD
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;

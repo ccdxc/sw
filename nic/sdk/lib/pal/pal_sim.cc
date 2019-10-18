@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "lib/pal/pal.hpp"
 #include "lib/pal/pal_internal.hpp"
+#include "lib/thread/thread.hpp"
 
 namespace sdk {
 namespace lib {
@@ -13,6 +14,7 @@ namespace lib {
 static void *gl_lib_handle;
 extern pal_info_t   gl_pal_info;
 typedef int (*connect_fn_t)();
+typedef int (*disconnect_fn_t)();
 typedef bool (*read_reg_fn_t)(uint64_t addr, uint32_t& data);
 typedef bool (*write_reg_fn_t)(uint64_t addr, uint32_t  data);
 typedef bool (*read_mem_fn_t)(uint64_t addr, uint8_t * data, uint32_t size);
@@ -22,7 +24,8 @@ typedef bool (*step_cpu_pkt_fn_t)(const uint8_t* pkt, size_t pkt_len);
 typedef void* (*mem_map_fn_t)(uint64_t addr, uint32_t size);
 
 typedef struct pal_sim_vectors_s {
-    connect_fn_t        connect;
+    connect_fn_t            connect;
+    disconnect_fn_t         disconnect;
     read_reg_fn_t           read_reg;
     write_reg_fn_t          write_reg;
     read_mem_fn_t           read_mem;
@@ -39,6 +42,8 @@ pal_init_sim_vectors ()
 {
     gl_sim_vecs.connect =
             (connect_fn_t)dlsym(gl_lib_handle, "lib_model_connect");
+    gl_sim_vecs.disconnect =
+            (disconnect_fn_t)dlsym(gl_lib_handle, "lib_model_conn_close");
     gl_sim_vecs.read_reg = (read_reg_fn_t)dlsym(gl_lib_handle, "read_reg");
     gl_sim_vecs.write_reg = (write_reg_fn_t)dlsym(gl_lib_handle, "write_reg");
     gl_sim_vecs.read_mem = (read_mem_fn_t)dlsym(gl_lib_handle, "read_mem");
@@ -204,6 +209,29 @@ pal_sim_connect (void)
 }
 
 pal_ret_t
+pal_sim_disconnect (void)
+{
+    int     rc;
+
+    if (getenv("CAPRI_MOCK_MODE")) {
+        return PAL_RET_OK;
+    }
+
+    SDK_TRACE_DEBUG("Disconnecting ASIC SIM");
+    do {
+        rc = (*gl_sim_vecs.disconnect)();
+        if (rc != -1) {
+            SDK_TRACE_DEBUG("Disconnected the ASIC model...");
+            break;
+        }
+        SDK_TRACE_DEBUG("Failed to disconnect asic, retrying in 1 sec ...");
+        sleep(1);
+    } while (1);
+
+    return PAL_RET_OK;
+}
+
+pal_ret_t
 pal_sim_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
           qsfp_page_t page, uint32_t nretry, uint32_t port)
 {
@@ -295,6 +323,17 @@ pal_init_sim (void)
     SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
 
     rv = pal_sim_connect();
+    SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
+
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_teardown_sim (void)
+{
+    pal_ret_t   rv;
+
+    rv = pal_sim_disconnect();
     SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
 
     return PAL_RET_OK;

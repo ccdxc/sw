@@ -63,6 +63,7 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
 void
 capri_impl::destroy(capri_impl *impl) {
     sdk::asic::asic_cleanup();
+    sdk::lib::pal_teardown(impl->asic_cfg_.platform);
 }
 
 /**

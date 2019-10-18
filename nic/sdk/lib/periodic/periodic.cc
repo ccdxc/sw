@@ -38,7 +38,8 @@ thread_local timerfd_info_t timerfd_info;
 void *
 periodic_thread_init (void *ctxt)
 {
-    SDK_THREAD_INIT(ctxt);
+    // opting for graceful termination
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
     // create a timer wheel
     g_twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,

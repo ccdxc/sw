@@ -24,6 +24,8 @@
 #define HAL_GCOV_FLUSH()     { }
 #endif
 
+#define debug_printf(...) do { } while(0)
+
 cap_env_base *g_env;
 std::queue<std::vector<uint8_t>> g_cpu_pkts;
 extern "C" void __gcov_flush();
@@ -158,7 +160,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             } else {
                 buff->size = sizeof(uint32_t);
                 memcpy(buff->data, &data, buff->size);
-                printf("read_reg addr: 0x%lx data: 0x%x\n", addr, data);
+                debug_printf("read_reg addr: 0x%lx data: 0x%x\n", addr, data);
             }
         }
             break;
@@ -176,7 +178,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             } else {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = 0;
-                printf("write_reg addr: 0x%lx  data: 0x%x\n", addr, data);
+                debug_printf("write_reg addr: 0x%lx  data: 0x%x\n", addr, data);
             }
         }
             break;
@@ -190,7 +192,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
-                printf("read_mem addr: 0x%lx size: %d\n", addr, buff->size);
+                debug_printf("read_mem addr: 0x%lx size: %d\n", addr, buff->size);
             }
         }
             break;
@@ -207,7 +209,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             } else {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = 0;
-                printf("write_mem addr: 0x%lx size: %d\n", addr, buff->size);
+                debug_printf("write_mem addr: 0x%lx size: %d\n", addr, buff->size);
             }
         }
             break;

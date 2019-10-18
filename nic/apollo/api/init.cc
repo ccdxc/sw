@@ -281,7 +281,6 @@ pds_init (pds_init_params_t *params)
 
     // spin fte threads
     //core::spawn_thread_fte(&api::g_pds_state);
-
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
 
@@ -305,8 +304,8 @@ pds_teardown (void)
     // 5. bring asic down (scheduler etc.)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
-    core::threads_stop();
     sdk::linkmgr::linkmgr_threads_stop();
+    core::threads_stop();
     if (!sdk::asic::is_soft_init()) {
         impl_base::destroy();
     }

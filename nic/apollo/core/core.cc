@@ -209,9 +209,7 @@ spawn_pciemgr_thread (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
-    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
-        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
-         (getenv("NICMGR_SIM_MODE"))) {
+    if (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL) {
         // spawn pciemgr thread
         new_thread =
             thread_create("pciemgr", THREAD_ID_PCIEMGR,
@@ -233,9 +231,7 @@ spawn_nicmgr_thread (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
-    if (((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
-         (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) ||
-         (getenv("NICMGR_SIM_MODE"))) {
+    if (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL) {
         // spawn nicmgr thread
         new_thread =
             thread_create("nicmgr", THREAD_ID_NICMGR,
@@ -325,6 +321,7 @@ threads_stop (void)
         if (g_thread_store[thread_id] != NULL) {
             // stop the thread
             g_thread_store[thread_id]->stop();
+            PDS_TRACE_DEBUG("Stoppig thread %s", g_thread_store[thread_id]->name());
         }
     }
     for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {

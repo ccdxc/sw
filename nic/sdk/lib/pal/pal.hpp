@@ -79,6 +79,7 @@ typedef struct pal_info_s {
 extern pal_info_t   gl_pal_info;
 
 pal_ret_t pal_init(platform_type_t platform_type);
+pal_ret_t pal_teardown(platform_type_t platform_type);
 
 static inline pal_ret_t
 pal_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words = 1)

@@ -45,7 +45,9 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
     pds_state *state;
     string config_file;
 
-    SDK_THREAD_INIT(ctxt);
+    // opting for graceful termination as fd wait used by evpoll
+    // is part of pthread_cancel list
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
     EV_A = evutil_create_loop();
 
     // get pds state
@@ -100,6 +102,9 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
 void
 nicmgrapi::nicmgr_thread_cleanup (void *arg) {
     delete devmgr;
+    if (pciemgr) {
+        delete pciemgr;
+    }
 }
 
 

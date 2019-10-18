@@ -14,6 +14,7 @@ typedef struct pal_mmap_regions_s {
 
 pal_ret_t pal_default_init(void);
 pal_ret_t pal_init_sim(void);
+pal_ret_t pal_teardown_sim(void);
 pal_ret_t pal_hw_init(void);
 pal_ret_t pal_mock_init(void);
 

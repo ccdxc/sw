@@ -445,7 +445,9 @@ linkmgr_event_loop (void* ctxt)
     bool             rv          = true;
     linkmgr_entry_t  *rw_entry   = NULL;
 
-    SDK_THREAD_INIT(ctxt);
+    // opting for graceful termination as pthrad_cond_wait
+    // is part of pthread_cancel list
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
     while (TRUE) {
         work_done = false;
