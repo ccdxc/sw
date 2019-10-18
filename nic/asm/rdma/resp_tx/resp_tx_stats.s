@@ -143,8 +143,6 @@ dcqcn_rate_stats:
     tblmincri.c6     d.rp_num_fast_recovery, MASK_16, 1
     tblmincri.c5     d.rp_num_hyper_increase, MASK_16, 1
     tblmincri.c4     d.rp_num_max_rate_reached, MASK_16, 1
-    seq              c6, d.rp_num_hyper_increase, r0
-    tblmincri.c6     d.last_msn, 24, 1
     nop.e
     nop
 
@@ -153,8 +151,6 @@ dcqcn_timer_stats:
     tblmincri.c7     d.rp_num_alpha_timer_expiry, MASK_16, 1
     seq              c6, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_timer_T_expiry), 1
     tblmincri.c6     d.rp_num_timer_T_expiry, MASK_16, 1
-    seq              c6, d.rp_num_timer_T_expiry, r0
-    tblmincri.c6     d.last_psn, 24, 1
     nop.e
     nop
 

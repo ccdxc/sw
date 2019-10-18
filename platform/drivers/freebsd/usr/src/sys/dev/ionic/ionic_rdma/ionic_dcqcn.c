@@ -57,7 +57,7 @@ enum dcqcn_var {
 	RP_THRESHOLD,			/* 1..31 */
 	RP_TIME_RESET,			/* 1..32767 (x RP_DCE_TCP_RTT) */
 	RP_QP_RATE,			/* 1.. (Mbps) */
-	RP_BYTE_RESET,			/* 1..32767 (B) */
+	RP_BYTE_RESET,			/* 1..4294967296 (B) */
 	RP_AI_RATE,			/* 1.. (Mbps) */
 	RP_HAI_RATE,			/* 1.. (Mbps) */
 
@@ -348,7 +348,7 @@ static DCQCN_INT_ATTR(qp_rate,
 		      1, 100000, RP_QP_RATE);
 
 static DCQCN_INT_ATTR(byte_reset,
-		      1, 32767, RP_BYTE_RESET);
+		      1, INT_MAX, RP_BYTE_RESET);
 
 static DCQCN_INT_ATTR(ai_rate,
 		      1, INT_MAX, RP_AI_RATE);
