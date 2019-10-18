@@ -819,9 +819,9 @@ class EsxHostManagement(HostManagement):
         #Ctrl VM reboot might have removed the image
         self.ctrl_vm_copyin(GlobalOptions.image,
                     entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
-                    naples_dir = "/tmp")
+                    naples_dir = "/data")
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/%s"%os.path.basename(GlobalOptions.image))
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(GlobalOptions.image))
 
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
