@@ -220,7 +220,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"host1\"\n    },\n    \"spec\": {\n        \"smart-nics\": [\n            {\n                \"mac-address\": \"00ae.cd00.1938\"\n            }\n        ]\n    }\n}"
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"host1\"\n    },\n    \"spec\": {\n        \"dscs\": [\n            {\n                \"mac-address\": \"00ae.cd00.1938\"\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/cluster/v1/hosts",
@@ -573,7 +573,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a DSC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"DSC_ADMITTED\"]\n        }],\n        \"enable\": true\n    }\n}"
 								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/monitoring/v1/tenant/default/alertPolicies",
@@ -619,7 +619,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a DSC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"DSC_ADMITTED\"]\n        }],\n        \"enable\": true\n    }\n}"
 								},
 								"url": {
 									"raw": "{{apigwurl}}/configs/monitoring/v1/alerts",
@@ -720,12 +720,12 @@
 					"_postman_isSubFolder": true
 				},
 				{
-					"name": "smartnics-get",
+					"name": "getDistributedServiceCards",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{apigwurl}}/configs/cluster/v1/smartnics",
+							"raw": "{{apigwurl}}/configs/cluster/v1/distributedservicecards",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -733,7 +733,7 @@
 								"configs",
 								"cluster",
 								"v1",
-								"smartnics"
+								"distributedservicecards"
 							]
 						}
 					},
@@ -788,7 +788,7 @@
 							"raw": "{\n    \"kind\": \"NetworkSecurityPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"policy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.1\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.2\",\n                    \"10.0.0.4\"\n                ],\n                \"apps\": [\n                    \"ftpApp\"\n                ]\n            },\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.2\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.1\",\n                    \"11.0.0.0/24\"\n                ],\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"100-200\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
 						},
 						"url": {
-							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies",
+							"raw": "{{apigwurl}}/configs/security/v1/networksecuritypolicies",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -796,19 +796,19 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies"
+								"networksecuritypolicies"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "get_sg_policy_after_create",
+					"name": "getNetworkSecurityPolicy",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies",
+							"raw": "{{apigwurl}}/configs/security/v1/networksecuritypolicies",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -816,7 +816,7 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies"
+								"networksecuritypolicies"
 							]
 						}
 					},
@@ -843,7 +843,7 @@
 					"response": []
 				},
 				{
-					"name": "update_sg_policy",
+					"name": "updateNetworkSecurityPolicy",
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -857,7 +857,7 @@
 							"raw": "{\n    \"kind\": \"NetworkSecurityPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"policy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"apps\": [\n                    \"ftpApp\"\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.1/23\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.0/24\",\n                    \"11.0.0.0/24\"\n                ]\n            },\n            {\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"100-200\"\n                    }\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.2\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.1\",\n                    \"11.0.0.0/24\"\n                ]\n            }\n        ]\n    }\n}"
 						},
 						"url": {
-							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"raw": "{{apigwurl}}/configs/security/v1/networksecuritypolicies/policy1",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -865,7 +865,7 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies",
+								"networksecuritypolicies",
 								"policy1"
 							]
 						}
@@ -873,7 +873,7 @@
 					"response": []
 				},
 				{
-					"name": "delete_sg_policy",
+					"name": "deleteNetworkSecurityPolicy",
 					"request": {
 						"method": "DELETE",
 						"header": [],
@@ -882,7 +882,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"raw": "{{apigwurl}}/configs/security/v1/networksecuritypolicies/policy1",
 							"host": [
 								"{{apigwurl}}"
 							],
@@ -890,7 +890,7 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies",
+								"networksecuritypolicies",
 								"policy1"
 							]
 						}
@@ -951,7 +951,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NIC_ADMITTED\"]\n        }],\n        \"enable\": true\n    }\n}"
+							"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a DSC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"DSC_ADMITTED\"]\n        }],\n        \"enable\": true\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigwurl}}/configs/monitoring/v1/tenant/default/alertPolicies",
