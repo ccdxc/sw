@@ -120,7 +120,7 @@ define INCLUDE_MODULEMK
     $${TGID}_LDPATHS        := $$(addprefix -L,$${MODULE_LDPATHS}) \
                                $$(addprefix $${RPATH_PREFIX},$${MODULE_LDPATHS}) ${CONFIG_LDPATHS}
     $${TGID}_LDFLAGS        := $${MODULE_LDFLAGS} ${CMD_LINKER_FLAGS}
-    $${TGID}_PIPELINE       := $$(findstring $${PIPELINE},$${MODULE_PIPELINE})
+    $${TGID}_PIPELINE       := $$(filter $${PIPELINE},$${MODULE_PIPELINE})
     $${TGID}_ARCH           := $$(findstring ${ARCH},$${MODULE_ARCH})
     $${TGID}_FWTYPE         := $$(findstring $${FWTYPE},$${MODULE_FWTYPE})
     $${TGID}_DEPS           := $${MODULE_DEPS}

@@ -1,0 +1,7 @@
+{
+  "mode" : "sim",
+  "asic" :
+  {
+    "loader_info_file" : "capri_loader.conf"
+  }
+}

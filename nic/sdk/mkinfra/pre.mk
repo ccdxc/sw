@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 MODULE_ARCH                 := x86_64 aarch64
-MODULE_PIPELINE             := iris gft apollo hello l2switch elektra phoebus artemis apulu
+MODULE_PIPELINE             := iris gft apollo hello l2switch elektra phoebus artemis apulu gft16
 MODULE_FWTYPE               := ${FWTYPE}
 MODULE_SRC_DIR              := ${MODULE_DIR}
 MODULE_EXPORT_DIR           := ${MODULE_DIR}/${ARCH}

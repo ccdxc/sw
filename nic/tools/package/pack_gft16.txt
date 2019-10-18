@@ -1,0 +1,154 @@
+nic/conf/init_bins                                                  /nic/conf/init_bins/
+nic/conf/$PIPELINE                                                  /nic/conf/$PIPELINE/
+
+# config files
+nic/conf/gft/plugins.json                                           /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/hbm_mem.json                                     /nic/conf/
+nic/conf/catalog_hw_68-0003.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0004.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0005.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0006.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0007.json                                    /nic/conf/
+nic/conf/serdes_68-0003.json                                        /nic/conf/
+nic/conf/serdes_68-0004.json                                        /nic/conf/
+nic/conf/serdes_68-0005.json                                        /nic/conf/
+nic/conf/serdes_68-0006.json                                        /nic/conf/
+nic/conf/serdes_68-0007.json                                        /nic/conf/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json    /nic/conf/$PIPELINE/capri_p4_table_map.json
+
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_common_p4plus_txdma.so         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_common_p4plus_rxdma.so         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblist.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libslab.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblfq.so                              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmmgr.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpal.so                              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libht.so                               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libindexer.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblogger.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libthread.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libutils.so                            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libperiodic.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtwheel.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdirectmap.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libhash.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libhbmhash.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtcam.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtimerfd.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcatalog.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtrace.so                            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libasicpd.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcapisa.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libisa.so                              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsknobs.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libev.so.4                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libheartbeat.so                        /nic/lib/
+nic/hal/third-party/lkl/export/$ARCH/lib/liblkl.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                          /nic/lib/
+
+nic/build/$ARCH/$PIPELINE/bin/p4asm/                                 /nic/conf/$PIPELINE/asm_bin/
+nic/build/$ARCH/$PIPELINE/bin/p4pasm/                                /nic/conf/$PIPELINE/p4plus_bin/
+nic/build/$ARCH/$PIPELINE/pgm_bin/                                   /nic/conf/$PIPELINE/pgm_bin/
+
+# HAL CLI
+nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /nic/tools/
+nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /etc/bash_completion.d/
+nic/build/$ARCH/$PIPELINE/bin/halctl                                 /nic/bin/
+
+# scripts
+nic/tools/sysupdate.sh                                               /nic/tools/
+nic/$PIPELINE/tools/sysinit.sh                                       /nic/tools/
+nic/$PIPELINE/tools/bringup_mgmt_ifs.sh                              /nic/tools/
+nic/tools/sysreset.sh                                                /nic/tools/
+
+# linkmgr
+nic/build/$ARCH/$PIPELINE/bin/port_client                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblinkmgr_libsrc.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblinkmgr_src.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblinkmgrdelphi.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblinkmgrdelphi.so                    /nic/lib/
+nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                  /nic/conf/fw/
+
+# AAPL
+nic/sdk/third-party/avago/build/$ARCH/bin/aapl                       /nic/bin/
+nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so          /nic/lib/
+
+# link scripts
+nic/tools/port_init_100g.sh                                          /nic/tools/
+nic/tools/port_op.sh                                                 /nic/tools/
+nic/tools/check_link.sh                                              /nic/tools/
+nic/tools/check_stats.sh                                             /nic/tools/
+nic/tools/speed_change.sh                                            /nic/tools/
+
+# platform modules, scripts etc.
+nic/tools/fwupdate                                                   /nic/tools/
+nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                          /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/capview                                /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/captrace                               /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/capmon                                 /nic/bin/
+nic/build/$ARCH/$PIPELINE/out/capviewdb_submake/capviewdb.bin        /nic/etc/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcieport.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libevutils.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmisc.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsensor.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmnet.so                             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmisc.so                             /nic/lib/
+
+nic/build/$ARCH/$PIPELINE/lib/libpacket_parser.so                    /nic/lib/
+
+# captrace config json files
+nic/conf/captrace/txdma-all.json                                     /nic/conf/captrace/
+nic/conf/captrace/rxdma-all.json                                     /nic/conf/captrace/
+nic/conf/captrace/dma-all.json                                       /nic/conf/captrace/
+nic/conf/captrace/p4ig-all.json                                      /nic/conf/captrace/
+nic/conf/captrace/p4eg-all.json                                      /nic/conf/captrace/
+nic/conf/captrace/p4-all.json                                        /nic/conf/captrace/
+nic/conf/captrace/pipeline-all.json                                  /nic/conf/captrace/
+nic/conf/captrace/sample-conf.json                                   /nic/conf/captrace/
+
+# test libs, bins, scripts etc.
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /nic/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/gft16_test                               /nic/bin/
+
+/lib/libzmq.so.3                                                     /nic/lib/
+/lib64/libJudy.so.1                                                  /nic/lib64/
+/lib64/libstdc++.so.6                                                /nic/lib64/

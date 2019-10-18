@@ -107,6 +107,7 @@ export NIC_artemis_P4PD_SOLIBS := p4pd_artemis p4pd_artemis_rxdma p4pd_artemis_t
 export NIC_l2switch_P4PD_SOLIBS := p4pd_l2switch
 export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
 export NIC_phoebus_P4PD_SOLIBS := p4pd_phoebus
+export NIC_gft16_P4PD_SOLIBS := p4pd_gft16
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
 export NIC_apollo_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
 export NIC_artemis_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
@@ -257,10 +258,11 @@ apulu_DEFS      := -DAPULU
 l2switch_DEFS   := -DL2SWITCH
 elektra_DEFS    := -DELEKTRA
 phoebus_DEFS    := -DPHOEBUS
+gft16_DEFS      := -DGFT16
 hello_DEFS      := -DHELLO
 
 export PIPLINES_8G := apollo artemis apulu
-export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus hello
+export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus gft16 hello
 
 # ==========================================================================
 #                        Toolchain Specific Defs

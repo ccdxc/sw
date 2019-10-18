@@ -50,7 +50,7 @@ parser.add_argument('--dry-run', dest='dry_run',
 
 # pipeline
 parser.add_argument('--pipeline', dest='pipeline', default='iris',
-                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus'],
+                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus', 'gft16'],
                      help='Pipeline')
 
 # feature type
@@ -86,6 +86,8 @@ if args.target == 'sim':
         files.append('nic/tools/package/pack_apulu.txt')
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
+    elif args.pipeline == 'gft16':
+        files.append('nic/tools/package/pack_gft16.txt')
     else:
         files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
