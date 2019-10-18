@@ -45,9 +45,12 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 	na.init(emdb, dp)
 	na.Mode = "host-managed"
 	na.DelphiClient = delphiClient
-
 	if err := na.createDefaultTenant(); err != nil {
 		log.Errorf("Failed to create default tenant. Err: %v", err)
+	}
+
+	if err := na.GetHwInterfaces(); err != nil {
+		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
 	}
 
 	if err := na.createDefaultVrf(); err != nil {
@@ -56,10 +59,6 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string, delphiClient clientApi.
 
 	if err := na.createDefaultUntaggedNw(); err != nil {
 		log.Errorf("Failed to create default untagged network. Err: %v", err)
-	}
-
-	if err := na.GetHwInterfaces(); err != nil {
-		log.Errorf("Failed to program HW Interfaces. Err: %v", err)
 	}
 
 	err = dp.SetAgent(&na)

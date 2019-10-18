@@ -350,11 +350,6 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 
 	var uplinks []*netproto.Interface
 
-	if err := na.Datapath.CreatePort(ports...); err != nil {
-		log.Errorf("Failed to create Ports in Datapath. Err: %v", err)
-		return fmt.Errorf("failed to create Ports in Datapath. Err: %v", err)
-	}
-
 	for id, p := range ports {
 		var uplinkType string
 		if p.Spec.Type == "TYPE_MANAGEMENT" {
@@ -397,6 +392,11 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 	if err := na.Datapath.CreateInterface(uplinks...); err != nil {
 		log.Errorf("Failed to create Uplinks in Datapath. Err: %v", err)
 		return fmt.Errorf("failed to create uplinks in Datapath. Err: %v", err)
+	}
+
+	if err := na.Datapath.CreatePort(ports...); err != nil {
+		log.Errorf("Failed to create Ports in Datapath. Err: %v", err)
+		return fmt.Errorf("failed to create Ports in Datapath. Err: %v", err)
 	}
 
 	return nil
