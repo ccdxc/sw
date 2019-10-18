@@ -342,7 +342,7 @@ func vrfEPdShowOneResp(resp *halproto.VrfGetResponse) {
 		imnStr, imtStr)
 }
 
-func vrfGetType(vIdx uint64) halproto.VrfType {
+func vrfGetType(vIdx uint64) (halproto.VrfType, uint64) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -367,7 +367,7 @@ func vrfGetType(vIdx uint64) halproto.VrfType {
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
 		fmt.Printf("Getting vrf failed. %v\n", err)
-		return halproto.VrfType_VRF_TYPE_NONE
+		return halproto.VrfType_VRF_TYPE_NONE, 0
 	}
 
 	for _, resp := range respMsg.Response {
@@ -375,7 +375,7 @@ func vrfGetType(vIdx uint64) halproto.VrfType {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		return resp.GetSpec().GetVrfType()
+		return resp.GetSpec().GetVrfType(), resp.GetSpec().GetDesignatedUplink().GetInterfaceId()
 	}
-	return halproto.VrfType_VRF_TYPE_NONE
+	return halproto.VrfType_VRF_TYPE_NONE, 0
 }

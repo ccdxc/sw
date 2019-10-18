@@ -127,7 +127,7 @@ update_l2seg(uint32_t vrf_id, uint32_t l2seg_id, uint32_t encap,
     spec.set_mcast_fwd_policy(mcast_pol);
     spec.set_bcast_fwd_policy(bcast_pol);
     spec.set_single_wire_management(is_swm);
-    for (int i = 0; i < ifid_count; i++) {
+    for (uint32_t i = 0; i < ifid_count; i++) {
         spec.add_if_key_handle()->set_interface_id(up_ifid[i]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -264,7 +264,7 @@ create_mcast (uint32_t l2seg_id, uint64_t mac, uint32_t ifid[], uint32_t ifid_co
     MulticastEntryResponse rsp;
 
     spec.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
-    for (int i = 0; i < ifid_count; i++) {
+    for (uint32_t i = 0; i < ifid_count; i++) {
         spec.add_oif_key_handles()->set_interface_id(ifid[i]);
     }
     spec.mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);

@@ -160,11 +160,13 @@ typedef struct ep_update_app_ctxt_s {
     uint64_t                iplist_change:1;
     uint64_t                if_change:1;
     uint64_t                vmotion_state_change:1;
+    uint64_t                useg_vlan_change:1;
 
     dllist_ctxt_t           *add_iplist;
     dllist_ctxt_t           *del_iplist;
     hal_handle_t            new_if_handle;
     EndpointVMotionState    new_vmotion_state;
+    vlan_id_t               new_useg_vlan;
 } __PACK__ ep_update_app_ctxt_t;
 
 const char *ep_l2_key_to_str(ep_t *ep);

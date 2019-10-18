@@ -1274,7 +1274,6 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 
         // check of native l2seg change
         if (hal_if->native_l2seg_clsc != native_l2seg_handle) {
-                // clsc_enic_info->native_l2segment_handle()) {
 
             app_ctxt->new_native_l2seg_clsc = native_l2seg_handle;
                 // clsc_enic_info->native_l2segment_handle();
@@ -1356,6 +1355,15 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
             HAL_TRACE_DEBUG("updating lif hdl from {} -> {}",
                             hal_if->lif_handle, lif_handle);
         }
+
+        if (hal_if->encap_vlan != if_enic_info.mutable_enic_info()->encap_vlan_id()) {
+            app_ctxt->new_encap_vlan = if_enic_info.mutable_enic_info()->encap_vlan_id();
+            app_ctxt->encap_vlan_change = true;
+            *has_changed = true;
+            HAL_TRACE_DEBUG("updating encap vlan {} => {}",
+                            hal_if->encap_vlan, app_ctxt->new_encap_vlan);
+        }
+
     }
 
 end:
@@ -1613,6 +1621,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     case intf::IF_TYPE_ENIC:
         pd::pd_if_update_args_init(&pd_if_args);
         pd_if_args.intf = hal_if;
+        pd_if_args.intf_clone = hal_if_clone;
         pd_if_args.native_l2seg_clsc_change = app_ctxt->native_l2seg_clsc_change;
         pd_if_args.new_native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
         pd_if_args.pinned_uplink_change = app_ctxt->pinned_uplink_change;
@@ -1622,6 +1631,11 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_if_args.del_l2seg_clsclist = app_ctxt->del_l2segclsclist;
         pd_if_args.lif_change = app_ctxt->lif_change;
         pd_if_args.new_lif = app_ctxt->lif;
+        pd_if_args.encap_vlan_change = app_ctxt->encap_vlan_change;
+        pd_if_args.new_encap_vlan = app_ctxt->new_encap_vlan;
+        if (app_ctxt->encap_vlan_change) {
+            hal_if_clone->encap_vlan = app_ctxt->new_encap_vlan;
+        }
         break;
     case intf::IF_TYPE_UPLINK:
     case intf::IF_TYPE_UPLINK_PC:

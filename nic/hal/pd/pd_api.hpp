@@ -559,6 +559,8 @@ typedef struct pd_if_update_args_s {
                 bool            egress_en;
                 bool            lif_change;
                 lif_t           *new_lif;
+                bool            encap_vlan_change;
+                vlan_id_t       new_encap_vlan;
             } __PACK__;
         } __PACK__;
     } __PACK__;

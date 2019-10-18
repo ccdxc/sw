@@ -1360,6 +1360,10 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     endpoint_update_pi_with_iplist(ep_clone, app_ctxt->add_iplist,
                                    app_ctxt->del_iplist);
 
+    if (app_ctxt->useg_vlan_change) {
+        ep_clone->useg_vlan = app_ctxt->new_useg_vlan;
+    }
+
     // Copy the session list
     ep_copy_session_list(ep_clone, ep);
 
@@ -1598,6 +1602,13 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
         if (ep->if_handle != hal_if->hal_handle) {
             app_ctxt->if_change = true;
             app_ctxt->new_if_handle = hal_if->hal_handle;
+        }
+
+        if (ep->useg_vlan != req.endpoint_attrs().useg_vlan()) {
+            app_ctxt->useg_vlan_change = true;
+            app_ctxt->new_useg_vlan = req.endpoint_attrs().useg_vlan();
+            HAL_TRACE_DEBUG("useg vlan change {} => {}", ep->useg_vlan,
+                            app_ctxt->new_useg_vlan);
         }
 
         // Check if vmotion state changed
@@ -2104,7 +2115,8 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     HAL_ABORT(ret == HAL_RET_OK);
 
 
-    if (!app_ctxt.if_change && !l2seg_change && !iplist_change) {
+    if (!app_ctxt.if_change && !app_ctxt.useg_vlan_change &&
+        !l2seg_change && !iplist_change) {
         HAL_TRACE_WARN("No change in EP update");
         goto end;
     }

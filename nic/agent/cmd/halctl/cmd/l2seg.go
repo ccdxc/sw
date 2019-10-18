@@ -286,11 +286,11 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("vrfId:         L2segs's VRF ID                       WireEncap:   Wire encap type/value\n")
 	fmt.Printf("B-M-P-SB-SM:   Bcast, Mcast, Prom , Shared BC, Shared MC Repl indices\n")
 	fmt.Printf("#EPs:          Num. of EPs in L2seg                  IFs:         Member Interfaces\n")
-	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID\n")
+	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID            Attach:      Attached L2segs\n")
 	hdrLine := strings.Repeat("-", 80)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-15s%-10s\n",
-		"Id", "Mode", "vrfId", "WireEncap", "B-M-P-SB-SM", "#EPs", "IFs", "PinUplnkId")
+	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-10s%-10s%-20s\n",
+		"Id", "Mode", "vrfId", "WireEncap", "B-M-P-SB-SM", "#EPs", "IFs", "PinUp", "Attach.")
 	fmt.Println(hdrLine)
 }
 
@@ -352,12 +352,35 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	}
 
 	vrfTypeStr := "CL"
-	vrfType := vrfGetType(resp.GetSpec().GetVrfKeyHandle().GetVrfId())
+	vrfType, desUplink := vrfGetType(resp.GetSpec().GetVrfKeyHandle().GetVrfId())
 	if vrfType == halproto.VrfType_VRF_TYPE_CUSTOMER {
 		vrfTypeStr = "HP"
 	}
 
-	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-15s%-10s\n",
+	ifIdxStr := ifGetAllIdxStr()
+	attachStr := ""
+	attachL2segs := resp.GetStatus().GetAttachedL2Segs()
+	attachIdx := 0
+	for attachIdx < len(attachL2segs) {
+		if attachL2segs[attachIdx].GetSegmentId() != 0 {
+			if vrfType == halproto.VrfType_VRF_TYPE_CUSTOMER {
+				attachStr += fmt.Sprintf("%s:%d", ifIdxStr[uint32(attachIdx)],
+					attachL2segs[attachIdx].GetSegmentId())
+			} else {
+				attachStr += fmt.Sprintf("Uplink-%d:%d", desUplink,
+					attachL2segs[attachIdx].GetSegmentId())
+			}
+			attachStr += ","
+		}
+		attachIdx++
+	}
+	if len(attachStr) > 0 {
+		attachStr = attachStr[:len(attachStr)-1]
+	} else {
+		attachStr += "-"
+	}
+
+	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-10s%-11s%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		vrfTypeStr,
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
@@ -365,7 +388,8 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		replIndices,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr,
-		ifIDStr)
+		ifIDStr,
+		attachStr)
 }
 
 func l2segPdShowHeader(cmd *cobra.Command, args []string) {

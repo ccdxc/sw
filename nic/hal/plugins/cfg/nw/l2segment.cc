@@ -1949,7 +1949,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {};
-    bool                        is_shared = false, is_shared_clone = false;
+    // bool                        is_shared = false, is_shared_clone = false;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2688,9 +2688,9 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_delete_args_t  pd_l2seg_args = {};
     dllist_ctxt_t               *lnode        = NULL;
     dhl_entry_t                 *dhl_entry    = NULL;
-    l2seg_t                     *l2seg        = NULL, *shared_mgmt_l2seg = NULL;
+    l2seg_t                     *l2seg        = NULL/*, *shared_mgmt_l2seg = NULL */;
     pd::pd_func_args_t          pd_func_args = {};
-    oif_list_id_t               cl_oifl_id;
+    // oif_list_id_t               cl_oifl_id;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2972,6 +2972,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     pd::pd_l2seg_get_args_t     args        = {};
     hal_ret_t                   ret         = HAL_RET_OK;
     pd::pd_func_args_t          pd_func_args = {};
+    l2seg_t                     *shared_l2seg = NULL;
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -3002,6 +3003,14 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
             p_hdl_id = (hal_handle_t *)ptr;
             auto ifkh = rsp->mutable_spec()->add_if_key_handle();
             ifkh->set_if_handle(*p_hdl_id);
+        }
+    }
+#define HAL_MAX_NUM_UPLINKS 3
+    for (int i = 0; i < HAL_MAX_NUM_UPLINKS; i++) {
+        if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+            shared_l2seg = l2seg_lookup_by_handle(l2seg->other_shared_mgmt_l2seg_hdl[i]);
+            auto attach_l2seg = rsp->mutable_status()->add_attached_l2segs();
+            attach_l2seg->set_segment_id(shared_l2seg->seg_id);
         }
     }
 #if 0
@@ -3605,6 +3614,8 @@ l2seg_detach_mgmt_oifls (l2seg_t *l2seg)
             ret = oif_list_detach(cl_oifl_id);
         }
     }
+
+    return ret;
 }
 
 hal_ret_t
@@ -3632,6 +3643,8 @@ l2seg_attach_mgmt (l2seg_t *l2seg)
                                 tmp_l2seg->seg_id, l2seg->seg_id, uplink_if->if_id);
                 l2seg->other_shared_mgmt_l2seg_hdl[if_idx] = tmp_l2seg->hal_handle;
                 tmp_l2seg->other_shared_mgmt_l2seg_hdl[0] = l2seg->hal_handle;
+                l2seg_print_attached_l2segs(l2seg);
+                l2seg_print_attached_l2segs(tmp_l2seg);
                 // attach useg repls to classic repls.
                 // Bcast
                 cl_oifl_id = l2seg_get_shared_bcast_oif_list(tmp_l2seg);
@@ -3679,6 +3692,23 @@ l2seg_attach_mgmt (l2seg_t *l2seg)
         }
     }
     return ret;
+}
+
+void
+l2seg_print_attached_l2segs (l2seg_t *l2seg)
+{
+    HAL_TRACE_DEBUG("Attached info of l2seg: {}", l2seg->seg_id);
+    for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+        if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+            HAL_TRACE_DEBUG("Attachments idx: {} , l2seg_hdl: {}", i, 
+                            l2seg->other_shared_mgmt_l2seg_hdl[i]);
+#if 0
+            l2seg = l2seg_lookup_by_handle(l2seg->other_shared_mgmt_l2seg_hdl[i]);
+            HAL_TRACE_DEBUG("Attachments idx: {} , l2seg_hdl: {}, id: {}", i, 
+                            l2seg->other_shared_mgmt_l2seg_hdl[i], l2seg->seg_id);
+#endif
+        }
+    }
 }
 
 #if 0

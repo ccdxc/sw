@@ -262,6 +262,10 @@ typedef struct if_update_app_ctxt_s {
             // host-pin: lif change
             bool            lif_change;
             lif_t           *lif;
+
+            // host-pin: encap vlan change
+            bool            encap_vlan_change;
+            vlan_id_t       new_encap_vlan;
         } __PACK__;
     } __PACK__;
 

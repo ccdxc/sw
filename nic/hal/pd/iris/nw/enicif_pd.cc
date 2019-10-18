@@ -79,6 +79,8 @@ pd_enicif_update (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    pd_enicif_t     *pd_enicif_clone = args->intf_clone ?
+        (pd_enicif_t *)args->intf_clone->pd_if : NULL;
     if_t            *hal_if = args->intf;
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
@@ -90,7 +92,7 @@ pd_enicif_update (pd_if_update_args_t *args)
         }
     } else {
         // Host-Pin or Switch mode
-        if (args->egress_en_change || args->lif_change) {
+        if (args->egress_en_change || args->lif_change || args->encap_vlan_change) {
             ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, NULL,
                                                       TABLE_OPER_UPDATE);
             if (ret != HAL_RET_OK) {
@@ -106,6 +108,14 @@ pd_enicif_update (pd_if_update_args_t *args)
                 HAL_TRACE_ERR("Failed to repgm inp. prop. mac vlan table. ret:{}", ret);
                 goto end;
             }
+        }
+
+        if (args->encap_vlan_change) {
+            // - Remove existing mac-vlan entry
+            // - Create a new mac-vlan entry with new encap vlan. 
+            //   Clone will have new encap vlan
+            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_clone, args, 
+                                                      NULL, TABLE_OPER_UPDATE);
         }
 
         // TODO Deprecated: Pinning on ENICs for classic is moved to Lifs.
@@ -633,6 +643,7 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         } else {
             HAL_TRACE_DEBUG("deprogrammed entry for host traffic");
         }
+        pd_enicif->inp_prop_mac_vlan_idx_host = INVALID_INDEXER_INDEX;
     }
 
     // deprogram nw entry to drop
@@ -645,6 +656,7 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         } else {
             HAL_TRACE_DEBUG("deprogrammed drop entry for network traffic");
         }
+        pd_enicif->inp_prop_mac_vlan_idx_upl = INVALID_INDEXER_INDEX;
     }
 
 end:
@@ -1624,6 +1636,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
     bool                        set_drop            = false;
     bool                        egress_en           = false;
+    vlan_id_t                   encap_vlan          = 0;
 
     memset(&data, 0, sizeof(data));
 
@@ -1632,6 +1645,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         pd_lif = (pd_lif_t *)lif_get_pd_lif(args->new_lif);
     } else {
         pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+    }
+
+    if (args && args->encap_vlan_change) {
+        encap_vlan = args->new_encap_vlan;
+    } else {
+        encap_vlan = if_get_encap_vlan((if_t *)pd_enicif->pi_if);
     }
 
     if (pd_lif) {
@@ -1686,8 +1705,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             om_tmoport_enforce.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
                                                                           pd_lif->pi_lif) : false;
             om_tmoport_enforce.encap_vlan_id_valid = 1;
-            om_tmoport_enforce.encap_vlan_id       = if_get_encap_vlan((if_t *)
-                                                               pd_enicif->pi_if);
+            om_tmoport_enforce.encap_vlan_id       = encap_vlan;
             om_tmoport_enforce.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
                                                                                pd_lif->pi_lif,
                                                                                lif_upd) : false;
@@ -1702,8 +1720,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
                                                                           pd_lif->pi_lif) : false;
             om_tmoport.encap_vlan_id_valid = 1;
-            om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
-                                                               pd_enicif->pi_if);
+            om_tmoport.encap_vlan_id       = encap_vlan;
             om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
                                                                                pd_lif->pi_lif,
                                                                                lif_upd) : false;
@@ -1793,6 +1810,10 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
         key.p4plus_to_p4_insert_vlan_tag = 1;
     } else {
         key.vlan_tag_valid = 1;
+    }
+    // Useg vlan change
+    if (args && args->encap_vlan_change) {
+        key_changed = true;
     }
     key.vlan_tag_vid = if_get_encap_vlan((if_t*)pd_enicif->pi_if);
     mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);

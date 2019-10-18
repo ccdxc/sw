@@ -222,7 +222,7 @@ hal_ret_t l2seg_select_pinned_uplink(l2seg_t *l2seg);
 hal_ret_t l2seg_handle_repin(l2seg_t *l2seg);
 hal_ret_t l2seg_attach_mgmt(l2seg_t *l2seg);
 hal_ret_t l2seg_detach_mgmt_oifls(l2seg_t *l2seg);
-// hal_ret_t l2seg_update_swm_cust(l2seg_t *l2seg);
+void l2seg_print_attached_l2segs (l2seg_t *l2seg);
 
 }    // namespace hal
 

@@ -173,7 +173,6 @@ TEST_F(enicif_test, test1)
     // hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-
     // delete enicif
     del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1004,6 +1003,20 @@ TEST_F(enicif_test, test6)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Update useg vlan of enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(61);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 61);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(601);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(63);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     // change pinned uplink on lif
     lif_spec.mutable_key_or_handle()->set_lif_id(61);
     lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 61);
@@ -1030,6 +1043,7 @@ TEST_F(enicif_test, test7)
     L2SegmentResponse        l2seg_rsp;
     EndpointSpec             ep_spec;
     EndpointResponse         ep_rsp;
+    EndpointUpdateRequest    ep_req;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
@@ -1152,6 +1166,20 @@ TEST_F(enicif_test, test7)
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // update Endpoint
+    ep_req.mutable_vrf_key_handle()->set_vrf_id(7);
+    ep_req.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(701);
+    ep_req.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    ep_req.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0000DEADBEEF);
+    ep_req.mutable_endpoint_attrs()->add_ip_address();
+    ep_req.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_req.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_req.mutable_endpoint_attrs()->set_useg_vlan(72);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_update(ep_req, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
