@@ -357,6 +357,10 @@ action f_p4plus_cpu_pkt(offset) {
     modify_field(scratch_metadata.offset, offset);
     modify_field(scratch_metadata.cpu_flags, 0);
 
+    if (tunnel_metadata.tunnel_terminate_egress == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               CPU_FLAGS_TUNNEL_TERMINATE);
+    }
     if (ethernet.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu_pkt.l2_offset, scratch_metadata.offset);
         if (vlan_tag.valid == TRUE) {

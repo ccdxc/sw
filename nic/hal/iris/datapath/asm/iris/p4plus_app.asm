@@ -302,6 +302,8 @@ f_p4plus_cpu_pkt:
   // r2 : flags
   add         r1, r0, r6
   add         r2, r0, r0
+  seq         c1, k.tunnel_metadata_tunnel_terminate_egress, TRUE
+  or.c1       r2, r2, CPU_FLAGS_TUNNEL_TERMINATE
   seq         c1, k.ethernet_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_l2_offset, r1.hx
   phvwr.!c1   p.p4_to_p4plus_cpu_pkt_l2_offset, -1

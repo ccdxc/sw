@@ -1014,13 +1014,21 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     }
 
     pkt_info = &txpkts_[txpkt_cnt_++];
-    HAL_TRACE_DEBUG("fte: txpkt for dir={}", key_.dir);
+    HAL_TRACE_DEBUG("fte: txpkt for dir={}, tunnel_terminated: {}", 
+                    key_.dir, tunnel_terminated());
     if (cpu_header) {
         pkt_info->cpu_header = *cpu_header;
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
         // change lif/vlan for uplink pkts
-        if (cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) {
+        // - Vxlan: P4 terminates vxlan and doesn't send outer headers to FTE. 
+        //          So FTE can inject the same packet.
+        // - IPsec Decrypt: FTE injected packets are coming back to FTE because
+        //                  of flow miss. Even for this packets we re-inject
+        //                  with cpu vlan.
+        if ((cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) && 
+            (use_vrf_ || is_proxy_enabled() || tunnel_terminated() ||
+             pkt_info->cpu_header.src_lif == HAL_LIF_CPU)) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = HAL_LIF_CPU;
             if (use_vrf_) {

@@ -146,6 +146,7 @@
 #define CPU_FLAGS_IPV6_VALID           0x04
 #define CPU_FLAGS_IP_OPTIONS_PRESENT   0x08
 #define CPU_FLAGS_TCP_OPTIONS_PRESENT  0x10
+#define CPU_FLAGS_TUNNEL_TERMINATE     0x40
 
 /*****************************************************************************/
 /* CPU header packet types                                                   */

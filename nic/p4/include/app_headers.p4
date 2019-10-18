@@ -151,7 +151,8 @@ header_type p4_to_p4plus_cpu_header_t {
  *  3       : ip options present
  *  4       : tcp options present
  *  5       : from ipsec app
- *  6-7     : unused
+ *  6       : tunnel terminated
+ *  7     : unused
  */
 header_type p4_to_p4plus_cpu_pkt_t {
     fields {

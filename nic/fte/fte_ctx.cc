@@ -675,6 +675,12 @@ ctx_t::vlan_valid()
     return cpu_rxhdr_->flags&CPU_FLAGS_VLAN_VALID;
 }
 
+bool
+ctx_t::tunnel_terminated()
+{
+    return cpu_rxhdr_->flags&CPU_FLAGS_TUNNEL_TERMINATE;
+}
+
 std::ostream& operator<<(std::ostream& os, const mpls_label_t& val)
 {
     os << "{label=" << val.label;

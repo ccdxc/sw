@@ -690,6 +690,7 @@ public:
     hal_handle_t sep_handle() { return sep_handle_; }
     hal_handle_t dep_handle() { return dep_handle_; }
     bool vlan_valid();
+    bool tunnel_terminated();
 
     bool hal_cleanup() const { return cleanup_hal_; }
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
