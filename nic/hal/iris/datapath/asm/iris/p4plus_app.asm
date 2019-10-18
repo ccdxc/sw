@@ -12,6 +12,8 @@ struct phv_          p;
 
 .align
 p4plus_app_default:
+  slt         c1, k.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
+  phvwr.c1    p.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
   phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   seq         c1, k.tcp_valid, TRUE
   sle         c2, k.tcp_dataOffset, 5

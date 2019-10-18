@@ -4,6 +4,11 @@
 
 action p4plus_app_default () {
     f_egress_tcp_options_fixup();
+    // packets going via uplink interfaces will be padded to min ethernet
+    // frame size by deparser. account for it here.
+    if (capri_p4_intrinsic.packet_len < MIN_ETHER_FRAME_LEN) {
+        modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+    }
 }
 
 action p4plus_app_tcp_proxy() {
