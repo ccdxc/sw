@@ -229,8 +229,8 @@ nic/sdk/third-party/vpp-pkg/$ARCH/lib/*.so.*                      /nic/lib/
 nic/sdk/third-party/vpp-pkg/$ARCH/bin/vpp                         /nic/bin/
 nic/sdk/third-party/vpp-pkg/$ARCH/bin/vppctl                      /nic/bin/
 nic/sdk/third-party/vpp-pkg/$ARCH/lib/vpp_plugins/dpdk_plugin.so  /nic/lib/vpp_plugins/
-nic/apollo/tools/start-vpp.sh                                     /nic/tools/
-nic/apollo/vpp/conf/*                                             /nic/conf/vpp/
+nic/vpp/tools/start-vpp.sh                                        /nic/tools/
+nic/vpp/conf/*                                                    /nic/conf/vpp/
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so                          /nic/lib/libnuma.so.1
 
 # cronjobs

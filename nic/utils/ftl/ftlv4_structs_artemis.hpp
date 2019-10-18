@@ -187,6 +187,35 @@ public:
         }
         return 0;
     }
+
+    uint32_t get_session_index() {
+        return session_index;
+    } 
+
+    void set_session_index(uint32_t session) {
+        session_index = session;
+    }
+ 
+    void set_key(uint32_t sip,
+                 uint32_t dip,
+                 uint8_t ip_proto,
+                 uint16_t src_port,
+                 uint16_t dst_port,
+                 uint16_t lookup_id)
+    {
+        src = sip;
+        dst = dip;
+        proto = ip_proto;
+        sport = src_port;
+        dport = dst_port;
+        vpc_id = lookup_id;
+    }
+
+    void set_epoch(uint8_t val)
+    {
+        epoch = val;
+    }
+
 #endif
 
 };

@@ -124,6 +124,20 @@ export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
 export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
 
 # ==========================================================================
+#                           VPP
+# ==========================================================================
+export VPP_DEFINES_COMMON  := -DCLIB_LOG2_CACHE_LINE_BYTES=6
+export VPP_DEFINES_x86_64  := -DCLIB_DEBUG ${VPP_DEFINES_COMMON}
+export VPP_DEFINES_aarch64 := ${VPP_DEFINES_COMMON}
+export VPP_FLAGS_COMMON    := -Wall -Werror
+export VPP_FLAGS_x86_64    := ${VPP_FLAGS_COMMON} -O0
+export VPP_FLAGS_aarch64   := ${VPP_FLAGS_COMMON} -O3
+export VPP_PLUGINS_PATH    := ${TOPDIR}/nic/vpp
+export VPP_PLUGINS_INCS    := ${SDK_THIRD_PARTY_VPP_INCLUDES}           \
+                              ${VPP_PLUGINS_PATH}/infra/                \
+                              ${VPP_PLUGINS_PATH}/infra/${PIPELINE}
+
+# ==========================================================================
 #                           Apollo GTEST common LDLIBS
 # ==========================================================================
 export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}

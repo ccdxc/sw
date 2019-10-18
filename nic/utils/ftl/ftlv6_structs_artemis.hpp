@@ -219,5 +219,42 @@ public:
         }
         return 0;
     }
+
+    uint32_t get_session_index() {
+        return session_index;
+    }
+
+    void set_session_index(uint32_t session) {
+        session_index = session;
+    }
+
+    void set_key(uint8_t *sip,
+                 uint8_t *dip,
+                 uint8_t ip_proto,
+                 uint16_t src_port,
+                 uint16_t dst_port,
+                 uint16_t lookup_id,
+                 uint8_t key_type)
+    {   
+        uint64_t *dptr = (uint64_t *)src;
+        uint64_t *sptr = (uint64_t *)sip;
+        dptr[0] = sptr[0];
+        dptr[1] = sptr[1];
+        dptr = (uint64_t *)dst;
+        sptr = (uint64_t *)dip;
+        dptr[0] = sptr[0];
+        dptr[1] = sptr[1];
+        proto = ip_proto;
+        sport = src_port;
+        dport = dst_port;
+        vpc_id = lookup_id;
+        ktype = key_type;
+    }
+
+    void set_epoch(uint8_t val)
+    {
+        epoch = val;
+    }
+
 #endif
 };

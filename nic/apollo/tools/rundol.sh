@@ -23,7 +23,7 @@ echo $NICDIR
 
 cleanup() {
     if [ $START_VPP == 1 ]; then
-        sudo $NICDIR/apollo/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
+        sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
     fi
     pkill agent
     pkill cap_model
@@ -51,7 +51,7 @@ export CONFIG_PATH=$NICDIR/conf
 
 if [ $START_VPP == 1 ]; then
     echo "Starting VPP"
-    sudo $NICDIR/apollo/tools/start-vpp-sim.sh $*
+    sudo $NICDIR/vpp/tools/start-vpp-sim.sh $*
     if [[ $? != 0 ]]; then
         echo "Failed to bring up VPP"
         exit -1
