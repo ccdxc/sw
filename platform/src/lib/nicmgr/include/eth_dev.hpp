@@ -134,6 +134,7 @@ public:
     EthDevType GetType() { return spec->eth_type; }
 
     void DevcmdHandler();
+    status_code_t CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     static struct eth_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
@@ -228,9 +229,6 @@ private:
     status_code_t _CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
-
-    /* Proxy Command Handlers */
-    status_code_t _CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
 
     // Tasks
     static void StatsUpdate(void *obj);

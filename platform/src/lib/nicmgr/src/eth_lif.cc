@@ -122,12 +122,14 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
     }
 }
 
-EthLif::EthLif(devapi *dev_api,
+EthLif::EthLif(Eth *dev,
+               devapi *dev_api,
                void *dev_spec,
                PdClient *pd_client,
                eth_lif_res_t *res,
                EV_P)
 {
+    EthLif::dev = dev;
     EthLif::dev_api = dev_api;
     EthLif::spec = (struct eth_devspec *)dev_spec;
     EthLif::res = res;
@@ -656,7 +658,17 @@ EthLif::AdminCmdHandler(void *obj,
     void *req, void *req_data, void *resp, void *resp_data)
 {
     EthLif *lif = (EthLif *)obj;
-    lif->CmdHandler(req, req_data, resp, resp_data);
+    union dev_cmd *cmd = (union dev_cmd *)req;
+
+    if (cmd->cmd.lif_index == lif->res->lif_index) {
+        lif->CmdHandler(req, req_data, resp, resp_data);
+    } else {
+        NIC_LOG_DEBUG("{}: Proxying cmd {} with lif_index {}",
+                      lif->hal_lif_info_.name,
+                      opcode_to_str((cmd_opcode_t)cmd->cmd.opcode),
+                      cmd->cmd.lif_index);
+        lif->dev->CmdProxyHandler(req, req_data, resp, resp_data);
+    }
 }
 
 status_code_t
@@ -666,6 +678,13 @@ EthLif::CmdHandler(void *req, void *req_data,
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
+
+    if (cmd->cmd.lif_index != res->lif_index) {
+        NIC_LOG_ERR("{}: Incorrect LIF with index {} for command with lif_index {}",
+                    hal_lif_info_.name, res->lif_index, cmd->cmd.lif_index);
+        status = IONIC_RC_EINVAL;
+        goto out;
+    }
 
     if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
         NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
@@ -740,6 +759,7 @@ EthLif::CmdHandler(void *req, void *req_data,
         break;
     }
 
+out:
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
 
@@ -1039,8 +1059,8 @@ EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     memset(ident, 0, sizeof(union q_identity));
 
-    ident->version = 0;
-    ident->supported = 1;
+    ident->version = 1;
+    ident->supported = 0x3;
     ident->features = IONIC_QIDENT_F_CQ;
     ident->desc_sz = sizeof(struct admin_cmd);
     ident->comp_sz = sizeof(struct admin_comp);
@@ -1708,7 +1728,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver != 0) {
+    if (cmd->ver > 1) {
         NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
         return (IONIC_RC_ENOSUPP);
     }

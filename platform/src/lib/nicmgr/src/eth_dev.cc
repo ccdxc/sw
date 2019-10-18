@@ -178,6 +178,7 @@ Eth::Eth(devapi *dev_api,
         eth_lif_res_t *lif_res = new eth_lif_res_t();
         uint64_t lif_id = dev_resources.lif_base + lif_index;
 
+        lif_res->lif_index = lif_index;
         lif_res->lif_id = lif_id;
         lif_res->intr_base = dev_resources.intr_base;
         lif_res->rx_eq_base = dev_resources.rx_eq_base;
@@ -185,7 +186,7 @@ Eth::Eth(devapi *dev_api,
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
-        EthLif *eth_lif = new EthLif(dev_api,
+        EthLif *eth_lif = new EthLif(this, dev_api,
             dev_info->eth_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
@@ -385,6 +386,7 @@ Eth::Eth(devapi *dev_api,
         eth_lif_res_t *lif_res = new eth_lif_res_t();
         uint64_t lif_id = dev_resources.lif_base + lif_index;
 
+        lif_res->lif_index = lif_index;
         lif_res->lif_id = lif_id;
         lif_res->intr_base = dev_resources.intr_base;
         lif_res->rx_eq_base = dev_resources.rx_eq_base;
@@ -392,7 +394,7 @@ Eth::Eth(devapi *dev_api,
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
-        EthLif *eth_lif = new EthLif(dev_api,
+        EthLif *eth_lif = new EthLif(this, dev_api,
             dev_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
@@ -1022,7 +1024,7 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     default:
         // FIXME: Check if this is a valid opcode
-        status = _CmdProxyHandler(req, req_data, resp, resp_data);
+        status = CmdProxyHandler(req, req_data, resp, resp_data);
         break;
     }
 
@@ -1734,7 +1736,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
-Eth::_CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
+Eth::CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct admin_cmd *cmd = (struct admin_cmd *)req;
     uint64_t lif_id = dev_resources.lif_base + cmd->lif_index;

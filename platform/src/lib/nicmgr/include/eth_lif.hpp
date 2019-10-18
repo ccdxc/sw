@@ -13,6 +13,7 @@ using namespace std;
 
 namespace pt = boost::property_tree;
 
+class Eth;
 class AdminQ;
 class EdmaQ;
 typedef uint8_t status_code_t;
@@ -73,6 +74,7 @@ enum eth_hw_qtype {
  * LIF Resource structure
  */
 typedef struct eth_lif_res_s {
+    uint64_t lif_index;
     uint64_t lif_id;
     uint64_t intr_base;
     uint64_t rx_eq_base;
@@ -97,7 +99,8 @@ enum eth_lif_state {
 
 class EthLif {
 public:
-    EthLif(devapi *dev_api,
+    EthLif(Eth *dev,
+           devapi *dev_api,
            void *dev_spec,
            PdClient *pd_client,
            eth_lif_res_t *res,
@@ -131,6 +134,7 @@ public:
     EV_P;
 
 private:
+    Eth *dev;
     static sdk::lib::indexer *fltr_allocator;
     // Info
     char name[IONIC_IFNAMSIZ];
@@ -232,9 +236,9 @@ private:
     void FreeUpVlanFilters();
     void FreeUpMacVlanFilters();
 
-    const char *lif_state_to_str(enum eth_lif_state state);
-    const char *opcode_to_str(cmd_opcode_t opcode);
-    sdk::platform::lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
+    static const char *lif_state_to_str(enum eth_lif_state state);
+    static const char *opcode_to_str(cmd_opcode_t opcode);
+    static sdk::platform::lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
 };
 
 #endif   /* __ETH_LIF_HPP__ */
