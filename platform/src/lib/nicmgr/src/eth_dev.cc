@@ -1147,7 +1147,7 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
     DEVAPI_CHECK
 
     if (spec->uplink_port_num == 0) {
-        port_config->speed = IONIC_SPEED_1G;
+        port_config->speed = IONIC_SPEED_100G;
         port_config->mtu = 1500;
         port_config->state = PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
@@ -1173,7 +1173,7 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
+    if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -1220,7 +1220,7 @@ Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
+    if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -1242,7 +1242,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->attr);
 
-    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
+    if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -1315,7 +1315,7 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->attr);
 
-    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_MNIC_OOB_MGMT) {
+    if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
     }
 
@@ -1640,7 +1640,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->uplink_port_num == 0) {
         port_status->id = 0;
-        port_status->speed = IONIC_SPEED_1G;
+        port_status->speed = IONIC_SPEED_100G;
         port_status->status = PORT_OPER_STATUS_UP;
     } else {
         // Update port config
