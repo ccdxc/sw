@@ -509,11 +509,28 @@ DeviceManager::HalEventHandler(bool status)
         // dev_api->swm_update(true, 1, 0, 0x00AECD0005CF);
     }
 
+    // Bringup OOB first
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        NIC_LOG_DEBUG("dev: {}, type: {}", it->first, dev->GetType());
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
+            NIC_LOG_DEBUG("eth dev type: {}", eth_dev->GetType());
+            if (eth_dev->GetType() == ETH_MNIC_OOB_MGMT) {
+                eth_dev->HalEventHandler(status);
+                break;
+            }
+        }
+    }
+
+    // Bringup other devices
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *)dev;
-            eth_dev->HalEventHandler(status);
+            if (eth_dev->GetType() != ETH_MNIC_OOB_MGMT) {
+                eth_dev->HalEventHandler(status);
+            }
         }
 
 #ifdef IRIS
