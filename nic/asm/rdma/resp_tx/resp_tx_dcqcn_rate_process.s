@@ -62,7 +62,7 @@ resp_tx_dcqcn_rate_process:
     bcf     [!c2], cnp_recv_process
     phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_rate), 1   // BD Slot
 
-    bbeq    d.max_rate_reached, 1, disable_table
+    bbeq    d.max_rate_reached, 1, exit
     // Update dcqcn_cb values from config
     tblwr   d.byte_counter_thr, K_BYTE_RESET    // BD Slot
 
@@ -111,8 +111,11 @@ fast_recovery:
 
     // Rc = ((Rt + Rc) / 2)
     add     r1, d.target_rate, d.rate_enforced
-    srl.e   RATE_ENFORCED, r1, 1
+    srl     RATE_ENFORCED, r1, 1
+
     tblwr   d.rate_enforced, RATE_ENFORCED
+    nop.e
+    nop
 
 hyper_increase:
     // Check target-rate has reached MAX-QP-RATE. If yes, stop further target-rate-increase.
@@ -172,11 +175,12 @@ cnp_recv_process:
     add     r2, r2, K_G_VAL
     tblwr   d.alpha_value, r2
 
-    bbeq    d.max_rate_reached, 0, disable_table
     // Update num-cnp-processed.
-    tblmincri   d.num_cnp_processed, 8, 1   // BD Slot
+    tblmincri   d.num_cnp_processed, 8, 1
+    CAPRI_SET_TABLE_0_VALID(0)
  
-    tblwr   d.max_rate_reached, 0
+    bbeq    d.max_rate_reached, 0, exit
+    tblwr   d.max_rate_reached, 0 // BD-slot
     /* 
      * Timer will be started only when CNP is received after max_rate_reached is hit. 
      * Init value of max_rate_reached will be set to 1 to kick-start dcqcn timers when first CNP is received.
@@ -185,7 +189,7 @@ cnp_recv_process:
      * should have minimal impact on timer T and subsequent dcqcn rate-increase.
      */
     CAPRI_START_FAST_TIMER(r1, r6, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, DCQCN_TIMER_RING_ID, K_ALPHA_TIMER_INTERVAL)
-    CAPRI_SET_TABLE_0_VALID_CE(c0, 0)
+    nop.e
     nop
 
 bubble_to_next_stage:
@@ -200,6 +204,3 @@ exit:
     nop.e
     nop
 
-disable_table:
-    CAPRI_SET_TABLE_0_VALID_CE(c0, 0)
-    nop
