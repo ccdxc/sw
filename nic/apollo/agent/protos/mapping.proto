@@ -37,7 +37,8 @@ message MappingSpec {
   oneof dstinfo {
       // Tunnel ID of the TEP, if the mapping is remote, 0 for local mappings
       uint32          TunnelID       = 3;
-      // nexthop identifier for reachability information
+      // nexthop identifier for reachability information (can be used when
+      //       // traffic is going out natively without encap)
       uint32          NexthopId      = 4 [(gogoproto.moretags) = "meta:mandatory"];
       // mappings can point to underlay nexthop group, but not overlay as one
       // mapping can't be behind two TEPs (i.e., multi-homing is not supported

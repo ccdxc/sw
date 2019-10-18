@@ -22,15 +22,15 @@
 
 /// \brief    local mapping specification
 typedef struct pds_local_mapping_spec_s {
-    pds_mapping_key_t key;       ///< Mapping key
-    pds_vnic_key_t vnic;         ///< VNIC for given IP
-    pds_subnet_key_t subnet;     ///< Subnet this IP is part of
+    pds_mapping_key_t key;       ///< mapping key
+    pds_vnic_key_t vnic;         ///< vnic for given IP
+    pds_subnet_key_t subnet;     ///< subnet this IP is part of
     pds_encap_t fabric_encap;    ///< fabric encap for this mapping
-    mac_addr_t vnic_mac;         ///< VNIC MAC
-    bool public_ip_valid;        ///< TRUE if public IP is valid
-    ip_addr_t public_ip;         ///< Public IP address
-    bool provider_ip_valid;      ///< TRUE if provider IP is valid
-    ip_addr_t provider_ip;       ///< Provider IP address
+    mac_addr_t vnic_mac;         ///< vnic MAC
+    bool public_ip_valid;        ///< true if public IP is valid
+    ip_addr_t public_ip;         ///< public IP address
+    bool provider_ip_valid;      ///< true if provider IP is valid
+    ip_addr_t provider_ip;       ///< provider IP address
     uint32_t  svc_tag;           ///< service tag, if any
 } __PACK__ pds_local_mapping_spec_t;
 

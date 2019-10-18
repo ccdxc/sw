@@ -104,6 +104,28 @@ public:
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     program and activate mapping related tables during create
+    ///            by enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch       epoch being activated
+    /// \param[in] mapping     mapping instance
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \param[in] spec        mapping configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_mapping_create_(pds_epoch_t epoch,
+                                               mapping_entry *mapping,
+                                               obj_ctxt_t *obj_ctxt,
+                                               pds_mapping_spec_t *spec);
+
+    /// \brief     program and activate mapping related tables during delete
+    ///            by enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch       epoch being activated
+    /// \param[in] key         key identifying the mapping
+    /// \param[in] mapping     mapping instance
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_mapping_delete_(pds_epoch_t epoch,
+                                               pds_mapping_key_t *key,
+                                               mapping_entry *mapping);
+
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
     /// \param[in] api_obj API object holding this resource
@@ -150,14 +172,10 @@ private:
     /// \brief     reserve necessary entries in local mapping table
     /// \param[in] api_obj API object being processed
     /// \param[in] vpc     VPC of this mapping
-    /// \param[in] subnet  subnet of this mapping
-    /// \param[in] vnic    vnic of this mapping
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_local_mapping_resources_(api_base *api_obj,
                                                vpc_entry *vpc,
-                                               subnet_entry *subnet,
-                                               vnic_entry *vnic,
                                                pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for local mappings

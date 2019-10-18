@@ -138,7 +138,13 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return vnic's h/w id
+    /// \return    h/w id assigned to the vnic
     uint16_t hw_id(void) { return hw_id_; }
+
+    /// \brief     return nexthop idx allocated for this vnic
+    /// \return    nexthop index corresponding to this vnic
+    uint16_t nh_idx(void) { return nh_idx_; }
 
 private:
     /// \brief constructor
