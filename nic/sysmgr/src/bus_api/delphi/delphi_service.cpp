@@ -8,15 +8,23 @@
 #include "gen/proto/sysmgr.delphi.hpp"
 #include "gen/proto/eventtypes.pb.h"
 
-#include "eventlogger.hpp"
-#include "service_factory.hpp"
-#include "service_watcher.hpp"
-#include "switchroot_watcher.hpp"
-#include "utils.hpp"
+#include "../bus_api.hpp"
 
-DelphiServicePtr DelphiService::create(delphi::SdkPtr sdk)
+SysmgrBusPtr
+init_bus (bus_api_t *api)
+{
+    delphi::SdkPtr delphi_sdk = std::make_shared<delphi::Sdk>();
+
+    DelphiServicePtr svc = DelphiService::create(delphi_sdk, api);
+    delphi_sdk->RegisterService(svc);
+
+    return svc;
+}
+
+DelphiServicePtr DelphiService::create(delphi::SdkPtr sdk, bus_api_t *bus_api)
 {
     DelphiServicePtr svc = std::make_shared<DelphiService>();
+    svc->bus_api = bus_api;
     svc->sdk = sdk;
     svc->name = "sysmgr";
 
@@ -35,14 +43,36 @@ DelphiServicePtr DelphiService::create(delphi::SdkPtr sdk)
     return svc;
 }
 
+void
+DelphiService::Connect(void) {
+    this->sdk->Connect();
+}
+
+void
+DelphiService::SystemFault(std::string reason) {
+    auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
+
+    obj->set_state(::sysmgr::Fault);
+    obj->set_reason(reason);
+
+    this->sdk->QueueUpdate(obj);
+}
+
+void
+DelphiService::ProcessDied(std::string name, pid_t pid, std::string reason) {
+    auto obj = std::make_shared<delphi::objects::SysmgrProcessStatus>();
+
+    obj->set_key(name);
+    obj->set_pid(pid);
+    obj->set_state(::sysmgr::Died);
+    obj->set_exitreason(reason);
+
+    this->sdk->QueueUpdate(obj);
+}
+
 void DelphiService::OnMountComplete()
 {
-    logger->debug("Service delphi started");
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create("delphi", SERVICE_EVENT_START));
-    EventLogger::getInstance()->LogSystemEvent(
-        eventtypes::SYSTEM_COLDBOOT, "System booted");
-
+    this->bus_api->bus_up("delphi");
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
     obj->set_state(::sysmgr::Normal);
     this->sdk->QueueUpdate(obj);
@@ -56,9 +86,7 @@ std::string DelphiService::Name()
 delphi::error DelphiService::OnSysmgrServiceStatusCreate(
     delphi::objects::SysmgrServiceStatusPtr obj)
 {
-    logger->debug("Service {} started", obj->key());
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
+    this->bus_api->service_started(obj->key());
     return delphi::error::OK();
 }
 
@@ -71,18 +99,14 @@ delphi::error DelphiService::OnSysmgrServiceStatusDelete(
 delphi::error DelphiService::OnSysmgrServiceStatusUpdate(
     delphi::objects::SysmgrServiceStatusPtr obj)
 {
-    logger->debug("Service {} started", obj->key());
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
+    this->bus_api->service_started(obj->key());
     return delphi::error::OK();
 }
 
 delphi::error DelphiService::OnDelphiClientStatusCreate(
     delphi::objects::DelphiClientStatusPtr obj)
 {
-    logger->debug("Service {} heartbeat", obj->key());
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
+    this->bus_api->service_heartbeat(obj->key());
     return delphi::error::OK();
 }
 
@@ -95,18 +119,14 @@ delphi::error DelphiService::OnDelphiClientStatusDelete(
 delphi::error DelphiService::OnDelphiClientStatusUpdate(
     delphi::objects::DelphiClientStatusPtr obj)
 {
-    logger->debug("Service {} heartbeat", obj->key());
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(obj->key(), SERVICE_EVENT_HEARTBEAT));
+    this->bus_api->service_heartbeat(obj->key());
     return delphi::error::OK();
 }
 
 delphi::error DelphiService::OnSysmgrShutdownReqCreate(
     delphi::objects::SysmgrShutdownReqPtr obj)
 {
-    logger->info("Switching root");
-    switch_root();
-    SwitchrootLoop::getInstance()->set_switchroot();
+    this->bus_api->switchroot();
     return delphi::error::OK();
 }
 
@@ -119,17 +139,14 @@ delphi::error DelphiService::OnSysmgrShutdownReqDelete(
 delphi::error DelphiService::OnSysmgrShutdownReqUpdate(
     delphi::objects::SysmgrShutdownReqPtr obj)
 {
-    logger->info("Switching root");
-    switch_root();
-    SwitchrootLoop::getInstance()->set_switchroot();
+    this->bus_api->switchroot();
     return delphi::error::OK();
 }
 
 delphi::error DelphiService::OnSysmgrRespawnReqCreate(
     delphi::objects::SysmgrRespawnReqPtr obj)
 {
-    logger->info("Respawning processes");
-    ServiceFactory::getInstance()->respawn_all();
+    this->bus_api->respawn_processes();
     return delphi::error::OK();
 }
 
@@ -142,7 +159,8 @@ delphi::error DelphiService::OnSysmgrRespawnReqDelete(
 delphi::error DelphiService::OnSysmgrRespawnReqUpdate(
     delphi::objects::SysmgrRespawnReqPtr obj)
 {
-    logger->info("Respawning processes");
-    ServiceFactory::getInstance()->respawn_all();
+    // glog->info("Respawning processes");
+    // ServiceFactory::getInstance()->respawn_all();
+    this->bus_api->respawn_processes();
     return delphi::error::OK();
 }

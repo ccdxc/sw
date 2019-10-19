@@ -1,10 +1,9 @@
 #include "gtest/gtest.h"
 
 #include "nic/delphi/utils/utest.hpp"
-#include "nic/utils/penlog/lib/penlog.hpp"
-#include "nic/utils/penlog/lib/null_logger.hpp"
 
 #include "delphi_service.hpp"
+#include "log.hpp"
 #include "service_factory.hpp"
 #include "service_watcher.hpp"
 #include "utils.hpp"
@@ -12,9 +11,9 @@
 void *startEventLoop(void* arg)
 {
     ev::default_loop *loop = (ev::default_loop *)arg;
-    logger->info("Event loop started!");
+    glog->info("Event loop started!");
     loop->run(0);
-    logger->info("Event loop exited!");
+    glog->info("Event loop exited!");
 
     return NULL;
 }
@@ -32,7 +31,6 @@ public:
 	this->service_factory = ServiceFactory::getInstance();
 	this->sdk = std::make_shared<delphi::Sdk>();
 	this->svc = DelphiService::create(sdk);
-	logger = penlog::logger_init(sdk, "sysmgr-test");
 
 	pthread_create(&ev_thread_id, 0, &startEventLoop, (void*)&loop);
     };
@@ -54,7 +52,7 @@ public:
     bool notification_received = false;
     void on_service_start(std::string name) {
 	this->notification_received = true;
-	logger->info("Got notification for {}", name);
+	glog->info("Got notification for {}", name);
     };
     void on_service_stop(std::string name) {
     };
@@ -72,10 +70,10 @@ TEST_F(SysmgrTest, ServiceLoop)
 
     for (auto &service_reactors: service_loop->event_reactors[SERVICE_EVENT_START])
     {
-	logger->info("Service: {}", service_reactors.first);
+	glog->info("Service: {}", service_reactors.first);
 	for (auto reactor: service_reactors.second)
 	{
-	    logger->info("  Reactor: {}", reactor);
+	    glog->info("  Reactor: {}", reactor);
 	}
     }
     service_loop->queue_event(ServiceEvent::create("sysmgr-test-service",

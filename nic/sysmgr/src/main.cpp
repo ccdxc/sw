@@ -5,25 +5,25 @@
 
 #include <ev++.h>
 #include <stdlib.h>
-
-#include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/utils/penlog/lib/penlog.hpp"
-#include "nic/utils/penlog/lib/null_logger.hpp"
-
-#include "delphi_service.hpp"
+#include "bus_api/bus_api.hpp"
+#include "bus_callbacks.hpp"
+#include "events_api/events_api.hpp"
+#include "log.hpp"
 #include "service_factory.hpp"
 #include "utils.hpp"
 #include "watchdog.hpp"
 
-delphi::SdkPtr delphi_sdk = std::make_shared<delphi::Sdk>();
+SysmgrBusPtr g_bus;
+SysmgrEventsPtr g_events;
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
     ev::default_loop loop;
     ServiceFactoryPtr service_factory = ServiceFactory::getInstance();
-    DelphiServicePtr svc = DelphiService::create(delphi_sdk);
     WatchdogPtr watchdog;
+
+    init_logger();
 
     if (argc == 3) {
         log_location = argv[2];
@@ -40,8 +40,9 @@ main(int argc, char *argv[])
     redirect_stds("sysmgr", getpid());
     cpulock(0xffffffff);
 
-    delphi_sdk->RegisterService(svc);
-    logger = penlog::logger_init(delphi_sdk, "sysmgr");
+    g_bus = init_bus(&g_bus_callbacks);
+    g_events = init_events(glog);
+    
     watchdog = Watchdog::create();
     
     if (argc > 1)
@@ -54,21 +55,21 @@ main(int argc, char *argv[])
         try {
             config_file = get_main_config_file();
         } catch (const std::exception & e) {
-            logger->error("get_main_config_file() exception: {}",
+            glog->error("get_main_config_file() exception: {}",
                 std::string(e.what()));
             exit(-1);
         }
         service_factory->load_config(config_file);
     }
     
-    logger->debug("Trying /data/sysmgr.json");
+    glog->debug("Trying /data/sysmgr.json");
     service_factory->load_config("/data/sysmgr.json");
-    logger->debug("Done with /data/sysmgr.json");
+    glog->debug("Done with /data/sysmgr.json");
 
     // Needed in order to process custom events before blocking for an
     // actual event
     loop.run(EVRUN_NOWAIT);
-    delphi_sdk->Connect();
+    g_bus->Connect();
     loop.run(0);
     
     return 0;

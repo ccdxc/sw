@@ -4,6 +4,7 @@
 
 #include <ev++.h>
 
+#include "log.hpp"
 #include "utils.hpp"
 
 std::shared_ptr<ChildWatcher> ChildWatcher::create(pid_t pid,
@@ -18,7 +19,7 @@ ChildWatcher::ChildWatcher(pid_t pid, ChildReactorPtr reactor)
     this->pid = pid;
     child.set<ChildWatcher, &ChildWatcher::child_callback>(this);
     child.start(pid, ev::READ);
-    logger->info("Child listenting {}", pid);
+    glog->info("Child listenting {}", pid);
 }
 
 void ChildWatcher::child_callback()
@@ -28,13 +29,13 @@ void ChildWatcher::child_callback()
 
 void ChildWatcher::stop()
 {
-    logger->info("Child stop listenting {}", this->pid);
+    glog->info("Child stop listenting {}", this->pid);
     child.stop();
 }
 
 ChildWatcher::~ChildWatcher()
 {
-    logger->info("Child listener destructor {}", this->pid);
+    glog->info("Child listener destructor {}", this->pid);
     this->stop();
 }
 

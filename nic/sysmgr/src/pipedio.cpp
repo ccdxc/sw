@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "io_watcher.hpp"
+#include "log.hpp"
 #include "utils.hpp"
 
 #define MAX_LOG_SIZE (128 * 1024)
@@ -31,7 +32,7 @@ PipedIO::~PipedIO()
 
 void PipedIO::stop()
 {
-    logger->debug("Closing {}", this->filename);
+    glog->debug("Closing {}", this->filename);
     if (this->watcher != nullptr)
     {
         this->watcher->stop();
@@ -54,7 +55,7 @@ void PipedIO::rotate()
     if (this->size >= MAX_LOG_SIZE)
     {
         std::string old = this->filename + ".1";
-        logger->debug("Rotating {}", this->filename);
+        glog->debug("Rotating {}", this->filename);
         // remove the old "old" if it exist
         unlink(old.c_str());
         close(this->out_fd);
@@ -73,10 +74,10 @@ void PipedIO::on_io(int fd)
     while (true)
     {
         n = read(fd, buf, sizeof(buf));
-        logger->debug("Read {} for {}", n, this->filename);
+        glog->debug("Read {} for {}", n, this->filename);
         if (n == 0) /* socket closed */
         {
-            logger->debug("EOF for {}", this->filename);
+            glog->debug("EOF for {}", this->filename);
             this->stop();
             return;
         }
@@ -87,7 +88,7 @@ void PipedIO::on_io(int fd)
             {
                 return;
             }
-            logger->error("Errno: {}", errno);
+            glog->error("Errno: {}", errno);
             this->stop();
             return;
         }

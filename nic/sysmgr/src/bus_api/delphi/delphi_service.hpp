@@ -8,7 +8,10 @@
 #include "gen/proto/client.delphi.hpp"
 #include "gen/proto/sysmgr.delphi.hpp"
 
+#include "../bus_api.hpp"
+
 class DelphiService : public delphi::Service,
+                      public SysmgrBus,
                       public delphi::objects::SysmgrServiceStatusReactor,
                       public delphi::objects::DelphiClientStatusReactor,
                       public delphi::objects::SysmgrShutdownReqReactor,
@@ -16,9 +19,14 @@ class DelphiService : public delphi::Service,
 {
   private:
     delphi::SdkPtr sdk;
-    std::string name;
+    std::string    name;
+    bus_api_t      *bus_api;
   public:
-    static std::shared_ptr<DelphiService> create(delphi::SdkPtr sdk);
+    static std::shared_ptr<DelphiService> create(delphi::SdkPtr sdk,
+                                                 bus_api_t *api);
+    virtual void Connect(void);
+    virtual void SystemFault(std::string reason);
+    virtual void ProcessDied(std::string name, pid_t pid, std::string reason);
     virtual void OnMountComplete();
     virtual std::string Name();
     // SysmgrServiceStatusReactor

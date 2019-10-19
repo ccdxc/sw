@@ -7,9 +7,7 @@
 
 #include <ev++.h>
 
-#include "nic/utils/penlog/lib/penlog.hpp"
-
-extern penlog::LoggerPtr logger;
+#include "log.hpp"
 
 ServiceEventPtr ServiceEvent::create(std::string name,
     enum service_event_kind kind)
@@ -45,10 +43,9 @@ void ServiceLoop::do_work()
 	auto ev = this->event_queue.front();
 	this->event_queue.pop_front();
 	auto &reactors = this->event_reactors[ev->kind][ev->name];
-	logger->debug("Notyfing service reactors of {}", ev->name);
+	glog->debug("Notyfing service reactors of {}", ev->name);
 	for (auto reactor: reactors)
 	{
-	    logger->debug("Notyfing service reactor {}", reactor);
 	    if (ev->kind == SERVICE_EVENT_START)
 	    {
 		reactor->on_service_start(ev->name);

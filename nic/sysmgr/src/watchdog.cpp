@@ -6,11 +6,8 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 
 #include "fault_watcher.hpp"
+#include "log.hpp"
 #include "timer_watcher.hpp"
-
-#include "nic/utils/penlog/lib/penlog.hpp"
-
-extern penlog::LoggerPtr logger;
 
 class PALWatchdog : public AbstractWatchdog {
 public:
@@ -41,7 +38,7 @@ PALWatchdogPtr PALWatchdog::create()
 PALWatchdog::PALWatchdog()
 {
     int rc = pal_watchdog_init(PANIC_WDT);
-    logger->info("pal_watchdog_init() rc = {}", rc);
+    glog->info("pal_watchdog_init() rc = {}", rc);
 }
 
 void PALWatchdog::kick()
@@ -66,7 +63,7 @@ void SimulationWatchdog::on_timer()
 {
     ev::default_loop loop;
 
-    logger->critical("Simulation Watchdog Expired");
+    glog->critical("Simulation Watchdog Expired");
     // Kill all children
     kill(-getpid(), SIGTERM);
     loop.break_loop(ev::ALL);
@@ -82,17 +79,17 @@ WatchdogPtr Watchdog::create()
     FaultLoop::getInstance()->register_fault_reactor(wchdg);
     SwitchrootLoop::getInstance()->register_switchroot_reactor(wchdg);
 
-    logger->info("Creating watchdog");
+    glog->info("Creating watchdog");
 
     // If file "/data/no_watchdog" is present or NO_WATCHDOG is set then use
     // the simulation watchdog
     if ((access("/data/no_watchdog", F_OK) != -1) ||
         (std::getenv("NO_WATCHDOG"))) {
         wchdg->watchdog = SimulationWatchdog::create();
-        logger->info("Using Simulation watchdog");
+        glog->info("Using Simulation watchdog");
     } else {
         wchdg->watchdog = PALWatchdog::create();
-        logger->info("Using PAL watchdog");
+        glog->info("Using PAL watchdog");
     }
     
     wchdg->timer_watcher->repeat();
@@ -109,22 +106,22 @@ void Watchdog::on_timer()
 {
     if (this->kick_it == false)
     {
-        logger->debug("Not kicking watchdog");
+        glog->debug("Not kicking watchdog");
         return;
     }
-    logger->debug("Kicking watchdog");
+    glog->debug("Kicking watchdog");
     this->watchdog->kick();
 }
 
 void Watchdog::on_switchroot()
 {
-    logger->debug("Watchdog on_switchroot()");
+    glog->debug("Watchdog on_switchroot()");
     this->stop();
 }
 
 void Watchdog::stop()
 {
-    logger->debug("Watchdgo stop()");
+    glog->debug("Watchdgo stop()");
     this->timer_watcher->stop();
     pal_watchdog_stop();
 }

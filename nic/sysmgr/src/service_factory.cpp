@@ -10,14 +10,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <ev++.h>
 
-#include "nic/utils/penlog/lib/penlog.hpp"
-
 #include "config_watcher.hpp"
+#include "log.hpp"
 #include "service.hpp"
 #include "service_spec.hpp"
 #include "utils.hpp"
-
-extern penlog::LoggerPtr logger;
 
 namespace pt = boost::property_tree;
 
@@ -105,7 +102,7 @@ ServiceFactoryPtr ServiceFactory::getInstance()
 
 void ServiceFactory::on_config_add(ServiceSpecPtr spec)
 {
-    logger->critical("Config for {} added!", spec->name);
+    glog->critical("Config for {} added!", spec->name);
     this->services[spec->name] = Service::create(spec);
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_STOP,
         spec->name, instance);
@@ -115,11 +112,11 @@ void ServiceFactory::load_config(std::string path)
 {
     pt::ptree root;
 
-    logger->info("Loading config from {}", path);
+    glog->info("Loading config from {}", path);
 
     if (access(path.c_str(), F_OK) == -1 )
     {
-        logger->error("Config file '{}' not found", path);
+        glog->error("Config file '{}' not found", path);
         return;
     }
     
@@ -129,7 +126,7 @@ void ServiceFactory::load_config(std::string path)
     }
     catch (...)
     {
-        logger->error("Failed to parse config file {}", path);
+        glog->error("Failed to parse config file {}", path);
     }
 
     for (auto obj: root)
@@ -142,7 +139,7 @@ void ServiceFactory::on_signal(int sig)
 {
     ev::default_loop loop;
 
-    logger->info("Got signal {}. Exiting", sig);
+    glog->info("Got signal {}. Exiting", sig);
     kill(-mypid, SIGTERM);
     loop.break_loop(ev::ALL);
 }
@@ -156,11 +153,11 @@ void ServiceFactory::respawn_all()
     for (auto s: services)
     {
         if (!s.second->is_running()) {
-            logger->info("Service {} is not running, skiping", s.first);
+            glog->info("Service {} is not running, skiping", s.first);
             continue;
         }
         s.second->stop();
-        logger->info("Adding {} to shutdown_pending", s.first);
+        glog->info("Adding {} to shutdown_pending", s.first);
         this->shutdown_pending.insert(s.first);
     }
     this->respawn_in_progress = true;
@@ -175,10 +172,10 @@ void ServiceFactory::on_service_stop(std::string name)
     if (!this->respawn_in_progress) {
         return;
     }
-    logger->info("Service {} stopped", name);
+    glog->info("Service {} stopped", name);
     this->shutdown_pending.erase(name);
 
-    logger->info("Services in shutdown_pending: {}",
+    glog->info("Services in shutdown_pending: {}",
         this->shutdown_pending.size());
 
     if (this->shutdown_pending.size() == 0) {

@@ -18,15 +18,14 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "nic/utils/penlog/lib/penlog.hpp"
-#include "nic/utils/penlog/lib/null_logger.hpp"
 #include "gen/proto/device.pb.h"
+
+#include "log.hpp"
 
 #define CHUNK_SIZE (64 * 1024)
 
 const pid_t mypid = getpid();
 std::string log_location = "/var/log/sysmgr";
-penlog::LoggerPtr logger = std::make_shared<penlog::NullLogger>();
 
 namespace pt = boost::property_tree;
 
@@ -61,14 +60,14 @@ void exists_or_mkdir(const char *dir)
     struct stat sb;
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            logger->critical("%s is not a directory");
+            glog->critical("%s is not a directory");
             exit(-1);
         }
         return;
     }
     
     mkdir(dir, S_IRWXU);
-    logger->debug("Creating directory {}", dir);
+    glog->debug("Creating directory {}", dir);
 }
 
 void mkdirs(const char *dir)
@@ -81,7 +80,7 @@ void mkdirs(const char *dir)
     // if file exists bail out
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            logger->error("%s is not a directory");
+            glog->error("%s is not a directory");
             exit(-1);
         }
         return;
@@ -125,7 +124,7 @@ void run_debug(pid_t crashed_pid)
     pid = fork();
     if (pid == -1)
     {
-        logger->error("Fork failed: {}", strerror(errno));
+        glog->error("Fork failed: {}", strerror(errno));
     }
     else if (pid == 0)
     {
@@ -172,7 +171,7 @@ void close_on_exec(int fd)
     flags = fcntl(fd, F_GETFD, 0);
     if (flags == -1)
     {
-        logger->error("fcntl F_GETFD: %d", errno);
+        glog->error("fcntl F_GETFD: %d", errno);
         return;
     }
 
@@ -180,7 +179,7 @@ void close_on_exec(int fd)
     rc = fcntl(fd, F_SETFD, flags);
     if (rc == -1)
     {
-        logger->error("fcntl F_SETFD: %d", errno);
+        glog->error("fcntl F_SETFD: %d", errno);
     }
 }
 
@@ -207,7 +206,7 @@ void launch(const std::string &name, const std::string &command,
 
     if (pid == -1)
     {
-        logger->error("Fork failed: {}", strerror(errno));
+        glog->error("Fork failed: {}", strerror(errno));
         exit(1);
     }
     else if (pid == 0)
@@ -227,7 +226,7 @@ void launch(const std::string &name, const std::string &command,
     close(outfds[1]);
     close(errfds[1]);
 
-    logger->info("Fork success. Child pid: {}", pid);
+    glog->info("Fork success. Child pid: {}", pid);
 
     new_process->pid = pid;
     new_process->stdout = outfds[0];
@@ -284,12 +283,12 @@ void copy_std(const std::string &name, pid_t pid, const std::string &suffix)
         std::to_string(pid) + "." + suffix + ".log";
     std::string dest_filename = get_filename(name, suffix, pid);
 
-    logger->debug("Copying {} to {}", src_filename, dest_filename);
+    glog->debug("Copying {} to {}", src_filename, dest_filename);
 
     int in = open(src_filename.c_str(), O_RDONLY);
     if (in < 0)
     {
-        logger->warn("Couldn't open {}", src_filename);
+        glog->warn("Couldn't open {}", src_filename);
         return;
     }
     gzFile out = gzopen(dest_filename.c_str(), "w");
@@ -298,13 +297,13 @@ void copy_std(const std::string &name, pid_t pid, const std::string &suffix)
         ssize_t n = read(in, buffer, CHUNK_SIZE);
         if (n <= 0) 
         {
-            logger->debug("EOF");
+            glog->debug("EOF");
             gzclose(out);
             close(in);
             return;
         }
         gzwrite(out, buffer, n);
-        logger->debug("Wrote {} bytes", n);
+        glog->debug("Wrote {} bytes", n);
     }
 }
 
@@ -327,7 +326,7 @@ void cpulock(unsigned long cpu_affinity)
         if (cpu_affinity & (1 << i))
         {
             CPU_SET(i, &set);
-            logger->debug("Setting affinity to cpu {}", i);
+            glog->debug("Setting affinity to cpu {}", i);
         }
     }
     pid = getpid();
@@ -335,7 +334,7 @@ void cpulock(unsigned long cpu_affinity)
     rc = sched_setaffinity(pid, sizeof(set), &set);
     if (rc == -1)
     {
-        logger->error("Failed(%d) to set the affinity for pid {}", errno, pid);
+        glog->error("Failed(%d) to set the affinity for pid {}", errno, pid);
     }
 }
 

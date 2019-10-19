@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "bus_api/bus_api.hpp"
+#include "events_api/events_api.hpp"
 #include "pipedio.hpp"
 
 #include "nic/utils/penlog/lib/penlog.hpp"
@@ -12,7 +14,6 @@
 
 extern const pid_t       mypid;
 extern std::string       log_location;
-extern penlog::LoggerPtr logger;
 extern delphi::SdkPtr    delphi_sdk;
 
 typedef struct process_ {
@@ -20,6 +21,9 @@ typedef struct process_ {
     int   stdout;
     int   stderr;
 } process_t;
+
+extern SysmgrBusPtr g_bus;
+extern SysmgrEventsPtr g_events;
 
 extern void        exec_command(const std::string &command);
 extern void        exists_or_mkdir(const char *dir);

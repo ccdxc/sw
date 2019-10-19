@@ -2,14 +2,12 @@
 
 #include <memory>
 
-#include "gen/proto/sysmgr.delphi.hpp"
-#include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/utils/penlog/lib/penlog.hpp"
 #include "gen/proto/eventtypes.pb.h"
 
-#include "eventlogger.hpp"
+#include "events_api/events_api.hpp"
 #include "fault_watcher.hpp"
 #include "pipedio.hpp"
+#include "log.hpp"
 #include "service_watcher.hpp"
 #include "timer_watcher.hpp"
 #include "utils.hpp"
@@ -34,7 +32,7 @@ ServiceDepPtr ServiceDep::create(ServiceSpecDepPtr spec)
     dep->file_name = spec->file_name;
     dep->isMet = false;
 
-    logger->info("Created service dependency {}, {}, {}",
+    glog->info("Created service dependency {}, {}, {}",
         dep->kind, dep->service_name, dep->isMet);
 
     return dep;
@@ -51,7 +49,7 @@ void Service::launch()
         get_logname_for_process(this->spec->name, this->pid, "out"));
     this->stderr_pipe = PipedIO::create(new_process.stderr,
         get_logname_for_process(this->spec->name, this->pid, "err"));
-    logger->info("Launched {}({}) using {} with affinity {}", this->spec->name, this->pid,
+    glog->info("Launched {}({}) using {} with affinity {}", this->spec->name, this->pid,
         this->spec->command, this->spec->cpu_affinity);
     
 
@@ -67,18 +65,18 @@ void Service::launch()
 
 void Service::check_dep_and_launch()
 {
-    logger->info("Checking dependencies for {}",
+    glog->info("Checking dependencies for {}",
         this->spec->name);
     for (auto dep: this->dependencies)
     {
-        logger->info("Dependency {} is{} met",
+        glog->info("Dependency {} is{} met",
             dep->service_name, dep->isMet?"":" not");
         if (!dep->isMet)
         {
             return;
         }
     }
-    logger->info("All dependencies are go for {}",
+    glog->info("All dependencies are go for {}",
         this->spec->name);
     launch();
 }
@@ -101,7 +99,7 @@ ServicePtr Service::create(ServiceSpecPtr spec)
 {
     ServicePtr svc = std::make_shared<Service>();
 
-    logger->info("Created service {}", spec->name);
+    glog->info("Created service {}", spec->name);
 
     for (auto spec_dep: spec->dependencies)
     {
@@ -125,11 +123,6 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_HEARTBEAT,
         spec->name, svc);
 
-#if 0
-    EventLogger::getInstance()->LogServiceEvent(
-        eventtypes::SERVICE_PENDING, "Service %s pending", spec->name);
-#endif
-    
     return svc;
 }
 
@@ -137,9 +130,8 @@ void Service::on_service_start(std::string name)
 {
     if (name == this->spec->name)
     {
-        logger->info("Service {} started", name);
-        EventLogger::getInstance()->LogServiceEvent(
-            eventtypes::SERVICE_STARTED, "Service %s started", spec->name);
+        glog->info("Service {} started", name);
+        g_events->ServiceStartedEvent(spec->name);
         return;
     }
 
@@ -160,7 +152,7 @@ void Service::on_service_stop(std::string name)
 
 void Service::on_service_heartbeat(std::string name)
 {
-    logger->debug("{} got hearbeat!", this->spec->name);
+    glog->debug("{} got hearbeat!", this->spec->name);
     if (this->timer_watcher)
     {
         this->timer_watcher->repeat();
@@ -172,19 +164,16 @@ void Service::fault(std::string reason)
     reason = reason + " - " + this->spec->name;
 
     if (this->config_state == SERVICE_CONFIG_STATE_OFF) {
-        logger->info("Service {} shutdown on purpose, not setting fault",
+        glog->info("Service {} shutdown on purpose, not setting fault",
             this->spec->name);
         return;
     }
-    logger->info("System in fault mode ({})", reason);
+    glog->info("System in fault mode ({})", reason);
     if (this->spec->flags & PANIC_ON_FAILURE) {
-        logger->info("{} is critical. Triggering watchdog", this->spec->name);
+        glog->info("{} is critical. Triggering watchdog", this->spec->name);
         FaultLoop::getInstance()->set_fault(reason);
     }
-    auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
-    obj->set_state(::sysmgr::Fault);
-    obj->set_reason(reason);
-    delphi_sdk->QueueUpdate(obj);
+    g_bus->SystemFault(reason);
 }
 
 void Service::on_child(pid_t pid)
@@ -193,9 +182,8 @@ void Service::on_child(pid_t pid)
 
     std::string reason = parse_status(this->child_watcher->get_status());
 
-    logger->info("Service {} {}", this->spec->name, reason);
-    EventLogger::getInstance()->LogServiceEvent(eventtypes::NAPLES_SERVICE_STOPPED,
-        "Service %s stopped", this->spec->name);
+    glog->info("Service {} {}", this->spec->name, reason);
+    g_events->ServiceStoppedEvent(this->spec->name);
 
     run_debug(this->pid);
 
@@ -217,14 +205,7 @@ void Service::on_child(pid_t pid)
         return;
     }
 
-    auto obj = std::make_shared<delphi::objects::SysmgrProcessStatus>();
-
-    obj->set_key(this->spec->name);
-    obj->set_pid(pid);
-    obj->set_state(::sysmgr::Died);
-    obj->set_exitreason(reason);
-
-    delphi_sdk->QueueUpdate(obj);
+    g_bus->ProcessDied(this->spec->name, pid, reason);
 
     ServiceLoop::getInstance()->queue_event(
         ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
@@ -234,7 +215,7 @@ void Service::on_child(pid_t pid)
 
 void Service::on_timer()
 {
-    logger->info("Service {} timed out", this->spec->name);
+    glog->info("Service {} timed out", this->spec->name);
     this->timer_watcher->stop();
 
     this->fault("Process timed-out");
@@ -258,7 +239,7 @@ void Service::stop()
     }
     this->restart_count = 0;
     this->reset_dependencies();
-    logger->info("Killing {}({})", this->spec->name, this->pid);
+    glog->info("Killing {}({})", this->spec->name, this->pid);
     kill(this->pid, SIGKILL);
 }
 
