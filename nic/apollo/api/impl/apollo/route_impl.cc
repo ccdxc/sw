@@ -140,7 +140,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             break;
         case PDS_NH_TYPE_TEP:
             // non vpc peering case
-            tep_key = &spec->routes[i].nh_tep;
+            tep_key = &spec->routes[i].tep;
             tep = tep_db()->find(tep_key);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %u not found while processing route %s in "

@@ -125,7 +125,7 @@ populate_route_table_request (RouteTableRequest *req,
         if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             route->set_vpcid(rt->routes[i].vpc.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
-            route->set_tunnelid(rt->routes[i].nh_tep.id);
+            route->set_tunnelid(rt->routes[i].tep.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_IP) {
             route->set_nexthopid(rt->routes[i].nh.id);
         }

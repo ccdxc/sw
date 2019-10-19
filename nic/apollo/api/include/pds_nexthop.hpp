@@ -18,18 +18,19 @@
 /// \defgroup PDS_NEXTHOP nexthop & nexthop group APIs
 /// @{
 
-#define PDS_MAX_NEXTHOP                4095    ///< Maximum nexthops
-#define PDS_MAX_NEXTHOP_GROUP          1024    ///< Maximum nexthop groups
+#define PDS_MAX_NEXTHOP                4095    ///< maximum nexthops
+#define PDS_MAX_NEXTHOP_GROUP          1024    ///< maximum nexthop groups
 
 /// \brief nexthop type
 typedef enum pds_nh_type_e {
-    PDS_NH_TYPE_NONE            = 0,
-    PDS_NH_TYPE_BLACKHOLE       = 1,    ///< blackhole/drop nexthop
-    PDS_NH_TYPE_TEP             = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_IP              = 3,    ///< native IP route
-    PDS_NH_TYPE_PEER_VPC        = 4,    ///< VPC id of the peer VPC
-    PDS_NH_TYPE_GENERIC_OVERLAY = 5,    ///< generic overlay nexthop that is
-                                        ///< flattened (aka. fully resolved)
+    PDS_NH_TYPE_NONE      = 0,
+    PDS_NH_TYPE_BLACKHOLE = 1,    ///< blackhole/drop nexthop
+    // TODO: rename PDS_NH_TYPE_TEP to PDS_NH_TYPE_OVERLAY ?
+    PDS_NH_TYPE_TEP       = 2,    ///< any of the possible types of TEP
+    PDS_NH_TYPE_IP        = 3,    ///< native IP route
+    PDS_NH_TYPE_PEER_VPC  = 4,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_UNDERLAY  = 5,    ///< underlay nexthop
+    PDS_NH_TYPE_VNIC      = 6,    ///< vnic nexthop
 } pds_nh_type_t;
 
 /// \brief nexthop specification
@@ -45,14 +46,16 @@ typedef struct pds_nexthop_spec_s {
             mac_addr_t    mac;     ///< (optional) MAC address if known at
                                    ///< config time
         };
-        // info specific to PDS_NH_TYPE_GENERIC_OVERLAY
+        // info specific to PDS_NH_TYPE_TEP
         struct {
-            mac_addr_t       overlay_mac;     ///< overlay/inner DMAC (DMACi)
-            pds_if_key_t     l3_if;           ///< L3 interface key (SMACo
-                                              ///< comes from this)
-            mac_addr_t       underlay_mac;    ///< underlay/outer DMAC (DMACo)
-            pds_encap_t      encap;           ///< egress encap (vnid)
-            pds_tep_key_t    tep;             ///< dst TEP IP (DMACo)
+            pds_tep_key_t tep;
+        };
+        // info specific to PDS_NH_TYPE_UNDERLAY
+        struct {
+            pds_if_key_t  l3_if;           ///< L3 interface key (SMACo,
+                                           ///< vlan tag and outgoing port
+                                           ///< come from this)
+            mac_addr_t    underlay_mac;    ///< underlay/outer DMAC (DMACo)
         };
     };
 } __PACK__ pds_nexthop_spec_t;
@@ -64,7 +67,6 @@ typedef struct pds_nexthop_status_s {
 
 /// \brief nexthop statistics
 typedef struct pds_nexthop_stats_s {
-    // TODO
 } __PACK__ pds_nexthop_stats_t;
 
 /// \brief nexthop information
@@ -105,41 +107,41 @@ sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key,
 /// \brief nexthop group type
 typedef enum pds_nexthop_group_type_e {
     PDS_NHGROUP_TYPE_NONE          = 0,
-    PDS_NHGROUP_TYPE_OVERLAY_ECMP  = 1,    ///< overlay ECMP nexthop group
-    PDS_NHGROUP_TYPE_UNDERLAY_ECMP = 2,    ///< underlay ECMP nexthop group
+    ///< overlay ECMP nexthop group pointing to TEPs
+    PDS_NHGROUP_TYPE_OVERLAY_ECMP  = 1,
+    ///< underlay ECMP nexthop group
+    PDS_NHGROUP_TYPE_UNDERLAY_ECMP = 2,
 } pds_nexthop_group_type_t;
 
-/// \brief type of the entries in a nexthop group
-typedef enum pds_nexthop_group_entry_type_e {
-    PDS_NHGROUP_ENTRY_TYPE_NONE    = 0,
-    PDS_NHGROUP_ENTRY_TYPE_NEXTHOP = 1,    ///< nexthop type entries
-    PDS_NHGROUP_ENTRY_TYPE_NHGROUP = 2,    ///< nexthop group type entries
-} pds_nexthop_group_entry_type_t;
+#define PDS_MAX_OVERLAY_ECMP_TEP       4       ///< maximum number of TEPs in
+                                               ///< overlay nexthop group
+#define PDS_MAX_ECMP_NEXTHOP           8       ///< maximum nexthops per
+                                               ///< nexthop group
+///< maximum number of nexthops in ECMP group
+///< NOTE: this must be maximum of all individual ECMP type max. members
+#define PDS_MAX_ECMP_NEXTHOP           8
 
 /// \brief nexthop group specification
 typedef struct pds_nexthop_group_spec_s {
     pds_nexthop_group_key_t key;      ///< key
     pds_nexthop_group_type_t type;    ///< nexthop group type
-    ///< type of the entries in this group
-    pds_nexthop_group_entry_type_t entry_type;
-    ///< number of nexthops or nexthop groups in this nexthop group
-    uint16_t num_entries;
-    union {
-        ///< nexthop list in this group
-        pds_nexthop_key_t nexthops[0];
-        ///< nexthop group list in this group
-        pds_nexthop_group_key_t nexthop_groups[0];
-    };
+    uint8_t num_nexthops;             ///< number of members in this group
+    pds_nexthop_spec_t nexthops[PDS_MAX_ECMP_NEXTHOP];
 } __PACK__ pds_nexthop_group_spec_t;
 
 /// \brief nexthop group status
 typedef struct pds_nexthop_group_status_s {
-    uint16_t hw_id;    ///< hardware id
+    uint16_t hw_id;    ///< hardware id of this group
+    union {
+        ///< operational state specific to PDS_NHGROUP_TYPE_UNDERLAY_ECMP
+        struct {
+            uint16_t nh_base_idx;
+        };
+    };
 } __PACK__ pds_nexthop_group_status_t;
 
 /// \brief nexthop group statistics
 typedef struct pds_nexthop_group_stats_s {
-    // TODO
 } __PACK__ pds_nexthop_group_stats_t;
 
 /// \brief nexthop group information

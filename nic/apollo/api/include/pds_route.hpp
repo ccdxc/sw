@@ -31,11 +31,13 @@ typedef struct pds_route_s {
     pds_nh_type_t            nh_type;    ///< nexthop type
     union {
         // PDS_NH_TYPE_TEP specific data
-        pds_tep_key_t        nh_tep;      ///< nexthop TEP
+        pds_tep_key_t        tep;         ///< nexthop TEP
         // PDS_NH_TYPE_PEER_VPC specific data
         pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering
-        // PDS_NH_TYPE_IP specific data
+        // one of the possible nexthop types
         pds_nexthop_key_t    nh;         ///< nexthop key
+        // PDS_NH_TYPE_VNIC specific data
+        pds_vnic_key_t       vnic;       ///< vnic nexthop
     };
 } __PACK__ pds_route_t;
 

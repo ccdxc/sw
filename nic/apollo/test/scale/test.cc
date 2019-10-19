@@ -66,7 +66,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 // In apollo, use TEPs as nexthop
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 120);
-                v6route_table.routes[j].nh_tep.id = tep_id++;
+                v6route_table.routes[j].tep.id = tep_id++;
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
@@ -124,7 +124,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
                 route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                route_table.routes[j].nh_tep.id = tep_id++;
+                route_table.routes[j].tep.id = tep_id++;
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
@@ -136,10 +136,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                    route_table.routes[j].nh_tep.id = svc_tep_id++;
+                    route_table.routes[j].tep.id = svc_tep_id++;
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
-                   route_table.routes[j].nh_tep.id = num_svc_teps + ++svc_tep_id;
+                   route_table.routes[j].tep.id = num_svc_teps + ++svc_tep_id;
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
                     route_table.routes[j].nh.id = nh_id++;

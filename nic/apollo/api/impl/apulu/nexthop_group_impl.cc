@@ -60,6 +60,7 @@ nexthop_group_impl::reserve_resources(api_base *orig_obj,
             goto error;
         }
         hw_id_ = idx;
+#if 0
         // reserve entries in the subsequent table, if needed
         if (spec->num_entries) {
             if (spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
@@ -107,6 +108,7 @@ nexthop_group_impl::reserve_resources(api_base *orig_obj,
             }
             nh_base_hw_id_ = idx;
         }
+#endif
     }
     return SDK_RET_OK;
 
@@ -118,12 +120,13 @@ sdk_ret_t
 nexthop_group_impl::release_resources(api_base *api_obj) {
     nexthop_group *nhgroup = (nexthop_group *)api_obj;
 
+#if 0
     if (hw_id_ != 0xFFFF) {
         if (nhgroup->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
             nexthop_group_impl_db()->overlay_nhgroup_idxr()->free(hw_id_);
             if (underlay_nhgroup_base_hw_id_ != 0xFFFF) {
                 nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(underlay_nhgroup_base_hw_id_,
-                                                                       nhgroup->num_entries());
+                                                                       nhgroup->num_nexthops());
             }
         } else {
             nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(hw_id_);
@@ -133,6 +136,7 @@ nexthop_group_impl::release_resources(api_base *api_obj) {
                                                nhgroup->num_entries());
         }
     }
+#endif
     return SDK_RET_OK;
 }
 

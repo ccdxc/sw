@@ -92,6 +92,24 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
+                                        api_op_t api_op) override;
+
+    ///\brief read config from hardware
+    ///\param[in] key    pointer to the key object
+    ///\param[out] info  pointer to the info object
+    ///\return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_nexthop_group_key_t *key,
+                   pds_nexthop_group_info_t *info);
+
     /// \brief  add given nexthop group to the database
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
@@ -130,21 +148,17 @@ public:
         return sizeof(pds_nexthop_group_key_t);
     }
 
-    /// \brief     return impl instance of this nexthop group object
-    /// \return    impl instance of the nexthop group object
-    impl_base *impl(void) { return impl_; }
+    /// \brief     return the key of the nexthop group
+    /// \return    nexthop group key
+    pds_nexthop_group_key_t key(void) const { return key_; }
 
     /// \brief     return the type of the nexthop group
     /// \return    nexthop group type
     pds_nexthop_group_type_t type(void) const { return type_; }
 
-    /// \brief     return the type of the nexthop group members
-    /// \return    nexthop group member type
-    pds_nexthop_group_entry_type_t entry_type(void) const {
-        return entry_type_;
-    }
-
-    uint32_t num_entries(void) const { return num_entries_; }
+    /// \brief     return impl instance of this nexthop group object
+    /// \return    impl instance of the nexthop group object
+    impl_base *impl(void) { return impl_; }
 
 private:
     /// \brief constructor
@@ -159,14 +173,11 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_nexthop_group_key_t key_;                  ///< nexthop group key
-    pds_nexthop_group_type_t type_;                ///< nexthop group type
-    pds_nexthop_group_entry_type_t entry_type_;    ///< type of entries in this group
-    uint16_t num_entries_;                         ///< no. of entries in this group
-    ht_ctxt_t ht_ctxt_;                            ///< hash table context
-    impl_base *impl_;                              ///< impl object instance
-
-    friend class nexthop_group_state;              ///< a friend of nexthop_group
+    pds_nexthop_group_key_t key_;        ///< nexthop group key
+    pds_nexthop_group_type_t type_;      ///< nexthop group type
+    ht_ctxt_t ht_ctxt_;                  ///< hash table context
+    impl_base *impl_;                    ///< impl object instance
+    friend class nexthop_group_state;    ///< a friend of nexthop_group
 } __PACK__;
 
 /// \@}

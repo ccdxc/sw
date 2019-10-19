@@ -24,7 +24,7 @@ service NhSvc {
 }
 
 // IP nexthop information
-message IPNhInfo {
+message IPNhSpec {
   // egress VRF id
   uint32           VPCId = 1;
   // nexthop's IP address
@@ -35,31 +35,28 @@ message IPNhInfo {
   uint64           Mac   = 4;
 }
 
-// Overlay nexthop information
-message OverlayNhInfo {
-  // OverlayNexthopMAC is the inner DMAC in case of VxLAN fabric
-  uint64      OverlayMAC    = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // L3 interface of this nexthop (outer SMAC is picked from this interface
-  // in case of VxLAN fabric)
-  uint32      L3InterfaceId = 2 [(gogoproto.moretags) = "meta:mandatory"];
+// Underlay nexthop information
+message UnderlayNhSpec {
+  // L3 interface of this nexthop (outer SMAC, vlan tag and outgoing port
+  // are picked from this L3 interface)
+  uint32 L3InterfaceId = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // UnderlayNexthopMAC is the outer DMAC in case of VxLAN fabric
-  uint64      UnderlayMAC   = 3 [(gogoproto.moretags) = "meta:mandatory"];
-  // Egress rewrite (NOTE: only VxLAN vnid is supported)
-  types.Encap Encap         = 4 [(gogoproto.moretags) = "meta:mandatory"];
-  // TunnelId points to the remote VTEP (DMAC outer is picked from this)
-  uint32      TunnelId      = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64 UnderlayMAC   = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // nexthop specification
 message NexthopSpec {
   // unique nexthop id
-  uint32          Id            = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // nexthop can be one of different types
   oneof NhInfo {
+    // TODO: check why IPNhSpec is needed separately ??
     // IP nexthop is used when VTEP IP is to be resolved by PDS
-    IPNhInfo      IPNhInfo      = 2;
-    // L3 nexthop is used when application (e.g., fib) fully resolved nexthop
-    OverlayNhInfo OverlayNhInfo = 3;
+    IPNhSpec       IPNhInfo       = 2;
+    // Tunnel/TEP member is used for overlay routing
+    uint32         TunnelId       = 3;
+    // Underlay nexthop info is used for a resolved underlay IP
+    UnderlayNhSpec UnderlayNhInfo = 4;
   }
 }
 
@@ -133,23 +130,14 @@ enum NhGroupType {
   NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP = 2;
 }
 
-message Nh {
-  oneof nh {
-      // zero or more member nexthop identifiers
-      uint32 Nexthop = 1;
-      // zero or more member nexthop group identifiers
-      uint32 NhGroup = 2 [(gogoproto.moretags) = "meta:constraints={NhGroupSpec.Type==NEXTHOP_GROUP_TYPE_OVERLAY_ECMP}"];
-  }
-}
-
 // nexthop group specification - a nextgroup consists of bunch of nexthops
 message NhGroupSpec {
   // unique nexthop group id
-  uint32      Id     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32            Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the nexthop
-  NhGroupType Type   = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  NhGroupType       Type       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // zero or more member nexthops or nexthop groups
-  repeated Nh NhInfo = 3;
+  repeated NexthopSpec Members = 3;
 }
 
 // operational status of nexthop group, if any

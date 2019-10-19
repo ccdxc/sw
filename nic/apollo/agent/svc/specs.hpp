@@ -1232,7 +1232,8 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
                           const pds::NexthopSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
-    if (proto_spec.has_ipnhinfo()) {
+    switch (proto_spec.NhInfo_case()) {
+    case pds::NexthopSpec::kIPNhInfo:
         api_spec->type = PDS_NH_TYPE_IP;
         api_spec->vpc.id = proto_spec.ipnhinfo().vpcid();
         ipaddr_proto_spec_to_api_spec(&api_spec->ip,
@@ -1241,19 +1242,23 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
         if (proto_spec.ipnhinfo().mac() != 0) {
             MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.ipnhinfo().mac());
         }
-    } else if (proto_spec.has_overlaynhinfo()) {
-        api_spec->type = PDS_NH_TYPE_GENERIC_OVERLAY;
-        api_spec->l3_if.id = proto_spec.overlaynhinfo().l3interfaceid();
-        MAC_UINT64_TO_ADDR(api_spec->overlay_mac,
-                           proto_spec.overlaynhinfo().overlaymac());
-        MAC_UINT64_TO_ADDR(api_spec->underlay_mac,
-                           proto_spec.overlaynhinfo().underlaymac());
-        api_spec->encap =
-            proto_encap_to_pds_encap(proto_spec.overlaynhinfo().encap());
-        //api_spec->tep.id = proto_spec->tunnelid();
+        break;
 
-    } else {
-        api_spec->type = PDS_NH_TYPE_NONE;
+    case pds::NexthopSpec::kTunnelId:
+        api_spec->type = PDS_NH_TYPE_TEP;
+        api_spec->tep.id = proto_spec.tunnelid();
+        break;
+
+    case pds::NexthopSpec::kUnderlayNhInfo:
+        api_spec->type = PDS_NH_TYPE_UNDERLAY;
+        api_spec->l3_if.id = proto_spec.underlaynhinfo().l3interfaceid();
+        MAC_UINT64_TO_ADDR(api_spec->underlay_mac,
+                           proto_spec.underlaynhinfo().underlaymac());
+        break;
+
+    default:
+         api_spec->type = PDS_NH_TYPE_NONE;
+         break;
     }
 }
 
@@ -1269,14 +1274,12 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         ipaddr_api_spec_to_proto_spec(ipnhinfo->mutable_ip(), &api_spec->ip);
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
-    } else if (api_spec->type == PDS_NH_TYPE_GENERIC_OVERLAY) {
-        auto overlaynhinfo = proto_spec->mutable_overlaynhinfo();
-        overlaynhinfo->set_overlaymac(MAC_TO_UINT64(api_spec->overlay_mac));
-        overlaynhinfo->set_l3interfaceid(api_spec->l3_if.id);
-        overlaynhinfo->set_underlaymac(MAC_TO_UINT64(api_spec->underlay_mac));
-        pds_encap_to_proto_encap(overlaynhinfo->mutable_encap(),
-                                 &api_spec->encap);
-        //overlaynhinfo->set_tunnelid(api_spec->tep.id);
+    } else if (api_spec->type == PDS_NH_TYPE_TEP) {
+        proto_spec->set_tunnelid(api_spec->tep.id);
+    } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
+        auto underlayinfo = proto_spec->mutable_underlaynhinfo();
+        underlayinfo->set_l3interfaceid(api_spec->l3_if.id);
+        underlayinfo->set_underlaymac(MAC_TO_UINT64(api_spec->underlay_mac));
     }
 }
 
@@ -1314,34 +1317,29 @@ static inline sdk_ret_t
 pds_nh_group_proto_to_api_spec (pds_nexthop_group_spec_t *api_spec,
                                 const pds::NhGroupSpec &proto_spec)
 {
-    pds::NhGroupType type;
-
     api_spec->key.id = proto_spec.id();
-    if (type == pds::NEXTHOP_GROUP_TYPE_NONE) {
-        return SDK_RET_INVALID_ARG;
-    } else if (type == pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP) {
-        api_spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
-    } else if (type == pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP) {
-        api_spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
-    }
-    api_spec->num_entries = proto_spec.nhinfo_size();
-    if (api_spec->num_entries) {
-        if (proto_spec.nhinfo(0).nh_case() == pds::Nh::kNexthop) {
-            api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NEXTHOP;
-        } else if (proto_spec.nhinfo(0).nh_case() == pds::Nh::kNhGroup) {
-            api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NHGROUP;
-        } else {
+    api_spec->num_nexthops = proto_spec.members_size();
+    switch (proto_spec.type()) {
+    case pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+        if (api_spec->num_nexthops > PDS_MAX_OVERLAY_ECMP_TEP) {
             return SDK_RET_INVALID_ARG;
         }
-    } else {
-        api_spec->entry_type = PDS_NHGROUP_ENTRY_TYPE_NONE;
-    }
-    for (uint32_t i = 0; i < api_spec->num_entries; i++) {
-        if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
-            api_spec->nexthops[i].id = proto_spec.nhinfo(i).nexthop();
-        } else if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
-            api_spec->nexthop_groups[i].id = proto_spec.nhinfo(i).nhgroup();
+        api_spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+        break;
+
+    case pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
+        if (api_spec->num_nexthops > PDS_MAX_ECMP_NEXTHOP) {
+            return SDK_RET_INVALID_ARG;
         }
+        api_spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+    for (uint32_t i = 0; i < api_spec->num_nexthops; i++) {
+        pds_nh_proto_to_api_spec(&api_spec->nexthops[i],
+                                 proto_spec.members(i));
     }
     return SDK_RET_OK;
 }
@@ -1352,21 +1350,22 @@ pds_nh_group_api_spec_to_proto (pds::NhGroupSpec *proto_spec,
                                 const pds_nexthop_group_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
-    if (api_spec->type == PDS_NHGROUP_TYPE_NONE) {
-        return SDK_RET_INVALID_ARG;
-    } else if (api_spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
+    switch (api_spec->type) {
+    case PDS_NHGROUP_TYPE_OVERLAY_ECMP:
         proto_spec->set_type(pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP);
-    } else if (api_spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        break;
+
+    case PDS_NHGROUP_TYPE_UNDERLAY_ECMP:
         proto_spec->set_type(pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP);
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
     }
-    for (uint32_t i = 0; i < api_spec->num_entries; i++) {
-        if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
-            auto nhinfo = proto_spec->add_nhinfo();
-            nhinfo->set_nexthop(api_spec->nexthops[i].id);
-        } else if (api_spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
-            auto nhinfo = proto_spec->add_nhinfo();
-            nhinfo->set_nhgroup(api_spec->nexthop_groups[i].id);
-        }
+
+    for (uint32_t i = 0; i < api_spec->num_nexthops; i++) {
+        pds_nh_api_spec_to_proto(proto_spec->add_members(),
+                                 &api_spec->nexthops[i]);
     }
 }
 
@@ -1436,7 +1435,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         switch (proto_route.Nh_case()) {
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
-            api_spec->routes[i].nh_tep.id = proto_route.tunnelid();
+            api_spec->routes[i].tep.id = proto_route.tunnelid();
             api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
             break;
         case pds::Route::kNexthopId:

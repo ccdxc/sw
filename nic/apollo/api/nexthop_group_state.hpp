@@ -42,7 +42,8 @@ public:
 
     /// \brief     remove the given instance of nexthop group object from db
     /// \param[in] nh_group    nexthop group entry to be deleted from the db
-    /// \return    pointer to the removed nexthop group instance or NULL, if not found
+    /// \return    pointer to the removed nexthop group instance or NULL,
+    ///            if not found
     nexthop_group *remove(nexthop_group *nh_group);
 
     /// \brief     free nexthop group instance back to slab
@@ -63,8 +64,8 @@ private:
     friend class nexthop_group;
 
 private:
-    ht      *nexthop_group_ht_;      ///< nexthop group hash table
-    slab    *nexthop_group_slab_;    ///< slab for allocating nexthop group entry
+    ht *nexthop_group_ht_;      ///< nexthop group hash table
+    slab *nexthop_group_slab_;  ///< slab for allocating nexthop group entry
 };
 
 /// \@}

@@ -125,13 +125,14 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data = { 0 };
 
+#if 0
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     switch (spec->type) {
     case PDS_NH_TYPE_BLACKHOLE:
         // nothing to program for system-wide blackhole nexthop
         break;
 
-    case PDS_NH_TYPE_GENERIC_OVERLAY:
+    case PDS_NH_TYPE_UNDERLAY:
         intf = if_db()->find(&spec->l3_if);
         if (intf->type() != PDS_IF_TYPE_L3) {
             PDS_TRACE_ERR("Invalid nexthop %u spec, nh pointing to non L3 "
@@ -162,8 +163,6 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                          spec->underlay_mac, ETH_ADDR_LEN);
         sdk::lib::memrev(nh_data.nexthop_info.
                          smaco, intf->l3_mac(), ETH_ADDR_LEN);
-        sdk::lib::memrev(nh_data.nexthop_info.dmaci,
-                         spec->overlay_mac, ETH_ADDR_LEN);
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
                                            NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -179,6 +178,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         return SDK_RET_INVALID_ARG;
         break;
     }
+#endif
     return SDK_RET_OK;
 }
 

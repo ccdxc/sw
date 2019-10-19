@@ -98,7 +98,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
             spec->routes[i].nh = this->routes[i].nh;
             break;
         case PDS_NH_TYPE_TEP:
-            spec->routes[i].nh_tep.id = this->routes[i].nh_id;
+            spec->routes[i].tep.id = this->routes[i].nh_id;
             break;
         case PDS_NH_TYPE_PEER_VPC:
             spec->routes[i].vpc.id = this->routes[i].peer_vpc_id;
