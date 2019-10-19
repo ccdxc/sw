@@ -365,6 +365,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create v4 local mapping failed, ret %u", rv);
 
+    if (apulu()) {
+        return rv;
+    }
+
     // create remote mappings
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vpcs; i++) {
@@ -1481,27 +1485,27 @@ create_objects (void)
         }
     }
 
-        // create vnics
-        ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
-                           g_test_params.num_vnics, g_test_params.vlan_start,
-                           g_test_params.num_meter);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create vnics
+    ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
+                       g_test_params.num_vnics, g_test_params.vlan_start,
+                       g_test_params.num_meter);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // create mappings
+    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
+                          g_test_params.num_subnets, g_test_params.num_vnics,
+                          g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
+                          &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
+                          g_test_params.num_remote_mappings,
+                          &g_test_params.provider_pfx,
+                          &g_test_params.v6_provider_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     if (!apulu()) {
-        // create mappings
-        ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
-                              g_test_params.num_subnets, g_test_params.num_vnics,
-                              g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
-                              &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
-                              g_test_params.num_remote_mappings,
-                              &g_test_params.provider_pfx,
-                              &g_test_params.v6_provider_pfx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-
         // create service mappings
         if (artemis()) {
             ret = create_svc_mappings(g_test_params.num_vpcs,

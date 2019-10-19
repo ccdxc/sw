@@ -36,13 +36,13 @@ typedef struct pds_local_mapping_spec_s {
 
 /// \brief    remote mapping specification
 typedef struct pds_remote_mapping_spec_s {
-    pds_mapping_key_t key;       ///< Mapping key
-    pds_subnet_key_t subnet;     ///< Subnet this IP is part of
+    pds_mapping_key_t key;       ///< mapping key
+    pds_subnet_key_t subnet;     ///< subnet this IP is part of
     pds_encap_t fabric_encap;    ///< fabric encap for this mapping
-    pds_tep_key_t tep;           ///< Remote TEP address for this mapping
-    mac_addr_t vnic_mac;         ///< VNIC MAC
-    bool provider_ip_valid;      ///< TRUE if provider IP is valid
-    ip_addr_t provider_ip;       ///< Provider IP address
+    pds_tep_key_t tep;           ///< remote TEP address for this mapping
+    mac_addr_t vnic_mac;         ///< vnci MAC
+    bool provider_ip_valid;      ///< true if provider IP is valid
+    ip_addr_t provider_ip;       ///< provider IP address
 } __PACK__ pds_remote_mapping_spec_t;
 
 /// \brief    mapping status
@@ -55,16 +55,16 @@ typedef struct pds_mapping_stats_s {
 
 /// \brief    local mapping information
 typedef struct pds_local_mapping_info_t {
-    pds_local_mapping_spec_t spec;    ///< Specification
-    pds_mapping_status_t status;      ///< Status
-    pds_mapping_stats_t stats;        ///< Statistics
+    pds_local_mapping_spec_t spec;    ///< specification
+    pds_mapping_status_t status;      ///< status
+    pds_mapping_stats_t stats;        ///< statistics
 } __PACK__ pds_local_mapping_info_t;
 
 /// \brief    remote mapping information
 typedef struct pds_remote_mapping_info_t {
-    pds_remote_mapping_spec_t spec;    ///< Specification
-    pds_mapping_status_t status;       ///< Status
-    pds_mapping_stats_t stats;         ///< Statistics
+    pds_remote_mapping_spec_t spec;    ///< specification
+    pds_mapping_status_t status;       ///< status
+    pds_mapping_stats_t stats;         ///< statistics
 } __PACK__ pds_remote_mapping_info_t;
 
 /// \brief    create local mapping

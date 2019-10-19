@@ -123,8 +123,7 @@ mapping_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 mapping_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    // there is no stage 0 h/w programming for mapping , so nothing to activate
-    return SDK_RET_OK;
+    return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
