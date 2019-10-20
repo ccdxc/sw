@@ -270,6 +270,7 @@ class TestSuite:
             return types.status.SUCCESS
 
         atexit.register(logcollector.CollectLogs)
+        atexit.register(logcollector.CollectTechSupport,(self.Name()))
 
         # Start the testsuite timer
         self.__timer.Start()
