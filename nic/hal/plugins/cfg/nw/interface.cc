@@ -3386,8 +3386,14 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
+#if 0
     hal_if->uplink_port_num = g_hal_state->catalog()->
         logical_port_to_tm_port(spec.if_uplink_info().port_num());
+#endif
+
+    ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(),
+                                             &hal_if->uplink_port_num);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
 
     hal_if->fp_port_num = spec.if_uplink_info().port_num();
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
