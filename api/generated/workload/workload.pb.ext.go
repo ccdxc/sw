@@ -380,7 +380,7 @@ func init() {
 	validatorMapWorkload["WorkloadIntfSpec"]["all"] = append(validatorMapWorkload["WorkloadIntfSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*WorkloadIntfSpec)
 		args := make([]string, 0)
-		args = append(args, "1")
+		args = append(args, "0")
 		args = append(args, "4095")
 
 		if err := validators.IntRange(m.ExternalVlan, args); err != nil {

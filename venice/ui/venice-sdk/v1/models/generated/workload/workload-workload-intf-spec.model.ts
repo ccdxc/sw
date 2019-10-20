@@ -21,7 +21,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     'mac-address': string = null;
     /** value should be between 1 and 4095 */
     'micro-seg-vlan': number = null;
-    /** value should be between 1 and 4095 */
+    /** value should be between 0 and 4095 */
     'external-vlan': number = null;
     'ip-addresses': Array<string> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadIntfSpec]: PropInfoItem } = {
@@ -37,7 +37,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             type: 'number'
         },
         'external-vlan': {
-            description:  'value should be between 1 and 4095',
+            description:  'value should be between 0 and 4095',
             required: true,
             type: 'number'
         },
@@ -116,7 +116,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             this._formGroup = new FormGroup({
                 'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfSpec.propInfo['mac-address']),
                 'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan']),
-                'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan']),
+                'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan']),
                 'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses']),
             });
         }

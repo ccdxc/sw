@@ -3168,9 +3168,8 @@
         "external-vlan": {
           "type": "integer",
           "format": "int64",
-          "minimum": 1,
           "maximum": 4095,
-          "description": "value should be between 1 and 4095",
+          "description": "value should be between 0 and 4095",
           "title": "External vlan assigned for this interface\ncli-help: External vlan associated with the workload"
         },
         "ip-addresses": {

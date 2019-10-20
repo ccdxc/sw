@@ -258,7 +258,7 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 
 func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint32) (err error) {
 	for _, net := range na.ListNetwork() {
-		if vrfName == net.Spec.VrfName && vlanID == net.Spec.VlanID && vlanID != 0 {
+		if vrfName == net.Spec.VrfName && vlanID == net.Spec.VlanID {
 			err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)
 			return
 		}
