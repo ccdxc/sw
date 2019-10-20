@@ -265,7 +265,7 @@ mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
 
-    // reserve an entry in REMOTE_VNIC_MAPPING_TX table
+    // reserve an entry in MAPPING table
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                    &spec->key.ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,

@@ -19,18 +19,21 @@ typedef struct pds_mapping_spec_s {
     pds_subnet_key_t subnet;              // subnet this IP is part of
     pds_encap_t fabric_encap;             // fabric encap for this mapping
     mac_addr_t overlay_mac;               // MAC for this IP
+    pds_nh_type_t nh_type;                // nexthop type information for
+                                          // the mapping
+    bool is_local;
+    // information specific to remote mappings
     union {
         pds_tep_key_t tep;                // TEP address for this mapping
                                           // 1. device IP for local vnic
                                           // 2. remote TEP for remote vnic if
                                           //    provider IP is not valid
-        pds_nexthop_group_key_t nh_group; // nexthop group this TEP is behind
+        pds_nexthop_group_key_t nh_group; // nexthop group mapping is behind
         pds_nexthop_key_t nexthop;        // nexthop (used in case traffic is
                                           // going out natively without encap)
     };
 
     // information specific to local IP mappings
-    bool is_local;
     struct {
         pds_vnic_key_t vnic;              // vnic for local IP
         bool public_ip_valid;             // true if public IP is valid

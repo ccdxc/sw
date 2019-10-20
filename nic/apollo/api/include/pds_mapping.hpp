@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 /// \defgroup PDS_MAPPING Mapping API
 /// @{
@@ -39,8 +40,14 @@ typedef struct pds_remote_mapping_spec_s {
     pds_mapping_key_t key;       ///< mapping key
     pds_subnet_key_t subnet;     ///< subnet this IP is part of
     pds_encap_t fabric_encap;    ///< fabric encap for this mapping
-    pds_tep_key_t tep;           ///< remote TEP address for this mapping
-    mac_addr_t vnic_mac;         ///< vnci MAC
+    pds_nh_type_t nh_type;       ///< type of the nexthop for this mapping
+    union {
+        ///< remote TEP where this mapping is located
+        pds_tep_key_t tep;
+        ///< overlay nexthop group for this mapping
+        pds_nexthop_group_key_t nh_group;
+    };
+    mac_addr_t vnic_mac;         ///< vnic MAC
     bool provider_ip_valid;      ///< true if provider IP is valid
     ip_addr_t provider_ip;       ///< provider IP address
 } __PACK__ pds_remote_mapping_spec_t;

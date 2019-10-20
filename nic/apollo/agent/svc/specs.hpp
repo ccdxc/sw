@@ -690,7 +690,8 @@ pds_service_api_stats_to_proto (pds::SvcMappingStats *proto_stats,
 
 // populate proto buf from service API info
 static inline void
-pds_service_api_info_to_proto (const pds_svc_mapping_info_t *api_info, void *ctxt)
+pds_service_api_info_to_proto (const pds_svc_mapping_info_t *api_info,
+                               void *ctxt)
 {
     pds::SvcMappingGetResponse *proto_rsp = (pds::SvcMappingGetResponse *)ctxt;
     auto service = proto_rsp->add_response();
@@ -2186,7 +2187,7 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
 }
 
-static inline void
+static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                       const pds::MappingSpec &proto_spec)
 {
@@ -2196,7 +2197,20 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     remote_spec->key.vpc.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
     remote_spec->subnet.id = proto_spec.subnetid();
-    remote_spec->tep.id = proto_spec.tunnelid();
+    switch (proto_spec.dstinfo_case()) {
+    case pds::MappingSpec::kTunnelID:
+        remote_spec->nh_type = PDS_NH_TYPE_TEP;
+        remote_spec->tep.id = proto_spec.tunnelid();
+        break;
+
+    case pds::MappingSpec::kNexthopGroupId:
+        remote_spec->nh_type = PDS_NH_TYPE_OVERLAY_NHGROUP;
+        remote_spec->nh_group.id = proto_spec.nexthopgroupid();
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
     MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
     remote_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
     if (proto_spec.has_providerip()) {
@@ -2207,6 +2221,7 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                           proto_spec.providerip());
         }
     }
+    return SDK_RET_OK;
 }
 
 static inline void

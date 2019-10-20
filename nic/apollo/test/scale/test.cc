@@ -394,6 +394,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.fabric_encap.val.mpls_tag =
                         remote_slot++;
                 }
+                pds_remote_mapping.nh_type = PDS_NH_TYPE_TEP;
                 pds_remote_mapping.tep.id = tep_offset;
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,

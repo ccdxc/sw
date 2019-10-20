@@ -267,15 +267,6 @@ jobd/artemis/scale_test_sim: ${JOBD_PREREQS}
 jobd/artemis/ftlite: ${JOBD_PREREQS}
 	${NICDIR}/utils/ftlite/test/run.sh
 
-.PHONY: jobd/apulu/gtest_1
-jobd/apulu/gtest_1: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apulu_gtest
-	${NICDIR}/apollo/test/tools/apulu/run_gtests_apulu_1.sh ${COVERAGE_OPTS}
-
-.PHONY: jobd/apulu/gtest_2
-jobd/apulu/gtest_2: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/tools/apulu/run_gtests_apulu_2.sh ${COVERAGE_OPTS}
-
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --storage
@@ -447,3 +438,11 @@ jobd/apulu/pds_scale_test_mock: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/scale/apulu/run_scale_test_mock.sh
 	${NICDIR}/apollo/test/scale/apulu/runtestapp.sh
 
+.PHONY: jobd/apulu/gtest_1
+jobd/apulu/gtest_1: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apulu_gtest
+	${NICDIR}/apollo/test/tools/apulu/run_gtests_apulu_1.sh ${COVERAGE_OPTS}
+
+.PHONY: jobd/apulu/gtest_2
+jobd/apulu/gtest_2: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/tools/apulu/run_gtests_apulu_2.sh ${COVERAGE_OPTS}

@@ -69,13 +69,15 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->subnet.id = local_spec->subnet.id;
     spec->fabric_encap = local_spec->fabric_encap;
     memcpy(&spec->overlay_mac, &local_spec->vnic_mac, sizeof(mac_addr_t));
+    // local mapping always point to local VTEP (i.e., MyTEP) IP
+    spec->nh_type = PDS_NH_TYPE_TEP;
+    spec->is_local = true;
     spec->vnic.id = local_spec->vnic.id;
     spec->public_ip_valid = local_spec->public_ip_valid;
     spec->public_ip = local_spec->public_ip;
     spec->provider_ip_valid = local_spec->provider_ip_valid;
     spec->provider_ip = local_spec->provider_ip;
     spec->svc_tag = local_spec->svc_tag;
-    spec->is_local = true;
 }
 
 static inline void
@@ -86,10 +88,15 @@ pds_remote_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->key = remote_spec->key;
     spec->subnet = remote_spec->subnet;
     spec->fabric_encap = remote_spec->fabric_encap;
-    spec->tep = remote_spec->tep;
+    memcpy(&spec->overlay_mac, &remote_spec->vnic_mac, sizeof(mac_addr_t));
+    spec->nh_type = remote_spec->nh_type;
+    if (spec->nh_type == PDS_NH_TYPE_TEP) {
+        spec->tep = remote_spec->tep;
+    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_NHGROUP) {
+        spec->nh_group = remote_spec->nh_group;
+    }
     spec->provider_ip_valid = remote_spec->provider_ip_valid;
     spec->provider_ip = remote_spec->provider_ip;
-    memcpy(&spec->overlay_mac, &remote_spec->vnic_mac, sizeof(mac_addr_t));
     spec->is_local = false;
 }
 
