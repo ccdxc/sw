@@ -1,0 +1,64 @@
+#
+# This .lst file runs the CAM scripts required to set up an EVPN
+# between two PE routers.
+#
+# The hostnames of the two PE devices are set in evpn.ali
+#
+# Some configuration (i.e. interface indexes, IP addresses)
+# can be changed in evpn.cfg
+#
+
+#
+# Include user specific configuration
+#
+
+include evpn.cfg
+
+#
+# Activate the components in the following order:
+#
+# System Manager
+# Stubs
+# DC-RTM
+# DC-BGP
+# DC-LMGR
+# DC-EVPN
+#
+
+evpn_si.cam evpn.ali
+
+evpn_stub.cam evpn.ali
+
+evpn_rtm.cam evpn.ali
+
+evpn_bgp.cam evpn.ali
+evpn_bgp2.cam evpn.ali
+evpn_bgp3.cam evpn.ali
+evpn_bgp4.cam evpn.ali
+
+#
+# evpn_bgp3.cam activates a active BGP peer
+#
+# In order to ensure that the passive peer is operational before the
+# active peer starts requesting connections, sleep for 2 seconds between
+# the two CAM scripts.
+#
+
+! sleep 2000
+
+# evpn_bgp5.cam evpn.ali
+
+evpn_evpn.cam evpn.ali
+
+#
+# Wait for components and the LDP session to activate
+# before verification
+#
+
+! sleep 30000
+
+#
+# Verify components are in the correct state
+#
+
+evpn_chkcfg.cam evpn.ali

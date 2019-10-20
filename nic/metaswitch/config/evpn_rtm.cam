@@ -1,0 +1,45 @@
+#
+# This script sets up RTM on both PE routers.
+# It first configures the RTM component settings for
+# node A and then does the equivalent for node B.
+#
+
+#
+# CAM script for injecting RTM configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    begin rtmEntityTable 1
+     rtmEntityFteIndex                1
+     rtmEntityRowStatus               AMB_ROW_CREATE_AND_GO
+     rtmEntityAdminStat               AMB_ADMIN_STATUS_DOWN
+     rtmEntityAddressFamily           AMB_INETWK_ADDR_TYPE_IPV4
+     rtmEntityI3Index                 1
+    end rtmEntityTable 1
+
+    begin rtmMjTable 2
+     rtmMjRtmFteIndex                 1
+     rtmMjSlaveFteId                  1
+     rtmMjSlaveType                   AMB_RTM_ARI_PARTNER_BGP
+     rtmMjAdminStatus                 AMB_ADMIN_STATUS_UP
+     rtmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end rtmMjTable 2
+
+    begin rtmMjTable 3
+     rtmMjRtmFteIndex                 1
+     rtmMjSlaveFteId                  1
+     rtmMjSlaveType                   AMB_RTM_ARI_PARTNER_FT
+     rtmMjAdminStatus                 AMB_ADMIN_STATUS_UP
+     rtmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end rtmMjTable 3
+
+    begin rtmEntityTable 4
+     rtmEntityFteIndex                1
+     rtmEntityRowStatus               AMB_ROW_ACTIVE
+     rtmEntityAdminStat               AMB_ADMIN_STATUS_UP
+     rtmEntityAddressFamily           AMB_INETWK_ADDR_TYPE_IPV4
+     rtmEntityI3Index                 1
+    end rtmEntityTable 4
+  END_NODE
+END_SI

@@ -1,0 +1,32 @@
+#
+# This script configures the BGP component entity MIBS on both
+# nodes. They are created admin down so that join configuration
+# that requires the entity MIBs to be admin down can be injected
+# later.
+#
+
+#
+# CAM script for injecting BGP entity configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    begin bgpRmEntTable 1
+     bgpRmEntIndex                    1
+     bgpRmEntI3EntIndex               1
+     bgpRmEntRowStatus                AMB_ROW_CREATE_AND_GO
+     bgpRmEntRestartSupported         AMB_TRUE
+     bgpRmEntLocalAs                  1
+     bgpRmEntAdminStatus              AMB_BGP_ADMIN_STATUS_DOWN
+     bgpRmEntLocalIdentifier          NODE_A_IP_ADDR_HEX
+    end bgpRmEntTable 1
+
+    begin bgpNmEntTable 2
+     bgpNmEntIndex                    1
+     bgpNmEntRowStatus                AMB_ROW_CREATE_AND_GO
+     bgpNmEntAdminStatus              AMB_BGP_ADMIN_STATUS_DOWN
+     bgpNmEntSckIndex                 1
+     bgpNmEntRmIndex                  1
+    end bgpNmEntTable 2
+  END_NODE
+END_SI

@@ -1,0 +1,15 @@
+#
+# Start System Manager on both PE routers.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_GLOBAL
+    begin siNode 1
+     nodeIndex                        1
+     smCssReplay                      AMB_FALSE
+     locationCapable                  AMB_FALSE
+     ftCapable                        AMB_FALSE
+     rowStatus                        AMB_ROW_CREATE_AND_GO
+    end siNode 1
+  END_GLOBAL
+END_SI

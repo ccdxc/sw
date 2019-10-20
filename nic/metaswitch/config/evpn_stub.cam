@@ -1,0 +1,218 @@
+#
+# This script sets up stub configuration on both
+# PE routers. It first configures the stub on
+# node A and then does the same for node B.
+#
+
+#
+# CAM script for injecting stub configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+
+    begin l2fEntTable 1
+     l2fEntEntityIndex                1
+     l2fEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end l2fEntTable 1
+
+    begin liEntTable 2
+     liEntEntityIndex                 1
+     liEntRowStatus                   AMB_ROW_CREATE_AND_GO
+    end liEntTable 2
+
+    begin liMjTable 3
+     liMjEntityIndex                  1
+     liMjInterface                    AMB_LI_IF_ATG_FRI
+     liMjPartnerType                  AMB_LI_MJ_PARTNER_LIM
+     liMjPartnerIndex                 1
+     liMjSubIndex                     0
+     liMjRowStatus                    AMB_ROW_CREATE_AND_GO
+    end liMjTable 3
+
+    begin limEntTable 4
+     limEntEntityIndex                1
+     limEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end limEntTable 4
+
+    begin limMjTable 5
+     limEntEntityIndex                1
+     limMjInterface                   AMB_LIM_IF_ATG_LIPI
+     limMjPartnerType                 AMB_LIM_MJ_PARTNER_LI
+     limMjPartnerIndex                1
+     limMjSubIndex                    0
+     limMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end limMjTable 5
+
+    begin limMjTable 6
+     limEntEntityIndex                1
+     limMjInterface                   AMB_LIM_IF_ATG_SMI
+     limMjPartnerType                 AMB_LIM_MJ_PARTNER_SMI
+     limMjPartnerIndex                1
+     limMjSubIndex                    0
+     limMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end limMjTable 6
+
+    begin limInterfaceCfgTable 7
+     limEntEntityIndex                1
+     limInterfaceCfgIfIndex           NODE_A_EVPN_IF_INDEX
+     limInterfaceCfgRowStatus         AMB_ROW_CREATE_AND_GO
+     limInterfaceCfgEnable            AMB_TRUE
+     limInterfaceCfgIpv4Enabled       AMB_TRISTATE_TRUE
+     limInterfaceCfgIpv4Forwarding    AMB_TRISTATE_TRUE
+     limInterfaceCfgIpv6Enabled       AMB_TRISTATE_TRUE
+     limInterfaceCfgIpv6Forwarding    AMB_TRISTATE_TRUE
+    end limInterfaceCfgTable 7
+
+    begin limInterfaceCfgTable 8
+     limEntEntityIndex                1
+     limInterfaceCfgIfIndex           NODE_A_AC_IF_INDEX
+     limInterfaceCfgRowStatus         AMB_ROW_CREATE_AND_GO
+     limInterfaceCfgEnable            AMB_TRUE
+     limInterfaceCfgIpv4Enabled       AMB_TRISTATE_FALSE
+     limInterfaceCfgIpv4Forwarding    AMB_TRISTATE_FALSE
+     limInterfaceCfgIpv6Enabled       AMB_TRISTATE_FALSE
+     limInterfaceCfgIpv6Forwarding    AMB_TRISTATE_FALSE
+    end limInterfaceCfgTable 8
+
+    begin limL3InterfaceAddressTable 9
+     limEntEntityIndex                1
+     limL3InterfaceAddressIfIndex     NODE_A_EVPN_IF_INDEX
+     limL3InterfaceAddressIPAddrType  AMB_INETWK_ADDR_TYPE_IPV4
+     limL3InterfaceAddressIPAddress   NODE_A_IP_ADDR_DOT
+     limL3InterfaceAddressRowStatus   AMB_ROW_CREATE_AND_GO
+     limL3InterfaceAddressPrefixLen   24
+    end limL3InterfaceAddressTable 9
+
+    begin sckTable 10
+     sckIndex                         1
+     sckAdminStatus                   AMB_ADMIN_STATUS_UP
+     sckRowStatus                     AMB_ROW_CREATE_AND_GO
+    end sckTable 10
+
+    begin l2fMacIpCfgTable 11
+     l2fEntIndex                      1
+     l2fMacIpCfgBdType                AMB_L2_BRIDGE_DOMAIN_EVPN
+     l2fMacIpCfgBdIndex               1
+     l2fMacIpCfgBdSubIndex            0
+     l2fMacIpCfgMacAddress            NODE_A_MAI_MAC_ADDR
+     l2fMacIpCfgIpAddressType         AMB_INETWK_ADDR_TYPE_IPV4
+     l2fMacIpCfgIpAddress             NODE_A_MAI_IP_ADDR
+     l2fMacIpCfgIfIndex               NODE_A_AC_IF_INDEX
+     l2fMacIpCfgRowStatus             AMB_ROW_CREATE_AND_GO
+    end l2fMacIpCfgTable 11
+
+    begin smiEntTable 12
+     smiEntEntityIndex                1
+     smiEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end smiEntTable 12
+
+    begin ftmEntTable 13
+     ftmEntEntityIndex                1
+     ftmEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end ftmEntTable 13
+
+    begin ftmMjTable 14
+     ftmEntEntityIndex                1
+     ftmMjInterface                   AMB_FTM_IF_ATG_ROPI
+     ftmMjPartnerType                 AMB_FTM_MJ_PARTNER_HALS
+     ftmMjPartnerIndex                1
+     ftmMjSubIndex                    0
+     ftmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end ftmMjTable 14
+
+    begin ftmMjTable 15
+     ftmEntEntityIndex                1
+     ftmMjInterface                   AMB_FTM_IF_ATG_PRI
+     ftmMjPartnerType                 AMB_FTM_MJ_PARTNER_PSM
+     ftmMjPartnerIndex                1
+     ftmMjSubIndex                    0
+     ftmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end ftmMjTable 15
+
+    begin halsEntTable 16
+     halsEntEntityIndex               1
+     halsEntRowStatus                 AMB_ROW_CREATE_AND_GO
+     halsEntStateful                  AMB_TRUE
+    end halsEntTable 16
+
+    begin narEntTable 17
+     narEntEntityIndex                1
+     narEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end narEntTable 17
+
+    begin nrmEntTable 18
+     nrmEntEntityIndex                1
+     nrmEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end nrmEntTable 18
+
+    begin nrmMjTable 19
+     nrmEntEntityIndex                1
+     nrmMjInterface                   AMB_NRM_IF_ATG_NARI
+     nrmMjPartnerType                 AMB_NRM_MJ_PARTNER_NAR
+     nrmMjPartnerIndex                1
+     nrmMjSubIndex                    0
+     nrmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end nrmMjTable 19
+
+    begin nrmMjTable 20
+     nrmEntEntityIndex                1
+     nrmMjInterface                   AMB_NRM_IF_ATG_NBPI
+     nrmMjPartnerType                 AMB_NRM_MJ_PARTNER_HALS
+     nrmMjPartnerIndex                1
+     nrmMjSubIndex                    0
+     nrmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end nrmMjTable 20
+
+    begin nrmMjTable 21
+     nrmEntEntityIndex                1
+     nrmMjInterface                   AMB_NRM_IF_ATG_MMI
+     nrmMjPartnerType                 AMB_NRM_MJ_PARTNER_L2FST
+     nrmMjPartnerIndex                1
+     nrmMjSubIndex                    0
+     nrmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end nrmMjTable 21
+
+    begin nrmMjTable 22
+     nrmEntEntityIndex                1
+     nrmMjInterface                   AMB_NRM_IF_ATG_I3
+     nrmMjPartnerType                 AMB_NRM_MJ_PARTNER_LIM
+     nrmMjPartnerIndex                1
+     nrmMjSubIndex                    0
+     nrmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end nrmMjTable 22
+
+    begin psmEntTable 23
+     psmEntEntityIndex                1
+     psmEntRowStatus                  AMB_ROW_CREATE_AND_GO
+    end psmEntTable 23
+
+    begin psmMjTable 24
+     psmEntEntityIndex                1
+     psmMjInterface                   AMB_PSM_IF_ATG_NHPI
+     psmMjPartnerType                 AMB_PSM_MJ_PARTNER_HALS
+     psmMjPartnerIndex                1
+     psmMjSubIndex                    0
+     psmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end psmMjTable 24
+
+    begin psmMjTable 25
+     psmEntEntityIndex                1
+     psmMjInterface                   AMB_PSM_IF_ATG_NRI
+     psmMjPartnerType                 AMB_PSM_MJ_PARTNER_NRM
+     psmMjPartnerIndex                1
+     psmMjSubIndex                    0
+     psmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end psmMjTable 25
+
+    begin psmMjTable 26
+     psmEntEntityIndex                1
+     psmMjInterface                   AMB_PSM_IF_ATG_I3
+     psmMjPartnerType                 AMB_PSM_MJ_PARTNER_LIM
+     psmMjPartnerIndex                1
+     psmMjSubIndex                    0
+     psmMjRowStatus                   AMB_ROW_CREATE_AND_GO
+    end psmMjTable 26
+
+  END_NODE
+END_SI

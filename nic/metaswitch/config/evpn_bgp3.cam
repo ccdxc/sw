@@ -1,0 +1,51 @@
+#
+# This script configures BGP MIB tables that require
+# configuration to be injected prior to their injection,
+# and BGP peer configuration.
+#
+
+#
+# CAM script for injecting BGP configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    begin bgpRmAfmJoinTable 1
+     bgpRmEntIndex                    1
+     bgpRmAfmJoin                     1
+     bgpRmAfmAfi                      AMB_BGP_AFI_IPV4
+     bgpRmAfmSafi                     AMB_BGP_UNICAST
+     bgpRmAfmAdminStatus              AMB_BGP_ADMIN_STATUS_UP
+     bgpRmAfmPartnerIndex             1
+     bgpRmAfmRowStatus                AMB_ROW_CREATE_AND_GO
+    end bgpRmAfmJoinTable 1
+
+    begin bgpRmAfmJoinTable 2
+     bgpRmEntIndex                    1
+     bgpRmAfmJoin                     2
+     bgpRmAfmAfi                      AMB_BGP_AFI_L2VPN
+     bgpRmAfmSafi                     AMB_BGP_EVPN
+     bgpRmAfmAdminStatus              AMB_BGP_ADMIN_STATUS_UP
+     bgpRmAfmPartnerIndex             1
+     bgpRmAfmRowStatus                AMB_ROW_CREATE_AND_GO
+    end bgpRmAfmJoinTable 2
+
+    begin bgpPeerTable 3
+     bgpRmEntIndex                    1
+     bgpPeerLocalAddrType             AMB_INETWK_ADDR_TYPE_IPV4
+     bgpPeerLocalAddr                 NODE_A_IP_ADDR_BYTE
+     bgpPeerLocalPort                 0
+     bgpPeerRemoteAddrType            AMB_INETWK_ADDR_TYPE_IPV4
+     bgpPeerRemoteAddr                NODE_B_IP_ADDR_BYTE
+     bgpPeerRemotePort                0
+     bgpPeerLocalAddrScopeId          0
+     bgpPeerConnectRetryInterval      10
+     bgpPeerRemoteAs                  1
+     bgpPeerLocalNm                   1
+     bgpPeerConfigPassive             AMB_FALSE
+     bgpPeerAdminStatus               AMB_BGP_ADMIN_STATUS_UP
+     bgpPeerRowStatus                 AMB_ROW_CREATE_AND_GO
+    end bgpPeerTable 3
+
+  END_NODE
+END_SI

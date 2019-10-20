@@ -1,0 +1,30 @@
+#
+# This script configures BGP MIB tables that require the entity
+# MIBs to be admin status down. The scripts are separated to
+# ensure correct ordering of CAM injection.
+#
+
+#
+# CAM script for injecting BGP configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    begin bgpRmAfiSafiTable 1
+     bgpRmEntIndex                    1
+     bgpRmAfiSafiAfi                  AMB_BGP_AFI_L2VPN
+     bgpRmAfiSafiSafi                 AMB_BGP_EVPN
+     bgpRmAfiSafiNextHopSafi          AMB_BGP_UNICAST
+     bgpRmAfiSafiAdminStatus          AMB_BGP_ADMIN_STATUS_UP
+    end bgpRmAfiSafiTable 1
+
+    begin bgpNmListenTable 2
+     bgpNmEntIndex                    1
+     bgpNmListenIndex                 1
+     bgpNmListenAdminStatus           AMB_BGP_ADMIN_STATUS_UP
+     bgpNmListenAddrType              AMB_INETWK_ADDR_TYPE_IPV4
+     bgpNmListenAddr                  NODE_A_IP_ADDR_BYTE
+     bgpNmListenRowStatus             AMB_ROW_CREATE_AND_GO
+    end bgpNmListenTable 2
+  END_NODE
+END_SI

@@ -1,0 +1,126 @@
+#
+# This CAM script checks the configuration for
+# EVPN tests on both nodes.
+# It first checks the configuration of node A then
+# node B, checking the configuration of the components
+# in the following order.
+#
+# BD stub
+# I3 stub
+# SCK stub
+# MAI stub
+# DC-LMGR
+# DC-RTM
+# DC-BGP
+# DC-EVPN
+#
+
+#
+# Check configuration on node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    getall l2fEntTable
+      begin_compare l2fEntTable
+     l2fEntEntityIndex                1
+     $l2fEntAdminStatus               AMB_ADMIN_STATUS_UP
+     $l2fEntRowStatus                 AMB_ROW_ACTIVE
+    end l2fEntTable
+
+    getall liEntTable
+      begin_compare liEntTable
+     liEntEntityIndex                 1
+     $liEntAdminStatus                AMB_ADMIN_STATUS_UP
+     $liEntRowStatus                  AMB_ROW_ACTIVE
+    end liEntTable
+
+    getall limEntTable
+      begin_compare limEntTable
+     limEntEntityIndex                1
+     $limEntAdminStatus               AMB_ADMIN_STATUS_UP
+     $limEntRowStatus                 AMB_ROW_ACTIVE
+    end i3EmuTable
+
+    getall sckTable
+      begin_compare sckTable
+     sckIndex                         1
+     $sckAdminStatus                  AMB_ADMIN_STATUS_UP
+     $sckRowStatus                    AMB_ROW_ACTIVE
+    end sckTable
+
+    getall ftmEntTable
+      begin_compare ftmEntTable
+     ftmEntEntityIndex                1
+     $ftmEntRowStatus                 AMB_ROW_ACTIVE
+    end ftmEntityTable
+
+    getall halsEntTable
+      begin_compare halsEntTable
+     halsEntEntityIndex               1
+     $halsEntRowStatus                AMB_ROW_ACTIVE
+    end halsEntityTable
+
+    getall narEntTable
+      begin_compare narEntTable
+     narEntEntityIndex                1
+     $narEntRowStatus                 AMB_ROW_ACTIVE
+    end narEntityTable
+
+    getall nrmEntTable
+      begin_compare nrmEntTable
+     nrmEntEntityIndex                1
+     $nrmEntRowStatus                 AMB_ROW_ACTIVE
+    end nrmEntityTable
+
+    getall psmEntTable
+      begin_compare psmEntTable
+     psmEntEntityIndex                1
+     $psmEntRowStatus                 AMB_ROW_ACTIVE
+    end psmEntityTable
+
+    getall rtmEntityTable
+      begin_compare rtmEntityTable
+     rtmEntityFteIndex                1
+     $rtmEntityAdminStat              AMB_ADMIN_STATUS_UP
+     $rtmEntityRowStatus              AMB_ROW_ACTIVE
+     $rtmEntityI3Index                1
+     $rtmEntityAddressFamily          AMB_INETWK_ADDR_TYPE_IPV4
+    end rtmEntityTable
+
+    getall bgpRmEntTable
+      begin_compare bgpRmEntTable
+     bgpRmEntIndex                    1
+     $bgpRmEntRowStatus               AMB_ROW_ACTIVE
+     $bgpRmEntI3EntIndex              1
+     $bgpRmEntLocalAs                 1
+     $bgpRmEntRestartSupported        AMB_TRUE
+     $bgpRmEntAdminStatus             AMB_BGP_ADMIN_STATUS_UP
+     $bgpRmEntLocalIdentifier         NODE_A_IP_ADDR_HEX
+    end bgpRmEntTable
+
+    getall evpnEntTable
+      begin_compare evpnEntTable
+     evpnEntEntityIndex               1
+     $evpnEntRowStatus                AMB_ROW_ACTIVE
+    end l2vmEntityTable
+
+    getall evpnMacIpTable
+
+    getall evpnMacIpTable
+      begin_compare evpnMacIpTable
+     evpnEntEntityIndex               1
+     evpnEviIndex                     1
+     evpnMacIpEthernetTagId           0
+     evpnMacIpMacAddress              NODE_B_MAI_MAC_ADDR
+     evpnMacIpIpAddressType           AMB_INETWK_ADDR_TYPE_IPV4
+     evpnMacIpIpAddress               NODE_B_MAI_IP_ADDR
+     evpnMacIpPathIndex               1
+     $evpnMacIpSource                 AMB_EVPN_REMOTE
+     $evpnMacIpBgpNhAddrType          AMB_INETWK_ADDR_TYPE_IPV4
+     $evpnMacIpBgpNhAddr              NODE_B_IP_ADDR_BYTE
+     $evpnMacIpInUse                  AMB_TRUE
+    end evpnMacIpTable
+
+  END_NODE
+END_SI

@@ -1,0 +1,5 @@
+#
+# evpn.ali - CAM Alias File
+#
+
+nodeA_1    localhost  1

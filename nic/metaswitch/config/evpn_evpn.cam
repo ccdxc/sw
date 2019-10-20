@@ -1,0 +1,76 @@
+#
+# This script sets up DC-EVPN on both nodes.  It
+# first configures DC-EVPN component settings for
+# node A and then does the equivalent for node B.
+#
+
+#
+# CAM script for injecting EVPN Manager configuration into node A.
+#
+
+BEGIN_SI nodeA_1
+  BEGIN_NODE 1
+    begin evpnEntTable 1
+     evpnEntEntityIndex               1
+     evpnEntRowStatus                 AMB_ROW_CREATE_AND_GO
+    end evpnEntTable 1
+
+    begin evpnMjTable 2
+     evpnEntEntityIndex               1
+     evpnMjInterfaceId                AMB_EVPN_IF_ATG_BDPI
+     evpnMjPartnerType                AMB_EVPN_MJ_PARTNER_L2FST
+     evpnMjPartnerIndex               1
+     evpnMjSubIndex                   0
+     evpnMjRowStatus                  AMB_ROW_CREATE_AND_GO
+    end evpnMjTable 2
+
+    begin evpnMjTable 3
+     evpnEntEntityIndex               1
+     evpnMjInterfaceId                AMB_EVPN_IF_ATG_I3
+     evpnMjPartnerType                AMB_EVPN_MJ_PARTNER_LIM
+     evpnMjPartnerIndex               1
+     evpnMjSubIndex                   0
+     evpnMjRowStatus                  AMB_ROW_CREATE_AND_GO
+    end evpnMjTable 3
+
+    begin evpnMjTable 4
+     evpnEntEntityIndex               1
+     evpnMjInterfaceId                AMB_EVPN_IF_ATG_TPI
+     evpnMjPartnerType                AMB_EVPN_MJ_PARTNER_LIM
+     evpnMjPartnerIndex               1
+     evpnMjSubIndex                   0
+     evpnMjRowStatus                  AMB_ROW_CREATE_AND_GO
+    end evpnMjTable 4
+
+    begin evpnMjTable 5
+     evpnEntEntityIndex               1
+     evpnMjInterfaceId                AMB_EVPN_IF_ATG_MAI
+     evpnMjPartnerType                AMB_EVPN_MJ_PARTNER_L2FST
+     evpnMjPartnerIndex               1
+     evpnMjSubIndex                   0
+     evpnMjRowStatus                  AMB_ROW_CREATE_AND_GO
+    end evpnMjTable 5
+
+    begin evpnEviTable 6
+     evpnEntEntityIndex               1
+     evpnEviIndex                     1
+     evpnEviRdCfgOrAuto               AMB_EVPN_AUTO
+     evpnEviRowStatus                 AMB_ROW_CREATE_AND_GO
+     evpnEviEncapsulation             AMB_EVPN_ENCAPS_VXLAN
+    end evpnEviTable 6
+
+    begin evpnBdTable 7
+     evpnEntEntityIndex               1
+     evpnEviIndex                     1
+     evpnBdRowStatus                  AMB_ROW_CREATE_AND_GO
+     evpnBdVni                        NODE_A_VNI
+    end evpnBdTable 7
+
+    begin evpnIfBindCfgTable 8
+     evpnEntEntityIndex               1
+     ifIndex                          NODE_A_AC_IF_INDEX
+     evpnIfBindCfgRowStatus           AMB_ROW_CREATE_AND_GO
+     evpnIfBindCfgEviIndex            1
+    end evpnIfBindCfgTable 8
+  END_NODE
+END_SI

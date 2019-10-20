@@ -1,0 +1,13 @@
+#
+# This script is the final script of five that configure BGP on both PE
+# devices. It activates the entity MIB rows in node B that were created
+# in the first of the five scripts, now that all other configuration
+# has been injected.
+#
+# It is separated from the equivalent CAM injection to node A because
+# in order to prevent the active BGP peer from attempting to start a
+# connection before the passive BGP peer is operational, it must be
+# activated later. As node B is the active peer, it must be activated
+# second.
+#
+
