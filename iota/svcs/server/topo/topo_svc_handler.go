@@ -26,7 +26,7 @@ import (
 type TopologyService struct {
 	SSHConfig        *ssh.ClientConfig
 	tbInfo           testBedInfo
-	Nodes            []*testbed.TestNode
+	Nodes            map[string]*testbed.TestNode
 	Workloads        map[string]*iota.Workload // list of workloads
 	ProvisionedNodes map[string]*testbed.TestNode
 	downloadedImages bool
@@ -239,7 +239,6 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	var vlans []uint32
 	var err error
 	ts.tbInfo.resp = req
-	ts.Nodes = []*testbed.TestNode{}
 
 	if err := ts.downloadImages(); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Download images failed. Err: %v", err)
@@ -281,6 +280,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 	// Run init
 	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
+	ts.Nodes = make(map[string]*testbed.TestNode)
 	// split init nodes into pools of upto 'n' each
 	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
 		poolNodes := []*iota.TestBedNode{}
@@ -306,11 +306,14 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 					},
 					Os: node.Os,
 				},
-				Os:     node.Os,
-				SSHCfg: ts.SSHConfig,
+				Os:           node.Os,
+				SSHCfg:       ts.SSHConfig,
+				CimcIP:       node.CimcIpAddress,
+				CimcPassword: node.CimcPassword,
+				CimcUserName: node.CimcUsername,
 			}
 
-			ts.Nodes = append(ts.Nodes, &n)
+			ts.Nodes[node.IpAddress] = &n
 			commonCopyArtifacts := []string{
 				ts.tbInfo.resp.VeniceImage,
 				ts.tbInfo.resp.NaplesImage,
@@ -333,9 +336,11 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		ts.tbInfo.resp.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitTestBed | Init Test Bed Call Failed. %s", err.Error())
 		return ts.tbInfo.resp, nil
 	}
-	for index, node := range ts.Nodes {
-		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-			req.Nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+	for ip, node := range ts.Nodes {
+		for index, reqnode := range req.Nodes {
+			if reqnode.IpAddress == ip && reqnode.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+				req.Nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+			}
 		}
 	}
 
@@ -377,7 +382,7 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 			CimcUserName: node.CimcUsername,
 		}
 
-		ts.Nodes = append(ts.Nodes, &n)
+		ts.Nodes[node.IpAddress] = &n
 		commonCopyArtifacts := []string{
 			ts.tbInfo.resp.VeniceImage,
 			ts.tbInfo.resp.NaplesImage,
@@ -392,9 +397,11 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 		return err
 	}
 
-	for _, node := range nodes {
-		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-			node.EsxCtrlNodeIpAddress = node.IpAddress
+	for ip, node := range ts.Nodes {
+		for index, reqnode := range nodes {
+			if reqnode.IpAddress == ip && reqnode.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+				nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+			}
 		}
 	}
 	return nil
@@ -539,12 +546,17 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	// Prep Topo
 	newNodes := []*testbed.TestNode{}
 	for _, n := range req.Nodes {
+
+		if _, ok := ts.Nodes[n.IpAddress]; !ok {
+			err := fmt.Errorf("TOPO SVC | AddNodes failed, unknown node with IP %v found", n.IpAddress)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not get agent URL. Err: %v", err)
+			return req, nil
+		}
+
 		svcName := n.Name
 
-		tbNode := &testbed.TestNode{
-			Node:   n,
-			SSHCfg: ts.SSHConfig,
-		}
+		tbNode := ts.Nodes[n.IpAddress]
 
 		agentURL, err := tbNode.GetAgentURL()
 		if err != nil {
@@ -571,6 +583,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		}
 
 		ts.ProvisionedNodes[n.Name] = tbNode
+		tbNode.Node = n
 		log.Infof("Adding provisioned node %v : %v\n", n.Name, tbNode.Node.Name)
 		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
