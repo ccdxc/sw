@@ -504,10 +504,8 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
 }
 
 sdk_ret_t
-mapping_impl::activate_mapping_create_(pds_epoch_t epoch,
-                                       mapping_entry *mapping,
-                                       obj_ctxt_t *obj_ctxt,
-                                       pds_mapping_spec_t *spec) {
+mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
+                               obj_ctxt_t *obj_ctxt, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
@@ -544,9 +542,8 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::activate_mapping_delete_(pds_epoch_t epoch,
-                                       pds_mapping_key_t *key,
-                                       mapping_entry *mapping) {
+mapping_impl::activate_delete_(pds_epoch_t epoch, pds_mapping_key_t *key,
+                               mapping_entry *mapping) {
     return SDK_RET_INVALID_OP;
 }
 
@@ -560,14 +557,14 @@ mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->mapping_spec;
-        ret = activate_mapping_create_(epoch, (mapping_entry *)api_obj,
-                                       obj_ctxt, spec);
+        ret = activate_create_(epoch, (mapping_entry *)api_obj,
+                               obj_ctxt, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
         key = &obj_ctxt->api_params->mapping_key;
-        ret = activate_mapping_delete_(epoch, key, (mapping_entry *)api_obj);
+        ret = activate_delete_(epoch, key, (mapping_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

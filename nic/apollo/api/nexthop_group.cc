@@ -66,6 +66,7 @@ nexthop_group::init_config(api_ctxt_t *api_ctxt) {
 
     memcpy(&this->key_, &spec->key, sizeof(key_));
     type_ = spec->type;
+    num_nexthops_ = spec->num_nexthops;
     return SDK_RET_OK;
 }
 

@@ -204,15 +204,15 @@ private:
     /// \param[in] vnic  VNIC obj being programmed
     /// \param[in] spec  VNIC configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
-                                    pds_vnic_spec_t *spec);
+    sdk_ret_t activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
+                               pds_vnic_spec_t *spec);
 
     /// \brief     program VNIC related tables during VNIC delete by disabling
     ///            stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
     /// \param[in] vnic  VNIC obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, vnic_entry *vnic);
 
     /// \brief      fill the VNIC spec
     /// \param[out] spec specification

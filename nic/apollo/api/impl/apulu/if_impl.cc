@@ -159,15 +159,15 @@ if_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-if_impl::activate_if_create_(pds_epoch_t epoch, if_entry *intf,
-                             pds_if_spec_t *spec) {
+if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
+                          pds_if_spec_t *spec) {
     PDS_TRACE_DEBUG("Activating if 0x%x, type %u, admin state %u",
                     spec->key.id, spec->type, spec->admin_state);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-if_impl::activate_if_delete_(pds_epoch_t epoch, if_entry *intf) {
+if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
     return SDK_RET_INVALID_OP;
 }
 
@@ -180,12 +180,12 @@ if_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->if_spec;
-        ret = activate_if_create_(epoch, (if_entry *)api_obj, spec);
+        ret = activate_create_(epoch, (if_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_if_delete_(epoch, (if_entry *)api_obj);
+        ret = activate_delete_(epoch, (if_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

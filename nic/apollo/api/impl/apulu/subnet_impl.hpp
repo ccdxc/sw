@@ -142,15 +142,15 @@ private:
     /// \param[in]  subnet    subnet obj being programmed
     /// \param[in]  spec    subnet configuration
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_subnet_create_(pds_epoch_t epoch, subnet_entry *subnet,
-                                      pds_subnet_spec_t *spec);
+    sdk_ret_t activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
+                               pds_subnet_spec_t *spec);
 
     /// \brief      program subnet related tables during subnet delete by
     ///             disabling stage0 tables corresponding to the new epoch
     /// \param[in]  epoch epoch being activated
     /// \param[in]  subnet    subnet obj being programmed
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_subnet_delete_(pds_epoch_t epoch, subnet_entry *subnet);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, subnet_entry *subnet);
 
 private:
     handle_t    vni_hdl_;

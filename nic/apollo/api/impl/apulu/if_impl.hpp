@@ -144,15 +144,15 @@ private:
     /// \param[in] intf  interface obj being programmed
     /// \param[in] spec  interface configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_if_create_(pds_epoch_t epoch, if_entry *intf,
-                                  pds_if_spec_t *spec);
+    sdk_ret_t activate_create_(pds_epoch_t epoch, if_entry *intf,
+                               pds_if_spec_t *spec);
 
     /// \brief     program interface related tables during interface delete by
     ///            disabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
     /// \param[in] intf interface obj being deleted
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_if_delete_(pds_epoch_t epoch, if_entry *intf);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, if_entry *intf);
 
 private:
     uint16_t    hw_id_;    ///< h/w id of this interface

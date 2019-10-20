@@ -51,68 +51,35 @@ nexthop_group_impl::reserve_resources(api_base *orig_obj,
     pds_nexthop_group_spec_t *spec;
 
     spec = &obj_ctxt->api_params->nexthop_group_spec;
-    if (spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
-        // reserve an entry in NEXTHOP_GROUP table
-        ret = nexthop_group_impl_db()->overlay_nhgroup_idxr()->alloc(&idx);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve an entry in OVERLAY_ECMP table, ",
-                          "for nexthop group %u, err %u", spec->key.id, ret);
-            goto error;
-        }
-        hw_id_ = idx;
-#if 0
-        // reserve entries in the subsequent table, if needed
-        if (spec->num_entries) {
-            if (spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NHGROUP) {
-                ret = nexthop_group_impl_db()->underlay_nhgroup_idxr()->alloc(&idx,
-                                                                              spec->num_entries);
-                if (ret != SDK_RET_OK) {
-                    PDS_TRACE_ERR("Failed to reserve %u entries in "
-                                  "UNDERLAY_ECMP table for nexthop group %u, "
-                                  "err %u", spec->num_entries,
-                                  spec->key.id, ret);
-                    goto error;
-                }
-                underlay_nhgroup_base_hw_id_ = idx;
-            } else if (spec->entry_type == PDS_NHGROUP_ENTRY_TYPE_NEXTHOP) {
-                ret = nexthop_impl_db()->nh_idxr()->alloc(&idx,
-                                                          spec->num_entries);
-                if (ret != SDK_RET_OK) {
-                    PDS_TRACE_ERR("Failed to reserve %u entries in "
-                                  "NEXTHOP table for nexthop group %u, "
-                                  "err %u", spec->num_entries,
-                                  spec->key.id, ret);
-                    goto error;
-                }
-                nh_base_hw_id_ = idx;
-            }
-        }
-    } else {
-        // reserve an entry in NEXTHOP_GROUP table
-        ret = nexthop_group_impl_db()->underlay_nhgroup_idxr()->alloc(&idx);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve an entry in UNDERLAY_ECMP table, ",
-                          "for nexthop group %u, err %u", spec->key.id, ret);
-            goto error;
-        }
-        hw_id_ = idx;
-        // reserve entries in the subsequent table, if needed
-        if (spec->num_entries) {
-            ret = nexthop_impl_db()->nh_idxr()->alloc(&idx, spec->num_entries);
+    // reserve an entry in NEXTHOP_GROUP table
+    ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(&idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve an entry in ECMP table, ",
+                      "for nexthop group %u, err %u", spec->key.id, ret);
+        return ret;
+    }
+    hw_id_ = idx;
+    if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        if (spec->num_nexthops) {
+            ret = nexthop_impl_db()->nh_idxr()->alloc(&idx, spec->num_nexthops);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reserve %u entries in "
                               "NEXTHOP table for nexthop group %u, "
-                              "err %u", spec->num_entries,
+                              "err %u", spec->num_nexthops,
                               spec->key.id, ret);
                 goto error;
             }
             nh_base_hw_id_ = idx;
         }
-#endif
     }
     return SDK_RET_OK;
 
 error:
+
+    if (hw_id_ != 0xFFFF) {
+        nexthop_group_impl_db()->nhgroup_idxr()->free(hw_id_);
+        hw_id_ = 0xFFFF;
+    }
     return ret;
 }
 
@@ -120,23 +87,13 @@ sdk_ret_t
 nexthop_group_impl::release_resources(api_base *api_obj) {
     nexthop_group *nhgroup = (nexthop_group *)api_obj;
 
-#if 0
     if (hw_id_ != 0xFFFF) {
-        if (nhgroup->type() == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
-            nexthop_group_impl_db()->overlay_nhgroup_idxr()->free(hw_id_);
-            if (underlay_nhgroup_base_hw_id_ != 0xFFFF) {
-                nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(underlay_nhgroup_base_hw_id_,
-                                                                       nhgroup->num_nexthops());
-            }
-        } else {
-            nexthop_group_impl_db()->underlay_nhgroup_idxr()->free(hw_id_);
-        }
-        if (nh_base_hw_id_ != 0xFFFF) {
-            nexthop_impl_db()->nh_idxr()->free(nh_base_hw_id_,
-                                               nhgroup->num_entries());
-        }
+        nexthop_group_impl_db()->nhgroup_idxr()->free(hw_id_);
     }
-#endif
+    if (nh_base_hw_id_ != 0xFFFF) {
+        nexthop_impl_db()->nh_idxr()->free(nh_base_hw_id_,
+                                           nhgroup->num_nexthops());
+    }
     return SDK_RET_OK;
 }
 
@@ -147,17 +104,41 @@ nexthop_group_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-nexthop_group_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
-    pds_nexthop_group_spec_t *spec;
+nexthop_group_impl::activate_create_(pds_epoch_t epoch,
+                                     nexthop_group *nh_group,
+                                     pds_nexthop_group_spec_t *spec) {
+    return SDK_RET_ERR;
+}
 
+sdk_ret_t
+nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
+                                     nexthop_group *nh_group) {
     return SDK_RET_ERR;
 }
 
 sdk_ret_t
 nexthop_group_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                                 api_op_t api_op, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_ERR;
+    sdk_ret_t ret;
+    pds_nexthop_group_spec_t *spec;
+
+    switch (api_op) {
+    case api::API_OP_CREATE:
+        spec = &obj_ctxt->api_params->nexthop_group_spec;
+        ret = activate_create_(epoch, (nexthop_group *)api_obj, spec);
+        break;
+
+    case api::API_OP_DELETE:
+        // spec is not available for DELETE operations
+        ret = activate_delete_(epoch, (nexthop_group *)api_obj);
+        break;
+
+    case api::API_OP_UPDATE:
+    default:
+        ret = SDK_RET_INVALID_OP;
+        break;
+    }
+    return ret;
 }
 
 sdk_ret_t

@@ -111,10 +111,10 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \param[in] spec        mapping configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_mapping_create_(pds_epoch_t epoch,
-                                               mapping_entry *mapping,
-                                               obj_ctxt_t *obj_ctxt,
-                                               pds_mapping_spec_t *spec);
+    virtual sdk_ret_t activate_create_(pds_epoch_t epoch,
+                                       mapping_entry *mapping,
+                                       obj_ctxt_t *obj_ctxt,
+                                       pds_mapping_spec_t *spec);
 
     /// \brief     program and activate mapping related tables during delete
     ///            by enabling stage0 tables corresponding to the new epoch
@@ -122,9 +122,9 @@ public:
     /// \param[in] key         key identifying the mapping
     /// \param[in] mapping     mapping instance
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_mapping_delete_(pds_epoch_t epoch,
-                                               pds_mapping_key_t *key,
-                                               mapping_entry *mapping);
+    virtual sdk_ret_t activate_delete_(pds_epoch_t epoch,
+                                       pds_mapping_key_t *key,
+                                       mapping_entry *mapping);
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any

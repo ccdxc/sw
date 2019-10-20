@@ -629,8 +629,8 @@ error:
 }
 
 sdk_ret_t
-vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
-                                 pds_vnic_spec_t *spec) {
+vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
+                            pds_vnic_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
@@ -661,7 +661,7 @@ error:
 }
 
 sdk_ret_t
-vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
+vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     sdk_ret_t ret;
     subnet_entry *subnet;
     pds_subnet_key_t subnet_key;
@@ -718,12 +718,12 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->vnic_spec;
-        ret = activate_vnic_create_(epoch, (vnic_entry *)api_obj, spec);
+        ret = activate_create_(epoch, (vnic_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_vnic_delete_(epoch, (vnic_entry *)api_obj);
+        ret = activate_delete_(epoch, (vnic_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

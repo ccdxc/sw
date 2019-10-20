@@ -148,8 +148,8 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
-                               pds_vpc_spec_t *spec) {
+vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
+                           pds_vpc_spec_t *spec) {
     sdk_ret_t ret;
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
@@ -175,7 +175,7 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
 }
 
 sdk_ret_t
-vpc_impl::activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
+vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
     sdk_ret_t ret;
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
@@ -210,12 +210,12 @@ vpc_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->vpc_spec;
-        ret = activate_vpc_create_(epoch, (vpc_entry *)api_obj, spec);
+        ret = activate_create_(epoch, (vpc_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_vpc_delete_(epoch, (vpc_entry *)api_obj);
+        ret = activate_delete_(epoch, (vpc_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

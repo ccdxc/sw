@@ -122,15 +122,15 @@ private:
     /// \param[in] tep  TEP obj being programmed
     /// \param[in] spec TEP configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_tep_create_(pds_epoch_t epoch, tep_entry *tep,
-                                    pds_tep_spec_t *spec);
+    sdk_ret_t activate_create_(pds_epoch_t epoch, tep_entry *tep,
+                               pds_tep_spec_t *spec);
 
     /// \brief     program TEP related tables during TEP delete by disabling
     ///            stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
     /// \param[in] tep   TEP obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_tep_delete_(pds_epoch_t epoch, tep_entry *tep);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, tep_entry *tep);
 
 private:
     // P4 datapath specific state

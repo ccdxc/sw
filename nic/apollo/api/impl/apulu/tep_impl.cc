@@ -90,13 +90,13 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-tep_impl::activate_tep_create_(pds_epoch_t epoch, tep_entry *tep,
+tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
                                pds_tep_spec_t *spec) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-tep_impl::activate_tep_delete_(pds_epoch_t epoch, tep_entry *tep) {
+tep_impl::activate_delete_(pds_epoch_t epoch, tep_entry *tep) {
     return SDK_RET_OK;
 }
 
@@ -109,12 +109,12 @@ tep_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->tep_spec;
-        ret = activate_tep_create_(epoch, (tep_entry *)api_obj, spec);
+        ret = activate_create_(epoch, (tep_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_tep_delete_(epoch, (tep_entry *)api_obj);
+        ret = activate_delete_(epoch, (tep_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

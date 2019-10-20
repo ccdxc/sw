@@ -15,7 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
-#include "nic/apollo/api/nexthop.hpp"
+#include "nic/apollo/api/nexthop_group.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -64,7 +64,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_OK;
+    }
 
     /// \brief      re-program all hardware tables relevant to this object
     ///             except stage 0 table(s), if any and this reprogramming
@@ -132,12 +134,27 @@ private:
     /// \brief  constructor
     nexthop_group_impl() {
         hw_id_ = 0xFFFF;
-        underlay_nhgroup_base_hw_id_ = 0xFFFF;
         nh_base_hw_id_ = 0xFFFF;
     }
 
     /// \brief  destructor
     ~nexthop_group_impl() {}
+
+    /// \brief     program nexthop group related tables during create by
+    ///            enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] nh_group nexthop group obj being programmed
+    /// \param[in] spec  VNIC configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_create_(pds_epoch_t epoch, nexthop_group *nh_group,
+                               pds_nexthop_group_spec_t *spec);
+
+    /// \brief     program nexthop group related tables during delete by
+    ///            disabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] nh_group nexthop group obj being programmed
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, nexthop_group *nh_group);
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification
@@ -151,12 +168,8 @@ private:
 private:
     ///< hardware id of this nexthop group
     uint16_t    hw_id_;
-    ///< base index of UNDERLAY_ECMP table in case this group is
-    ///< overylay nexthop group and entry type is PDS_NHGROUP_ENTRY_TYPE_NHGROUP
-    uint16_t    underlay_nhgroup_base_hw_id_;
-    ///< base index of NEXTHOP table in case this group is
-    ///< overylay/underlay nexthop group and entry type is
-    ///< PDS_NHGROUP_ENTRY_TYPE_NEXTHOP
+    ///< base index of NEXTHOP table in case this group consists of underlay
+    ///< nexthops
     uint16_t    nh_base_hw_id_;
 };
 

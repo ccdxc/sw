@@ -35,23 +35,17 @@ public:
     /// \brief  destructor
     ~nexthop_group_impl_state();
 
-    /// \brief  return the underlay nexthop group table indexer
-    /// \return pointer to the underlay nexthop group table indexer
-    rte_indexer *underlay_nhgroup_idxr(void) { return overlay_nhgroup_idxr_; }
-
-    /// \brief  return the overlay nexthop group table indexer
-    /// \return pointer to the overlay nexthop group table indexer
-    rte_indexer *overlay_nhgroup_idxr(void) { return overlay_nhgroup_idxr_; }
+    /// \brief  return the nexthop group table indexer
+    /// \return pointer to the nexthop group table indexer
+    rte_indexer *nhgroup_idxr(void) { return nhgroup_idxr_; }
 
 private:
     // nexthop_group_impl is friend of nexthop_group_impl_state
     friend class nexthop_group_impl;
 
 private:
-    // indexer for overlay nexthop group
-    rte_indexer *overlay_nhgroup_idxr_;
-    // indexer for underlay nexthop group
-    rte_indexer *underlay_nhgroup_idxr_;
+    // indexer for nexthop group
+    rte_indexer *nhgroup_idxr_;
 };
 
 /// @}

@@ -148,9 +148,8 @@ subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-subnet_impl::activate_subnet_create_(pds_epoch_t epoch,
-                                     subnet_entry *subnet,
-                                     pds_subnet_spec_t *spec) {
+subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
+                              pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     vni_swkey_t vni_key = { 0 };
@@ -184,7 +183,7 @@ subnet_impl::activate_subnet_create_(pds_epoch_t epoch,
 }
 
 sdk_ret_t
-subnet_impl::activate_subnet_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
+subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     sdk_ret_t ret;
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
@@ -219,12 +218,12 @@ subnet_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case api::API_OP_CREATE:
         spec = &obj_ctxt->api_params->subnet_spec;
-        ret = activate_subnet_create_(epoch, (subnet_entry *)api_obj, spec);
+        ret = activate_create_(epoch, (subnet_entry *)api_obj, spec);
         break;
 
     case api::API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_subnet_delete_(epoch, (subnet_entry *)api_obj);
+        ret = activate_delete_(epoch, (subnet_entry *)api_obj);
         break;
 
     case api::API_OP_UPDATE:

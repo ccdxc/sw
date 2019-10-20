@@ -142,15 +142,15 @@ private:
     /// \param[in]  vpc    vpc obj being programmed
     /// \param[in]  spec    vpc configuration
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
-                                   pds_vpc_spec_t *spec);
+    sdk_ret_t activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
+                               pds_vpc_spec_t *spec);
 
     /// \brief      program vpc related tables during vpc delete by disabling
     ///             stage0 tables corresponding to the new epoch
     /// \param[in]  epoch epoch being activated
     /// \param[in]  vpc    vpc obj being programmed
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
     handle_t    vni_hdl_;
