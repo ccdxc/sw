@@ -322,8 +322,9 @@ func (s *sworkloadEndpointBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 		}),
 
-		"workload.EndpointSpec":   apisrvpkg.NewMessage("workload.EndpointSpec"),
-		"workload.EndpointStatus": apisrvpkg.NewMessage("workload.EndpointStatus"),
+		"workload.EndpointMigrationStatus": apisrvpkg.NewMessage("workload.EndpointMigrationStatus"),
+		"workload.EndpointSpec":            apisrvpkg.NewMessage("workload.EndpointSpec"),
+		"workload.EndpointStatus":          apisrvpkg.NewMessage("workload.EndpointStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

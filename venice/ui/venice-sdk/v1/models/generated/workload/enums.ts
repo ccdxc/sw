@@ -18,6 +18,24 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
+export enum WorkloadEndpointMigrationStatus_status {
+    'none' = "none",
+    'started' = "started",
+    'inprogress' = "inprogress",
+    'success' = "success",
+    'failed' = "failed",
+    'aborted' = "aborted",
+}
+
+export enum WorkloadWorkloadMigrationStatus_status {
+    'none' = "none",
+    'started' = "started",
+    'inprogress' = "inprogress",
+    'success' = "success",
+    'failed' = "failed",
+    'aborted' = "aborted",
+}
+
 
 export enum ApiListWatchOptions_sort_order_uihint {
     'by-creation-time' = "By Creation Time",
@@ -29,6 +47,24 @@ export enum ApiListWatchOptions_sort_order_uihint {
     'by-version' = "By Version",
     'by-version-reverse' = "By Version Reverse",
     'none' = "None",
+}
+
+export enum WorkloadEndpointMigrationStatus_status_uihint {
+    'aborted' = "Aborted",
+    'failed' = "Failed",
+    'inprogress' = "In Progress",
+    'none' = "None",
+    'started' = "Started",
+    'success' = "Success",
+}
+
+export enum WorkloadWorkloadMigrationStatus_status_uihint {
+    'aborted' = "Aborted",
+    'failed' = "Failed",
+    'inprogress' = "In Progress",
+    'none' = "None",
+    'started' = "Started",
+    'success' = "Success",
 }
 
 
@@ -63,6 +99,10 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    WorkloadEndpointMigrationStatus_status = WorkloadEndpointMigrationStatus_status;
+    WorkloadWorkloadMigrationStatus_status = WorkloadWorkloadMigrationStatus_status;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
+    WorkloadEndpointMigrationStatus_status_uihint = WorkloadEndpointMigrationStatus_status_uihint;
+    WorkloadWorkloadMigrationStatus_status_uihint = WorkloadWorkloadMigrationStatus_status_uihint;
 }

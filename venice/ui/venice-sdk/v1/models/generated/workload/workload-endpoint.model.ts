@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { WorkloadEndpointSpec, IWorkloadEndpointSpec } from './workload-endpoint-spec.model';
 import { WorkloadEndpointStatus, IWorkloadEndpointStatus } from './workload-endpoint-status.model';
+import { WorkloadEndpointMigrationStatus, IWorkloadEndpointMigrationStatus } from './workload-endpoint-migration-status.model';
 
 export interface IWorkloadEndpoint {
     'kind'?: string;
@@ -17,6 +18,7 @@ export interface IWorkloadEndpoint {
     'meta'?: IApiObjectMeta;
     'spec'?: IWorkloadEndpointSpec;
     'status'?: IWorkloadEndpointStatus;
+    'migration'?: IWorkloadEndpointMigrationStatus;
 }
 
 
@@ -28,6 +30,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     'spec': WorkloadEndpointSpec = null;
     /** Status contains the current state of the Endpoint. */
     'status': WorkloadEndpointStatus = null;
+    'migration': WorkloadEndpointMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadEndpoint]: PropInfoItem } = {
         'kind': {
             required: false,
@@ -48,6 +51,10 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
         },
         'status': {
             description:  'Status contains the current state of the Endpoint.',
+            required: false,
+            type: 'object'
+        },
+        'migration': {
             required: false,
             type: 'object'
         },
@@ -78,6 +85,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new WorkloadEndpointSpec();
         this['status'] = new WorkloadEndpointStatus();
+        this['migration'] = new WorkloadEndpointMigrationStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -116,6 +124,11 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
         } else {
             this['status'].setValues(null, fillDefaults);
         }
+        if (values) {
+            this['migration'].setValues(values['migration'], fillDefaults);
+        } else {
+            this['migration'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -128,6 +141,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
                 'meta': CustomFormGroup(this['meta'].$formGroup, WorkloadEndpoint.propInfo['meta'].required),
                 'spec': CustomFormGroup(this['spec'].$formGroup, WorkloadEndpoint.propInfo['spec'].required),
                 'status': CustomFormGroup(this['status'].$formGroup, WorkloadEndpoint.propInfo['status'].required),
+                'migration': CustomFormGroup(this['migration'].$formGroup, WorkloadEndpoint.propInfo['migration'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
@@ -142,6 +156,11 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('status').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('migration') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('migration').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -159,6 +178,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
             this['meta'].setFormGroupValuesToBeModelValues();
             this['spec'].setFormGroupValuesToBeModelValues();
             this['status'].setFormGroupValuesToBeModelValues();
+            this['migration'].setFormGroupValuesToBeModelValues();
         }
     }
 }

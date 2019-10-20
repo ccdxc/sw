@@ -8,6 +8,7 @@ Input file: endpoint.proto
 The following Messages are defined.
 
   Endpoint
+  EndpointMigrationStatus
   EndpointSpec
   EndpointStatus
 

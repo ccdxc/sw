@@ -404,6 +404,50 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "migration.status",
+            "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.start-time",
+            "description": "Start time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.end-time",
+            "description": "End time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.source-ip",
+            "description": "IP of source DSC.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.destination-ip",
+            "description": "IP of destination DSC where the endpoint will be migrated to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.reason",
+            "description": "Reason field is populated if some failures are encountered while migrating a workload.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -797,6 +841,50 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "migration.status",
+            "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.start-time",
+            "description": "Start time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.end-time",
+            "description": "End time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.source-ip",
+            "description": "IP of source DSC.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.destination-ip",
+            "description": "IP of destination DSC where the endpoint will be migrated to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.reason",
+            "description": "Reason field is populated if some failures are encountered while migrating a workload.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1216,6 +1304,50 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "migration.status",
+            "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.start-time",
+            "description": "Start time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.end-time",
+            "description": "End time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.source-host",
+            "description": "Source Hostname derived from the workload to host to DSC association.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.destination-host",
+            "description": "Destination Hostname where the new workload will be migrated to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.reason",
+            "description": "Reason field is populated if some failures are encountered while migrating a workload.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2435,6 +2567,50 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "migration.status",
+            "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.start-time",
+            "description": "Start time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.end-time",
+            "description": "End time of the migration operation.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.source-host",
+            "description": "Source Hostname derived from the workload to host to DSC association.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.destination-host",
+            "description": "Destination Hostname where the new workload will be migrated to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.reason",
+            "description": "Reason field is populated if some failures are encountered while migrating a workload.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2999,6 +3175,10 @@
         "status": {
           "$ref": "#/definitions/workloadEndpointStatus",
           "description": "Status contains the current state of the Endpoint."
+        },
+        "migration": {
+          "$ref": "#/definitions/workloadEndpointMigrationStatus",
+          "title": "Status of migration of endpoint"
         }
       },
       "title": "Endpoint represents a network endpoint"
@@ -3024,6 +3204,57 @@
         }
       },
       "title": "EndpointList is a container object for list of Endpoint objects"
+    },
+    "workloadEndpointMigrationStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "started",
+            "inprogress",
+            "success",
+            "failed",
+            "aborted"
+          ],
+          "default": "none",
+          "x-ui-hints": {
+            "aborted": "Aborted",
+            "failed": "Failed",
+            "inprogress": "In Progress",
+            "none": "None",
+            "started": "Started",
+            "success": "Success"
+          },
+          "title": "Status of migration"
+        },
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Start time of the migration operation"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "End time of the migration operation"
+        },
+        "source-ip": {
+          "type": "string",
+          "title": "IP of source DSC"
+        },
+        "destination-ip": {
+          "type": "string",
+          "title": "IP of destination DSC where the endpoint will be migrated to"
+        },
+        "reason": {
+          "type": "string",
+          "title": "Reason field is populated if some failures are encountered while migrating a workload"
+        }
+      }
     },
     "workloadEndpointSpec": {
       "type": "object",
@@ -3221,6 +3452,57 @@
       },
       "title": "WorkloadList is a container object for list of Workload objects"
     },
+    "workloadWorkloadMigrationStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "started",
+            "inprogress",
+            "success",
+            "failed",
+            "aborted"
+          ],
+          "default": "none",
+          "x-ui-hints": {
+            "aborted": "Aborted",
+            "failed": "Failed",
+            "inprogress": "In Progress",
+            "none": "None",
+            "started": "Started",
+            "success": "Success"
+          },
+          "title": "Status of migration"
+        },
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Start time of the migration operation"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "End time of the migration operation"
+        },
+        "source-host": {
+          "type": "string",
+          "title": "Source Hostname derived from the workload to host to DSC association"
+        },
+        "destination-host": {
+          "type": "string",
+          "title": "Destination Hostname where the new workload will be migrated to"
+        },
+        "reason": {
+          "type": "string",
+          "title": "Reason field is populated if some failures are encountered while migrating a workload"
+        }
+      }
+    },
     "workloadWorkloadSpec": {
       "type": "object",
       "required": [
@@ -3256,6 +3538,10 @@
             "$ref": "#/definitions/workloadWorkloadIntfStatus"
           },
           "title": "Status of all interfaces in the Workload identified by Primary MAC"
+        },
+        "migration": {
+          "$ref": "#/definitions/workloadWorkloadMigrationStatus",
+          "title": "Status of Migration of the workload"
         }
       },
       "title": "Status part of Workload object"

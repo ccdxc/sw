@@ -51,6 +51,40 @@ func DecodeGrpcRespEndpoint(ctx context.Context, response interface{}) (interfac
 	return response, nil
 }
 
+func encodeHTTPEndpointMigrationStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPEndpointMigrationStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req EndpointMigrationStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqEndpointMigrationStatus encodes GRPC request
+func EncodeGrpcReqEndpointMigrationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointMigrationStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqEndpointMigrationStatus decodes GRPC request
+func DecodeGrpcReqEndpointMigrationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointMigrationStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespEndpointMigrationStatus encodes GRC response
+func EncodeGrpcRespEndpointMigrationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespEndpointMigrationStatus decodes GRPC response
+func DecodeGrpcRespEndpointMigrationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPEndpointSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
