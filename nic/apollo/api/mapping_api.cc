@@ -150,6 +150,10 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
 {
     pds_mapping_spec_t spec;
 
+    if ((remote_spec->nh_type != PDS_NH_TYPE_TEP) &&
+        (remote_spec->nh_type != PDS_NH_TYPE_OVERLAY_NHGROUP)) {
+        return SDK_RET_INVALID_ARG;
+    }
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);
     return pds_mapping_api_handle(bctxt, api::API_OP_CREATE, NULL, &spec);
 }

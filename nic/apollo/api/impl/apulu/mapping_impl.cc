@@ -20,6 +20,7 @@
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -399,6 +400,61 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
+                        obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
+                                          pds_mapping_spec_t *spec) {
+    tep_impl *tep;
+    subnet_entry *subnet;
+    mapping_swkey_t mapping_key;
+    nexthop_group_impl *nh_group;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
+
+    // add entry to MAPPING table for overlay IP
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                   &spec->key.ip_addr);
+    memset(&mapping_data, 0, sizeof(mapping_data));
+    mapping_data.nexthop_valid = TRUE;
+    switch (spec->nh_type) {
+        case PDS_NH_TYPE_TEP:
+            tep = (tep_impl *)tep_db()->find(&spec->tep)->impl();
+            // TODO: rename NEXTHOP_TYPE_UNDERLAY to NEXTHOP_TYPE_TEP once p4 is
+            //       fixed with new tables
+            mapping_data.nexthop_type = NEXTHOP_TYPE_UNDERLAY;
+            mapping_data.nexthop_id = tep->hw_id();
+            break;
+
+        case PDS_NH_TYPE_OVERLAY_NHGROUP:
+            nh_group =
+                (nexthop_group_impl *)nexthop_group_db()->find(&spec->nh_group)->impl();
+            mapping_data.nexthop_type = NEXTHOP_TYPE_OVERLAY;
+            mapping_data.nexthop_id = nh_group->hw_id();
+            break;
+
+        default:
+            return SDK_RET_INVALID_ARG;
+            break;
+    }
+    subnet = subnet_db()->find(&spec->subnet);
+    mapping_data.egress_bd_id = subnet->hw_id();
+    sdk::lib::memrev(mapping_data.dmaci, spec->overlay_mac, ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
+                                   NULL, &mapping_data,
+                                   MAPPING_MAPPING_INFO_ID, mapping_hdl_);
+    return mapping_impl_db()->mapping_tbl()->insert(&tparams);
+}
+
+sdk_ret_t
 mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
                                          pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
@@ -483,24 +539,6 @@ error:
 
     // TODO: handle cleanup in case of failure
     return ret;
-}
-
-sdk_ret_t
-mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-
-sdk_ret_t
-mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
-                                          pds_mapping_spec_t *spec) {
-    sdk_ret_t ret;
-    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
