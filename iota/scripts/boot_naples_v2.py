@@ -279,7 +279,7 @@ class EntityManagement:
         print("Waiting for IP:%s to be up." % self.ipaddr)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ret = sock.connect_ex(('%s' % self.ipaddr, port))
-        sock.settimeout(1)
+        sock.settimeout(10)
         if ret == 0:
             return True
         print("Host not up. Ret:%d" % ret)
@@ -650,9 +650,9 @@ class HostManagement(EntityManagement):
         self.InstallPrep()
 
         if copy_fw:
-            self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+            self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = NAPLES_TMP_DIR)
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(GlobalOptions.image))
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /%s/%s"%(NAPLES_TMP_DIR, os.path.basename(GlobalOptions.image)))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 

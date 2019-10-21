@@ -138,7 +138,7 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             node_msg = msg.nodes.add()
             node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
-            node_msg.ip_address = socket.gethostbyname(instance.NodeMgmtIP)
+            node_msg.ip_address = instance.NodeMgmtIP
             node_os = getattr(instance, 'NodeOs', 'linux')
             if node_os == "freebsd":
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
