@@ -109,7 +109,7 @@ def CollectTechSupport(tsName):
         resp = api.Trigger(req)
         result = types.status.SUCCESS
         for n,cmd in zip(nodes,resp.commands):
-            api.PrintCommandResults(cmd)
+            #api.PrintCommandResults(cmd)
             if cmd.exit_code != 0:
                 Logger.error("Failed to execute penctl system tech-support on node: %s. err: %d" % (n, cmd.exit_code))
                 result = types.status.FAILURE
@@ -128,6 +128,6 @@ def CollectTechSupport(tsName):
         return result
     except:
         print('failed to collect tech support')
-        Logger.error('failed to collect tech support. error was: {0}'.format(traceback.format_exc()))
+        Logger.debug('failed to collect tech support. error was: {0}'.format(traceback.format_exc()))
         return types.status.CRITICAL
 
