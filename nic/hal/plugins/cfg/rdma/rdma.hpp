@@ -118,8 +118,8 @@ typedef struct sram_lif_entry_s {
     uint32_t log_num_sq_entries:5;
     uint32_t log_num_rq_entries:5;
 
-    uint32_t prefetch_pool_base_addr_page_id:22;
-    uint32_t log_num_prefetch_pool_entries:5;
+    uint32_t prefetch_base_addr_page_id:22;
+    uint32_t log_prefetch_buf_size:5;
     uint32_t sq_qtype: 3;
     uint32_t rq_qtype: 3;
     uint32_t aq_qtype: 3;

@@ -99,13 +99,14 @@ sdk_ret_t
 rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                        uint32_t max_ahs, uint32_t max_ptes,
                        uint64_t mem_bar_addr, uint32_t mem_bar_size,
-                       uint32_t max_prefetch)
+                       uint32_t max_prefetch_wqes)
 {
     sdk_ret_t           ret = SDK_RET_OK;
     sram_lif_entry_t    sram_lif_entry;
     uint32_t            pt_size, key_table_size, ah_table_size;
-    uint32_t            prefetch_cb_size = 0, prefetch_ring_size = 0;
-    uint32_t            prefetch_size = 0;
+    uint32_t            prefetch_cb_size = 0;
+    uint32_t            prefetch_ring_size = 0;
+    uint32_t            prefetch_buf_size = 0;
     uint32_t            total_size;
     uint64_t            base_addr;
     uint64_t            size;
@@ -170,25 +171,31 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     key_table_size += sizeof(dcqcn_config_cb_t) * num_dcqcn_profiles;
     key_table_size = HBM_PAGE_ALIGN(key_table_size);
 
-    if (max_prefetch > 0) {
+    if (max_prefetch_wqes > 0) {
         prefetch_cb_size = sizeof(rq_prefetch_cb_t); // 64 bytes for LIF level cb
         //adjust to page boundary
         if (prefetch_cb_size & (HBM_PAGE_SIZE - 1)) {
             prefetch_cb_size = ((prefetch_cb_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
 
-        prefetch_ring_size = sizeof(rq_prefetch_ring_t) * MAX_RQ_PREFETCH_ACTIVE_QPS; // 2 byte entries * 1024 active QP's
+        prefetch_ring_size = sizeof(rq_prefetch_ring_t) * MAX_RQ_PREFETCH_ACTIVE_QPS;
         //adjust to page boundary
         if (prefetch_ring_size & (HBM_PAGE_SIZE - 1)) {
             prefetch_ring_size = ((prefetch_ring_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
 
-        // TODO hard code to 64 for now. With this, WQE's > 64 bytes will have < 32 prefetch WQE entries per QP
-        prefetch_size = 64 * max_prefetch;
+        // max_prefetch_wqes is the total number of minimum-size WQEs to preallocate in HBM
+        prefetch_buf_size = RQ_PREFETCH_WQE_SIZE * max_prefetch_wqes;
         //adjust to page boundary
-        if (prefetch_size & (HBM_PAGE_SIZE - 1)) {
-            prefetch_size = ((prefetch_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+        if (prefetch_buf_size & (HBM_PAGE_SIZE - 1)) {
+            prefetch_buf_size = ((prefetch_buf_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
         }
+
+        /* asm code makes assumptions about the memory layout */
+        SDK_ASSERT(prefetch_cb_size ==
+                   RQ_PREFETCH_RING_PG_OFFSET << HBM_PAGE_SIZE_SHIFT);
+        SDK_ASSERT(prefetch_cb_size + prefetch_ring_size ==
+                   RQ_PREFETCH_BUF_PG_OFFSET << HBM_PAGE_SIZE_SHIFT);
     }
 
     max_ahs = roundup_to_pow_2_(max_ahs);
@@ -196,23 +203,23 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     ah_table_size = AT_ENTRY_SIZE_BYTES * max_ahs;
     ah_table_size = HBM_PAGE_ALIGN(ah_table_size);
 
-    total_size = pt_size + key_table_size + prefetch_cb_size + prefetch_ring_size + prefetch_size + ah_table_size + HBM_PAGE_SIZE;
+    total_size = pt_size + key_table_size + prefetch_cb_size + prefetch_ring_size + prefetch_buf_size + ah_table_size + HBM_PAGE_SIZE;
 
     base_addr = rdma_mem_alloc_(total_size);
 
     NIC_FUNC_DEBUG("lif-{}: pt_size: {}, key_table_size: {}, "
                   "ah_table_size: {}, base_addr: {:#x}, "
-                  "prefetch_cb_size: {}, prefetch_ring_size: {}, prefetch_size: {}",
+                  "prefetch_cb_size: {}, prefetch_ring_size: {}, prefetch_buf_size: {}",
                   lif,
                   pt_size, key_table_size,
                   ah_table_size, base_addr,
-                  prefetch_cb_size, prefetch_ring_size, prefetch_size);
+                  prefetch_cb_size, prefetch_ring_size, prefetch_buf_size);
 
     size = base_addr;
     sram_lif_entry.pt_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     size += pt_size + key_table_size;
 
-    if (max_prefetch > 0) {
+    if (max_prefetch_wqes > 0) {
         // init LIF level prefetch CB
         prefetch_cb_base_addr = size;
         uint16_t p_index = MAX_RQ_PREFETCH_ACTIVE_QPS - 1;
@@ -221,16 +228,16 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
 
         // init prefetch ring
         uint64_t addr = size;
-        for (int i=0; i<p_index; i++) {
+        for (int i = 0; i < p_index; i++) {
             WRITE_MEM(addr, (uint8_t *)&i, sizeof(uint16_t), 0);
             addr += sizeof(uint16_t);
         }
         size += prefetch_ring_size;
 
         // populate prefetch related fields
-        sram_lif_entry.prefetch_pool_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
-        sram_lif_entry.log_num_prefetch_pool_entries = log2(prefetch_size / MAX_RQ_PREFETCH_ACTIVE_QPS);
-        size += prefetch_size;
+        sram_lif_entry.prefetch_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+        sram_lif_entry.log_prefetch_buf_size = log2(prefetch_buf_size / MAX_RQ_PREFETCH_ACTIVE_QPS);
+        size += prefetch_buf_size;
     }
 
     sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
@@ -239,8 +246,6 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     sram_lif_entry.log_num_dcqcn_profiles = log2(num_dcqcn_profiles);
     sram_lif_entry.log_num_ah_entries = log2(max_ahs);
     size += ah_table_size;
-
-    // TODO: Fill prefetch data and add corresponding code
 
     sram_lif_entry.rdma_en_qtype_mask =
         ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ) | (1 << Q_TYPE_ADMINQ));
@@ -252,7 +257,8 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                    "log_num_kt: {}, log_num_dcqcn: {}, "
                    "ah_base_addr_page_id: {}, log_num_ah {}, rdma_en_qtype_mask: {} "
                    "sq_qtype: {} rq_qtype: {} aq_qtype: {}, "
-                   "prefetch_pool_base_addr : {:#x}, log_num_prefetch_pool_entries: {}",
+                   "prefetch_pool_base_addr : {:#x} log_prefetch_buf_size: {} "
+                   "prefetch_cb_base_addr: {:#x}",
                     lif,
                     sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
@@ -264,8 +270,9 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                     sram_lif_entry.sq_qtype,
                     sram_lif_entry.rq_qtype,
                     sram_lif_entry.aq_qtype,
-                    sram_lif_entry.prefetch_pool_base_addr_page_id,
-                    sram_lif_entry.log_num_prefetch_pool_entries);
+                    sram_lif_entry.prefetch_base_addr_page_id,
+                    sram_lif_entry.log_prefetch_buf_size,
+                    prefetch_cb_base_addr);
 
     //Controller Memory Buffer
     //meant for SQ/RQ in HBM for good performance
@@ -292,8 +299,8 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.log_num_cq_entries,
                             sram_lif_entry.log_num_sq_entries,
                             sram_lif_entry.log_num_rq_entries,
-                            sram_lif_entry.prefetch_pool_base_addr_page_id,
-                            sram_lif_entry.log_num_prefetch_pool_entries,
+                            sram_lif_entry.prefetch_base_addr_page_id,
+                            sram_lif_entry.log_prefetch_buf_size,
                             sram_lif_entry.sq_qtype,
                             sram_lif_entry.rq_qtype,
                             sram_lif_entry.aq_qtype);
@@ -313,8 +320,8 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.log_num_cq_entries,
                             sram_lif_entry.log_num_sq_entries,
                             sram_lif_entry.log_num_rq_entries,
-                            sram_lif_entry.prefetch_pool_base_addr_page_id,
-                            sram_lif_entry.log_num_prefetch_pool_entries,
+                            sram_lif_entry.prefetch_base_addr_page_id,
+                            sram_lif_entry.log_prefetch_buf_size,
                             sram_lif_entry.sq_qtype,
                             sram_lif_entry.rq_qtype,
                             sram_lif_entry.aq_qtype,
@@ -406,8 +413,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add_(
                                                              uint8_t log_num_cq_entries,
                                                              uint8_t log_num_sq_entries,
                                                              uint8_t log_num_rq_entries,
-                                                             uint32_t prefetch_pool_base_addr_page_id,
-                                                             uint8_t log_num_prefetch_pool_entries,
+                                                             uint32_t prefetch_base_addr_page_id,
+                                                             uint8_t log_prefetch_buf_size,
                                                              uint8_t sq_qtype,
                                                              uint8_t rq_qtype,
                                                              uint8_t aq_qtype)
@@ -429,8 +436,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add_(
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_sq_entries = log_num_sq_entries;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_rq_entries = log_num_rq_entries;
-    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
-    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_base_addr_page_id = prefetch_base_addr_page_id;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_prefetch_buf_size = log_prefetch_buf_size;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sq_qtype = sq_qtype;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rq_qtype = rq_qtype;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.aq_qtype = aq_qtype;
@@ -467,8 +474,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add_(
                                                              uint8_t log_num_cq_entries,
                                                              uint8_t log_num_sq_entries,
                                                              uint8_t log_num_rq_entries,
-                                                             uint32_t prefetch_pool_base_addr_page_id,
-                                                             uint8_t log_num_prefetch_pool_entries,
+                                                             uint32_t prefetch_base_addr_page_id,
+                                                             uint8_t log_prefetch_buf_size,
                                                              uint8_t sq_qtype,
                                                              uint8_t rq_qtype,
                                                              uint8_t aq_qtype,
@@ -492,8 +499,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add_(
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_sq_entries = log_num_sq_entries;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_rq_entries = log_num_rq_entries;
-    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
-    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_base_addr_page_id = prefetch_base_addr_page_id;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_prefetch_buf_size = log_prefetch_buf_size;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;

@@ -22,7 +22,7 @@ struct resp_tx_s1_t2_k k;
 
 resp_tx_setup_checkout_process:
 
-    //seq         c1, K_RQ_PINDEX, RQ_PROXY_C_INDEX
+    //seq         c1, K_RQ_PINDEX, PROXY_RQ_C_INDEX
     //bcf         [c1], process_checkin
     seq         c2, d.checkout_done, 1 // BD Slot
     // c2: checkout_done
@@ -35,7 +35,8 @@ process_checkout:
 
 load_pre_checkout:
     add         r1, r0, PREFETCH_CB_ADDR, PT_BASE_ADDR_SHIFT
-    sub         r1, r1, 2, HBM_PAGE_SIZE_SHIFT
+    sub         r1, r1, PREFETCH_BUF_PAGE_OFFSET, HBM_PAGE_SIZE_SHIFT
+    // r1: addr of prefetch cb
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_pre_checkout_process, r1) // Exit Slot
 
 process_checkin:

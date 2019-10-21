@@ -30,6 +30,12 @@
 
 #define RESP_TX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
+#define PREFETCH_LOG_MAX_QPS            10  // 1024 QPs
+#define PREFETCH_LOG_CB_ENTRY           1   // 2 bytes per entry
+#define PREFETCH_LOG_CB_PER_QP          11  // 2048 bytes per QP
+#define PREFETCH_RING_PAGE_OFFSET       1   // 1 page after cb
+#define PREFETCH_BUF_PAGE_OFFSET        2   // 2 pages after cb
+
 // phv 
 struct resp_tx_phv_t {
     // dma commands

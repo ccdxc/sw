@@ -967,8 +967,8 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
                                   log_num_cq_entries,
                                   log_num_sq_entries,
                                   log_num_rq_entries,
-                                  prefetch_pool_base_addr_page_id,
-                                  log_num_prefetch_pool_entries,
+                                  prefetch_base_addr_page_id,
+                                  log_prefetch_buf_size,
                                   sq_qtype,
                                   rq_qtype,
                                   aq_qtype,
@@ -995,10 +995,10 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
             modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
             modify_field(scratch_rdma.log_num_sq_entries, log_num_sq_entries);
             modify_field(scratch_rdma.log_num_rq_entries, log_num_rq_entries);
-            modify_field(scratch_rdma.prefetch_pool_base_addr_page_id,
-                         prefetch_pool_base_addr_page_id);
-            modify_field(scratch_rdma.log_num_prefetch_pool_entries,
-                         log_num_prefetch_pool_entries);
+            modify_field(scratch_rdma.prefetch_base_addr_page_id,
+                         prefetch_base_addr_page_id);
+            modify_field(scratch_rdma.log_prefetch_buf_size,
+                         log_prefetch_buf_size);
             modify_field(scratch_rdma.sq_qtype, sq_qtype);
             modify_field(scratch_rdma.rq_qtype, rq_qtype);
             modify_field(scratch_rdma.aq_qtype, aq_qtype);

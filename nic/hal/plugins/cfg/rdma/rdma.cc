@@ -117,8 +117,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
     rx_args.log_num_sq_entries = entry_p->log_num_sq_entries;
     rx_args.log_num_rq_entries = entry_p->log_num_rq_entries;
-    rx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
-    rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
+    rx_args.prefetch_base_addr_page_id = entry_p->prefetch_base_addr_page_id;
+    rx_args.log_prefetch_buf_size = entry_p->log_prefetch_buf_size;
     rx_args.sq_qtype = entry_p->sq_qtype;
     rx_args.rq_qtype = entry_p->rq_qtype;
     rx_args.aq_qtype = entry_p->aq_qtype;
@@ -147,8 +147,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
     tx_args.log_num_sq_entries = entry_p->log_num_sq_entries;
     tx_args.log_num_rq_entries = entry_p->log_num_rq_entries;
-    tx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
-    tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
+    tx_args.prefetch_base_addr_page_id = entry_p->prefetch_base_addr_page_id;
+    tx_args.log_prefetch_buf_size = entry_p->log_prefetch_buf_size;
     tx_args.sq_qtype = entry_p->sq_qtype;
     tx_args.rq_qtype = entry_p->rq_qtype;
     tx_args.aq_qtype = entry_p->aq_qtype;

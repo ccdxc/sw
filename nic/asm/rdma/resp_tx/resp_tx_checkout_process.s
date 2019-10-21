@@ -24,11 +24,12 @@ struct resp_tx_s3_t2_k k;
 resp_tx_checkout_process:
 
     bbeq        K_CHECK_IN, 1, process_checkin
-    // prefetch base is 2 pages away from cb base
 
+    // prefetch buffers are PREFETCH_BUF_PAGE_OFFSET pages away from cb
     sll         r1, PREFETCH_CB_ADDR, PT_BASE_ADDR_SHIFT // BD Slot
 
-    add         r1, r1, d.{val}.hx, 11 // 11 is log (size of prefetch buffer per QP)
+    // TODO pass in prefetch buffer size
+    add         r1, r1, d.{val}.hx, PREFETCH_LOG_CB_PER_QP
 
     srl         r1, r1, PT_BASE_ADDR_SHIFT
     CAPRI_SET_FIELD2(OUT_P, prefetch_cb_or_base_addr, r1)

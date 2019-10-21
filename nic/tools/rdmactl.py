@@ -596,14 +596,15 @@ class RdmaRQCB0state(Packet):
 
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
-        
+
         XIntField("rsq_base_addr", 0),
-    
+
         X3BytesField("spec_read_rsp_psn", 0),
         BitField("spec_color", 0, 1),
         BitField("drain_in_progress", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rsvd", 0, 5),
+        BitField("prefetch_en", 0, 1),
+        BitField("rsvd", 0, 4),
 
         XIntField("header_template_addr", 0),
 
@@ -633,17 +634,17 @@ class RdmaRQCB1state(Packet):
         ByteField("pc_offset", 0),
 
         XIntField("rsq_base_addr/q_key", 0),
-    
+
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_or_rq_hbm_or_prefetch_base_addr", 0),
-        
+
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("congestion_mgmt_enable", 0, 1),
         BitField("cb1_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
-        
+
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
@@ -651,7 +652,7 @@ class RdmaRQCB1state(Packet):
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rx_prefetch_en", 0, 1),
+        BitField("prefetch_en", 0, 1),
 
         X3BytesField("cq_id", 0),
 

@@ -36,7 +36,7 @@ resp_tx_rqprefetch_process:
 
     // compare RQ PI with RQ proxy CI
     // if equal, all WQE's have already been prefetched
-    seq         c1, K_RQ_PINDEX, RQ_PROXY_C_INDEX
+    seq         c1, K_RQ_PINDEX, PROXY_RQ_C_INDEX
     bcf         [c1], prefetch_done
     nop // BD Slot
 
@@ -71,12 +71,12 @@ skip_init:
     // calculate the number of WQE's in RQ buffer yet to be
     // prefetched, before RQ ring wraps around
     // if rq_pindex < proxy_cindex, it has wrapped around
-    slt         c1, K_RQ_PINDEX, RQ_PROXY_C_INDEX // BD Slot
+    slt         c1, K_RQ_PINDEX, PROXY_RQ_C_INDEX // BD Slot
     sll         RQ_NUM_WQES, 1, d.log_num_prefetch_wqes
-    sub.c1      RQ_NUM_WQES, RQ_NUM_WQES, RQ_PROXY_C_INDEX
+    sub.c1      RQ_NUM_WQES, RQ_NUM_WQES, PROXY_RQ_C_INDEX
     // rq_num_wqes = rq PI - rq proxy CI
 
-    sub.!c1     RQ_NUM_WQES, K_RQ_PINDEX, RQ_PROXY_C_INDEX
+    sub.!c1     RQ_NUM_WQES, K_RQ_PINDEX, PROXY_RQ_C_INDEX
 
     // calculate the number of WQE's that can be prefetched
     // before prefetch ring wraps around
@@ -99,7 +99,7 @@ no_wrap_around:
     sub         r2, K_LOG_RQ_PAGE_SIZE, K_LOG_WQE_SIZE
     sll         PAGE_NUM_WQES, 1, r2
     // page_index = c_index >> (log_rq_page_size - log_wqe_size)
-    add         r1, r0, RQ_PROXY_C_INDEX
+    add         r1, r0, PROXY_RQ_C_INDEX
     srlv        r3, r1, r2
 
     // page_offset = c_index & ((1 << (log_rq_page_size - log_wqe_size))-1) << log_wqe_size
@@ -133,7 +133,7 @@ no_wrap_around:
     add         r1, r0, PREFETCH_P_INDEX
     CAPRI_SET_FIELD2(INFO_OUT1_P, prefetch_pindex_pre, r1)
 
-    tblmincr    RQ_PROXY_C_INDEX, K_LOG_NUM_WQES, TRANSFER_NUM_WQES
+    tblmincr    PROXY_RQ_C_INDEX, K_LOG_NUM_WQES, TRANSFER_NUM_WQES
     tblmincr    PREFETCH_P_INDEX, d.log_num_prefetch_wqes, TRANSFER_NUM_WQES
 
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, prefetch_pindex_post), d.prefetch_pindex, \

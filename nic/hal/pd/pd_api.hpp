@@ -2584,8 +2584,8 @@ typedef struct pd_rxdma_table_entry_add_args_s {
     uint8_t log_num_cq_entries;
     uint8_t log_num_sq_entries;
     uint8_t log_num_rq_entries;
-    uint32_t prefetch_pool_base_addr_page_id;
-    uint8_t log_num_prefetch_pool_entries;
+    uint32_t prefetch_base_addr_page_id;
+    uint8_t log_prefetch_buf_size;
     uint8_t sq_qtype;
     uint8_t rq_qtype;
     uint8_t aq_qtype;
@@ -2606,8 +2606,8 @@ typedef struct pd_txdma_table_entry_add_args_s {
     uint8_t log_num_cq_entries;
     uint8_t log_num_sq_entries;
     uint8_t log_num_rq_entries;
-    uint32_t prefetch_pool_base_addr_page_id;
-    uint8_t log_num_prefetch_pool_entries;
+    uint32_t prefetch_base_addr_page_id;
+    uint8_t log_prefetch_buf_size;
     uint8_t sq_qtype;
     uint8_t rq_qtype;
     uint8_t aq_qtype;

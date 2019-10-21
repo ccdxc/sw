@@ -84,7 +84,7 @@ class RdmaAQstate(Packet):
 class RdmaRQstate(Packet):
     name = "RdmaRQstate"
     fields_desc = [
-        
+
         # RQCB0
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
@@ -118,9 +118,9 @@ class RdmaRQstate(Packet):
 
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
-        
+
         XIntField("rsq_base_addr/rqcb0_q_key", 0),
-    
+
         X3BytesField("spec_read_rsp_psn", 0),
         BitField("spec_color", 0, 1),
         BitField("drain_in_progress", 0, 1),
@@ -149,7 +149,7 @@ class RdmaRQstate(Packet):
 
         BitField("serv_type", 0, 3),
         BitField("log_pmtu", 0xa, 5),
-        
+
         # RQCB1
         ByteField("pc_offset", 0),
 
@@ -157,14 +157,14 @@ class RdmaRQstate(Packet):
 
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
-        
+
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("congestion_mgmt_enable", 0, 1),
         BitField("cb1_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
-        
+
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
@@ -172,8 +172,8 @@ class RdmaRQstate(Packet):
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("rx_prefetch_en", 0, 1),
-    
+        BitField("prefetch_en", 0, 1),
+
         X3BytesField("cq_id", 0),
 
         IntField("pd", 0),
@@ -238,7 +238,17 @@ class RdmaRQstate(Packet):
 
         IntField("pd", 0),
 
-        BitField("rqcb2_pad", 0, 240),
+        LEShortField("rqcb2_proxy_cindex", 0),
+        LEShortField("prefetch_pindex", 0),
+        LEShortField("prefetch_proxy_cindex", 0),
+        XIntField("prefetch_base_addr", 0),
+        BitField("log_num_prefetch_wqes", 0, 5),
+        BitField("rqcb2_rsvd3", 0, 3),
+        ShortField("prefetch_buf_index", 0),
+        BitField("checkout_done", 0, 1),
+        BitField("prefetch_init_done", 0, 1),
+
+        BitField("rqcb2_pad", 0, 134),
 
         # RQCB3
         LongField("wrid", 0),

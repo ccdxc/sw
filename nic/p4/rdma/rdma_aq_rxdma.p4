@@ -152,8 +152,8 @@ header_type aq_rx_cqcb_to_eq_info_t {
 header_type aq_rx_to_stage_wqe_t {
     fields {
         rqcb_base_addr_hi                :   24;
-        prefetch_pool_base_addr_page_id  :   22;
-        log_num_prefetch_pool_entries    :    5;
+        prefetch_base_addr_page_id       :   22;
+        log_prefetch_buf_size            :    5;
         pad                              :   77;
     }
 }
@@ -551,8 +551,8 @@ action rdma_aq_rx_aqwqe_process () {
 
     // to stage
     modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
-    modify_field(to_s1_info_scr.prefetch_pool_base_addr_page_id, to_s1_info.prefetch_pool_base_addr_page_id);
-    modify_field(to_s1_info_scr.log_num_prefetch_pool_entries, to_s1_info.log_num_prefetch_pool_entries);
+    modify_field(to_s1_info_scr.prefetch_base_addr_page_id, to_s1_info.prefetch_base_addr_page_id);
+    modify_field(to_s1_info_scr.log_prefetch_buf_size, to_s1_info.log_prefetch_buf_size);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
 
     // stage to stage

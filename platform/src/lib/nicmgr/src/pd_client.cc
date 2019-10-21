@@ -798,11 +798,11 @@ sdk_ret_t
 PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                          uint32_t max_ahs, uint32_t max_ptes,
                          uint64_t mem_bar_addr, uint32_t mem_bar_size,
-                         uint32_t max_prefetch)
+                         uint32_t max_prefetch_wqes)
 {
     if (rdma_mgr_) {
         return rdma_mgr_->lif_init(lif, max_keys, max_ahs, max_ptes,
-                                   mem_bar_addr, mem_bar_size, max_prefetch);
+                                   mem_bar_addr, mem_bar_size, max_prefetch_wqes);
     }
     return SDK_RET_ERR;
 }

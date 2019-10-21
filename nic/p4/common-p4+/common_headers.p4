@@ -309,8 +309,8 @@ header_type tx_rdma_scratch_metadata_t {
 
         //RQCB prefetch uses per LIF global ring
         //This is the base address of that ring
-        prefetch_pool_base_addr_page_id: 22;
-        log_num_prefetch_pool_entries:5;
+        prefetch_base_addr_page_id:22;
+        log_prefetch_buf_size:5;
         sq_qtype: 3;
         rq_qtype: 3;
         aq_qtype: 3;
@@ -361,8 +361,8 @@ header_type rx_rdma_scratch_metadata_t {
 
         //RQCB prefetch uses per LIF global ring
         //This is the base address of that ring
-        prefetch_pool_base_addr_page_id: 22;
-        log_num_prefetch_pool_entries:5;
+        prefetch_base_addr_page_id:22;
+        log_prefetch_buf_size:5;
         sq_qtype: 3;
         rq_qtype: 3;
         aq_qtype: 3;

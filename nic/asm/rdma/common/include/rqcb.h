@@ -43,7 +43,6 @@
 #define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
 
 // rqcb2 fields related to prefetch
-#define RQ_PROXY_C_INDEX d.{proxy_cindex}.hx
 #define PREFETCH_P_INDEX d.{prefetch_pindex}.hx
 #define PREFETCH_PROXY_C_INDEX d.{prefetch_proxy_cindex}.hx
 

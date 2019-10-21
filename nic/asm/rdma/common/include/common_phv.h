@@ -92,8 +92,6 @@ struct phv_global_common_t {
     spec_cindex: 16;
     rsvd: 6;
     union roce_opcode_flags_t flags;
-    //prefetch_pool_base_addr_page_id: 20;
-    //log_num_prefetch_pool_entries: 5;
 };
 
 #define K_GLOBAL_LIF CAPRI_KEY_RANGE(phv_global_common, lif_sbit0_ebit7, lif_sbit8_ebit10)

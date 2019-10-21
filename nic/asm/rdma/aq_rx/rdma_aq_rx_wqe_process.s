@@ -11,8 +11,8 @@ struct aq_rx_s1_t3_k k;
 #define IN_TO_S_P to_s1_info
 
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
-#define K_PREFETCH_BASE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, prefetch_pool_base_addr_page_id_sbit0_ebit15, prefetch_pool_base_addr_page_id_sbit16_ebit21)
-#define K_LOG_PREFETCH_ENTRIES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_prefetch_pool_entries_sbit0_ebit1, log_num_prefetch_pool_entries_sbit2_ebit4)
+#define K_PREFETCH_BASE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, prefetch_base_addr_page_id_sbit0_ebit15, prefetch_base_addr_page_id_sbit16_ebit21)
+#define K_LOG_PREFETCH_BUF_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, log_prefetch_buf_size_sbit0_ebit1, log_prefetch_buf_size_sbit2_ebit4)
 
 #define K_RQ_MAP_COUNT CAPRI_KEY_FIELD(IN_P, rq_map_count)
 #define K_RQ_CMB CAPRI_KEY_FIELD(IN_P, rq_cmb)
@@ -73,9 +73,9 @@ qp_no_skip_dma_pt:
     beq         r1, r0, skip_prefetch_en
     add         r1, r0, r1, HBM_PAGE_SIZE_SHIFT   // BD Slot
 
-    sll         r3, K_RQ_ID, K_LOG_PREFETCH_ENTRIES
+    sll         r3, K_RQ_ID, K_LOG_PREFETCH_BUF_SIZE
     add         r1, r1, r3
-    sub         r2, K_LOG_PREFETCH_ENTRIES, K_LOG_WQE_SIZE
+    sub         r2, K_LOG_PREFETCH_BUF_SIZE, K_LOG_WQE_SIZE
 
     phvwr       p.rqcb0.prefetch_en, 1
     phvwr       p.rqcb1.prefetch_en, 1
