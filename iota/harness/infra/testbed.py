@@ -256,6 +256,8 @@ class _Testbed:
                 cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
                 if GlobalOptions.use_gold_firmware: 
                     cmd.extend(["--use-gold-firmware"]) 
+                if GlobalOptions.fast_upgrade: 
+                    cmd.extend(["--fast-upgrade"]) 
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if getattr(instance.Resource, "ServerType", "server-a") == "hpe":
@@ -304,6 +306,7 @@ class _Testbed:
         try:
             for idx in range(len(proc_hdls)):
                 proc_hdl = proc_hdls[idx]
+                Logger.debug('Firmware upgrade started at time: {0}'.format(time.asctime()))
                 while proc_hdl.poll() is None:
                     time.sleep(5)
                     continue
@@ -312,6 +315,8 @@ class _Testbed:
                     _, err = proc_hdl.communicate()
                     Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
                     Logger.error("Firmware upgrade failed : " + err.decode())
+                else:
+                    Logger.debug('Firmware upgrade finished at time: {0}'.format(time.asctime()))
         except KeyboardInterrupt:
             result=2
             err="SIGINT detected. terminating boot_naples_v2 scripts" 

@@ -13,10 +13,11 @@ import json
 import atexit
 import paramiko
 import threading
+import traceback
 from enum import auto, Enum, unique
 
 HOST_NAPLES_DIR                 = "/naples"
-NAPLES_TMP_DIR                  = "/tmp"
+NAPLES_TMP_DIR                  = "/data"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
 
@@ -95,6 +96,8 @@ parser.add_argument('--esx-script', dest='esx_script',
                     default="", help='ESX start up script')
 parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Only use gold firmware')
+parser.add_argument('--fast-upgrade', dest='fast_upgrade',
+                    action='store_true', help='update firmware only')
 
 
 GlobalOptions = parser.parse_args()
@@ -1009,21 +1012,24 @@ def Main():
         return
 
     #Read Naples Gold FW version.
-    naples.ReadGoldFwVersion()
+    if not GlobalOptions.fast_upgrade:
+        naples.ReadGoldFwVersion()
 
     # Case 1: Main firmware upgrade.
     naples.InitForUpgrade(goldfw = True)
     if naples.IsSSHUP():
         #OOb is present and up install right away,
-        naples.RebootGoldFw()
-        if GlobalOptions.use_gold_firmware:
-            print("installing and running tests with gold firmware {0}".format(GlobalOptions.gold_fw_img))
-            naples.InstallGoldFirmware()
+        if GlobalOptions.fast_upgrade:
+            print("installing and running tests with firmware {0} without checking goldfw".format(GlobalOptions.image))
+            try:
+                naples.InstallMainFirmware()
+            except:
+                print("failed to upgrade main firmware only. error was:")
+                print(traceback.format_exc())
+                print("attempting gold + main firmware update")
+                __fullUpdate()
         else:
-            print("installing and running tests with firmware {0}".format(GlobalOptions.image))
-            naples.InstallMainFirmware()
-            if not IsNaplesGoldFWLatest():
-                naples.InstallGoldFirmware()
+            __fullUpdate()
         naples.Reboot()
     else:
         host.InitForUpgrade()
@@ -1062,6 +1068,17 @@ def Main():
     #else:
         # Update MainFwB also to same image - TEMP CHANGE
         # host.InstallMainFirmware(mount_data = False, copy_fw = False)
+
+def __fullUpdate():
+    naples.RebootGoldFw()
+    if GlobalOptions.use_gold_firmware:
+        print("installing and running tests with gold firmware {0}".format(GlobalOptions.gold_fw_img))
+        naples.InstallGoldFirmware()
+    else:
+        print("installing and running tests with firmware {0}".format(GlobalOptions.image))
+        naples.InstallMainFirmware()
+        if not IsNaplesGoldFWLatest():
+            naples.InstallGoldFirmware()
 
 
 if __name__ == '__main__':

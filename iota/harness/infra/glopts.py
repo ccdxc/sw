@@ -67,6 +67,8 @@ parser.add_argument('--skip-logs', dest='skip_logs', help='Skip log collection.'
                     action='store_true')
 parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Use gold firmware for testing')
+parser.add_argument('--fast-upgrade', dest='fast_upgrade',
+                    action='store_true', help='install firmware only')
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"
