@@ -98,7 +98,6 @@ nic/build/aarch64/iris/lib/libindexer.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                           /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                               /nic/lib/
-nic/build/aarch64/iris/lib/liblkl*.so                               /nic/lib/
 nic/build/aarch64/iris/lib/liblogger.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libmmgr.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libmpuobj.so                             /nic/lib/
@@ -138,7 +137,6 @@ nic/build/aarch64/iris/lib/libevent_thread.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libpenipc.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so                                /nic/lib/libzmq.so.3
 nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                      /nic/lib/
-nic/hal/third-party/lkl/export/aarch64/lib/liblkl.so                /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/

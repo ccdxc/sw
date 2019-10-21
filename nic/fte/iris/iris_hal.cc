@@ -4,7 +4,10 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
+
+#ifdef SIM
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
+#endif
 
 namespace fte {
 namespace impl {
@@ -113,7 +116,9 @@ hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
 //------------------------------------------------------------------------------
 void process_pending_queues()
 {
+#ifdef SIM
     hal::proxy::tls_poll_asym_pend_req_q();
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -121,10 +126,10 @@ void process_pending_queues()
 //------------------------------------------------------------------------------
 void *init_tcp_rings_ctxt(uint8_t fte_id, void *arm_ctx)
 {
-    void * ctxt;
-
+    void * ctxt = NULL;
+#ifdef SIM
     ctxt = hal::proxy::tcp_rings_ctxt_init(fte_id, arm_ctx);
-
+#endif
     return ctxt;
 }
 
@@ -133,7 +138,9 @@ void *init_tcp_rings_ctxt(uint8_t fte_id, void *arm_ctx)
 //------------------------------------------------------------------------------
 void process_tcp_queues(void *tcp_ctx)
 {
+#ifdef SIM
     hal::proxy::tcp_rings_poll(tcp_ctx);
+#endif
 }
 
 }

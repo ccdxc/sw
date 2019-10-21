@@ -407,8 +407,11 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         }
         process_arq_new();
         process_softq();
+
+#ifdef SIM
         fte::impl::process_pending_queues();
         ctx_->process_tcp_queues(tcp_ctx_);
+#endif
         curr_thread->punch_heartbeat();
     }
 }

@@ -12,7 +12,6 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 
 using intf::Interface;
@@ -129,8 +128,10 @@ hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp) {
 hal_ret_t quiesce_msg_snd(const types::Empty &request,
                           types::Empty* rsp) 
 {
+#ifdef SIM
     HAL_TRACE_DEBUG("QuiesceMsgSnd Request");
-    hal::proxy::quiesce_message_tx();    
+    hal::proxy::quiesce_message_tx();
+#endif
     return HAL_RET_OK;
 }
 

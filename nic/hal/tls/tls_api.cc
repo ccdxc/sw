@@ -225,10 +225,12 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret,
 
     if(!args->is_server) {
         // Inform LKL
+#ifdef SIM
         if (args->is_v4_flow)
             lklshim_release_client_syn(id);
         else
             lklshim_release_client_syn6(id);
+#endif
     }
 
     return ret;

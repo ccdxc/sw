@@ -59,8 +59,15 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_lif \
                                     cfg_plugin_accel \
                                     cfg_plugin_sfw \
-                                    plugin_alg_utils \
-                                    plugin_proxy
+                                    plugin_alg_utils
+
+export NIC_HAL_CFG_PLUGIN_SOLIBS_x86_64 := plugin_proxy
+
+ifeq  ($(PLATFORM),sim)
+export NIC_HAL_CFG_PLUGIN_SOLIBS_aarch64 := plugin_proxy
+else
+export NIC_HAL_CFG_PLUGIN_SOLIBS_aarch64 :=
+endif
 
 export NIC_HAL_PLUGIN_full_SOLIBS := plugin_classic \
                                      plugin_ep_learn_common \
@@ -91,7 +98,14 @@ export NIC_HAL_TLS_SOLIBS := tls_pse tls_api
 export NIC_LINKMGR_SOLIBS := linkmgr_libsrc sdklinkmgrcsr sdklinkmgr linkmgrdelphi linkmgrproto
 export NIC_LINKMGR_LDLIBS := AAPL
 
-export NIC_LKL_SOLIBS := lklshim_tls lkl_api
+export NIC_LKL_SOLIBS_x86_64 := lklshim_tls lkl_api
+
+ifeq ($(PLATFORM),sim)
+export NIC_LKL_SOLIBS_aarch64 := lklshim_tls lkl_api
+else
+export NIC_LKL_SOLIBS_aarch64 :=
+endif
+
 
 export NIC_P4_NCC_DEPS  := $(shell find ${TOPDIR}/nic/tools/ncc/ -name '*.py') \
                            $(shell find ${TOPDIR}/nic/tools/ncc/ -name '*.cc') \
@@ -116,7 +130,14 @@ export NIC_apulu_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_apulu rfc_apulu sensor tr
 # ==========================================================================
 #                           Third-party Libs
 # ==========================================================================
-export NIC_THIRDPARTY_LKL_LDLIBS := lkl
+export NIC_THIRDPARTY_LKL_LDLIBS_x86_64 := lkl
+
+ifeq ($(PLATFORM),sim)
+export NIC_THIRDPARTY_LKL_LDLIBS_aarch64 := lkl
+else
+export NIC_THIRDPARTY_LKL_LDLIBS_aarch64 :=
+endif
+
 export NIC_THIRDPARTY_SSL_LDLIBS := ssl crypto
 export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
        grpc++ grpc_unsecure grpc++_unsecure
@@ -203,17 +224,20 @@ export CLI_apulu_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
 
 export NIC_HAL_PLUGIN_full_SOLIBS:= ${NIC_HAL_PLUGIN_full_SOLIBS} \
                                     ${NIC_HAL_PROTO_SOLIBS} \
-                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS}
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS_${ARCH}}
+
 
 export NIC_HAL_PLUGIN_gold_SOLIBS:= ${NIC_HAL_PLUGIN_gold_SOLIBS} \
                                     ${NIC_HAL_PROTO_SOLIBS} \
-                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS}
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
+                                    ${NIC_HAL_CFG_PLUGIN_SOLIBS_${ARCH}}
 
 export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_HAL_PLUGIN_${FWTYPE}_SOLIBS} \
                                ${NIC_HAL_UTILS_SOLIBS} \
                                ${NIC_FTE_SOLIBS} \
-                               ${NIC_LKL_SOLIBS} \
+                               ${NIC_LKL_SOLIBS_${ARCH}} \
                                ${NIC_HAL_TLS_SOLIBS} \
                                ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                ${NIC_HAL_PD_SOLIBS} \
@@ -226,7 +250,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \
-                               ${NIC_THIRDPARTY_LKL_LDLIBS} \
+                               ${NIC_THIRDPARTY_LKL_LDLIBS_${ARCH}} \
                                ${NIC_THIRDPARTY_PACKET_PARSER_LDLIBS} \
                                ${NIC_CAPSIM_LDLIBS} \
                                ${NIC_LINKMGR_LDLIBS} \
