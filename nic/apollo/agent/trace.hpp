@@ -9,8 +9,8 @@ namespace core {
 
 extern utils::log *g_trace_logger;
 void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
-                const char *trace_file, size_t file_size, size_t max_files,
-                utils::trace_level_e trace_level);
+                const char *err_file, const char *trace_file, size_t file_size,
+                size_t max_files, utils::trace_level_e trace_level);
 void trace_deinit(void);
 
 // wrapper API to get logger

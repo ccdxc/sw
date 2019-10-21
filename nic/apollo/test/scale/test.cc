@@ -365,10 +365,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create v4 local mapping failed, ret %u", rv);
 
-    if (apulu()) {
-        return rv;
-    }
-
     // create remote mappings
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vpcs; i++) {

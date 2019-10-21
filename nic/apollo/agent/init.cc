@@ -150,47 +150,54 @@ init_pds (std::string cfg_file, std::string profile, std::string pipeline)
     return ret;
 }
 
+static inline string
+log_file (const char *logdir, const char *logfile)
+{
+    struct stat st = { 0 };
+
+    if (!logdir) {
+        return std::string(logfile);
+    }
+
+    // check if this log dir exists
+    if (stat(logdir, &st) == -1) {
+        // doesn't exist, try to create
+        if (mkdir(logdir, 0755) < 0) {
+            fprintf(stderr,
+                    "Log directory %s/ doesn't exist, failed to create "
+                    "one\n", logdir);
+            return std::string("");
+        }
+    } else {
+        // log dir exists, check if we have write permissions
+        if (access(logdir, W_OK) < 0) {
+            // don't have permissions to create this directory
+            fprintf(stderr,
+                    "No permissions to create log file in %s/\n",
+                    logdir);
+            return std::string("");
+        }
+    }
+    return logdir + std::string(logfile);
+}
+
 //------------------------------------------------------------------------------
 // initialize the logger
 //------------------------------------------------------------------------------
 static inline sdk_ret_t
 logger_init (void)
 {
-    std::string    logfile;
-    char           *logdir;
-    struct stat    st = { 0 };
+    std::string logfile, err_logfile;
 
-    logdir = std::getenv("LOG_DIR");
-    if (!logdir) {
-        // log in the current dir
-        logfile = std::string("./pds-agent.log");
-    } else {
-        // check if this log dir exists
-        if (stat(logdir, &st) == -1) {
-            // doesn't exist, try to create
-            if (mkdir(logdir, 0755) < 0) {
-                fprintf(stderr,
-                        "Log directory %s/ doesn't exist, failed to create "
-                        "one\n", logdir);
-                return SDK_RET_ERR;
-            }
-        } else {
-            // log dir exists, check if we have write permissions
-            if (access(logdir, W_OK) < 0) {
-                // don't have permissions to create this directory
-                fprintf(stderr,
-                        "No permissions to create log file in %s\n",
-                        logdir);
-                return SDK_RET_ERR;
-            }
-        }
-        logfile = logdir + std::string("/pds-agent.log");
+    logfile = log_file(std::getenv("LOG_DIR"), "./pds-agent.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
+
+    if (logfile.empty() || err_logfile.empty()) {
+        return SDK_RET_ERR;
     }
-
     // initialize the logger
-    core::trace_init("agent", 0x1, true, logfile.c_str(),
-                     TRACE_FILE_SIZE, TRACE_NUM_FILES,
-                     utils::trace_debug);
+    core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
+                     TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);
 
     return SDK_RET_OK;
 }

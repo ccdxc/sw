@@ -16,8 +16,8 @@ utils::log *g_trace_logger;
 //------------------------------------------------------------------------------
 void
 trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
-            const char *trace_file, size_t file_size, size_t num_files,
-            utils::trace_level_e trace_level)
+            const char *err_file, const char *trace_file, size_t file_size,
+            size_t num_files, utils::trace_level_e trace_level)
 {
     if ((name == NULL) || (trace_file == NULL)) {
         return;
@@ -25,8 +25,8 @@ trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
     g_trace_logger =
         utils::log::factory(name, cores_mask,
             sync_mode ? utils::log_mode_sync : utils::log_mode_async,
-            false, trace_file, NULL, file_size, num_files,
-            utils::trace_debug, utils::trace_debug, utils::log_none);
+            false, err_file, trace_file, file_size, num_files,
+            utils::trace_err, trace_level, utils::log_none);
 }
 
 //------------------------------------------------------------------------------

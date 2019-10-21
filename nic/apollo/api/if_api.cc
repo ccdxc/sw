@@ -139,7 +139,7 @@ pds_if_info_from_entry (void *entry, void *ctxt)
     if_entry *intf = (if_entry *)entry;
     pds_if_read_args_t *args = (pds_if_read_args_t *)ctxt;
 
-    if (intf->type() != IF_TYPE_NONE) {
+    if (intf->type() != PDS_IF_TYPE_NONE) {
         pds_if_spec_fill(&info.spec, intf);
         pds_if_status_fill(&info.status, intf);
         pds_if_stats_fill(&info.stats, intf);
@@ -157,7 +157,7 @@ pds_if_read_all (if_read_cb_t cb, void *ctxt)
     args.ctxt = ctxt;
     args.cb = cb;
 
-    return if_db()->walk(IF_TYPE_NONE, pds_if_info_from_entry, &args);
+    return if_db()->walk(PDS_IF_TYPE_NONE, pds_if_info_from_entry, &args);
 }
 
 sdk_ret_t

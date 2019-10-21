@@ -120,13 +120,13 @@ nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/apollo_scale_test                   /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
-nic/apollo/test/scale/artemis/scale_cfg.json                      /nic/conf/
-nic/apollo/test/scale/artemis/scale_cfg_1vpc.json                 /nic/conf/
-nic/apollo/test/scale/artemis/scale_cfg_l2l.json                  /nic/conf/
-nic/apollo/test/scale/artemis/scale_cfg_stateful.json             /nic/conf/
-nic/apollo/test/scale/artemis/scale_cfg_1vpc_stateful.json        /nic/conf/
-nic/apollo/test/scale/artemis/scale_cfg_l2l_stateful.json         /nic/conf/
-nic/apollo/test/scale/artemis/run_scale_test_hw.sh                /nic/tools/
+nic/apollo/test/scale/$PIPELINE/scale_cfg.json                    /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc.json               /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l.json                /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_stateful.json           /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc_stateful.json      /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l_stateful.json       /nic/conf/
+nic/apollo/test/scale/$PIPELINE/run_scale_test_hw.sh              /nic/tools/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
@@ -148,7 +148,7 @@ nic/tools/serial_console.sh                                       /nic/tools/
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_artemis                 /nic/bin/eth_dbgtool
+nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_$PIPELINE               /nic/bin/eth_dbgtool
 nic/build/$ARCH/$PIPELINE/bin/memtun                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capmon                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
