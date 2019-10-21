@@ -1017,8 +1017,15 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "state:\t%d\n", qp->state);
 
 	if (qp->has_sq) {
-		if (qp->sq.ptr)
+		if (qp->sq.ptr) {
 			ionic_q_show(s, "sq.", &qp->sq);
+			seq_printf(s, "sq_msn_prod:\t%#06x\n",
+				   qp->sq_msn_prod);
+			seq_printf(s, "sq_msn_cons:\t%#06x\n",
+				   qp->sq_msn_cons);
+			seq_printf(s, "sq_npg_cons:\t%#06x\n",
+				   qp->sq_npg_cons);
+		}
 
 		if (qp->sq_umem)
 			ionic_umem_show(s, "sq.", qp->sq_umem);
