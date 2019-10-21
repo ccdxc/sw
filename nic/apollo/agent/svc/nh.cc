@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/nh.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
 #include "nic/apollo/agent/trace.hpp"

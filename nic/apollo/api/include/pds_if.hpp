@@ -85,6 +85,8 @@ typedef struct pds_if_info_s {
     pds_if_stats_t     stats;     ///< statistics
 } __PACK__ pds_if_info_t;
 
+typedef void (*if_read_cb_t)(void *info, void *ctxt);
+
 /// \brief     create interface
 /// \param[in] spec specification
 /// \param[in] bctxt batch context if API is invoked in a batch
@@ -98,6 +100,13 @@ sdk_ret_t pds_if_create(pds_if_spec_t *spec,
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     valid interface key should be passed
 sdk_ret_t pds_if_read(pds_if_key_t *key, pds_if_info_t *info);
+
+/// \brief      read interface
+/// \param[in]  cb   callback
+/// \param[out] ctxt context for callback
+/// \return     #SDK_RET_OK on success, failure status code on error
+/// \remark     valid interface key should be passed
+sdk_ret_t pds_if_read_all(if_read_cb_t cb, void *ctxt);
 
 /// \brief     update interface
 /// \param[in] spec specification

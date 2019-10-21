@@ -155,6 +155,10 @@ public:
     /// \return interface index
     pds_if_key_t key(void) const { return key_; }
 
+    /// \brief    return admin state
+    /// \return interface admin state
+    pds_if_state_t admin_state(void) const { return admin_state_; }
+    
     /// \brief    return the interface type
     /// \return interface type
     pds_if_type_t type(void) const { return type_; }
@@ -174,6 +178,10 @@ public:
     /// \return   wire encap of this L3 interface
     pds_encap_t l3_encap(void) { return if_info_.l3_.encap_; }
 
+    /// \brief    return the vpc of this (L3) interface
+    /// \return   vpc of this L3 interface
+    pds_vpc_key_t l3_vpc(void) { return if_info_.l3_.vpc_; }
+    
     /// \brief    return the MAC address of this interface
     /// \return   MAC address of this interface
     mac_addr_t& l3_mac(void) { return if_info_.l3_.mac_; }
@@ -209,6 +217,7 @@ private:
     ht_ctxt_t ht_ctxt_;            ///< hash table context
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
+    pds_if_state_t admin_state_;   ///< admin state
     union {
         ///< physical port specific information
         struct {

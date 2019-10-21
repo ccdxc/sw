@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/vnic.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 

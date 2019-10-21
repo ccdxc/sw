@@ -86,6 +86,7 @@ message InterfaceSpec {
     // uplink specific configuration
     UplinkSpec   UplinkSpec    = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
     UplinkPCSpec UplinkPCSpec  = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
+    L3IfSpec     L3IfSpec      = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
   }
 }
 

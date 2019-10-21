@@ -56,6 +56,7 @@ typedef enum slab_id_e {
     SLAB_ID_POLICY,
     SLAB_ID_MIRROR,
     SLAB_ID_NEXTHOP,
+    SLAB_ID_IF,
     SLAB_ID_MAX
 } slab_id_t;
 
@@ -115,6 +116,9 @@ public:
     }
     slab_ptr_t vnic_slab(void) const {
         return slabs_[SLAB_ID_VNIC];
+    }
+    slab_ptr_t if_slab(void) const {
+        return slabs_[SLAB_ID_IF];
     }
     slab_ptr_t meter_slab(void) const {
         return slabs_[SLAB_ID_METER];
@@ -215,6 +219,8 @@ public:
     sdk_ret_t vnic_db_walk(vnic_walk_cb_t cb, void *ctxt);
     bool del_from_vnic_db(pds_vnic_key_t *key);
     slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
+    
+    slab_ptr_t if_slab(void) const { return cfg_db_->if_slab(); }
 
     pds_meter_spec_t *find_in_meter_db(pds_meter_key_t *key);
     sdk_ret_t add_to_meter_db(pds_meter_key_t *key,

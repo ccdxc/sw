@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 

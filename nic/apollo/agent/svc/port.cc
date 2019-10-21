@@ -7,7 +7,6 @@
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 Status

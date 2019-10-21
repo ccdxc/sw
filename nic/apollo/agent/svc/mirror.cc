@@ -7,7 +7,6 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/mirror.hpp"
 #include "nic/apollo/agent/svc/mirror.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 // create mirror session object

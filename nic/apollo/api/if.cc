@@ -73,10 +73,11 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
                     spec->key.id, spec->type);
-     memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
-     type_ = spec->type;
-     ifindex_ = spec->key.id;
-     switch (type_) {
+    memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
+    type_ = spec->type;
+    ifindex_ = spec->key.id;
+    admin_state_ = spec->admin_state;
+    switch (type_) {
      case PDS_IF_TYPE_UPLINK:
          if_info_.uplink_.port_ = spec->uplink_info.port_num;
          break;

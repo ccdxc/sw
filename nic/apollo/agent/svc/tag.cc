@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tag.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 

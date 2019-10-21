@@ -26,8 +26,7 @@ pds_lif_read (pds_lif_key_t *key, pds_lif_spec_t *spec)
     return SDK_RET_OK;
 }
 
-typedef struct pds_lif_read_args_s
-{
+typedef struct pds_lif_read_args_s {
     lif_read_cb_t cb;
     void *ctxt;
 } pds_lif_read_args_t;

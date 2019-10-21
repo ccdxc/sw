@@ -7,7 +7,6 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"

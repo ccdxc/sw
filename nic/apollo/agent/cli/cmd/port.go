@@ -399,7 +399,7 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	fmt.Printf("%-10s0x%-14x%-12s%-10s%-14s\n",
+	fmt.Printf("%-10s0x%-12x%-12s%-10s%-14s\n",
 		ifIndexToPortIdStr(resp.GetSpec().GetId()),
 		resp.GetSpec().GetId(),
 		adminStateStr, operStatusStr,

@@ -6,7 +6,6 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tunnel.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 

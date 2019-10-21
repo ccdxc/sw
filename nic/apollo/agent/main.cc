@@ -23,7 +23,7 @@
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
-#include "nic/apollo/agent/svc/lif.hpp"
+#include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"

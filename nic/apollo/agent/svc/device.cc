@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 

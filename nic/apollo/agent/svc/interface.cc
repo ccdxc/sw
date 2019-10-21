@@ -2,24 +2,23 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
+#include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/include/pds_policy.hpp"
-#include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/policy.hpp"
+#include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
-#include "nic/apollo/agent/svc/policy.hpp"
+#include "nic/apollo/agent/core/interface.hpp"
 
 Status
-SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
-                                            const pds::SecurityPolicyRequest *proto_req,
-                                            pds::SecurityPolicyResponse *proto_rsp) {
+IfSvcImpl::InterfaceCreate(ServerContext *context,
+                           const pds::InterfaceRequest *proto_req,
+                           pds::InterfaceResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_policy_spec_t *api_spec;
-    pds_policy_key_t key = { 0 };
+    Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
+    pds_if_spec_t *api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -41,29 +40,24 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_policy_spec_t *)
-                   core::agent_state::state()->policy_slab()->alloc();
+        api_spec = (pds_if_spec_t *)
+                    core::agent_state::state()->if_slab()->alloc();
         if (api_spec == NULL) {
             ret = SDK_RET_OOM;
             goto end;
         }
-        ret = pds_policy_proto_to_api_spec(api_spec,
-                                           proto_req->request(i));
-        if (unlikely(ret != SDK_RET_OK)) {
+        auto request = proto_req->request(i);
+        ret = pds_if_proto_to_api_spec(api_spec, request);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }
-        auto request = proto_req->request(i);
-        key.id = request.id();
-        ret = core::policy_create(&key, api_spec, bctxt);
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rules);
-            api_spec->rules = NULL;
-        }
-        if (ret != SDK_RET_OK) {
+        ret = core::interface_create(api_spec, bctxt);
+        if (ret != sdk::SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }
     }
-
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
@@ -72,7 +66,6 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
     return Status::OK;
 
 end:
-
     if (batched_internally) {
         // destroy the internal batch
         pds_batch_destroy(bctxt);
@@ -82,15 +75,15 @@ end:
 }
 
 Status
-SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
-                                            const pds::SecurityPolicyRequest *proto_req,
-                                            pds::SecurityPolicyResponse *proto_rsp) {
+IfSvcImpl::InterfaceUpdate(ServerContext *context,
+                           const pds::InterfaceRequest *proto_req,
+                           pds::InterfaceResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_policy_spec_t *api_spec;
-    pds_policy_key_t key = { 0 };
+    Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
+    pds_if_spec_t *api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -110,31 +103,25 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
         }
         batched_internally = true;
     }
-
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_policy_spec_t *)
-                   core::agent_state::state()->policy_slab()->alloc();
+        api_spec = (pds_if_spec_t *)
+                    core::agent_state::state()->if_slab()->alloc();
         if (api_spec == NULL) {
             ret = SDK_RET_OOM;
             goto end;
         }
-        ret = pds_policy_proto_to_api_spec(api_spec,
-                                           proto_req->request(i));
-        if (unlikely(ret != SDK_RET_OK)) {
+        auto request = proto_req->request(i);
+        ret = pds_if_proto_to_api_spec(api_spec, request);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }
-        auto request = proto_req->request(i);
-        key.id = request.id();
-        ret = core::policy_update(&key, api_spec, bctxt);
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rules);
-            api_spec->rules = NULL;
-        }
-        if (ret != SDK_RET_OK) {
+        ret = core::interface_update(api_spec, bctxt);
+        if (ret != sdk::SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }
     }
-
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
@@ -143,21 +130,21 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
     return Status::OK;
 
 end:
-
     if (batched_internally) {
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }
 
 Status
-SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
-                                            const pds::SecurityPolicyDeleteRequest *proto_req,
-                                            pds::SecurityPolicyDeleteResponse *proto_rsp) {
+IfSvcImpl::InterfaceDelete(ServerContext *context,
+                           const pds::InterfaceDeleteRequest *proto_req,
+                           pds::InterfaceDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_policy_key_t key = { 0 };
+    pds_if_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -181,7 +168,7 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::policy_delete(&key, bctxt);
+        ret = core::interface_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
@@ -196,40 +183,63 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
 
 end:
 
+    // destroy the internal batch
     if (batched_internally) {
-        // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
     return Status::CANCELLED;
 }
 
 Status
-SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
-                                         const pds::SecurityPolicyGetRequest *proto_req,
-                                         pds::SecurityPolicyGetResponse *proto_rsp) {
+IfSvcImpl::InterfaceGet(ServerContext *context,
+                        const pds::InterfaceGetRequest *proto_req,
+                        pds::InterfaceGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policy_key_t key;
-    pds_policy_info_t info;
+    pds_if_key_t key = { 0 };
+    pds_if_info_t info;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::policy_get(&key, &info);
+        ret = core::interface_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        pds_policy_api_info_to_proto(&info, proto_rsp);
+        pds_if_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::policy_get_all(pds_policy_api_info_to_proto, proto_rsp);
+        ret = core::interface_get_all(pds_if_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
 }
 
+Status
+IfSvcImpl::LifGet(ServerContext *context,
+                  const pds::LifGetRequest *proto_req,
+                  pds::LifGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+
+    PDS_TRACE_VERBOSE("Received Lif Get");
+    if (proto_req) {
+        for (int i = 0; i < proto_req->lifid_size(); i ++) {
+            pds_lif_spec_t spec = {0};
+            pds_lif_key_t key = proto_req->lifid(i);
+            ret = pds_lif_read(&key, &spec);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            pds_lif_api_spec_to_proto(&spec, proto_rsp);
+        }
+        if (proto_req->lifid_size() == 0) {
+            ret = pds_lif_read_all(pds_lif_api_spec_to_proto, proto_rsp);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        }
+    }
+    return Status::OK;
+}
