@@ -157,7 +157,7 @@ pds_if_read_all (if_read_cb_t cb, void *ctxt)
     args.ctxt = ctxt;
     args.cb = cb;
 
-    return if_db()->walk(PDS_IF_TYPE_NONE, pds_if_info_from_entry, &args);
+    return if_db()->walk(IF_TYPE_NONE, pds_if_info_from_entry, &args);
 }
 
 sdk_ret_t
