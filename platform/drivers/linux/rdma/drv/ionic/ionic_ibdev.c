@@ -29,7 +29,8 @@ MODULE_DESCRIPTION("Pensando RoCE HCA driver");
 MODULE_LICENSE("Dual BSD/GPL");
 
 #define DRIVER_NAME "ionic_rdma"
-#define DRIVER_VERSION "0.8.0" /* XXX don't upstream */
+/* XXX update or delete version string before submitting upstream */
+#define DRIVER_VERSION "0.8.0"
 #define DRIVER_DESCRIPTION "Pensando RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando RoCE HCA"
 
