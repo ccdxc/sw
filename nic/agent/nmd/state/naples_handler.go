@@ -354,6 +354,7 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.Controllers = []string{}
 		n.config.Status.TransitionPhase = ""
 		n.config.Status.AdmissionPhase = ""
+		n.config.Status.AdmissionPhaseReason = ""
 
 		if n.rebootNeeded {
 			n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_REBOOT_PENDING.String()
