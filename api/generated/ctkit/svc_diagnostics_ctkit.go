@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffModule(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Module().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Module().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffModule(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type ModuleAPI interface {
 	Update(obj *diagnostics.Module) error
 	Delete(obj *diagnostics.Module) error
 	Find(meta *api.ObjectMeta) (*Module, error)
-	List() []*Module
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error)
 	Watch(handler ModuleHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *moduleAPI) Find(meta *api.ObjectMeta) (*Module, error) {
 }
 
 // List returns a list of all Module objects
-func (api *moduleAPI) List() []*Module {
+func (api *moduleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error) {
 	var objlist []*Module
+	objs, err := api.ct.List("Module", ctx, opts)
 
-	objs := api.ct.ListObjects("Module")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Module:
@@ -515,7 +525,7 @@ func (api *moduleAPI) List() []*Module {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Module object

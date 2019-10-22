@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffBucket(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Bucket().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Bucket().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffBucket(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type BucketAPI interface {
 	Update(obj *objstore.Bucket) error
 	Delete(obj *objstore.Bucket) error
 	Find(meta *api.ObjectMeta) (*Bucket, error)
-	List() []*Bucket
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bucket, error)
 	Watch(handler BucketHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *bucketAPI) Find(meta *api.ObjectMeta) (*Bucket, error) {
 }
 
 // List returns a list of all Bucket objects
-func (api *bucketAPI) List() []*Bucket {
+func (api *bucketAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bucket, error) {
 	var objlist []*Bucket
+	objs, err := api.ct.List("Bucket", ctx, opts)
 
-	objs := api.ct.ListObjects("Bucket")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Bucket:
@@ -515,7 +525,7 @@ func (api *bucketAPI) List() []*Bucket {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Bucket object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffObject(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Object().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Object().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffObject(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type ObjectAPI interface {
 	Update(obj *objstore.Object) error
 	Delete(obj *objstore.Object) error
 	Find(meta *api.ObjectMeta) (*Object, error)
-	List() []*Object
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Object, error)
 	Watch(handler ObjectHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *objectAPI) Find(meta *api.ObjectMeta) (*Object, error) {
 }
 
 // List returns a list of all Object objects
-func (api *objectAPI) List() []*Object {
+func (api *objectAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Object, error) {
 	var objlist []*Object
+	objs, err := api.ct.List("Object", ctx, opts)
 
-	objs := api.ct.ListObjects("Object")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Object:
@@ -1020,7 +1040,7 @@ func (api *objectAPI) List() []*Object {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Object object

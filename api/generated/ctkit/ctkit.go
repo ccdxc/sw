@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 
 	"github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	diag "github.com/pensando/sw/venice/utils/diagnostics"
@@ -56,6 +57,7 @@ type ctrlerCtx struct {
 type Controller interface {
 	FindObject(kind string, ometa *api.ObjectMeta) (runtime.Object, error)
 	ListObjects(kind string) []runtime.Object
+	List(kind string, ctx context.Context, opts *api.ListWatchOptions) ([]runtime.Object, error)
 	Stop() error                                                              // stop the controller
 	RegisterDiagnosticsHandler(rpcMethod, query string, handler diag.Handler) // registers diagnostics query handler
 
@@ -270,6 +272,36 @@ func (ct *ctrlerCtx) ListObjects(kind string) []runtime.Object {
 	}
 
 	return objlist
+}
+
+// List returns a list of object of a kind
+func (ct *ctrlerCtx) List(kind string, ctx context.Context, opts *api.ListWatchOptions) ([]runtime.Object, error) {
+	ct.Lock()
+	defer ct.Unlock()
+
+	ks, ok := ct.kinds[kind]
+	if !ok {
+		return []runtime.Object{}, fmt.Errorf("Kind %v not found in local cache.", kind)
+	}
+
+	labelMap, err := labels.ConvertSelectorToLabelsMap(opts.LabelSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	var objlist []runtime.Object
+	for _, obj := range ks.objects {
+		meta, err := runtime.GetObjectMeta(obj)
+		if err != nil {
+			return nil, err
+		}
+
+		if labels.Equals(labels.Set(labelMap), meta.Labels) {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
 }
 
 func (ct *ctrlerCtx) delObject(kind, key string) error {

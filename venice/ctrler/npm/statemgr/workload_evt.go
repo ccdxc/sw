@@ -3,6 +3,7 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -438,8 +439,17 @@ func (sm *Statemgr) FindWorkload(tenant, name string) (*WorkloadState, error) {
 //RemoveStaleEndpoints remove stale endpoints
 func (sm *Statemgr) RemoveStaleEndpoints() error {
 
-	workloads := sm.ctrler.Workload().List()
-	endpoints := sm.ctrler.Endpoint().List()
+	workloads, err := sm.ctrler.Workload().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		log.Errorf("Failed to get workloads. Err : %v", err)
+		return err
+	}
+
+	endpoints, err := sm.ctrler.Endpoint().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		log.Errorf("Failed to get endpoints. Err : %v", err)
+		return err
+	}
 
 	workloadMacPresent := func(wName, mac string) bool {
 		for _, workload := range workloads {

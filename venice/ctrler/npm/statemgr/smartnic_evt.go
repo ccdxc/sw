@@ -3,6 +3,7 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pensando/sw/api"
@@ -82,8 +83,13 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		}
 	}
 
-	// walk all hosts and see if they need to be associated to this snic
-	for _, host := range sm.ctrler.Host().List() {
+	hosts, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		log.Errorf("failed to get list of all hosts. Err : %v", err)
+	}
+
+	// walk all hosts and ee if they need to be associated to this snic
+	for _, host := range hosts {
 		associated := false
 		for _, snid := range host.Spec.DSCs {
 			if (snid.ID == smartNic.DistributedServiceCard.Spec.ID) || (snid.MACAddress == smartNic.DistributedServiceCard.Status.PrimaryMAC) {
@@ -202,8 +208,14 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 		fwprofile.FirewallProfile.Unlock()
 	}
 
+	hosts, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		log.Errorf("Failed to get list of all hosts. Err : %v", err)
+		return err
+	}
+
 	// walk all hosts and see if they need to be dis-associated to this snic
-	for _, host := range sm.ctrler.Host().List() {
+	for _, host := range hosts {
 		associated := false
 		for _, snid := range host.Spec.DSCs {
 			if (snid.ID == smartNic.DistributedServiceCard.Spec.ID) || (snid.MACAddress == smartNic.DistributedServiceCard.Status.PrimaryMAC) {

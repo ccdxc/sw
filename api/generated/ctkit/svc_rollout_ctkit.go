@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Rollout().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Rollout().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffRollout(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type RolloutAPI interface {
 	Update(obj *rollout.Rollout) error
 	Delete(obj *rollout.Rollout) error
 	Find(meta *api.ObjectMeta) (*Rollout, error)
-	List() []*Rollout
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(handler RolloutHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *rolloutAPI) Find(meta *api.ObjectMeta) (*Rollout, error) {
 }
 
 // List returns a list of all Rollout objects
-func (api *rolloutAPI) List() []*Rollout {
+func (api *rolloutAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error) {
 	var objlist []*Rollout
+	objs, err := api.ct.List("Rollout", ctx, opts)
 
-	objs := api.ct.ListObjects("Rollout")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Rollout:
@@ -515,7 +525,7 @@ func (api *rolloutAPI) List() []*Rollout {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Rollout object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffRolloutAction(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.RolloutAction().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.RolloutAction().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffRolloutAction(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type RolloutActionAPI interface {
 	Update(obj *rollout.RolloutAction) error
 	Delete(obj *rollout.RolloutAction) error
 	Find(meta *api.ObjectMeta) (*RolloutAction, error)
-	List() []*RolloutAction
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RolloutAction, error)
 	Watch(handler RolloutActionHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *rolloutactionAPI) Find(meta *api.ObjectMeta) (*RolloutAction, error) 
 }
 
 // List returns a list of all RolloutAction objects
-func (api *rolloutactionAPI) List() []*RolloutAction {
+func (api *rolloutactionAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*RolloutAction, error) {
 	var objlist []*RolloutAction
+	objs, err := api.ct.List("RolloutAction", ctx, opts)
 
-	objs := api.ct.ListObjects("RolloutAction")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *RolloutAction:
@@ -1020,7 +1040,7 @@ func (api *rolloutactionAPI) List() []*RolloutAction {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for RolloutAction object

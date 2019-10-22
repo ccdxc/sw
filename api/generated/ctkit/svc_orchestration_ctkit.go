@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffOrchestrator(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Orchestrator().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Orchestrator().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffOrchestrator(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type OrchestratorAPI interface {
 	Update(obj *orchestration.Orchestrator) error
 	Delete(obj *orchestration.Orchestrator) error
 	Find(meta *api.ObjectMeta) (*Orchestrator, error)
-	List() []*Orchestrator
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Orchestrator, error)
 	Watch(handler OrchestratorHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *orchestratorAPI) Find(meta *api.ObjectMeta) (*Orchestrator, error) {
 }
 
 // List returns a list of all Orchestrator objects
-func (api *orchestratorAPI) List() []*Orchestrator {
+func (api *orchestratorAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Orchestrator, error) {
 	var objlist []*Orchestrator
+	objs, err := api.ct.List("Orchestrator", ctx, opts)
 
-	objs := api.ct.ListObjects("Orchestrator")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Orchestrator:
@@ -515,7 +525,7 @@ func (api *orchestratorAPI) List() []*Orchestrator {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Orchestrator object

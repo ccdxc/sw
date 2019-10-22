@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffSecurityGroup(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.SecurityGroup().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.SecurityGroup().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffSecurityGroup(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type SecurityGroupAPI interface {
 	Update(obj *security.SecurityGroup) error
 	Delete(obj *security.SecurityGroup) error
 	Find(meta *api.ObjectMeta) (*SecurityGroup, error)
-	List() []*SecurityGroup
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*SecurityGroup, error)
 	Watch(handler SecurityGroupHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *securitygroupAPI) Find(meta *api.ObjectMeta) (*SecurityGroup, error) 
 }
 
 // List returns a list of all SecurityGroup objects
-func (api *securitygroupAPI) List() []*SecurityGroup {
+func (api *securitygroupAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*SecurityGroup, error) {
 	var objlist []*SecurityGroup
+	objs, err := api.ct.List("SecurityGroup", ctx, opts)
 
-	objs := api.ct.ListObjects("SecurityGroup")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *SecurityGroup:
@@ -515,7 +525,7 @@ func (api *securitygroupAPI) List() []*SecurityGroup {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for SecurityGroup object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffNetworkSecurityPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.NetworkSecurityPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.NetworkSecurityPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffNetworkSecurityPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type NetworkSecurityPolicyAPI interface {
 	Update(obj *security.NetworkSecurityPolicy) error
 	Delete(obj *security.NetworkSecurityPolicy) error
 	Find(meta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
-	List() []*NetworkSecurityPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkSecurityPolicy, error)
 	Watch(handler NetworkSecurityPolicyHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *networksecuritypolicyAPI) Find(meta *api.ObjectMeta) (*NetworkSecurit
 }
 
 // List returns a list of all NetworkSecurityPolicy objects
-func (api *networksecuritypolicyAPI) List() []*NetworkSecurityPolicy {
+func (api *networksecuritypolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkSecurityPolicy, error) {
 	var objlist []*NetworkSecurityPolicy
+	objs, err := api.ct.List("NetworkSecurityPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("NetworkSecurityPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *NetworkSecurityPolicy:
@@ -1020,7 +1040,7 @@ func (api *networksecuritypolicyAPI) List() []*NetworkSecurityPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for NetworkSecurityPolicy object
@@ -1265,8 +1285,14 @@ func (ct *ctrlerCtx) diffApp(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.App().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.App().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffApp(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1410,7 +1436,7 @@ type AppAPI interface {
 	Update(obj *security.App) error
 	Delete(obj *security.App) error
 	Find(meta *api.ObjectMeta) (*App, error)
-	List() []*App
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*App, error)
 	Watch(handler AppHandler) error
 }
 
@@ -1511,10 +1537,14 @@ func (api *appAPI) Find(meta *api.ObjectMeta) (*App, error) {
 }
 
 // List returns a list of all App objects
-func (api *appAPI) List() []*App {
+func (api *appAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*App, error) {
 	var objlist []*App
+	objs, err := api.ct.List("App", ctx, opts)
 
-	objs := api.ct.ListObjects("App")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *App:
@@ -1525,7 +1555,7 @@ func (api *appAPI) List() []*App {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for App object
@@ -1770,8 +1800,14 @@ func (ct *ctrlerCtx) diffFirewallProfile(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.FirewallProfile().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.FirewallProfile().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffFirewallProfile(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1915,7 +1951,7 @@ type FirewallProfileAPI interface {
 	Update(obj *security.FirewallProfile) error
 	Delete(obj *security.FirewallProfile) error
 	Find(meta *api.ObjectMeta) (*FirewallProfile, error)
-	List() []*FirewallProfile
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FirewallProfile, error)
 	Watch(handler FirewallProfileHandler) error
 }
 
@@ -2016,10 +2052,14 @@ func (api *firewallprofileAPI) Find(meta *api.ObjectMeta) (*FirewallProfile, err
 }
 
 // List returns a list of all FirewallProfile objects
-func (api *firewallprofileAPI) List() []*FirewallProfile {
+func (api *firewallprofileAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*FirewallProfile, error) {
 	var objlist []*FirewallProfile
+	objs, err := api.ct.List("FirewallProfile", ctx, opts)
 
-	objs := api.ct.ListObjects("FirewallProfile")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *FirewallProfile:
@@ -2030,7 +2070,7 @@ func (api *firewallprofileAPI) List() []*FirewallProfile {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for FirewallProfile object
@@ -2275,8 +2315,14 @@ func (ct *ctrlerCtx) diffCertificate(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Certificate().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Certificate().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffCertificate(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2420,7 +2466,7 @@ type CertificateAPI interface {
 	Update(obj *security.Certificate) error
 	Delete(obj *security.Certificate) error
 	Find(meta *api.ObjectMeta) (*Certificate, error)
-	List() []*Certificate
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Certificate, error)
 	Watch(handler CertificateHandler) error
 }
 
@@ -2521,10 +2567,14 @@ func (api *certificateAPI) Find(meta *api.ObjectMeta) (*Certificate, error) {
 }
 
 // List returns a list of all Certificate objects
-func (api *certificateAPI) List() []*Certificate {
+func (api *certificateAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Certificate, error) {
 	var objlist []*Certificate
+	objs, err := api.ct.List("Certificate", ctx, opts)
 
-	objs := api.ct.ListObjects("Certificate")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Certificate:
@@ -2535,7 +2585,7 @@ func (api *certificateAPI) List() []*Certificate {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Certificate object
@@ -2780,8 +2830,14 @@ func (ct *ctrlerCtx) diffTrafficEncryptionPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.TrafficEncryptionPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.TrafficEncryptionPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffTrafficEncryptionPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2925,7 +2981,7 @@ type TrafficEncryptionPolicyAPI interface {
 	Update(obj *security.TrafficEncryptionPolicy) error
 	Delete(obj *security.TrafficEncryptionPolicy) error
 	Find(meta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
-	List() []*TrafficEncryptionPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TrafficEncryptionPolicy, error)
 	Watch(handler TrafficEncryptionPolicyHandler) error
 }
 
@@ -3026,10 +3082,14 @@ func (api *trafficencryptionpolicyAPI) Find(meta *api.ObjectMeta) (*TrafficEncry
 }
 
 // List returns a list of all TrafficEncryptionPolicy objects
-func (api *trafficencryptionpolicyAPI) List() []*TrafficEncryptionPolicy {
+func (api *trafficencryptionpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*TrafficEncryptionPolicy, error) {
 	var objlist []*TrafficEncryptionPolicy
+	objs, err := api.ct.List("TrafficEncryptionPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("TrafficEncryptionPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *TrafficEncryptionPolicy:
@@ -3040,7 +3100,7 @@ func (api *trafficencryptionpolicyAPI) List() []*TrafficEncryptionPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for TrafficEncryptionPolicy object

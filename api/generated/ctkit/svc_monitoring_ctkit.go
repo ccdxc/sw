@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.EventPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.EventPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffEventPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type EventPolicyAPI interface {
 	Update(obj *monitoring.EventPolicy) error
 	Delete(obj *monitoring.EventPolicy) error
 	Find(meta *api.ObjectMeta) (*EventPolicy, error)
-	List() []*EventPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*EventPolicy, error)
 	Watch(handler EventPolicyHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *eventpolicyAPI) Find(meta *api.ObjectMeta) (*EventPolicy, error) {
 }
 
 // List returns a list of all EventPolicy objects
-func (api *eventpolicyAPI) List() []*EventPolicy {
+func (api *eventpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*EventPolicy, error) {
 	var objlist []*EventPolicy
+	objs, err := api.ct.List("EventPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("EventPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *EventPolicy:
@@ -515,7 +525,7 @@ func (api *eventpolicyAPI) List() []*EventPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for EventPolicy object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.StatsPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.StatsPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffStatsPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type StatsPolicyAPI interface {
 	Update(obj *monitoring.StatsPolicy) error
 	Delete(obj *monitoring.StatsPolicy) error
 	Find(meta *api.ObjectMeta) (*StatsPolicy, error)
-	List() []*StatsPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*StatsPolicy, error)
 	Watch(handler StatsPolicyHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *statspolicyAPI) Find(meta *api.ObjectMeta) (*StatsPolicy, error) {
 }
 
 // List returns a list of all StatsPolicy objects
-func (api *statspolicyAPI) List() []*StatsPolicy {
+func (api *statspolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*StatsPolicy, error) {
 	var objlist []*StatsPolicy
+	objs, err := api.ct.List("StatsPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("StatsPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *StatsPolicy:
@@ -1020,7 +1040,7 @@ func (api *statspolicyAPI) List() []*StatsPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for StatsPolicy object
@@ -1265,8 +1285,14 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.FwlogPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.FwlogPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffFwlogPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1410,7 +1436,7 @@ type FwlogPolicyAPI interface {
 	Update(obj *monitoring.FwlogPolicy) error
 	Delete(obj *monitoring.FwlogPolicy) error
 	Find(meta *api.ObjectMeta) (*FwlogPolicy, error)
-	List() []*FwlogPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FwlogPolicy, error)
 	Watch(handler FwlogPolicyHandler) error
 }
 
@@ -1511,10 +1537,14 @@ func (api *fwlogpolicyAPI) Find(meta *api.ObjectMeta) (*FwlogPolicy, error) {
 }
 
 // List returns a list of all FwlogPolicy objects
-func (api *fwlogpolicyAPI) List() []*FwlogPolicy {
+func (api *fwlogpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*FwlogPolicy, error) {
 	var objlist []*FwlogPolicy
+	objs, err := api.ct.List("FwlogPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("FwlogPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *FwlogPolicy:
@@ -1525,7 +1555,7 @@ func (api *fwlogpolicyAPI) List() []*FwlogPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for FwlogPolicy object
@@ -1770,8 +1800,14 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.FlowExportPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.FlowExportPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffFlowExportPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1915,7 +1951,7 @@ type FlowExportPolicyAPI interface {
 	Update(obj *monitoring.FlowExportPolicy) error
 	Delete(obj *monitoring.FlowExportPolicy) error
 	Find(meta *api.ObjectMeta) (*FlowExportPolicy, error)
-	List() []*FlowExportPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FlowExportPolicy, error)
 	Watch(handler FlowExportPolicyHandler) error
 }
 
@@ -2016,10 +2052,14 @@ func (api *flowexportpolicyAPI) Find(meta *api.ObjectMeta) (*FlowExportPolicy, e
 }
 
 // List returns a list of all FlowExportPolicy objects
-func (api *flowexportpolicyAPI) List() []*FlowExportPolicy {
+func (api *flowexportpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*FlowExportPolicy, error) {
 	var objlist []*FlowExportPolicy
+	objs, err := api.ct.List("FlowExportPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("FlowExportPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *FlowExportPolicy:
@@ -2030,7 +2070,7 @@ func (api *flowexportpolicyAPI) List() []*FlowExportPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for FlowExportPolicy object
@@ -2275,8 +2315,14 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Alert().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Alert().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffAlert(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2420,7 +2466,7 @@ type AlertAPI interface {
 	Update(obj *monitoring.Alert) error
 	Delete(obj *monitoring.Alert) error
 	Find(meta *api.ObjectMeta) (*Alert, error)
-	List() []*Alert
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Alert, error)
 	Watch(handler AlertHandler) error
 }
 
@@ -2521,10 +2567,14 @@ func (api *alertAPI) Find(meta *api.ObjectMeta) (*Alert, error) {
 }
 
 // List returns a list of all Alert objects
-func (api *alertAPI) List() []*Alert {
+func (api *alertAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Alert, error) {
 	var objlist []*Alert
+	objs, err := api.ct.List("Alert", ctx, opts)
 
-	objs := api.ct.ListObjects("Alert")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Alert:
@@ -2535,7 +2585,7 @@ func (api *alertAPI) List() []*Alert {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Alert object
@@ -2780,8 +2830,14 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.AlertPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.AlertPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffAlertPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2925,7 +2981,7 @@ type AlertPolicyAPI interface {
 	Update(obj *monitoring.AlertPolicy) error
 	Delete(obj *monitoring.AlertPolicy) error
 	Find(meta *api.ObjectMeta) (*AlertPolicy, error)
-	List() []*AlertPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertPolicy, error)
 	Watch(handler AlertPolicyHandler) error
 }
 
@@ -3026,10 +3082,14 @@ func (api *alertpolicyAPI) Find(meta *api.ObjectMeta) (*AlertPolicy, error) {
 }
 
 // List returns a list of all AlertPolicy objects
-func (api *alertpolicyAPI) List() []*AlertPolicy {
+func (api *alertpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertPolicy, error) {
 	var objlist []*AlertPolicy
+	objs, err := api.ct.List("AlertPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("AlertPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *AlertPolicy:
@@ -3040,7 +3100,7 @@ func (api *alertpolicyAPI) List() []*AlertPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for AlertPolicy object
@@ -3285,8 +3345,14 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.AlertDestination().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.AlertDestination().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffAlertDestination(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -3430,7 +3496,7 @@ type AlertDestinationAPI interface {
 	Update(obj *monitoring.AlertDestination) error
 	Delete(obj *monitoring.AlertDestination) error
 	Find(meta *api.ObjectMeta) (*AlertDestination, error)
-	List() []*AlertDestination
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertDestination, error)
 	Watch(handler AlertDestinationHandler) error
 }
 
@@ -3531,10 +3597,14 @@ func (api *alertdestinationAPI) Find(meta *api.ObjectMeta) (*AlertDestination, e
 }
 
 // List returns a list of all AlertDestination objects
-func (api *alertdestinationAPI) List() []*AlertDestination {
+func (api *alertdestinationAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertDestination, error) {
 	var objlist []*AlertDestination
+	objs, err := api.ct.List("AlertDestination", ctx, opts)
 
-	objs := api.ct.ListObjects("AlertDestination")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *AlertDestination:
@@ -3545,7 +3615,7 @@ func (api *alertdestinationAPI) List() []*AlertDestination {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for AlertDestination object
@@ -3790,8 +3860,14 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.MirrorSession().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.MirrorSession().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffMirrorSession(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -3935,7 +4011,7 @@ type MirrorSessionAPI interface {
 	Update(obj *monitoring.MirrorSession) error
 	Delete(obj *monitoring.MirrorSession) error
 	Find(meta *api.ObjectMeta) (*MirrorSession, error)
-	List() []*MirrorSession
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*MirrorSession, error)
 	Watch(handler MirrorSessionHandler) error
 }
 
@@ -4036,10 +4112,14 @@ func (api *mirrorsessionAPI) Find(meta *api.ObjectMeta) (*MirrorSession, error) 
 }
 
 // List returns a list of all MirrorSession objects
-func (api *mirrorsessionAPI) List() []*MirrorSession {
+func (api *mirrorsessionAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*MirrorSession, error) {
 	var objlist []*MirrorSession
+	objs, err := api.ct.List("MirrorSession", ctx, opts)
 
-	objs := api.ct.ListObjects("MirrorSession")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *MirrorSession:
@@ -4050,7 +4130,7 @@ func (api *mirrorsessionAPI) List() []*MirrorSession {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for MirrorSession object
@@ -4295,8 +4375,14 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.TroubleshootingSession().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.TroubleshootingSession().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffTroubleshootingSession(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -4440,7 +4526,7 @@ type TroubleshootingSessionAPI interface {
 	Update(obj *monitoring.TroubleshootingSession) error
 	Delete(obj *monitoring.TroubleshootingSession) error
 	Find(meta *api.ObjectMeta) (*TroubleshootingSession, error)
-	List() []*TroubleshootingSession
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TroubleshootingSession, error)
 	Watch(handler TroubleshootingSessionHandler) error
 }
 
@@ -4541,10 +4627,14 @@ func (api *troubleshootingsessionAPI) Find(meta *api.ObjectMeta) (*Troubleshooti
 }
 
 // List returns a list of all TroubleshootingSession objects
-func (api *troubleshootingsessionAPI) List() []*TroubleshootingSession {
+func (api *troubleshootingsessionAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*TroubleshootingSession, error) {
 	var objlist []*TroubleshootingSession
+	objs, err := api.ct.List("TroubleshootingSession", ctx, opts)
 
-	objs := api.ct.ListObjects("TroubleshootingSession")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *TroubleshootingSession:
@@ -4555,7 +4645,7 @@ func (api *troubleshootingsessionAPI) List() []*TroubleshootingSession {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for TroubleshootingSession object
@@ -4800,8 +4890,14 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.TechSupportRequest().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.TechSupportRequest().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffTechSupportRequest(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -4945,7 +5041,7 @@ type TechSupportRequestAPI interface {
 	Update(obj *monitoring.TechSupportRequest) error
 	Delete(obj *monitoring.TechSupportRequest) error
 	Find(meta *api.ObjectMeta) (*TechSupportRequest, error)
-	List() []*TechSupportRequest
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TechSupportRequest, error)
 	Watch(handler TechSupportRequestHandler) error
 }
 
@@ -5046,10 +5142,14 @@ func (api *techsupportrequestAPI) Find(meta *api.ObjectMeta) (*TechSupportReques
 }
 
 // List returns a list of all TechSupportRequest objects
-func (api *techsupportrequestAPI) List() []*TechSupportRequest {
+func (api *techsupportrequestAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*TechSupportRequest, error) {
 	var objlist []*TechSupportRequest
+	objs, err := api.ct.List("TechSupportRequest", ctx, opts)
 
-	objs := api.ct.ListObjects("TechSupportRequest")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *TechSupportRequest:
@@ -5060,7 +5160,7 @@ func (api *techsupportrequestAPI) List() []*TechSupportRequest {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for TechSupportRequest object

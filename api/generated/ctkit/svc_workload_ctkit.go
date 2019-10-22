@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffEndpoint(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Endpoint().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Endpoint().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffEndpoint(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type EndpointAPI interface {
 	Update(obj *workload.Endpoint) error
 	Delete(obj *workload.Endpoint) error
 	Find(meta *api.ObjectMeta) (*Endpoint, error)
-	List() []*Endpoint
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Endpoint, error)
 	Watch(handler EndpointHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *endpointAPI) Find(meta *api.ObjectMeta) (*Endpoint, error) {
 }
 
 // List returns a list of all Endpoint objects
-func (api *endpointAPI) List() []*Endpoint {
+func (api *endpointAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Endpoint, error) {
 	var objlist []*Endpoint
+	objs, err := api.ct.List("Endpoint", ctx, opts)
 
-	objs := api.ct.ListObjects("Endpoint")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Endpoint:
@@ -515,7 +525,7 @@ func (api *endpointAPI) List() []*Endpoint {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Endpoint object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffWorkload(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Workload().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Workload().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffWorkload(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type WorkloadAPI interface {
 	Update(obj *workload.Workload) error
 	Delete(obj *workload.Workload) error
 	Find(meta *api.ObjectMeta) (*Workload, error)
-	List() []*Workload
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Workload, error)
 	Watch(handler WorkloadHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *workloadAPI) Find(meta *api.ObjectMeta) (*Workload, error) {
 }
 
 // List returns a list of all Workload objects
-func (api *workloadAPI) List() []*Workload {
+func (api *workloadAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Workload, error) {
 	var objlist []*Workload
+	objs, err := api.ct.List("Workload", ctx, opts)
 
-	objs := api.ct.ListObjects("Workload")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Workload:
@@ -1020,7 +1040,7 @@ func (api *workloadAPI) List() []*Workload {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Workload object

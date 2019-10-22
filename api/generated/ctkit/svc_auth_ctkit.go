@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.User().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.User().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffUser(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type UserAPI interface {
 	Update(obj *auth.User) error
 	Delete(obj *auth.User) error
 	Find(meta *api.ObjectMeta) (*User, error)
-	List() []*User
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error)
 	Watch(handler UserHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *userAPI) Find(meta *api.ObjectMeta) (*User, error) {
 }
 
 // List returns a list of all User objects
-func (api *userAPI) List() []*User {
+func (api *userAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error) {
 	var objlist []*User
+	objs, err := api.ct.List("User", ctx, opts)
 
-	objs := api.ct.ListObjects("User")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *User:
@@ -515,7 +525,7 @@ func (api *userAPI) List() []*User {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for User object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.AuthenticationPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.AuthenticationPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffAuthenticationPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type AuthenticationPolicyAPI interface {
 	Update(obj *auth.AuthenticationPolicy) error
 	Delete(obj *auth.AuthenticationPolicy) error
 	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
-	List() []*AuthenticationPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(handler AuthenticationPolicyHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *authenticationpolicyAPI) Find(meta *api.ObjectMeta) (*AuthenticationP
 }
 
 // List returns a list of all AuthenticationPolicy objects
-func (api *authenticationpolicyAPI) List() []*AuthenticationPolicy {
+func (api *authenticationpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error) {
 	var objlist []*AuthenticationPolicy
+	objs, err := api.ct.List("AuthenticationPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("AuthenticationPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *AuthenticationPolicy:
@@ -1020,7 +1040,7 @@ func (api *authenticationpolicyAPI) List() []*AuthenticationPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for AuthenticationPolicy object
@@ -1265,8 +1285,14 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Role().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Role().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffRole(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1410,7 +1436,7 @@ type RoleAPI interface {
 	Update(obj *auth.Role) error
 	Delete(obj *auth.Role) error
 	Find(meta *api.ObjectMeta) (*Role, error)
-	List() []*Role
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Role, error)
 	Watch(handler RoleHandler) error
 }
 
@@ -1511,10 +1537,14 @@ func (api *roleAPI) Find(meta *api.ObjectMeta) (*Role, error) {
 }
 
 // List returns a list of all Role objects
-func (api *roleAPI) List() []*Role {
+func (api *roleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Role, error) {
 	var objlist []*Role
+	objs, err := api.ct.List("Role", ctx, opts)
 
-	objs := api.ct.ListObjects("Role")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Role:
@@ -1525,7 +1555,7 @@ func (api *roleAPI) List() []*Role {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Role object
@@ -1770,8 +1800,14 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.RoleBinding().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.RoleBinding().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffRoleBinding(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1915,7 +1951,7 @@ type RoleBindingAPI interface {
 	Update(obj *auth.RoleBinding) error
 	Delete(obj *auth.RoleBinding) error
 	Find(meta *api.ObjectMeta) (*RoleBinding, error)
-	List() []*RoleBinding
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoleBinding, error)
 	Watch(handler RoleBindingHandler) error
 }
 
@@ -2016,10 +2052,14 @@ func (api *rolebindingAPI) Find(meta *api.ObjectMeta) (*RoleBinding, error) {
 }
 
 // List returns a list of all RoleBinding objects
-func (api *rolebindingAPI) List() []*RoleBinding {
+func (api *rolebindingAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoleBinding, error) {
 	var objlist []*RoleBinding
+	objs, err := api.ct.List("RoleBinding", ctx, opts)
 
-	objs := api.ct.ListObjects("RoleBinding")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *RoleBinding:
@@ -2030,7 +2070,7 @@ func (api *rolebindingAPI) List() []*RoleBinding {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for RoleBinding object
@@ -2275,8 +2315,14 @@ func (ct *ctrlerCtx) diffUserPreference(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.UserPreference().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.UserPreference().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffUserPreference(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2420,7 +2466,7 @@ type UserPreferenceAPI interface {
 	Update(obj *auth.UserPreference) error
 	Delete(obj *auth.UserPreference) error
 	Find(meta *api.ObjectMeta) (*UserPreference, error)
-	List() []*UserPreference
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*UserPreference, error)
 	Watch(handler UserPreferenceHandler) error
 }
 
@@ -2521,10 +2567,14 @@ func (api *userpreferenceAPI) Find(meta *api.ObjectMeta) (*UserPreference, error
 }
 
 // List returns a list of all UserPreference objects
-func (api *userpreferenceAPI) List() []*UserPreference {
+func (api *userpreferenceAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*UserPreference, error) {
 	var objlist []*UserPreference
+	objs, err := api.ct.List("UserPreference", ctx, opts)
 
-	objs := api.ct.ListObjects("UserPreference")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *UserPreference:
@@ -2535,7 +2585,7 @@ func (api *userpreferenceAPI) List() []*UserPreference {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for UserPreference object

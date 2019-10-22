@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffNetwork(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Network().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Network().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffNetwork(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type NetworkAPI interface {
 	Update(obj *network.Network) error
 	Delete(obj *network.Network) error
 	Find(meta *api.ObjectMeta) (*Network, error)
-	List() []*Network
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Network, error)
 	Watch(handler NetworkHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *networkAPI) Find(meta *api.ObjectMeta) (*Network, error) {
 }
 
 // List returns a list of all Network objects
-func (api *networkAPI) List() []*Network {
+func (api *networkAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Network, error) {
 	var objlist []*Network
+	objs, err := api.ct.List("Network", ctx, opts)
 
-	objs := api.ct.ListObjects("Network")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Network:
@@ -515,7 +525,7 @@ func (api *networkAPI) List() []*Network {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Network object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffService(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Service().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Service().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffService(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type ServiceAPI interface {
 	Update(obj *network.Service) error
 	Delete(obj *network.Service) error
 	Find(meta *api.ObjectMeta) (*Service, error)
-	List() []*Service
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Service, error)
 	Watch(handler ServiceHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *serviceAPI) Find(meta *api.ObjectMeta) (*Service, error) {
 }
 
 // List returns a list of all Service objects
-func (api *serviceAPI) List() []*Service {
+func (api *serviceAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Service, error) {
 	var objlist []*Service
+	objs, err := api.ct.List("Service", ctx, opts)
 
-	objs := api.ct.ListObjects("Service")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Service:
@@ -1020,7 +1040,7 @@ func (api *serviceAPI) List() []*Service {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Service object
@@ -1265,8 +1285,14 @@ func (ct *ctrlerCtx) diffLbPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.LbPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.LbPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffLbPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1410,7 +1436,7 @@ type LbPolicyAPI interface {
 	Update(obj *network.LbPolicy) error
 	Delete(obj *network.LbPolicy) error
 	Find(meta *api.ObjectMeta) (*LbPolicy, error)
-	List() []*LbPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*LbPolicy, error)
 	Watch(handler LbPolicyHandler) error
 }
 
@@ -1511,10 +1537,14 @@ func (api *lbpolicyAPI) Find(meta *api.ObjectMeta) (*LbPolicy, error) {
 }
 
 // List returns a list of all LbPolicy objects
-func (api *lbpolicyAPI) List() []*LbPolicy {
+func (api *lbpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*LbPolicy, error) {
 	var objlist []*LbPolicy
+	objs, err := api.ct.List("LbPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("LbPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *LbPolicy:
@@ -1525,7 +1555,7 @@ func (api *lbpolicyAPI) List() []*LbPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for LbPolicy object
@@ -1770,8 +1800,14 @@ func (ct *ctrlerCtx) diffVirtualRouter(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.VirtualRouter().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.VirtualRouter().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffVirtualRouter(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1915,7 +1951,7 @@ type VirtualRouterAPI interface {
 	Update(obj *network.VirtualRouter) error
 	Delete(obj *network.VirtualRouter) error
 	Find(meta *api.ObjectMeta) (*VirtualRouter, error)
-	List() []*VirtualRouter
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*VirtualRouter, error)
 	Watch(handler VirtualRouterHandler) error
 }
 
@@ -2016,10 +2052,14 @@ func (api *virtualrouterAPI) Find(meta *api.ObjectMeta) (*VirtualRouter, error) 
 }
 
 // List returns a list of all VirtualRouter objects
-func (api *virtualrouterAPI) List() []*VirtualRouter {
+func (api *virtualrouterAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*VirtualRouter, error) {
 	var objlist []*VirtualRouter
+	objs, err := api.ct.List("VirtualRouter", ctx, opts)
 
-	objs := api.ct.ListObjects("VirtualRouter")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *VirtualRouter:
@@ -2030,7 +2070,7 @@ func (api *virtualrouterAPI) List() []*VirtualRouter {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for VirtualRouter object
@@ -2275,8 +2315,14 @@ func (ct *ctrlerCtx) diffNetworkInterface(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.NetworkInterface().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.NetworkInterface().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffNetworkInterface(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2420,7 +2466,7 @@ type NetworkInterfaceAPI interface {
 	Update(obj *network.NetworkInterface) error
 	Delete(obj *network.NetworkInterface) error
 	Find(meta *api.ObjectMeta) (*NetworkInterface, error)
-	List() []*NetworkInterface
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkInterface, error)
 	Watch(handler NetworkInterfaceHandler) error
 }
 
@@ -2521,10 +2567,14 @@ func (api *networkinterfaceAPI) Find(meta *api.ObjectMeta) (*NetworkInterface, e
 }
 
 // List returns a list of all NetworkInterface objects
-func (api *networkinterfaceAPI) List() []*NetworkInterface {
+func (api *networkinterfaceAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkInterface, error) {
 	var objlist []*NetworkInterface
+	objs, err := api.ct.List("NetworkInterface", ctx, opts)
 
-	objs := api.ct.ListObjects("NetworkInterface")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *NetworkInterface:
@@ -2535,7 +2585,7 @@ func (api *networkinterfaceAPI) List() []*NetworkInterface {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for NetworkInterface object
@@ -2780,8 +2830,14 @@ func (ct *ctrlerCtx) diffIPAMPolicy(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.IPAMPolicy().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.IPAMPolicy().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffIPAMPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2925,7 +2981,7 @@ type IPAMPolicyAPI interface {
 	Update(obj *network.IPAMPolicy) error
 	Delete(obj *network.IPAMPolicy) error
 	Find(meta *api.ObjectMeta) (*IPAMPolicy, error)
-	List() []*IPAMPolicy
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*IPAMPolicy, error)
 	Watch(handler IPAMPolicyHandler) error
 }
 
@@ -3026,10 +3082,14 @@ func (api *ipampolicyAPI) Find(meta *api.ObjectMeta) (*IPAMPolicy, error) {
 }
 
 // List returns a list of all IPAMPolicy objects
-func (api *ipampolicyAPI) List() []*IPAMPolicy {
+func (api *ipampolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*IPAMPolicy, error) {
 	var objlist []*IPAMPolicy
+	objs, err := api.ct.List("IPAMPolicy", ctx, opts)
 
-	objs := api.ct.ListObjects("IPAMPolicy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *IPAMPolicy:
@@ -3040,7 +3100,7 @@ func (api *ipampolicyAPI) List() []*IPAMPolicy {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for IPAMPolicy object

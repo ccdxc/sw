@@ -255,8 +255,14 @@ func (ct *ctrlerCtx) diffOrder(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Order().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Order().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffOrder(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -400,7 +406,7 @@ type OrderAPI interface {
 	Update(obj *bookstore.Order) error
 	Delete(obj *bookstore.Order) error
 	Find(meta *api.ObjectMeta) (*Order, error)
-	List() []*Order
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Order, error)
 	Watch(handler OrderHandler) error
 }
 
@@ -501,10 +507,14 @@ func (api *orderAPI) Find(meta *api.ObjectMeta) (*Order, error) {
 }
 
 // List returns a list of all Order objects
-func (api *orderAPI) List() []*Order {
+func (api *orderAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Order, error) {
 	var objlist []*Order
+	objs, err := api.ct.List("Order", ctx, opts)
 
-	objs := api.ct.ListObjects("Order")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Order:
@@ -515,7 +525,7 @@ func (api *orderAPI) List() []*Order {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Order object
@@ -760,8 +770,14 @@ func (ct *ctrlerCtx) diffBook(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Book().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Book().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffBook(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -905,7 +921,7 @@ type BookAPI interface {
 	Update(obj *bookstore.Book) error
 	Delete(obj *bookstore.Book) error
 	Find(meta *api.ObjectMeta) (*Book, error)
-	List() []*Book
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Book, error)
 	Watch(handler BookHandler) error
 }
 
@@ -1006,10 +1022,14 @@ func (api *bookAPI) Find(meta *api.ObjectMeta) (*Book, error) {
 }
 
 // List returns a list of all Book objects
-func (api *bookAPI) List() []*Book {
+func (api *bookAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Book, error) {
 	var objlist []*Book
+	objs, err := api.ct.List("Book", ctx, opts)
 
-	objs := api.ct.ListObjects("Book")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Book:
@@ -1020,7 +1040,7 @@ func (api *bookAPI) List() []*Book {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Book object
@@ -1265,8 +1285,14 @@ func (ct *ctrlerCtx) diffPublisher(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Publisher().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Publisher().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffPublisher(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1410,7 +1436,7 @@ type PublisherAPI interface {
 	Update(obj *bookstore.Publisher) error
 	Delete(obj *bookstore.Publisher) error
 	Find(meta *api.ObjectMeta) (*Publisher, error)
-	List() []*Publisher
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Publisher, error)
 	Watch(handler PublisherHandler) error
 }
 
@@ -1511,10 +1537,14 @@ func (api *publisherAPI) Find(meta *api.ObjectMeta) (*Publisher, error) {
 }
 
 // List returns a list of all Publisher objects
-func (api *publisherAPI) List() []*Publisher {
+func (api *publisherAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Publisher, error) {
 	var objlist []*Publisher
+	objs, err := api.ct.List("Publisher", ctx, opts)
 
-	objs := api.ct.ListObjects("Publisher")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Publisher:
@@ -1525,7 +1555,7 @@ func (api *publisherAPI) List() []*Publisher {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Publisher object
@@ -1770,8 +1800,14 @@ func (ct *ctrlerCtx) diffStore(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Store().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Store().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffStore(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -1915,7 +1951,7 @@ type StoreAPI interface {
 	Update(obj *bookstore.Store) error
 	Delete(obj *bookstore.Store) error
 	Find(meta *api.ObjectMeta) (*Store, error)
-	List() []*Store
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Store, error)
 	Watch(handler StoreHandler) error
 }
 
@@ -2016,10 +2052,14 @@ func (api *storeAPI) Find(meta *api.ObjectMeta) (*Store, error) {
 }
 
 // List returns a list of all Store objects
-func (api *storeAPI) List() []*Store {
+func (api *storeAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Store, error) {
 	var objlist []*Store
+	objs, err := api.ct.List("Store", ctx, opts)
 
-	objs := api.ct.ListObjects("Store")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Store:
@@ -2030,7 +2070,7 @@ func (api *storeAPI) List() []*Store {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Store object
@@ -2275,8 +2315,14 @@ func (ct *ctrlerCtx) diffCoupon(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Coupon().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Coupon().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffCoupon(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2420,7 +2466,7 @@ type CouponAPI interface {
 	Update(obj *bookstore.Coupon) error
 	Delete(obj *bookstore.Coupon) error
 	Find(meta *api.ObjectMeta) (*Coupon, error)
-	List() []*Coupon
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Coupon, error)
 	Watch(handler CouponHandler) error
 }
 
@@ -2521,10 +2567,14 @@ func (api *couponAPI) Find(meta *api.ObjectMeta) (*Coupon, error) {
 }
 
 // List returns a list of all Coupon objects
-func (api *couponAPI) List() []*Coupon {
+func (api *couponAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Coupon, error) {
 	var objlist []*Coupon
+	objs, err := api.ct.List("Coupon", ctx, opts)
 
-	objs := api.ct.ListObjects("Coupon")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Coupon:
@@ -2535,7 +2585,7 @@ func (api *couponAPI) List() []*Coupon {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Coupon object
@@ -2780,8 +2830,14 @@ func (ct *ctrlerCtx) diffCustomer(apicl apiclient.Services) {
 		objmap[obj.GetKey()] = obj
 	}
 
+	list, err := ct.Customer().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
 	// if an object is in our local cache and not in API server, trigger delete for it
-	for _, obj := range ct.Customer().List() {
+	for _, obj := range list {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
 			ct.logger.Infof("diffCustomer(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
@@ -2925,7 +2981,7 @@ type CustomerAPI interface {
 	Update(obj *bookstore.Customer) error
 	Delete(obj *bookstore.Customer) error
 	Find(meta *api.ObjectMeta) (*Customer, error)
-	List() []*Customer
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Customer, error)
 	Watch(handler CustomerHandler) error
 }
 
@@ -3026,10 +3082,14 @@ func (api *customerAPI) Find(meta *api.ObjectMeta) (*Customer, error) {
 }
 
 // List returns a list of all Customer objects
-func (api *customerAPI) List() []*Customer {
+func (api *customerAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Customer, error) {
 	var objlist []*Customer
+	objs, err := api.ct.List("Customer", ctx, opts)
 
-	objs := api.ct.ListObjects("Customer")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, obj := range objs {
 		switch tp := obj.(type) {
 		case *Customer:
@@ -3040,7 +3100,7 @@ func (api *customerAPI) List() []*Customer {
 		}
 	}
 
-	return objlist
+	return objlist, nil
 }
 
 // Watch sets up a event handlers for Customer object
