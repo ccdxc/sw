@@ -375,6 +375,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     const observables: Observable<any>[] = [];
     for (const workloadObj of updatedWorkloads) {
       const name = workloadObj.meta.name;
+      delete  workloadObj[WorkloadComponent.WORKLOAD_FIELD_DSCS];  // Remove the workload.dscs field as it is only needed in UI.
       const sub = this.workloadService.UpdateWorkload(name, workloadObj);
       observables.push(sub);
     }

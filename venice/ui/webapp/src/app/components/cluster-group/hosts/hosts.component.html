@@ -70,6 +70,16 @@
                   [matTooltip]="'Not Admitted'">announcement</mat-icon>
       </div>
     </ng-container>
+    <ng-container *ngSwitchCase="'workloads'">
+      <div *ngFor="let w of rowData['processedWorkloads'] let i=index" class="hosts-workloads-div">
+        <ng-container *roleGuard="'workloadworkload_read'">
+          <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
+             [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+          <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
+             [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
+        </ng-container>
+      </div>
+    </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
     </ng-container>

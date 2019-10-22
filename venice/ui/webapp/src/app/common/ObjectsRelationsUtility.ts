@@ -14,6 +14,11 @@ export interface DSCWorkloadHostTuple {
     host: ClusterHost;
 }
 
+export interface HostWorkloadTuple {
+    workloads: WorkloadWorkload[];
+    host: ClusterHost;
+}
+
 export interface DSCnameToMacMap {
     [key: string]: string; // dsc.spec.id - dsc.meta.name
 }
@@ -120,7 +125,7 @@ export class ObjectsRelationsUtility {
     }
 
     /**
-     * Build a map key=workload.meta.name, value = 'DSCWorkloadHostTuple' object
+     * Build a map key=dsc.meta.name, value = 'DSCWorkloadHostTuple' object
      *
      * dsc -- 1:1 --> host
      * host -- 1:m --> workload
@@ -146,6 +151,31 @@ export class ObjectsRelationsUtility {
             dscWorkloadHostMap[dsc.meta.name] = newTuple;
         }
         return dscWorkloadHostMap;
+    }
+
+    /**
+     * Build a map key=host.meta.name, value = 'HostWorkloadTuple' object
+     *
+     * dsc -- 1:1 --> host
+     * host -- 1:m --> workloads
+     *
+     * e.g Host page can use this api to find workloads
+     * const hostWorkloadsTuple  = ObjectsRelationsUtility.buildHostWorkloadsMap(this.hosts this.workloads );
+     *
+     */
+    public static buildHostWorkloadsMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
+        hosts: ReadonlyArray<ClusterHost> | ClusterHost[],
+    ): { [hostKey: string]: HostWorkloadTuple; } {
+            const hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; } = {};
+            for (const host of hosts) {
+            const linkworkloads = this.findWorkloadsByHost(workloads, hosts);
+            const newTuple: HostWorkloadTuple = {
+                workloads: linkworkloads,
+                host: host
+            };
+            hostWorkloadsTuple[host.meta.name] = newTuple;
+            return hostWorkloadsTuple;
+        }
     }
 
     public static findWorkloadsByHost (workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[] ): WorkloadWorkload[] {
