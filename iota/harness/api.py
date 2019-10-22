@@ -398,6 +398,11 @@ def IsRegression():
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 
+#Returns true if tests running on same switch
+def RunningOnSameSwitch():
+    return (len(store.GetTestbed().GetCurrentTestsuite().GetTopology().Switches()) <= 1 )
+
+
 def GetNicType(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(node_name)
 

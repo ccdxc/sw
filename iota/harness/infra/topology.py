@@ -137,6 +137,23 @@ class Node(object):
             Logger.info("Skipping management IP read as no console info %s" % self.__name)
 
 
+    def Switches(self):
+        switch_ips = {}
+        for node_name in self.__nodes:
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            for nw in data_networks:
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+        
+        #Just return the switch IPs for now
+        return switch_ips.keys()
+
     def GetNicType(self):
         if getattr(self.__inst, "Resource", None):
             if getattr(self.__inst.Resource, "DataNicType", None):
