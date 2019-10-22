@@ -9,6 +9,7 @@
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/api/device_utils.hpp"
 
 namespace api_test {
 
@@ -34,6 +35,7 @@ public:
     void iter_next(int width = 1) { cur_iter_pos++; }
 
     bool read_unsupported(void) const {
+        if (apulu()) { return false; }
         return (::capri_mock_mode() ? true : false);
     }
 

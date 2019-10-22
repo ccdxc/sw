@@ -54,6 +54,7 @@ static inline void
 pds_device_spec_fill (pds_device_spec_t *spec, device_entry *entry)
 {
     spec->gateway_ip_addr = entry->gw_ip_addr();
+    spec->dev_oper_mode = entry->oper_mode();
 }
 
 sdk_ret_t

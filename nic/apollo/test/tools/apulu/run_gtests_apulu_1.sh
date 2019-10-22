@@ -34,9 +34,9 @@ fi
 #$GDB apulu_scale_test -c hal.json -i ${NICDIR}/apulu/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml" > /dev/null
 #[[ $? -ne 0 ]] && echo "apulu_scale_test failed!" && exit 1
 
-#echo "Running device test"
-#$GDB apulu_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_device_test.xml" > apulu_device_test.log.txt
-#[[ $? -ne 0 ]] && echo "apulu_device_test failed!" && exit 1
+echo "Running device test"
+$GDB apulu_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_device_test.xml" > apulu_device_test.log.txt
+[[ $? -ne 0 ]] && echo "apulu_device_test failed!" && exit 1
 
 #echo "Running vpc test"
 #$GDB apulu_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_vpc_test.xml" > apulu_vpc_test.log.txt
