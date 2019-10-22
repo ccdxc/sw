@@ -199,5 +199,5 @@ TEST_F(device_test, DISABLED_device_workflow_neg_5) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

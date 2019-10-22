@@ -264,5 +264,5 @@ main (int argc, char **argv)
         test_app_init();
     }
 #endif
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

@@ -373,5 +373,5 @@ TEST_F(policy, policy_workflow_neg_9) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

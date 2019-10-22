@@ -281,7 +281,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_10) {
 
 /// \brief Mirror session WF_N_1
 /// \ref WF_N_1
-TEST_F(mirror_session_test, mirror_session_workflow_neg_1) {
+TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
 
@@ -292,7 +292,7 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_1) {
 
 /// \brief Mirror session WF_N_2
 /// \ref WF_N_2
-TEST_F(mirror_session_test, mirror_session_workflow_neg_2) {
+TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed = {};
 
@@ -303,7 +303,7 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_2) {
 
 /// \brief Mirror session WF_N_3
 /// \ref WF_N_3
-TEST_F(mirror_session_test, mirror_session_workflow_neg_3) {
+TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_3) {
     mirror_session_stepper_seed_t seed = {};
 
     mirror_session_stepper_seed_init(k_base_ms+8, k_max_mirror_sessions,
@@ -313,7 +313,7 @@ TEST_F(mirror_session_test, mirror_session_workflow_neg_3) {
 
 /// \brief Mirror session WF_N_4
 /// \ref WF_N_4
-TEST_F(mirror_session_test, mirror_session_workflow_neg_4) {
+TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
     mirror_session_stepper_seed_t seed2 = {};
@@ -404,5 +404,5 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_8) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

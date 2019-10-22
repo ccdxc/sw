@@ -626,7 +626,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
 
 /// \brief local mappings WF_N_3
 /// \ref WF_N_3
-TEST_F(mapping_test, v4_local_mapping_workflow_neg_3) {
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_3) {
     uint32_t vnic_id = 9999;
     uint64_t vnic_mac = 0x0000000040302010;
     std::string vnic_cidr = "100.99.98.97";
@@ -705,7 +705,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_5) {
 
 /// \brief local mappings WF_N_6
 /// \ref WF_N_6
-TEST_F(mapping_test, v4_local_mapping_workflow_neg_6) {
+TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_6) {
     local_mapping_stepper_seed_t seed1 = {0};
     local_mapping_stepper_seed_t seed1A = {0};
 
@@ -1169,7 +1169,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
 
 /// \brief remote mappings WF_N_3
 /// \ref WF_N_3
-TEST_F(mapping_test, v4_remote_mapping_workflow_neg_3) {
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_3) {
     uint64_t vnic_mac = 0x0000000040302010;
     std::string vnic_cidr = "100.99.98.97";
     std::string tep_cidr = "200.97.98.99";
@@ -1241,7 +1241,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_5) {
 
 /// \brief remote mappings WF_N_6
 /// \ref WF_N_6
-TEST_F(mapping_test, v4_remote_mapping_workflow_neg_6) {
+TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_6) {
     remote_mapping_stepper_seed_t seed1 = {0};
     remote_mapping_stepper_seed_t seed1A = {0};
 
@@ -1350,5 +1350,5 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_8) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

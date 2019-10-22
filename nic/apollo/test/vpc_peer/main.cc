@@ -351,5 +351,5 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_8) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }

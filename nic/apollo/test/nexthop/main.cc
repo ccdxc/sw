@@ -254,5 +254,5 @@ TEST_F(nh_test, nh_workflow_neg_8) {
 int
 main (int argc, char **argv)
 {
-    api_test_program_run(argc, argv);
+    return api_test_program_run(argc, argv);
 }
