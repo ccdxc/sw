@@ -427,11 +427,15 @@ public:
     void generate_dummy_epdb() {
         ipv6_addr_t sip6 = {0};
         ipv6_addr_t dip6 = {0};
-        pds_local_mapping_spec_t local_spec = { 0 };
-        pds_remote_mapping_spec_t remote_spec = { 0 };
+        pds_local_mapping_spec_t local_spec;
+        pds_remote_mapping_spec_t remote_spec;
+        memset(&local_spec, 0, sizeof(local_spec));
+        memset(&remote_spec, 0, sizeof(remote_spec));
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             epdb[vpc].vpc_id = vpc;
+            local_spec.key.type = PDS_MAPPING_TYPE_L3;
             local_spec.key.vpc.id = vpc;
+            remote_spec.key.type = PDS_MAPPING_TYPE_L3;
             remote_spec.key.vpc.id = vpc;
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
                 local_spec.key.ip_addr.af = IP_AF_IPV4;

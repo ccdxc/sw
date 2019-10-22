@@ -85,8 +85,6 @@ typedef struct pds_encap_s {
     pds_encap_val_t  val;     ///< encap value
 } pds_encap_t;
 
-/// \@}
-
 /// \brief    VPC key
 typedef struct pds_vpc_key_s {
     pds_vpc_id_t id;    ///< VPC id
@@ -123,10 +121,26 @@ typedef struct pds_tag_key_s {
     pds_tag_id_t id;    ///< unique tag id
 } __PACK__ pds_tag_key_t;
 
+/// \brief    mapping type
+typedef enum pds_mapping_type_e {
+    PDS_MAPPING_TYPE_NONE = 0,
+    PDS_MAPPING_TYPE_L2   = 1,
+    PDS_MAPPING_TYPE_L3   = 2,
+} pds_mapping_type_t;
+
 /// \brief    mapping key
 typedef struct pds_mapping_key_s {
-    pds_vpc_key_t vpc;    ///< VPC this IP belongs to
-    ip_addr_t ip_addr;    ///< IP address of the mapping
+    pds_mapping_type_t type;
+    ///< L3 key
+    struct {
+        pds_vpc_key_t vpc;    ///< VPC this IP belongs to
+        ip_addr_t ip_addr;    ///< IP address of the mapping
+    };
+    ///< L2 key
+    struct {
+        pds_subnet_key_t subnet;    ///< subnet of the mapping
+        mac_addr_t mac_addr;        ///< MAC address of the mapping
+    };
 } __PACK__ pds_mapping_key_t;
 
 /// \brief    route table key

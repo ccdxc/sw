@@ -87,7 +87,7 @@ ippfx_proto_spec_to_api_spec (ip_prefix_t *ip_pfx,
              (ip_pfx->len > 32)) ||
         ((in_ippfx.addr().af() == types::IP_AF_INET6) &&
              (ip_pfx->len > 128))) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     } else {
         ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
     }
@@ -99,7 +99,7 @@ ipv6pfx_proto_spec_to_ippfx_api_spec (ip_prefix_t *ip_pfx,
                                       const types::IPv6Prefix& in_ippfx)
 {
     if ((ip_pfx->len = in_ippfx.len()) > 128) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
     memcpy(ip_pfx->addr.addr.v6_addr.addr8, in_ippfx.addr().c_str(),
            IP6_ADDR8_LEN);
@@ -113,7 +113,7 @@ ipv4pfx_proto_spec_to_ippfx_api_spec (ipv4_prefix_t *ip_pfx,
     ip_pfx->len = in_ippfx.len();
     if ((in_ippfx.addr().af() == types::IP_AF_INET) &&
              (ip_pfx->len > 32)) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     } else {
         ip_pfx->v4_addr = in_ippfx.addr().v4addr();
     }
@@ -125,7 +125,7 @@ ipv4pfx_proto_spec_to_api_spec (ipv4_prefix_t *ip_pfx,
                                 const types::IPv4Prefix& in_ippfx)
 {
     if ((ip_pfx->len = in_ippfx.len()) > 32) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
     ip_pfx->v4_addr = in_ippfx.addr();
     return sdk::SDK_RET_OK;
@@ -148,7 +148,7 @@ iprange_proto_spec_to_api_spec (ipvx_range_t *ip_range,
                in_iprange.ipv6range().high().v6addr().c_str(),
                IP6_ADDR8_LEN);
     } else {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
     return sdk::SDK_RET_OK;
 }
@@ -344,7 +344,7 @@ sdk_ret_to_api_status (sdk_ret_t ret)
     case sdk::SDK_RET_OOM:
         return types::ApiStatus::API_STATUS_OUT_OF_MEM;
 
-    case sdk::SDK_RET_INVALID_ARG:
+    case SDK_RET_INVALID_ARG:
         return types::ApiStatus::API_STATUS_INVALID_ARG;
 
     case sdk::SDK_RET_ENTRY_NOT_FOUND:
@@ -2611,17 +2611,36 @@ pds_vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
 }
 
 // build VPC API spec from protobuf spec
-static inline void
+static inline sdk_ret_t
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
 {
     pds::MappingKey key;
 
     key = proto_spec.id();
-    local_spec->key.vpc.id = key.ipkey().vpcid();
     ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
                                   key.ipkey().ipaddr());
-    local_spec->subnet.id = proto_spec.subnetid();
+
+    switch (key.keyinfo_case()) {
+    case pds::MappingKey::kMACKey:
+        local_spec->key.type = PDS_MAPPING_TYPE_L2;
+        local_spec->key.subnet.id = key.mackey().subnetid();
+        MAC_UINT64_TO_ADDR(local_spec->key.mac_addr,
+                           key.mackey().macaddr());
+        local_spec->subnet.id = local_spec->key.subnet.id;
+        break;
+
+    case pds::MappingKey::kIPKey:
+        local_spec->key.type = PDS_MAPPING_TYPE_L3;
+        local_spec->key.vpc.id = key.ipkey().vpcid();
+        ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
+                                      key.ipkey().ipaddr());
+        local_spec->subnet.id = proto_spec.subnetid();
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
     local_spec->vnic.id = proto_spec.vnicid();
     if (proto_spec.has_publicip()) {
         if (proto_spec.publicip().af() == types::IP_AF_INET ||
@@ -2642,6 +2661,7 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->svc_tag = proto_spec.servicetag();
     MAC_UINT64_TO_ADDR(local_spec->vnic_mac, proto_spec.macaddr());
     local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -2651,10 +2671,27 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    remote_spec->key.vpc.id = key.ipkey().vpcid();
-    ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
-                                  key.ipkey().ipaddr());
-    remote_spec->subnet.id = proto_spec.subnetid();
+    switch (key.keyinfo_case()) {
+    case pds::MappingKey::kMACKey:
+        remote_spec->key.type = PDS_MAPPING_TYPE_L2;
+        remote_spec->key.subnet.id = key.mackey().subnetid();
+        MAC_UINT64_TO_ADDR(remote_spec->key.mac_addr,
+                           key.mackey().macaddr());
+        remote_spec->subnet.id = remote_spec->key.subnet.id;
+        break;
+
+    case pds::MappingKey::kIPKey:
+        remote_spec->key.type = PDS_MAPPING_TYPE_L3;
+        remote_spec->key.vpc.id = key.ipkey().vpcid();
+        ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
+                                      key.ipkey().ipaddr());
+        remote_spec->subnet.id = proto_spec.subnetid();
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+
     switch (proto_spec.dstinfo_case()) {
     case pds::MappingSpec::kTunnelID:
         remote_spec->nh_type = PDS_NH_TYPE_TEP;

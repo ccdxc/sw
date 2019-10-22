@@ -46,7 +46,8 @@ pds_mapping_entry_find (pds_mapping_key_t *key)
     // mapping does not have any entry database, as the calls are single thread,
     // we can use static entry
     static mapping_entry *mapping;
-    pds_mapping_spec_t spec = { 0 };
+    pds_mapping_spec_t spec;
+    memset(&spec, 0, sizeof(spec));
     spec.key = *key;
 
     if (mapping == NULL) {

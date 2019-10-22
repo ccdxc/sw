@@ -43,13 +43,15 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i++) {
-        pds_local_mapping_spec_t local_spec = { 0 };
-        pds_remote_mapping_spec_t remote_spec = { 0 };
+        pds_local_mapping_spec_t local_spec;
+        pds_remote_mapping_spec_t remote_spec;
         if (proto_req->request(i).tunnelid() == 0) {
+            memset(&local_spec, 0, sizeof(local_spec));
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
             hooks::local_mapping_create(&local_spec);
         } else {
+            memset(&remote_spec, 0, sizeof(remote_spec));
             pds_remote_mapping_proto_to_api_spec(&remote_spec,
                                                  proto_req->request(i));
             hooks::remote_mapping_create(&remote_spec);
@@ -116,12 +118,14 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i++) {
-        pds_local_mapping_spec_t local_spec = { 0 };
-        pds_remote_mapping_spec_t remote_spec = { 0 };
+        pds_local_mapping_spec_t local_spec;
+        pds_remote_mapping_spec_t remote_spec;
         if (proto_req->request(i).tunnelid() == 0) {
+            memset(&local_spec, 0, sizeof(local_spec));
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
         } else {
+            memset(&remote_spec, 0, sizeof(remote_spec));
             pds_remote_mapping_proto_to_api_spec(&remote_spec,
                                                  proto_req->request(i));
         }

@@ -45,8 +45,10 @@ local_mapping_util::~local_mapping_util() {}
 
 sdk::sdk_ret_t
 local_mapping_util::create(void) const {
-    pds_local_mapping_spec_t local_spec = {0};
+    pds_local_mapping_spec_t local_spec;
 
+    memset(&local_spec, 0, sizeof(local_spec));
+    local_spec.key.type = PDS_MAPPING_TYPE_L3;
     local_spec.key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &local_spec.key.ip_addr);
     local_spec.subnet.id = this->sub_id;
@@ -77,8 +79,10 @@ local_mapping_util::create(void) const {
 
 sdk::sdk_ret_t
 local_mapping_util::update(void) const {
-    pds_local_mapping_spec_t local_spec = {0};
+    pds_local_mapping_spec_t local_spec;
 
+    memset(&local_spec, 0, sizeof(local_spec));
+    local_spec.key.type = PDS_MAPPING_TYPE_L3;
     local_spec.key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &local_spec.key.ip_addr);
     local_spec.subnet.id = this->sub_id;
@@ -110,10 +114,11 @@ local_mapping_util::update(void) const {
 sdk::sdk_ret_t
 local_mapping_util::read(pds_local_mapping_info_t *info) const {
     sdk_ret_t rv = sdk::SDK_RET_OK;
-    pds_mapping_key_t key = {0};
+    pds_mapping_key_t key;
 
-
+    memset(&key, 0, sizeof(key));
     memset(info, 0, sizeof(pds_local_mapping_info_t));
+    key.type = PDS_MAPPING_TYPE_L3;
     key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &key.ip_addr);
     rv = pds_local_mapping_read(&key, info);
@@ -160,6 +165,8 @@ sdk::sdk_ret_t
 local_mapping_util::del(void) const {
     pds_mapping_key_t key;
 
+    memset(&key, 0, sizeof(key));
+    key.type = PDS_MAPPING_TYPE_L3;
     key.vpc.id = vpc_id;
     extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     return pds_local_mapping_delete(&key);
@@ -179,7 +186,7 @@ mapping_util_object_stepper (utils_op_t op, local_mapping_stepper_seed_t *seed,
     std::string vnic_ip = "0.0.0.0";
     std::string public_ip = "0.0.0.0";
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    pds_local_mapping_info_t info = {0};
+    pds_local_mapping_info_t info;
     ip_prefix_t ippfx;
     ip_addr_t ipaddr;
     ip_addr_t ipaddr_next;
@@ -236,6 +243,7 @@ mapping_util_object_stepper (utils_op_t op, local_mapping_stepper_seed_t *seed,
                 rv = mapping_obj.del();
                 break;
             case OP_MANY_READ:
+                memset(&info, 0, sizeof(info));
                 rv = mapping_obj.read(&info);
                 break;
             default:

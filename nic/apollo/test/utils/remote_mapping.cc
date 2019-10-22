@@ -47,8 +47,10 @@ remote_mapping_util::~remote_mapping_util() {}
 
 sdk::sdk_ret_t
 remote_mapping_util::create(void) const {
-    pds_remote_mapping_spec_t remote_spec = {0};
+     pds_remote_mapping_spec_t remote_spec;
 
+    memset(&remote_spec, 0, sizeof(remote_spec));
+    remote_spec.key.type = PDS_MAPPING_TYPE_L3;
     remote_spec.key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &remote_spec.key.ip_addr);
     remote_spec.subnet.id = this->sub_id;
@@ -74,8 +76,10 @@ remote_mapping_util::create(void) const {
 
 sdk::sdk_ret_t
 remote_mapping_util::update(void) const {
-    pds_remote_mapping_spec_t remote_spec = {0};
+    pds_remote_mapping_spec_t remote_spec;
 
+    memset(&remote_spec, 0, sizeof(remote_spec));
+    remote_spec.key.type = PDS_MAPPING_TYPE_L3;
     remote_spec.key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &remote_spec.key.ip_addr);
     remote_spec.subnet.id = this->sub_id;
@@ -102,8 +106,10 @@ remote_mapping_util::update(void) const {
 sdk::sdk_ret_t
 remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
     sdk_ret_t rv = sdk::SDK_RET_OK;
-    pds_mapping_key_t key = {0};
+    pds_mapping_key_t key;
 
+    memset(&key, 0, sizeof(key));
+    key.type = PDS_MAPPING_TYPE_L3;
     key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &key.ip_addr);
     memset(info, 0, sizeof(*info));
@@ -142,8 +148,10 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info) const {
 
 sdk::sdk_ret_t
 remote_mapping_util::del(void) const {
-    pds_mapping_key_t key = {0};
+    pds_mapping_key_t key;
 
+    memset(&key, 0, sizeof(key));
+    key.type = PDS_MAPPING_TYPE_L3;
     key.vpc.id = vpc_id;
     extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     return pds_remote_mapping_delete(&key);
@@ -164,7 +172,7 @@ mapping_util_object_stepper (utils_op_t op, remote_mapping_stepper_seed_t *seed,
     uint32_t curr_tep_id;
     uint64_t curr_vnic_mac;
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    pds_remote_mapping_info_t info = {0};
+    pds_remote_mapping_info_t info;
     ip_prefix_t ippfx;
     ip_addr_t ipaddr;
     ip_addr_t ipaddr_next;
@@ -226,6 +234,7 @@ mapping_util_object_stepper (utils_op_t op, remote_mapping_stepper_seed_t *seed,
                 rv = mapping_obj.del();
                 break;
             case OP_MANY_READ:
+                memset(&info, 0, sizeof(info));
                 rv = mapping_obj.read(&info);
                 break;
             default:
