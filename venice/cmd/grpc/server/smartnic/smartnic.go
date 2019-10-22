@@ -247,45 +247,51 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*clu
 	nicName := updObj.Name
 
 	// decide whether to send to ApiServer or not before we make any adjustment
-	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, []string{"Conditions"})
+	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, []string{"Conditions", "AdmissionPhase"})
 
-	refHealthCond := cmdutils.GetNICCondition(refObj, cluster.DSCCondition_HEALTHY)
-	updHealthCond := cmdutils.GetNICCondition(updObj, cluster.DSCCondition_HEALTHY)
+	if updObj.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_DECOMMISSIONED.String() {
+		refObj.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_DECOMMISSIONED.String()
+		refObj.Status.AdmissionPhaseReason = updObj.Status.AdmissionPhaseReason
+	} else {
+		refHealthCond := cmdutils.GetNICCondition(refObj, cluster.DSCCondition_HEALTHY)
+		updHealthCond := cmdutils.GetNICCondition(updObj, cluster.DSCCondition_HEALTHY)
 
-	// generate event if there was a health transition
-	if updHealthCond != nil && (refHealthCond == nil || refHealthCond.Status != updHealthCond.Status) {
-		var evtType eventtypes.EventType
-		evtType = -1
-		var msg string
+		// generate event if there was a health transition
+		if updHealthCond != nil && (refHealthCond == nil || refHealthCond.Status != updHealthCond.Status) {
+			var evtType eventtypes.EventType
+			evtType = -1
+			var msg string
 
-		switch updHealthCond.Status {
-		case cluster.ConditionStatus_TRUE.String():
-			evtType = eventtypes.DSC_HEALTHY
-			msg = fmt.Sprintf("DSC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
+			switch updHealthCond.Status {
+			case cluster.ConditionStatus_TRUE.String():
+				evtType = eventtypes.DSC_HEALTHY
+				msg = fmt.Sprintf("DSC %s(%s) is %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
 
-		case cluster.ConditionStatus_FALSE.String():
-			evtType = eventtypes.DSC_UNHEALTHY
-			msg = fmt.Sprintf("DSC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
+			case cluster.ConditionStatus_FALSE.String():
+				evtType = eventtypes.DSC_UNHEALTHY
+				msg = fmt.Sprintf("DSC %s(%s) is not %s", updObj.Spec.ID, nicName, cluster.DSCCondition_HEALTHY.String())
 
-		default:
-			// this should not happen
-			log.Errorf("NIC reported unknown health condition: %+v", updHealthCond)
+			default:
+				// this should not happen
+				log.Errorf("NIC reported unknown health condition: %+v", updHealthCond)
+			}
+
+			if evtType != -1 {
+				recorder.Event(evtType, msg, updObj)
+				log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
+			}
+
+			// Ignore the time-stamp provided by NMD and replace it with our own.
+			// This will help mitigating issues due to clock misalignments between Venice and NAPLES
+			// As long as it gets periodic updates, CMD is happy.
+			// If it happens to process an old message by mistake, the next one will correct it.
+			updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 		}
 
-		if evtType != -1 {
-			recorder.Event(evtType, msg, updObj)
-			log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
-		}
-
-		// Ignore the time-stamp provided by NMD and replace it with our own.
-		// This will help mitigating issues due to clock misalignments between Venice and NAPLES
-		// As long as it gets periodic updates, CMD is happy.
-		// If it happens to process an old message by mistake, the next one will correct it.
-		updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
+		// Store the update in local cache
+		refObj.Status.Conditions = updObj.Status.Conditions
 	}
 
-	// Store the update in local cache
-	refObj.Status.Conditions = updObj.Status.Conditions
 	err = s.stateMgr.UpdateSmartNIC(refObj, updateAPIServer)
 	if err != nil {
 		log.Errorf("Error updating statemgr state for NIC %s: %v", nicName, err)

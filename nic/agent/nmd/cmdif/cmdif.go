@@ -440,7 +440,10 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.DistributedServiceCard) 
 	req := grpc.UpdateNICRequest{
 		Nic: *nic,
 	}
-	resp, err := nicRPCClient.UpdateNIC(context.Background(), &req)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	resp, err := nicRPCClient.UpdateNIC(ctx, &req)
 	if err != nil || resp == nil {
 		log.Errorf("Error resp from CMD for updateNIC, Nic: %v Err: %v Resp: %v",
 			nic.Name, err, resp)
