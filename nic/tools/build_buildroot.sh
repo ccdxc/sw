@@ -96,13 +96,35 @@ start_shell() {
     make docker/background-shell | tail -n 1
 }
 
+uboot_extra() {
+    last_addr=0x70100000
+    docker_exec "cp -ar /sw/nic/buildroot/output/images/u-boot.bin /sw/nic/buildroot/output/images/u-boot.bin-$last_addr"
+    docker_exec "mv -f /sw/nic/buildroot/output/build/uboot-* /sw/nic/buildroot/output/build/ubootArchive-$last_addr"
+    for addr in 0x70180000 0x74200000 0x74600000 # Add 0x70100000 to build the default uboot without the main build
+    do
+        echo "Clean out old uboot [$last_addr=CONFIG_SYS_TEXT_BASE]"
+        docker_exec "cd /sw/nic/buildroot && make uboot-dirclean"
+        echo "Setup new uboot directory for $addr"
+        docker_exec "cd /sw/nic/buildroot && make uboot-configure"
+        echo "Update .config with $addr=CONFIG_SYS_TEXT_BASE"
+        docker_exec "sed -i 's/CONFIG_SYS_TEXT_BASE.*/CONFIG_SYS_TEXT_BASE=$addr/' /sw/nic/buildroot/output/build/uboot-*/.config"
+        echo "Build uboot with $addr=CONFIG_SYS_TEXT_BASE"
+        docker_exec "cd /sw/nic/buildroot && make uboot"
+        docker_exec "mv -f /sw/nic/buildroot/output/images/u-boot.bin /sw/nic/buildroot/output/images/u-boot.bin-$addr"
+        docker_exec "rm -rf /sw/nic/buildroot/output/build/ubootArchive-$addr"
+        docker_exec "mv -f /sw/nic/buildroot/output/build/uboot-* /sw/nic/buildroot/output/build/ubootArchive-$addr"
+        last_addr=$addr
+    done
+    docker_exec "cp -ar /sw/nic/buildroot/output/images/u-boot.bin-0x70100000 /sw/nic/buildroot/output/images/u-boot.bin"
+}
+
 cleanup() {
     # stop shell
     docker stop $DOCKER_ID
     # remove submodule remote
     (cd $TOPDIR/nic/buildroot && git remote remove $GIT_REMOTE_NAME)
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 echo "Creating buildroot remote $GIT_REMOTE_NAME"
 update_submodule
@@ -113,8 +135,8 @@ echo Docker_ID $DOCKER_ID
 
 #sleeping to let pull-asset finish
 sleep 90
-
-alias docker_exec="docker exec $DOCKER_ID sudo -i -u $USERNAME /bin/bash -c"
+ 
+docker_exec() { docker exec $DOCKER_ID sudo -i -u $USERNAME /bin/bash -c "${1}"; }
 alias docker_root="docker exec $DOCKER_ID /bin/bash -c"
 
 echo 'Replacing make and gmake'
@@ -134,6 +156,9 @@ docker_exec "cd /sw/nic/buildroot && make capri_defconfig"
 
 echo 'Building buildroot'
 docker_exec "cd /sw/nic/buildroot && make -j 24"
+
+echo 'Building extra uboot'
+uboot_extra
 
 echo 'Preparing kernel headers for building external modules'
 docker_exec "sh /sw/nic/tools/prepare_kernel_headers.sh"
