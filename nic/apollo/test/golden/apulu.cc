@@ -160,6 +160,8 @@ sort_mpu_programs (std::vector<std::string> &programs)
     }
     sort(programs.begin(), programs.end(), sort_compare);
 }
+
+#ifdef SIM
 static bool
 is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
 {
@@ -171,6 +173,7 @@ is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
             std::equal(pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE, pkt1.end(),
                        pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE));
 }
+#endif
 
 static void
 p4plus_table_init (platform_type_t platform_type)
