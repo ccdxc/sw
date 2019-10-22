@@ -22,7 +22,7 @@ service RouteSvc {
 message Route {
   types.IPPrefix      Prefix         = 1;
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
-  oneof Nh {
+  oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
       types.IPAddress NextHop        = 2;
       // nexthop for this route

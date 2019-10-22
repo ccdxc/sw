@@ -143,9 +143,10 @@ populate_local_mapping_request (MappingRequest *req,
     }
 
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_vpcid(local_spec->key.vpc.id);
-    ipaddr_api_spec_to_proto_spec(spec->mutable_id()->mutable_ipaddr(),
-                                  &local_spec->key.ip_addr);
+    spec->mutable_id()->mutable_ipkey()->set_vpcid(local_spec->key.vpc.id);
+    ipaddr_api_spec_to_proto_spec(
+        spec->mutable_id()->mutable_ipkey()->mutable_ipaddr(),
+        &local_spec->key.ip_addr);
     spec->set_subnetid(local_spec->subnet.id);
     spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &local_spec->fabric_encap);
@@ -172,9 +173,10 @@ populate_remote_mapping_request (MappingRequest *req,
     }
 
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_vpcid(remote_spec->key.vpc.id);
-    ipaddr_api_spec_to_proto_spec(spec->mutable_id()->mutable_ipaddr(),
-                                  &remote_spec->key.ip_addr);
+    spec->mutable_id()->mutable_ipkey()->set_vpcid(remote_spec->key.vpc.id);
+    ipaddr_api_spec_to_proto_spec(
+        spec->mutable_id()->mutable_ipkey()->mutable_ipaddr(),
+        &remote_spec->key.ip_addr);
     spec->set_subnetid(remote_spec->subnet.id);
     spec->set_tunnelid(remote_spec->tep.id);
     spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));

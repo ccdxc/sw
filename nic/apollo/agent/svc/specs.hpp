@@ -531,9 +531,9 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
     if (proto_ctxt->has_mappingdumpfilter()) {
         auto key = proto_ctxt->mappingdumpfilter().key();
         cmd_ctxt->args.valid = true;
-        cmd_ctxt->args.mapping_dump.key.vpc.id = key.vpcid();
+        cmd_ctxt->args.mapping_dump.key.vpc.id = key.ipkey().vpcid();
         ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
-                                      key.ipaddr());
+                                      key.ipkey().ipaddr());
     }
 }
 
@@ -1688,7 +1688,7 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
                           const pds::NexthopSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
-    switch (proto_spec.NhInfo_case()) {
+    switch (proto_spec.nhinfo_case()) {
     case pds::NexthopSpec::kIPNhInfo:
         api_spec->type = PDS_NH_TYPE_IP;
         api_spec->vpc.id = proto_spec.ipnhinfo().vpcid();
@@ -1888,7 +1888,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         const pds::Route &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix,
                                      proto_route.prefix());
-        switch (proto_route.Nh_case()) {
+        switch (proto_route.nh_case()) {
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
             api_spec->routes[i].tep.id = proto_route.tunnelid();
@@ -1926,7 +1926,8 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
     }
-#if 0 // We don't store routes in db for now
+#if 0
+    // we don't store routes in db for now
     for (uint32_t i = 0; i < api_spec->num_routes; i++) {
         pds::Route *proto_route = proto_spec->add_routes();
     }
@@ -2617,8 +2618,9 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    local_spec->key.vpc.id = key.vpcid();
-    ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr, key.ipaddr());
+    local_spec->key.vpc.id = key.ipkey().vpcid();
+    ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
+                                  key.ipkey().ipaddr());
     local_spec->subnet.id = proto_spec.subnetid();
     local_spec->vnic.id = proto_spec.vnicid();
     if (proto_spec.has_publicip()) {
@@ -2649,8 +2651,9 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    remote_spec->key.vpc.id = key.vpcid();
-    ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
+    remote_spec->key.vpc.id = key.ipkey().vpcid();
+    ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
+                                  key.ipkey().ipaddr());
     remote_spec->subnet.id = proto_spec.subnetid();
     switch (proto_spec.dstinfo_case()) {
     case pds::MappingSpec::kTunnelID:

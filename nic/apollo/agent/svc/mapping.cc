@@ -179,7 +179,7 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, mapping delete failed");
+            PDS_TRACE_ERR("Failed to create new batch, mapping delete failed");
             proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -187,8 +187,9 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.vpc.id = proto_req->id(i).vpcid();
-        ipaddr_proto_spec_to_api_spec(&key.ip_addr, proto_req->id(i).ipaddr());
+        key.vpc.id = proto_req->id(i).ipkey().vpcid();
+        ipaddr_proto_spec_to_api_spec(&key.ip_addr,
+                                      proto_req->id(i).ipkey().ipaddr());
         ret = pds_local_mapping_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {

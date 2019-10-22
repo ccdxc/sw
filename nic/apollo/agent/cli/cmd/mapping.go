@@ -56,8 +56,12 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		// dump specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
-			VPCId:  vpcID,
-			IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
+            Keyinfo: &pds.MappingKey_IPKey{
+                IPKey: &pds.L3MappingKey{
+                    VPCId:  vpcID,
+                    IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
+                },
+            },
 		}
 		cmdCtxt = &pds.CommandCtxt{
 			Version: 1,

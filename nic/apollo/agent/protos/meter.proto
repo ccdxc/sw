@@ -41,7 +41,7 @@ message MeterRuleSpec {
   // policer configuration, one of the following must be set
   // if bytes/packets are zero in the following policer specs,
   // only accounting will be performed
-  oneof Policer {
+  oneof policer {
     // packets per second (pps) policer
     PacketPolicerSpec     PPSPolicer = 2;
     // bytes per second (bps) policer

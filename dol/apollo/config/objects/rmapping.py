@@ -67,14 +67,14 @@ class RemoteMappingObject(base.ConfigObjectBase):
 
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
-        key.VPCId = self.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
+        key.IPKey.VPCId = self.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.VPCId = self.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
+        spec.Id.IPKey.VPCId = self.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
         spec.TunnelID = self.TunID
         spec.MACAddr = self.MACAddr.getnum()

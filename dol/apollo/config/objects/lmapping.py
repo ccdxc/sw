@@ -83,8 +83,8 @@ class LocalMappingObject(base.ConfigObjectBase):
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
+        spec.Id.IPKey.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
         spec.MACAddr = self.VNIC.MACAddr.getnum()

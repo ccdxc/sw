@@ -195,6 +195,7 @@ logger_init (void)
     if (logfile.empty() || err_logfile.empty()) {
         return SDK_RET_ERR;
     }
+
     // initialize the logger
     core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
                      TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);

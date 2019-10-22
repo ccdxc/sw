@@ -82,7 +82,7 @@ message InterfaceSpec {
   // port up|down adminstratively
   IfStatus         AdminStatus = 3;
   // interface type specific configuration
-  oneof if_info {
+  oneof ifinfo {
     // uplink specific configuration
     UplinkSpec   UplinkSpec    = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
     UplinkPCSpec UplinkPCSpec  = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];

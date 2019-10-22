@@ -29,7 +29,7 @@ message RSpanSpec {
 message ERSpanSpec {
   // VPC id
   uint32          VPCId  = 1;
-  oneof ERSPanDst {
+  oneof erspandst {
       // Tunnel ID of the ERSPAN destination
       uint32    TunnelID = 2;
       // Mapping key of the ERSPAN destination
@@ -50,7 +50,7 @@ message MirrorSessionSpec {
   uint32 Id               = 1 [(gogoproto.moretags) = "meta:mandatory,range:1-7"];
   // maximum  bytes of packet to mirror
   uint32 SnapLen          = 2;
-  oneof MirrorDst {
+  oneof mirrordst {
     // RSPAN configuration in case of RSPAN
     RSpanSpec RspanSpec   = 3;
     // ERSPAN configuration in case of ERSPAN

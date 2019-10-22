@@ -49,7 +49,7 @@ message NexthopSpec {
   // unique nexthop id
   uint32          Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // nexthop can be one of different types
-  oneof NhInfo {
+  oneof nhinfo {
     // TODO: check why IPNhSpec is needed separately ??
     // IP nexthop is used when VTEP IP is to be resolved by PDS
     IPNhSpec       IPNhInfo       = 2;

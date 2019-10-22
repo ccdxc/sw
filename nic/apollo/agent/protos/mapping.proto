@@ -19,12 +19,28 @@ service MappingSvc {
   rpc MappingDelete (MappingDeleteRequest) returns (MappingDeleteResponse) {}
 }
 
-// MappingKey uniquley identifies the IP in the entire fabric
-message MappingKey {
+message L3MappingKey {
   // virtual private cloud mapping belongs to
   uint32 VPCId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // private/overlay IP of the mapping
   types.IPAddress IPAddr = 2;
+}
+
+message L2MappingKey {
+  // subnet id of this MAC
+  uint32 SubnetId = 1;
+  // MAC address of this mapping
+  uint64 MACAddr  = 2;
+}
+
+// MappingKey uniquley identifies the IP in the entire fabric
+message MappingKey {
+  oneof keyinfo {
+    // IP mapping key
+    L3MappingKey IPKey = 1;
+    // MAC mapping key
+    L2MappingKey MACKey = 2;
+  }
 }
 
 // MappingSpec captures configuration of each mapping
@@ -67,11 +83,11 @@ message MappingStats {
 
 // mapping object
 message Mapping {
-  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  MappingSpec   Spec      = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  MappingStatus Status    = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  MappingStats  Stats     = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  MappingSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  MappingStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  MappingStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // mapping create and update request
