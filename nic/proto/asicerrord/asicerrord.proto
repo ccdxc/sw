@@ -3,565 +3,2216 @@ package asicerrord;
 
 import "delphi.proto";
 
-message DppintcreditMetrics {
-    fixed64 Key = 1;
-
-    delphi.Counter ptr_credit_ovflow              = 2;
-    delphi.Counter ptr_credit_undflow             = 3;
-    delphi.Counter pkt_credit_ovflow              = 4;
-    delphi.Counter pkt_credit_undflow             = 5;
-    delphi.Counter framer_credit_ovflow           = 6;
-    delphi.Counter framer_credit_undflow          = 7;
-    delphi.Counter framer_hdrfld_vld_ovfl         = 8;
-    delphi.Counter framer_hdrfld_offset_ovfl      = 9;
-    delphi.Counter err_framer_hdrsize_zero_ovfl   = 10;
+message Ppappa0intbndl0Metrics {
+  fixed64 Key = 1;
+  delphi.Counter state_lkp_srch_hit_addr_range_err = 2;
+  delphi.Counter state_lkp_srch_miss = 3;
+  delphi.Counter state_lkp_srch_req_not_rdy = 4;
 }
 
-message DppintfifoMetrics {
-    fixed64 Key = 1;
-
-    delphi.Counter phv_ff_overflow          = 2;
-    delphi.Counter ohi_ff_overflow          = 3;
-    delphi.Counter pkt_size_ff_ovflow       = 4;
-    delphi.Counter pkt_size_ff_undflow      = 5;
-    delphi.Counter csum_phv_ff_ovflow       = 6;
-    delphi.Counter csum_phv_ff_undflow      = 7;
-
+message Ppappa0intbndl1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter state_lkp_srch_hit_addr_range_err = 2;
+  delphi.Counter state_lkp_srch_miss = 3;
+  delphi.Counter state_lkp_srch_req_not_rdy = 4;
 }
 
-message Dppintreg1Metrics {
-    fixed64 Key = 1;
-
-    delphi.Counter err_phv_sop_no_eop                     = 2;
-    delphi.Counter err_phv_eop_no_sop                     = 3;
-    delphi.Counter err_ohi_sop_no_eop                     = 4;
-    delphi.Counter err_ohi_eop_no_sop                     = 5;
-    delphi.Counter err_framer_credit_overrun              = 6;
-    delphi.Counter err_packets_in_flight_credit_overrun   = 7;
-    delphi.Counter err_null_hdr_vld                       = 8;
-    delphi.Counter err_null_hdrfld_vld                    = 9;
-    delphi.Counter err_max_pkt_size                       = 10;
-    delphi.Counter err_max_active_hdrs                    = 11;
-    delphi.Counter err_phv_no_data_reference_ohi          = 12;
-    delphi.Counter err_csum_multiple_hdr                  = 13;
-    delphi.Counter err_csum_multiple_hdr_copy             = 14;
-    delphi.Counter err_crc_multiple_hdr                   = 15;
-    delphi.Counter err_ptr_fifo_credit_overrun            = 16;
-    delphi.Counter err_clip_max_pkt_size                  = 17;
-    delphi.Counter err_min_pkt_size                       = 18;
+message Ppappa0inteccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pkt_mem_uncorrectable = 2;
+  delphi.Counter pkt_mem_correctable = 3;
+  delphi.Counter bndl0_state_lkp_sram_uncorrectable = 4;
+  delphi.Counter bndl0_state_lkp_sram_correctable = 5;
+  delphi.Counter bndl1_state_lkp_sram_uncorrectable = 6;
+  delphi.Counter bndl1_state_lkp_sram_correctable = 7;
 }
 
-message Dppintreg2Metrics {
-    fixed64 Key = 1;
-
-    delphi.Counter fieldC   = 2;
-    delphi.Counter fieldD   = 3;
+message Ppappa0intfifo1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter pe0_qctl_ff_ovflow = 2;
+  delphi.Counter pe1_qctl_ff_ovflow = 3;
+  delphi.Counter pe2_qctl_ff_ovflow = 4;
+  delphi.Counter pe3_qctl_ff_ovflow = 5;
+  delphi.Counter pe4_qctl_ff_ovflow = 6;
+  delphi.Counter pe5_qctl_ff_ovflow = 7;
+  delphi.Counter pe6_qctl_ff_ovflow = 8;
+  delphi.Counter pe7_qctl_ff_ovflow = 9;
+  delphi.Counter pe8_qctl_ff_ovflow = 10;
+  delphi.Counter pe9_qctl_ff_ovflow = 11;
+  delphi.Counter pe0_phv_ff_ovflow = 12;
+  delphi.Counter pe1_phv_ff_ovflow = 13;
+  delphi.Counter pe2_phv_ff_ovflow = 14;
+  delphi.Counter pe3_phv_ff_ovflow = 15;
+  delphi.Counter pe4_phv_ff_ovflow = 16;
+  delphi.Counter pe5_phv_ff_ovflow = 17;
+  delphi.Counter pe6_phv_ff_ovflow = 18;
+  delphi.Counter pe7_phv_ff_ovflow = 19;
+  delphi.Counter pe8_phv_ff_ovflow = 20;
+  delphi.Counter pe9_phv_ff_ovflow = 21;
+  delphi.Counter pe0_ohi_ff_ovflow = 22;
+  delphi.Counter pe1_ohi_ff_ovflow = 23;
+  delphi.Counter pe2_ohi_ff_ovflow = 24;
+  delphi.Counter pe3_ohi_ff_ovflow = 25;
+  delphi.Counter pe4_ohi_ff_ovflow = 26;
+  delphi.Counter pe5_ohi_ff_ovflow = 27;
+  delphi.Counter pe6_ohi_ff_ovflow = 28;
+  delphi.Counter pe7_ohi_ff_ovflow = 29;
+  delphi.Counter pe8_ohi_ff_ovflow = 30;
+  delphi.Counter pe9_ohi_ff_ovflow = 31;
 }
 
-message IntspareMetrics {
-    fixed64 Key = 1;
-
-    delphi.Counter spare_0   = 2;
-    delphi.Counter spare_1   = 3;
-    delphi.Counter spare_2   = 4;
-    delphi.Counter spare_3   = 5;
-    delphi.Counter spare_4   = 6;
-    delphi.Counter spare_5   = 7;
-    delphi.Counter spare_6   = 8;
-    delphi.Counter spare_7   = 9;
-    delphi.Counter spare_8   = 10;
-    delphi.Counter spare_9   = 11;
-    delphi.Counter spare_10  = 12;
-    delphi.Counter spare_11  = 13;
-    delphi.Counter spare_12  = 14;
-    delphi.Counter spare_13  = 15;
-    delphi.Counter spare_14  = 16;
-    delphi.Counter spare_15  = 17;
-    delphi.Counter spare_16  = 18;
-    delphi.Counter spare_17  = 19;
-    delphi.Counter spare_18  = 20;
-    delphi.Counter spare_19  = 21;
-    delphi.Counter spare_20  = 22;
-    delphi.Counter spare_21  = 23;
-    delphi.Counter spare_22  = 24;
-    delphi.Counter spare_23  = 25;
-    delphi.Counter spare_24  = 26;
-    delphi.Counter spare_25  = 27;
-    delphi.Counter spare_26  = 28;
-    delphi.Counter spare_27  = 29;
-    delphi.Counter spare_28  = 30;
-    delphi.Counter spare_29  = 31;
-    delphi.Counter spare_30  = 32;
-    delphi.Counter spare_31  = 33;
+message Ppappa0intfifo2Metrics {
+  fixed64 Key = 1;
+  delphi.Counter dp_if_ff_ovflow = 2;
+  delphi.Counter ohi_if_ff_ovflow = 3;
+  delphi.Counter ma_if_ff_ovflow = 4;
+  delphi.Counter pb_if_ff_ovflow = 5;
+  delphi.Counter pkt_mtu_ff_ovflow = 6;
+  delphi.Counter outphv_ff_ovflow = 7;
+  delphi.Counter outohi_ff_ovflow = 8;
+  delphi.Counter chk_ff_ovflow = 9;
 }
 
-message DppintsramseccMetrics {
-    fixed64 Key = 1;
+message Ppappa0intpe0Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter dpp_phv_fifo_uncorrectable = 2;
-    delphi.Counter dpp_phv_fifo_correctable   = 3;
-    delphi.Counter dpp_ohi_fifo_uncorrectable = 4;
-    delphi.Counter dpp_ohi_fifo_correctable   = 5;
-};
+message Ppappa0intpe1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message DprintcreditMetrics {
-    fixed64 Key = 1;
+message Ppappa0intpe2Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter egress_credit_ovflow   = 2;
-    delphi.Counter egress_credit_undflow  = 3;
-    delphi.Counter pktout_credit_ovflow   = 4;
-    delphi.Counter pktout_credit_undflow  = 5;
-};
+message Ppappa0intpe3Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message DprintfifoMetrics {
-    fixed64 Key = 1;
+message Ppappa0intpe4Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter phv_ff_ovflow       = 2;
-    delphi.Counter ohi_ff_ovflow       = 3;
-    delphi.Counter pktin_ff_ovflow     = 4;
-    delphi.Counter pktout_ff_undflow   = 5;
-    delphi.Counter csum_ff_ovflow      = 6;
-    delphi.Counter ptr_ff_ovflow       = 7;
-};
+message Ppappa0intpe5Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message DprintflopfifoMetrics {
-    fixed64 Key = 1;
+message Ppappa0intpe6Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter data_mux_force_bypass_crc_flop_ff_ovflow    = 2;
-    delphi.Counter dpr_crc_info_flop_ff_ovflow                 = 3;
-    delphi.Counter dpr_crc_update_info_flop_ff_ovflow          = 4;
-    delphi.Counter dpr_csum_info_flop_ff_ovflow                = 5;
-    delphi.Counter data_mux_force_bypass_csum_flop_ff_ovflow   = 6;
-    delphi.Counter dpr_csum_update_info_flop_ff_ovflow         = 7;
-    delphi.Counter ptr_early_pkt_eop_info_flop_ff_ovflow       = 8;
-    delphi.Counter data_mux_eop_err_flop_ff_ovflow             = 9;
-    delphi.Counter pktin_eop_err_flop_ff_ovflow                = 10;
-    delphi.Counter csum_err_flop_ff_ovflow                     = 11;
-    delphi.Counter crc_err_flop_ff_ovflow                      = 12;
-    delphi.Counter data_mux_drop_flop_ff_ovflow                = 13;
-    delphi.Counter phv_pkt_data_flop_ff_ovflow                 = 14;
-    delphi.Counter pktout_len_cell_flop_ff_ovflow              = 15;
-    delphi.Counter padding_size_flop_ff_ovflow                 = 16;
-    delphi.Counter pktin_err_flop_ff_ovflow                    = 17;
-    delphi.Counter phv_no_data_flop_ff_ovflow                  = 18;
-    delphi.Counter ptr_lookahaed_flop_ff_ovflow                = 19;
-    delphi.Counter eop_vld_flop_ff_ovflow                      = 20;
-    delphi.Counter csum_cal_vld_flop_ff_ovflow                 = 21;
-};
+message Ppappa0intpe7Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message Dprintreg1Metrics {
-    fixed64 Key = 1;
+message Ppappa0intpe8Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter err_phv_sop_no_eop                 = 2;
-    delphi.Counter err_phv_eop_no_sop                 = 3;
-    delphi.Counter err_ohi_sop_no_eop                 = 4;
-    delphi.Counter err_ohi_eop_no_sop                 = 5;
-    delphi.Counter err_pktin_sop_no_eop               = 6;
-    delphi.Counter err_pktin_eop_no_sop               = 7;
-    delphi.Counter err_csum_offset_gt_pkt_size_4      = 8;
-    delphi.Counter err_csum_offset_gt_pkt_size_3      = 9;
-    delphi.Counter err_csum_offset_gt_pkt_size_2      = 10;
-    delphi.Counter err_csum_offset_gt_pkt_size_1      = 11;
-    delphi.Counter err_csum_offset_gt_pkt_size_0      = 12;
-    delphi.Counter err_csum_phdr_offset_gt_pkt_size_4 = 13;
-    delphi.Counter err_csum_phdr_offset_gt_pkt_size_3 = 14;
-    delphi.Counter err_csum_phdr_offset_gt_pkt_size_2 = 15;
-    delphi.Counter err_csum_phdr_offset_gt_pkt_size_1 = 16;
-    delphi.Counter err_csum_phdr_offset_gt_pkt_size_0 = 17;
-    delphi.Counter err_csum_loc_gt_pkt_size_4         = 18;
-    delphi.Counter err_csum_loc_gt_pkt_size_3         = 19;
-    delphi.Counter err_csum_loc_gt_pkt_size_2         = 20;
-    delphi.Counter err_csum_loc_gt_pkt_size_1         = 21;
-    delphi.Counter err_csum_loc_gt_pkt_size_0         = 22;
-    delphi.Counter err_crc_offset_gt_pkt_size         = 23;
-    delphi.Counter err_crc_loc_gt_pkt_size            = 24;
-    delphi.Counter err_crc_mask_offset_gt_pkt_size    = 25;
-    delphi.Counter err_pkt_eop_early                  = 26;
-    delphi.Counter err_ptr_ff_overflow                = 27;
-    delphi.Counter err_csum_ff_overflow               = 28;
-    delphi.Counter err_pktout_ff_overflow             = 29;
-    delphi.Counter err_ptr_from_cfg_overflow          = 30;
-};
+message Ppappa0intpe9Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message Dprintreg2Metrics {
-    fixed64 Key = 1;
+message Ppappa0intpaMetrics {
+  fixed64 Key = 1;
+  delphi.Counter reorder_phv_not_sop = 2;
+  delphi.Counter csum0_not_enuf_bytes = 3;
+  delphi.Counter csum0_start_more_than_end_offset = 4;
+  delphi.Counter csum1_not_enuf_bytes = 5;
+  delphi.Counter csum1_start_more_than_end_offset = 6;
+  delphi.Counter csum2_not_enuf_bytes = 7;
+  delphi.Counter csum2_start_more_than_end_offset = 8;
+  delphi.Counter csum3_not_enuf_bytes = 9;
+  delphi.Counter csum3_start_more_than_end_offset = 10;
+  delphi.Counter csum4_not_enuf_bytes = 11;
+  delphi.Counter csum4_start_more_than_end_offset = 12;
+  delphi.Counter crc_not_enuf_bytes = 13;
+  delphi.Counter crc_start_more_than_end_offset = 14;
+  delphi.Counter chkr_phv_single_flit = 15;
+  delphi.Counter chkr_phv_not_sop = 16;
+  delphi.Counter chkr_pkt_not_sop = 17;
+  delphi.Counter chkr_seq_id = 18;
+  delphi.Counter preparse_line0_not_sop = 19;
+  delphi.Counter preparse_dff_not_sop = 20;
+  delphi.Counter preparse_dff_ovflow = 21;
+  delphi.Counter preparse_eff_ovflow = 22;
+}
 
-    delphi.Counter fieldC                  = 2;
-    delphi.Counter fieldD                  = 3;
-    delphi.Counter err_csum_start_gt_end_4 = 4;
-    delphi.Counter err_csum_start_gt_end_3 = 5;
-    delphi.Counter err_csum_start_gt_end_2 = 6;
-    delphi.Counter err_csum_start_gt_end_1 = 7;
-    delphi.Counter err_csum_start_gt_end_0 = 8;
-    delphi.Counter err_crc_start_gt_end    = 9;
-};
+message Ppappa0intswphvmemMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2;
+  delphi.Counter ecc_correctable = 3;
+  delphi.Counter phv_invalid_sram = 4;
+  delphi.Counter phv_invalid_data = 5;
+  delphi.Counter phv_done0 = 6;
+  delphi.Counter phv_done1 = 7;
+  delphi.Counter phv_done2 = 8;
+  delphi.Counter phv_done3 = 9;
+  delphi.Counter phv_done4 = 10;
+  delphi.Counter phv_done5 = 11;
+  delphi.Counter phv_done6 = 12;
+  delphi.Counter phv_done7 = 13;
+}
 
-message DprintsramseccMetrics {
-    fixed64 Key = 1;
+message Ppappa0intintfMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_err = 2;
+  delphi.Counter pb_sop_err = 3;
+  delphi.Counter pb_eop_err = 4;
+  delphi.Counter dp_err = 5;
+  delphi.Counter dp_sop_err = 6;
+  delphi.Counter dp_eop_err = 7;
+  delphi.Counter ohi_err = 8;
+  delphi.Counter ohi_sop_err = 9;
+  delphi.Counter ohi_eop_err = 10;
+  delphi.Counter sw_phv_err = 11;
+  delphi.Counter sw_phv_sop_err = 12;
+  delphi.Counter sw_phv_eop_err = 13;
+  delphi.Counter ma_err = 14;
+  delphi.Counter ma_sop_err = 15;
+  delphi.Counter ma_eop_err = 16;
+}
 
-    delphi.Counter dpr_pktin_fifo_uncorrectable  = 2;
-    delphi.Counter dpr_pktin_fifo_correctable    = 3;
-    delphi.Counter dpr_csum_fifo_uncorrectable   = 4;
-    delphi.Counter dpr_csum_fifo_correctable     = 5;
-    delphi.Counter dpr_phv_fifo_uncorrectable    = 6;
-    delphi.Counter dpr_phv_fifo_correctable      = 7;
-    delphi.Counter dpr_ohi_fifo_uncorrectable    = 8;
-    delphi.Counter dpr_ohi_fifo_correctable      = 9;
-    delphi.Counter dpr_ptr_fifo_uncorrectable    = 10;
-    delphi.Counter dpr_ptr_fifo_correctable      = 11;
-    delphi.Counter dpr_pktout_fifo_uncorrectable = 12;
-    delphi.Counter dpr_pktout_fifo_correctable   = 13;
-};
+message Ppappa1intbndl0Metrics {
+  fixed64 Key = 1;
+  delphi.Counter state_lkp_srch_hit_addr_range_err = 2;
+  delphi.Counter state_lkp_srch_miss = 3;
+  delphi.Counter state_lkp_srch_req_not_rdy = 4;
+}
 
-message SsepicsintbadaddrMetrics {
-    fixed64 Key = 1;
+message Ppappa1intbndl1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter state_lkp_srch_hit_addr_range_err = 2;
+  delphi.Counter state_lkp_srch_miss = 3;
+  delphi.Counter state_lkp_srch_req_not_rdy = 4;
+}
 
-    delphi.Counter rdreq0_bad_addr = 2;
-    delphi.Counter wrreq0_bad_addr = 3;
-    delphi.Counter rdreq1_bad_addr = 4;
-    delphi.Counter wrreq1_bad_addr = 5;
-    delphi.Counter rdreq2_bad_addr = 6;
-    delphi.Counter wrreq2_bad_addr = 7;
-    delphi.Counter rdreq3_bad_addr = 8;
-    delphi.Counter wrreq3_bad_addr = 9;
-    delphi.Counter rdreq4_bad_addr = 10;
-    delphi.Counter wrreq4_bad_addr = 11;
-    delphi.Counter rdreq5_bad_addr = 12;
-    delphi.Counter wrreq5_bad_addr = 13;
-    delphi.Counter rdreq6_bad_addr = 14;
-    delphi.Counter wrreq6_bad_addr = 15;
-    delphi.Counter rdreq7_bad_addr = 16;
-    delphi.Counter wrreq7_bad_addr = 17;
-    delphi.Counter cpu_bad_addr    = 18;
-    delphi.Counter bg_bad_addr     = 19;
-};
+message Ppappa1inteccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pkt_mem_uncorrectable = 2;
+  delphi.Counter pkt_mem_correctable = 3;
+  delphi.Counter bndl0_state_lkp_sram_uncorrectable = 4;
+  delphi.Counter bndl0_state_lkp_sram_correctable = 5;
+  delphi.Counter bndl1_state_lkp_sram_uncorrectable = 6;
+  delphi.Counter bndl1_state_lkp_sram_correctable = 7;
+}
 
-message SsepicsintbgMetrics {
-    fixed64 Key = 1;
+message Ppappa1intfifo1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter pe0_qctl_ff_ovflow = 2;
+  delphi.Counter pe1_qctl_ff_ovflow = 3;
+  delphi.Counter pe2_qctl_ff_ovflow = 4;
+  delphi.Counter pe3_qctl_ff_ovflow = 5;
+  delphi.Counter pe4_qctl_ff_ovflow = 6;
+  delphi.Counter pe5_qctl_ff_ovflow = 7;
+  delphi.Counter pe6_qctl_ff_ovflow = 8;
+  delphi.Counter pe7_qctl_ff_ovflow = 9;
+  delphi.Counter pe8_qctl_ff_ovflow = 10;
+  delphi.Counter pe9_qctl_ff_ovflow = 11;
+  delphi.Counter pe0_phv_ff_ovflow = 12;
+  delphi.Counter pe1_phv_ff_ovflow = 13;
+  delphi.Counter pe2_phv_ff_ovflow = 14;
+  delphi.Counter pe3_phv_ff_ovflow = 15;
+  delphi.Counter pe4_phv_ff_ovflow = 16;
+  delphi.Counter pe5_phv_ff_ovflow = 17;
+  delphi.Counter pe6_phv_ff_ovflow = 18;
+  delphi.Counter pe7_phv_ff_ovflow = 19;
+  delphi.Counter pe8_phv_ff_ovflow = 20;
+  delphi.Counter pe9_phv_ff_ovflow = 21;
+  delphi.Counter pe0_ohi_ff_ovflow = 22;
+  delphi.Counter pe1_ohi_ff_ovflow = 23;
+  delphi.Counter pe2_ohi_ff_ovflow = 24;
+  delphi.Counter pe3_ohi_ff_ovflow = 25;
+  delphi.Counter pe4_ohi_ff_ovflow = 26;
+  delphi.Counter pe5_ohi_ff_ovflow = 27;
+  delphi.Counter pe6_ohi_ff_ovflow = 28;
+  delphi.Counter pe7_ohi_ff_ovflow = 29;
+  delphi.Counter pe8_ohi_ff_ovflow = 30;
+  delphi.Counter pe9_ohi_ff_ovflow = 31;
+}
 
-    delphi.Counter unfinished_bg0  = 2;
-    delphi.Counter unfinished_bg1  = 3;
-    delphi.Counter unfinished_bg2  = 4;
-    delphi.Counter unfinished_bg3  = 5;
-    delphi.Counter unfinished_bg4  = 6;
-    delphi.Counter unfinished_bg5  = 7;
-    delphi.Counter unfinished_bg6  = 8;
-    delphi.Counter unfinished_bg7  = 9;
-    delphi.Counter unfinished_bg8  = 10;
-    delphi.Counter unfinished_bg9  = 11;
-    delphi.Counter unfinished_bg10 = 12;
-    delphi.Counter unfinished_bg11 = 13;
-    delphi.Counter unfinished_bg12 = 14;
-    delphi.Counter unfinished_bg13 = 15;
-    delphi.Counter unfinished_bg14 = 16;
-    delphi.Counter unfinished_bg15 = 17;
-};
+message Ppappa1intfifo2Metrics {
+  fixed64 Key = 1;
+  delphi.Counter dp_if_ff_ovflow = 2;
+  delphi.Counter ohi_if_ff_ovflow = 3;
+  delphi.Counter ma_if_ff_ovflow = 4;
+  delphi.Counter pb_if_ff_ovflow = 5;
+  delphi.Counter pkt_mtu_ff_ovflow = 6;
+  delphi.Counter outphv_ff_ovflow = 7;
+  delphi.Counter outohi_ff_ovflow = 8;
+  delphi.Counter chk_ff_ovflow = 9;
+}
 
-message SsepicsintpicsMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpe0Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter uncorrectable_ecc     = 2;
-    delphi.Counter correctable_ecc       = 3;
-    delphi.Counter too_many_rl_sch_error = 4;
-};
+message Ppappa1intpe1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message DbwaintdbMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpe2Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter db_cam_conflict       = 2;
-    delphi.Counter db_pid_chk_fail       = 3;
-    delphi.Counter db_qid_overflow       = 4;
-    delphi.Counter host_ring_access_err  = 5;
-    delphi.Counter total_ring_access_err = 6;
-    delphi.Counter rresp_err             = 7;
-    delphi.Counter bresp_err             = 8;
-};
+message Ppappa1intpe3Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message DbwaintlifqstatemapMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpe4Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter ecc_uncorrectable = 2;
-    delphi.Counter ecc_correctable   = 3;
-    delphi.Counter qid_invalid       = 4;
-};
+message Ppappa1intpe5Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message SgeteinterrMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpe6Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter miss_sop                   = 2;
-    delphi.Counter miss_eop                   = 3;
-    delphi.Counter phv_max_size               = 4;
-    delphi.Counter spurious_axi_rsp           = 5;
-    delphi.Counter spurious_tcam_rsp          = 6;
-    delphi.Counter te2mpu_timeout             = 7;
-    delphi.Counter axi_rdrsp_err              = 8;
-    delphi.Counter axi_bad_read               = 9;
-    delphi.Counter tcam_req_idx_fifo          = 10;
-    delphi.Counter tcam_rsp_idx_fifo          = 11;
-    delphi.Counter mpu_req_idx_fifo           = 12;
-    delphi.Counter axi_req_idx_fifo           = 13;
-    delphi.Counter proc_tbl_vld_wo_proc       = 14;
-    delphi.Counter pend_wo_wb                 = 15;
-    delphi.Counter pend1_wo_pend0             = 16;
-    delphi.Counter both_pend_down             = 17;
-    delphi.Counter pend_wo_proc_down          = 18;
-    delphi.Counter both_pend_went_up          = 19;
-    delphi.Counter loaded_but_no_proc         = 20;
-    delphi.Counter loaded_but_no_proc_tbl_vld = 21;
-};
+message Ppappa1intpe7Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message SgeteintinfoMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpe8Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-    delphi.Counter profile_cam_hit0  = 2;
-    delphi.Counter profile_cam_hit1  = 3;
-    delphi.Counter profile_cam_hit2  = 4;
-    delphi.Counter profile_cam_hit3  = 5;
-    delphi.Counter profile_cam_hit4  = 6;
-    delphi.Counter profile_cam_hit5  = 7;
-    delphi.Counter profile_cam_hit6  = 8;
-    delphi.Counter profile_cam_hit7  = 9;
-    delphi.Counter profile_cam_hit8  = 10;
-    delphi.Counter profile_cam_hit9  = 11;
-    delphi.Counter profile_cam_hit10 = 12;
-    delphi.Counter profile_cam_hit11 = 13;
-    delphi.Counter profile_cam_hit12 = 14;
-    delphi.Counter profile_cam_hit13 = 15;
-    delphi.Counter profile_cam_hit14 = 16;
-    delphi.Counter profile_cam_hit15 = 17;
-    delphi.Counter profile_cam_miss  = 18;
-};
+message Ppappa1intpe9Metrics {
+  fixed64 Key = 1;
+  delphi.Counter qctl_skid_depth_not_zero = 2;
+  delphi.Counter qctl_not_sop_after_pkt_release = 3;
+  delphi.Counter unexpected_non_sop = 4;
+  delphi.Counter exceed_phv_flit_cnt = 5;
+  delphi.Counter exceed_parse_loop_cnt = 6;
+  delphi.Counter offset_out_of_range = 7;
+  delphi.Counter pkt_size_chk = 8;
+  delphi.Counter offset_jump_chk = 9;
+  delphi.Counter d1_not_valid = 10;
+  delphi.Counter phv_upr_idx_less = 11;
+}
 
-message SgempuinterrMetrics {
-    fixed64 Key = 1;
+message Ppappa1intpaMetrics {
+  fixed64 Key = 1;
+  delphi.Counter reorder_phv_not_sop = 2;
+  delphi.Counter csum0_not_enuf_bytes = 3;
+  delphi.Counter csum0_start_more_than_end_offset = 4;
+  delphi.Counter csum1_not_enuf_bytes = 5;
+  delphi.Counter csum1_start_more_than_end_offset = 6;
+  delphi.Counter csum2_not_enuf_bytes = 7;
+  delphi.Counter csum2_start_more_than_end_offset = 8;
+  delphi.Counter csum3_not_enuf_bytes = 9;
+  delphi.Counter csum3_start_more_than_end_offset = 10;
+  delphi.Counter csum4_not_enuf_bytes = 11;
+  delphi.Counter csum4_start_more_than_end_offset = 12;
+  delphi.Counter crc_not_enuf_bytes = 13;
+  delphi.Counter crc_start_more_than_end_offset = 14;
+  delphi.Counter chkr_phv_single_flit = 15;
+  delphi.Counter chkr_phv_not_sop = 16;
+  delphi.Counter chkr_pkt_not_sop = 17;
+  delphi.Counter chkr_seq_id = 18;
+  delphi.Counter preparse_line0_not_sop = 19;
+  delphi.Counter preparse_dff_not_sop = 20;
+  delphi.Counter preparse_dff_ovflow = 21;
+  delphi.Counter preparse_eff_ovflow = 22;
+}
 
-    delphi.Counter results_mismatch      = 2;
-    delphi.Counter sdp_mem_uncorrectable = 3;
-    delphi.Counter sdp_mem_correctable   = 4;
-    delphi.Counter illegal_op_0          = 5;
-    delphi.Counter illegal_op_1          = 6;
-    delphi.Counter illegal_op_2          = 7;
-    delphi.Counter illegal_op_3          = 8;
-    delphi.Counter max_inst_0            = 9;
-    delphi.Counter max_inst_1            = 10;
-    delphi.Counter max_inst_2            = 11;
-    delphi.Counter max_inst_3            = 12;
-    delphi.Counter phvwr_0               = 13;
-    delphi.Counter phvwr_1               = 14;
-    delphi.Counter phvwr_2               = 15;
-    delphi.Counter phvwr_3               = 16;
-    delphi.Counter write_err_0           = 17;
-    delphi.Counter write_err_1           = 18;
-    delphi.Counter write_err_2           = 19;
-    delphi.Counter write_err_3           = 20;
-    delphi.Counter cache_axi_0           = 21;
-    delphi.Counter cache_axi_1           = 22;
-    delphi.Counter cache_axi_2           = 23;
-    delphi.Counter cache_axi_3           = 24;
-    delphi.Counter cache_parity_0        = 25;
-    delphi.Counter cache_parity_1        = 26;
-    delphi.Counter cache_parity_2        = 27;
-    delphi.Counter cache_parity_3        = 28;
-};
+message Ppappa1intswphvmemMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2;
+  delphi.Counter ecc_correctable = 3;
+  delphi.Counter phv_invalid_sram = 4;
+  delphi.Counter phv_invalid_data = 5;
+  delphi.Counter phv_done0 = 6;
+  delphi.Counter phv_done1 = 7;
+  delphi.Counter phv_done2 = 8;
+  delphi.Counter phv_done3 = 9;
+  delphi.Counter phv_done4 = 10;
+  delphi.Counter phv_done5 = 11;
+  delphi.Counter phv_done6 = 12;
+  delphi.Counter phv_done7 = 13;
+}
 
-message SgempuintinfoMetrics {
-    fixed64 Key = 1;
+message Ppappa1intintfMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_err = 2;
+  delphi.Counter pb_sop_err = 3;
+  delphi.Counter pb_eop_err = 4;
+  delphi.Counter dp_err = 5;
+  delphi.Counter dp_sop_err = 6;
+  delphi.Counter dp_eop_err = 7;
+  delphi.Counter ohi_err = 8;
+  delphi.Counter ohi_sop_err = 9;
+  delphi.Counter ohi_eop_err = 10;
+  delphi.Counter sw_phv_err = 11;
+  delphi.Counter sw_phv_sop_err = 12;
+  delphi.Counter sw_phv_eop_err = 13;
+  delphi.Counter ma_err = 14;
+  delphi.Counter ma_sop_err = 15;
+  delphi.Counter ma_eop_err = 16;
+}
 
-    delphi.Counter trace_full_0 = 2;
-    delphi.Counter trace_full_1 = 3;
-    delphi.Counter trace_full_2 = 4;
-    delphi.Counter trace_full_3 = 5;
-    delphi.Counter mpu_stop_0   = 6;
-    delphi.Counter mpu_stop_1   = 7;
-    delphi.Counter mpu_stop_2   = 8;
-    delphi.Counter mpu_stop_3   = 9;
-};
+message Sgite0interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message MdhensintaxierrMetrics {
-    fixed64 Key = 1;
+message Sgite0intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter wrsp_err = 2;
-    delphi.Counter rrsp_err = 3;
-};
+message Sgite1interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message MdhensinteccMetrics {
-    fixed64 Key = 1;
+message Sgite1intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter correctable_err   = 2;
-    delphi.Counter uncorrectable_err = 3;
-};
+message Sgite2interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message MdhensintipcoreMetrics {
-    fixed64 Key = 1;
+message Sgite2intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter xts_enc = 2;
-    delphi.Counter xts     = 3;
-    delphi.Counter gcm0    = 4;
-    delphi.Counter gcm1    = 5;
-    delphi.Counter drbg    = 6;
-    delphi.Counter pk      = 7;
-    delphi.Counter cp      = 8;
-    delphi.Counter dc      = 9;
-};
+message Sgite3interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message MpmpnsintcryptoMetrics {
-    fixed64 Key = 1;
+message Sgite3intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter mpp0 = 2;
-    delphi.Counter mpp1 = 3;
-    delphi.Counter mpp2 = 4;
-    delphi.Counter mpp3 = 5;
-    delphi.Counter mpp4 = 6;
-    delphi.Counter mpp5 = 7;
-    delphi.Counter mpp6 = 8;
-    delphi.Counter mpp7 = 9;
-};
+message Sgite4interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message PbpbcintcreditunderflowMetrics {
-    fixed64 Key = 1;
+message Sgite4intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter port_10 = 2;
-    delphi.Counter port_11 = 3;
-};
+message Sgite5interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
 
-message InteccdescMetrics {
-    fixed64 Key = 1;
+message Sgite5intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
 
-    delphi.Counter uncorrectable = 2;
-    delphi.Counter correctable   = 3;
-};
+message Sgimpu0interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbcintpbusviolationMetrics {
-    fixed64 Key = 1;
+message Sgimpu0intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter sop_sop_in_0  = 2;
-    delphi.Counter sop_sop_in_1  = 3;
-    delphi.Counter sop_sop_in_2  = 4;
-    delphi.Counter sop_sop_in_3  = 5;
-    delphi.Counter sop_sop_in_4  = 6;
-    delphi.Counter sop_sop_in_5  = 7;
-    delphi.Counter sop_sop_in_6  = 8;
-    delphi.Counter sop_sop_in_7  = 9;
-    delphi.Counter sop_sop_in_8  = 10;
-    delphi.Counter sop_sop_in_9  = 11;
-    delphi.Counter sop_sop_in_10 = 12;
-    delphi.Counter sop_sop_in_11 = 13;
-    delphi.Counter eop_eop_in_0  = 14;
-    delphi.Counter eop_eop_in_1  = 15;
-    delphi.Counter eop_eop_in_2  = 16;
-    delphi.Counter eop_eop_in_3  = 17;
-    delphi.Counter eop_eop_in_4  = 18;
-    delphi.Counter eop_eop_in_5  = 19;
-    delphi.Counter eop_eop_in_6  = 20;
-    delphi.Counter eop_eop_in_7  = 21;
-    delphi.Counter eop_eop_in_8  = 22;
-    delphi.Counter eop_eop_in_9  = 23;
-    delphi.Counter eop_eop_in_10 = 24;
-    delphi.Counter eop_eop_in_11 = 25;
-};
+message Sgimpu1interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbcintrplMetrics {
-    fixed64 Key = 1;
+message Sgimpu1intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter memory_error    = 2;
-    delphi.Counter zero_last_error = 3;
-};
+message Sgimpu2interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbcintwriteMetrics {
-    fixed64 Key = 1;
+message Sgimpu2intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter out_of_cells        = 2;
-    delphi.Counter out_of_credit       = 3;
-    delphi.Counter port_disabled       = 4;
-    delphi.Counter truncation          = 5;
-    delphi.Counter intrinsic_drop      = 6;
-    delphi.Counter out_of_cells1       = 7;
-    delphi.Counter enq_err             = 8;
-    delphi.Counter tail_drop_cpu       = 9;
-    delphi.Counter tail_drop_span      = 10;
-    delphi.Counter min_size_viol       = 11;
-    delphi.Counter port_range          = 12;
-    delphi.Counter credit_growth_error = 13;
-    delphi.Counter oq_range            = 14;
-    delphi.Counter xoff_timeout        = 15;
-};
+message Sgimpu3interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbchbmintecchbmrbMetrics {
-    fixed64 Key = 1;
+message Sgimpu3intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter rb_uncorrectable  = 2;
-    delphi.Counter rb_correctable    = 3;
-    delphi.Counter cdt_uncorrectable = 4;
-    delphi.Counter cdt_correctable   = 5;
-};
+message Sgimpu4interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbchbminthbmaxierrrspMetrics {
-    fixed64 Key = 1;
+message Sgimpu4intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter ctrl = 2;
-    delphi.Counter pyld = 3;
-    delphi.Counter r2a  = 4;
-};
+message Sgimpu5interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
 
-message PbpbchbminthbmdropMetrics {
-    fixed64 Key = 1;
+message Sgimpu5intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
 
-    delphi.Counter occupancy_0 = 2;
-    delphi.Counter occupancy_1 = 3;
-    delphi.Counter occupancy_2 = 4;
-    delphi.Counter occupancy_3 = 5;
-    delphi.Counter occupancy_4 = 6;
-    delphi.Counter occupancy_5 = 7;
-    delphi.Counter occupancy_6 = 8;
-    delphi.Counter occupancy_7 = 9;
-    delphi.Counter occupancy_8 = 10;
-    delphi.Counter occupancy_9 = 11;
-    delphi.Counter ctrl_full_0 = 12;
-    delphi.Counter ctrl_full_1 = 13;
-    delphi.Counter ctrl_full_2 = 14;
-    delphi.Counter ctrl_full_3 = 15;
-    delphi.Counter ctrl_full_4 = 16;
-    delphi.Counter ctrl_full_5 = 17;
-    delphi.Counter ctrl_full_6 = 18;
-    delphi.Counter ctrl_full_7 = 19;
-    delphi.Counter ctrl_full_8 = 20;
-    delphi.Counter ctrl_full_9 = 21;
-};
+message RpcpicsintpicsMetrics {
+  fixed64 Key = 1;
+  delphi.Counter uncorrectable_ecc = 2;
+  delphi.Counter correctable_ecc = 3;
+  delphi.Counter too_many_rl_sch_error = 4;
+  delphi.Counter picc = 5;
+}
 
-message PbpbchbminthbmpbusviolationMetrics {
-    fixed64 Key = 1;
+message RpcpicsintbadaddrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rdreq0_bad_addr = 2;
+  delphi.Counter wrreq0_bad_addr = 3;
+  delphi.Counter rdreq1_bad_addr = 4;
+  delphi.Counter wrreq1_bad_addr = 5;
+  delphi.Counter rdreq2_bad_addr = 6;
+  delphi.Counter wrreq2_bad_addr = 7;
+  delphi.Counter rdreq3_bad_addr = 8;
+  delphi.Counter wrreq3_bad_addr = 9;
+  delphi.Counter rdreq4_bad_addr = 10;
+  delphi.Counter wrreq4_bad_addr = 11;
+  delphi.Counter rdreq5_bad_addr = 12;
+  delphi.Counter wrreq5_bad_addr = 13;
+  delphi.Counter rdreq6_bad_addr = 14;
+  delphi.Counter wrreq6_bad_addr = 15;
+  delphi.Counter rdreq7_bad_addr = 16;
+  delphi.Counter wrreq7_bad_addr = 17;
+  delphi.Counter cpu_bad_addr = 18;
+  delphi.Counter bg_bad_addr = 19;
+}
 
-    delphi.Counter sop_sop_in_0 = 2;
-    delphi.Counter sop_sop_in_1 = 3;
-    delphi.Counter sop_sop_in_2 = 4;
-    delphi.Counter sop_sop_in_3 = 5;
-    delphi.Counter sop_sop_in_4 = 6;
-    delphi.Counter sop_sop_in_5 = 7;
-    delphi.Counter sop_sop_in_6 = 8;
-    delphi.Counter sop_sop_in_7 = 9;
-    delphi.Counter sop_sop_in_8 = 10;
-    delphi.Counter sop_sop_in_9 = 11;
-    delphi.Counter eop_eop_in_0 = 12;
-    delphi.Counter eop_eop_in_1 = 13;
-    delphi.Counter eop_eop_in_2 = 14;
-    delphi.Counter eop_eop_in_3 = 15;
-    delphi.Counter eop_eop_in_4 = 16;
-    delphi.Counter eop_eop_in_5 = 17;
-    delphi.Counter eop_eop_in_6 = 18;
-    delphi.Counter eop_eop_in_7 = 19;
-    delphi.Counter eop_eop_in_8 = 20;
-    delphi.Counter eop_eop_in_9 = 21;
-};
+message RpcpicsintbgMetrics {
+  fixed64 Key = 1;
+  delphi.Counter unfinished_bg0 = 2;
+  delphi.Counter unfinished_bg1 = 3;
+  delphi.Counter unfinished_bg2 = 4;
+  delphi.Counter unfinished_bg3 = 5;
+  delphi.Counter unfinished_bg4 = 6;
+  delphi.Counter unfinished_bg5 = 7;
+  delphi.Counter unfinished_bg6 = 8;
+  delphi.Counter unfinished_bg7 = 9;
+  delphi.Counter unfinished_bg8 = 10;
+  delphi.Counter unfinished_bg9 = 11;
+  delphi.Counter unfinished_bg10 = 12;
+  delphi.Counter unfinished_bg11 = 13;
+  delphi.Counter unfinished_bg12 = 14;
+  delphi.Counter unfinished_bg13 = 15;
+  delphi.Counter unfinished_bg14 = 16;
+  delphi.Counter unfinished_bg15 = 17;
+}
 
-message PbpbchbminthbmxoffMetrics {
-    fixed64 Key = 1;
+message RpcpicspiccintpiccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter uncorrectable_ecc = 2;
+  delphi.Counter correctable_ecc = 3;
+  delphi.Counter cache_stg_awlen_err = 4;
+  delphi.Counter cache_hbm_rresp_slverr = 5;
+  delphi.Counter cache_hbm_rresp_decerr = 6;
+  delphi.Counter cache_hbm_bresp_slverr = 7;
+  delphi.Counter cache_hbm_bresp_decerr = 8;
+}
 
-    delphi.Counter timeout = 2;
-};
+message IntrintrintintreccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter intr_state_uncorrectable = 2;
+  delphi.Counter intr_state_correctable = 3;
+  delphi.Counter intr_pba_cfg_uncorrectable = 4;
+  delphi.Counter intr_pba_cfg_correctable = 5;
+  delphi.Counter intr_coalesce_uncorrectable = 6;
+  delphi.Counter intr_coalesce_correctable = 7;
+  delphi.Counter intr_legacy_fifo_overrun = 8;
+  delphi.Counter int_credit_positive_after_return_interrupt = 9;
+  delphi.Counter int_credits_max_debug_threshold_interrupt = 10;
+  delphi.Counter intr_bresp_err = 11;
+}
 
-message McmchintmcMetrics {
-    fixed64 Key = 1;
+message PxbpxbinttgteccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter aximst_0_uncorrectable = 2;
+  delphi.Counter aximst_0_correctable = 3;
+  delphi.Counter aximst_1_uncorrectable = 4;
+  delphi.Counter aximst_1_correctable = 5;
+  delphi.Counter aximst_2_uncorrectable = 6;
+  delphi.Counter aximst_2_correctable = 7;
+  delphi.Counter aximst_3_uncorrectable = 8;
+  delphi.Counter aximst_3_correctable = 9;
+  delphi.Counter aximst_4_uncorrectable = 10;
+  delphi.Counter aximst_4_correctable = 11;
+  delphi.Counter rxcrbfr_0_uncorrectable = 12;
+  delphi.Counter rxcrbfr_0_correctable = 13;
+  delphi.Counter rxcrbfr_1_uncorrectable = 14;
+  delphi.Counter rxcrbfr_1_correctable = 15;
+  delphi.Counter rxcrbfr_2_uncorrectable = 16;
+  delphi.Counter rxcrbfr_2_correctable = 17;
+  delphi.Counter rxcrbfr_3_uncorrectable = 18;
+  delphi.Counter rxcrbfr_3_correctable = 19;
+  delphi.Counter rxinfo_uncorrectable = 20;
+  delphi.Counter rxinfo_correctable = 21;
+  delphi.Counter cplst_uncorrectable = 22;
+  delphi.Counter cplst_correctable = 23;
+  delphi.Counter romask_uncorrectable = 24;
+  delphi.Counter romask_correctable = 25;
+  delphi.Counter pmr_uncorrectable = 26;
+  delphi.Counter pmr_correctable = 27;
+  delphi.Counter prt_uncorrectable = 28;
+  delphi.Counter prt_correctable = 29;
+}
 
-    delphi.Counter ecc_1bit_thres_ps1 = 2;
-    delphi.Counter ecc_1bit_thres_ps0 = 3;
-};
+message PxbpxbintitreccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pcihdrt_uncorrectable = 2;
+  delphi.Counter pcihdrt_correctable = 3;
+  delphi.Counter portmap_uncorrectable = 4;
+  delphi.Counter portmap_correctable = 5;
+  delphi.Counter wrhdr_uncorrectable = 6;
+  delphi.Counter wrhdr_correctable = 7;
+  delphi.Counter rdhdr_uncorrectable = 8;
+  delphi.Counter rdhdr_correctable = 9;
+  delphi.Counter wrbfr_0_uncorrectable = 10;
+  delphi.Counter wrbfr_0_correctable = 11;
+  delphi.Counter wrbfr_1_uncorrectable = 12;
+  delphi.Counter wrbfr_1_correctable = 13;
+  delphi.Counter wrbfr_2_uncorrectable = 14;
+  delphi.Counter wrbfr_2_correctable = 15;
+  delphi.Counter wrbfr_3_uncorrectable = 16;
+  delphi.Counter wrbfr_3_correctable = 17;
+  delphi.Counter cplbfr_uncorrectable = 18;
+  delphi.Counter cplbfr_correctable = 19;
+}
+
+message PxbpxbinterrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter cpl_ecrc = 2;
+  delphi.Counter cpl_rxbuf_err = 3;
+  delphi.Counter cpl_stat = 4;
+  delphi.Counter cpl_unexp = 5;
+  delphi.Counter cpl_timeout = 6;
+  delphi.Counter cpl_len = 7;
+  delphi.Counter cpl_poison = 8;
+  delphi.Counter cpl_lowaddr = 9;
+  delphi.Counter tgt_ind_rsp_unexp = 10;
+  delphi.Counter tgt_axi_rsp_unexp = 11;
+  delphi.Counter tgt_axi_rsp_err = 12;
+  delphi.Counter tgt_req_4k_err = 13;
+  delphi.Counter itr_req_bdfmiss = 14;
+  delphi.Counter itr_req_axi_unsupp = 15;
+  delphi.Counter itr_req_msg_align_err = 16;
+  delphi.Counter itr_bus_master_dis = 17;
+  delphi.Counter itr_atomic_seq_err = 18;
+  delphi.Counter itr_atomic_resource_err = 19;
+  delphi.Counter tgt_rmw_axi_resperr = 20;
+  delphi.Counter tgt_ind_notify_axi_resperr = 21;
+}
+
+message Sgete0interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete0intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgete1interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete1intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgete2interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete2intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgete3interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete3intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgete4interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete4intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgete5interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter miss_sop = 2;
+  delphi.Counter miss_eop = 3;
+  delphi.Counter phv_max_size = 4;
+  delphi.Counter spurious_axi_rsp = 5;
+  delphi.Counter spurious_tcam_rsp = 6;
+  delphi.Counter te2mpu_timeout = 7;
+  delphi.Counter axi_rdrsp_err = 8;
+  delphi.Counter axi_bad_read = 9;
+  delphi.Counter tcam_req_idx_fifo = 10;
+  delphi.Counter tcam_rsp_idx_fifo = 11;
+  delphi.Counter mpu_req_idx_fifo = 12;
+  delphi.Counter axi_req_idx_fifo = 13;
+  delphi.Counter proc_tbl_vld_wo_proc = 14;
+  delphi.Counter pend_wo_wb = 15;
+  delphi.Counter pend1_wo_pend0 = 16;
+  delphi.Counter both_pend_down = 17;
+  delphi.Counter pend_wo_proc_down = 18;
+  delphi.Counter both_pend_went_up = 19;
+  delphi.Counter loaded_but_no_proc = 20;
+  delphi.Counter loaded_but_no_proc_tbl_vld = 21;
+}
+
+message Sgete5intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter profile_cam_hit0 = 2;
+  delphi.Counter profile_cam_hit1 = 3;
+  delphi.Counter profile_cam_hit2 = 4;
+  delphi.Counter profile_cam_hit3 = 5;
+  delphi.Counter profile_cam_hit4 = 6;
+  delphi.Counter profile_cam_hit5 = 7;
+  delphi.Counter profile_cam_hit6 = 8;
+  delphi.Counter profile_cam_hit7 = 9;
+  delphi.Counter profile_cam_hit8 = 10;
+  delphi.Counter profile_cam_hit9 = 11;
+  delphi.Counter profile_cam_hit10 = 12;
+  delphi.Counter profile_cam_hit11 = 13;
+  delphi.Counter profile_cam_hit12 = 14;
+  delphi.Counter profile_cam_hit13 = 15;
+  delphi.Counter profile_cam_hit14 = 16;
+  delphi.Counter profile_cam_hit15 = 17;
+  delphi.Counter profile_cam_miss = 18;
+}
+
+message Sgempu0interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu0intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Sgempu1interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu1intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Sgempu2interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu2intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Sgempu3interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu3intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Sgempu4interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu4intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Sgempu5interrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter results_mismatch = 2;
+  delphi.Counter sdp_mem_uncorrectable = 3;
+  delphi.Counter sdp_mem_correctable = 4;
+  delphi.Counter illegal_op_0 = 5;
+  delphi.Counter illegal_op_1 = 6;
+  delphi.Counter illegal_op_2 = 7;
+  delphi.Counter illegal_op_3 = 8;
+  delphi.Counter max_inst_0 = 9;
+  delphi.Counter max_inst_1 = 10;
+  delphi.Counter max_inst_2 = 11;
+  delphi.Counter max_inst_3 = 12;
+  delphi.Counter phvwr_0 = 13;
+  delphi.Counter phvwr_1 = 14;
+  delphi.Counter phvwr_2 = 15;
+  delphi.Counter phvwr_3 = 16;
+  delphi.Counter write_err_0 = 17;
+  delphi.Counter write_err_1 = 18;
+  delphi.Counter write_err_2 = 19;
+  delphi.Counter write_err_3 = 20;
+  delphi.Counter cache_axi_0 = 21;
+  delphi.Counter cache_axi_1 = 22;
+  delphi.Counter cache_axi_2 = 23;
+  delphi.Counter cache_axi_3 = 24;
+  delphi.Counter cache_parity_0 = 25;
+  delphi.Counter cache_parity_1 = 26;
+  delphi.Counter cache_parity_2 = 27;
+  delphi.Counter cache_parity_3 = 28;
+}
+
+message Sgempu5intinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter trace_full_0 = 2;
+  delphi.Counter trace_full_1 = 3;
+  delphi.Counter trace_full_2 = 4;
+  delphi.Counter trace_full_3 = 5;
+  delphi.Counter mpu_stop_0 = 6;
+  delphi.Counter mpu_stop_1 = 7;
+  delphi.Counter mpu_stop_2 = 8;
+  delphi.Counter mpu_stop_3 = 9;
+}
+
+message Prprintreg1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter slave_prd = 2;
+  delphi.Counter slave_psp = 3;
+}
+
+message PrprpspintinfoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pr_pkt_ff_almost_full = 2;
+  delphi.Counter ptd_npv_phv_full = 3;
+  delphi.Counter phv_srdy_collapsed = 4;
+  delphi.Counter pr_resub_pkt_before_phv = 5;
+  delphi.Counter pb_pbus_fsm0_no_data = 6;
+  delphi.Counter pb_pbus_fsm1_no_data = 7;
+  delphi.Counter pb_pbus_fsm2_no_data = 8;
+  delphi.Counter pb_pbus_fsm3_no_data = 9;
+  delphi.Counter pb_pbus_fsm4_no_data = 10;
+}
+
+message PrprpspinterrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_pbus_err = 2;
+  delphi.Counter pr_pbus_err = 3;
+  delphi.Counter pr_resub_pbus_err = 4;
+  delphi.Counter psp_csr_read_access_err = 5;
+  delphi.Counter psp_csr_write_access_err = 6;
+  delphi.Counter psp_phv_larger_than_twelve_flits_err = 7;
+  delphi.Counter psp_phv_sop_offset_err = 8;
+  delphi.Counter psp_phv_eop_offset_err = 9;
+  delphi.Counter max_recir_count_err = 10;
+  delphi.Counter pb_pbus_dummy_err = 11;
+  delphi.Counter pb_pbus_nopkt_err = 12;
+  delphi.Counter pb_pbus_min_err = 13;
+  delphi.Counter lb_phv_almost_full_timeout_err = 14;
+  delphi.Counter lb_pkt_almost_full_timeout_err = 15;
+}
+
+message PrprpspintfatalMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_pbus_sop_err = 2;
+  delphi.Counter pb_pbus_eop_err = 3;
+  delphi.Counter ma_sop_err = 4;
+  delphi.Counter ma_eop_err = 5;
+  delphi.Counter pr_pbus_sop_err = 6;
+  delphi.Counter pr_pbus_eop_err = 7;
+  delphi.Counter pr_resub_pbus_sop_err = 8;
+  delphi.Counter pr_resub_pbus_eop_err = 9;
+  delphi.Counter pr_resub_sop_err = 10;
+  delphi.Counter pr_resub_eop_err = 11;
+  delphi.Counter pb_pbus_fsm0_no_data_err = 12;
+  delphi.Counter pb_pbus_fsm1_no_data_err = 13;
+  delphi.Counter pb_pbus_fsm2_no_data_err = 14;
+  delphi.Counter pb_pbus_fsm3_no_data_err = 15;
+  delphi.Counter pb_pbus_fsm4_no_data_err = 16;
+  delphi.Counter pb_pbus_fsm5_pkt_too_small_err = 17;
+  delphi.Counter lif_ind_table_rsp_err = 18;
+  delphi.Counter flit_cnt_oflow_err = 19;
+  delphi.Counter lb_phv_sop_err = 20;
+  delphi.Counter dc_phv_sop_err = 21;
+  delphi.Counter lb_pkt_sop_err = 22;
+  delphi.Counter dc_pkt_sop_err = 23;
+  delphi.Counter sw_phv_jabber_err = 24;
+}
+
+message PrprpspintlifqstatemapMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2;
+  delphi.Counter ecc_correctable = 3;
+  delphi.Counter qid_invalid = 4;
+}
+
+message PrprpspintswphvmemMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2;
+  delphi.Counter ecc_correctable = 3;
+  delphi.Counter phv_invalid_sram = 4;
+  delphi.Counter phv_invalid_data = 5;
+  delphi.Counter phv_done0 = 6;
+  delphi.Counter phv_done1 = 7;
+  delphi.Counter phv_done2 = 8;
+  delphi.Counter phv_done3 = 9;
+  delphi.Counter phv_done4 = 10;
+  delphi.Counter phv_done5 = 11;
+  delphi.Counter phv_done6 = 12;
+  delphi.Counter phv_done7 = 13;
+}
+
+message PrprprdinteccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rdata_mem_uncorrectable = 2;
+  delphi.Counter rdata_mem_correctable = 3;
+  delphi.Counter pkt_mem_uncorrectable = 4;
+  delphi.Counter pkt_mem_correctable = 5;
+}
+
+message PrprprdintfifoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter wr_lat_ff_ovflow = 2;
+  delphi.Counter rd_lat_ff_ovflow = 3;
+  delphi.Counter wdata_ff_ovflow = 4;
+  delphi.Counter rcv_stg_ff_ovflow = 5;
+  delphi.Counter cmdflit_ff_ovflow = 6;
+  delphi.Counter cmd_ff_ovflow = 7;
+  delphi.Counter pkt_ff_ovflow = 8;
+  delphi.Counter pkt_order_ff_ovflow = 9;
+  delphi.Counter pkt_stg_ff_ovflow = 10;
+  delphi.Counter wr_mem_ff_ovflow = 11;
+  delphi.Counter dfence_ff_ovflow = 12;
+  delphi.Counter ffence_ff_ovflow = 13;
+}
+
+message Prprprdintgrp1Metrics {
+  fixed64 Key = 1;
+  delphi.Counter rcv_phv_dma_ptr = 2;
+  delphi.Counter rcv_phv_addr = 3;
+  delphi.Counter rcv_exceed_16byte = 4;
+  delphi.Counter rcv_phv_not_sop = 5;
+  delphi.Counter rcv_pkt_order_ff_full = 6;
+  delphi.Counter rcv_pend_phv_more_than_2 = 7;
+  delphi.Counter rcv_pend_phv_less = 8;
+  delphi.Counter rcv_cmd_nop_eop = 9;
+  delphi.Counter rcv_cmd_out_not_sop = 10;
+  delphi.Counter rcv_no_data_but_pkt2mem_cmd = 11;
+  delphi.Counter rcv_no_data_but_skip_cmd = 12;
+  delphi.Counter rcv_mem2pkt_seen = 13;
+  delphi.Counter rcv_phv2pkt_seen = 14;
+  delphi.Counter rcv_phv_eop_no_cmd_eop = 15;
+  delphi.Counter rcv_m2m_dst_not_seen = 16;
+  delphi.Counter rcv_m2m_src_not_seen = 17;
+  delphi.Counter rdreq_invalid_cmd_seen = 18;
+  delphi.Counter rdreq_mem2mem_psize_zero = 19;
+  delphi.Counter rdreq_m2m_phv2mem_exceed_16byte = 20;
+  delphi.Counter rdreq_phv2mem_fence_exceed_16byte = 21;
+  delphi.Counter rdreq_pkt2mem_psize_zero = 22;
+  delphi.Counter rdreq_skip_psize_zero = 23;
+}
+
+message Prprprdintgrp2Metrics {
+  fixed64 Key = 1;
+  delphi.Counter wr_axi_rd_err_recovery = 2;
+  delphi.Counter wr_axi_rd_resp = 3;
+  delphi.Counter wr_not_enuf_pkt_bytes = 4;
+  delphi.Counter wr_invalid_cmd = 5;
+  delphi.Counter wr_seq_id = 6;
+  delphi.Counter wr_no_data_pkt_cmd = 7;
+  delphi.Counter rdrsp_axi = 8;
+  delphi.Counter wrrsp_axi = 9;
+  delphi.Counter pkt_not_sop = 10;
+  delphi.Counter pkt_len_calc_len_mismatch = 11;
+  delphi.Counter spurious_rd_resp = 12;
+  delphi.Counter rdrsp_axi_id_out_of_range = 13;
+  delphi.Counter spurious_wr_resp = 14;
+  delphi.Counter wrreq_info_first_missing = 15;
+  delphi.Counter wrreq_num_bytes_zero = 16;
+  delphi.Counter wrreq_num_bytes_more_than_64 = 17;
+}
+
+message PrprprdintintfMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ps_pkt_err = 2;
+  delphi.Counter ps_pkt_sop_err = 3;
+  delphi.Counter ps_pkt_eop_err = 4;
+  delphi.Counter ps_resub_pkt_err = 5;
+  delphi.Counter ps_resub_pkt_sop_err = 6;
+  delphi.Counter ps_resub_pkt_eop_err = 7;
+  delphi.Counter ps_resub_phv_err = 8;
+  delphi.Counter ps_resub_phv_sop_err = 9;
+  delphi.Counter ps_resub_phv_eop_err = 10;
+  delphi.Counter ma_err = 11;
+  delphi.Counter ma_sop_err = 12;
+  delphi.Counter ma_eop_err = 13;
+}
+
+message PpppintppMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ppsd_sbe = 2;
+  delphi.Counter ppsd_dbe = 3;
+  delphi.Counter sbus_err = 4;
+  delphi.Counter port7_c_int = 5;
+  delphi.Counter port7_p_int = 6;
+  delphi.Counter port6_c_int = 7;
+  delphi.Counter port6_p_int = 8;
+  delphi.Counter port5_c_int = 9;
+  delphi.Counter port5_p_int = 10;
+  delphi.Counter port4_c_int = 11;
+  delphi.Counter port4_p_int = 12;
+  delphi.Counter port3_c_int = 13;
+  delphi.Counter port3_p_int = 14;
+  delphi.Counter port2_c_int = 15;
+  delphi.Counter port2_p_int = 16;
+  delphi.Counter port1_c_int = 17;
+  delphi.Counter port1_p_int = 18;
+  delphi.Counter port0_c_int = 19;
+  delphi.Counter port0_p_int = 20;
+  delphi.Counter perst7n_dn2up = 21;
+  delphi.Counter perst6n_dn2up = 22;
+  delphi.Counter perst5n_dn2up = 23;
+  delphi.Counter perst4n_dn2up = 24;
+  delphi.Counter perst3n_dn2up = 25;
+  delphi.Counter perst2n_dn2up = 26;
+  delphi.Counter perst1n_dn2up = 27;
+  delphi.Counter perst0n_dn2up = 28;
+}
+
+message Ppppportp0intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp1intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp2intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp3intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp4intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp5intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp6intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportp7intpeccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbfr_overflow = 2;
+  delphi.Counter replay_bfr_overflow = 3;
+  delphi.Counter rxtlp_err = 4;
+  delphi.Counter txbuf_0_uncorrectable = 5;
+  delphi.Counter txbuf_1_uncorrectable = 6;
+  delphi.Counter txbuf_2_uncorrectable = 7;
+  delphi.Counter txbuf_3_uncorrectable = 8;
+  delphi.Counter txbuf_0_correctable = 9;
+  delphi.Counter txbuf_1_correctable = 10;
+  delphi.Counter txbuf_2_correctable = 11;
+  delphi.Counter txbuf_3_correctable = 12;
+}
+
+message Ppppportc0intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter link_dn2up = 2;
+  delphi.Counter link_up2dn = 3;
+  delphi.Counter sec_bus_rst = 4;
+  delphi.Counter rst_up2dn = 5;
+  delphi.Counter rst_dn2up = 6;
+  delphi.Counter portgate_open2close = 7;
+  delphi.Counter ltssm_st_changed = 8;
+  delphi.Counter sec_busnum_changed = 9;
+  delphi.Counter rc_pme = 10;
+  delphi.Counter rc_aerr = 11;
+  delphi.Counter rc_serr = 12;
+  delphi.Counter rc_hpe = 13;
+  delphi.Counter rc_eq_req = 14;
+  delphi.Counter rc_dpc = 15;
+  delphi.Counter pm_turnoff = 16;
+  delphi.Counter txbfr_overflow = 17;
+  delphi.Counter rxtlp_err = 18;
+  delphi.Counter tl_flr_req = 19;
+  delphi.Counter rc_legacy_intpin_changed = 20;
+}
+
+message Ppppportc0intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2;
+  delphi.Counter rxbuf_1_uncorrectable = 3;
+  delphi.Counter rxbuf_2_uncorrectable = 4;
+  delphi.Counter rxbuf_3_uncorrectable = 5;
+  delphi.Counter rxbuf_0_correctable = 6;
+  delphi.Counter rxbuf_1_correctable = 7;
+  delphi.Counter rxbuf_2_correctable = 8;
+  delphi.Counter rxbuf_3_correctable = 9;
+}
+
+message Ppppportc1intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter link_dn2up = 2;
+  delphi.Counter link_up2dn = 3;
+  delphi.Counter sec_bus_rst = 4;
+  delphi.Counter rst_up2dn = 5;
+  delphi.Counter rst_dn2up = 6;
+  delphi.Counter portgate_open2close = 7;
+  delphi.Counter ltssm_st_changed = 8;
+  delphi.Counter sec_busnum_changed = 9;
+  delphi.Counter rc_pme = 10;
+  delphi.Counter rc_aerr = 11;
+  delphi.Counter rc_serr = 12;
+  delphi.Counter rc_hpe = 13;
+  delphi.Counter rc_eq_req = 14;
+  delphi.Counter rc_dpc = 15;
+  delphi.Counter pm_turnoff = 16;
+  delphi.Counter txbfr_overflow = 17;
+  delphi.Counter rxtlp_err = 18;
+  delphi.Counter tl_flr_req = 19;
+  delphi.Counter rc_legacy_intpin_changed = 20;
+}
+
+message Ppppportc1intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2;
+  delphi.Counter rxbuf_1_uncorrectable = 3;
+  delphi.Counter rxbuf_2_uncorrectable = 4;
+  delphi.Counter rxbuf_3_uncorrectable = 5;
+  delphi.Counter rxbuf_0_correctable = 6;
+  delphi.Counter rxbuf_1_correctable = 7;
+  delphi.Counter rxbuf_2_correctable = 8;
+  delphi.Counter rxbuf_3_correctable = 9;
+}
+
+message Ppppportc2intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter link_dn2up = 2;
+  delphi.Counter link_up2dn = 3;
+  delphi.Counter sec_bus_rst = 4;
+  delphi.Counter rst_up2dn = 5;
+  delphi.Counter rst_dn2up = 6;
+  delphi.Counter portgate_open2close = 7;
+  delphi.Counter ltssm_st_changed = 8;
+  delphi.Counter sec_busnum_changed = 9;
+  delphi.Counter rc_pme = 10;
+  delphi.Counter rc_aerr = 11;
+  delphi.Counter rc_serr = 12;
+  delphi.Counter rc_hpe = 13;
+  delphi.Counter rc_eq_req = 14;
+  delphi.Counter rc_dpc = 15;
+  delphi.Counter pm_turnoff = 16;
+  delphi.Counter txbfr_overflow = 17;
+  delphi.Counter rxtlp_err = 18;
+  delphi.Counter tl_flr_req = 19;
+  delphi.Counter rc_legacy_intpin_changed = 20;
+}
+
+message Ppppportc2intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2;
+  delphi.Counter rxbuf_1_uncorrectable = 3;
+  delphi.Counter rxbuf_2_uncorrectable = 4;
+  delphi.Counter rxbuf_3_uncorrectable = 5;
+  delphi.Counter rxbuf_0_correctable = 6;
+  delphi.Counter rxbuf_1_correctable = 7;
+  delphi.Counter rxbuf_2_correctable = 8;
+  delphi.Counter rxbuf_3_correctable = 9;
+}
+
+message Ppppportc3intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter link_dn2up = 2;
+  delphi.Counter link_up2dn = 3;
+  delphi.Counter sec_bus_rst = 4;
+  delphi.Counter rst_up2dn = 5;
+  delphi.Counter rst_dn2up = 6;
+  delphi.Counter portgate_open2close = 7;
+  delphi.Counter ltssm_st_changed = 8;
+  delphi.Counter sec_busnum_changed = 9;
+  delphi.Counter rc_pme = 10;
+  delphi.Counter rc_aerr = 11;
+  delphi.Counter rc_serr = 12;
+  delphi.Counter rc_hpe = 13;
+  delphi.Counter rc_eq_req = 14;
+  delphi.Counter rc_dpc = 15;
+  delphi.Counter pm_turnoff = 16;
+  delphi.Counter txbfr_overflow = 17;
+  delphi.Counter rxtlp_err = 18;
+  delphi.Counter tl_flr_req = 19;
+  delphi.Counter rc_legacy_intpin_changed = 20;
+}
+
+message Ppppportc3intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2;
+  delphi.Counter rxbuf_1_uncorrectable = 3;
+  delphi.Counter rxbuf_2_uncorrectable = 4;
+  delphi.Counter rxbuf_3_uncorrectable = 5;
+  delphi.Counter rxbuf_0_correctable = 6;
+  delphi.Counter rxbuf_1_correctable = 7;
+  delphi.Counter rxbuf_2_correctable = 8;
+  delphi.Counter rxbuf_3_correctable = 9;
+}
+

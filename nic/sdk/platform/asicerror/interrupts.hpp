@@ -50,6 +50,7 @@ typedef struct intr_cfg_s {
 } intr_cfg_t;
 
 extern intr_reg_t cap0;
+extern intr_reg_t all_csrs;
 
 // interrupt lib initialization
 int intr_init(intr_cfg_t *intr_cfg);

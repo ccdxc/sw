@@ -26,7 +26,7 @@ func main() {
 	fmt.Printf("Running %d iteration\n", *numIter)
 
 	for i := 0; i < *numIter; i++ {
-		iter, err := goproto.NewPbpbcintwriteMetricsIterator()
+		iter, err := goproto.NewPbpbcintwrite0MetricsIterator()
 		if err != nil {
 			log.Errorf("failed to get metrics, error: %s", err)
 			return

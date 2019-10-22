@@ -6,6 +6,7 @@
 #include "platform/src/app/sysmond/logger.h"
 #include "platform/src/app/sysmond/delphi/sysmond_delphi.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
+#include "platform/src/app/sysmond/sysmond_cb.hpp"
 
 static shared_ptr<SysmondService> svc;
 static delphi::objects::asicpowermetrics_t asicpower;
@@ -24,6 +25,9 @@ delphi_event_cb_init (void)
     delphi::objects::AsicPowerMetrics::CreateTable();
     delphi::objects::AsicFrequencyMetrics::CreateTable();
     delphi::objects::AsicMemoryMetrics::CreateTable();
+
+    // Register for asicerror metrics
+    create_tables();
 
     svc = make_shared<SysmondService>(sdk, "Sysmond");
     svc->init();

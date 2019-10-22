@@ -30,6 +30,14 @@ print_interrupts (intr_reg_t &reg)
     }
 }
 
+static void
+handle_interrupt (intr_reg_t *reg, intr_field_t *field)
+{
+    if (intr_cfg.intr_event_cb) {
+        intr_cfg.intr_event_cb(reg, field);
+    }
+}
+
 void
 traverse_interrupts (intr_reg_t &reg)
 {
@@ -40,7 +48,21 @@ traverse_interrupts (intr_reg_t &reg)
     uint16_t field_count = reg.field_count;
     intr_field_t *field;
 
+    switch (reg.id) {
+    case 140:
+    case 142:
+    case 144:
+    case 146:
+    case 148:
+    case 150:
+    case 152:
+    case 154:
+        // TODO skip PCIE ports for now
+        return;
+    }
+
     if (reg_type == INTR_REG_TYPE_SRC) {
+        // SDK_TRACE_ERR("Reading addr: 0x%x", reg_addr);
         ret = sdk::lib::pal_reg_read(reg_addr, &data, 1);
         if (ret != 0) {
         }
@@ -52,9 +74,7 @@ traverse_interrupts (intr_reg_t &reg)
         if (reg_type == INTR_REG_TYPE_SRC) {
             if (data & (1 << i)) {
                 field->count += 1;
-                if (intr_cfg.intr_event_cb) {
-                    intr_cfg.intr_event_cb(&reg, field);
-                }
+                handle_interrupt(&reg, field);
             }
         }
         if(field->next_ptr) {
@@ -64,6 +84,7 @@ traverse_interrupts (intr_reg_t &reg)
 
     if (reg_type == INTR_REG_TYPE_SRC) {
         // clear interrupts
+        // SDK_TRACE_ERR("Writing addr: 0x%x", reg_addr);
         ret = sdk::lib::pal_reg_write(reg_addr, &data, 1);
         if (ret != 0) {
         }

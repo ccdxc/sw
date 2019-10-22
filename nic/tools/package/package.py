@@ -212,7 +212,7 @@ for input_file in files:
         else:
             if not 'dummy' in items[0]:
                 if '.tar' in items[0]:
-                    cmd = 'tar -xvf' + items[0] + ' -C ' + directory
+                    cmd = 'tar -xf' + items[0] + ' -C ' + directory
                 else:
                     cmd = 'cp ' + items[0] + ' ' + output_file
                 print (cmd)
@@ -224,7 +224,7 @@ for input_file in files:
 
 for root, dirs, files in os.walk(output_dir):
     for file in files:
-        if '.so' in file or 'hal' in file or 'linkmgr' in file:
+        if '.so' in file or 'nic/bin' in root or 'platform/bin' in root:
             non_stripped = os.path.join(root, file)
             call(['chmod', '755', non_stripped])
             # strip the libs and binaries

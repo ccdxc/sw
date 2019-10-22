@@ -6,6 +6,7 @@
 #include "platform/src/app/sysmond/logger.h"
 #include "platform/src/app/sysmond/delphi/sysmond_delphi_cb.hpp"
 #include "platform/src/app/sysmond/event_recorder/sysmond_eventrecorder_cb.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 void
 event_cb_init (void)
@@ -37,7 +38,6 @@ temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
                sysmond_hbm_threshold_event_t hbm_event)
 {
     delphi_temp_event_cb(temperature);
-    TRACE_INFO(GetObflLogger(), "temp_event_cb::hbm event is {}.", hbm_event);
     eventrecorder_temp_event_cb(temperature, hbm_event);
 }
 
@@ -51,11 +51,13 @@ memory_event_cb (uint64_t total_mem, uint64_t available_mem,
 void
 intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 {
+    bool iscattrip = false;
+
     switch (field->severity) {
     case INTR_SEV_TYPE_HW_RMA:
     case INTR_SEV_TYPE_FATAL:
     case INTR_SEV_TYPE_ERR:
-        TRACE_INFO(GetObflLogger(), "name: {}_{}, count: {}, severity: {}, desc: {}",
+        TRACE_INFO(GetAsicErrObflLogger(), "name: {}_{}, count: {}, severity: {}, desc: {}",
                    reg->name, field->name, field->count,
                    get_severity_str(field->severity).c_str(), field->desc);
         break;
@@ -63,4 +65,27 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     default:
         break;
     }
+
+    // TODO use enums
+    // invoke unravel interrupts for mc[0-7]_mch_int_mc registers
+    switch (reg->id) {
+    case 396:
+    case 400:
+    case 404:
+    case 408:
+    case 412:
+    case 416:
+    case 420:
+    case 424:
+        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, true);
+        if (iscattrip == false) {
+            TRACE_ERR(GetAsicErrObflLogger(), "ECCERR observed on the system.");
+        }
+        break;
+    default:
+        break;
+    }
+
+    // notify
+    interrupt_notify(reg->id, field->id);
 }

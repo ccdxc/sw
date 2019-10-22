@@ -12,7 +12,9 @@
 #include "sysmond_cb.hpp"
 
 #define SYSMOND_TIMER_ID_POLL 1
+#define ASICERROR_TIMER_ID_POLL 2
 #define SYSMOND_POLL_TIME     10000 // 10 secs = 10 * 1000 msecs
+#define ASICERROR_POLL_TIME   1000  // 1 sec   = 1  * 1000 msecs
 
 //------------------------------------------------------------------------------
 // starting point for the periodic thread loop
@@ -32,7 +34,15 @@ static sdk_ret_t
 sysmond_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     sysmon_monitor();
-    // traverse_interrupts(cap0);
+    sysmond_flush_logger();
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+asicerror_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    traverse_interrupts(cap0);
+    traverse_interrupts(all_csrs);
     sysmond_flush_logger();
     return SDK_RET_OK;
 }
@@ -41,6 +51,7 @@ static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     print_interrupts(cap0);
+    print_interrupts(all_csrs);
     sysmond_flush_logger();
 }
 
@@ -124,10 +135,16 @@ main(int argc, char *argv[])
         pthread_yield();
     }
 
-    // schedule the periodic timer cb
+    // schedule the sysmon timer cb
     sdk::lib::timer_schedule(
                     SYSMOND_TIMER_ID_POLL, SYSMOND_POLL_TIME, NULL,
                     (sdk::lib::twheel_cb_t)sysmond_timer_cb,
+                    true);
+
+    // schedule the asicerror timer cb
+    sdk::lib::timer_schedule(
+                    ASICERROR_TIMER_ID_POLL, ASICERROR_POLL_TIME, NULL,
+                    (sdk::lib::twheel_cb_t)asicerror_timer_cb,
                     true);
 
     siginit();

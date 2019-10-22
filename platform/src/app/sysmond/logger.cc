@@ -7,6 +7,9 @@
 
 ::utils::log *g_trace_logger;
 ::utils::log *obfl_trace_logger;
+::utils::log *g_asicerr_trace_logger;
+::utils::log *g_asicerr_obfl_trace_logger;
+
 
 // wrapper APIs to get logger
 std::shared_ptr<spdlog::logger>
@@ -23,6 +26,25 @@ GetObflLogger (void)
 {
     if (obfl_trace_logger) {
         return obfl_trace_logger->logger();
+    }
+    return NULL;
+}
+
+// wrapper APIs to get logger
+std::shared_ptr<spdlog::logger>
+GetAsicErrLogger (void)
+{
+    if (g_asicerr_trace_logger) {
+        return g_asicerr_trace_logger->logger();
+    }
+    return NULL;
+}
+
+std::shared_ptr<spdlog::logger>
+GetAsicErrObflLogger (void)
+{
+    if (g_asicerr_obfl_trace_logger) {
+        return g_asicerr_obfl_trace_logger->logger();
     }
     return NULL;
 }
@@ -79,6 +101,8 @@ sysmond_flush_logger (void)
 {
     GetLogger()->flush();
     GetObflLogger()->flush();
+    GetAsicErrLogger()->flush();
+    GetAsicErrObflLogger()->flush();
 }
 
 void
@@ -95,7 +119,23 @@ initializeLogger (void)
                                         ::utils::log_none);
         obfl_trace_logger = ::utils::log::factory("sysmond_obfl", 0x0,
                                         ::utils::log_mode_sync, false,
-                                        OBFL_LOG_FILENAME, NULL, OBFL_LOG_MAX_FILESIZE,
+                                        OBFL_LOG_FILENAME, NULL,
+                                        OBFL_LOG_MAX_FILESIZE,
+                                        LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::trace_debug,
+                                        ::utils::log_none);
+        g_asicerr_trace_logger = ::utils::log::factory("asicerrord", 0x0,
+                                        ::utils::log_mode_sync, false,
+                                        NULL, ASICERR_LOG_FILENAME,
+                                        LOG_MAX_FILESIZE,
+                                        LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::trace_debug,
+                                        ::utils::log_none);
+        g_asicerr_obfl_trace_logger = ::utils::log::factory(
+                                        "asicerrord_obfl", 0x0,
+                                        ::utils::log_mode_sync, false,
+                                        ASICERR_OBFL_LOG_FILENAME, NULL,
+                                        OBFL_LOG_MAX_FILESIZE,
                                         LOG_MAX_FILES, ::utils::trace_debug,
                                         ::utils::trace_debug,
                                         ::utils::log_none);
