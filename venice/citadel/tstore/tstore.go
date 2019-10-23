@@ -323,10 +323,21 @@ func (ta *tstoreAuth) AuthorizeSeriesWrite(database string, measurement []byte, 
 
 // Close closes the tstore
 func (ts *Tstore) Close() error {
-	ts.service.Close()
-	ts.pointsWriter.Close()
-	ts.queryExecutor.Close()
-	ts.metaClient.Close()
-	ts.tsdb.Close()
+	if ts.service != nil {
+		ts.service.Close()
+	}
+	if ts.pointsWriter != nil {
+		ts.pointsWriter.Close()
+	}
+
+	if ts.queryExecutor != nil {
+		ts.queryExecutor.Close()
+	}
+	if ts.metaClient != nil {
+		ts.metaClient.Close()
+	}
+	if ts.tsdb != nil {
+		ts.tsdb.Close()
+	}
 	return nil
 }
