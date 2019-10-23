@@ -124,8 +124,9 @@ def IsNaplesGoldFWLatest():
     return gold_fw_latest
 
 def IpmiReset():
-    os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
-              (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+    cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
+              (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password)
+    subprocess.check_call(cmd, shell=True, stdout=subprocess.STDOUT, stderr=subprocess.STDOUT)
 
 # Error codes for all module exceptions
 @unique
@@ -156,6 +157,7 @@ class _errCodes(Enum):
     NAPLES_FW_INSTALL_FROM_HOST_FAILED = 110
     NAPLES_TELNET_CLEARLINE_FAILED     = 111
     NAPLES_MEMORY_SIZE_INCOMPATIBLE    = 112
+    FAILED_TO_READ_FIRMWARE_TYPE       = 113
 
     #Entity errors
     ENTITY_COPY_FAILED               = 300
@@ -176,7 +178,9 @@ class _errCodes(Enum):
     HOST_ESX_CTRL_VM_STARTUP_FAILED  = 208
     HOST_ESX_BUILD_VM_RUN_FAILED     = 209
 
-
+FIRMWARE_TYPE_MAIN = 'mainfwa'
+FIRMWARE_TYPE_GOLD = 'goldfw'
+FIRMWARE_TYPE_UNKNOWN = 'unknown'
 
 class bootNaplesException(Exception):
 
@@ -255,6 +259,7 @@ class EntityManagement:
 
     def SendlineExpect(self, line, expect, hdl = None,
                        timeout = GlobalOptions.timeout):
+        print("\n{0}\n".format(time.asctime()))
         if hdl is None: hdl = self.hdl
         hdl.sendline(line)
         return hdl.expect_exact(expect, timeout)
@@ -301,6 +306,7 @@ class EntityManagement:
         return retcode
 
     def __run_cmd(self, cmd):
+        print("\n{0}\n".format(time.asctime()))
         self.hdl.sendline(cmd)
         self.hdl.expect("#")
 
@@ -427,7 +433,8 @@ class NaplesManagement(EntityManagement):
         self.InstallPrep()
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
-
+        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
+            raise Exception('failed to switch firmware to mainfwa')
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
@@ -514,6 +521,32 @@ class NaplesManagement(EntityManagement):
                     return
                 raise Exception(msg)
 
+    @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
+    def ReadRunningFirmwareType(self):
+        fwType = str(self.RunCommoandOnConsoleWithOutput("fwupdate -r"))
+        if re.search('mainfwa',fwType):
+            print('determined running firmware to be type MAIN')
+            return FIRMWARE_TYPE_MAIN
+        elif re.search('goldfw',fwType):
+            print('determined running firmware to be type GOLD')
+            return FIRMWARE_TYPE_GOLD
+        else:
+            print("failed to determine running firmware type from output: {0}".format(fwType))
+            return FIRMWARE_TYPE_UNKNOWN
+
+    @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
+    def ReadSavedFirmwareType(self):
+        fwType = str(self.RunCommoandOnConsoleWithOutput("fwupdate -S"))
+        if re.search('mainfwa',fwType):
+            print('determined saved firmware to be type MAIN')
+            return FIRMWARE_TYPE_MAIN
+        elif re.search('goldfw',fwType):
+            print('determined saved firmware to be type GOLD')
+            return FIRMWARE_TYPE_GOLD
+        else:
+            print("failed to determine saved firmware type from output: {0}".format(fwType))
+            return FIRMWARE_TYPE_UNKNOWN
+
     def CleanUpOldFiles(self):
         self.SendlineExpect("clear_nic_config.sh remove-config", "#")
         #clean up db that was setup by previous
@@ -546,7 +579,8 @@ class NaplesManagement(EntityManagement):
 
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
-
+        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
+            raise Exception('failed to switch firmware to goldfw')
 
     def Close(self):
         if self.hdl:
@@ -575,6 +609,8 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
     def SwitchToGoldFW(self):
         self.SendlineExpect("fwupdate -s goldfw", "#")
+        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
+            raise Exception('failed to switch firmware to goldfw')
 
     def Close(self):
         if self.hdl:
@@ -1011,14 +1047,15 @@ def Main():
         host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
         return
 
-    #Read Naples Gold FW version.
-    if not GlobalOptions.fast_upgrade:
-        naples.ReadGoldFwVersion()
+    naples.ReadGoldFwVersion()
+    fwType = naples.ReadRunningFirmwareType()
 
     # Case 1: Main firmware upgrade.
-    naples.InitForUpgrade(goldfw = True)
+    #naples.InitForUpgrade(goldfw = True)
     if naples.IsSSHUP():
         #OOb is present and up install right away,
+        if fwType != FIRMWARE_TYPE_GOLD:
+            naples.RebootGoldFw()
         if GlobalOptions.fast_upgrade:
             print("installing and running tests with firmware {0} without checking goldfw".format(GlobalOptions.image))
             try:
@@ -1038,7 +1075,10 @@ def Main():
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
         host.Init(driver_pkg =  gold_pkg, cleanup = False)
         if GlobalOptions.use_gold_firmware:
-            naples.InstallGoldFirmware()
+            if fwType != FIRMWARE_TYPE_GOLD:
+                naples.InstallGoldFirmware()
+            else:
+                print('firmware already gold, skipping gold firmware installation')
         else:
             host.InstallMainFirmware()
             #Install gold fw if required.
@@ -1070,7 +1110,9 @@ def Main():
         # host.InstallMainFirmware(mount_data = False, copy_fw = False)
 
 def __fullUpdate():
-    naples.RebootGoldFw()
+    fwType = naples.ReadRunningFirmwareType()
+    if fwType != FIRMWARE_TYPE_GOLD:
+        naples.RebootGoldFw()
     if GlobalOptions.use_gold_firmware:
         print("installing and running tests with gold firmware {0}".format(GlobalOptions.gold_fw_img))
         naples.InstallGoldFirmware()
