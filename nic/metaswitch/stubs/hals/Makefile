@@ -19,11 +19,6 @@ endif
 MS_COMPILATION_SWITCH=LINUX_MT_NBASE \
                       NBB_64BIT_TYPES_NATIVE \
                       NBB_64_BIT_POINTERS
-CXX = g++
-CPPFLAGS += $(addprefix -D,$(MS_COMPILATION_SWITCH)) -I/usr/local/include -std=c++11 \
-			-pthread -g -c -Wall -Werror -O0
-OBJ_DIR = obj
-LIB_DIR = lib
 
 MS_INCLPATH = code/comn/intface        \
 			  code/comn/custom         \
@@ -51,21 +46,14 @@ MS_INCLPATH = code/comn/intface        \
 			  code/comn/worker         \
 			  output/$(GMK_TARGETOS)
 
+OBJ_DIR = obj
+LIB_DIR = lib
 INC_DIRS = -I../common/ -I. $(addprefix -I$(MS_ROOT)/,$(MS_INCLPATH))
-LD_FLAGS = -L$(MS_LIB_DIR)
-DLD_FLAGS = -L$(LIB_DIR) -Wl,-rpath-link=$(MS_LIB_DIR)
 LD_LIBS = -lpthread -ldl -lzmq
 
-SRC_FILES :=	pdsa_stub_li.cc \
-				pdsa_stub_l2f.cc \
-				$(NULL)
-
-
-#OBJECTS := $(basename $(SRC_FILES))
-#OBJECTS := $(OBJECTS:%=$(OBJ_DIR)/%.o)
-#DEPENDS = $(OBJECTS:.o=.d)
-
-#MS_LD_LIBS = -ldcsi
+SRC_FILES = $(wildcard *.cc)
+OBJ_FILES = $(SRC_FILES:%.cc=$(OBJ_DIR)/%.o)
+DEP_FILES = $(OBJ_FILES:.o=.d)
 
 MS_LD_LIBS = -ldcgeolocn -ldchm -ldci3dl -ldcadll -ldctpl -ldchals -ldcjoinxcpi \
 			 -ldcftm -ldcjoinropi -ldclim -ldcjoinbdii -ldcjoinlapi -ldcjointci \
@@ -80,19 +68,37 @@ MS_LD_LIBS = -ldcgeolocn -ldchm -ldci3dl -ldcadll -ldctpl -ldchals -ldcjoinxcpi 
 			 -ldcsm -ldcamb -ldchaf -ldcamkl -ldcnbase -ldcregex   \
 			 -lpthread -lrt -lstdc++ -lcrypto -lxml2
 
-OBJ_FILES := $(patsubst %.cc, $(OBJ_DIR)/%.o, $(SRC_FILES))
 SHARED_LIB = $(LIB_DIR)/libpdsahal.so
 
-$(OBJ_DIR)/%.o: %.cc
-	@echo Compiling $@
-	$(shell [ ! -d $(@D) ] && mkdir -p $(@D))
-	$(CXX) -m64 $(CPPFLAGS) $(INC_DIRS) -fpic $< -o $@
+CXX = g++
+CPPFLAGS = $(addprefix -D,$(MS_COMPILATION_SWITCH)) -I/usr/local/include -std=c++11 \
+        	$(INC_DIRS) -fpic -pthread -g -Wall -Werror -O0
+LD_FLAGS = $(MS_LD_LIBS) $(LD_LIBS) -L$(MS_LIB_DIR)
+CPP_FLAGS += $(INC_DIRS)
+
+install: $(OBJ_DIR) $(LIB_DIR) $(SHARED_LIB)
+$(OBJ_DIR):	
+	mkdir -p $(OBJ_DIR)
+$(LIB_DIR):	
+	mkdir -p $(LIB_DIR)
 
 $(SHARED_LIB): $(OBJ_FILES)
 	@echo Linking $@
-	$(shell [ ! -d $(@D) ] && mkdir -p $(@D))
-	$(CXX) -g -shared -o $@ $^ $(LD_FLAGS) $(DLD_FLAGS) $(MS_LD_LIBS)
+	$(CXX) -g -shared -o $@ $^ $(LD_FLAGS)
 
-.PHONY: clean all
+$(OBJ_DIR)/%.o: %.cc
+	@echo Compiling $@
+	$(CXX) $(CPPFLAGS) -c $< -o $@
+
+include $(DEP_FILES)
+
+$(OBJ_DIR)/%.d: %.cc
+	@$(CPP) $(CPPFLAGS) $< -MM -MT $(@:.d=.o) >$@
+
+.PHONY: install clean
 clean:
-	rm -f $(LIB_DIR)/*.* $(OBJ_DIR)/*.o
+	rm -f $(LIB_DIR)/*.* $(OBJ_FILES)
+
+.PHONY: cleandep
+cleandep:
+	rm -f $(DEP_FILES)
