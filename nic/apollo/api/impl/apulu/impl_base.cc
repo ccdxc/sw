@@ -23,6 +23,7 @@
 #include "nic/apollo/api/impl/apulu/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -95,6 +96,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_NEXTHOP:
         return nexthop_impl::factory((pds_nexthop_spec_t *)args);
+
+    case IMPL_OBJ_ID_SUBNET:
+        return subnet_impl::factory((pds_subnet_spec_t *)args);
 
     case IMPL_OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group_impl::factory((pds_nexthop_group_spec_t *)args);

@@ -134,6 +134,11 @@ vpc_entry::release_resources(void) {
 
 sdk_ret_t
 vpc_entry::nuke_resources_(void) {
+    if (hw_id_ == 0xFFFF) {
+        // resources not yet allocated
+        return sdk::SDK_RET_OK;
+    }
+
     if (impl_) {
         impl_->nuke_resources(this);
     }
@@ -179,6 +184,15 @@ sdk_ret_t
 vpc_entry::delay_delete(void) {
     PDS_TRACE_VERBOSE("Delay delete vpc %u", key_.id);
     return delay_delete_to_slab(PDS_SLAB_ID_VPC, this);
+}
+
+sdk_ret_t
+vpc_entry::read(pds_vpc_key_t *key, pds_vpc_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                          (impl::obj_info_t *)info);
+    }
+    return SDK_RET_OK;
 }
 
 }    // namespace api

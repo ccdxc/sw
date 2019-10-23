@@ -66,6 +66,7 @@ pds_subnet_spec_fill (pds_subnet_spec_t *spec, subnet_entry *entry)
     spec->egr_v4_policy = entry->egr_v4_policy();
     spec->egr_v6_policy = entry->egr_v6_policy();
     memcpy(&spec->vr_mac, entry->vr_mac(), sizeof(mac_addr_t));
+    spec->fabric_encap = entry->fabric_encap();
 
     return SDK_RET_OK;
 }
@@ -92,21 +93,32 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
     sdk::sdk_ret_t rv;
     subnet_entry *entry = NULL;
 
-    if (key == NULL || info == NULL)
+    if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
+    }
 
-    if ((entry = pds_subnet_entry_find(key)) == NULL)
+    if ((entry = pds_subnet_entry_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
 
-    if ((rv = pds_subnet_spec_fill(&info->spec, entry)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_spec_fill(&info->spec, entry)) != sdk::SDK_RET_OK) {
         return rv;
+    }
+
+    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
+        return rv;
+    }
+
     info->spec.key = *key;
 
-    if ((rv = pds_subnet_status_fill(&info->status, entry)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_status_fill(&info->status, entry)) !=
+            sdk::SDK_RET_OK) {
         return rv;
+    }
 
-    if ((rv = pds_subnet_stats_fill(&info->stats, entry)) != sdk::SDK_RET_OK)
+    if ((rv = pds_subnet_stats_fill(&info->stats, entry)) != sdk::SDK_RET_OK) {
         return rv;
+    }
 
     return sdk::SDK_RET_OK;
 }

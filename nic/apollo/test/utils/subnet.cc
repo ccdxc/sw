@@ -15,10 +15,12 @@ namespace api_test {
 
 void
 subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
-                    std::string cidr_str, int num_subnet) {
+                    std::string cidr_str, std::string vrmac_str,
+                    int num_subnet) {
     this->key = key;
     this->vpc = vpc_key;
     this->cidr_str = cidr_str;
+    this->vr_mac = vrmac_str;
     SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
     v4_route_table.id = key.id;
     v6_route_table.id = key.id + 1024; // Unique id, 1-1024 reserved
@@ -27,6 +29,9 @@ subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
     ing_v6_policy.id = key.id + 1024;
     egr_v4_policy.id = key.id + 2048;
     egr_v6_policy.id = key.id + 3072;
+    fabric_encap.val.vnid = key.id + 512; 
+    fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+
     num_obj = num_subnet;
 }
 
@@ -43,6 +48,8 @@ subnet_feeder::iter_next(int width) {
     ing_v6_policy.id += width;
     egr_v4_policy.id += width;
     egr_v6_policy.id += width;
+    fabric_encap.val.vnid += width;
+
     cur_iter_pos++;
 }
 
@@ -78,6 +85,8 @@ subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
     spec->ing_v6_policy.id = ing_v6_policy.id;
     spec->egr_v4_policy.id = egr_v4_policy.id;
     spec->egr_v6_policy.id = egr_v6_policy.id;
+    spec->fabric_encap.type = fabric_encap.type;
+    spec->fabric_encap.val.vnid = fabric_encap.val.vnid;
 }
 
 bool
@@ -115,6 +124,12 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
             return false;
     }
 
+    if (apulu()) {
+        if (memcmp(&spec->fabric_encap, &fabric_encap, sizeof(pds_encap_t))) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -128,12 +143,14 @@ static subnet_feeder k_subnet_feeder;
 
 void sample_subnet_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16");
+    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16",
+                         "00:02:01:00:00:01");
     create(bctxt, k_subnet_feeder);
 }
 
 void sample_subnet_teardown(pds_batch_ctxt_t bctxt) {
-    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16");
+    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.1.0.0/16",
+                         "00:02:01:00:00:01");
     del(bctxt, k_subnet_feeder);
 }
 

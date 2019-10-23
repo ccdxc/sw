@@ -10,6 +10,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/api/subnet_utils.hpp"
 
 namespace api_test {
 
@@ -28,16 +29,19 @@ public:
     pds_policy_key_t ing_v6_policy;
     pds_policy_key_t egr_v4_policy;
     pds_policy_key_t egr_v6_policy;
+    pds_encap_t fabric_encap;
 
     // Constructor
     subnet_feeder() { };
     subnet_feeder(const subnet_feeder& feeder) {
-        init(feeder.key, feeder.vpc, feeder.cidr_str, feeder.num_obj);
+        init(feeder.key, feeder.vpc, feeder.cidr_str,
+             feeder.vr_mac, feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
     void init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
-              std::string cidr_str, int num_subnet = 1);
+              std::string cidr_str, std::string vrmac_str, 
+              int num_subnet = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -65,7 +69,8 @@ operator<<(std::ostream& os, const subnet_feeder& obj) {
         << " v4_in_pol: " << obj.ing_v4_policy.id
         << " v6_in_pol: " << obj.ing_v6_policy.id
         << " v4_eg_pol: " << obj.egr_v4_policy.id
-        << " v6_eg_pol: " << obj.egr_v6_policy.id;
+        << " v6_eg_pol: " << obj.egr_v6_policy.id
+        << " vnid: " << obj.fabric_encap.val.vnid;
     return os;
 }
 

@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
 
 namespace api {
 
@@ -55,17 +56,13 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
-        // no hardware programming required for subnet config
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in] api_op    API operation
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
-        // no hardware programming required for subnet config
         return SDK_RET_OK;
     }
 
@@ -96,10 +93,7 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                      obj_ctxt_t *obj_ctxt) override {
-        // no h/w programming required for subnet config, so nothing to activate
-        return SDK_RET_OK;
-    }
+                                      obj_ctxt_t *obj_ctxt) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing
@@ -140,6 +134,12 @@ public:
     ///                             processing
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          read config
+    /// \param[in]      key pointer to the key object
+    /// \param[out]     info pointer to the info object
+    /// \return         SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_subnet_key_t *key, pds_subnet_info_t *info);
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
@@ -212,8 +212,8 @@ private:
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
     // P4 datapath specific state
-    uint32_t hw_id_;                 ///< hardware id
-
+    uint32_t hw_id_;              ///< hardware id
+    impl_base *impl_;             ///< impl object instance
     friend class subnet_state;    ///< subnet_state is friend of subnet_entry
 } __PACK__;
 

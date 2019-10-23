@@ -49,6 +49,8 @@ std::string vnic_test_ip = "5.5.0.0";
 std::string tep_test_ip = "1.0.0.1";
 std::string remote_test_ip = "5.5.0.10";
 uint64_t g_remote_vnic_mac = 0x000000030b020a02;
+std::string g_vpc_rmac("00:03:01:00:00:01");
+std::string g_subnet_rmac("00:04:01:00:00:01");
 
 //----------------------------------------------------------------------------
 // Mapping test class
@@ -94,7 +96,7 @@ protected:
 
         vpc_feeder vpc_feeder;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
-                        PDS_MAX_VPC);
+                        g_vpc_rmac, PDS_MAX_VPC);
         many_create(bctxt, vpc_feeder);
 
         // sample_tep_setup(g_mytep_id, k_device_ip, 1);
@@ -113,7 +115,8 @@ protected:
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr, 1);
+            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr,
+                               g_subnet_rmac, 1);
             many_create(bctxt, subnet_feeder);
             subnet_key.id += 1;
             vpc_key.id += 1;
@@ -129,12 +132,13 @@ protected:
 
         vpc_key.id = api_test::g_vpc_id;
         vpc_feeder.init(vpc_key, PDS_VPC_TYPE_TENANT, g_vpc_cidr_v4,
-                        PDS_MAX_VPC);
+                        g_vpc_rmac, PDS_MAX_VPC);
         many_read(vpc_feeder);
 
         subnet_key.id = api_test::g_subnet_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr, 1);
+            subnet_feeder.init(subnet_key, vpc_key, subnet_cidr,
+                               g_subnet_rmac, 1);
             many_read(subnet_feeder);
             subnet_key.id += 1;
             vpc_key.id += 1;

@@ -10,6 +10,7 @@
 
 #include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "nic/apollo/core/trace.hpp"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -37,11 +38,13 @@ vpc_impl_state::~vpc_impl_state() {
 
 sdk_ret_t
 vpc_impl_state::table_transaction_begin(void) {
+    vni_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_impl_state::table_transaction_end(void) {
+    vni_tbl_->txn_end();
     return SDK_RET_OK;
 }
 

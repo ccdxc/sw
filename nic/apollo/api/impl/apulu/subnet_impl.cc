@@ -93,7 +93,7 @@ subnet_impl::nuke_resources(api_base *api_obj) {
     vni_key.vxlan_1_vni = subnet->fabric_encap().val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
                                    VNI_VNI_INFO_ID,
-                                   handle_t::null());
+                                   vni_hdl_);
     return vpc_impl_db()->vni_tbl()->remove(&tparams);
 }
 
@@ -242,7 +242,43 @@ subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    p4pd_error_t p4pd_ret;
+    sdk_ret_t ret;
+    bd_actiondata_t bd_data { 0 };
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+    pds_subnet_info_t *sinfo = (pds_subnet_info_t *) info;
+    pds_subnet_spec_t *spec = &sinfo->spec;
+    vni_swkey_t vni_key = { 0 };
+    sdk_table_api_params_t tparams;
+    vni_actiondata_t vni_data = { 0 };
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, subnet->hw_id(),
+                                       NULL, NULL, &bd_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read BD table at index %u",
+                      subnet->hw_id());
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    spec->fabric_encap.val.vnid = bd_data.bd_info.vni;
+    spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    memcpy(spec->vr_mac, bd_data.bd_info.vrmac, ETH_ADDR_LEN);
+
+    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
+                                   VNI_VNI_INFO_ID, handle_t::null());
+    // read the VNI table
+    ret = vpc_impl_db()->vni_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read VNI table for vnid %u, err %u",
+                      bd_data.bd_info.vni, ret);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    // validate values read from hw table with sw state
+    SDK_ASSERT(vni_data.vni_info.bd_id == subnet->hw_id());
+    SDK_ASSERT(!memcmp(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN)); 
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_SUBNET_IMPL

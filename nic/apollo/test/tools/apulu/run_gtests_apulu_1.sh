@@ -38,13 +38,13 @@ echo "Running device test"
 $GDB apulu_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_device_test.xml" > apulu_device_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_device_test failed!" && exit 1
 
-#echo "Running vpc test"
-#$GDB apulu_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_vpc_test.xml" > apulu_vpc_test.log.txt
-#[[ $? -ne 0 ]] && echo "apulu_vpc_test failed!" && exit 1
+echo "Running vpc test"
+$GDB apulu_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_vpc_test.xml" > apulu_vpc_test.log.txt
+[[ $? -ne 0 ]] && echo "apulu_vpc_test failed!" && exit 1
 
-#echo "Running subnet test"
-#$GDB apulu_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_subnet_test.xml" > apulu_subnet_test.log.txt
-#[[ $? -ne 0 ]] && echo "apulu_subnet_test failed!" && exit 1
+echo "Running subnet test"
+$GDB apulu_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_subnet_test.xml" > apulu_subnet_test.log.txt
+[[ $? -ne 0 ]] && echo "apulu_subnet_test failed!" && exit 1
 
 #echo "Running route test"
 #$GDB apulu_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_route_test.xml" > /dev/null

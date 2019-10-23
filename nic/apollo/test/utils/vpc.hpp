@@ -24,16 +24,18 @@ public:
     pds_encap_t fabric_encap;
     std::string cidr_str;
     ip_prefix_t pfx;
+    std::string vr_mac;
 
     // Constructor
     vpc_feeder() { };
     vpc_feeder(const vpc_feeder& feeder) {
-        init(feeder.key, feeder.type, feeder.cidr_str, feeder.num_obj);
+        init(feeder.key, feeder.type, feeder.cidr_str,
+             feeder.vr_mac, feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
     void init(pds_vpc_key_t key, pds_vpc_type_t type, std::string cidr_str,
-              uint32_t num_vpc = 1);
+              std::string vr_mac, uint32_t num_vpc = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -53,7 +55,9 @@ inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"
        << " id: " << obj.key.id
-       << " cidr_str: " << obj.cidr_str << " ";
+       << " cidr_str: " << obj.cidr_str
+       << " vnid: " << obj.fabric_encap.val.vnid
+       << " rmac: " << obj.vr_mac << " ";
     return os;
 }
 

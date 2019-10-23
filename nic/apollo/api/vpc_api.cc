@@ -98,6 +98,11 @@ pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
     if ((rv = pds_vpc_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
         return rv;
     }
+
+    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
+        return rv;
+    }
+
     info->spec.key = *key;
 
     if ((rv = pds_vpc_status_fill(&info->status, entry)) != SDK_RET_OK) {

@@ -14,12 +14,14 @@ namespace api_test {
 
 void
 vpc_feeder::init(pds_vpc_key_t key, pds_vpc_type_t type,
-                 std::string cidr_str, uint32_t num_vpc) {
+                 std::string cidr_str, std::string vr_mac,
+                 uint32_t num_vpc) {
     this->key = key;
     this->type = type;
     this->cidr_str = cidr_str;
+    this->vr_mac = vr_mac;
     this->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    this->fabric_encap.val.vnid = 9999;
+    this->fabric_encap.val.vnid = key.id + 9999;
     SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
     num_obj = num_vpc;
 }
@@ -31,7 +33,7 @@ vpc_feeder::iter_next(int width) {
     ip_prefix_ip_next(&pfx, &ipaddr);
     memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
     key.id += width;
-    if (artemis())
+    if (artemis() || apulu())
         fabric_encap.val.vnid += width;
     cur_iter_pos++;
 }
@@ -51,6 +53,7 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
     spec->v4_prefix.len = pfx.len;
     spec->v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
     spec->fabric_encap = fabric_encap;
+    mac_str_to_addr((char *)vr_mac.c_str(), spec->vr_mac);
 }
 
 bool
@@ -63,6 +66,19 @@ vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
     if (spec->type != type)
         return false;
 
+    if (memcmp(&spec->fabric_encap, &fabric_encap, sizeof(pds_encap_t))) {
+        return false;
+    }
+
+    if (apulu()) {
+        if (!vr_mac.empty()) {
+            mac_addr_t vrmac;
+            mac_str_to_addr((char *)vr_mac.c_str(), vrmac);
+            if (memcmp(&spec->vr_mac, vrmac, sizeof(mac_addr_t))) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -76,33 +92,36 @@ static vpc_feeder k_vpc_feeder;
 
 void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
     create(bctxt, k_vpc_feeder);
 }
 
 void sample_vpc_setup_validate(pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
     read(k_vpc_feeder);
 }
 
 void sample_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
     del(bctxt, k_vpc_feeder);
 }
 
 void sample1_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
+                      "00:02:01:00:00:01", PDS_MAX_VPC);
     many_create(bctxt, k_vpc_feeder);
 }
 
 void sample1_vpc_setup_validate(pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
+                      "00:02:01:00:00:01", PDS_MAX_VPC);
     many_read(k_vpc_feeder);
 }
 
 void sample1_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
+                      "00:02:01:00:00:01", PDS_MAX_VPC);
     many_delete(bctxt, k_vpc_feeder);
 }
 

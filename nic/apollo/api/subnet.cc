@@ -31,6 +31,7 @@ subnet_entry::subnet_entry() {
     ing_v6_policy_.id = PDS_POLICY_ID_INVALID;
     egr_v4_policy_.id = PDS_POLICY_ID_INVALID;
     egr_v6_policy_.id = PDS_POLICY_ID_INVALID;
+    
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -43,6 +44,7 @@ subnet_entry::factory(pds_subnet_spec_t *spec) {
     subnet = subnet_db()->alloc();
     if (subnet) {
         new (subnet) subnet_entry();
+        subnet->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SUBNET, spec);
     }
     return subnet;
 }
@@ -55,6 +57,9 @@ subnet_entry::~subnet_entry() {
 void
 subnet_entry::destroy(subnet_entry *subnet) {
     subnet->nuke_resources_();
+    if (subnet->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_SUBNET, subnet->impl_);
+    }
     subnet->~subnet_entry();
     subnet_db()->free(subnet);
 }
@@ -67,13 +72,14 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         "Initializing subnet (vpc %u, subnet %u), v4 pfx %s, v6 pfx %s, "
         "v4_vr_ip %s, v6_vr_ip %s, vr_mac %s, v4 route table %u, "
         "v6 route table %u, ingress v4 policy %u, ingress v6 policy %u, "
-        "egress v4 policy %u, egress v6 policy %u",
+        "egress v4 policy %u, egress v6 policy %u vnid %u",
         spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
         ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
         ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
         spec->v4_route_table.id, spec->v6_route_table.id,
         spec->ing_v4_policy.id, spec->ing_v6_policy.id,
-        spec->egr_v4_policy.id, spec->egr_v6_policy.id);
+        spec->egr_v4_policy.id, spec->egr_v6_policy.id,
+        spec->fabric_encap.val.vnid);
 
     key_.id = spec->key.id;
     vpc_ = spec->vpc;
@@ -90,24 +96,66 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) ==
+                         sdk::lib::indexer::SUCCESS) {
+            if (impl_) {
+                ret = impl_->reserve_resources(this, obj_ctxt);
+            }
+        } else {
+            ret = sdk::SDK_RET_NO_RESOURCE;
+        }
+        break;
+
+    case API_OP_UPDATE:
+    case API_OP_DELETE:
+    default:
+        ret = sdk::SDK_RET_INVALID_OP;
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t
 subnet_entry::nuke_resources_(void) {
-    // other than an index allocation, no other h/w resources are used
-    // for subnet, so this is same as release_resources()
+    if (hw_id_ == 0xFFFF) {
+        // resources not yet allocated
+        return sdk::SDK_RET_OK;
+    }
+
+    if (impl_) {
+        impl_->nuke_resources(this);
+    }
     return this->release_resources();
 }
 
 sdk_ret_t
 subnet_entry::release_resources(void) {
+    if (impl_) {
+        impl_->release_resources(this);
+    }
     if (hw_id_ != 0xFFFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->program_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                              obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
+        return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;
 }
@@ -161,6 +209,15 @@ subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
     upd_ctxt.subnet = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+}
+
+sdk_ret_t
+subnet_entry::read(pds_subnet_key_t *key, pds_subnet_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                              (impl::obj_info_t *)info);
+    }
+    return SDK_RET_OK;
 }
 
 }    // namespace api
