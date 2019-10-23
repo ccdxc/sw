@@ -30,6 +30,9 @@ nexthop_tx_rewrite:
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_NEXTHOP
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
+    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
+                        TX_REWRITE_DMAC_FROM_TUNNEL
+    phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_tunnel_dmaci
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SMAC_BITS], \
                         TX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
@@ -51,7 +54,7 @@ vxlan_encap:
     or              r7, r0, r7, 8
     phvwr           p.{vxlan_0_flags,vxlan_0_reserved,vxlan_0_vni, \
                         vxlan_0_reserved2}, r7
-    bbeq            d.nexthop_info_d.ip_type, IPTYPE_IPV6, ipv6_vxlan_encap
+    bbeq            k.rewrite_metadata_ip_type, IPTYPE_IPV6, ipv6_vxlan_encap
 ipv4_vxlan_encap:
     /*
     phvwr           p.vxlan_0_valid, 1
@@ -76,7 +79,6 @@ ipv4_vxlan_encap:
     add             r1, r1, 36
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
     phvwr           p.ipv4_0_srcAddr, k.rewrite_metadata_device_ipv4_addr
-    phvwr           p.ipv4_0_dstAddr, d.nexthop_info_d.dipo
     phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_UDP
     phvwr           p.ipv4_0_totalLen, r1
     sub             r1, r1, 20
@@ -109,7 +111,6 @@ ipv6_vxlan_encap:
     add             r1, r1, 16
     phvwr           p.ipv6_0_version, 0x6
     phvwr           p.ipv6_0_srcAddr, k.rewrite_metadata_device_ipv6_addr
-    phvwr           p.ipv6_0_dstAddr, d.nexthop_info_d.dipo
     phvwr           p.{ipv6_0_nextHdr,ipv6_0_hopLimit}, (IP_PROTO_UDP << 8) | 64
     phvwr           p.ipv6_0_payloadLen, r1
     or              r7, k.p4e_i2e_entropy_hash, 0xC000

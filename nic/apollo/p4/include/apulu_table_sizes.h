@@ -16,8 +16,9 @@
 #define SESSION_TABLE_SIZE                                  1048576     // 1M
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define NAT_TABLE_SIZE                                      65536       // 64K
-#define NEXTHOP_GROUP_TABLE_SIZE                            2048
-#define NEXTHOP_TABLE_SIZE                                  4096
+#define ECMP_TABLE_SIZE                                     2048
+#define TUNNEL_TABLE_SIZE                                   2048
+#define NEXTHOP_TABLE_SIZE                                  65536
 #define CHECKSUM_TABLE_SIZE                                 32
 #define VPC_TABLE_SIZE                                      1024
 #define BD_TABLE_SIZE                                       1024

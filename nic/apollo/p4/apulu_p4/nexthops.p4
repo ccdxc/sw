@@ -1,52 +1,80 @@
 /******************************************************************************
- * Overlay Nexthop Group
+ * ECMP
  *****************************************************************************/
-action overlay_nexthop_group_info(nexthop_id, nexthop_type, num_nexthops) {
+action ecmp_info(nexthop_type, num_nexthops, tunnel_id4, tunnel_id3,
+                 tunnel_id2, tunnel_id1, nexthop_base) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
     if (num_nexthops == 0) {
-        modify_field(scratch_metadata.nexthop_id, nexthop_id);
+        modify_field(scratch_metadata.nexthop_id, nexthop_base);
     } else {
-        modify_field(scratch_metadata.nexthop_id, nexthop_id +
-            (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
+        modify_field(scratch_metadata.nexthop_id,
+                     (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
+        if (nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+            if (scratch_metadata.nexthop_id == 0) {
+                modify_field(scratch_metadata.nexthop_id, tunnel_id1);
+            }
+            if (scratch_metadata.nexthop_id == 1) {
+                modify_field(scratch_metadata.nexthop_id, tunnel_id2);
+            }
+            if (scratch_metadata.nexthop_id == 2) {
+                modify_field(scratch_metadata.nexthop_id, tunnel_id3);
+            }
+            if (scratch_metadata.nexthop_id == 3) {
+                modify_field(scratch_metadata.nexthop_id, tunnel_id4);
+            }
+        } else {
+            modify_field(scratch_metadata.nexthop_id,
+                         nexthop_base + scratch_metadata.nexthop_id);
+        }
     }
     modify_field(rewrite_metadata.nexthop_type, nexthop_type);
     modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
 }
 
 @pragma stage 2
-table overlay_nexthop_group {
+@pragma index_table
+table ecmp {
     reads {
         p4e_i2e.nexthop_id  : exact;
     }
     actions {
-        overlay_nexthop_group_info;
+        ecmp_info;
     }
-    size : NEXTHOP_GROUP_TABLE_SIZE;
+    size : ECMP_TABLE_SIZE;
 }
 
 /******************************************************************************
- * Underlay Nexthop Group
+ * Tunnel
  *****************************************************************************/
-action underlay_nexthop_group_info(nexthop_id, num_nexthops) {
+action tunnel_info(nexthop_base, num_nexthops, ip_type, dipo, dmaci) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
     if (num_nexthops == 0) {
-        modify_field(scratch_metadata.nexthop_id, nexthop_id);
+        modify_field(scratch_metadata.nexthop_id, nexthop_base);
     } else {
-        modify_field(scratch_metadata.nexthop_id, nexthop_id +
-            (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
+        modify_field(scratch_metadata.nexthop_id, nexthop_base +
+                     (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
     modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
+
+    modify_field(rewrite_metadata.ip_type, ip_type);
+    if (ip_type == IPTYPE_IPV4) {
+        modify_field(ipv4_0.dstAddr, dipo);
+    } else {
+        modify_field(ipv6_0.dstAddr, dipo);
+    }
+    modify_field(rewrite_metadata.tunnel_dmaci, dmaci);
 }
 
 @pragma stage 3
-table underlay_nexthop_group {
+@pragma index_table
+table tunnel {
     reads {
         p4e_i2e.nexthop_id  : exact;
     }
     actions {
-        underlay_nexthop_group_info;
+        tunnel_info;
     }
-    size : NEXTHOP_GROUP_TABLE_SIZE;
+    size : TUNNEL_TABLE_SIZE;
 }
 
 /******************************************************************************
@@ -64,7 +92,7 @@ action encap_vlan(vlan) {
     modify_field(ctag_1.vid, vlan);
 }
 
-action ipv4_vxlan_encap(dipo, dmac, smac) {
+action ipv4_vxlan_encap(dmac, smac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -92,7 +120,6 @@ action ipv4_vxlan_encap(dipo, dmac, smac) {
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_0.ttl, 64);
     modify_field(ipv4_0.protocol, IP_PROTO_UDP);
-    modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.device_ipv4_addr);
 
     modify_field(udp_0.srcPort, (0xC000 | p4e_i2e.entropy_hash));
@@ -107,7 +134,7 @@ action ipv4_vxlan_encap(dipo, dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, 14);
 }
 
-action ipv6_vxlan_encap(dipo, dmac, smac) {
+action ipv6_vxlan_encap(dmac, smac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -134,7 +161,6 @@ action ipv6_vxlan_encap(dipo, dmac, smac) {
     modify_field(ipv6_0.payloadLen, scratch_metadata.ip_totallen);
     modify_field(ipv6_0.hopLimit, 64);
     modify_field(ipv6_0.nextHdr, IP_PROTO_UDP);
-    modify_field(ipv6_0.dstAddr, dipo);
     modify_field(ipv6_0.srcAddr, rewrite_metadata.device_ipv6_addr);
 
     modify_field(udp_0.srcPort, (0xC000 | p4e_i2e.entropy_hash));
@@ -149,8 +175,7 @@ action ipv6_vxlan_encap(dipo, dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, (40 + 14));
 }
 
-action nexthop_info(lif, qtype, qid, port, vlan, ip_type, dipo, dmaco, smaco,
-                    dmaci) {
+action nexthop_info(lif, qtype, qid, port, vlan, dmaco, smaco, dmaci) {
     if (p4e_i2e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
@@ -160,21 +185,25 @@ action nexthop_info(lif, qtype, qid, port, vlan, ip_type, dipo, dmaco, smaco,
         } else {
             if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
                 modify_field(ethernet_1.dstAddr, dmaci);
+            } else {
+                if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_TUNNEL)) {
+                    modify_field(ethernet_1.dstAddr,
+                                 rewrite_metadata.tunnel_dmaci);
+                }
             }
         }
         if (TX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
             modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
         }
-        if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
-            encap_vlan(vlan);
+        if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
+            if (rewrite_metadata.ip_type == IPTYPE_IPV4) {
+                ipv4_vxlan_encap(dmaco, smaco);
+            } else {
+                ipv6_vxlan_encap(dmaco, smaco);
+            }
         } else {
-            if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
-                modify_field(scratch_metadata.flag, ip_type);
-                if (ip_type == IPTYPE_IPV4) {
-                    ipv4_vxlan_encap(dipo, dmaco, smaco);
-                } else {
-                    ipv6_vxlan_encap(dipo, dmaco, smaco);
-                }
+            if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
+                encap_vlan(vlan);
             }
         }
     } else {
@@ -215,11 +244,11 @@ table nexthop {
 }
 
 control nexthops {
-    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_OVERLAY) {
-        apply(overlay_nexthop_group);
+    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_ECMP) {
+        apply(ecmp);
     }
-    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_UNDERLAY) {
-        apply(underlay_nexthop_group);
+    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+        apply(tunnel);
     }
     apply(nexthop);
 }

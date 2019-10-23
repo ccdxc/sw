@@ -73,6 +73,8 @@ header_type rewrite_metadata_t {
         nexthop_type        : 2;
         vrmac               : 48;
         vni                 : 24;
+        ip_type             : 1;
+        tunnel_dmaci        : 48;
     }
 }
 

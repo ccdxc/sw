@@ -43,8 +43,8 @@
 /* nexthop types                                                            */
 /*****************************************************************************/
 #define NEXTHOP_TYPE_VPC                0
-#define NEXTHOP_TYPE_OVERLAY            1
-#define NEXTHOP_TYPE_UNDERLAY           2
+#define NEXTHOP_TYPE_ECMP               1
+#define NEXTHOP_TYPE_TUNNEL             2
 #define NEXTHOP_TYPE_NEXTHOP            3
 
 /*****************************************************************************/
@@ -61,6 +61,7 @@
 #define TX_REWRITE_DMAC_NONE                    0
 #define TX_REWRITE_DMAC_FROM_MAPPING            1
 #define TX_REWRITE_DMAC_FROM_NEXTHOP            2
+#define TX_REWRITE_DMAC_FROM_TUNNEL             3
 #define TX_REWRITE_DMAC_BITS                    1:0
 
 #define TX_REWRITE_SMAC_START                   2

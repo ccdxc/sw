@@ -108,6 +108,7 @@ uint16_t g_bd_id1 = 0x2ED;
 uint16_t g_vnic_id1 = 0x2EE;
 uint16_t g_egress_bd_id1 = 0x2FE;
 uint32_t g_session_id1 = 0x55E51;
+uint32_t g_tunnel_id1 = 0x1EF;
 uint32_t g_nexthop_id1 = 0x2EF;
 uint32_t g_nexthop_id2 = 0x3EF;
 uint64_t g_dmaci1 = 0x001112131415ULL;
@@ -566,8 +567,8 @@ mappings_init (void)
     memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip1, 4);
     mapping_info->entry_valid = 1;
     mapping_info->nexthop_valid = 1;
-    mapping_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    mapping_info->nexthop_id = g_nexthop_id1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+    mapping_info->nexthop_id = g_tunnel_id1;
     mapping_info->egress_bd_id = g_egress_bd_id1;
     memcpy(mapping_info->dmaci, &g_dmaci1, 6);
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
@@ -664,6 +665,21 @@ egress_properties_init (void)
 }
 
 static void
+tunnels_init (void)
+{
+    tunnel_actiondata_t data;
+    tunnel_tunnel_info_t *tunnel_info = &data.action_u.tunnel_tunnel_info;
+    uint16_t tbl_id = P4TBL_ID_TUNNEL;
+
+    memset(&data, 0, sizeof(data));
+    memcpy(tunnel_info->dipo, &g_dipo1, 4);
+    tunnel_info->ip_type = IPTYPE_IPV4;
+    tunnel_info->nexthop_base = g_nexthop_id1;
+    tunnel_info->num_nexthops = 0;
+    entry_write(tbl_id, g_tunnel_id1, 0, 0, &data, false, 0);
+}
+
+static void
 nexthops_init (void)
 {
     nexthop_actiondata_t data;
@@ -678,10 +694,8 @@ nexthops_init (void)
 
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_1;
-    nexthop_info->ip_type = IPTYPE_IPV4;
     memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
     memcpy(nexthop_info->smaco, &g_device_mac, 6);
-    memcpy(nexthop_info->dipo, &g_dipo1, 4);
     entry_write(tbl_id, g_nexthop_id1, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
@@ -832,6 +846,7 @@ TEST_F(apulu_test, test1)
     flows_init();
     sessions_init();
     egress_properties_init();
+    tunnels_init();
     nexthops_init();
     checksum_init();
 

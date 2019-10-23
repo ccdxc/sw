@@ -430,14 +430,14 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
             tep = (tep_impl *)tep_db()->find(&spec->tep)->impl();
             // TODO: rename NEXTHOP_TYPE_UNDERLAY to NEXTHOP_TYPE_TEP once p4 is
             //       fixed with new tables
-            mapping_data.nexthop_type = NEXTHOP_TYPE_UNDERLAY;
+            mapping_data.nexthop_type = NEXTHOP_TYPE_TUNNEL;
             mapping_data.nexthop_id = tep->hw_id();
             break;
 
         case PDS_NH_TYPE_OVERLAY_NHGROUP:
             nh_group =
                 (nexthop_group_impl *)nexthop_group_db()->find(&spec->nh_group)->impl();
-            mapping_data.nexthop_type = NEXTHOP_TYPE_OVERLAY;
+            mapping_data.nexthop_type = NEXTHOP_TYPE_ECMP;
             mapping_data.nexthop_id = nh_group->hw_id();
             break;
 
