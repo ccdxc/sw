@@ -1,14 +1,14 @@
 # format: <name> <version>
-third_party_libs 1.1.159
+third_party_libs 1.1.161
 lkl_libs 1.1.11
 vpp e6e44e8d62b24430bca4f9a164beb3c08ed4de27
 openssl_libs 1.1.0.2
 platform_libs 0.0.40
 storage_libs 0.0.1
-asic_libs 70c44b16fea7919e290989d71e40717162aabf74
-ncc_tools 70c44b16fea7919e290989d71e40717162aabf74
+asic_libs 5d63ed8b07880d766e8c5a5337d855ea0535b2bf
+ncc_tools 5d63ed8b07880d766e8c5a5337d855ea0535b2bf
 sorrento_tools 2406dbe7b5536e3b3d22cb73319685e48c279e3c
-pbc_config 70c44b16fea7919e290989d71e40717162aabf74
+pbc_config 5d63ed8b07880d766e8c5a5337d855ea0535b2bf
 upgrade 1.0.18
 iota 1.0.2
 host_tools 1.0.23
