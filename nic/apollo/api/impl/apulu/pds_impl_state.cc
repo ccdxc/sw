@@ -19,6 +19,13 @@ pds_impl_state g_pds_impl_state;
 /// \defgroup PDS_IMPL_STATE - internal state
 /// \@{
 
+pds_impl_state::pds_impl_state() {
+    memset(impl_state_, 0, sizeof(impl_state_));
+}
+
+pds_impl_state::~pds_impl_state() {
+}
+
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
     impl_state_[PDS_IMPL_STATE_APULU] = new apulu_impl_state(state);
@@ -45,13 +52,6 @@ pds_impl_state::destroy(pds_impl_state *impl_state) {
             delete impl_state->impl_state_[i];
         }
     }
-}
-
-pds_impl_state::pds_impl_state() {
-    memset(impl_state_, 0, sizeof(impl_state_));
-}
-
-pds_impl_state::~pds_impl_state() {
 }
 
 /// \@}

@@ -35,6 +35,29 @@ using std::string;
 
 namespace api {
 
+/// \brief s/w state/db types
+enum {
+    PDS_STATE_MIN,
+    PDS_STATE_DEVICE = PDS_STATE_MIN,
+    PDS_STATE_LIF,
+    PDS_STATE_IF,
+    PDS_STATE_TEP,
+    PDS_STATE_VPC,
+    PDS_STATE_SUBNET,
+    PDS_STATE_VNIC,
+    PDS_STATE_MAPPING,
+    PDS_STATE_ROUTE_TABLE,
+    PDS_STATE_POLICY,
+    PDS_STATE_MIRROR,
+    PDS_STATE_METER,
+    PDS_STATE_TAG,
+    PDS_STATE_SVC_MAPPING,
+    PDS_STATE_VPC_PEER,
+    PDS_STATE_NEXTHOP,
+    PDS_STATE_NEXTHOP_GROUP,
+    PDS_STATE_MAX,
+};
+
 /**
  * @defgroup PDS_STATE - Internal state
  * @{
@@ -44,6 +67,7 @@ class pds_state {
 public:
     pds_state();
     ~pds_state();
+    sdk_ret_t init(void);
     static void destroy(pds_state *ps);
     void set_cfg_path(string cfg_path) { cfg_path_ = cfg_path; }
     string cfg_path(void) const { return cfg_path_; }
@@ -77,25 +101,57 @@ public:
         num_data_cores_ = num_cores;
     }
     uint16_t num_data_cores(void) const { return num_data_cores_; }
-    device_state *device_db(void) { return &device_db_; }
-    tep_state *tep_db(void) { return &tep_db_; }
-    vpc_state *vpc_db(void) { return &vpc_db_; }
-    subnet_state *subnet_db(void) { return &subnet_db_; }
-    vnic_state *vnic_db(void) { return &vnic_db_ ; }
-    mapping_state *mapping_db(void) { return &mapping_db_; }
-    route_table_state *route_table_db(void) { return &route_table_db_; }
-    policy_state *policy_db(void) { return &poicy_db_; }
-    if_state *if_db(void) { return &if_db_; }
-    mirror_session_state *mirror_session_db(void) {
-        return &mirror_session_db_;
+    device_state *device_db(void) {
+        return (device_state *)state_[PDS_STATE_DEVICE];
     }
-    meter_state *meter_db(void) { return &meter_db_; }
-    tag_state *tag_db(void) { return &tag_db_; }
-    lif_state *lif_db(void) { return &lif_db_; }
-    svc_mapping_state *svc_mapping_db(void) { return &svc_mapping_db_; }
-    vpc_peer_state *vpc_peer_db(void) { return &vpc_peer_db_; }
-    nexthop_state *nexthop_db(void) { return &nexthop_db_; }
-    nexthop_group_state *nexthop_group_db(void) { return &nexthop_group_db_; }
+    lif_state *lif_db(void) {
+        return (lif_state *)state_[PDS_STATE_LIF];
+    }
+    if_state *if_db(void) {
+        return (if_state *)state_[PDS_STATE_IF];
+    }
+    tep_state *tep_db(void) {
+        return (tep_state *)state_[PDS_STATE_TEP];
+    }
+    vpc_state *vpc_db(void) {
+        return (vpc_state *)state_[PDS_STATE_VPC];
+    }
+    subnet_state *subnet_db(void) {
+        return (subnet_state *)state_[PDS_STATE_SUBNET];
+    }
+    vnic_state *vnic_db(void) {
+        return (vnic_state *)state_[PDS_STATE_VNIC];
+    }
+    mapping_state *mapping_db(void) {
+        return (mapping_state *)state_[PDS_STATE_MAPPING];
+    }
+    route_table_state *route_table_db(void) {
+        return (route_table_state *)state_[PDS_STATE_ROUTE_TABLE];
+    }
+    policy_state *policy_db(void) {
+        return (policy_state *)state_[PDS_STATE_POLICY];
+    }
+    mirror_session_state *mirror_session_db(void) {
+        return (mirror_session_state *)state_[PDS_STATE_MIRROR];
+    }
+    meter_state *meter_db(void) {
+        return (meter_state *)state_[PDS_STATE_METER];
+    }
+    tag_state *tag_db(void) {
+        return (tag_state *)state_[PDS_STATE_TAG];
+    }
+    svc_mapping_state *svc_mapping_db(void) {
+        return (svc_mapping_state *)state_[PDS_STATE_SVC_MAPPING];
+    }
+    vpc_peer_state *vpc_peer_db(void) {
+        return (vpc_peer_state *)state_[PDS_STATE_VPC_PEER];
+    }
+    nexthop_state *nexthop_db(void) {
+        return (nexthop_state *)state_[PDS_STATE_NEXTHOP];
+    }
+    nexthop_group_state *nexthop_group_db(void) {
+        return (nexthop_group_state *)state_[PDS_STATE_NEXTHOP_GROUP];
+    }
 
 private:
     string                  cfg_path_;
@@ -109,23 +165,7 @@ private:
     uint16_t                num_control_cores_;
     uint64_t                data_cores_mask_;
     uint16_t                num_data_cores_;
-    device_state            device_db_;
-    tep_state               tep_db_;
-    vpc_state               vpc_db_;
-    subnet_state            subnet_db_;
-    vnic_state              vnic_db_;
-    mapping_state           mapping_db_;
-    route_table_state       route_table_db_;
-    policy_state            poicy_db_;
-    if_state                if_db_;
-    mirror_session_state    mirror_session_db_;
-    meter_state             meter_db_;
-    tag_state               tag_db_;
-    lif_state               lif_db_;
-    svc_mapping_state       svc_mapping_db_;
-    vpc_peer_state          vpc_peer_db_;
-    nexthop_state           nexthop_db_;
-    nexthop_group_state     nexthop_group_db_;
+    state_base              *state_[PDS_STATE_MAX];
 };
 extern pds_state g_pds_state;
 

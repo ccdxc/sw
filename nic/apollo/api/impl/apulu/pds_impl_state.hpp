@@ -37,7 +37,7 @@ enum {
     PDS_SLAB_ID_MIRROR_IMPL,
 };
 
-/// \brief impl state types
+/// \brief impl state/db types
 enum {
     PDS_IMPL_STATE_MIN,
     PDS_IMPL_STATE_APULU = PDS_IMPL_STATE_MIN,
@@ -62,10 +62,10 @@ enum {
 /// \brief state implementation at impl layer
 class pds_impl_state {
 public:
-    sdk_ret_t init(pds_state *state);
-    static void destroy(pds_impl_state *impl_state);
     pds_impl_state();
     ~pds_impl_state();
+    sdk_ret_t init(pds_state *state);
+    static void destroy(pds_impl_state *impl_state);
     apulu_impl_state *apulu_impl_db(void) const {
         return (apulu_impl_state *)impl_state_[PDS_IMPL_STATE_APULU];
     }

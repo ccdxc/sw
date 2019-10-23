@@ -189,6 +189,8 @@ pds_init (pds_init_params_t *params)
     sdk::lib::logger::init(params->trace_cb, params->trace_cb);
     register_trace_cb(params->trace_cb);
 
+    // do state initialization
+    SDK_ASSERT(api::g_pds_state.init() == SDK_RET_OK);
     // parse global configuration
     api::g_pds_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
     if (api::g_pds_state.cfg_path().empty()) {
