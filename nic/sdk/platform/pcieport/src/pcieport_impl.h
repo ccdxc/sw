@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIEPORT_IMPL_H__
 #define __PCIEPORT_IMPL_H__
+
+#include <stddef.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -54,5 +56,8 @@ pcieport_struct_size_checks(void)
     CHECK_PAD(pcieport_t);
     CHECK_PAD(pcieport_stats_t);
 #undef CHECK_PAD
+
+    /* keep the pcieport table at this offset */
+    STATIC_ASSERT(offsetof(pcieport_info_t, pcieport) == 8);
 }
 #endif /* __PCIEPORT_IMPL_H__ */

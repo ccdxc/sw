@@ -17,4 +17,4 @@ export PATH=${GENBIN}:${NICBIN}:${PATH}
 PROG=$1
 shift
 
-$PROG $*
+$GDB $PROG $*

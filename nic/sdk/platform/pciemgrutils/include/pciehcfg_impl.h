@@ -7,6 +7,17 @@
 
 #define PCIEHCFGSZ 1024
 
+typedef struct vpd_entry_s {
+    char key[2];
+    char *val;
+} vpd_entry_t;
+
+typedef struct vpd_table_s {
+    char *id;
+    vpd_entry_t *entry;
+    u_int8_t nentries;
+} vpd_table_t;
+
 typedef struct pciehcfg_s {
     u_int8_t cap_gen;           /* PCIe GenX (1,2,3,4) */
     u_int8_t cap_width;         /* lane width xX (1,2,4,8,16) */
@@ -35,6 +46,7 @@ typedef struct pciehcfg_s {
     u_int32_t fnn:1;            /* multi-function device, not function 0 */
     u_int16_t totalvfs;         /* if pf, sriov total vfs */
     u_int16_t vfdeviceid;       /* if pf, sriov vf deviceid  */
+    vpd_table_t vpdtab;         /* VPD (read-only) entries */
     u_int8_t cap_cursor;        /* current capabilities position */
     u_int16_t extcap_cursor;    /* current extended capabilities position */
     u_int8_t *cur;              /* config space contents */

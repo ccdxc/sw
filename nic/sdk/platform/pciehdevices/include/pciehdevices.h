@@ -37,6 +37,7 @@ typedef struct pciehdev_ethres_s {
     u_int64_t devregspa;        /* dev info/cmd region physical address */
     u_int32_t devregssz;        /* dev info/cmd region size */
     u_int32_t devregs_stride;   /* VF: stride between dev info/cmd regions */
+    u_int64_t macaddr;          /* mac address */
 } pciehdev_ethres_t;
 
 typedef struct pciehdev_nvmeres_s {
@@ -51,6 +52,7 @@ typedef struct pciehdev_virtiores_s {
     u_int64_t regspa;           /* virtio register region */
     u_int32_t regssz;           /* virtio register region size */
     u_int32_t qidc;             /* virtio qid count */
+    u_int64_t macaddr;          /* mac address */
     u_int16_t deviceid;         /* override deviceid */
 } pciehdev_virtiores_t;
 

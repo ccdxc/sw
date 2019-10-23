@@ -153,6 +153,7 @@ nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res, const u_int16_t devid)
     }
 
     pciehcfg_sethdr_type0(pcfg, pbars);
+    pciehcfg_add_standard_vpd(pcfg);
     pciehcfg_add_standard_pfcaps(pcfg, vfbars);
     pciehdev_set_cfg(pdev, pcfg);
     return 0;

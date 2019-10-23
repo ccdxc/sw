@@ -140,7 +140,7 @@ add_accel(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_ACCEL;
-    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "accel%d", instance++);
+    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "accel%d", instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
     pres.pfres.accel.devregspa = 0x13e000000; /* XXX */
@@ -166,6 +166,7 @@ add_accel(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -177,7 +178,7 @@ add_debug(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_DEBUG;
-    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "debug%d", instance++);
+    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "debug%d", instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
     bi = 0;
@@ -220,6 +221,7 @@ add_debug(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -234,11 +236,12 @@ add_eth_class(const pciehdevice_type_t type, const char *types,
     memset(&pres, 0, sizeof(pres));
     pres.type = type;
     snprintf(pres.pfres.name, sizeof(pres.pfres.name),
-             "%s%d", types, instance++);
+             "%s%d", types, instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
     pres.pfres.eth.devregspa = 0x13d000000; /* XXX */
     pres.pfres.eth.devregssz = 0x1000;      /* XXX */
+    pres.pfres.eth.macaddr = 0x001122334455 + instance; /* XXX */
 
     getopt_reset(4, 2);
     while ((opt = getopt(argc, argv, "c:C:I:i:l:L:N:p:P:r:R:v:")) != -1) {
@@ -258,6 +261,7 @@ add_eth_class(const pciehdevice_type_t type, const char *types,
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -282,7 +286,7 @@ add_nvme(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_NVME;
-    snprintf(pfres->name, sizeof(pfres->name), "nvme%d", instance++);
+    snprintf(pfres->name, sizeof(pfres->name), "nvme%d", instance);
     pfres->intrc = 4;
     pfres->intrdmask = 0;
     pfres->nvme.regspa = 0x13d000000; /* XXX */
@@ -333,6 +337,7 @@ add_nvme(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -345,7 +350,7 @@ add_pciestress(int argc, char *argv[])
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_PCIESTRESS;
     snprintf(pres.pfres.name, sizeof(pres.pfres.name),
-             "pciestress%d", instance++);
+             "pciestress%d", instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
 
@@ -368,6 +373,7 @@ add_pciestress(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -379,7 +385,7 @@ add_rcdev(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_RCDEV;
-    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "rcdev%d", instance++);
+    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "rcdev%d", instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 0;
 
@@ -402,6 +408,7 @@ add_rcdev(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 static void
@@ -413,7 +420,7 @@ add_virtio(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.type = PCIEHDEVICE_VIRTIO;
-    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "virtio%d", instance++);
+    snprintf(pres.pfres.name, sizeof(pres.pfres.name), "virtio%d", instance);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 0;
     pres.pfres.virtio.regspa = 0x13e000000; /* XXX */
@@ -441,6 +448,7 @@ add_virtio(int argc, char *argv[])
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+    instance++;
 }
 
 typedef struct addent_s {

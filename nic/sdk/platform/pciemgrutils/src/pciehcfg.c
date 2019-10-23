@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/param.h>
 
@@ -14,7 +15,32 @@
 #include "platform/misc/include/misc.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgr/include/pciemgr.h"
 #include "pciehcfg_impl.h"
+
+/*
+ * XXX
+ * We need a copy of the params here to construct VPD info,
+ * and we would like to be able to call pciehdev_get_params()
+ * but that is in libpciemgr so we're creating a new dependency.
+ * The layering needs to be improved here.  Might be time to
+ * just combine libpciemgrutils and libpciemgr, the need for separation
+ * has generally been removed in most areas.  Fix the rest.
+ * XXX
+ */
+static pciemgr_params_t pciehcfg_params;
+
+void
+pciehcfg_set_params(pciemgr_params_t *params)
+{
+    if (params) pciehcfg_params = *params;
+}
+
+pciemgr_params_t *
+pciehcfg_get_params(void)
+{
+    return &pciehcfg_params;
+}
 
 void
 pciehcfg_setconf_cap_gen(pciehcfg_t *pcfg, const u_int8_t cap_gen)
@@ -247,6 +273,68 @@ pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
     pcfg->msixcap = 1;
 }
 
+static void
+vpdtab_add_id(vpd_table_t *vpdtab, const char *id)
+{
+    free(vpdtab->id); /* free previous value, if any */
+    vpdtab->id = strdup(id);
+    assert(vpdtab->id);
+}
+
+static int
+vpdtab_has_data(const vpd_table_t *vpdtab)
+{
+    return vpdtab->id || vpdtab->nentries;
+}
+
+static void
+vpdtab_add(vpd_table_t *vpdtab, const char *key, const char *val)
+{
+    const size_t nsz = (vpdtab->nentries + 1) * sizeof(vpd_entry_t);
+    vpd_entry_t *nentry;
+    vpd_entry_t *vpde;
+    int i;
+
+    /*
+     * Search for the key already in the table.  If found,
+     * replace value with new value.  This let's clients override
+     * default values if desired, or even cancel default values
+     * by setting value to NULL.
+     */
+    for (vpde = vpdtab->entry, i = 0; i < vpdtab->nentries; i++, vpde++) {
+        if (memcmp(vpde->key, key, sizeof(vpde->key)) == 0) {
+            free(vpde->val);
+            if (val) vpde->val = strdup(val);
+            return;
+        }
+    }
+
+    /*
+     * Not found in table.  Extend table and append new entry.
+     */
+    nentry = pciesys_realloc(vpdtab->entry, nsz);
+    vpdtab->entry = nentry;
+    vpde = &vpdtab->entry[vpdtab->nentries++];
+    memset(vpde, 0, sizeof(*vpde));
+    memcpy(vpde->key, key, sizeof(vpde->key));
+    if (val) vpde->val = strdup(val);
+}
+
+static void
+vpdtab_free(vpd_table_t *vpdtab)
+{
+    int i;
+
+    for (i = 0; i < vpdtab->nentries; i++) {
+        free(vpdtab->entry[i].val);
+    }
+    free(vpdtab->id);
+    pciesys_free(vpdtab->entry);
+    vpdtab->id = NULL;
+    vpdtab->entry = NULL;
+    vpdtab->nentries = 0;
+}
+
 pciehcfg_t *
 pciehcfg_new(void)
 {
@@ -267,6 +355,7 @@ void
 pciehcfg_delete(pciehcfg_t *pcfg)
 {
     if (pcfg == NULL) return;
+    vpdtab_free(&pcfg->vpdtab);
     pciesys_free(pcfg);
 }
 
@@ -469,6 +558,9 @@ pciehcfg_add_standard_pfcaps(pciehcfg_t *pcfg, pciehbars_t *vfbars)
     if (cfgspace_is_bridge(cp)) {
         addcap(pcfg, cs, cp, "subsys");
     }
+    if (vpdtab_has_data(&pcfg->vpdtab)) {
+        addcap(pcfg, cs, cp, "vpd");
+    }
 
     /*****************
      * Extended capabilities.
@@ -513,6 +605,54 @@ void
 pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
 {
     pciehcfg_add_standard_pfcaps(pcfg, NULL);
+}
+
+void
+pciehcfg_add_vpd_id(pciehcfg_t *pcfg, const char *id)
+{
+    vpd_table_t *vpdtab = &pcfg->vpdtab;
+    vpdtab_add_id(vpdtab, id);
+}
+
+void
+pciehcfg_add_vpd(pciehcfg_t *pcfg, const char *key, const char *val)
+{
+    vpd_table_t *vpdtab = &pcfg->vpdtab;
+    vpdtab_add(vpdtab, key, val);
+}
+
+void
+pciehcfg_add_standard_vpd(pciehcfg_t *pcfg)
+{
+    pciemgr_params_t *params = pciehcfg_get_params();
+
+    if (params->id[0] != '\0') {
+        pciehcfg_add_vpd_id(pcfg, params->id);
+    }
+
+#define S(key, field) \
+    if (params->field[0] != '\0') \
+        pciehcfg_add_vpd(pcfg, key, params->field);
+
+    S("PN", partnum);
+    S("SN", serialnum);
+    S("EC", engdate);
+    S(VPD_KEY_MFGDATE, mfgdate);
+    S(VPD_KEY_PCAREV, pcarev);
+    S(VPD_KEY_MISC, misc);
+    S(VPD_KEY_MAC, mac);
+    S(VPD_KEY_FWVERS, fwvers);
+#undef S
+}
+
+void
+pciehcfg_add_macaddr_vpd(pciehcfg_t *pcfg, const u_int64_t macaddr)
+{
+    if (macaddr) {
+        char macstr[16];
+        snprintf(macstr, sizeof(macstr), "%012" PRIx64, macaddr);
+        pciehcfg_add_vpd(pcfg, VPD_KEY_MAC, macstr);
+    }
 }
 
 void

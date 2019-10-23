@@ -208,6 +208,8 @@ virtio_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     pciehcfg_setconf_dsn(pcfg, res->dsn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);
+    pciehcfg_add_standard_vpd(pcfg);
+    pciehcfg_add_macaddr_vpd(pcfg, res->virtio.macaddr);
     pciehcfg_add_standard_caps(pcfg);
 
     pciehdev_set_cfg(pdev, pcfg);

@@ -787,6 +787,7 @@ Eth::CreateHostDevice()
     pres.pfres.totalvfs = spec->pcie_total_vfs;
     pres.pfres.eth.devregspa = dev_resources.regs_mem_addr;
     pres.pfres.eth.devregssz = sizeof(union dev_regs);
+    pres.pfres.eth.macaddr = spec->mac_addr;
 
     if (pres.pfres.totalvfs > 0) {
         pciehdev_res_t *vfres = &pres.vfres;

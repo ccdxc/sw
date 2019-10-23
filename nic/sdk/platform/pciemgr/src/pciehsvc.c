@@ -76,7 +76,14 @@ pciehsvc_iowr(const u_int32_t addr, const u_int8_t size, u_int32_t val)
 }
 
 unsigned long long
-pciehsvc_barsz(const u_int32_t bdf, const int i)
+pciehsvc_barsz(const u_int16_t bdf, const int i)
 {
     return pciehw_barsz(0, bdf, i);
+}
+
+int
+pciehsvc_read_vpd(const u_int16_t bdf,
+                  const u_int16_t addr, void *buf, const size_t len)
+{
+    return pciehw_read_vpd(0, bdf, addr, buf, len);
 }

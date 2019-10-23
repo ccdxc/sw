@@ -462,6 +462,31 @@ cfgspace_setcap_subsys(cfgspace_t *cs,
     return caplen;
 }
 
+/*
+ * Reference: PCIe Base Spec, Rev 4.0v1.0
+ *
+ * This implements the VPD capability header, but the
+ * VPD data is managed outside of config space, so we
+ * don't deal with the data here.
+ */
+static int
+cfgspace_setcap_vpd(cfgspace_t *cs,
+                    const cfgspace_capparams_t *cp,
+                    const u_int8_t capaddr)
+{
+    const u_int8_t caplen = 8;
+
+    assert(capaddr + caplen < cfgspace_size(cs));
+    cfgspace_setb(cs, capaddr, 0x3);          /* vpd cap id */
+    cfgspace_setb(cs, capaddr + 0x1, 0);      /* cap->next = NULL */
+    /* vpd address, flag writable */
+    cfgspace_setwm(cs, capaddr + 0x2, 0, 0xffff);
+    /* vpd data writable for rw entries */
+    cfgspace_setdm(cs, capaddr + 0x4, 0, 0xffffffff);
+    cfgspace_linkcap(cs, capaddr);
+    return caplen;
+}
+
 /******************************************************************/
 
 typedef struct capent_s {
@@ -479,6 +504,7 @@ static capent_t captab[] = {
     CAPENT(pcie),
     CAPENT(pm),
     CAPENT(subsys),
+    CAPENT(vpd),
     { NULL, NULL }
 };
 

@@ -17,77 +17,84 @@ idx  id typ p:bb:dd.f bdfmsk p:bdflim  rw cfgreg vfst romsk address     flags
 15   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0068 0    8     0x0c4802000 v----
 16   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0070 0    9     0x0c4802000 v----
 17   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0084 0    10    0x0c4802000 v----
-18   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0108 0    11    0x0c4802000 v----
-19   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x010c 0    11    0x0c4802000 v----
-20   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0114 0    12    0x0c4802000 v----
-21   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0118 0    13    0x0c4802000 v----
-22   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0164 0    14    0x0c4802000 v----
-23   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0288 0    15    0x0c4802000 v----
-24   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x028c 0    15    0x0c4802000 v----
-25   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0290 0    15    0x0c4802000 v----
-26   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0294 0    15    0x0c4802000 v----
-27   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0298 0    15    0x0c4802000 v----
-28   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x029c 0    15    0x0c4802000 v----
-29   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x02a0 0    15    0x0c4802000 v----
-30   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x02a4 0    15    0x0c4802000 v----
-31   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0000 0    1     0x0c4802000 v----
-32   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0000 1    1     0x0c4800000 v----
-36   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0004 0    0     0x0c4802800 vi---
-37   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x000c 0    2     0x0c4802800 v----
-38   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0010 0    0     0x0c4802800 vi---
-39   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0018 0    0     0x0c4802800 vi---
-40   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x001c 0    0     0x0c4802800 vi---
-41   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x003c 0    2     0x0c4802800 v----
-42   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0048 0    0     0x0c4802800 vi---
-43   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0050 0    16    0x0c4802800 v----
-44   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0068 0    17    0x0c4802800 v----
-45   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0070 0    9     0x0c4802800 v----
-46   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0084 0    10    0x0c4802800 v----
-47   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x00a0 0    0     0x0c4802800 vi---
-48   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0108 0    11    0x0c4802800 v----
-49   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x010c 0    11    0x0c4802800 v----
-50   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0114 0    12    0x0c4802800 v----
-51   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0118 0    13    0x0c4802800 v----
-52   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0248 0    15    0x0c4802800 v----
-53   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x024c 0    15    0x0c4802800 v----
-54   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0250 0    15    0x0c4802800 v----
-55   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0254 0    15    0x0c4802800 v----
-56   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0258 0    15    0x0c4802800 v----
-57   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x025c 0    15    0x0c4802800 v----
-58   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0260 0    15    0x0c4802800 v----
-59   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0264 0    15    0x0c4802800 v----
-60   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0000 0    1     0x0c4802800 v----
-61   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0000 1    1     0x0c4800000 v----
-62   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0004 0    18    0x0c4803800 v----
-63   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x000c 0    2     0x0c4803800 v----
-64   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0018 0    3     0x0c4803800 v----
-65   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x001c 0    4     0x0c4803800 v----
-66   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0020 0    5     0x0c4803800 v----
-67   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0024 0    5     0x0c4803800 v----
-68   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0028 0    0     0x0c4803800 v----
-69   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x002c 0    0     0x0c4803800 v----
-70   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0030 0    0     0x0c4803800 v----
-71   0  cfg 2:01:00.0 0xffff 2:01:00.0 -w 0x003c 0    0     0x0c4803800 vi---
-72   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0048 0    6     0x0c4803800 v----
-73   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0050 0    7     0x0c4803800 v----
-74   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0068 0    8     0x0c4803800 v----
-75   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0070 0    9     0x0c4803800 v----
-76   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0084 0    10    0x0c4803800 v----
-77   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0108 0    11    0x0c4803800 v----
-78   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x010c 0    11    0x0c4803800 v----
-79   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0114 0    12    0x0c4803800 v----
-80   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0118 0    13    0x0c4803800 v----
-81   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0164 0    14    0x0c4803800 v----
-82   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0288 0    15    0x0c4803800 v----
-83   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x028c 0    15    0x0c4803800 v----
-84   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0290 0    15    0x0c4803800 v----
-85   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0294 0    15    0x0c4803800 v----
-86   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0298 0    15    0x0c4803800 v----
-87   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x029c 0    15    0x0c4803800 v----
-88   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x02a0 0    15    0x0c4803800 v----
-89   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x02a4 0    15    0x0c4803800 v----
-90   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0000 0    1     0x0c4803800 v----
-91   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0000 1    1     0x0c4800000 v----
+18   0  cfg 0:01:00.0 0xffff 0:01:00.0 -w 0x00c0 0    11    0x0c4802000 v-n--
+19   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x00c4 0    0     0x0c4802000 v----
+20   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0108 0    12    0x0c4802000 v----
+21   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x010c 0    12    0x0c4802000 v----
+22   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0114 0    13    0x0c4802000 v----
+23   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0118 0    14    0x0c4802000 v----
+24   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0164 0    15    0x0c4802000 v----
+25   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0288 0    16    0x0c4802000 v----
+26   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x028c 0    16    0x0c4802000 v----
+27   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0290 0    16    0x0c4802000 v----
+28   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0294 0    16    0x0c4802000 v----
+29   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0298 0    16    0x0c4802000 v----
+30   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x029c 0    16    0x0c4802000 v----
+31   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x02a0 0    16    0x0c4802000 v----
+32   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x02a4 0    16    0x0c4802000 v----
+33   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0000 0    1     0x0c4802000 v----
+34   0  cfg 0:01:00.0 0xffff 0:01:00.0 rw 0x0000 1    1     0x0c4800000 v----
+39   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0004 0    0     0x0c4802800 vi---
+40   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x000c 0    2     0x0c4802800 v----
+41   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0010 0    0     0x0c4802800 vi---
+42   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0014 0    0     0x0c4802800 vi---
+43   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0018 0    0     0x0c4802800 vi---
+44   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x001c 0    0     0x0c4802800 vi---
+45   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x003c 0    2     0x0c4802800 v----
+46   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x0048 0    0     0x0c4802800 vi---
+47   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0050 0    17    0x0c4802800 v----
+48   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0068 0    18    0x0c4802800 v----
+49   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0070 0    9     0x0c4802800 v----
+50   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0084 0    10    0x0c4802800 v----
+51   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x00a0 0    0     0x0c4802800 vi---
+52   0  cfg 0:02:00.0 0xffff 0:02:00.0 -w 0x00c0 0    11    0x0c4802800 v-n--
+53   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x00c4 0    0     0x0c4802800 v----
+54   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0108 0    12    0x0c4802800 v----
+55   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x010c 0    12    0x0c4802800 v----
+56   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0114 0    13    0x0c4802800 v----
+57   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0118 0    14    0x0c4802800 v----
+58   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0248 0    16    0x0c4802800 v----
+59   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x024c 0    16    0x0c4802800 v----
+60   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0250 0    16    0x0c4802800 v----
+61   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0254 0    16    0x0c4802800 v----
+62   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0258 0    16    0x0c4802800 v----
+63   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x025c 0    16    0x0c4802800 v----
+64   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0260 0    16    0x0c4802800 v----
+65   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0264 0    16    0x0c4802800 v----
+66   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0000 0    1     0x0c4802800 v----
+67   0  cfg 0:02:00.0 0xffff 0:02:00.0 rw 0x0000 1    1     0x0c4800000 v----
+68   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0004 0    19    0x0c4803800 v----
+69   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x000c 0    2     0x0c4803800 v----
+70   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0018 0    3     0x0c4803800 v----
+71   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x001c 0    4     0x0c4803800 v----
+72   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0020 0    5     0x0c4803800 v----
+73   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0024 0    5     0x0c4803800 v----
+74   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0028 0    0     0x0c4803800 v----
+75   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x002c 0    0     0x0c4803800 v----
+76   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0030 0    0     0x0c4803800 v----
+77   0  cfg 2:01:00.0 0xffff 2:01:00.0 -w 0x003c 0    0     0x0c4803800 vi---
+78   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0048 0    6     0x0c4803800 v----
+79   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0050 0    7     0x0c4803800 v----
+80   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0068 0    8     0x0c4803800 v----
+81   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0070 0    9     0x0c4803800 v----
+82   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0084 0    10    0x0c4803800 v----
+83   0  cfg 2:01:00.0 0xffff 2:01:00.0 -w 0x00c0 0    11    0x0c4803800 v-n--
+84   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x00c4 0    0     0x0c4803800 v----
+85   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0108 0    12    0x0c4803800 v----
+86   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x010c 0    12    0x0c4803800 v----
+87   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0114 0    13    0x0c4803800 v----
+88   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0118 0    14    0x0c4803800 v----
+89   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0164 0    15    0x0c4803800 v----
+90   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0288 0    16    0x0c4803800 v----
+91   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x028c 0    16    0x0c4803800 v----
+92   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0290 0    16    0x0c4803800 v----
+93   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0294 0    16    0x0c4803800 v----
+94   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0298 0    16    0x0c4803800 v----
+95   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x029c 0    16    0x0c4803800 v----
+96   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x02a0 0    16    0x0c4803800 v----
+97   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x02a4 0    16    0x0c4803800 v----
+98   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0000 0    1     0x0c4803800 v----
+99   0  cfg 2:01:00.0 0xffff 2:01:00.0 rw 0x0000 1    1     0x0c4800000 v----
 00:00.0 0604: 1dd8:1008
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
@@ -123,6 +130,18 @@ idx  id typ p:bb:dd.f bdfmsk p:bdflim  rw cfgreg vfst romsk address     flags
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
 	Capabilities: [a0] Subsystem: 1dd8:4001
+	Capabilities: [c0] Vital Product Data
+		Product Name: SIM NAPLES
+		Read-only fields:
+			[PN] Part number: SIM-123456-78
+			[SN] Serial number: SIM12345678
+			[EC] Engineering changes: SIM-2013-08-29
+			[V2] Vendor specific: SIM-2013-08-29
+			[V5] Vendor specific: SIM-PCA-X1
+			[V0] Vendor specific: SIM 1000GHz,0.0001pW
+			[V3] Vendor specific: SIM 1.2.3.4
+			[RV] Reserved: checksum good, 0 byte(s) reserved
+		End
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -145,9 +164,9 @@ idx  id typ p:bb:dd.f bdfmsk p:bdflim  rw cfgreg vfst romsk address     flags
 70: 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 80: 01 a0 03 00 00 00 00 00 00 00 00 00 00 00 00 00
 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 0d 00 00 00 d8 1d 01 40 00 00 00 00 00 00 00 00
+a0: 0d c0 00 00 d8 1d 01 40 00 00 00 00 00 00 00 00
 b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -428,6 +447,18 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
 	Capabilities: [a0] Subsystem: 1dd8:4001
+	Capabilities: [c0] Vital Product Data
+		Product Name: SIM NAPLES
+		Read-only fields:
+			[PN] Part number: SIM-123456-78
+			[SN] Serial number: SIM12345678
+			[EC] Engineering changes: SIM-2013-08-29
+			[V2] Vendor specific: SIM-2013-08-29
+			[V5] Vendor specific: SIM-PCA-X1
+			[V0] Vendor specific: SIM 1000GHz,0.0001pW
+			[V3] Vendor specific: SIM 1.2.3.4
+			[RV] Reserved: checksum good, 0 byte(s) reserved
+		End
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -454,9 +485,9 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 70: 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 80: 01 a0 03 00 00 00 00 00 00 00 00 00 00 00 00 00
 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 0d 00 00 00 d8 1d 01 40 00 00 00 00 00 00 00 00
+a0: 0d c0 00 00 d8 1d 01 40 00 00 00 00 00 00 00 00
 b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -706,7 +737,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Interrupt: pin A routed to IRQ 0
-	Region 0: I/O ports at <unassigned> [disabled] [size=4K]
+	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=4K]
 	Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=8K]
 	Capabilities: [40] Express (v2) Endpoint, MSI 00
 		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
@@ -735,6 +766,18 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [a0] MSI-X: Enable- Count=4 Masked-
 		Vector table: BAR=2 offset=00000000
 		PBA: BAR=2 offset=00001000
+	Capabilities: [c0] Vital Product Data
+		Product Name: SIM NAPLES
+		Read-only fields:
+			[PN] Part number: SIM-123456-78
+			[SN] Serial number: SIM12345678
+			[EC] Engineering changes: SIM-2013-08-29
+			[V2] Vendor specific: SIM-2013-08-29
+			[V5] Vendor specific: SIM-PCA-X1
+			[V0] Vendor specific: SIM 1000GHz,0.0001pW
+			[V3] Vendor specific: SIM 1.2.3.4
+			[RV] Reserved: checksum good, 0 byte(s) reserved
+		End
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -748,7 +791,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [1a0 v1] #26
 	Capabilities: [240 v1] #27
 00: f4 1a 00 10 00 00 10 00 00 00 00 02 00 00 00 00
-10: 01 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
 20: 00 00 00 00 00 00 00 00 00 00 00 00 f4 1a 01 00
 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 00 00
 40: 10 80 02 00 e1 8f 00 10 10 29 00 00 04 f1 43 00
@@ -757,9 +800,9 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 70: 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 80: 01 a0 03 00 00 00 00 00 00 00 00 00 00 00 00 00
 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 11 00 03 00 02 00 00 00 02 10 00 00 00 00 00 00
+a0: 11 c0 03 00 02 00 00 00 02 10 00 00 00 00 00 00
 b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

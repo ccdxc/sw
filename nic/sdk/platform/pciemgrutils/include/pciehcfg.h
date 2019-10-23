@@ -71,8 +71,33 @@ void pciehcfg_addextcap(pciehcfg_t *pcfg, const char *capname);
 void pciehcfg_add_standard_caps(pciehcfg_t *pcfg);
 void pciehcfg_add_standard_pfcaps(pciehcfg_t *pcfg, pciehbars_t *vfbars);
 
+/*
+ * VPD
+ */
+/* HPE specified vendor-specific keys V0-V9 */
+#define VPD_KEY_MISC            "V0"    /* freq, power, etc */
+#define VPD_KEY_UEFIVERS        "V1"    /* uefi driver version a.b.c.d */
+#define VPD_KEY_MFGDATE         "V2"    /* mfg date code yyww */
+#define VPD_KEY_FWVERS          "V3"    /* rom fw version a.b.c.d */
+#define VPD_KEY_MAC             "V4"    /* mac address */
+#define VPD_KEY_PCAREV          "V5"    /* pca revision info  */
+#define VPD_KEY_PXEVERS         "V6"    /* pxe version a.b.c.d */
+/* VA-VJ available for OEM Vendor use */
+/* VK-VZ reserved for HPE future use */
+
+void pciehcfg_add_vpd_id(pciehcfg_t *pcfg, const char *id);
+void pciehcfg_add_vpd(pciehcfg_t *pcfg, const char *key, const char *val);
+void pciehcfg_add_standard_vpd(pciehcfg_t *pcfg);
+void pciehcfg_add_macaddr_vpd(pciehcfg_t *pcfg, const u_int64_t macaddr);
+
 void pciehcfg_make_fn0(pciehcfg_t *pcfg);
 void pciehcfg_make_fnn(pciehcfg_t *pcfg, const int fnn);
+
+struct pciemgr_params_s;
+typedef struct pciemgr_params_s pciemgr_params_t;
+
+void pciehcfg_set_params(pciemgr_params_t *params);
+pciemgr_params_t *pciehcfg_get_params(void);
 
 #ifdef __cplusplus
 }

@@ -511,6 +511,10 @@ cmd_meminfo(int argc, char *argv[])
     PSZ(pcieport_info_t);
     PSZ(pcieport_t);
     PSZ(pcieport_stats_t);
+
+    pciesys_loginfo("%-*s: %lu\n", w,
+                    "offsetof(pcieport_info_t, pcieport)",
+                    offsetof(pcieport_info_t, pcieport));
 }
 
 static void

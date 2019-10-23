@@ -29,7 +29,7 @@ int pciehsvc_cfgwr(const u_int16_t bdf,
                    u_int32_t val);
 
 int pciehsvc_memrd(const u_int64_t addr,
-                   const u_int8_t size, 
+                   const u_int8_t size,
                    u_int64_t *valp);
 int pciehsvc_memwr(const u_int64_t addr,
                    const u_int8_t size,
@@ -42,7 +42,10 @@ int pciehsvc_iowr(const u_int32_t addr,
                   const u_int8_t size,
                   u_int32_t val);
 
-unsigned long long pciehsvc_barsz(const u_int32_t bdf, const int i);
+unsigned long long pciehsvc_barsz(const u_int16_t bdf, const int i);
+
+int pciehsvc_read_vpd(const u_int16_t bdf,
+                      const u_int16_t addr, void *buf, const size_t len);
 
 #ifdef __cplusplus
 }

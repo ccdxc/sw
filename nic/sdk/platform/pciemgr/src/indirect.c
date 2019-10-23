@@ -219,7 +219,7 @@ pciehw_indirect_complete(indirect_entry_t *ientry)
      * We might have written some memory that will be read
      * by subsequent direct transactions handled in hw.
      * Insert barrier here to be sure all memory writes have
-     * landed so hw will always see that data we wrote.
+     * landed so hw will always see the data we wrote.
      */
     PAL_barrier();
 
@@ -369,41 +369,13 @@ pciehw_indirect_poll_init(void)
     const u_int64_t msgaddr = pal_mem_vtop(&phwmem->indirect_intr_dest[0]);
     const u_int32_t msgdata = 1;
 
-    return req_int_init(indirect_int_addr(), "indirect_intr", port, msgaddr, msgdata);
+    return req_int_init(indirect_int_addr(), "indirect_intr",
+                        port, msgaddr, msgdata);
 }
 
 /******************************************************************
  * debug
  */
-
-static void
-indirect_show(void)
-{
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    u_int64_t addr;
-    u_int32_t data;
-    const int w = 20;
-    int i;
-
-    indirect_int_get(&addr, &data);
-    pciesys_loginfo("%-*s : 0x%08"PRIx64"\n", w, "indirect_int_addr", addr);
-    pciesys_loginfo("%-*s : 0x%08x\n", w, "indirect_int_data", data);
-
-    pciesys_loginfo("%-4s %-9s %4s %s\n",
-                    "port", "intr_dest", "cnt", "last_data");
-    for (i = 0; i < PCIEHW_NPORTS; i++) {
-        pciehw_port_t *p = &pshmem->port[i];
-        indirect_entry_t *ientry = &indirect_entry[i];
-
-        pciesys_loginfo("%-4d %9d %4"PRId64" %08x %08x %08x %08x\n",
-                        i,
-                        phwmem->indirect_intr_dest[i],
-                        p->stats.ind_intr,
-                        ientry->data[0], ientry->data[1],
-                        ientry->data[2], ientry->data[3]);
-    }
-}
 
 static void
 show_ientry(const indirect_entry_t *ientry)
@@ -462,4 +434,7 @@ pciehw_aximst_show(const unsigned int port,
             pciesys_loginfo("aximst%d: %s\n", i, line);
         }
     }
+
+    /* reference for safe keeping */
+    if (0) indirect_int_get(NULL, NULL);
 }

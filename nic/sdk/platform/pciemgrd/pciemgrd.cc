@@ -14,13 +14,18 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/pal/include/pal.h"
 #include "platform/evutils/include/evutils.h"
+#include "platform/misc/include/misc.h"
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pcieport/include/pcieport.h"
 #include "lib/catalog/catalog.hpp"
+#include "platform/fru/fru.hpp"
 
 #include "pciemgrd_impl.hpp"
 
@@ -251,6 +256,95 @@ pciemgrd_param_ull(const char *name, const u_int64_t def)
     return getenv_override_ull("pciemgrd", name, def);
 }
 
+static void
+pciemgrd_vpd_params(pciemgrenv_t *pme)
+{
+    pciemgr_params_t *params = &pme->params;
+
+#define S(field, str) \
+    strncpy0(params->field, str, sizeof(params->field))
+
+#ifdef __aarch64__
+    std::string s;
+
+#define SFRU(KEY, field) \
+    do { \
+        if (sdk::platform::readFruKey(KEY, s) == 0) {   \
+            S(field, s.c_str());\
+        } \
+    } while (0)
+
+    SFRU(PRODUCTNAME_KEY, id);
+    SFRU(PARTNUM_KEY, partnum);
+    SFRU(SERIALNUMBER_KEY, serialnum);
+    SFRU(MANUFACTURERDATE_KEY, mfgdate);
+    SFRU(ENGCHANGELEVEL_KEY, engdate); // XXX HPE wants a date
+#undef SFRU
+
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json("/nic/etc/VERSION.json", ver);
+    S(fwvers, ver.get<std::string>("sw.version").c_str());
+
+#if 0
+    char misc[PCIEMGR_STRSZ], *mp = misc;
+    int misc_left = PCIEMGR_STRSZ;
+#define MISC_APPEND(fmt, val) \
+    do { \
+        int n; \
+        n = snprintf(mp, misc_left, "%s" fmt, mp == misc ? "" : ",", val); \
+        if (n >= 0 && n < misc_left) { \
+            misc_left -= n;            \
+            mp += n;                   \
+        }                              \
+    } while (0)
+
+    //
+    // XXX
+    // Many of these vary over time, but we're taking a snapshot
+    // and encoding into VPD.  Maybe these are not right for VPD.
+    // (Or maybe we periodically update VPD with current values?)
+    // Leaving this out for now until we get more clarity on what
+    // should be included in the "misc" section.
+    // XXX
+    //
+
+    pciemgrd_sysinfo_t sysinfo;
+    pciemgrd_get_sysinfo(&sysinfo);
+
+    if (sysinfo.cclk_mhz) {
+        MISC_APPEND("cclk=%uMHz", sysinfo.cclk_mhz);
+    }
+    if (sysinfo.vin_mv) {
+        MISC_APPEND("vin=%.0fV", sysinfo.vin_mv / 1000.0);
+    }
+    if (sysinfo.vdd_mv) {
+        MISC_APPEND("vdd=%umV", sysinfo.vdd_mv);
+    }
+    if (sysinfo.vcpu_mv) {
+        MISC_APPEND("vcpu=%umV", sysinfo.vcpu_mv);
+    }
+    if (sysinfo.pin_uw) {
+        MISC_APPEND("pin=%.0fW", sysinfo.pin_uw / 1000000.0);
+    }
+#undef MISC_APPEND
+
+    S(misc, misc);
+#endif
+
+#else
+
+    S(id, "SIM NAPLES");
+    S(partnum, "SIM-123456-78");
+    S(serialnum, "SIM12345678");
+    S(mfgdate, "SIM-2013-08-29");
+    S(engdate, "SIM-2013-08-29");
+    S(pcarev, "SIM-PCA-X1");
+    S(misc, "SIM 1000GHz,0.0001pW");
+    S(fwvers, "SIM 1.2.3.4");
+#endif
+#undef S
+}
+
 /*
  * These overrides are separated here and called by the main loop
  * *after* the logger initialization any setting overrides can be
@@ -272,6 +366,8 @@ pciemgrd_params(pciemgrenv_t *pme)
     pciemgr_params_t *params = &pme->params;
     params->single_pnd = pciemgrd_param_ull("PCIE_SINGLE_PND",
                                             params->single_pnd);
+
+    pciemgrd_vpd_params(pme);
 
     if (pme->params.restart) {
         if (upgrade_state_restore() < 0) {

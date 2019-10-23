@@ -37,6 +37,8 @@ typedef struct pciemgr_params_s pciemgr_params_t;
 #define PCIEHW_ROMSKSZ  (PCIEHW_CFGSZ / sizeof (u_int32_t))
 #define PCIEHW_CFGHNDSZ (PCIEHW_CFGSZ / sizeof (u_int32_t))
 
+#define PCIEHW_VPDSZ    1024
+
 #define PCIEHW_NPMT     PMT_COUNT
 #define PCIEHW_NPRT     PRT_COUNT
 #define PCIEHW_NBAR     6               /* 6 cfgspace BARs */
@@ -48,6 +50,7 @@ enum pciehw_cfghnd_e {
     PCIEHW_CFGHND_ROM_BAR,
     PCIEHW_CFGHND_BRIDGECTL,
     PCIEHW_CFGHND_MSIX,
+    PCIEHW_CFGHND_VPD,
     PCIEHW_CFGHND_PCIE_DEVCTL,
     PCIEHW_CFGHND_SRIOV_CTRL,
     PCIEHW_CFGHND_SRIOV_BARS,
@@ -160,6 +163,7 @@ typedef struct pciehw_shmem_s {
     pciehw_sprt_t sprt[PCIEHW_NPRT];
     u_int8_t cfgrst[PCIEHW_NDEVS][PCIEHW_CFGSZ];
     u_int8_t cfgmsk[PCIEHW_NDEVS][PCIEHW_CFGSZ];
+    u_int8_t vpddata[PCIEHW_NDEVS][PCIEHW_VPDSZ];
 } pciehw_shmem_t;
 
 #define STATIC_ASSERT(cond) static_assert(cond, #cond)
@@ -191,6 +195,7 @@ void pciehw_pmt_show(int argc, char *argv[]);
 void pciehw_cfg_show(int argc, char *argv[]);
 void pciehw_bar_show(int argc, char *argv[]);
 void pciehw_hdrt_show(int argc, char *argv[]);
+void pciehw_vpd_show(int argc, char *argv[]);
 
 /* flags for stats_show() */
 #define PMGRSF_NONE     0x0
@@ -242,6 +247,9 @@ int pciehw_iowr(const u_int8_t port,
 
 unsigned long long pciehw_barsz(const u_int8_t port,
                                 const u_int16_t bdf, const int i);
+
+int pciehw_read_vpd(const u_int8_t port, const u_int16_t bdf,
+                    const u_int16_t addr, void *buf, const size_t len);
 
 #ifdef __cplusplus
 }

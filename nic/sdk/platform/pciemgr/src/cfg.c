@@ -17,6 +17,7 @@
 #include "platform/pal/include/pal.h"
 #include "platform/pcietlp/include/pcietlp.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgrutils/include/pciehcfg_impl.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/pciemgr/include/pciehw.h"
 #include "pciehw_impl.h"
@@ -69,12 +70,15 @@ static void
 pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
 {
     cfgspace_t cfgspace, *cs = &cfgspace;
-    int msixcap, pciecap, sriovcap;
-    int nbars_valid = 0;
     const int pmtf_wrind = PMTF_WR | PMTF_INDIRECT;
+    int nbars_valid = 0;
+    int cap;
 
     pciehwdev_get_cfgspace(phwdev, cs);
 
+    /*****************
+     * Bars
+     */
     if (!phwdev->vf) {
         /* Bars */
         const int cfgbase = 0x10;
@@ -88,19 +92,18 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
         }
     }
 
+    /*****************
+     * Bridge Control for bus reset
+     */
     /* if bridge */
     if (cfgspace_get_headertype(cs) == 1) {
         pciehw_set_cfghnd(phwdev, PCI_BRIDGE_CONTROL, pmtf_wrind,
                           PCIEHW_CFGHND_BRIDGECTL);
     }
 
-    msixcap = cfgspace_findcap(cs, PCI_CAP_ID_MSIX);
-    if (msixcap) {
-        /* MSIX message control */
-        pciehw_set_cfghnd(phwdev, msixcap, pmtf_wrind, PCIEHW_CFGHND_MSIX);
-    }
-
-    /*
+    /*****************
+     * Command
+     *
      * Only capture writes to Command if we have bars, intrs, or lifs.
      *
      * If we have bars,  then CMD.{mem,io}_enable needs attention.
@@ -112,28 +115,57 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
         pciehw_set_cfghnd(phwdev, 0x4, pmtf_wrind, PCIEHW_CFGHND_CMD);
     }
 
-    pciecap = cfgspace_findcap(cs, PCI_CAP_ID_EXP);
-    if (pciecap) {
-        const u_int32_t devcap = cfgspace_readd(cs, pciecap + 0x4);
+    /*****************
+     * MSIX cap
+     */
+    cap = cfgspace_findcap(cs, PCI_CAP_ID_MSIX);
+    if (cap) {
+        /* MSIX message control */
+        pciehw_set_cfghnd(phwdev, cap, pmtf_wrind, PCIEHW_CFGHND_MSIX);
+    }
+
+    /*****************
+     * Express cap, FLR and Device Control
+     */
+    cap = cfgspace_findcap(cs, PCI_CAP_ID_EXP);
+    if (cap) {
+        const u_int32_t devcap = cfgspace_readd(cs, cap + 0x4);
         if (devcap & (1 << 28)) { /* FLR capability */
             /*
              * If FLR capability claimed, then watch for FLR requests
              * as writes to Device Control (+0x8) register of PCIE capability.
              */
-            pciehw_set_cfghnd(phwdev, pciecap + 0x8,
+            pciehw_set_cfghnd(phwdev, cap + 0x8,
                               pmtf_wrind, PCIEHW_CFGHND_PCIE_DEVCTL);
         }
     }
 
-    sriovcap = cfgspace_findextcap(cs, PCI_EXT_CAP_ID_SRIOV);
-    if (sriovcap) {
+    /*****************
+     * VPD
+     */
+    cap = cfgspace_findcap(cs, PCI_CAP_ID_VPD);
+    if (cap) {
+        pciehw_set_cfghnd(phwdev, cap, PMTF_WR | PMTF_NOTIFY,
+                          PCIEHW_CFGHND_VPD);
+    }
+
+    /*****************
+     * SRIOV
+     */
+    cap = cfgspace_findextcap(cs, PCI_EXT_CAP_ID_SRIOV);
+    if (cap) {
         /* SRIOV Control */
-        const int cfgbase = sriovcap + 0x24;
-        pciehw_set_cfghnd(phwdev, sriovcap + 0x8,
+        const int cfgbase = cap + 0x24;
+        pciehw_set_cfghnd(phwdev, cap + 0x8,
                           pmtf_wrind, PCIEHW_CFGHND_SRIOV_CTRL);
         set_bars_handlers(phwdev, cfgbase, PCIEHW_CFGHND_SRIOV_BARS);
     }
 
+    /*****************
+     * pciestress debug device,
+     * set indirect handler with programmable delay to
+     * test pcie timeouts.
+     */
     if (strncmp(phwdev->name, "pciestress", strlen("pciestress")) == 0) {
         cfgspace_setdm(cs, 0x400, 0, 0xffffffff);
         pciehw_set_cfghnd(phwdev, 0x400, PMTF_RW | PMTF_INDIRECT,
@@ -188,6 +220,7 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
 
     pciehcfg_get_cfgspace(pcfg, &cs);
     pciehw_cfg_set_default_ids(pcfg, &cs);
+    pciehw_vpd_finalize(phwdev, &pcfg->vpdtab);
 
     /*
      * Init config space contents from device config space.
@@ -530,6 +563,36 @@ pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 }
 
 static void
+pciehw_cfgwr_vpd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int16_t vpdcap, addr, f;
+    u_int32_t data;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    vpdcap = cfgspace_findcap(&cs, PCI_CAP_ID_VPD);
+    addr = cfgspace_readw(&cs, vpdcap + PCI_VPD_ADDR);
+    f = addr & PCI_VPD_ADDR_F;
+    addr &= PCI_VPD_ADDR_MASK;
+
+    /*
+     * Flag set indicates write data, clear flag when complete.
+     * Flag clear indicates read data, set flag when complete.
+     */
+    if (f) {
+        /* vpd write */
+        data = cfgspace_readd(&cs, vpdcap + PCI_VPD_DATA);
+        pciehw_vpd_write(phwdev, addr, data);
+        cfgspace_writew(&cs, vpdcap + PCI_VPD_ADDR, addr);
+    } else {
+        /* vpd read */
+        data = pciehw_vpd_read(phwdev, addr);
+        cfgspace_writed(&cs, vpdcap + PCI_VPD_DATA, data);
+        cfgspace_writew(&cs, vpdcap + PCI_VPD_ADDR, addr | PCI_VPD_ADDR_F);
+    }
+}
+
+static void
 pciehw_cfgwr_pcie_devctl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     cfgspace_t cs;
@@ -746,6 +809,9 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
         break;
     case PCIEHW_CFGHND_MSIX:
         pciehw_cfgwr_msix(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_VPD:
+        pciehw_cfgwr_vpd(phwdev, stlp);
         break;
     case PCIEHW_CFGHND_PCIE_DEVCTL:
         pciehw_cfgwr_pcie_devctl(phwdev, stlp);

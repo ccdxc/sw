@@ -48,9 +48,10 @@ int
 pciehdev_open(pciemgr_params_t *params)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    int r = pciehw_open(params);
+
     if (params) pdevdata->params = *params;
-    return r;
+    pciehcfg_set_params(params);
+    return pciehw_open(params);
 }
 
 void

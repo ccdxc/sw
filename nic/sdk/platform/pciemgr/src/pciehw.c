@@ -455,7 +455,7 @@ pciehw_memopen(const pciemgr_initmode_t initmode)
                         phwmem->magic, pshmem->magic,
                         phwmem->version, pshmem->version);
 #endif
-    } else if (phwmem->magic != PCIEHW_MAGIC || 
+    } else if (phwmem->magic != PCIEHW_MAGIC ||
                pshmem->magic != PCIEHW_MAGIC ||
                phwmem->version != PCIEHW_VERSION ||
                pshmem->version != PCIEHW_VERSION) {
@@ -1256,6 +1256,32 @@ pciehw_barsz(const u_int8_t port, const u_int16_t bdf, const int i)
     }
     phwbar = &phwdev->bar[i];
     return pciehw_bar_getsize(phwbar);
+}
+
+/*
+ * Called by lspci, this function might be called to read any
+ * arbitrary byte(s) of vpd.  The underlying worker function expects
+ * dword-aligned access only since that is what the pcie spec allows.
+ * We have to account for unaligned head and tail.
+ */
+int
+pciehw_read_vpd(const u_int8_t port, const u_int16_t bdf,
+                const u_int16_t addr, void *buf, const size_t len)
+{
+    pciehwdev_t *phwdev;
+    u_int8_t *vpddata;
+
+    phwdev = pciehwdev_by_bdf(port, bdf);
+    if (phwdev == NULL) {
+        return 0;
+    }
+    if (addr + len >= PCIEHW_VPDSZ) {
+        return 0;
+    }
+
+    vpddata = pciehw_vpd_getdata(phwdev);
+    memcpy(buf, &vpddata[addr], len);
+    return 1;
 }
 
 void

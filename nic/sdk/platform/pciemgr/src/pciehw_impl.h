@@ -13,6 +13,7 @@
 
 #include "pmt.h"
 #include "prt.h"
+#include "vpd.h"
 #include "notify.h"
 #include "indirect.h"
 #include "req_int.h"

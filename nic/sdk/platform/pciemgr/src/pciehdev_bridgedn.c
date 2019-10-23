@@ -77,6 +77,7 @@ bridgedn_initialize_cfg(pciehdev_t *pdev)
     pciehcfg_setconf_bridgedn(pcfg, 1);
 
     pciehcfg_sethdr_type1(pcfg, pbars);
+    pciehcfg_add_standard_vpd(pcfg);
     pciehcfg_add_standard_caps(pcfg);
 
     pciehdev_set_cfg(pdev, pcfg);

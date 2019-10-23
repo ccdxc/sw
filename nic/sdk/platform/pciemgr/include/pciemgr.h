@@ -11,6 +11,8 @@ typedef enum pciemgr_initmode_e {
     FORCE_INIT,                 /* pciemgrd must init */
 } pciemgr_initmode_t;
 
+#define PCIEMGR_STRSZ   80      /* size of vpd string params */
+
 typedef struct pciemgr_params_s {
     u_int8_t cap_gen;           /* default GenX capability (1,2,3,4) */
     u_int8_t cap_width;         /* xX lane width (1,2,4,8,16) */
@@ -28,6 +30,15 @@ typedef struct pciemgr_params_s {
     u_int32_t strict_crs:1;     /* enable crs=1 at open */
     u_int32_t restart:1;        /* restarting */
     u_int32_t single_pnd:1;     /* single pending mode */
+    char id       [PCIEMGR_STRSZ]; /* product id */
+    char partnum  [PCIEMGR_STRSZ]; /* part number */
+    char serialnum[PCIEMGR_STRSZ]; /* serial number */
+    char mfgdate  [PCIEMGR_STRSZ]; /* manufacturing date code */
+    char engdate  [PCIEMGR_STRSZ]; /* engineering date code */
+    char pcarev   [PCIEMGR_STRSZ]; /* pca revision */
+    char misc     [PCIEMGR_STRSZ]; /* frequency,power, etc */
+    char mac      [PCIEMGR_STRSZ]; /* factory mac address */
+    char fwvers   [PCIEMGR_STRSZ]; /* fw version */
 } pciemgr_params_t;
 
 #include "pciehw.h"
