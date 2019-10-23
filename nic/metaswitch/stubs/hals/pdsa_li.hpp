@@ -1,16 +1,17 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Class that implements the Metaswitch LI stub integration interface
 
-#ifndef __PDSA_STUB_LI_HPP__
-#define __PDSA_STUB_LI_HPP__
+#ifndef __PDSA_LI_HPP__
+#define __PDSA_LI_HPP__
 
 #include "li_pen_is.hpp"
 
+
 namespace pdsa_stub {
 
-class LiIntegSubcomp: public li_pen::IntegrationSubcomponent {
+class LiIntegSubcomponent : public li_pen::IntegrationSubcomponent {
     public:
-        ~LiIntegSubcomp () {};
+        ~LiIntegSubcomponent () {};
         NBB_BYTE vrf_add_update (ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
         NBB_BYTE vrf_delete (const NBB_BYTE* vrf_name, NBB_ULONG vrf_len);
 

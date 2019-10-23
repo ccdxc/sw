@@ -1,8 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Typedefs for HAL types
 
-#ifndef __PDSA_STUB_HAL_DEFS_HPP__
-#define __PDSA_STUB_HAL_DEFS_HPP__
+#ifndef __PDSA_DEFS_HPP__
+#define __PDSA_DEFS_HPP__
 
 namespace pdsa_stub {
 

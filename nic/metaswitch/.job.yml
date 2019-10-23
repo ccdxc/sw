@@ -1,0 +1,21 @@
+---
+version: 2.0
+targets:
+  apollo/dol/mirror:
+    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mirror"]
+    owners: ["email:vgunta@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+
+logfiles:
+  - /usr/src/github.com/pensando/sw/nic/nic_sanity_logs.tar.gz

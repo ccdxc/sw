@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
  
-#ifndef __PDSA_STUB_UTIL_HPP__
-#define __PDSA_STUB_UTIL_HPP__
+#ifndef __PDSA_UTIL_HPP__
+#define __PDSA_UTIL_HPP__
 
 #include <nbase.h>
 
