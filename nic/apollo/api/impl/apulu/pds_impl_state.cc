@@ -21,50 +21,34 @@ pds_impl_state g_pds_impl_state;
 
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
-    apulu_impl_db_ = new apulu_impl_state(state);
-    lif_impl_db_ = new lif_impl_state(state);
-    if_impl_db_ = new if_impl_state(state);
-    tep_impl_db_ = new tep_impl_state(state);
-    vpc_impl_db_ = new vpc_impl_state(state);
-    vnic_impl_db_ = new vnic_impl_state(state);
-    mapping_impl_db_ = new mapping_impl_state(state);
-    route_table_impl_db_ = new route_table_impl_state(state);
-    security_policy_impl_db_ = new security_policy_impl_state(state);
-    mirror_impl_db_ = new mirror_impl_state(state);
-    nexthop_impl_db_ = new nexthop_impl_state(state);
-    nexthop_group_impl_db_ = new nexthop_group_impl_state(state);
-
+    impl_state_[PDS_IMPL_STATE_APULU] = new apulu_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_LIF] = new lif_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_IF] = new if_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_TEP] = new tep_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_VPC] = new vpc_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_VNIC] = new vnic_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_MAPPING] = new mapping_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_ROUTE_TABLE] = new route_table_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_SECURITY_POLICY] =
+        new security_policy_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_MIRROR] = new mirror_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_NEXTHOP] = new nexthop_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_NEXTHOP_GROUP] =
+        new nexthop_group_impl_state(state);
     return SDK_RET_OK;
 }
 
 void
 pds_impl_state::destroy(pds_impl_state *impl_state) {
-    delete impl_state->apulu_impl_db_;
-    delete impl_state->lif_impl_db_;
-    delete impl_state->if_impl_db_;
-    delete impl_state->tep_impl_db_;
-    delete impl_state->vpc_impl_db_;
-    delete impl_state->vnic_impl_db_;
-    delete impl_state->mapping_impl_db_;
-    delete impl_state->route_table_impl_db_;
-    delete impl_state->security_policy_impl_db_;
-    delete impl_state->mirror_impl_db_;
-    delete impl_state->nexthop_impl_db_;
-    delete impl_state->nexthop_group_impl_db_;
+    for (uint32_t i = PDS_IMPL_STATE_MIN; i < PDS_IMPL_STATE_MAX; i++) {
+        if (impl_state->impl_state_[i]) {
+            delete impl_state->impl_state_[i];
+        }
+    }
 }
 
 pds_impl_state::pds_impl_state() {
-    apulu_impl_db_ = NULL;
-    lif_impl_db_ = NULL;
-    if_impl_db_ = NULL;
-    tep_impl_db_ = NULL;
-    vpc_impl_db_ = NULL;
-    vnic_impl_db_ = NULL;
-    mapping_impl_db_ = NULL;
-    route_table_impl_db_ = NULL;
-    security_policy_impl_db_ = NULL;
-    mirror_impl_db_ = NULL;
-    nexthop_impl_db_ = NULL;
+    memset(impl_state_, 0, sizeof(impl_state_));
 }
 
 pds_impl_state::~pds_impl_state() {

@@ -106,3 +106,4 @@ agent/cmd/halctl/halctl_ext/bash_completion
 agent/cmd/halctl/halctl_ext/man_pages
 agent/cmd/halctl/halctl_ext/markdown
 captrace.syms
+*.swo

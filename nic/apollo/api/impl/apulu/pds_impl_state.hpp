@@ -37,6 +37,24 @@ enum {
     PDS_SLAB_ID_MIRROR_IMPL,
 };
 
+/// \brief impl state types
+enum {
+    PDS_IMPL_STATE_MIN,
+    PDS_IMPL_STATE_APULU = PDS_IMPL_STATE_MIN,
+    PDS_IMPL_STATE_LIF,
+    PDS_IMPL_STATE_IF,
+    PDS_IMPL_STATE_TEP,
+    PDS_IMPL_STATE_VPC,
+    PDS_IMPL_STATE_VNIC,
+    PDS_IMPL_STATE_MAPPING,
+    PDS_IMPL_STATE_ROUTE_TABLE,
+    PDS_IMPL_STATE_SECURITY_POLICY,
+    PDS_IMPL_STATE_MIRROR,
+    PDS_IMPL_STATE_NEXTHOP,
+    PDS_IMPL_STATE_NEXTHOP_GROUP,
+    PDS_IMPL_STATE_MAX,
+};
+
 /// \defgroup PDS_IMPL_STATE - internal state
 /// \ingroup PDS_IMPL_STATE
 /// @{
@@ -48,42 +66,46 @@ public:
     static void destroy(pds_impl_state *impl_state);
     pds_impl_state();
     ~pds_impl_state();
-    apulu_impl_state *apulu_impl_db(void) const { return apulu_impl_db_; }
-    lif_impl_state *lif_impl_db(void) const { return lif_impl_db_; }
-    if_impl_state *if_impl_db(void) const { return if_impl_db_; }
-    tep_impl_state *tep_impl_db(void) const { return tep_impl_db_; }
-    vpc_impl_state *vpc_impl_db(void) const { return vpc_impl_db_; }
-    vnic_impl_state *vnic_impl_db(void) const { return vnic_impl_db_; }
-    mapping_impl_state *mapping_impl_db(void) const { return mapping_impl_db_; }
+    apulu_impl_state *apulu_impl_db(void) const {
+        return (apulu_impl_state *)impl_state_[PDS_IMPL_STATE_APULU];
+    }
+    lif_impl_state *lif_impl_db(void) const {
+        return (lif_impl_state *)impl_state_[PDS_IMPL_STATE_LIF];
+    }
+    if_impl_state *if_impl_db(void) const {
+        return (if_impl_state *)impl_state_[PDS_IMPL_STATE_IF];
+    }
+    tep_impl_state *tep_impl_db(void) const {
+        return (tep_impl_state *)impl_state_[PDS_IMPL_STATE_TEP];
+    }
+    vpc_impl_state *vpc_impl_db(void) const {
+        return (vpc_impl_state *)impl_state_[PDS_IMPL_STATE_VPC];
+    }
+    vnic_impl_state *vnic_impl_db(void) const {
+        return (vnic_impl_state*)impl_state_[PDS_IMPL_STATE_VNIC];
+    }
+    mapping_impl_state *mapping_impl_db(void) const {
+        return (mapping_impl_state *)impl_state_[PDS_IMPL_STATE_MAPPING];
+    }
     route_table_impl_state *route_table_impl_db(void) const {
-        return route_table_impl_db_;
+        return (route_table_impl_state *)impl_state_[PDS_IMPL_STATE_ROUTE_TABLE];
     }
     security_policy_impl_state *security_policy_impl_db(void) const {
-        return security_policy_impl_db_;
+        return (security_policy_impl_state  *)impl_state_[PDS_IMPL_STATE_SECURITY_POLICY];
     }
     mirror_impl_state *mirror_impl_db(void) const {
-        return mirror_impl_db_;
+        return (mirror_impl_state *)impl_state_[PDS_IMPL_STATE_MIRROR];
     }
     nexthop_impl_state *nexthop_impl_db(void) const {
-        return nexthop_impl_db_;
+        return (nexthop_impl_state *)impl_state_[PDS_IMPL_STATE_NEXTHOP];
     }
     nexthop_group_impl_state *nexthop_group_impl_db(void) const {
-        return nexthop_group_impl_db_;
+        return (nexthop_group_impl_state *)impl_state_[PDS_IMPL_STATE_NEXTHOP_GROUP];
     }
 
 private:
-    apulu_impl_state           *apulu_impl_db_;
-    lif_impl_state             *lif_impl_db_;
-    if_impl_state              *if_impl_db_;
-    tep_impl_state             *tep_impl_db_;
-    vpc_impl_state             *vpc_impl_db_;
-    vnic_impl_state            *vnic_impl_db_;
-    mapping_impl_state         *mapping_impl_db_;
-    route_table_impl_state     *route_table_impl_db_;
-    security_policy_impl_state *security_policy_impl_db_;
-    mirror_impl_state          *mirror_impl_db_;
-    nexthop_impl_state         *nexthop_impl_db_;
-    nexthop_group_impl_state   *nexthop_group_impl_db_;
+    state_base *impl_state_[PDS_IMPL_STATE_MAX];
+
 };
 extern pds_impl_state g_pds_impl_state;
 

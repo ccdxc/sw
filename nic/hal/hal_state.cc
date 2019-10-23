@@ -2157,8 +2157,10 @@ sdk::lib::slab*
 hal_cfg_db::register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
 
     slabs_[slab_id] = slab::factory(slab_args.name, slab_id, slab_args.size,
-                                     slab_args.num_elements, slab_args.thread_safe,
-                                   slab_args.grow_on_demand, slab_args.zero_on_alloc, mmgr_);
+                                    slab_args.num_elements,
+                                    slab_args.thread_safe,
+                                    slab_args.grow_on_demand,
+                                    slab_args.zero_on_alloc, mmgr_);
     return slabs_[slab_id];
 }
 

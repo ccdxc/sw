@@ -21,8 +21,8 @@ namespace api {
 
 /// \brief     generic walk callback function type for db elements (i.e., api
 ///            objects)
-/// \param[in] api_obj    api object instance
-/// \param[in] ctxt       opaque context that the callback can interpret
+/// \param[in] obj     object instance
+/// \param[in] ctxt    opaque context that the callback can interpret
 /// \return    true if walk needs to be stopped or false if walk needs to
 ///            continue
 typedef bool (state_walk_cb_t)(void *api_obj, void *ctxt);
