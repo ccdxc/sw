@@ -23,59 +23,269 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-type InterfaceSpec_IFType int32
+type PauseType int32
 
 const (
-	InterfaceSpec_NONE        InterfaceSpec_IFType = 0
-	InterfaceSpec_ENIC        InterfaceSpec_IFType = 1
-	InterfaceSpec_UPLINK_ETH  InterfaceSpec_IFType = 2
-	InterfaceSpec_UPLINK_MGMT InterfaceSpec_IFType = 3
+	PauseType_DISABLE  PauseType = 0
+	PauseType_LINK     PauseType = 1
+	PauseType_PRIORITY PauseType = 2
 )
 
-var InterfaceSpec_IFType_name = map[int32]string{
+var PauseType_name = map[int32]string{
+	0: "DISABLE",
+	1: "LINK",
+	2: "PRIORITY",
+}
+var PauseType_value = map[string]int32{
+	"DISABLE":  0,
+	"LINK":     1,
+	"PRIORITY": 2,
+}
+
+func (x PauseType) String() string {
+	return proto.EnumName(PauseType_name, int32(x))
+}
+func (PauseType) EnumDescriptor() ([]byte, []int) { return fileDescriptorInterface, []int{0} }
+
+type IFType int32
+
+const (
+	IFType_NONE        IFType = 0
+	IFType_ENIC        IFType = 1
+	IFType_UPLINK_ETH  IFType = 2
+	IFType_UPLINK_MGMT IFType = 3
+)
+
+var IFType_name = map[int32]string{
 	0: "NONE",
 	1: "ENIC",
 	2: "UPLINK_ETH",
 	3: "UPLINK_MGMT",
 }
-var InterfaceSpec_IFType_value = map[string]int32{
+var IFType_value = map[string]int32{
 	"NONE":        0,
 	"ENIC":        1,
 	"UPLINK_ETH":  2,
 	"UPLINK_MGMT": 3,
 }
 
+func (x IFType) String() string {
+	return proto.EnumName(IFType_name, int32(x))
+}
+func (IFType) EnumDescriptor() ([]byte, []int) { return fileDescriptorInterface, []int{1} }
+
+type IFStatus int32
+
+const (
+	IFStatus_UP   IFStatus = 0
+	IFStatus_DOWN IFStatus = 1
+)
+
+var IFStatus_name = map[int32]string{
+	0: "UP",
+	1: "DOWN",
+}
+var IFStatus_value = map[string]int32{
+	"UP":   0,
+	"DOWN": 1,
+}
+
+func (x IFStatus) String() string {
+	return proto.EnumName(IFStatus_name, int32(x))
+}
+func (IFStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptorInterface, []int{2} }
+
+type InterfaceSpec_IFType int32
+
+const (
+	InterfaceSpec_NONE        InterfaceSpec_IFType = 0
+	InterfaceSpec_HOST_PF     InterfaceSpec_IFType = 1
+	InterfaceSpec_UPLINK_ETH  InterfaceSpec_IFType = 3
+	InterfaceSpec_UPLINK_MGMT InterfaceSpec_IFType = 4
+)
+
+var InterfaceSpec_IFType_name = map[int32]string{
+	0: "NONE",
+	1: "HOST_PF",
+	3: "UPLINK_ETH",
+	4: "UPLINK_MGMT",
+}
+var InterfaceSpec_IFType_value = map[string]int32{
+	"NONE":        0,
+	"HOST_PF":     1,
+	"UPLINK_ETH":  3,
+	"UPLINK_MGMT": 4,
+}
+
 func (x InterfaceSpec_IFType) String() string {
 	return proto.EnumName(InterfaceSpec_IFType_name, int32(x))
 }
 func (InterfaceSpec_IFType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorInterface, []int{1, 0}
+	return fileDescriptorInterface, []int{2, 0}
 }
 
-type InterfaceStatus_IFStatus int32
+type TransceiverStatus_State int32
 
 const (
-	InterfaceStatus_NONE InterfaceStatus_IFStatus = 0
-	InterfaceStatus_UP   InterfaceStatus_IFStatus = 1
-	InterfaceStatus_DOWN InterfaceStatus_IFStatus = 2
+	TransceiverStatus_STATE_NA             TransceiverStatus_State = 0
+	TransceiverStatus_STATE_REMOVED        TransceiverStatus_State = 1
+	TransceiverStatus_STATE_INSERTED       TransceiverStatus_State = 2
+	TransceiverStatus_STATE_PENDING        TransceiverStatus_State = 3
+	TransceiverStatus_STATE_SPROM_READ     TransceiverStatus_State = 4
+	TransceiverStatus_STATE_SPROM_READ_ERR TransceiverStatus_State = 5
 )
 
-var InterfaceStatus_IFStatus_name = map[int32]string{
-	0: "NONE",
-	1: "UP",
-	2: "DOWN",
+var TransceiverStatus_State_name = map[int32]string{
+	0: "STATE_NA",
+	1: "STATE_REMOVED",
+	2: "STATE_INSERTED",
+	3: "STATE_PENDING",
+	4: "STATE_SPROM_READ",
+	5: "STATE_SPROM_READ_ERR",
 }
-var InterfaceStatus_IFStatus_value = map[string]int32{
-	"NONE": 0,
-	"UP":   1,
-	"DOWN": 2,
+var TransceiverStatus_State_value = map[string]int32{
+	"STATE_NA":             0,
+	"STATE_REMOVED":        1,
+	"STATE_INSERTED":       2,
+	"STATE_PENDING":        3,
+	"STATE_SPROM_READ":     4,
+	"STATE_SPROM_READ_ERR": 5,
 }
 
-func (x InterfaceStatus_IFStatus) String() string {
-	return proto.EnumName(InterfaceStatus_IFStatus_name, int32(x))
+func (x TransceiverStatus_State) String() string {
+	return proto.EnumName(TransceiverStatus_State_name, int32(x))
 }
-func (InterfaceStatus_IFStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorInterface, []int{2, 0}
+func (TransceiverStatus_State) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorInterface, []int{5, 0}
+}
+
+type TransceiverStatus_CableType int32
+
+const (
+	TransceiverStatus_NONE   TransceiverStatus_CableType = 0
+	TransceiverStatus_COPPER TransceiverStatus_CableType = 1
+	TransceiverStatus_FIBER  TransceiverStatus_CableType = 2
+)
+
+var TransceiverStatus_CableType_name = map[int32]string{
+	0: "NONE",
+	1: "COPPER",
+	2: "FIBER",
+}
+var TransceiverStatus_CableType_value = map[string]int32{
+	"NONE":   0,
+	"COPPER": 1,
+	"FIBER":  2,
+}
+
+func (x TransceiverStatus_CableType) String() string {
+	return proto.EnumName(TransceiverStatus_CableType_name, int32(x))
+}
+func (TransceiverStatus_CableType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorInterface, []int{5, 1}
+}
+
+type TransceiverStatus_Pid int32
+
+const (
+	TransceiverStatus_UNKNOWN TransceiverStatus_Pid = 0
+	// CU
+	TransceiverStatus_QSFP_100G_CR4    TransceiverStatus_Pid = 1
+	TransceiverStatus_QSFP_40GBASE_CR4 TransceiverStatus_Pid = 2
+	TransceiverStatus_SFP_25GBASE_CR_S TransceiverStatus_Pid = 3
+	TransceiverStatus_SFP_25GBASE_CR_L TransceiverStatus_Pid = 4
+	TransceiverStatus_SFP_25GBASE_CR_N TransceiverStatus_Pid = 5
+	// Fiber, grouping all together
+	TransceiverStatus_QSFP_100G_AOC    TransceiverStatus_Pid = 50
+	TransceiverStatus_QSFP_100G_ACC    TransceiverStatus_Pid = 51
+	TransceiverStatus_QSFP_100G_SR4    TransceiverStatus_Pid = 52
+	TransceiverStatus_QSFP_100G_LR4    TransceiverStatus_Pid = 53
+	TransceiverStatus_QSFP_100G_ER4    TransceiverStatus_Pid = 54
+	TransceiverStatus_QSFP_40GBASE_ER4 TransceiverStatus_Pid = 55
+	TransceiverStatus_QSFP_40GBASE_SR4 TransceiverStatus_Pid = 56
+	TransceiverStatus_QSFP_40GBASE_LR4 TransceiverStatus_Pid = 57
+	TransceiverStatus_QSFP_40GBASE_AOC TransceiverStatus_Pid = 58
+	TransceiverStatus_SFP_25GBASE_SR   TransceiverStatus_Pid = 59
+	TransceiverStatus_SFP_25GBASE_LR   TransceiverStatus_Pid = 60
+	TransceiverStatus_SFP_25GBASE_ER   TransceiverStatus_Pid = 61
+	TransceiverStatus_SFP_25GBASE_AOC  TransceiverStatus_Pid = 62
+	TransceiverStatus_SFP_10GBASE_SR   TransceiverStatus_Pid = 63
+	TransceiverStatus_SFP_10GBASE_LR   TransceiverStatus_Pid = 64
+	TransceiverStatus_SFP_10GBASE_LRM  TransceiverStatus_Pid = 65
+	TransceiverStatus_SFP_10GBASE_ER   TransceiverStatus_Pid = 66
+	TransceiverStatus_SFP_10GBASE_AOC  TransceiverStatus_Pid = 67
+	TransceiverStatus_SFP_10GBASE_CU   TransceiverStatus_Pid = 68
+	TransceiverStatus_QSFP_100G_CWDM4  TransceiverStatus_Pid = 69
+	TransceiverStatus_QSFP_100G_PSM4   TransceiverStatus_Pid = 70
+	TransceiverStatus_PID_NA           TransceiverStatus_Pid = 1000
+)
+
+var TransceiverStatus_Pid_name = map[int32]string{
+	0:    "UNKNOWN",
+	1:    "QSFP_100G_CR4",
+	2:    "QSFP_40GBASE_CR4",
+	3:    "SFP_25GBASE_CR_S",
+	4:    "SFP_25GBASE_CR_L",
+	5:    "SFP_25GBASE_CR_N",
+	50:   "QSFP_100G_AOC",
+	51:   "QSFP_100G_ACC",
+	52:   "QSFP_100G_SR4",
+	53:   "QSFP_100G_LR4",
+	54:   "QSFP_100G_ER4",
+	55:   "QSFP_40GBASE_ER4",
+	56:   "QSFP_40GBASE_SR4",
+	57:   "QSFP_40GBASE_LR4",
+	58:   "QSFP_40GBASE_AOC",
+	59:   "SFP_25GBASE_SR",
+	60:   "SFP_25GBASE_LR",
+	61:   "SFP_25GBASE_ER",
+	62:   "SFP_25GBASE_AOC",
+	63:   "SFP_10GBASE_SR",
+	64:   "SFP_10GBASE_LR",
+	65:   "SFP_10GBASE_LRM",
+	66:   "SFP_10GBASE_ER",
+	67:   "SFP_10GBASE_AOC",
+	68:   "SFP_10GBASE_CU",
+	69:   "QSFP_100G_CWDM4",
+	70:   "QSFP_100G_PSM4",
+	1000: "PID_NA",
+}
+var TransceiverStatus_Pid_value = map[string]int32{
+	"UNKNOWN":          0,
+	"QSFP_100G_CR4":    1,
+	"QSFP_40GBASE_CR4": 2,
+	"SFP_25GBASE_CR_S": 3,
+	"SFP_25GBASE_CR_L": 4,
+	"SFP_25GBASE_CR_N": 5,
+	"QSFP_100G_AOC":    50,
+	"QSFP_100G_ACC":    51,
+	"QSFP_100G_SR4":    52,
+	"QSFP_100G_LR4":    53,
+	"QSFP_100G_ER4":    54,
+	"QSFP_40GBASE_ER4": 55,
+	"QSFP_40GBASE_SR4": 56,
+	"QSFP_40GBASE_LR4": 57,
+	"QSFP_40GBASE_AOC": 58,
+	"SFP_25GBASE_SR":   59,
+	"SFP_25GBASE_LR":   60,
+	"SFP_25GBASE_ER":   61,
+	"SFP_25GBASE_AOC":  62,
+	"SFP_10GBASE_SR":   63,
+	"SFP_10GBASE_LR":   64,
+	"SFP_10GBASE_LRM":  65,
+	"SFP_10GBASE_ER":   66,
+	"SFP_10GBASE_AOC":  67,
+	"SFP_10GBASE_CU":   68,
+	"QSFP_100G_CWDM4":  69,
+	"QSFP_100G_PSM4":   70,
+	"PID_NA":           1000,
+}
+
+func (x TransceiverStatus_Pid) String() string {
+	return proto.EnumName(TransceiverStatus_Pid_name, int32(x))
+}
+func (TransceiverStatus_Pid) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorInterface, []int{5, 2}
 }
 
 // Interface object
@@ -105,18 +315,59 @@ func (m *Interface) GetStatus() InterfaceStatus {
 	return InterfaceStatus{}
 }
 
+type PauseSpec struct {
+	// Pause type
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	// TX Pause enabled
+	TxPauseEnabled bool `protobuf:"varint,2,opt,name=TxPauseEnabled,proto3" json:"tx-pause-enabled,omitempty"`
+	// RX Pause enabled
+	RxPauseEnabled bool `protobuf:"varint,3,opt,name=RxPauseEnabled,proto3" json:"rx-pause-enabled,omitempty"`
+}
+
+func (m *PauseSpec) Reset()                    { *m = PauseSpec{} }
+func (m *PauseSpec) String() string            { return proto.CompactTextString(m) }
+func (*PauseSpec) ProtoMessage()               {}
+func (*PauseSpec) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{1} }
+
+func (m *PauseSpec) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *PauseSpec) GetTxPauseEnabled() bool {
+	if m != nil {
+		return m.TxPauseEnabled
+	}
+	return false
+}
+
+func (m *PauseSpec) GetRxPauseEnabled() bool {
+	if m != nil {
+		return m.RxPauseEnabled
+	}
+	return false
+}
+
 // InterfaceSpec captures all the interface level configuration
 type InterfaceSpec struct {
 	Type        string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
 	AdminStatus string `protobuf:"bytes,2,opt,name=AdminStatus,proto3" json:"admin-status,omitempty"`
 	// VrfName specifies the name of the VRF that the current Interface belongs to
 	VrfName string `protobuf:"bytes,3,opt,name=VrfName,proto3" json:"vrf-name,omitemtpy"`
+	// Inteface speed
+	Speed string `protobuf:"bytes,4,opt,name=Speed,proto3" json:"speed,omitempty"`
+	// Mtu of the interface
+	MTU uint32 `protobuf:"varint,5,opt,name=MTU,proto3" json:"mtu,omitempty"`
+	// Pause Spec
+	Pause *PauseSpec `protobuf:"bytes,6,opt,name=Pause" json:"pause,omitempty"`
 }
 
 func (m *InterfaceSpec) Reset()                    { *m = InterfaceSpec{} }
 func (m *InterfaceSpec) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceSpec) ProtoMessage()               {}
-func (*InterfaceSpec) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{1} }
+func (*InterfaceSpec) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{2} }
 
 func (m *InterfaceSpec) GetType() string {
 	if m != nil {
@@ -139,24 +390,146 @@ func (m *InterfaceSpec) GetVrfName() string {
 	return ""
 }
 
-// Interface Status
+func (m *InterfaceSpec) GetSpeed() string {
+	if m != nil {
+		return m.Speed
+	}
+	return ""
+}
+
+func (m *InterfaceSpec) GetMTU() uint32 {
+	if m != nil {
+		return m.MTU
+	}
+	return 0
+}
+
+func (m *InterfaceSpec) GetPause() *PauseSpec {
+	if m != nil {
+		return m.Pause
+	}
+	return nil
+}
+
+// InterfaceHostStatus is populated for PF and VF
+type InterfaceHostStatus struct {
+	// interface name seen by the host driver
+	HostIfName string `protobuf:"bytes,1,opt,name=HostIfName,proto3" json:"host-ifname,omitempty"`
+}
+
+func (m *InterfaceHostStatus) Reset()                    { *m = InterfaceHostStatus{} }
+func (m *InterfaceHostStatus) String() string            { return proto.CompactTextString(m) }
+func (*InterfaceHostStatus) ProtoMessage()               {}
+func (*InterfaceHostStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{3} }
+
+func (m *InterfaceHostStatus) GetHostIfName() string {
+	if m != nil {
+		return m.HostIfName
+	}
+	return ""
+}
+
+type InterfaceUplinkStatus struct {
+	// LinkSpeed auto-negotiated
+	LinkSpeed         string             `protobuf:"bytes,1,opt,name=LinkSpeed,proto3" json:"link-speed,omitempty"`
+	TransceiverStatus *TransceiverStatus `protobuf:"bytes,2,opt,name=TransceiverStatus" json:"transceiver-status,omitempty"`
+	PortID            uint32             `protobuf:"varint,3,opt,name=PortID,proto3" json:"uplink-port-id,omitempty"`
+}
+
+func (m *InterfaceUplinkStatus) Reset()                    { *m = InterfaceUplinkStatus{} }
+func (m *InterfaceUplinkStatus) String() string            { return proto.CompactTextString(m) }
+func (*InterfaceUplinkStatus) ProtoMessage()               {}
+func (*InterfaceUplinkStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{4} }
+
+func (m *InterfaceUplinkStatus) GetLinkSpeed() string {
+	if m != nil {
+		return m.LinkSpeed
+	}
+	return ""
+}
+
+func (m *InterfaceUplinkStatus) GetTransceiverStatus() *TransceiverStatus {
+	if m != nil {
+		return m.TransceiverStatus
+	}
+	return nil
+}
+
+func (m *InterfaceUplinkStatus) GetPortID() uint32 {
+	if m != nil {
+		return m.PortID
+	}
+	return 0
+}
+
+type TransceiverStatus struct {
+	TransceiverState    string `protobuf:"bytes,1,opt,name=TransceiverState,proto3" json:"state,omitempty"`
+	TranceiverCableType string `protobuf:"bytes,2,opt,name=TranceiverCableType,proto3" json:"cable-type,omitempty"`
+	TranceiverPid       string `protobuf:"bytes,3,opt,name=TranceiverPid,proto3" json:"pid,omitempty"`
+}
+
+func (m *TransceiverStatus) Reset()                    { *m = TransceiverStatus{} }
+func (m *TransceiverStatus) String() string            { return proto.CompactTextString(m) }
+func (*TransceiverStatus) ProtoMessage()               {}
+func (*TransceiverStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{5} }
+
+func (m *TransceiverStatus) GetTransceiverState() string {
+	if m != nil {
+		return m.TransceiverState
+	}
+	return ""
+}
+
+func (m *TransceiverStatus) GetTranceiverCableType() string {
+	if m != nil {
+		return m.TranceiverCableType
+	}
+	return ""
+}
+
+func (m *TransceiverStatus) GetTranceiverPid() string {
+	if m != nil {
+		return m.TranceiverPid
+	}
+	return ""
+}
+
+// InterfaceStatus
 type InterfaceStatus struct {
-	InterfaceID  uint64      `protobuf:"varint,1,opt,name=InterfaceID,proto3" json:"id,omitempty"`
-	OperStatus   string      `protobuf:"bytes,2,opt,name=OperStatus,proto3" json:"oper-status,omitempty"`
-	EnicStatus   *EnicStatus `protobuf:"bytes,3,opt,name=EnicStatus" json:"enic-status,omitempty"`
-	UplinkPortID uint32      `protobuf:"varint,4,opt,name=UplinkPortID,proto3" json:"uplink-port-id,omitempty"`
+	Name           string                 `protobuf:"bytes,1,opt,name=Name,proto3" json:"dsc,omitempty"`
+	InterfaceID    uint64                 `protobuf:"varint,2,opt,name=InterfaceID,proto3" json:"id,omitempty"`
+	DSC            string                 `protobuf:"bytes,3,opt,name=DSC,proto3" json:"dsc,omitempty"`
+	OperStatus     string                 `protobuf:"bytes,4,opt,name=OperStatus,proto3" json:"oper-status,omitempty"`
+	PrimaryMac     string                 `protobuf:"bytes,5,opt,name=PrimaryMac,proto3" json:"primary-mac,omitempty"`
+	IFHostStatus   *InterfaceHostStatus   `protobuf:"bytes,6,opt,name=IFHostStatus" json:"if-host-status,omitempty"`
+	IFUplinkStatus *InterfaceUplinkStatus `protobuf:"bytes,7,opt,name=IFUplinkStatus" json:"if-uplink-status,omitempty"`
+	MirrorEnabled  bool                   `protobuf:"varint,8,opt,name=MirrorEnabled,proto3" json:"mirror-enabled,omitempty"`
 }
 
 func (m *InterfaceStatus) Reset()                    { *m = InterfaceStatus{} }
 func (m *InterfaceStatus) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceStatus) ProtoMessage()               {}
-func (*InterfaceStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{2} }
+func (*InterfaceStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{6} }
+
+func (m *InterfaceStatus) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
 
 func (m *InterfaceStatus) GetInterfaceID() uint64 {
 	if m != nil {
 		return m.InterfaceID
 	}
 	return 0
+}
+
+func (m *InterfaceStatus) GetDSC() string {
+	if m != nil {
+		return m.DSC
+	}
+	return ""
 }
 
 func (m *InterfaceStatus) GetOperStatus() string {
@@ -166,36 +539,32 @@ func (m *InterfaceStatus) GetOperStatus() string {
 	return ""
 }
 
-func (m *InterfaceStatus) GetEnicStatus() *EnicStatus {
+func (m *InterfaceStatus) GetPrimaryMac() string {
 	if m != nil {
-		return m.EnicStatus
+		return m.PrimaryMac
+	}
+	return ""
+}
+
+func (m *InterfaceStatus) GetIFHostStatus() *InterfaceHostStatus {
+	if m != nil {
+		return m.IFHostStatus
 	}
 	return nil
 }
 
-func (m *InterfaceStatus) GetUplinkPortID() uint32 {
+func (m *InterfaceStatus) GetIFUplinkStatus() *InterfaceUplinkStatus {
 	if m != nil {
-		return m.UplinkPortID
-	}
-	return 0
-}
-
-// EnicStatus captures enic configurations.
-type EnicStatus struct {
-	// List of endpoints that this ENIC is mapped to
-	EpName []string `protobuf:"bytes,2,rep,name=EpName" json:"ep-name,omitempty"`
-}
-
-func (m *EnicStatus) Reset()                    { *m = EnicStatus{} }
-func (m *EnicStatus) String() string            { return proto.CompactTextString(m) }
-func (*EnicStatus) ProtoMessage()               {}
-func (*EnicStatus) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{3} }
-
-func (m *EnicStatus) GetEpName() []string {
-	if m != nil {
-		return m.EpName
+		return m.IFUplinkStatus
 	}
 	return nil
+}
+
+func (m *InterfaceStatus) GetMirrorEnabled() bool {
+	if m != nil {
+		return m.MirrorEnabled
+	}
+	return false
 }
 
 type InterfaceList struct {
@@ -205,7 +574,7 @@ type InterfaceList struct {
 func (m *InterfaceList) Reset()                    { *m = InterfaceList{} }
 func (m *InterfaceList) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceList) ProtoMessage()               {}
-func (*InterfaceList) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{4} }
+func (*InterfaceList) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{7} }
 
 func (m *InterfaceList) GetInterfaces() []*Interface {
 	if m != nil {
@@ -223,7 +592,7 @@ type InterfaceEvent struct {
 func (m *InterfaceEvent) Reset()                    { *m = InterfaceEvent{} }
 func (m *InterfaceEvent) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceEvent) ProtoMessage()               {}
-func (*InterfaceEvent) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{5} }
+func (*InterfaceEvent) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{8} }
 
 func (m *InterfaceEvent) GetEventType() api.EventType {
 	if m != nil {
@@ -247,7 +616,7 @@ type InterfaceEventList struct {
 func (m *InterfaceEventList) Reset()                    { *m = InterfaceEventList{} }
 func (m *InterfaceEventList) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceEventList) ProtoMessage()               {}
-func (*InterfaceEventList) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{6} }
+func (*InterfaceEventList) Descriptor() ([]byte, []int) { return fileDescriptorInterface, []int{9} }
 
 func (m *InterfaceEventList) GetInterfaceEvents() []*InterfaceEvent {
 	if m != nil {
@@ -258,14 +627,22 @@ func (m *InterfaceEventList) GetInterfaceEvents() []*InterfaceEvent {
 
 func init() {
 	proto.RegisterType((*Interface)(nil), "netproto.Interface")
+	proto.RegisterType((*PauseSpec)(nil), "netproto.PauseSpec")
 	proto.RegisterType((*InterfaceSpec)(nil), "netproto.InterfaceSpec")
+	proto.RegisterType((*InterfaceHostStatus)(nil), "netproto.InterfaceHostStatus")
+	proto.RegisterType((*InterfaceUplinkStatus)(nil), "netproto.InterfaceUplinkStatus")
+	proto.RegisterType((*TransceiverStatus)(nil), "netproto.TransceiverStatus")
 	proto.RegisterType((*InterfaceStatus)(nil), "netproto.InterfaceStatus")
-	proto.RegisterType((*EnicStatus)(nil), "netproto.EnicStatus")
 	proto.RegisterType((*InterfaceList)(nil), "netproto.InterfaceList")
 	proto.RegisterType((*InterfaceEvent)(nil), "netproto.InterfaceEvent")
 	proto.RegisterType((*InterfaceEventList)(nil), "netproto.InterfaceEventList")
+	proto.RegisterEnum("netproto.PauseType", PauseType_name, PauseType_value)
+	proto.RegisterEnum("netproto.IFType", IFType_name, IFType_value)
+	proto.RegisterEnum("netproto.IFStatus", IFStatus_name, IFStatus_value)
 	proto.RegisterEnum("netproto.InterfaceSpec_IFType", InterfaceSpec_IFType_name, InterfaceSpec_IFType_value)
-	proto.RegisterEnum("netproto.InterfaceStatus_IFStatus", InterfaceStatus_IFStatus_name, InterfaceStatus_IFStatus_value)
+	proto.RegisterEnum("netproto.TransceiverStatus_State", TransceiverStatus_State_name, TransceiverStatus_State_value)
+	proto.RegisterEnum("netproto.TransceiverStatus_CableType", TransceiverStatus_CableType_name, TransceiverStatus_CableType_value)
+	proto.RegisterEnum("netproto.TransceiverStatus_Pid", TransceiverStatus_Pid_name, TransceiverStatus_Pid_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -650,6 +1027,50 @@ func (m *Interface) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *PauseSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PauseSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.TxPauseEnabled {
+		dAtA[i] = 0x10
+		i++
+		if m.TxPauseEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RxPauseEnabled {
+		dAtA[i] = 0x18
+		i++
+		if m.RxPauseEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
+}
+
 func (m *InterfaceSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -683,6 +1104,126 @@ func (m *InterfaceSpec) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintInterface(dAtA, i, uint64(len(m.VrfName)))
 		i += copy(dAtA[i:], m.VrfName)
 	}
+	if len(m.Speed) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.Speed)))
+		i += copy(dAtA[i:], m.Speed)
+	}
+	if m.MTU != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(m.MTU))
+	}
+	if m.Pause != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(m.Pause.Size()))
+		n5, err := m.Pause.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+
+func (m *InterfaceHostStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceHostStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.HostIfName) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.HostIfName)))
+		i += copy(dAtA[i:], m.HostIfName)
+	}
+	return i, nil
+}
+
+func (m *InterfaceUplinkStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceUplinkStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.LinkSpeed) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.LinkSpeed)))
+		i += copy(dAtA[i:], m.LinkSpeed)
+	}
+	if m.TransceiverStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(m.TransceiverStatus.Size()))
+		n6, err := m.TransceiverStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	if m.PortID != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(m.PortID))
+	}
+	return i, nil
+}
+
+func (m *TransceiverStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TransceiverStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.TransceiverState) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.TransceiverState)))
+		i += copy(dAtA[i:], m.TransceiverState)
+	}
+	if len(m.TranceiverCableType) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.TranceiverCableType)))
+		i += copy(dAtA[i:], m.TranceiverCableType)
+	}
+	if len(m.TranceiverPid) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.TranceiverPid)))
+		i += copy(dAtA[i:], m.TranceiverPid)
+	}
 	return i, nil
 }
 
@@ -701,64 +1242,64 @@ func (m *InterfaceStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Name) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
 	if m.InterfaceID != 0 {
-		dAtA[i] = 0x8
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintInterface(dAtA, i, uint64(m.InterfaceID))
 	}
+	if len(m.DSC) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.DSC)))
+		i += copy(dAtA[i:], m.DSC)
+	}
 	if len(m.OperStatus) > 0 {
-		dAtA[i] = 0x12
+		dAtA[i] = 0x22
 		i++
 		i = encodeVarintInterface(dAtA, i, uint64(len(m.OperStatus)))
 		i += copy(dAtA[i:], m.OperStatus)
 	}
-	if m.EnicStatus != nil {
-		dAtA[i] = 0x1a
+	if len(m.PrimaryMac) > 0 {
+		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintInterface(dAtA, i, uint64(m.EnicStatus.Size()))
-		n5, err := m.EnicStatus.MarshalTo(dAtA[i:])
+		i = encodeVarintInterface(dAtA, i, uint64(len(m.PrimaryMac)))
+		i += copy(dAtA[i:], m.PrimaryMac)
+	}
+	if m.IFHostStatus != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintInterface(dAtA, i, uint64(m.IFHostStatus.Size()))
+		n7, err := m.IFHostStatus.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n7
 	}
-	if m.UplinkPortID != 0 {
-		dAtA[i] = 0x20
+	if m.IFUplinkStatus != nil {
+		dAtA[i] = 0x3a
 		i++
-		i = encodeVarintInterface(dAtA, i, uint64(m.UplinkPortID))
-	}
-	return i, nil
-}
-
-func (m *EnicStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EnicStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.EpName) > 0 {
-		for _, s := range m.EpName {
-			dAtA[i] = 0x12
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+		i = encodeVarintInterface(dAtA, i, uint64(m.IFUplinkStatus.Size()))
+		n8, err := m.IFUplinkStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n8
+	}
+	if m.MirrorEnabled {
+		dAtA[i] = 0x40
+		i++
+		if m.MirrorEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
 	}
 	return i, nil
 }
@@ -816,11 +1357,11 @@ func (m *InterfaceEvent) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintInterface(dAtA, i, uint64(m.Interface.Size()))
-	n6, err := m.Interface.MarshalTo(dAtA[i:])
+	n9, err := m.Interface.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n9
 	return i, nil
 }
 
@@ -877,6 +1418,22 @@ func (m *Interface) Size() (n int) {
 	return n
 }
 
+func (m *PauseSpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	if m.TxPauseEnabled {
+		n += 2
+	}
+	if m.RxPauseEnabled {
+		n += 2
+	}
+	return n
+}
+
 func (m *InterfaceSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -892,37 +1449,97 @@ func (m *InterfaceSpec) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovInterface(uint64(l))
 	}
+	l = len(m.Speed)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	if m.MTU != 0 {
+		n += 1 + sovInterface(uint64(m.MTU))
+	}
+	if m.Pause != nil {
+		l = m.Pause.Size()
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	return n
+}
+
+func (m *InterfaceHostStatus) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.HostIfName)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	return n
+}
+
+func (m *InterfaceUplinkStatus) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.LinkSpeed)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	if m.TransceiverStatus != nil {
+		l = m.TransceiverStatus.Size()
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	if m.PortID != 0 {
+		n += 1 + sovInterface(uint64(m.PortID))
+	}
+	return n
+}
+
+func (m *TransceiverStatus) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.TransceiverState)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	l = len(m.TranceiverCableType)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	l = len(m.TranceiverPid)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
 	return n
 }
 
 func (m *InterfaceStatus) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
+	}
 	if m.InterfaceID != 0 {
 		n += 1 + sovInterface(uint64(m.InterfaceID))
+	}
+	l = len(m.DSC)
+	if l > 0 {
+		n += 1 + l + sovInterface(uint64(l))
 	}
 	l = len(m.OperStatus)
 	if l > 0 {
 		n += 1 + l + sovInterface(uint64(l))
 	}
-	if m.EnicStatus != nil {
-		l = m.EnicStatus.Size()
+	l = len(m.PrimaryMac)
+	if l > 0 {
 		n += 1 + l + sovInterface(uint64(l))
 	}
-	if m.UplinkPortID != 0 {
-		n += 1 + sovInterface(uint64(m.UplinkPortID))
+	if m.IFHostStatus != nil {
+		l = m.IFHostStatus.Size()
+		n += 1 + l + sovInterface(uint64(l))
 	}
-	return n
-}
-
-func (m *EnicStatus) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.EpName) > 0 {
-		for _, s := range m.EpName {
-			l = len(s)
-			n += 1 + l + sovInterface(uint64(l))
-		}
+	if m.IFUplinkStatus != nil {
+		l = m.IFUplinkStatus.Size()
+		n += 1 + l + sovInterface(uint64(l))
+	}
+	if m.MirrorEnabled {
+		n += 2
 	}
 	return n
 }
@@ -1145,6 +1762,125 @@ func (m *Interface) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *PauseSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInterface
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PauseSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PauseSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxPauseEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.TxPauseEnabled = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxPauseEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RxPauseEnabled = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInterface(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInterface
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *InterfaceSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1261,6 +1997,434 @@ func (m *InterfaceSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.VrfName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Speed", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Speed = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MTU", wireType)
+			}
+			m.MTU = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MTU |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pause", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pause == nil {
+				m.Pause = &PauseSpec{}
+			}
+			if err := m.Pause.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInterface(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInterface
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceHostStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInterface
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceHostStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceHostStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostIfName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HostIfName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInterface(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInterface
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceUplinkStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInterface
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceUplinkStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceUplinkStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LinkSpeed", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LinkSpeed = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransceiverStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TransceiverStatus == nil {
+				m.TransceiverStatus = &TransceiverStatus{}
+			}
+			if err := m.TransceiverStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortID", wireType)
+			}
+			m.PortID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PortID |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInterface(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInterface
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TransceiverStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInterface
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TransceiverStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TransceiverStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransceiverState", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TransceiverState = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TranceiverCableType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TranceiverCableType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TranceiverPid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TranceiverPid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterface(dAtA[iNdEx:])
@@ -1312,6 +2476,35 @@ func (m *InterfaceStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceID", wireType)
 			}
@@ -1330,7 +2523,36 @@ func (m *InterfaceStatus) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 2:
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSC", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DSC = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field OperStatus", wireType)
 			}
@@ -1359,111 +2581,9 @@ func (m *InterfaceStatus) Unmarshal(dAtA []byte) error {
 			}
 			m.OperStatus = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EnicStatus", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowInterface
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthInterface
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.EnicStatus == nil {
-				m.EnicStatus = &EnicStatus{}
-			}
-			if err := m.EnicStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UplinkPortID", wireType)
-			}
-			m.UplinkPortID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowInterface
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UplinkPortID |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipInterface(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthInterface
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EnicStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowInterface
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EnicStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EnicStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PrimaryMac", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1488,8 +2608,94 @@ func (m *EnicStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EpName = append(m.EpName, string(dAtA[iNdEx:postIndex]))
+			m.PrimaryMac = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IFHostStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IFHostStatus == nil {
+				m.IFHostStatus = &InterfaceHostStatus{}
+			}
+			if err := m.IFHostStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IFUplinkStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInterface
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IFUplinkStatus == nil {
+				m.IFUplinkStatus = &InterfaceUplinkStatus{}
+			}
+			if err := m.IFUplinkStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MirrorEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterface
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.MirrorEnabled = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterface(dAtA[iNdEx:])
@@ -1880,64 +3086,115 @@ var (
 func init() { proto.RegisterFile("interface.proto", fileDescriptorInterface) }
 
 var fileDescriptorInterface = []byte{
-	// 929 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xd1, 0x6e, 0x1a, 0x47,
-	0x14, 0x65, 0xd7, 0x88, 0x98, 0x8b, 0x0d, 0xdb, 0x71, 0xe2, 0x02, 0x75, 0x8d, 0xbb, 0x52, 0x2b,
-	0x2a, 0x85, 0xdd, 0x08, 0x4b, 0x7d, 0x69, 0x9d, 0x36, 0x6b, 0xb0, 0x8b, 0x1c, 0x83, 0x85, 0xed,
-	0xa6, 0x4f, 0xad, 0xc6, 0xcb, 0x98, 0x4c, 0x0b, 0xb3, 0xa3, 0xdd, 0xc1, 0x95, 0x55, 0xe5, 0xa9,
-	0x52, 0xbe, 0xa1, 0x9f, 0x50, 0x59, 0x7d, 0xaa, 0xfa, 0x11, 0x79, 0xcc, 0x17, 0xa0, 0xc8, 0x7d,
-	0xe3, 0x2b, 0xaa, 0x19, 0x60, 0x19, 0x0c, 0xae, 0xaa, 0xbc, 0xcd, 0xdc, 0x39, 0xe7, 0xcc, 0xb9,
-	0x77, 0xe7, 0xde, 0x85, 0x1c, 0x65, 0x82, 0x84, 0x97, 0xd8, 0x27, 0x0e, 0x0f, 0x03, 0x11, 0xa0,
-	0x55, 0x46, 0x84, 0x5a, 0x15, 0xb7, 0xba, 0x41, 0xd0, 0xed, 0x11, 0x17, 0x73, 0xea, 0x62, 0xc6,
-	0x02, 0x81, 0x05, 0x0d, 0x58, 0x34, 0xc6, 0x15, 0xeb, 0x5d, 0x2a, 0x5e, 0x0e, 0x2e, 0x1c, 0x3f,
-	0xe8, 0xbb, 0x9c, 0xb0, 0x08, 0xb3, 0x4e, 0xe0, 0x46, 0xbf, 0xb8, 0x57, 0x84, 0x51, 0x9f, 0xb8,
-	0x03, 0x41, 0x7b, 0x91, 0xa4, 0x76, 0x09, 0xd3, 0xd9, 0x2e, 0x65, 0x7e, 0x6f, 0xd0, 0x21, 0x53,
-	0x99, 0x8a, 0x26, 0xd3, 0x0d, 0xba, 0x81, 0xab, 0xc2, 0x17, 0x83, 0x4b, 0xb5, 0x53, 0x1b, 0xb5,
-	0x9a, 0xc0, 0x3f, 0xbd, 0xe7, 0x56, 0xe9, 0xb1, 0x4f, 0x04, 0x1e, 0xc3, 0xec, 0x1b, 0x13, 0xd2,
-	0x8d, 0x69, 0x62, 0xe8, 0x29, 0xac, 0x9e, 0x5d, 0x73, 0x72, 0x4c, 0x04, 0xce, 0x1b, 0x3b, 0x46,
-	0x39, 0x53, 0x5d, 0x77, 0x30, 0xa7, 0xce, 0x34, 0xe8, 0x6d, 0xbc, 0x19, 0x96, 0x12, 0x6f, 0x87,
-	0x25, 0x63, 0x34, 0x2c, 0x3d, 0x78, 0x4c, 0x59, 0x8f, 0x32, 0xd2, 0x8e, 0x39, 0xe8, 0x08, 0xa0,
-	0x75, 0xf1, 0x13, 0xf1, 0x85, 0x52, 0x30, 0x95, 0x42, 0x4e, 0x29, 0xcc, 0xc2, 0x5e, 0x51, 0xd3,
-	0xc8, 0x4a, 0x2b, 0x8f, 0x83, 0x3e, 0x15, 0xa4, 0xcf, 0xc5, 0x75, 0x5b, 0xa3, 0xa3, 0x7d, 0x48,
-	0x9e, 0x72, 0xe2, 0xe7, 0x57, 0x94, 0xcc, 0x87, 0xce, 0xb4, 0xdc, 0x4e, 0xec, 0x57, 0x1e, 0x7b,
-	0x9b, 0x52, 0x4e, 0x4a, 0x45, 0x9c, 0xf8, 0x9a, 0x94, 0x22, 0xa3, 0x23, 0x48, 0x9d, 0x0a, 0x2c,
-	0x06, 0x51, 0x3e, 0xa9, 0x64, 0x0a, 0xcb, 0x64, 0x14, 0xc0, 0xcb, 0x4f, 0x84, 0xac, 0x48, 0xed,
-	0x35, 0xa9, 0x89, 0x84, 0xfd, 0xa7, 0x09, 0xeb, 0x73, 0x97, 0xa3, 0x43, 0x48, 0xca, 0xe4, 0x55,
-	0xb1, 0xd2, 0xde, 0xee, 0xcd, 0xeb, 0xc2, 0xc7, 0xa7, 0x22, 0xac, 0xb3, 0x41, 0xbf, 0x3c, 0x07,
-	0x74, 0x1a, 0x07, 0x12, 0xf7, 0xb9, 0xf4, 0x29, 0xae, 0x39, 0xd1, 0x7d, 0xca, 0x03, 0x84, 0x21,
-	0xf3, 0xac, 0xd3, 0xa7, 0x6c, 0x62, 0xd6, 0x54, 0x7a, 0x5f, 0xdf, 0xbc, 0x2e, 0x7c, 0xb2, 0xa8,
-	0xa7, 0x20, 0x4e, 0xe3, 0x60, 0xbc, 0x90, 0x9a, 0x9b, 0x58, 0x72, 0x2b, 0x0b, 0xc6, 0x75, 0x4d,
-	0xf4, 0x04, 0x1e, 0x7c, 0x17, 0x5e, 0x36, 0x71, 0x9f, 0xa8, 0x92, 0xa6, 0xbd, 0xcd, 0xd1, 0xb0,
-	0x84, 0xae, 0xc2, 0xcb, 0x0a, 0xc3, 0xfd, 0xa9, 0x23, 0xc1, 0xaf, 0xdb, 0x53, 0x98, 0xbd, 0x07,
-	0xa9, 0xb1, 0x6f, 0xb4, 0x0a, 0xc9, 0x66, 0xab, 0x59, 0xb7, 0x12, 0x72, 0x55, 0x6f, 0x36, 0xf6,
-	0x2d, 0x03, 0x65, 0x01, 0xce, 0x4f, 0x9e, 0x37, 0x9a, 0x47, 0x3f, 0xd6, 0xcf, 0xbe, 0xb5, 0x4c,
-	0x94, 0x83, 0xcc, 0x64, 0x7f, 0x7c, 0x78, 0x7c, 0x66, 0xad, 0xd8, 0xef, 0x4c, 0xc8, 0xdd, 0x71,
-	0x8d, 0xaa, 0x90, 0x89, 0x43, 0x8d, 0x9a, 0xaa, 0x5b, 0xd2, 0xb3, 0x46, 0xc3, 0xd2, 0x1a, 0xed,
-	0xe8, 0xc6, 0x35, 0x10, 0xfa, 0x01, 0xa0, 0xc5, 0x49, 0x38, 0x57, 0x9a, 0xa7, 0xff, 0xb7, 0x34,
-	0x8f, 0x02, 0x4e, 0xc2, 0xc5, 0xca, 0x68, 0x8a, 0xa8, 0x05, 0x50, 0x67, 0xd4, 0x9f, 0xe8, 0x8f,
-	0x9f, 0xdb, 0xc3, 0xd9, 0x3b, 0x99, 0x9d, 0x79, 0x05, 0x29, 0x28, 0xdb, 0x76, 0x89, 0xe0, 0x0c,
-	0x86, 0xbe, 0x81, 0xb5, 0x73, 0xde, 0xa3, 0xec, 0xe7, 0x93, 0x20, 0x14, 0x8d, 0x9a, 0x7a, 0x7a,
-	0xeb, 0xde, 0xd6, 0x68, 0x58, 0xca, 0x0f, 0x54, 0xbc, 0xc2, 0x83, 0x50, 0x54, 0xe6, 0x32, 0x9e,
-	0x63, 0xd8, 0x9f, 0xc1, 0xea, 0x34, 0x09, 0xad, 0xf6, 0x29, 0x30, 0xcf, 0x4f, 0x2c, 0x43, 0x46,
-	0x6a, 0xad, 0x17, 0x4d, 0xcb, 0xb4, 0xbf, 0xd4, 0xad, 0xa3, 0x0a, 0xa4, 0xea, 0x5c, 0x7d, 0x60,
-	0x73, 0x67, 0xa5, 0x9c, 0xf6, 0x1e, 0x8d, 0x86, 0xa5, 0x0f, 0x08, 0xd7, 0xbf, 0xaf, 0x7a, 0xce,
-	0x63, 0x90, 0x5d, 0xd3, 0x5e, 0xf3, 0x73, 0x1a, 0x09, 0xb4, 0x0b, 0x10, 0x0f, 0xb9, 0x28, 0x6f,
-	0xec, 0xac, 0x94, 0x33, 0xd5, 0x8d, 0x25, 0x0d, 0xd3, 0xd6, 0x60, 0xf6, 0x1f, 0x06, 0x64, 0xe3,
-	0x93, 0xfa, 0x15, 0x61, 0x02, 0x1d, 0x40, 0x5a, 0x2d, 0xe2, 0xd6, 0xc8, 0x56, 0xb3, 0x6a, 0x0a,
-	0xc4, 0x51, 0x2f, 0x3f, 0x1a, 0x96, 0x1e, 0x12, 0xb9, 0xad, 0xdc, 0xe9, 0x87, 0x19, 0x15, 0x35,
-	0xb5, 0xd9, 0x34, 0x99, 0x26, 0xcb, 0xec, 0x78, 0x1f, 0x4d, 0x3a, 0x77, 0x23, 0xb6, 0xa5, 0xeb,
-	0xc5, 0x38, 0xfb, 0x7b, 0x40, 0xf3, 0x4e, 0x55, 0xd6, 0x9e, 0xf6, 0x4a, 0x55, 0x74, 0x9a, 0x7a,
-	0x7e, 0xc9, 0x5d, 0x0a, 0xd0, 0xbe, 0x4b, 0xa8, 0xfe, 0x9d, 0x84, 0xb5, 0x38, 0xf6, 0x8c, 0x53,
-	0xb4, 0x07, 0xb9, 0xfd, 0x90, 0x60, 0x41, 0x66, 0xc3, 0x75, 0x99, 0xf5, 0xe2, 0xb2, 0xa0, 0x9d,
-	0x40, 0x5f, 0xc0, 0xda, 0x21, 0x11, 0x33, 0xee, 0xdd, 0x21, 0x7a, 0x1f, 0xef, 0x2b, 0xc8, 0xca,
-	0x9c, 0xe2, 0x50, 0xb4, 0xc8, 0x5c, 0x36, 0x48, 0x25, 0xc7, 0x4e, 0x48, 0xd3, 0x35, 0xd2, 0x23,
-	0xef, 0x6b, 0xba, 0x06, 0xb9, 0x17, 0x58, 0xf8, 0x2f, 0xff, 0xeb, 0xf6, 0xad, 0xfb, 0x6a, 0x3a,
-	0xb6, 0xf0, 0xc4, 0x90, 0x26, 0xce, 0x79, 0xe7, 0xbd, 0x2b, 0xe7, 0xc1, 0x46, 0xbc, 0x95, 0x3d,
-	0x3e, 0xd6, 0x42, 0xf7, 0x7e, 0xcb, 0xe2, 0xfc, 0x1f, 0xce, 0x4e, 0x94, 0x8d, 0x62, 0xf7, 0xaf,
-	0xdf, 0x0a, 0xbe, 0xfe, 0x5f, 0x4c, 0xf6, 0xe4, 0x43, 0x49, 0xf2, 0x20, 0x12, 0x28, 0xd5, 0x51,
-	0x25, 0x42, 0x2b, 0x7c, 0x20, 0x8a, 0x7b, 0xee, 0xaf, 0xb3, 0xe4, 0x9c, 0x33, 0xc2, 0x30, 0x13,
-	0xaf, 0xe6, 0x62, 0xb2, 0xd3, 0x22, 0x8e, 0x7d, 0xb2, 0x18, 0x7e, 0xe5, 0x59, 0x6f, 0x6e, 0xb7,
-	0x8d, 0xb7, 0xb7, 0xdb, 0xc6, 0xbb, 0xdb, 0x6d, 0xe3, 0xf7, 0x7f, 0xb6, 0x13, 0x27, 0xc6, 0x45,
-	0x4a, 0xb9, 0xdc, 0xfd, 0x37, 0x00, 0x00, 0xff, 0xff, 0x68, 0xaa, 0xb0, 0x18, 0x70, 0x08, 0x00,
-	0x00,
+	// 1752 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0x4f, 0x73, 0x1a, 0xc9,
+	0x15, 0xd7, 0x00, 0x42, 0xf0, 0x30, 0xd0, 0x6e, 0xd9, 0x5e, 0x60, 0xb5, 0x42, 0x35, 0xc9, 0x56,
+	0x64, 0x97, 0x01, 0xad, 0xcc, 0x7a, 0xb3, 0x89, 0xbd, 0x59, 0x06, 0x06, 0x99, 0x58, 0xc0, 0xec,
+	0x80, 0xd6, 0xd9, 0x13, 0x35, 0x82, 0x16, 0x9e, 0xac, 0x98, 0x99, 0x9a, 0x19, 0x9c, 0x55, 0xa5,
+	0xb6, 0x72, 0x48, 0x95, 0xca, 0x1f, 0x21, 0x1f, 0x21, 0xa5, 0x43, 0x0e, 0xa9, 0xe4, 0x9e, 0xa3,
+	0x8f, 0xfb, 0x09, 0xa8, 0x44, 0xa9, 0x54, 0xa5, 0x74, 0xcc, 0x27, 0x48, 0x75, 0xcf, 0x30, 0xff,
+	0x40, 0x3e, 0xec, 0x6d, 0xfa, 0xd7, 0xbf, 0xf7, 0x7b, 0xaf, 0x5f, 0x77, 0xcf, 0x7b, 0x0d, 0x79,
+	0x55, 0xb3, 0x89, 0x79, 0xa6, 0x8c, 0x49, 0xd5, 0x30, 0x75, 0x5b, 0xc7, 0x29, 0x8d, 0xd8, 0xec,
+	0xab, 0xb4, 0x33, 0xd5, 0xf5, 0xe9, 0x39, 0xa9, 0x29, 0x86, 0x5a, 0x53, 0x34, 0x4d, 0xb7, 0x15,
+	0x5b, 0xd5, 0x35, 0xcb, 0xe1, 0x95, 0xc4, 0xa9, 0x6a, 0xbf, 0x9e, 0x9f, 0x56, 0xc7, 0xfa, 0xac,
+	0x66, 0x10, 0xcd, 0x52, 0xb4, 0x89, 0x5e, 0xb3, 0x7e, 0x57, 0x7b, 0x43, 0x34, 0x75, 0x4c, 0x6a,
+	0x73, 0x5b, 0x3d, 0xb7, 0xa8, 0xe9, 0x94, 0x68, 0x41, 0xeb, 0x9a, 0xaa, 0x8d, 0xcf, 0xe7, 0x13,
+	0xb2, 0x94, 0xa9, 0x04, 0x64, 0xa6, 0xfa, 0x54, 0xaf, 0x31, 0xf8, 0x74, 0x7e, 0xc6, 0x46, 0x6c,
+	0xc0, 0xbe, 0x5c, 0xfa, 0xc7, 0xb7, 0x78, 0xa5, 0x31, 0xce, 0x88, 0xad, 0x38, 0x34, 0xfe, 0x2a,
+	0x06, 0xe9, 0xce, 0x72, 0x61, 0xf8, 0x0b, 0x48, 0x0d, 0x2f, 0x0c, 0xd2, 0x25, 0xb6, 0x52, 0xe0,
+	0xf6, 0xb8, 0xfd, 0xcc, 0x61, 0xb6, 0xaa, 0x18, 0x6a, 0x75, 0x09, 0x0a, 0xdb, 0xef, 0x16, 0xe5,
+	0x8d, 0x1f, 0x16, 0x65, 0xee, 0x66, 0x51, 0xde, 0x7a, 0xac, 0x6a, 0xe7, 0xaa, 0x46, 0x64, 0xcf,
+	0x06, 0xbf, 0x04, 0xe8, 0x9f, 0xfe, 0x96, 0x8c, 0x6d, 0xa6, 0x10, 0x63, 0x0a, 0x79, 0xa6, 0xe0,
+	0xc3, 0x42, 0x29, 0xa0, 0x91, 0xa3, 0xa1, 0x3c, 0xd6, 0x67, 0xaa, 0x4d, 0x66, 0x86, 0x7d, 0x21,
+	0x07, 0xcc, 0x71, 0x13, 0x12, 0x03, 0x83, 0x8c, 0x0b, 0x71, 0x26, 0xf3, 0x41, 0x75, 0x99, 0xee,
+	0xaa, 0x17, 0x2f, 0x9d, 0x16, 0x1e, 0x50, 0x39, 0x2a, 0x65, 0x19, 0x64, 0x1c, 0x90, 0x62, 0xc6,
+	0xf8, 0x25, 0x24, 0x07, 0xb6, 0x62, 0xcf, 0xad, 0x42, 0x82, 0xc9, 0x14, 0xd7, 0xc9, 0x30, 0x82,
+	0x50, 0x70, 0x85, 0x90, 0xc5, 0xc6, 0x01, 0x29, 0x57, 0x82, 0xff, 0x17, 0x07, 0x69, 0x49, 0x99,
+	0x5b, 0xcc, 0x31, 0x7e, 0x06, 0x09, 0xba, 0x70, 0x96, 0xa8, 0xb4, 0xb0, 0x7f, 0x75, 0x59, 0xc4,
+	0x03, 0xdb, 0x14, 0xb5, 0xf9, 0x6c, 0x9f, 0x91, 0xe8, 0xe4, 0x43, 0x1a, 0x98, 0x7d, 0x61, 0x90,
+	0x60, 0x60, 0x74, 0x02, 0xff, 0x1a, 0x72, 0xc3, 0xef, 0x18, 0x4f, 0xd4, 0x94, 0xd3, 0x73, 0x32,
+	0x61, 0xe9, 0x4a, 0x09, 0xfc, 0x3b, 0x27, 0x33, 0x25, 0xfb, 0xbb, 0x8a, 0x41, 0xa7, 0x2b, 0xc4,
+	0x99, 0x0f, 0x28, 0x44, 0x2c, 0xa9, 0x96, 0x1c, 0xd6, 0x8a, 0x87, 0xb5, 0xcc, 0xf7, 0x68, 0x85,
+	0x2d, 0xf9, 0xff, 0xc4, 0x21, 0x1b, 0x4a, 0x30, 0x3e, 0x0a, 0xad, 0xf3, 0xc9, 0xd5, 0x65, 0xf1,
+	0xa3, 0xe5, 0x3a, 0x43, 0xc4, 0x6a, 0xa7, 0xfd, 0xfe, 0x25, 0x7f, 0x05, 0x99, 0xc6, 0x64, 0xa6,
+	0x6a, 0xee, 0x86, 0xc4, 0x98, 0x5e, 0xed, 0xea, 0xb2, 0x78, 0xd7, 0xd3, 0x6b, 0x3b, 0x73, 0x54,
+	0xe3, 0x81, 0x42, 0xb9, 0x95, 0x95, 0xcd, 0x08, 0x6a, 0xe0, 0x03, 0xd8, 0xfa, 0xda, 0x3c, 0xeb,
+	0x29, 0x33, 0xc2, 0x96, 0x9c, 0x16, 0x1e, 0xdc, 0x2c, 0xca, 0xf8, 0x8d, 0x79, 0x56, 0xd1, 0x94,
+	0xd9, 0x32, 0x02, 0xdb, 0xb8, 0x90, 0x97, 0x34, 0xfc, 0x10, 0x36, 0x07, 0x06, 0x21, 0x13, 0x76,
+	0x1e, 0xd2, 0xc2, 0xf6, 0xcd, 0xa2, 0x9c, 0xb7, 0x28, 0x10, 0x70, 0xe1, 0x30, 0xf0, 0xcf, 0x20,
+	0xde, 0x1d, 0x9e, 0x14, 0x36, 0xf7, 0xb8, 0xfd, 0xac, 0x70, 0xdf, 0xcd, 0x65, 0x76, 0x66, 0xcf,
+	0x03, 0x54, 0xca, 0xc0, 0x02, 0x6c, 0xb2, 0x1c, 0x16, 0x92, 0xec, 0x8c, 0x6d, 0xfb, 0x67, 0xcc,
+	0x3b, 0x2d, 0xc2, 0x07, 0xae, 0x7d, 0x9e, 0x6d, 0x44, 0xd0, 0x19, 0xe3, 0xf0, 0x1a, 0x24, 0x9d,
+	0xfc, 0xe1, 0x14, 0x24, 0x7a, 0xfd, 0x9e, 0x88, 0x36, 0x70, 0x01, 0xb6, 0x5e, 0xf4, 0x07, 0xc3,
+	0x91, 0xd4, 0x46, 0x5c, 0x29, 0x73, 0xfd, 0xb6, 0xb8, 0xf5, 0x5a, 0xb7, 0xec, 0x8a, 0x71, 0x86,
+	0x77, 0x01, 0x4e, 0xa4, 0xe3, 0x4e, 0xef, 0xe5, 0x48, 0x1c, 0xbe, 0x40, 0xf1, 0x52, 0xee, 0xfa,
+	0x6d, 0x11, 0xe6, 0xc6, 0xb9, 0xaa, 0x7d, 0x5b, 0x21, 0xf6, 0x6b, 0xbc, 0x07, 0x19, 0x77, 0xbe,
+	0x7b, 0xd4, 0x1d, 0xa2, 0x44, 0x29, 0x7f, 0xfd, 0xb6, 0x98, 0x71, 0x09, 0xb3, 0xe9, 0xcc, 0xe6,
+	0x25, 0xd8, 0xf6, 0x76, 0xef, 0x85, 0x6e, 0xd9, 0x6e, 0x42, 0x3f, 0x07, 0xa0, 0xa3, 0x8e, 0x93,
+	0x53, 0x67, 0xcb, 0x8b, 0x37, 0x8b, 0xf2, 0x7d, 0xe6, 0x59, 0x3d, 0x0b, 0xa4, 0x95, 0xdd, 0x57,
+	0x9f, 0xcc, 0xff, 0x8f, 0x83, 0xfb, 0x9e, 0xe4, 0x09, 0x73, 0xe5, 0x8a, 0x3e, 0x85, 0xf4, 0x31,
+	0x1d, 0xb1, 0xbc, 0x3b, 0x9a, 0x85, 0x9b, 0x45, 0xf9, 0x1e, 0x8b, 0x26, 0x9a, 0x7c, 0x9f, 0x8a,
+	0xbf, 0x85, 0xbb, 0x43, 0x53, 0xd1, 0xac, 0x31, 0x51, 0xdf, 0x10, 0x33, 0x70, 0x6c, 0x32, 0x87,
+	0x1f, 0xfa, 0x39, 0x5e, 0xa1, 0x08, 0x7b, 0x37, 0x8b, 0xf2, 0x8e, 0xed, 0xc3, 0xab, 0x87, 0x68,
+	0x55, 0x17, 0xd7, 0x21, 0x29, 0xe9, 0xa6, 0xdd, 0x69, 0xb1, 0x93, 0x94, 0x15, 0x76, 0x6e, 0x16,
+	0xe5, 0x82, 0x9b, 0x31, 0x43, 0x37, 0xed, 0x8a, 0x1a, 0x8c, 0xd2, 0xe5, 0xf2, 0x7f, 0x49, 0xad,
+	0x89, 0x11, 0x8f, 0x01, 0x45, 0xc0, 0x65, 0x2e, 0x3f, 0xbb, 0xba, 0x2c, 0xee, 0x2d, 0x8f, 0xfb,
+	0x8a, 0x61, 0x95, 0x51, 0x1f, 0xb2, 0x33, 0x49, 0xbf, 0x02, 0x0e, 0x57, 0x04, 0xb1, 0x09, 0xdb,
+	0x14, 0x73, 0xa0, 0x26, 0xbd, 0xbd, 0xec, 0x9a, 0x3a, 0xd7, 0xea, 0xcb, 0xab, 0xcb, 0xe2, 0x4f,
+	0x6f, 0xf7, 0xe3, 0xd1, 0xa9, 0xaf, 0x7b, 0x63, 0x3a, 0xaa, 0x44, 0xee, 0xec, 0x3a, 0x71, 0xfc,
+	0x0d, 0x64, 0x7d, 0x58, 0x52, 0x27, 0xee, 0xad, 0xa3, 0x3f, 0x85, 0xdd, 0xdb, 0xbd, 0x49, 0xea,
+	0x84, 0xfa, 0xc9, 0x1a, 0xa1, 0x14, 0x86, 0x95, 0xf8, 0x3f, 0xc0, 0xa6, 0xb3, 0xae, 0x3b, 0x90,
+	0x1a, 0x0c, 0x1b, 0x43, 0x71, 0xd4, 0x6b, 0xa0, 0x0d, 0x7c, 0x17, 0xb2, 0xce, 0x48, 0x16, 0xbb,
+	0xfd, 0xaf, 0xc5, 0x16, 0xe2, 0x30, 0x86, 0x9c, 0x03, 0x75, 0x7a, 0x03, 0x51, 0x1e, 0x8a, 0x2d,
+	0x14, 0xf3, 0x69, 0x92, 0xd8, 0x6b, 0x75, 0x7a, 0x47, 0x28, 0x8e, 0xef, 0x01, 0x72, 0xa0, 0x81,
+	0x24, 0xf7, 0xbb, 0x23, 0x59, 0x6c, 0xb4, 0x50, 0x02, 0x17, 0xe0, 0x5e, 0x14, 0x1d, 0x89, 0xb2,
+	0x8c, 0x36, 0xf9, 0xc7, 0x90, 0xf6, 0x17, 0xea, 0x5f, 0x42, 0x80, 0x64, 0xb3, 0x2f, 0x49, 0xa2,
+	0x8c, 0x38, 0x9c, 0x86, 0xcd, 0x76, 0x47, 0x10, 0x65, 0x14, 0xe3, 0xff, 0x9e, 0x80, 0xb8, 0xa4,
+	0x4e, 0x70, 0x06, 0xb6, 0x4e, 0x7a, 0x2f, 0x7b, 0xfd, 0x57, 0x3d, 0x27, 0xd8, 0xaf, 0x06, 0x6d,
+	0x69, 0xf4, 0xc9, 0xc1, 0xc1, 0xd1, 0xa8, 0x29, 0xd7, 0x11, 0x47, 0xa3, 0x60, 0x50, 0xfd, 0xe0,
+	0x48, 0x68, 0x0c, 0x44, 0x86, 0xc6, 0x58, 0x6c, 0x6d, 0x69, 0x74, 0xf8, 0xe9, 0x12, 0x1c, 0x0d,
+	0xdc, 0x88, 0xc3, 0xe8, 0x31, 0x4a, 0xac, 0x41, 0x7b, 0x68, 0x33, 0xec, 0xaa, 0xd1, 0x6f, 0xa2,
+	0xc3, 0x08, 0xd4, 0x6c, 0xa2, 0x27, 0x61, 0x68, 0x20, 0xd7, 0x51, 0x3d, 0x0c, 0x1d, 0xcb, 0x75,
+	0xf4, 0x69, 0x18, 0x12, 0xe5, 0x3a, 0x7a, 0xba, 0x12, 0x36, 0x45, 0x3f, 0x5b, 0x41, 0xa9, 0xe2,
+	0xcf, 0x57, 0x50, 0x2a, 0xfa, 0xf9, 0x0a, 0x4a, 0x63, 0xfc, 0x05, 0xdb, 0xbb, 0xc0, 0x62, 0x06,
+	0x32, 0xfa, 0x65, 0x14, 0x3b, 0x96, 0xd1, 0xb3, 0x28, 0x26, 0xca, 0xe8, 0x39, 0xde, 0x86, 0x7c,
+	0x10, 0xa3, 0x82, 0x5f, 0x2c, 0x89, 0x9f, 0x78, 0x11, 0xa1, 0x5f, 0x45, 0xb1, 0x63, 0x19, 0x7d,
+	0xb9, 0x34, 0xf6, 0xb1, 0x2e, 0x6a, 0x44, 0x89, 0xa2, 0x8c, 0x84, 0x28, 0x91, 0x7a, 0x69, 0x46,
+	0x89, 0xcd, 0x13, 0xd4, 0xa2, 0xc4, 0xc0, 0x66, 0xbf, 0x6a, 0x75, 0xeb, 0x48, 0xa4, 0x44, 0x1f,
+	0x94, 0x06, 0xdd, 0x3a, 0x6a, 0xe3, 0x0c, 0x24, 0xa5, 0x4e, 0x8b, 0x1e, 0xe7, 0xff, 0x6e, 0xf1,
+	0xff, 0x48, 0x40, 0x3e, 0xd2, 0x79, 0xe0, 0x8f, 0x21, 0x11, 0xf8, 0xdd, 0xde, 0xa5, 0x57, 0x65,
+	0x62, 0x85, 0x7a, 0x19, 0x56, 0xba, 0x0e, 0x21, 0xe3, 0x59, 0x76, 0x5a, 0xec, 0xa2, 0x27, 0x04,
+	0x74, 0xb3, 0x28, 0xdf, 0x09, 0xdd, 0xab, 0x20, 0x09, 0xff, 0x04, 0xe2, 0xad, 0x41, 0xd3, 0xbd,
+	0xa6, 0x6b, 0x94, 0xe9, 0x2c, 0xee, 0x01, 0xf4, 0x0d, 0xef, 0x07, 0xeb, 0x14, 0xc6, 0xea, 0x6d,
+	0x75, 0xf9, 0xbe, 0x6e, 0xac, 0xfb, 0xa3, 0x06, 0x14, 0x70, 0x1f, 0x40, 0x32, 0xd5, 0x99, 0x62,
+	0x5e, 0x74, 0x95, 0x31, 0xab, 0x9f, 0x4e, 0x9d, 0xc7, 0x22, 0xa5, 0xf6, 0xcd, 0xfd, 0xae, 0x32,
+	0x6e, 0x4c, 0x26, 0xe6, 0xfe, 0x43, 0x26, 0x68, 0x38, 0xdc, 0xca, 0x4c, 0x09, 0x46, 0x16, 0x90,
+	0xc0, 0x23, 0xb8, 0xd3, 0x69, 0xfb, 0x55, 0xca, 0xad, 0xb3, 0x1f, 0xad, 0xe9, 0xe5, 0x7c, 0x92,
+	0xf3, 0x03, 0x57, 0xcf, 0x2a, 0xac, 0x72, 0xad, 0xc4, 0x1b, 0x12, 0xc4, 0x53, 0xc8, 0x75, 0xda,
+	0xc1, 0x9a, 0x55, 0xd8, 0x62, 0x2e, 0xca, 0x6b, 0x5c, 0x04, 0x69, 0xc2, 0x2e, 0x6d, 0xaf, 0xd4,
+	0xb3, 0x8a, 0x5b, 0x28, 0x56, 0xdc, 0x44, 0x64, 0xb1, 0x00, 0xd9, 0xae, 0x6a, 0x9a, 0xba, 0xb9,
+	0xec, 0xd4, 0x52, 0xac, 0x53, 0x63, 0xb1, 0xce, 0xd8, 0xc4, 0x9a, 0x1e, 0x2d, 0x6c, 0xc2, 0xb7,
+	0x02, 0x1d, 0xda, 0xb1, 0x6a, 0xd9, 0xf8, 0x09, 0x80, 0xf7, 0x38, 0xb1, 0x0a, 0xdc, 0x5e, 0x3c,
+	0xdc, 0x84, 0x78, 0x64, 0x39, 0x40, 0xe3, 0xff, 0xcc, 0x41, 0xce, 0x9b, 0x11, 0xdf, 0x10, 0xcd,
+	0xc6, 0x6d, 0x48, 0xb3, 0x0f, 0xaf, 0xdd, 0xcb, 0x1d, 0xe6, 0x58, 0xf7, 0xee, 0xa1, 0x4e, 0xdd,
+	0x26, 0x74, 0x18, 0xad, 0x17, 0xbe, 0x29, 0xee, 0x05, 0xde, 0x14, 0x6e, 0xbd, 0x5e, 0x17, 0x8e,
+	0xf0, 0xa1, 0xdb, 0x71, 0x6f, 0x7b, 0x61, 0x05, 0xf5, 0x3c, 0x1e, 0xff, 0x1b, 0xc0, 0xe1, 0x48,
+	0xd9, 0xaa, 0x85, 0xc0, 0x45, 0x62, 0xe8, 0x72, 0xe9, 0x85, 0x35, 0xbe, 0x18, 0x41, 0x8e, 0x1a,
+	0x3c, 0x3a, 0x70, 0x1b, 0x7a, 0x16, 0x76, 0x06, 0xb6, 0x5a, 0x9d, 0x41, 0x43, 0x38, 0xa6, 0xbf,
+	0xfd, 0x14, 0x24, 0x68, 0xff, 0x84, 0x38, 0x5a, 0x8f, 0x24, 0xb9, 0xd3, 0x97, 0x3b, 0xc3, 0x6f,
+	0x50, 0xec, 0xd1, 0xf3, 0x35, 0x7d, 0x5a, 0x0a, 0x12, 0x62, 0xaf, 0xd3, 0x44, 0x1c, 0xce, 0x85,
+	0xfa, 0xb2, 0x18, 0xce, 0x87, 0xfb, 0xb0, 0xf8, 0xa3, 0x1d, 0x48, 0x2d, 0x2f, 0x13, 0x4e, 0x42,
+	0xec, 0x44, 0x72, 0xcc, 0x5b, 0xb4, 0x7e, 0x70, 0x87, 0x7f, 0x4b, 0xc0, 0x1d, 0x2f, 0xc4, 0x86,
+	0xa1, 0xe2, 0xe7, 0x90, 0x6f, 0x9a, 0x44, 0xb1, 0x89, 0xff, 0x46, 0x5b, 0x97, 0xc9, 0xd2, 0x3a,
+	0x90, 0xdf, 0xc0, 0x4f, 0xe1, 0xce, 0x11, 0xb1, 0x7d, 0xdb, 0xe8, 0x5b, 0xec, 0x36, 0xbb, 0x67,
+	0x90, 0xa3, 0x29, 0xf6, 0x20, 0x6b, 0xd5, 0x72, 0xdd, 0x7b, 0x8c, 0xda, 0xf0, 0x1b, 0x34, 0xe8,
+	0x16, 0x39, 0x27, 0x3f, 0x36, 0xe8, 0x16, 0xe4, 0x5f, 0x29, 0xf6, 0xf8, 0xf5, 0xfb, 0xbc, 0xef,
+	0xdc, 0xb6, 0xc5, 0x4e, 0x08, 0x07, 0x1c, 0x0d, 0xe2, 0xc4, 0x98, 0xfc, 0xe8, 0xcc, 0x09, 0x81,
+	0xf6, 0x98, 0xfe, 0xd9, 0x1c, 0x2d, 0x7c, 0xeb, 0xd1, 0x2a, 0x85, 0x1f, 0xca, 0xfc, 0xc6, 0x3e,
+	0x57, 0x9a, 0xfe, 0xf5, 0x8f, 0xc5, 0x71, 0xf0, 0x79, 0x9d, 0x38, 0xa7, 0xe7, 0x36, 0x61, 0xe8,
+	0x96, 0x8d, 0x93, 0x13, 0x96, 0x22, 0x1c, 0x37, 0xe6, 0x76, 0xe9, 0x79, 0xed, 0xf7, 0xfe, 0xe2,
+	0xaa, 0x43, 0xa2, 0x29, 0x9a, 0xfd, 0x7d, 0x08, 0xa3, 0x05, 0xc0, 0x32, 0x94, 0x31, 0x59, 0x85,
+	0xbf, 0x17, 0xd0, 0xbb, 0xeb, 0x5d, 0xee, 0x87, 0xeb, 0x5d, 0xee, 0x9f, 0xd7, 0xbb, 0xdc, 0x9f,
+	0xfe, 0xbd, 0xbb, 0x21, 0x71, 0xa7, 0x49, 0x16, 0xe5, 0x93, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff,
+	0x33, 0xfc, 0x10, 0x43, 0xb7, 0x10, 0x00, 0x00,
 }

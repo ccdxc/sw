@@ -22,11 +22,13 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 			}
 			intfList := dnetproto.InterfaceList(delphiClient)
 			for _, intf := range intfList {
-				if intf.Interface.Status.UplinkPortID == portID {
-					if nodeUUID != "" {
-						intfName = nodeUUID + "-" + intf.Interface.ObjectMeta.Name
-					} else {
-						intfName = intf.Interface.ObjectMeta.Name
+				if intf.Interface.Spec.Type == "UPLINK_ETH" || intf.Interface.Spec.Type == "UPLINK_MGMT" {
+					if intf.Interface.Status.IFUplinkStatus.PortID == portID {
+						if nodeUUID != "" {
+							intfName = nodeUUID + "-" + intf.Interface.ObjectMeta.Name
+						} else {
+							intfName = intf.Interface.ObjectMeta.Name
+						}
 					}
 				}
 			}

@@ -54,9 +54,12 @@
 		ControlPlanePolicerEvent
 		ControlPlanePolicerEventList
 		Interface
+		PauseSpec
 		InterfaceSpec
+		InterfaceHostStatus
+		InterfaceUplinkStatus
+		TransceiverStatus
 		InterfaceStatus
-		EnicStatus
 		InterfaceList
 		InterfaceEvent
 		InterfaceEventList

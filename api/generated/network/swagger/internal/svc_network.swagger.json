@@ -855,6 +855,12 @@
             "type": "string"
           },
           {
+            "name": "status.dsc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.type",
             "in": "query",
             "required": false,
@@ -3767,6 +3773,9 @@
         "oper-status"
       ],
       "properties": {
+        "dsc": {
+          "type": "string"
+        },
         "dsc": {
           "type": "string"
         },

@@ -371,10 +371,12 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 				AdminStatus: "UP",
 			},
 			Status: netproto.InterfaceStatus{
-				InterfaceID:  uint64(id) + types.UplinkOffset + 1, // This will keep uplink IDs consistent across config replays
-				UplinkPortID: uint32(p.Status.PortID),
+				InterfaceID: uint64(id) + types.UplinkOffset + 1, // This will keep uplink IDs consistent across config replays
 			},
 		}
+
+		uplink.Status.IFUplinkStatus = &netproto.InterfaceUplinkStatus{PortID: uint32(p.Status.PortID)}
+
 		key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
 
 		// save the interface into state stores

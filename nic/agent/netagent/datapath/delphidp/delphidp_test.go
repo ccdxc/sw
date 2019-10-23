@@ -160,8 +160,10 @@ func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 			Type: "UPLINK_ETH",
 		},
 		Status: netproto.InterfaceStatus{
-			InterfaceID:  100,
-			UplinkPortID: uint32(port.Status.PortID),
+			InterfaceID: 100,
+			IFUplinkStatus: &netproto.InterfaceUplinkStatus{
+				PortID: uint32(port.Status.PortID),
+			},
 		},
 	}
 

@@ -100,6 +100,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 	"network.NetworkInterfaceStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceStatus{}) },
 		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"DSC": api.Field{Name: "DSC", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},

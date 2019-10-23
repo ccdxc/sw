@@ -99,17 +99,18 @@ message NetworkInterfaceStatus {
         // TB Added for SR-IOV: HOST_VF
     }
 
-    string DSC                                  = 1 [(gogoproto.jsontag) = "dsc,omitempty"];
-    string Type                                 = 2 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
+    string Name                                 = 1 [(gogoproto.jsontag) = "dsc,omitempty"];
+    string DSC                                  = 2 [(gogoproto.jsontag) = "dsc,omitempty"];
+    string Type                                 = 3 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
                                                    (gogoproto.jsontag) = "type,omitempty"];
-    string OperStatus                           = 3 [(venice.check) = "StrEnum(IFStatus)",
+    string OperStatus                           = 4 [(venice.check) = "StrEnum(IFStatus)",
                                                    (gogoproto.jsontag) = "oper-status,omitempty"];
-    string PrimaryMac                           = 4 [(venice.check) = "EmptyOr(MacAddr())",
+    string PrimaryMac                           = 5 [(venice.check) = "EmptyOr(MacAddr())",
                                                    (gogoproto.jsontag) = "primary-mac,omitempty"];
-    NetworkInterfaceHostStatus IFHostStatus     = 5 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
-    NetworkInterfaceUplinkStatus IFUplinkStatus = 6 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
+    NetworkInterfaceHostStatus IFHostStatus     = 6 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
+    NetworkInterfaceUplinkStatus IFUplinkStatus = 7 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
 
-    bool MirrorEnabled                          = 7 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
+    bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
 }
 
 // NetworkInterfaceHostStatus is populated for PF and VF

@@ -45,7 +45,7 @@ func (hd *Datapath) CreateInterface(intfs ...*netproto.Interface) error {
 				Type: halproto.IfType_IF_TYPE_UPLINK,
 				IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
 					IfUplinkInfo: &halproto.IfUplinkInfo{
-						PortNum: intf.Status.UplinkPortID,
+						PortNum: intf.Status.IFUplinkStatus.PortID,
 					},
 				},
 			}
@@ -59,7 +59,7 @@ func (hd *Datapath) CreateInterface(intfs ...*netproto.Interface) error {
 				Type: halproto.IfType_IF_TYPE_UPLINK,
 				IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
 					IfUplinkInfo: &halproto.IfUplinkInfo{
-						PortNum:         intf.Status.UplinkPortID,
+						PortNum:         intf.Status.IFUplinkStatus.PortID,
 						IsOobManagement: true,
 					},
 				},

@@ -441,19 +441,6 @@
         }
       }
     },
-    "netprotoEnicStatus": {
-      "type": "object",
-      "properties": {
-        "ep-name": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "List of endpoints that this ENIC is mapped to"
-        }
-      },
-      "description": "EnicStatus captures enic configurations."
-    },
     "netprotoInterface": {
       "type": "object",
       "properties": {
@@ -499,6 +486,16 @@
       },
       "title": "interface watch events batched"
     },
+    "netprotoInterfaceHostStatus": {
+      "type": "object",
+      "properties": {
+        "host-ifname": {
+          "type": "string",
+          "title": "interface name seen by the host driver"
+        }
+      },
+      "title": "InterfaceHostStatus is populated for PF and VF"
+    },
     "netprotoInterfaceList": {
       "type": "object",
       "properties": {
@@ -521,24 +518,36 @@
           "type": "string",
           "enum": [
             "none",
-            "enic",
-            "uplink_eth",
-            "uplink_mgmt"
+            "host-pf",
+            "uplink-eth",
+            "uplink-mgmt"
           ],
           "default": "none"
         },
         "admin-status": {
           "type": "string",
           "enum": [
-            "none",
             "up",
             "down"
           ],
-          "default": "none"
+          "default": "up"
         },
         "vrf-name": {
           "type": "string",
           "title": "VrfName specifies the name of the VRF that the current Interface belongs to"
+        },
+        "speed": {
+          "type": "string",
+          "title": "Inteface speed"
+        },
+        "mtu": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Mtu of the interface"
+        },
+        "pause": {
+          "$ref": "#/definitions/netprotoPauseSpec",
+          "title": "Pause Spec"
         }
       },
       "title": "InterfaceSpec captures all the interface level configuration"
@@ -549,28 +558,150 @@
         "oper-status"
       ],
       "properties": {
+        "dsc": {
+          "type": "string"
+        },
         "id": {
           "type": "string",
           "format": "uint64"
         },
+        "dsc": {
+          "type": "string"
+        },
         "oper-status": {
           "type": "string",
           "enum": [
-            "none",
             "up",
             "down"
           ],
-          "default": "none"
+          "default": "up"
         },
-        "enic-status": {
-          "$ref": "#/definitions/netprotoEnicStatus"
+        "primary-mac": {
+          "type": "string",
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "should be a valid MAC address"
+        },
+        "if-host-status": {
+          "$ref": "#/definitions/netprotoInterfaceHostStatus"
+        },
+        "if-uplink-status": {
+          "$ref": "#/definitions/netprotoInterfaceUplinkStatus"
+        },
+        "mirror-enabled": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "InterfaceStatus"
+    },
+    "netprotoInterfaceUplinkStatus": {
+      "type": "object",
+      "properties": {
+        "link-speed": {
+          "type": "string",
+          "title": "LinkSpeed auto-negotiated"
+        },
+        "transceiver-status": {
+          "$ref": "#/definitions/netprotoTransceiverStatus"
         },
         "uplink-port-id": {
           "type": "integer",
           "format": "int64"
         }
-      },
-      "title": "Interface Status"
+      }
+    },
+    "netprotoPauseSpec": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "disable",
+            "link",
+            "priority"
+          ],
+          "default": "disable",
+          "title": "Pause type"
+        },
+        "tx-pause-enabled": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "TX Pause enabled"
+        },
+        "rx-pause-enabled": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "RX Pause enabled"
+        }
+      }
+    },
+    "netprotoTransceiverStatus": {
+      "type": "object",
+      "required": [
+        "state",
+        "cable-type",
+        "pid"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "state_na",
+            "state_removed",
+            "state_inserted",
+            "state_pending",
+            "state_sprom_read",
+            "state_sprom_read_err"
+          ],
+          "default": "state_na"
+        },
+        "cable-type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "copper",
+            "fiber"
+          ],
+          "default": "none"
+        },
+        "pid": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "qsfp_100g_cr4",
+            "qsfp_40gbase_cr4",
+            "sfp_25gbase_cr_s",
+            "sfp_25gbase_cr_l",
+            "sfp_25gbase_cr_n",
+            "qsfp_100g_aoc",
+            "qsfp_100g_acc",
+            "qsfp_100g_sr4",
+            "qsfp_100g_lr4",
+            "qsfp_100g_er4",
+            "qsfp_40gbase_er4",
+            "qsfp_40gbase_sr4",
+            "qsfp_40gbase_lr4",
+            "qsfp_40gbase_aoc",
+            "sfp_25gbase_sr",
+            "sfp_25gbase_lr",
+            "sfp_25gbase_er",
+            "sfp_25gbase_aoc",
+            "sfp_10gbase_sr",
+            "sfp_10gbase_lr",
+            "sfp_10gbase_lrm",
+            "sfp_10gbase_er",
+            "sfp_10gbase_aoc",
+            "sfp_10gbase_cu",
+            "qsfp_100g_cwdm4",
+            "qsfp_100g_psm4",
+            "pid_na"
+          ],
+          "default": "unknown"
+        }
+      }
     }
   }
 }

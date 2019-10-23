@@ -42,44 +42,161 @@ message Interface {
     InterfaceStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
+enum PauseType {
+    DISABLE    = 0;   // Disable Pause
+    LINK       = 1;   // Link level pause
+    PRIORITY   = 2;   // PFC
+}
+
+message PauseSpec {
+    //Pause type
+    string Type               = 1 [(venice.check) = "StrEnum(PauseType)",(gogoproto.jsontag) = "type,omitempty"];
+
+    // TX Pause enabled    
+    bool  TxPauseEnabled     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tx-pause-enabled,omitempty"];
+
+    // RX Pause enabled    
+    bool  RxPauseEnabled     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rx-pause-enabled,omitempty"];
+
+}
+
+enum IFType {
+    NONE                = 0;
+    ENIC                = 1;
+    UPLINK_ETH          = 2;
+    UPLINK_MGMT         = 3;
+}
+
+enum IFStatus {
+    UP                = 0;
+    DOWN              = 1;
+}
+
 // InterfaceSpec captures all the interface level configuration
 message InterfaceSpec {
     enum IFType {
-        NONE                = 0;
-        ENIC                = 1;
-        UPLINK_ETH          = 2;
-        UPLINK_MGMT         = 3;
+        NONE              = 0;
+        HOST_PF           = 1 [(venice.enumValueStr) = "host-pf"];
+        UPLINK_ETH        = 3 [(venice.enumValueStr) = "uplink-eth"];
+        UPLINK_MGMT       = 4 [(venice.enumValueStr) = "uplink-mgmt"];
+        // TB Added for SR-IOV: HOST_VF
     }
 
-    string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
-                                (gogoproto.jsontag) = "type,omitempty"];
-    string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
+    string Type              = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
+                                                   (gogoproto.jsontag) = "type,omitempty"];
+    string AdminStatus       = 2 [(venice.check) = "StrEnum(IFStatus)",
                                 (gogoproto.jsontag) = "admin-status,omitempty"];
     // VrfName specifies the name of the VRF that the current Interface belongs to
-    string VrfName          = 3 [(gogoproto.jsontag) = "vrf-name,omitemtpy"];
+    string VrfName           = 3 [(gogoproto.jsontag) = "vrf-name,omitemtpy"];
+
+    //Inteface speed
+    string Speed             = 4 [(gogoproto.jsontag) = "speed,omitempty"];
+
+    //Mtu of the interface
+    uint32 MTU               = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mtu,omitempty"];
+
+    //Pause Spec
+    PauseSpec Pause          = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "pause,omitempty"];
 }
 
-// Interface Status
-message InterfaceStatus {
-    enum IFStatus {
-        NONE              = 0;
-        UP                = 1;
-        DOWN              = 2;
+// InterfaceHostStatus is populated for PF and VF
+message InterfaceHostStatus {
+    // interface name seen by the host driver
+    string HostIfName   = 1 [(gogoproto.jsontag) = "host-ifname,omitempty"];
+}
+
+message InterfaceUplinkStatus {
+
+    // LinkSpeed auto-negotiated
+    string LinkSpeed                    = 1 [(gogoproto.jsontag) = "link-speed,omitempty"];
+
+    TransceiverStatus TransceiverStatus = 2 [(gogoproto.jsontag) = "transceiver-status,omitempty"];
+
+    uint32 PortID                       = 3 [(gogoproto.jsontag) = "uplink-port-id,omitempty"];
+    // Future: BFD, CDP, LLDP, LACP, Breakout status appears here
+}
+
+message TransceiverStatus {
+
+    enum State {
+        STATE_NA             = 0;
+        STATE_REMOVED        = 1;
+        STATE_INSERTED       = 2;
+        STATE_PENDING        = 3;
+        STATE_SPROM_READ     = 4;
+        STATE_SPROM_READ_ERR = 5;
     }
-    uint64 InterfaceID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
-    string OperStatus               = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
-                                         (gogoproto.jsontag) = "oper-status,omitempty"];
-    EnicStatus EnicStatus           = 3 [(gogoproto.jsontag) = "enic-status,omitempty"];
-    uint32 UplinkPortID             = 4 [(gogoproto.jsontag) = "uplink-port-id,omitempty"];
+
+    enum CableType {
+        NONE   = 0;
+        COPPER = 1;
+        FIBER  = 2;
+    }
+
+    enum Pid {
+       UNKNOWN           = 0;
+       // CU
+       QSFP_100G_CR4     = 1;
+       QSFP_40GBASE_CR4  = 2;
+       SFP_25GBASE_CR_S  = 3;
+       SFP_25GBASE_CR_L  = 4;
+       SFP_25GBASE_CR_N  = 5;
+      
+        // Fiber, grouping all together
+       QSFP_100G_AOC    = 50;
+       QSFP_100G_ACC    = 51;
+       QSFP_100G_SR4    = 52;
+       QSFP_100G_LR4    = 53;
+       QSFP_100G_ER4    = 54;
+       QSFP_40GBASE_ER4 = 55;
+       QSFP_40GBASE_SR4 = 56;
+       QSFP_40GBASE_LR4 = 57;
+       QSFP_40GBASE_AOC = 58;
+       SFP_25GBASE_SR   = 59;
+       SFP_25GBASE_LR   = 60;
+       SFP_25GBASE_ER   = 61;
+       SFP_25GBASE_AOC  = 62;
+       SFP_10GBASE_SR   = 63;
+       SFP_10GBASE_LR   = 64;
+       SFP_10GBASE_LRM  = 65;
+       SFP_10GBASE_ER   = 66;
+       SFP_10GBASE_AOC  = 67;
+       SFP_10GBASE_CU   = 68;
+       QSFP_100G_CWDM4  = 69;
+       QSFP_100G_PSM4   = 70;
+
+
+       PID_NA           = 1000; //For host intefaces
+    }
+
+    string TransceiverState     = 1 [(venice.check) = "StrEnum(TransceiverStatus.State)",
+                            (gogoproto.jsontag) = "state,omitempty"];
+
+    string TranceiverCableType  = 2 [(venice.check) = "StrEnum(TransceiverStatus.CableType)",
+                            (gogoproto.jsontag) = "cable-type,omitempty"];
+
+    string TranceiverPid        = 3 [(venice.check) = "StrEnum(TransceiverStatus.Pid)",
+                            (gogoproto.jsontag) = "pid,omitempty"];
+
 }
 
+// InterfaceStatus
+message InterfaceStatus {
 
 
-// EnicStatus captures enic configurations.
-message EnicStatus {
-    // List of endpoints that this ENIC is mapped to
-    repeated string EpName = 2 [(gogoproto.jsontag) = "ep-name,omitempty"];
+    string Name                                 = 1 [(gogoproto.jsontag) = "dsc,omitempty"];
+    uint64 InterfaceID                          = 2 [(gogoproto.jsontag) = "id,omitempty"];
+    string DSC                                  = 3 [(gogoproto.jsontag) = "dsc,omitempty"];
+    string OperStatus                           = 4 [(venice.check) = "StrEnum(IFStatus)",
+                                                   (gogoproto.jsontag) = "oper-status,omitempty"];
+    string PrimaryMac                           = 5 [(venice.check) = "EmptyOr(MacAddr())",
+                                                   (gogoproto.jsontag) = "primary-mac,omitempty"];
+    InterfaceHostStatus IFHostStatus            = 6 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
+    InterfaceUplinkStatus IFUplinkStatus        = 7 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
+
+    bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
 }
+
 
 message InterfaceList {
     repeated Interface interfaces  = 1;
