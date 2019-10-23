@@ -36,7 +36,7 @@ static inline struct netdev_queue *q_to_ndq(struct ionic_queue *q)
 }
 
 static struct sk_buff *ionic_rx_skb_alloc(struct ionic_queue *q,
-										  unsigned int len, bool frags)
+					  unsigned int len, bool frags)
 {
 	struct ionic_lif *lif = q->lif;
 	struct ionic_rx_stats *stats;
@@ -53,7 +53,7 @@ static struct sk_buff *ionic_rx_skb_alloc(struct ionic_queue *q,
 
 	if (unlikely(!skb)) {
 		net_warn_ratelimited("%s: SKB alloc failed on %s!\n",
-					netdev->name, q->name);
+				     netdev->name, q->name);
 		stats->alloc_err++;
 		return NULL;
 	}
@@ -62,15 +62,16 @@ static struct sk_buff *ionic_rx_skb_alloc(struct ionic_queue *q,
 }
 
 static struct sk_buff* ionic_rx_frags(struct ionic_queue *q,
-	struct ionic_desc_info *desc_info, struct ionic_cq_info *cq_info)
+				      struct ionic_desc_info *desc_info,
+				      struct ionic_cq_info *cq_info)
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct device *dev = q->lif->ionic->dev;
 	struct ionic_page_info *page_info;
 	struct sk_buff *skb;
+	unsigned int i;
 	u16 frag_len;
 	u16 len;
-	unsigned int i;
 
 	page_info = &desc_info->pages[0];
 	len = le16_to_cpu(comp->len);
@@ -91,21 +92,21 @@ static struct sk_buff* ionic_rx_frags(struct ionic_queue *q,
 		frag_len = min(len, (u16)PAGE_SIZE);
 		len -= frag_len;
 
-		dma_unmap_page(dev,
-					   dma_unmap_addr(page_info, dma_addr),
-					   PAGE_SIZE, DMA_FROM_DEVICE);
+		dma_unmap_page(dev, dma_unmap_addr(page_info, dma_addr),
+			       PAGE_SIZE, DMA_FROM_DEVICE);
 		skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags,
-			page_info->page, 0, frag_len, PAGE_SIZE);
+				page_info->page, 0, frag_len, PAGE_SIZE);
 		page_info->page = NULL;
-		++page_info;
-		--i;
+		page_info++;
+		i--;
 	} while (i > 0);
 
 	return skb;
 }
 
 static struct sk_buff* ionic_rx_copybreak(struct ionic_queue *q,
-	struct ionic_desc_info *desc_info, struct ionic_cq_info *cq_info)
+					  struct ionic_desc_info *desc_info,
+					  struct ionic_cq_info *cq_info)
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct device *dev = q->lif->ionic->dev;
@@ -125,13 +126,11 @@ static struct sk_buff* ionic_rx_copybreak(struct ionic_queue *q,
 		return NULL;
 	}
 
-	dma_sync_single_for_cpu(dev,
-							dma_unmap_addr(page_info, dma_addr),
-							len, DMA_FROM_DEVICE);
+	dma_sync_single_for_cpu(dev, dma_unmap_addr(page_info, dma_addr),
+				len, DMA_FROM_DEVICE);
 	skb_copy_to_linear_data(skb, page_address(page_info->page), len);
-	dma_sync_single_for_device(dev,
-							   dma_unmap_addr(page_info, dma_addr),
-							   len, DMA_FROM_DEVICE);
+	dma_sync_single_for_device(dev, dma_unmap_addr(page_info, dma_addr),
+				   len, DMA_FROM_DEVICE);
 
 	skb_put(skb, len);
 	skb->protocol = eth_type_trans(skb, q->lif->netdev);
@@ -140,7 +139,7 @@ static struct sk_buff* ionic_rx_copybreak(struct ionic_queue *q,
 }
 
 static void ionic_rx_clean(struct ionic_queue *q, struct ionic_desc_info *desc_info,
-	struct ionic_cq_info *cq_info, void *cb_arg)
+			   struct ionic_cq_info *cq_info, void *cb_arg)
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct ionic_qcq *qcq = q_to_qcq(q);
@@ -224,8 +223,8 @@ static void ionic_rx_clean(struct ionic_queue *q, struct ionic_desc_info *desc_i
 	}
 
 	if (unlikely((comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_BAD) ||
-	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD) ||
-	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)))
+		     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD) ||
+		     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)))
 		stats->csum_error++;
 
 	if (likely(netdev->features & NETIF_F_HW_VLAN_CTAG_RX)) {
@@ -297,7 +296,8 @@ void ionic_rx_flush(struct ionic_cq *cq)
 				   work_done, IONIC_INTR_CRED_RESET_COALESCE);
 }
 
-static struct page *ionic_rx_page_alloc(struct ionic_queue *q, dma_addr_t *dma_addr)
+static struct page *ionic_rx_page_alloc(struct ionic_queue *q,
+					dma_addr_t *dma_addr)
 {
 	struct ionic_lif *lif = q->lif;
 	struct ionic_rx_stats *stats;
@@ -311,7 +311,7 @@ static struct page *ionic_rx_page_alloc(struct ionic_queue *q, dma_addr_t *dma_a
 	page = alloc_page(GFP_ATOMIC);
 	if (unlikely(!page)) {
 		net_err_ratelimited("%s: Page alloc failed on %s!\n",
-				     netdev->name, q->name);
+				    netdev->name, q->name);
 		stats->alloc_err++;
 		return NULL;
 	}
@@ -320,7 +320,7 @@ static struct page *ionic_rx_page_alloc(struct ionic_queue *q, dma_addr_t *dma_a
 	if (unlikely(dma_mapping_error(dev, *dma_addr))) {
 		__free_page(page);
 		net_err_ratelimited("%s: DMA single map failed on %s!\n",
-				     netdev->name, q->name);
+				    netdev->name, q->name);
 		stats->dma_map_err++;
 		return NULL;
 	}
@@ -329,20 +329,14 @@ static struct page *ionic_rx_page_alloc(struct ionic_queue *q, dma_addr_t *dma_a
 }
 
 static void ionic_rx_page_free(struct ionic_queue *q, struct page *page,
-	dma_addr_t dma_addr)
+			       dma_addr_t dma_addr)
 {
-	struct ionic_lif *lif = q->lif;
-	struct ionic_rx_stats *stats;
-	struct net_device *netdev;
-	struct device *dev;
-
-	netdev = lif->netdev;
-	dev = lif->ionic->dev;
-	stats = q_to_rx_stats(q);
+	struct net_device *netdev = q->lif->netdev;
+	struct device *dev = q->lif->ionic->dev;
 
 	if (unlikely(!page)) {
 		net_err_ratelimited("%s: Trying to free unallocated buffer on %s!\n",
-				netdev->name, q->name);
+				    netdev->name, q->name);
 		return;
 	}
 
@@ -352,7 +346,7 @@ static void ionic_rx_page_free(struct ionic_queue *q, struct page *page,
 }
 
 #define IONIC_RX_RING_DOORBELL_STRIDE		((1 << 5) - 1)
-#define IONIC_RX_RING_HEAD_BUF_SZ			2048
+#define IONIC_RX_RING_HEAD_BUF_SZ		2048
 
 void ionic_rx_fill(struct ionic_queue *q)
 {
@@ -362,8 +356,8 @@ void ionic_rx_fill(struct ionic_queue *q)
 	struct rxq_sg_desc *sg_desc;
 	struct rxq_sg_elem *sg_elem;
 	struct rxq_desc *desc;
-	bool ring_doorbell;
 	unsigned int nfrags;
+	bool ring_doorbell;
 	unsigned int len;
 	unsigned int i, j;
 
@@ -383,8 +377,9 @@ void ionic_rx_fill(struct ionic_queue *q)
 			continue;
 		}
 
-		/* fill main descriptor */
-		desc->opcode = (nfrags > 1) ? RXQ_DESC_OPCODE_SG : RXQ_DESC_OPCODE_SIMPLE;
+		/* fill main descriptor - pages[0] */
+		desc->opcode = (nfrags > 1) ? RXQ_DESC_OPCODE_SG :
+					      RXQ_DESC_OPCODE_SIMPLE;
 		desc_info->npages = nfrags;
 		page_info->page = ionic_rx_page_alloc(q, &page_info->dma_addr);
 		if (unlikely(!page_info->page)) {
@@ -394,9 +389,9 @@ void ionic_rx_fill(struct ionic_queue *q)
 		}
 		desc->addr = cpu_to_le64(page_info->dma_addr);
 		desc->len = cpu_to_le16(PAGE_SIZE);
-		++page_info;
+		page_info++;
 
-		/* fill sg descriptors */
+		/* fill sg descriptors - pages[1..n] */
 		for (j = 0; j < nfrags - 1; j++) {
 			if (page_info->page) /* recycle the sg buffer */
 				continue;
@@ -410,7 +405,7 @@ void ionic_rx_fill(struct ionic_queue *q)
 			}
 			sg_elem->addr = cpu_to_le64(page_info->dma_addr);
 			sg_elem->len = cpu_to_le16(PAGE_SIZE);
-			++page_info;
+			page_info++;
 		}
 
 		ring_doorbell = ((q->head->index + 1) &
@@ -426,7 +421,6 @@ static void ionic_rx_fill_cb(void *arg)
 
 void ionic_rx_empty(struct ionic_queue *q)
 {
-	struct device *dev = q->lif->ionic->dev;
 	struct ionic_desc_info *cur;
 	struct rxq_sg_desc *sg_desc;
 	struct rxq_desc *desc;
@@ -434,14 +428,16 @@ void ionic_rx_empty(struct ionic_queue *q)
 
 	for (cur = q->tail; cur != q->head; cur = cur->next) {
 		desc = cur->desc;
-		dma_unmap_single(dev, le64_to_cpu(desc->addr),
-				 le16_to_cpu(desc->len), DMA_FROM_DEVICE);
+		desc->addr = 0;
+		desc->len = 0;
 
 		sg_desc = cur->sg_desc;
 		for (i = 0; i < cur->npages; i++) {
 			if (likely(cur->pages[i].page)) {
-				ionic_rx_page_free(q, cur->pages[i].page, cur->pages[i].dma_addr);
+				ionic_rx_page_free(q, cur->pages[i].page,
+						   cur->pages[i].dma_addr);
 				cur->pages[i].page = NULL;
+				cur->pages[i].dma_addr = 0;
 			}
 		}
 

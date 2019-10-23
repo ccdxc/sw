@@ -9,9 +9,9 @@
 #define IONIC_ADMINQ_LENGTH	16	/* must be a power of two */
 #define IONIC_NOTIFYQ_LENGTH	64	/* must be a power of two */
 
-#define IONIC_MAX_NUM_NAPI_CNTR			(NAPI_POLL_WEIGHT + 1)
-#define IONIC_MAX_NUM_SG_CNTR			(IONIC_TX_MAX_SG_ELEMS + 1)
-#define IONIC_RX_COPYBREAK_DEFAULT		256
+#define IONIC_MAX_NUM_NAPI_CNTR		(NAPI_POLL_WEIGHT + 1)
+#define IONIC_MAX_NUM_SG_CNTR		(IONIC_TX_MAX_SG_ELEMS + 1)
+#define IONIC_RX_COPYBREAK_DEFAULT	256
 
 struct ionic_tx_stats {
 	u64 dma_map_err;
@@ -189,8 +189,8 @@ struct ionic_lif {
 
 #define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)
 #define lif_to_rxqcq(lif, i)	((lif)->rxqcqs[i].qcq)
-#define lif_to_txstats(lif, i) ((lif)->txqcqs[i].stats->tx)
-#define lif_to_rxstats(lif, i) ((lif)->rxqcqs[i].stats->rx)
+#define lif_to_txstats(lif, i)	((lif)->txqcqs[i].stats->tx)
+#define lif_to_rxstats(lif, i)	((lif)->rxqcqs[i].stats->rx)
 #define lif_to_txq(lif, i)	(&lif_to_txqcq((lif), i)->q)
 #define lif_to_rxq(lif, i)	(&lif_to_txqcq((lif), i)->q)
 #define is_master_lif(lif)	((lif)->index == 0)

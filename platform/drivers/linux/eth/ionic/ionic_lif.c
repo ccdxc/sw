@@ -15,7 +15,6 @@
 #include "ionic_ethtool.h"
 #include "ionic_debugfs.h"
 
-
 static void ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode);
 static int ionic_lif_addr_add(struct ionic_lif *lif, const u8 *addr);
 static int ionic_lif_addr_del(struct ionic_lif *lif, const u8 *addr);
@@ -279,8 +278,6 @@ static int ionic_qcq_disable(struct ionic_qcq *qcq)
 
 static int ionic_lif_quiesce(struct ionic_lif *lif)
 {
-	int err;
-	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
@@ -290,6 +287,8 @@ static int ionic_lif_quiesce(struct ionic_lif *lif)
 			.state = IONIC_LIF_DISABLE
 		},
 	};
+	struct device *dev = lif->ionic->dev;
+	int err;
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
@@ -297,7 +296,7 @@ static int ionic_lif_quiesce(struct ionic_lif *lif)
 		return err;
 	}
 	
-	return (0);
+	return 0;
 }
 
 static void ionic_lif_qcq_deinit(struct ionic_lif *lif, struct ionic_qcq *qcq)
@@ -2245,6 +2244,7 @@ static struct ionic_lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index
 					      GFP_KERNEL);
 
 	if (!lif->rss_ind_tbl) {
+		err = -ENOMEM;
 		dev_err(dev, "Failed to allocate rss indirection table, aborting\n");
 		goto err_out_free_qcqs;
 	}
