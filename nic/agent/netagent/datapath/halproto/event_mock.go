@@ -95,8 +95,8 @@ func (m *MockEventClient) EXPECT() *MockEventClientMockRecorder {
 }
 
 // EventListen mocks base method
-func (m *MockEventClient) EventListen(ctx context.Context, opts ...grpc.CallOption) (Event_EventListenClient, error) {
-	varargs := []interface{}{ctx}
+func (m *MockEventClient) EventListen(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (Event_EventListenClient, error) {
+	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
@@ -107,8 +107,8 @@ func (m *MockEventClient) EventListen(ctx context.Context, opts ...grpc.CallOpti
 }
 
 // EventListen indicates an expected call of EventListen
-func (mr *MockEventClientMockRecorder) EventListen(ctx interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx}, opts...)
+func (mr *MockEventClientMockRecorder) EventListen(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventListen", reflect.TypeOf((*MockEventClient)(nil).EventListen), varargs...)
 }
 
@@ -133,18 +133,6 @@ func NewMockEvent_EventListenClient(ctrl *gomock.Controller) *MockEvent_EventLis
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockEvent_EventListenClient) EXPECT() *MockEvent_EventListenClientMockRecorder {
 	return m.recorder
-}
-
-// Send mocks base method
-func (m *MockEvent_EventListenClient) Send(arg0 *EventRequest) error {
-	ret := m.ctrl.Call(m, "Send", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Send indicates an expected call of Send
-func (mr *MockEvent_EventListenClientMockRecorder) Send(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockEvent_EventListenClient)(nil).Send), arg0)
 }
 
 // Recv mocks base method
@@ -257,15 +245,15 @@ func (m *MockEventServer) EXPECT() *MockEventServerMockRecorder {
 }
 
 // EventListen mocks base method
-func (m *MockEventServer) EventListen(arg0 Event_EventListenServer) error {
-	ret := m.ctrl.Call(m, "EventListen", arg0)
+func (m *MockEventServer) EventListen(arg0 *EventRequest, arg1 Event_EventListenServer) error {
+	ret := m.ctrl.Call(m, "EventListen", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // EventListen indicates an expected call of EventListen
-func (mr *MockEventServerMockRecorder) EventListen(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventListen", reflect.TypeOf((*MockEventServer)(nil).EventListen), arg0)
+func (mr *MockEventServerMockRecorder) EventListen(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventListen", reflect.TypeOf((*MockEventServer)(nil).EventListen), arg0, arg1)
 }
 
 // MockEvent_EventListenServer is a mock of Event_EventListenServer interface
@@ -301,19 +289,6 @@ func (m *MockEvent_EventListenServer) Send(arg0 *EventResponse) error {
 // Send indicates an expected call of Send
 func (mr *MockEvent_EventListenServerMockRecorder) Send(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockEvent_EventListenServer)(nil).Send), arg0)
-}
-
-// Recv mocks base method
-func (m *MockEvent_EventListenServer) Recv() (*EventRequest, error) {
-	ret := m.ctrl.Call(m, "Recv")
-	ret0, _ := ret[0].(*EventRequest)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Recv indicates an expected call of Recv
-func (mr *MockEvent_EventListenServerMockRecorder) Recv() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Recv", reflect.TypeOf((*MockEvent_EventListenServer)(nil).Recv))
 }
 
 // SetHeader mocks base method

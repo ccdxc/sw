@@ -45,6 +45,7 @@ ${CMD_OPTS} bm_allocator_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/bm_all
 ${CMD_OPTS} enicif_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/enicif_test.xml"
 ${CMD_OPTS} lif_manager_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/lif_manager_test.xml"
 ${CMD_OPTS} lif_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/lif_test.xml"
+${CMD_OPTS} event_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/event_test.xml"
 
 #${CMD_OPTS} tlscb_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/tlscb_test.xml"
 #${CMD_OPTS} uplinkif_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/uplinkif_test.xml"

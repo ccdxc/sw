@@ -56,6 +56,8 @@ public:
     // send notifications to the listeners)
     hal_ret_t walk_listeners(event_id_t event_id, void *event_ctxt,
                              event_walk_cb_t walk_cb);
+    hal_ret_t notify_event(event_id_t event_id, void *event_ctxt,
+                             event_walk_cb_t walk_cb);
     slab *event_map_slab(void) const { return event_map_slab_; }
     slab *event_listener_slab(void) const { return event_listener_state_slab_; }
     slab *listener_slab(void) const { return listener_slab_; }

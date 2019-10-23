@@ -26,6 +26,102 @@ using hal::pd::pd_if_lif_update_args_t;
 
 namespace hal {
 
+static void
+lif_process_get (lif_t *lif, LifGetResponse *rsp)
+{
+    hal_ret_t ret;
+    LifSpec  *spec     = NULL;
+    uint64_t hw_lif_id = lif_hw_lif_id_get(lif);
+    pd::pd_lif_stats_get_args_t args   = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    // fill in the config spec of this lif.
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
+    spec->set_name(lif->name);
+    spec->set_admin_status(lif->admin_status);
+    spec->set_enable_rdma(lif->enable_rdma);
+    spec->set_rdma_max_keys(lif->rdma_max_keys);
+    spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
+    spec->set_enable_nvme(lif->enable_nvme);
+    spec->set_nvme_max_ns(lif->nvme_max_ns);
+    spec->set_nvme_max_sess(lif->nvme_max_sess);
+
+    spec->set_vlan_strip_en(lif->vlan_strip_en);
+    spec->set_vlan_insert_en(lif->vlan_insert_en);
+    if (lif->pinned_uplink != HAL_HANDLE_INVALID) {
+        if_t *hal_if = find_if_by_handle(lif->pinned_uplink);
+        spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(hal_if->if_id);
+    }
+    qos_policer_to_spec(&lif->qos_info.rx_policer, spec->mutable_rx_policer());
+    qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
+    spec->mutable_rss()->set_type(lif->rss.type);
+    spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
+    spec->mutable_rss()->set_indir(lif->rss.indir, sizeof(lif->rss.indir));
+
+    spec->mutable_packet_filter()->set_receive_promiscuous(lif->packet_filters.receive_promiscuous);
+    spec->mutable_packet_filter()->set_receive_broadcast(lif->packet_filters.receive_broadcast);
+    spec->mutable_packet_filter()->set_receive_all_multicast(lif->packet_filters.receive_all_multicast);
+
+    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
+    rsp->mutable_status()->set_lif_handle(lif->hal_handle);
+    rsp->mutable_status()->set_lif_status(lif->admin_status);
+ 
+    // Return LifQstate addresses
+    intf::LifQState *entry;
+    for (int i = 0; i < intf::LifQPurpose_MAX; i++) {
+        const auto &ent = lif->qinfo[i];
+        entry = rsp->add_qstate();
+        entry->set_type_num(ent.type);
+        // entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
+        entry->set_addr(lif_manager()->get_lif_qstate_addr(hw_lif_id, ent.type, 0));
+    }
+
+    if (lif->lif_id == HAL_LIF_CPU) {
+        ret = cpucb_get_stats(lif->lif_id, rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("cpucb pd stats get failed");
+        }
+    } else {
+
+        // Getting PD information
+        args.lif = lif;
+        args.rsp = rsp;
+        pd_func_args.pd_lif_stats_get = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
+                          lif->lif_id, ret);
+        }
+    }
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    proto_msg_dump(*rsp);
+}    
+
+//-----------------------------------------------------------------------------
+// API to send LIF updates to Agent
+//-----------------------------------------------------------------------------
+static inline hal_ret_t
+hal_stream_lif_updates (lif_t *lif) {
+
+    auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
+        grpc::ServerWriter<EventResponse> *stream =
+                 (grpc::ServerWriter<EventResponse> *)ctxt;
+        lif_t          *lif  = (lif_t *)entry;
+        EventResponse   evtresponse;
+
+        evtresponse.set_event_id(::event::EVENT_ID_LIF_ADD_UPDATE);
+        lif_process_get(lif, evtresponse.mutable_lif_event());
+        stream->Write(evtresponse);
+        return true;
+    };
+
+    g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_LIF_ADD_UPDATE, lif, walk_cb);
+
+    return HAL_RET_OK;
+}
+
 void *
 lif_id_get_key_func (void *entry)
 {
@@ -997,6 +1093,9 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // Add to map of lif name and PI ID
     g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);
+   
+    // Send updates to Agent
+    hal_stream_lif_updates(lif);
     return ret;
 }
 
@@ -1591,6 +1690,9 @@ end:
        rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
      }
 
+    // Send updates to Agent
+    hal_stream_lif_updates(lif);
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
@@ -1933,79 +2035,6 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
     rsp->set_error_code(0 - ret);
 #endif
     rsp->set_error_code(0 - ret);
-}
-
-static void
-lif_process_get (lif_t *lif, LifGetResponse *rsp)
-{
-    hal_ret_t ret;
-    LifSpec  *spec     = NULL;
-    uint64_t hw_lif_id = lif_hw_lif_id_get(lif);
-    pd::pd_lif_stats_get_args_t args   = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-
-    // fill in the config spec of this lif.
-    spec = rsp->mutable_spec();
-    spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
-    spec->set_name(lif->name);
-    spec->set_admin_status(lif->admin_status);
-    spec->set_enable_rdma(lif->enable_rdma);
-    spec->set_rdma_max_keys(lif->rdma_max_keys);
-    spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
-    spec->set_enable_nvme(lif->enable_nvme);
-    spec->set_nvme_max_ns(lif->nvme_max_ns);
-    spec->set_nvme_max_sess(lif->nvme_max_sess);
-
-    spec->set_vlan_strip_en(lif->vlan_strip_en);
-    spec->set_vlan_insert_en(lif->vlan_insert_en);
-    if (lif->pinned_uplink != HAL_HANDLE_INVALID) {
-        if_t *hal_if = find_if_by_handle(lif->pinned_uplink);
-        spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(hal_if->if_id);
-    }
-    qos_policer_to_spec(&lif->qos_info.rx_policer, spec->mutable_rx_policer());
-    qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
-    spec->mutable_rss()->set_type(lif->rss.type);
-    spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
-    spec->mutable_rss()->set_indir(lif->rss.indir, sizeof(lif->rss.indir));
-
-    spec->mutable_packet_filter()->set_receive_promiscuous(lif->packet_filters.receive_promiscuous);
-    spec->mutable_packet_filter()->set_receive_broadcast(lif->packet_filters.receive_broadcast);
-    spec->mutable_packet_filter()->set_receive_all_multicast(lif->packet_filters.receive_all_multicast);
-
-    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
-    rsp->mutable_status()->set_lif_handle(lif->hal_handle);
-    rsp->mutable_status()->set_lif_status(lif->admin_status);
-
-    // Return LifQstate addresses
-    intf::LifQState *entry;
-    for (int i = 0; i < intf::LifQPurpose_MAX; i++) {
-        const auto &ent = lif->qinfo[i];
-        entry = rsp->add_qstate();
-        entry->set_type_num(ent.type);
-        // entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
-        entry->set_addr(lif_manager()->get_lif_qstate_addr(hw_lif_id, ent.type, 0));
-    }
-
-    if (lif->lif_id == HAL_LIF_CPU) {
-        ret = cpucb_get_stats(lif->lif_id, rsp);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("cpucb pd stats get failed");
-        }
-    } else {
-
-        // Getting PD information
-        args.lif = lif;
-        args.rsp = rsp;
-        pd_func_args.pd_lif_stats_get = &args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
-                          lif->lif_id, ret);
-        }
-    }
-
-    rsp->set_api_status(types::API_STATUS_OK);
-    proto_msg_dump(*rsp);
 }
 
 static bool

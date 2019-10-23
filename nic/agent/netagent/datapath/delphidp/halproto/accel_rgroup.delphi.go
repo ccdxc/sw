@@ -318,7 +318,6 @@ It has these top-level messages:
 	EplearnStats
 	EplearnStatus
 	EventRequest
-	EndpointEvent
 	EventResponse
 	FWEvent
 	GftEthFields

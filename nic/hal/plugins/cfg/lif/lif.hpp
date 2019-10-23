@@ -15,8 +15,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/sdk/platform/utils/program.hpp"
-
-#include "gen/proto/interface.pb.h"
+#include "gen/proto/event.pb.h"
 
 #define NUM_MAX_COSES 16
 // Size of RSS seed in bytes
@@ -35,6 +34,8 @@ using intf::LifDeleteResponse;
 using intf::LifGetRequest;
 using intf::LifGetResponse;
 using intf::LifGetResponseMsg;
+
+using event::EventResponse;
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;

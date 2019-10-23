@@ -15,7 +15,6 @@
 #include "gen/proto/nw.grpc.pb.h"
 #include "gen/proto/nwsec.grpc.pb.h"
 #include "gen/proto/port.grpc.pb.h"
-#include "gen/proto/event.grpc.pb.h"
 #include "gen/proto/system.grpc.pb.h"
 #include "gen/proto/debug.grpc.pb.h"
 #include "gen/proto/endpoint.grpc.pb.h"
@@ -171,10 +170,6 @@ using debug::SlabStats;
 using types::EncapInfo;
 using types::IPAddress;
 
-using event::Event;
-using event::EventRequest;
-using event::EventResponse;
-
 using gft::GftExactMatchFlowEntryRequestMsg;
 using gft::GftExactMatchFlowEntrySpec;
 using gft::GftHeaderGroupExactMatch;
@@ -282,7 +277,6 @@ public:
     channel_ready(wait_channel_ready(channel)),
     vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
-    event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
     debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
@@ -1578,44 +1572,6 @@ public:
         }
 
         return;
-    }
-
-    void event_test(void) {
-        ClientContext context;
-        std::shared_ptr<grpc::ClientReaderWriter<EventRequest, EventResponse> > stream(
-            event_stub_->EventListen(&context));
-
-        std::thread writer([stream]() {
-            std::vector<EventRequest>    events(6);
-
-            events[0].set_event_id(event::EVENT_ID_PORT);
-            events[0].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[1].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[1].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[2].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[2].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            events[3].set_event_id(event::EVENT_ID_PORT);
-            events[3].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            events[4].set_event_id(event::EVENT_ID_PORT);
-            events[4].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[5].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[5].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            for (const EventRequest& event : events) {
-                std::cout << "Subscribing to event " << event.event_id() << std::endl;
-                stream->Write(event);
-            }
-            stream->WritesDone();
-        });
-
-        EventResponse event_response;
-        while (stream->Read(&event_response)) {
-            std::cout << "Got event " << event_response.event_id() << std::endl;
-        }
-        writer.join();
-        Status status = stream->Finish();
-        if (!status.ok()) {
-            std::cout << "Event test failed" << std::endl;
-        }
     }
 
     // create gre tunnel interface
@@ -2933,7 +2889,6 @@ private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
     std::unique_ptr<Port::Stub> port_stub_;
-    std::unique_ptr<Event::Stub> event_stub_;
     std::unique_ptr<System::Stub> system_stub_;
     std::unique_ptr<Debug::Stub> debug_stub_;
     std::unique_ptr<Interface::Stub> intf_stub_;

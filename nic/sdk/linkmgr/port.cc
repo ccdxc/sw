@@ -1392,6 +1392,9 @@ port::port_event_notify(port_event_t port_event)
     port_event_info.event = port_event;
     port_event_info.speed = port_speed();
     port_event_info.type = port_type();
+    port_event_info.num_lanes = num_lanes(); 
+    port_event_info.oper_status = oper_status();
+    port_event_info.auto_neg_enable = auto_neg_enable();
 
     if (g_linkmgr_cfg.port_event_cb) {
         g_linkmgr_cfg.port_event_cb(&port_event_info);

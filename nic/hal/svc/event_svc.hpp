@@ -10,17 +10,16 @@
 
 using event::Event;
 using event::EventRequest;
-using event::EndpointEvent;
 using event::EventResponse;
 
 using grpc::Status;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 
 class EventServiceImpl final : public Event::Service {
 public:
-    Status EventListen(ServerContext *context,
-                       grpc::ServerReaderWriter<EventResponse,
-                       EventRequest> *stream) override;
+    Status EventListen(ServerContext* context, const EventRequest* request,
+                       ServerWriter<EventResponse>* writer) override;
 };
 
 #endif    // __EVENT_SVC_HPP__

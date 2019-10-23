@@ -125,12 +125,14 @@ hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)
 
     // init grpc server
     grpc_init();
+    hal::g_hal_cfg.grpc_port = std::string("50054");
     g_grpc_server_addr = std::string("localhost:") + hal::g_hal_cfg.grpc_port;
     hal::g_hal_cfg.server_builder = server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
+    printf("Listening on %s\n", hal::g_hal_cfg.grpc_port.c_str());
 
 #if 0
     // parse the ini

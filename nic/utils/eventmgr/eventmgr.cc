@@ -500,5 +500,12 @@ eventmgr::walk_listeners(event_id_t event_id, void *event_ctxt,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+eventmgr::notify_event(event_id_t event_id, void *event_ctxt,
+                         event_walk_cb_t walk_cb)
+{
+    return (walk_listeners(event_id, event_ctxt, walk_cb));
+}
+
 }    // namespace utils
 }    // namespace hal

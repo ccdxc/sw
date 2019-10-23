@@ -22,10 +22,42 @@
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/sdk/linkmgr/linkmgr_internal.hpp"
 #include "nic/include/fte.hpp"
+#include "nic/linkmgr/linkmgr_utils.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
 namespace hal {
+
+static inline hal_ret_t
+hal_stream_port_status_update (port_event_info_t port_event) {
+    
+    auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
+        grpc::ServerWriter<EventResponse> *stream =
+                 (grpc::ServerWriter<EventResponse> *)ctxt;
+        port_event_info_t *port_event = (port_event_info_t *)entry;
+        EventResponse   evtresponse;
+        auto status = evtresponse.mutable_port_event()->mutable_status();
+        auto link_status = status->mutable_link_status();
+
+        status->mutable_key_or_handle()->set_port_id(port_event->logical_port);
+        // Set link status
+        link_status->set_oper_state(
+                     linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
+        link_status->set_port_speed(
+                     linkmgr::sdk_port_speed_to_port_speed_spec(port_event->speed));
+        link_status->set_auto_neg_enable(port_event->auto_neg_enable);
+        link_status->set_num_lanes(port_event->num_lanes); 
+        evtresponse.set_event_id(::event::EVENT_ID_PORT_STATE);
+        
+        evtresponse.set_api_status(::types::ApiStatus::API_STATUS_OK);
+        stream->Write(evtresponse);
+        return true;
+    };
+    g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_PORT_STATE, 
+                                          (void *)&port_event, walk_cb);
+
+    return HAL_RET_OK;
+}
 
 uint8_t g_num_uplink_ifs = 0;
 std::vector<uint8_t > g_uplink_if_ids;
@@ -5052,10 +5084,13 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     port_event_info.event = port_ctxt->event;
     port_event_info.speed = port_ctxt->port_speed;
     port_event_info.type  = port_ctxt->port_type;
+    port_event_info.num_lanes = port_ctxt->num_lanes;
+    port_event_info.oper_status = port_ctxt->oper_status;
 
     HAL_TRACE_DEBUG("Timer fired. Port: {}, Event: {}, Speed: {}",
                     port_ctxt->port_num, (uint32_t)port_ctxt->event,
                     (uint32_t)port_ctxt->port_speed);
+    hal_stream_port_status_update(port_event_info);
     sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
     if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
     linkmgr::port_event_notify(&port_event_info);
@@ -5163,6 +5198,7 @@ end:
             HAL_TRACE_ERR("Unable to repin ipfix sessions. ret: {}", ret);
         }
     }
+
     return ret;
 }
 
@@ -5602,7 +5638,5 @@ if_status_to_str (IfStatus status)
         default: return "IF_STATUS_NONE";
     }
 }
-
-
 
 }    // namespace hal

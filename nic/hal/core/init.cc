@@ -412,6 +412,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         }
 
         hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
+        HAL_TRACE_DEBUG("Setting GRPC port to: {}", hal_cfg->grpc_port);
         if (getenv("HAL_GRPC_PORT")) {
             hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");
             HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", hal_cfg->grpc_port);

@@ -44,9 +44,8 @@ void generate_event (void)
 #endif
 
 hal_ret_t
-handle_event_request (EventRequest *req,
-                      grpc::ServerReaderWriter<EventResponse,
-                                               EventRequest> *stream)
+handle_event_request (const EventRequest *req,
+                      grpc::ServerWriter<EventResponse> *stream)
 {
     hal_ret_t    ret = HAL_RET_OK;
 

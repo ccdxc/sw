@@ -6,20 +6,22 @@
 
 syntax = "proto3";
 import "types.proto";
+import "interface.proto";
+import "port.proto";
 package event;
 option go_package="halproto";
 
 // Event service definition
 service Event {
   // TODO: rename this API - with bidir streaming, this name doesn't make sense
-  rpc EventListen (stream EventRequest) returns (stream EventResponse) {}
+  rpc EventListen (EventRequest) returns (stream EventResponse) {}
 }
 
 // events that HAL generates and app(s) can listen to
 enum EventId {
-  EVENT_ID_NONE     = 0;
-  EVENT_ID_ENDPOINT = 1;
-  EVENT_ID_PORT     = 2;
+  EVENT_ID_NONE           = 0;
+  EVENT_ID_PORT_STATE     = 1;
+  EVENT_ID_LIF_ADD_UPDATE = 2;
 }
 
 enum EventOp {
@@ -34,15 +36,11 @@ message EventRequest {
     EventOp             event_operation = 2;    // subscribe or unsubscribe
 }
 
-message EndpointEvent {
-  fixed64    l2_segment_handle = 1;
-  uint64     mac_address       = 2;
-}
-
 message EventResponse {
-  types.ApiStatus      api_status = 1;    // API status code
-  EventId              event_id   = 2;
+  types.ApiStatus                 api_status = 1;    // API status code
+  EventId                         event_id   = 2;
   oneof event_info {
-      EndpointEvent    ep_event   = 3;    // Endpoint event
+      intf.LifGetResponse         lif_event  = 3;    // Lif Info
+      port.PortResponse           port_event = 4;    // Port Info
   }
 }
