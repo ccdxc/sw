@@ -140,6 +140,14 @@ private:
     /// \brief  destructor
     ~nexthop_group_impl() {}
 
+    /// \brief     populate overlay ECMP information in the ECMP table
+    ///            entry
+    /// \param[in] spec         nexthop group specification
+    /// \param[in] ecmp_data    P4 table entry pointer
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t populate_ecmp_tep_info_(pds_nexthop_group_spec_t *spec,
+                                      ecmp_actiondata_t *ecmp_data);
+
     /// \brief     program nexthop group related tables during create by
     ///            enabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated

@@ -15,11 +15,15 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/nexthop_group.hpp"
+#include "nic/apollo/api/impl/apulu/tep_impl.hpp"
+#include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
+
+#define ecmp_info    action_u.ecmp_ecmp_info
 
 /// \defgroup PDS_NEXTHOP_GROUP_IMPL - nexthop group datapath implementation
 /// \ingroup PDS_NEXTHOP
@@ -104,9 +108,84 @@ nexthop_group_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
+nexthop_group_impl::populate_ecmp_tep_info_(pds_nexthop_group_spec_t *spec,
+                                            ecmp_actiondata_t *ecmp_data)
+{
+    tep_impl *tep;
+    for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+        tep = (tep_impl *)tep_db()->find(&spec->nexthops[i].tep)->impl();
+        switch (i) {
+        case 0:
+            ecmp_data->ecmp_info.tunnel_id1 = tep->hw_id();
+            break;
+        case 1:
+            ecmp_data->ecmp_info.tunnel_id2 = tep->hw_id();
+            break;
+        case 2:
+            ecmp_data->ecmp_info.tunnel_id3 = tep->hw_id();
+            break;
+        case 3:
+            ecmp_data->ecmp_info.tunnel_id4 = tep->hw_id();
+            break;
+        default:
+            PDS_TRACE_ERR("Unexpected nexthop count %u in nexthop group %u",
+                          spec->num_nexthops, spec->key.id);
+            return SDK_RET_ERR;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 nexthop_group_impl::activate_create_(pds_epoch_t epoch,
                                      nexthop_group *nh_group,
                                      pds_nexthop_group_spec_t *spec) {
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data;
+    ecmp_actiondata_t ecmp_data = { 0 };
+
+    ecmp_data.action_id = ECMP_ECMP_INFO_ID;
+    ecmp_data.ecmp_info.num_nexthops = spec->num_nexthops;
+    if (spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
+        // populate ECMP table entry data
+        ecmp_data.ecmp_info.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+        ret = populate_ecmp_tep_info_(spec, &ecmp_data);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    } else if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        // program the nexthops first in NEXTHOP table
+        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+            ret = populate_nh_info_(&spec->nexthops[i], &nh_data);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Programming of nexthop %u in NEXTHOP table for "
+                              "nexthop group %u failed, err %u",
+                              i, spec->key.id, ret);
+                return ret;
+            }
+            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
+                                               nh_base_hw_id_ + i,
+                                               NULL, NULL, &nh_data);
+            if (p4pd_ret != P4PD_SUCCESS) {
+                PDS_TRACE_ERR("Failed to program nexthop %u at idx %u",
+                              spec->key.id, hw_id_);
+                return sdk::SDK_RET_HW_PROGRAM_ERR;
+            }
+        }
+        // populate ECMP table entry data
+        ecmp_data.ecmp_info.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+        ecmp_data.ecmp_info.nexthop_base = nh_base_hw_id_;
+    }
+
+    // program the ECMP table now
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
+                                       NULL, NULL, &ecmp_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop group %u at idx %u in "
+                      "ECMP table", spec->key.id, hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
     return SDK_RET_ERR;
 }
 

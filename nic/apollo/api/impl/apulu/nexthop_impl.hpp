@@ -11,10 +11,12 @@
 #ifndef __NEXTHOP_IMPL_HPP__
 #define __NEXTHOP_IMPL_HPP__
 
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
@@ -163,6 +165,37 @@ private:
 private:
     uint32_t    hw_id_;    ///< hardware id
 };
+
+/// helper function to populate nexthop related information
+/// in the nexthop P4 table entry
+#define nexthop_info    action_u.nexthop_nexthop_info
+static inline sdk_ret_t
+populate_nh_info_ (pds_nexthop_spec_t *spec,
+                  nexthop_actiondata_t *nh_data)
+{
+    if_entry *intf;
+    pds_encap_t encap;
+
+    memset(nh_data, 0, sizeof(*nh_data));
+    nh_data->action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    intf = if_db()->find(&spec->l3_if);
+    if (intf->type() != PDS_IF_TYPE_L3) {
+        PDS_TRACE_ERR("Unsupported interface %u type %u in nexthop %u",
+                      intf->key().id, intf->type(), spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    nh_data->nexthop_info.port = intf->port();
+    encap = intf->l3_encap();
+    if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+        nh_data->nexthop_info.vlan = encap.val.vlan_tag;
+    }
+    sdk::lib::memrev(nh_data->nexthop_info.dmaco,
+                     spec->underlay_mac, ETH_ADDR_LEN);
+    // TODO: get this from the pinned mnic
+    sdk::lib::memrev(nh_data->nexthop_info.smaco,
+                     intf->l3_mac(), ETH_ADDR_LEN);
+    return SDK_RET_OK;
+}
 
 /// @}
 

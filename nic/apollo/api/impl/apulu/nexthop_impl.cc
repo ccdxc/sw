@@ -114,7 +114,6 @@ typedef struct __attribute__((__packed__)) __nexthop_nexthop_info {
     uint8_t dmaci[6];
 } nexthop_nexthop_info_t;
 
-#define nexthop_info    action_u.nexthop_nexthop_info
 sdk_ret_t
 nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                                pds_nexthop_spec_t *spec) {
@@ -161,8 +160,9 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         }
         sdk::lib::memrev(nh_data.nexthop_info.dmaco,
                          spec->underlay_mac, ETH_ADDR_LEN);
-        sdk::lib::memrev(nh_data.nexthop_info.
-                         smaco, intf->l3_mac(), ETH_ADDR_LEN);
+        // TODO: get this from the pinned mnic
+        sdk::lib::memrev(nh_data.nexthop_info.smaco,
+                         intf->l3_mac(), ETH_ADDR_LEN);
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
                                            NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
