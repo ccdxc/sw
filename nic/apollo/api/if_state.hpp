@@ -69,6 +69,12 @@ public:
     sdk_ret_t walk(uint32_t if_type, sdk::lib::ht::ht_walk_cb_t walk_cb,
                    void *ctxt);
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
 private:
     typedef struct if_walk_ctxt_s {
         uint32_t if_type;

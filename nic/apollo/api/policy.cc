@@ -42,7 +42,7 @@ policy::factory(pds_policy_spec_t *spec) {
         return NULL;
     }
     /**< create security policy instance with defaults, if any */
-    new_policy = policy_db()->policy_alloc();
+    new_policy = policy_db()->alloc();
     if (new_policy) {
         new (new_policy) policy();
         new_policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
@@ -75,7 +75,7 @@ policy::destroy(policy *policy) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
     }
     policy->~policy();
-    policy_db()->policy_free(policy);
+    policy_db()->free(policy);
 }
 
 /**

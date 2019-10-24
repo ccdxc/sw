@@ -104,6 +104,12 @@ if_state::walk(uint32_t if_type, sdk::lib::ht::ht_walk_cb_t walk_cb,
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+if_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(if_slab_, ctxt);
+    return SDK_RET_OK;
+}
+
 /// \@}    // end of PDS_IF_STATE
 
 }    // namespace api

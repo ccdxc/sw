@@ -304,7 +304,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // Rx direction
     i = 0;
     policy_key = subnet->ing_v4_policy();
-    sec_policy = policy_db()->policy_find(&policy_key);
+    sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 subnet ing policy root addr 0xllx", addr);
@@ -313,7 +313,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate ingress IPv4 policy roots in the Rx direction entry now
     for (uint32_t j = 0; j < spec->num_ing_v4_policy; j++, i++) {
-        sec_policy = policy_db()->policy_find(&spec->ing_v4_policy[j]);
+        sec_policy = policy_db()->find(&spec->ing_v4_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -337,7 +337,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // Rx direction
     i = 0;
     policy_key = subnet->ing_v6_policy();
-    sec_policy = policy_db()->policy_find(&policy_key);
+    sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 subnet ing policy root addr 0xllx", addr);
@@ -346,7 +346,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate ingress IPv6 policy roots in the Rx direction entry
     for (uint32_t j = 0; i < spec->num_ing_v6_policy; j++, i++) {
-        sec_policy = policy_db()->policy_find(&spec->ing_v6_policy[j]);
+        sec_policy = policy_db()->find(&spec->ing_v6_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -385,7 +385,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate egress IPv4 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v4_policy; j++, i++) {
-        sec_policy = policy_db()->policy_find(&spec->egr_v4_policy[j]);
+        sec_policy = policy_db()->find(&spec->egr_v4_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -393,7 +393,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // if subnet has egress IPv4 policy, append that policy tree root
     policy_key = subnet->egr_v4_policy();
-    sec_policy = policy_db()->policy_find(&policy_key);
+    sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 subnet egr policy root addr 0xllx", addr);
@@ -432,7 +432,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate egress IPv6 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v6_policy; j++, i++) {
-        sec_policy = policy_db()->policy_find(&spec->egr_v6_policy[j]);
+        sec_policy = policy_db()->find(&spec->egr_v6_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -440,7 +440,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // if subnet has egress IPv6 policy, append that policy tree root
     policy_key = subnet->egr_v6_policy();
-    sec_policy = policy_db()->policy_find(&policy_key);
+    sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 subnet egr policy root addr 0xllx", addr);

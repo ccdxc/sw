@@ -61,6 +61,12 @@ public:
     mirror_session *find(pds_mirror_session_key_t *key) const;
 #endif
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

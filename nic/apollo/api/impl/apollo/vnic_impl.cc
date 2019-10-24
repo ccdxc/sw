@@ -481,13 +481,13 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     }
 
     policy_key = subnet->ing_v4_policy();
-    ing_v4_policy = policy_db()->policy_find(&policy_key);
+    ing_v4_policy = policy_db()->find(&policy_key);
     policy_key = subnet->ing_v6_policy();
-    ing_v6_policy = policy_db()->policy_find(&policy_key);
+    ing_v6_policy = policy_db()->find(&policy_key);
     policy_key = subnet->egr_v4_policy();
-    egr_v4_policy = policy_db()->policy_find(&policy_key);
+    egr_v4_policy = policy_db()->find(&policy_key);
     policy_key = subnet->egr_v6_policy();
-    egr_v6_policy = policy_db()->policy_find(&policy_key);
+    egr_v6_policy = policy_db()->find(&policy_key);
     // program local_vnic_by_vlan_tx table entry
     ret = activate_vnic_by_vlan_tx_table_create_(epoch, vpc, spec, vnic,
                                                  v4_route_table, v6_route_table,

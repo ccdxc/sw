@@ -25,19 +25,19 @@ policy_state::policy_state() {
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                              policy::policy_key_func_get,
                              policy::key_size());
-    SDK_ASSERT(policy_ht() != NULL);
+    SDK_ASSERT(policy_ht_ != NULL);
 
     policy_slab_ = slab::factory("security-policy", PDS_SLAB_ID_POLICY,
                                  sizeof(policy), 16, true, true, true, NULL);
-    SDK_ASSERT(policy_slab() != NULL);
+    SDK_ASSERT(policy_slab_ != NULL);
 }
 
 /**
  * @brief    destructor
  */
 policy_state::~policy_state() {
-    ht::destroy(policy_ht());
-    slab::destroy(policy_slab());
+    ht::destroy(policy_ht_);
+    slab::destroy(policy_slab_);
 }
 
 /**
@@ -45,8 +45,8 @@ policy_state::~policy_state() {
  * @return    pointer to the allocated security policy, NULL if no memory
  */
 policy *
-policy_state::policy_alloc(void) {
-    return ((policy *)policy_slab()->alloc());
+policy_state::alloc(void) {
+    return ((policy *)policy_slab_->alloc());
 }
 
 /**
@@ -54,8 +54,8 @@ policy_state::policy_alloc(void) {
  * @param[in]  rtrable pointer to the allocated security policy instance
  */
 void
-policy_state::policy_free(policy *policy) {
-    policy_slab()->free(policy);
+policy_state::free(policy *policy) {
+    policy_slab_->free(policy);
 }
 
 /**
@@ -64,8 +64,14 @@ policy_state::policy_free(policy *policy) {
  * @return       pointer to the security policy instance found or NULL
  */
 policy *
-policy_state::policy_find(pds_policy_key_t *policy_key) const {
-    return (policy *)(policy_ht()->lookup(policy_key));
+policy_state::find(pds_policy_key_t *policy_key) const {
+    return (policy *)(policy_ht_->lookup(policy_key));
+}
+
+sdk_ret_t
+policy_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(policy_slab_, ctxt);
+    return SDK_RET_OK;
 }
 
 /** @} */    // end of PDS_POLICY_STATE

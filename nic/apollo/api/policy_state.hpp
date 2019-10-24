@@ -42,20 +42,26 @@ public:
      * @return pointer to the allocated security policy instance,
      *         or NULL if no memory
      */
-    policy *policy_alloc(void);
+    policy *alloc(void);
 
     /**
      * @brief      free security policy instance back to slab
      * @param[in]  policy   pointer to the allocated security
      *             policy instance
      */
-    void policy_free(policy *policy);
+    void free(policy *policy);
 
     /**
      * @brief     lookup a security policy in database given the key
      * @param[in] policy_key security policy key
      */
-    policy *policy_find(pds_policy_key_t *policy_key) const;
+    policy *find(pds_policy_key_t *policy_key) const;
+
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 

@@ -23,43 +23,49 @@ nexthop_group_state::nexthop_group_state() {
         ht::factory(PDS_MAX_NEXTHOP_GROUP >> 1,
                     nexthop_group::nexthop_group_key_func_get,
                     nexthop_group::key_size());
-    SDK_ASSERT(nh_group_ht() != NULL);
+    SDK_ASSERT(nexthop_group_ht_ != NULL);
     nexthop_group_slab_ =
         slab::factory("nexthop-group", PDS_SLAB_ID_NEXTHOP_GROUP,
                       sizeof(nexthop_group), 256, true, true, NULL);
-    SDK_ASSERT(nh_group_slab() != NULL);
+    SDK_ASSERT(nexthop_group_slab_ != NULL);
 }
 
 nexthop_group_state::~nexthop_group_state() {
-    ht::destroy(nh_group_ht());
-    slab::destroy(nh_group_slab());
+    ht::destroy(nexthop_group_ht_);
+    slab::destroy(nexthop_group_slab_);
 }
 
 nexthop_group *
 nexthop_group_state::alloc(void) {
-    return ((nexthop_group *)nh_group_slab()->alloc());
+    return ((nexthop_group *)nexthop_group_slab_->alloc());
 }
 
 sdk_ret_t
 nexthop_group_state::insert(nexthop_group *nh_group) {
-    return nh_group_ht()->insert_with_key(&nh_group->key_,
+    return nexthop_group_ht_->insert_with_key(&nh_group->key_,
                                           nh_group, &nh_group->ht_ctxt_);
 }
 
 nexthop_group *
 nexthop_group_state::remove(nexthop_group *nh_group) {
     PDS_TRACE_VERBOSE("Adding nexthop group %u to db", nh_group->key().id);
-    return (nexthop_group *)(nh_group_ht()->remove(&nh_group->key_));
+    return (nexthop_group *)(nexthop_group_ht_->remove(&nh_group->key_));
 }
 
 void
 nexthop_group_state::free(nexthop_group *nh) {
-    nh_group_slab()->free(nh);
+    nexthop_group_slab_->free(nh);
 }
 
 nexthop_group *
 nexthop_group_state::find(pds_nexthop_group_key_t *key) const {
-    return (nexthop_group *)(nh_group_ht()->lookup(key));
+    return (nexthop_group *)(nexthop_group_ht_->lookup(key));
+}
+
+sdk_ret_t
+nexthop_group_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(nexthop_group_slab_, ctxt);
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_STATE

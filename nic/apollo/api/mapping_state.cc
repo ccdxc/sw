@@ -17,39 +17,31 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    constructor
- */
 mapping_state::mapping_state() {
     mapping_slab_ = slab::factory("mapping", PDS_SLAB_ID_MAPPING,
                                   sizeof(mapping_entry),
                                   8192, true, true, NULL);
-    SDK_ASSERT(mapping_slab() != NULL);
+    SDK_ASSERT(mapping_slab_ != NULL);
 }
 
-/**
- * @brief    destructor
- */
 mapping_state::~mapping_state() {
-    slab::destroy(mapping_slab());
+    slab::destroy(mapping_slab_);
 }
 
-/**
- * @brief     allocate mapping instance
- * @return    pointer to the allocated mapping , NULL if no memory
- */
 mapping_entry *
 mapping_state::alloc(void) {
-    return ((mapping_entry *)mapping_slab()->alloc());
+    return ((mapping_entry *)mapping_slab_->alloc());
 }
 
-/**
- * @brief      free mapping instance back to slab
- * @param[in]  mapping   pointer to the allocated mapping
- */
 void
 mapping_state::free(mapping_entry *mapping) {
-    mapping_slab()->free(mapping);
+    mapping_slab_->free(mapping);
+}
+
+sdk_ret_t
+mapping_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(mapping_slab_, ctxt);
+    return SDK_RET_OK;
 }
 
 /** @} */    // end of PDS_MAPPING_STATE

@@ -22,33 +22,33 @@ route_table_state::route_table_state() {
     route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
                                   route_table::route_table_key_func_get,
                                   route_table::key_size());
-    SDK_ASSERT(route_table_ht() != NULL);
+    SDK_ASSERT(route_table_ht_ != NULL);
 
     route_table_slab_ = slab::factory("route-table", PDS_SLAB_ID_ROUTE_TABLE,
                                       sizeof(route_table), 16, true, true,
                                       true, NULL);
-    SDK_ASSERT(route_table_slab() != NULL);
+    SDK_ASSERT(route_table_slab_ != NULL);
 }
 
 route_table_state::~route_table_state() {
-    ht::destroy(route_table_ht());
-    slab::destroy(route_table_slab());
+    ht::destroy(route_table_ht_);
+    slab::destroy(route_table_slab_);
 }
 
 route_table *
 route_table_state::alloc(void) {
-    return ((route_table *)route_table_slab()->alloc());
+    return ((route_table *)route_table_slab_->alloc());
 }
 
 sdk_ret_t
 route_table_state::insert(route_table *table) {
-    return route_table_ht()->insert_with_key(&table->key_, table,
+    return route_table_ht_->insert_with_key(&table->key_, table,
                                              &table->ht_ctxt_);
 }
 
 route_table *
 route_table_state::remove(route_table *table) {
-    return (route_table *)(route_table_ht()->remove(&table->key_));
+    return (route_table *)(route_table_ht_->remove(&table->key_));
 }
 
 sdk_ret_t
@@ -62,12 +62,18 @@ route_table_state::update(route_table *curr_table, route_table *new_table) {
 
 void
 route_table_state::free(route_table *rtable) {
-    route_table_slab()->free(rtable);
+    route_table_slab_->free(rtable);
 }
 
 route_table *
 route_table_state::find(pds_route_table_key_t *route_table_key) const {
-    return (route_table *)(route_table_ht()->lookup(route_table_key));
+    return (route_table *)(route_table_ht_->lookup(route_table_key));
+}
+
+sdk_ret_t
+route_table_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(route_table_slab_, ctxt);
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_ROUTE_TABLE_STATE

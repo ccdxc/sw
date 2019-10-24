@@ -24,21 +24,27 @@ mirror_session_state::mirror_session_state() {
     mirror_session_slab_ =
         slab::factory("mirror-session", PDS_SLAB_ID_MIRROR_SESSION,
                       sizeof(mirror_session), 8, true, true, true, NULL);
-    SDK_ASSERT(mirror_session_slab() != NULL);
+    SDK_ASSERT(mirror_session_slab_ != NULL);
 }
 
 mirror_session_state::~mirror_session_state() {
-    slab::destroy(mirror_session_slab());
+    slab::destroy(mirror_session_slab_);
 }
 
 mirror_session *
 mirror_session_state::alloc(void) {
-    return ((mirror_session *)mirror_session_slab()->alloc());
+    return ((mirror_session *)mirror_session_slab_->alloc());
 }
 
 void
 mirror_session_state::free(mirror_session *ms) {
-    mirror_session_slab()->free(ms);
+    mirror_session_slab_->free(ms);
+}
+
+sdk_ret_t
+mirror_session_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(mirror_session_slab_, ctxt);
+    return SDK_RET_OK;
 }
 
 #if 0

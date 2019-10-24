@@ -182,9 +182,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_db()->policy_find(&api_ctxt->api_params->policy_key);
+            return policy_db()->find(&api_ctxt->api_params->policy_key);
         }
-        return policy_db()->policy_find(&api_ctxt->api_params->policy_spec.key);
+        return policy_db()->find(&api_ctxt->api_params->policy_spec.key);
 
     case OBJ_ID_NEXTHOP:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -198,13 +198,11 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         return tag_db()->find(&api_ctxt->api_params->tag_spec.key);
 
-#if 0
     case OBJ_ID_NEXTHOP_GROUP:
         if (api_ctxt->api_op == API_OP_DELETE) {
             return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_key);
         }
         return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_spec.key);
-#endif
 
     case OBJ_ID_MAPPING:
     case OBJ_ID_MIRROR_SESSION:

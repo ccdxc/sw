@@ -25,7 +25,14 @@ namespace api {
 /// \param[in] ctxt    opaque context that the callback can interpret
 /// \return    true if walk needs to be stopped or false if walk needs to
 ///            continue
-typedef bool (state_walk_cb_t)(void *api_obj, void *ctxt);
+typedef bool (state_walk_cb_t)(void *obj, void *ctxt);
+
+/// \brief     generic walk callback function type for slab objects
+/// \param[in] obj     slab instance
+/// \param[in] ctxt    opaque context that the callback can interpret
+/// \return    true if walk needs to be stopped or false if walk needs to
+///            continue
+typedef bool (slab_walk_cb_t)(void *obj, void *ctxt);
 
 /// \brief state base class
 class state_base : public obj_base {
@@ -41,6 +48,14 @@ public:
     /// \param[in] ctxt       opaque context passed back to the callback
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
         return SDK_RET_INVALID_OP;
     }
 };

@@ -46,7 +46,7 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
 static inline policy *
 pds_policy_entry_find (pds_policy_key_t *key)
 {
-    return policy_db()->policy_find(key);
+    return policy_db()->find(key);
 }
 
 //----------------------------------------------------------------------------
