@@ -576,7 +576,7 @@ naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
 naples-firmware-tarball:
-	tar -zcf naples_fw_all.tgz nic/naples_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools/x86_64/*/goldfw/latest/drivers-*-eth.tar.xz platform/hosttools/x86_64/*/goldfw/old/drivers-*-eth.tar.xz nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+	tar -zcf naples_fw_all.tgz nic/naples_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
 
 e2e-iota: e2e-naples
 	$(MAKE) venice-image
