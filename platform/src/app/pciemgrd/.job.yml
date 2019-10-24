@@ -1,0 +1,15 @@
+---
+version: 2.0
+targets:
+  pciemgrd:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw/nic && make && make -C ../platform/src/third-party/app/pciutils && make BUILD_ARCH=x86_64 -C ../platform/src/app/pciemgrd/tests test"]
+    owners: ["email:brads@pensando.io"]
+    area:
+    sub-area:
+    feature:
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw"

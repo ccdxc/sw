@@ -115,6 +115,8 @@ jobs:
     labels: ["hourly"]
   platform/drivers/linux:
     labels: ["hourly"]
+  platform/src/app/pciemgrd:
+    labels: ["hourly"]
   storage/offload:
     labels: ["hourly"]
   storage/offload/linux-build-test:
@@ -181,6 +183,8 @@ dependencies:
       exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
     - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
+  platform/src/third-party/app/pciutils:
+    - reference: platform/src/app/pciemgrd
   storage/offload:
     - reference: storage/offload/linux-build-test
   venice:
