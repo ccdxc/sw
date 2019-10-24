@@ -118,13 +118,10 @@ sdk_ret_t
 nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                                pds_nexthop_spec_t *spec) {
     sdk_ret_t ret;
-    if_entry *intf;
     pds_encap_t encap;
-    ip_prefix_t ip_pfx;
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data = { 0 };
 
-#if 0
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     switch (spec->type) {
     case PDS_NH_TYPE_BLACKHOLE:
@@ -132,37 +129,10 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         break;
 
     case PDS_NH_TYPE_UNDERLAY:
-        intf = if_db()->find(&spec->l3_if);
-        if (intf->type() != PDS_IF_TYPE_L3) {
-            PDS_TRACE_ERR("Invalid nexthop %u spec, nh pointing to non L3 "
-                          "intf %u", spec->key.id, intf->key().id);
-            return SDK_RET_INVALID_ARG;
+        ret = populate_nh_info_(spec, &nh_data);
+        if (ret != SDK_RET_OK) {
+            return ret;
         }
-        nh_data.nexthop_info.port = intf->port();
-        encap = intf->l3_encap();
-        if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-            nh_data.nexthop_info.vlan = encap.val.vlan_tag;
-        } else if (encap.type != PDS_ENCAP_TYPE_NONE) {
-            PDS_TRACE_ERR("Unsupported encap type %u in nexthop %u",
-                          encap.type, spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        ip_pfx = intf->l3_ip_prefix();
-        if (ip_pfx.addr.af == IP_AF_IPV4) {
-            nh_data.nexthop_info.ip_type = IPTYPE_IPV4;
-            memcpy(nh_data.nexthop_info.dipo,
-                   &ip_pfx.addr.addr.v4_addr, IP4_ADDR8_LEN);
-        } else if (ip_pfx.addr.af == IP_AF_IPV6) {
-            nh_data.nexthop_info.ip_type = IPTYPE_IPV6;
-            sdk::lib::memrev(nh_data.nexthop_info.dipo,
-                             ip_pfx.addr.addr.v6_addr.addr8,
-                             IP6_ADDR8_LEN);
-        }
-        sdk::lib::memrev(nh_data.nexthop_info.dmaco,
-                         spec->underlay_mac, ETH_ADDR_LEN);
-        // TODO: get this from the pinned mnic
-        sdk::lib::memrev(nh_data.nexthop_info.smaco,
-                         intf->l3_mac(), ETH_ADDR_LEN);
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
                                            NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -178,7 +148,6 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         return SDK_RET_INVALID_ARG;
         break;
     }
-#endif
     return SDK_RET_OK;
 }
 
