@@ -107,6 +107,8 @@ subnet_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program BD table in the egress pipe
     bd_data.action_id = BD_BD_INFO_ID;
     bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
+    PDS_TRACE_DEBUG("Programming BD table at %u with vni %u",
+                    subnet->hw_id(), bd_data.bd_info.vni);
     memcpy(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_BD, subnet->hw_id(),
                                        NULL, NULL, &bd_data);
@@ -242,16 +244,17 @@ subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    p4pd_error_t p4pd_ret;
     sdk_ret_t ret;
-    bd_actiondata_t bd_data { 0 };
-    subnet_entry *subnet = (subnet_entry *)api_obj;
-    pds_subnet_info_t *sinfo = (pds_subnet_info_t *) info;
-    pds_subnet_spec_t *spec = &sinfo->spec;
+    p4pd_error_t p4pd_ret;
+    pds_subnet_spec_t *spec;
+    bd_actiondata_t bd_data;
+    vni_actiondata_t vni_data;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams;
-    vni_actiondata_t vni_data = { 0 };
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+    pds_subnet_info_t *subnet_info = (pds_subnet_info_t *)info;
 
+    spec = &subnet_info->spec;
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, subnet->hw_id(),
                                        NULL, NULL, &bd_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -277,7 +280,7 @@ subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 
     // validate values read from hw table with sw state
     SDK_ASSERT(vni_data.vni_info.bd_id == subnet->hw_id());
-    SDK_ASSERT(!memcmp(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN)); 
+    SDK_ASSERT(!memcmp(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN));
     return SDK_RET_OK;
 }
 

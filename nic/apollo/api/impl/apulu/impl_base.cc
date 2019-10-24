@@ -79,6 +79,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::factory((pds_vpc_spec_t *)args);
 
+    case IMPL_OBJ_ID_SUBNET:
+        return subnet_impl::factory((pds_subnet_spec_t *)args);
+
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((pds_vnic_spec_t *)args);
 
@@ -96,9 +99,6 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_NEXTHOP:
         return nexthop_impl::factory((pds_nexthop_spec_t *)args);
-
-    case IMPL_OBJ_ID_SUBNET:
-        return subnet_impl::factory((pds_subnet_spec_t *)args);
 
     case IMPL_OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group_impl::factory((pds_nexthop_group_spec_t *)args);
@@ -155,6 +155,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::destroy((vpc_impl *)impl);
+
+    case IMPL_OBJ_ID_SUBNET:
+        return subnet_impl::destroy((subnet_impl *)impl);
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::destroy((vnic_impl *)impl);

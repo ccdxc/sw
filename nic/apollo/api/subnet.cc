@@ -31,7 +31,7 @@ subnet_entry::subnet_entry() {
     ing_v6_policy_.id = PDS_POLICY_ID_INVALID;
     egr_v4_policy_.id = PDS_POLICY_ID_INVALID;
     egr_v6_policy_.id = PDS_POLICY_ID_INVALID;
-    
+
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }

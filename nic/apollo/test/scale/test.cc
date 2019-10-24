@@ -598,6 +598,10 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.ing_v4_policy.id = policy_id + (num_subnets * num_vpcs);
         pds_subnet.egr_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 2;
         pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
+        if (apulu()) {
+            pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+            pds_subnet.fabric_encap.val.vnid = num_vpcs + (vpc_id - 1) * num_subnets + i;
+        }
         policy_id++;
         rv = create_subnet(&pds_subnet);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
