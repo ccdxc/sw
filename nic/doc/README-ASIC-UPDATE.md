@@ -1,5 +1,6 @@
 README for updating capri asic pointer and asic files
 =====================================================
+Note: All of the following steps needs to be performed on srv13 server as jenkins user
 
     1) Prepare the headers and sources
         a) Add the required header files to nic/tools/asic_sw_combined_sanity/asic_headers.txt
@@ -38,3 +39,6 @@ README for updating capri asic pointer and asic files
 
     7) Use the below link to raise PR for the changes:
        https://github.com/pensando/sw/compare/master...vikasbd:asic_label_update_<ASIC_BRANCH>
+
+    At the start of jenkins job you can find the build machine and workspace information. You can login to this build
+    machine and go to the workspace to check if anything something is missing after your build
