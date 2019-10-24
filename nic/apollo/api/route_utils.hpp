@@ -18,7 +18,7 @@ operator<<(std::ostream& os, const pds_route_t *route) {
     os << " pfx: " << ippfx2str(&route->prefix)
        << " nh type: " << route->nh_type;
     switch(route->nh_type) {
-        case PDS_NH_TYPE_TEP:
+        case PDS_NH_TYPE_OVERLAY:
             os << " TEP id: " << route->tep.id;
             break;
         case PDS_NH_TYPE_IP:

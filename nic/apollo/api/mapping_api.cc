@@ -71,7 +71,7 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->fabric_encap = local_spec->fabric_encap;
     memcpy(&spec->overlay_mac, &local_spec->vnic_mac, sizeof(mac_addr_t));
     // local mapping always point to local VTEP (i.e., MyTEP) IP
-    spec->nh_type = PDS_NH_TYPE_TEP;
+    spec->nh_type = PDS_NH_TYPE_OVERLAY;
     spec->is_local = true;
     spec->vnic.id = local_spec->vnic.id;
     spec->public_ip_valid = local_spec->public_ip_valid;
@@ -91,9 +91,9 @@ pds_remote_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->fabric_encap = remote_spec->fabric_encap;
     memcpy(&spec->overlay_mac, &remote_spec->vnic_mac, sizeof(mac_addr_t));
     spec->nh_type = remote_spec->nh_type;
-    if (spec->nh_type == PDS_NH_TYPE_TEP) {
+    if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
         spec->tep = remote_spec->tep;
-    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_NHGROUP) {
+    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_ECMP) {
         spec->nh_group = remote_spec->nh_group;
     }
     spec->provider_ip_valid = remote_spec->provider_ip_valid;
@@ -151,8 +151,8 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
 {
     pds_mapping_spec_t spec;
 
-    if ((remote_spec->nh_type != PDS_NH_TYPE_TEP) &&
-        (remote_spec->nh_type != PDS_NH_TYPE_OVERLAY_NHGROUP)) {
+    if ((remote_spec->nh_type != PDS_NH_TYPE_OVERLAY) &&
+        (remote_spec->nh_type != PDS_NH_TYPE_OVERLAY_ECMP)) {
         return SDK_RET_INVALID_ARG;
     }
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);

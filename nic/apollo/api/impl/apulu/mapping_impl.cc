@@ -426,7 +426,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
     memset(&mapping_data, 0, sizeof(mapping_data));
     mapping_data.nexthop_valid = TRUE;
     switch (spec->nh_type) {
-        case PDS_NH_TYPE_TEP:
+        case PDS_NH_TYPE_OVERLAY:
             tep = (tep_impl *)tep_db()->find(&spec->tep)->impl();
             // TODO: rename NEXTHOP_TYPE_UNDERLAY to NEXTHOP_TYPE_TEP once p4 is
             //       fixed with new tables
@@ -434,7 +434,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
             mapping_data.nexthop_id = tep->hw_id();
             break;
 
-        case PDS_NH_TYPE_OVERLAY_NHGROUP:
+        case PDS_NH_TYPE_OVERLAY_ECMP:
             nh_group =
                 (nexthop_group_impl *)nexthop_group_db()->find(&spec->nh_group)->impl();
             mapping_data.nexthop_type = NEXTHOP_TYPE_ECMP;

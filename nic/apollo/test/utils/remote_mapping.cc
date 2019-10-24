@@ -67,7 +67,7 @@ remote_mapping_util::create(void) const {
     default:
         break;
     }
-    remote_spec.nh_type = PDS_NH_TYPE_TEP;
+    remote_spec.nh_type = PDS_NH_TYPE_OVERLAY;
     remote_spec.tep.id = tep_id;
     mac_str_to_addr((char *)this->vnic_mac.c_str(), remote_spec.vnic_mac);
 

@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 /// \defgroup PDS_TEP Tunnel End Point API
 /// @{
@@ -58,6 +59,13 @@ typedef struct pds_tep_spec_s {
     /// public IP of this service tunnel that is used as SIPo in the
     /// encapsulated VXLAN packet in the Tx direction
     ip_addr_t      remote_svc_public_ip;
+    /// type of the nexthop for this mapping
+    pds_nh_type_t nh_type;
+    /// forwarding information for this TEP
+    union {
+        pds_nexthop_key_t nh;
+        pds_nexthop_group_key_t nh_group;
+    };
 } __PACK__ pds_tep_spec_t;
 
 /// \brief TEP status

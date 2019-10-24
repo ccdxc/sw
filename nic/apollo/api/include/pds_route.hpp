@@ -30,7 +30,7 @@ typedef struct pds_route_s {
     ip_prefix_t              prefix;     ///< prefix
     pds_nh_type_t            nh_type;    ///< nexthop type
     union {
-        // PDS_NH_TYPE_TEP specific data
+        // PDS_NH_TYPE_OVERLAY specific data
         pds_tep_key_t        tep;         ///< nexthop TEP
         // PDS_NH_TYPE_PEER_VPC specific data
         pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering

@@ -25,13 +25,13 @@
 typedef enum pds_nh_type_e {
     PDS_NH_TYPE_NONE            = 0,
     PDS_NH_TYPE_BLACKHOLE       = 1,    ///< blackhole/drop nexthop
-    // TODO: rename PDS_NH_TYPE_TEP to PDS_NH_TYPE_OVERLAY ?
-    PDS_NH_TYPE_TEP             = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_IP              = 3,    ///< native IP route
-    PDS_NH_TYPE_PEER_VPC        = 4,    ///< VPC id of the peer VPC
-    PDS_NH_TYPE_UNDERLAY        = 5,    ///< underlay nexthop
-    PDS_NH_TYPE_VNIC            = 6,    ///< vnic nexthop
-    PDS_NH_TYPE_OVERLAY_NHGROUP = 7,    ///< overlay nexthop group
+    PDS_NH_TYPE_OVERLAY         = 2,    ///< any of the possible types of TEP
+    PDS_NH_TYPE_OVERLAY_ECMP    = 3,    ///< overlay nexthop group
+    PDS_NH_TYPE_UNDERLAY        = 4,    ///< underlay nexthop
+    PDS_NH_TYPE_UNDERLAY_ECMP   = 5,
+    PDS_NH_TYPE_PEER_VPC        = 6,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_VNIC            = 7,    ///< vnic nexthop
+    PDS_NH_TYPE_IP              = 8,    ///< native IP route
 } pds_nh_type_t;
 
 /// \brief nexthop specification
@@ -47,7 +47,7 @@ typedef struct pds_nexthop_spec_s {
             mac_addr_t    mac;     ///< (optional) MAC address if known at
                                    ///< config time
         };
-        // info specific to PDS_NH_TYPE_TEP
+        // info specific to PDS_NH_TYPE_OVERLAY
         struct {
             pds_tep_key_t tep;
         };

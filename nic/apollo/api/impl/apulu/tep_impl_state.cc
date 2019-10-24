@@ -22,20 +22,16 @@ namespace impl {
 /// \@{
 
 tep_impl_state::tep_impl_state(pds_state *state) {
-#if 0
     p4pd_table_properties_t tinfo;
 
     // instantiate P4 tables for bookkeeping
-    p4pd_table_properties_get(P4TBL_ID_TEP, &tinfo);
+    p4pd_table_properties_get(P4TBL_ID_TUNNEL, &tinfo);
     tep_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, false);
     SDK_ASSERT(tep_idxr_ != NULL);
-#endif
 }
 
 tep_impl_state::~tep_impl_state() {
-#if 0
     rte_indexer::destroy(tep_idxr_);
-#endif
 }
 
 sdk_ret_t

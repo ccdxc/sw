@@ -107,7 +107,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
     tep = (tep_entry *)api_obj;
-    ip_addr_t &tep_ip_addr = tep_spec->remote_ip;
+    ip_addr_t& tep_ip_addr = tep_spec->remote_ip;
     switch (tep_spec->encap.type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_data.action_id = TEP_MPLS_UDP_TEP_ID;

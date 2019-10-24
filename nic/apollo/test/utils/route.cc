@@ -8,7 +8,7 @@
 
 namespace api_test {
 
-pds_nh_type_t g_rt_def_nh_type = apollo() ? PDS_NH_TYPE_TEP : PDS_NH_TYPE_IP;
+pds_nh_type_t g_rt_def_nh_type = apollo() ? PDS_NH_TYPE_OVERLAY : PDS_NH_TYPE_IP;
 
 //----------------------------------------------------------------------------
 // Route table feeder class routines
@@ -49,7 +49,7 @@ route_table_feeder::init(std::string base_route_pfx_str,
                 nh_id_offset %= nh_id_offset_max;
             }
             break;
-        case PDS_NH_TYPE_TEP:
+        case PDS_NH_TYPE_OVERLAY:
             this->routes[i].nh_id = nh_offset;
             this->routes[i].nh_ip.addr.v4_addr =
                 base_nh_ip.addr.v4_addr + nh_offset;
@@ -97,7 +97,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
         case PDS_NH_TYPE_IP:
             spec->routes[i].nh = this->routes[i].nh;
             break;
-        case PDS_NH_TYPE_TEP:
+        case PDS_NH_TYPE_OVERLAY:
             spec->routes[i].tep.id = this->routes[i].nh_id;
             break;
         case PDS_NH_TYPE_PEER_VPC:

@@ -70,7 +70,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
-                v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                v6route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
             } else if (artemis()) {
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 124);
@@ -123,7 +123,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 route_table.routes[j].prefix.len = 24;
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
-                route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
                 route_table.routes[j].tep.id = tep_id++;
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
@@ -135,10 +135,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     TESTAPP_V4ROUTE_PREFIX_VAL(rtnum);
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
-                    route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                    route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
                     route_table.routes[j].tep.id = svc_tep_id++;
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
-                   route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
+                   route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
                    route_table.routes[j].tep.id = num_svc_teps + ++svc_tep_id;
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
@@ -390,7 +390,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.fabric_encap.val.mpls_tag =
                         remote_slot++;
                 }
-                pds_remote_mapping.nh_type = PDS_NH_TYPE_TEP;
+                pds_remote_mapping.nh_type = PDS_NH_TYPE_OVERLAY;
                 pds_remote_mapping.tep.id = tep_offset;
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,

@@ -1701,7 +1701,7 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
         break;
 
     case pds::NexthopSpec::kTunnelId:
-        api_spec->type = PDS_NH_TYPE_TEP;
+        api_spec->type = PDS_NH_TYPE_OVERLAY;
         api_spec->tep.id = proto_spec.tunnelid();
         break;
 
@@ -1730,7 +1730,7 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         ipaddr_api_spec_to_proto_spec(ipnhinfo->mutable_ip(), &api_spec->ip);
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
-    } else if (api_spec->type == PDS_NH_TYPE_TEP) {
+    } else if (api_spec->type == PDS_NH_TYPE_OVERLAY) {
         proto_spec->set_tunnelid(api_spec->tep.id);
     } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
         auto underlayinfo = proto_spec->mutable_underlaynhinfo();
@@ -1892,7 +1892,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
             api_spec->routes[i].tep.id = proto_route.tunnelid();
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
             break;
         case pds::Route::kNexthopId:
             api_spec->routes[i].nh.id= proto_route.nexthopid();
@@ -2694,12 +2694,12 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
 
     switch (proto_spec.dstinfo_case()) {
     case pds::MappingSpec::kTunnelID:
-        remote_spec->nh_type = PDS_NH_TYPE_TEP;
+        remote_spec->nh_type = PDS_NH_TYPE_OVERLAY;
         remote_spec->tep.id = proto_spec.tunnelid();
         break;
 
     case pds::MappingSpec::kNexthopGroupId:
-        remote_spec->nh_type = PDS_NH_TYPE_OVERLAY_NHGROUP;
+        remote_spec->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
         remote_spec->nh_group.id = proto_spec.nexthopgroupid();
         break;
 
