@@ -2389,6 +2389,7 @@ union dev_cmd {
 
 	struct q_identify_cmd q_identify;
 	struct q_init_cmd q_init;
+	struct q_control_cmd q_control;
 };
 
 union dev_cmd_comp {
@@ -2649,14 +2650,14 @@ union notifyq_comp {
 };
 
 /**
- * struct eq_comp - Event queue completion descriptor
+ * struct ionic_eq_comp - Event queue completion descriptor
  *
- * @code:  Event code, see enum eq_comp_code.
+ * @code:  Event code, see enum ionic_eq_comp_code.
  * @lif_index: To which lif the event pertains.
  * @qid:   To which queue id the event pertains.
  * @gen_color: Event queue wrap counter, init 1, incr each wrap.
  */
-struct eq_comp {
+struct ionic_eq_comp {
 	__le16 code;
 	__le16 lif_index;
 	__le32 qid;
@@ -2664,10 +2665,10 @@ struct eq_comp {
 	u8 gen_color;
 };
 
-enum eq_comp_code {
-	EQ_COMP_CODE_NONE = 0,
-	EQ_COMP_CODE_RX_COMP = 1,
-	EQ_COMP_CODE_TX_COMP = 2,
+enum ionic_eq_comp_code {
+	IONIC_EQ_COMP_CODE_NONE = 0,
+	IONIC_EQ_COMP_CODE_RX_COMP = 1,
+	IONIC_EQ_COMP_CODE_TX_COMP = 2,
 };
 
 /* Deprecate */

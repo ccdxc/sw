@@ -61,6 +61,7 @@ struct ionic_qcq {
 	void *base;
 	dma_addr_t base_pa;
 	unsigned int total_size;
+	bool armed;
 	struct ionic_queue q;
 	struct ionic_cq cq;
 	struct ionic_intr_info intr;
@@ -133,7 +134,6 @@ enum ionic_lif_state_flags {
 
 #define IONIC_LIF_NAME_MAX_SZ		32
 struct ionic_lif {
-	struct list_head list;
 	struct net_device *netdev;
 	struct net_device *upper_dev;
 	DECLARE_BITMAP(state, IONIC_LIF_STATE_SIZE);
@@ -151,7 +151,7 @@ struct ionic_lif {
 	u32 flags;
 	unsigned int kern_pid;
 	u64 __iomem *kern_dbpage;
-	unsigned int neqs;
+	unsigned int nrdma_eqs;
 	unsigned int nxqs;
 	unsigned int ntxq_descs;
 	unsigned int nrxq_descs;
@@ -242,6 +242,7 @@ int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
 void ionic_lifs_deinit(struct ionic *ionic);
 int ionic_lifs_init(struct ionic *ionic);
+int ionic_lifs_init_queues(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
@@ -250,8 +251,8 @@ int ionic_lifs_size(struct ionic *ionic);
 int ionic_lif_rss_config(struct ionic_lif *lif, u16 types,
 			 const u8 *key, const u32 *indir);
 
-int ionic_intr_alloc(struct ionic_lif *lif, struct ionic_intr_info *intr);
-void ionic_intr_free(struct ionic_lif *lif, int index);
+int ionic_intr_alloc(struct ionic *ionic, struct ionic_intr_info *intr);
+void ionic_intr_free(struct ionic *ionic, int index);
 int ionic_open(struct net_device *netdev);
 int ionic_stop(struct net_device *netdev);
 int ionic_reset_queues(struct ionic_lif *lif);

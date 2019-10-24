@@ -8,7 +8,9 @@
 #include <linux/slab.h>
 #include <linux/etherdevice.h>
 #include "ionic.h"
+#include "ionic_bus.h"
 #include "ionic_dev.h"
+#include "ionic_debugfs.h"
 #include "ionic_lif.h"
 
 static void ionic_watchdog_cb(struct timer_list *t)
@@ -415,6 +417,321 @@ int ionic_db_page_num(struct ionic_lif *lif, int pid)
 	return (lif->hw_index * lif->dbid_count) + pid;
 }
 
+static void ionic_txrx_notify(struct ionic *ionic,
+			      int lif_index, int qcq_id, bool is_tx)
+{
+	struct ionic_lif *lif;
+
+	lif = radix_tree_lookup(&ionic->lifs, lif_index);
+	if (!lif)
+		return;
+
+	if (is_tx)
+		lif->txqcqs[qcq_id].qcq->armed = false;
+	else
+		lif->rxqcqs[qcq_id].qcq->armed = false;
+
+	/* We schedule rx napi, it handles both tx and rx */
+	napi_schedule_irqoff(&lif->rxqcqs[qcq_id].qcq->napi);
+}
+
+static bool ionic_next_eq_comp(struct ionic_eq *eq, int ring_index,
+			       struct ionic_eq_comp *comp)
+{
+	struct ionic_eq_ring *ring = &eq->ring[ring_index];
+	struct ionic_eq_comp *qcomp;
+	u8 gen_color;
+
+	qcomp = &ring->base[ring->index];
+	gen_color = qcomp->gen_color;
+
+	if (gen_color == (u8)(ring->gen_color - 1))
+		return false;
+
+	/* Make sure ring descriptor is up-to-date before reading */
+	smp_rmb();
+	*comp = *qcomp;
+	gen_color = comp->gen_color;
+
+	if (gen_color != ring->gen_color) {
+		dev_err(eq->ionic->dev,
+			"eq %u ring %u missed %u events\n",
+			eq->index, ring_index,
+			eq->depth * (gen_color - ring->gen_color));
+
+		ring->gen_color = gen_color;
+	}
+
+	ring->index = (ring->index + 1) & (eq->depth - 1);
+	ring->gen_color += ring->index == 0;
+
+	return true;
+}
+
+static int ionic_poll_eq_ring(struct ionic_eq *eq, int ring_index)
+{
+	struct ionic_eq_comp comp;
+	int budget = eq->depth;
+	int credits = 0;
+	int code;
+
+	while (credits < budget && ionic_next_eq_comp(eq, ring_index, &comp)) {
+		code = le16_to_cpu(comp.code);
+
+		switch (code) {
+		case IONIC_EQ_COMP_CODE_NONE:
+			break;
+		case IONIC_EQ_COMP_CODE_RX_COMP:
+		case IONIC_EQ_COMP_CODE_TX_COMP:
+			ionic_txrx_notify(eq->ionic,
+					  le16_to_cpu(comp.lif_index),
+					  le32_to_cpu(comp.qid),
+					  code == IONIC_EQ_COMP_CODE_TX_COMP);
+			break;
+		default:
+			dev_warn(eq->ionic->dev,
+				 "eq %u ring %u unrecognized event %u\n",
+				 eq->index, ring_index, code);
+			break;
+		}
+
+		credits++;
+	}
+
+	return credits;
+}
+
+static irqreturn_t ionic_eq_isr(int irq, void *data)
+{
+	struct ionic_eq *eq = data;
+	int credits;
+
+	credits = ionic_poll_eq_ring(eq, 0) + ionic_poll_eq_ring(eq, 1);
+	ionic_intr_credits(eq->ionic->idev.intr_ctrl, eq->intr.index,
+			   credits, IONIC_INTR_CRED_UNMASK);
+
+	return IRQ_HANDLED;
+}
+
+static int ionic_request_eq_irq(struct ionic *ionic, struct ionic_eq *eq)
+{
+	struct device *dev = ionic->dev;
+	struct ionic_intr_info *intr = &eq->intr;
+	const char *name = dev_name(dev);
+
+	snprintf(intr->name, sizeof(intr->name),
+		 "%s-%s-eq%d", IONIC_DRV_NAME, name, eq->index);
+
+	return devm_request_irq(dev, intr->vector, ionic_eq_isr,
+				0, intr->name, eq);
+}
+
+int ionic_eq_alloc(struct ionic *ionic, int index)
+{
+	const int ring_bytes = sizeof(struct ionic_eq_comp) * IONIC_EQ_DEPTH;
+	struct ionic_eq *eq;
+	int err;
+
+	eq = kzalloc(sizeof(*eq), GFP_KERNEL);
+	eq->ionic = ionic;
+	eq->index = index;
+	eq->depth = IONIC_EQ_DEPTH;
+
+	err = ionic_intr_alloc(ionic, &eq->intr);
+	if (err) {
+		dev_warn(ionic->dev, "no intr for eq %u: %d\n", index, err);
+		goto err_out;
+	}
+
+	err = ionic_bus_get_irq(ionic, eq->intr.index);
+	if (err < 0) {
+		dev_warn(ionic->dev, "no vector for eq %u: %d\n", index, err);
+		goto err_out_free_intr;
+	}
+	eq->intr.vector = err;
+
+	ionic_intr_mask_assert(ionic->idev.intr_ctrl, eq->intr.index,
+			       IONIC_INTR_MASK_SET);
+
+	eq->intr.cpu = index % num_online_cpus();
+	if (cpu_online(eq->intr.cpu))
+		cpumask_set_cpu(eq->intr.cpu,
+				&eq->intr.affinity_mask);
+
+	eq->ring[0].gen_color = 1;
+	eq->ring[0].base = dma_alloc_coherent(ionic->dev, ring_bytes,
+					      &eq->ring[0].base_pa,
+					      GFP_KERNEL);
+
+	eq->ring[1].gen_color = 1;
+	eq->ring[1].base = dma_alloc_coherent(ionic->dev, ring_bytes,
+					      &eq->ring[1].base_pa,
+					      GFP_KERNEL);
+
+	ionic->eqs[index] = eq;
+
+	ionic_debugfs_add_eq(eq);
+
+	return 0;
+
+err_out_free_intr:
+	ionic_intr_free(ionic, eq->intr.index);
+err_out:
+	return err;
+}
+
+int ionic_eqs_alloc(struct ionic *ionic)
+{
+	size_t eq_size;
+	int i, err;
+
+	eq_size = sizeof(*ionic->eqs) * ionic->neth_eqs;
+	ionic->eqs = kzalloc(eq_size, GFP_KERNEL);
+	if (!ionic->eqs)
+		return -ENOMEM;
+
+	for (i = 0; i < ionic->neth_eqs; i++) {
+		err = ionic_eq_alloc(ionic, i);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
+void ionic_eq_free(struct ionic_eq *eq)
+{
+	const int ring_bytes = sizeof(struct ionic_eq_comp) * IONIC_EQ_DEPTH;
+	struct ionic *ionic = eq->ionic;
+
+	eq->ionic->eqs[eq->index] = NULL;
+
+	dma_free_coherent(ionic->dev, ring_bytes,
+			  eq->ring[0].base,
+			  eq->ring[0].base_pa);
+	dma_free_coherent(ionic->dev, ring_bytes,
+			  eq->ring[1].base,
+			  eq->ring[1].base_pa);
+	ionic_intr_free(ionic, eq->intr.index);
+	kfree(eq);
+}
+
+void ionic_eqs_free(struct ionic *ionic)
+{
+	int i;
+
+	for (i = 0; i < ionic->neth_eqs; i++) {
+		if (ionic->eqs[i])
+			ionic_eq_free(ionic->eqs[i]);
+	}
+
+	kfree(ionic->eqs);
+	ionic->eqs = NULL;
+	ionic->neth_eqs = 0;
+}
+
+void ionic_eq_deinit(struct ionic_eq *eq)
+{
+	struct ionic *ionic = eq->ionic;
+	union dev_cmd cmd = {
+		.q_control = {
+			.opcode = CMD_OPCODE_Q_CONTROL,
+			.type = IONIC_QTYPE_EQ,
+			.index = cpu_to_le32(eq->index),
+			.oper = IONIC_Q_DISABLE,
+		},
+	};
+
+	if (!eq->is_init)
+		return;
+	eq->is_init = false;
+
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_go(&ionic->idev, &cmd);
+	ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	ionic_intr_mask(ionic->idev.intr_ctrl, eq->intr.index,
+			IONIC_INTR_MASK_SET);
+	synchronize_irq(eq->intr.vector);
+
+	irq_set_affinity_hint(eq->intr.vector, NULL);
+	devm_free_irq(ionic->dev, eq->intr.vector, eq);
+}
+
+void ionic_eqs_deinit(struct ionic *ionic)
+{
+	int i;
+
+	for (i = 0; i < ionic->neth_eqs; i++) {
+		if (ionic->eqs[i])
+			ionic_eq_deinit(ionic->eqs[i]);
+	}
+}
+
+int ionic_eq_init(struct ionic_eq *eq)
+{
+	struct ionic *ionic = eq->ionic;
+	union dev_cmd cmd = {
+		.q_init = {
+			.opcode = CMD_OPCODE_Q_INIT,
+			.type = IONIC_QTYPE_EQ,
+			.index = cpu_to_le32(eq->index),
+			.intr_index = cpu_to_le16(eq->intr.index),
+			.flags = cpu_to_le16(IONIC_QINIT_F_IRQ |
+					     IONIC_QINIT_F_ENA),
+			.ring_size = ilog2(eq->depth),
+			.ring_base = cpu_to_le64(eq->ring[0].base_pa),
+			.cq_ring_base = cpu_to_le64(eq->ring[1].base_pa),
+		},
+	};
+	int err;
+
+	ionic_intr_mask(ionic->idev.intr_ctrl, eq->intr.index,
+			IONIC_INTR_MASK_SET);
+	ionic_intr_clean(ionic->idev.intr_ctrl, eq->intr.index);
+
+	err = ionic_request_eq_irq(ionic, eq);
+	if (err) {
+		dev_warn(ionic->dev, "eq %d irq request failed %d\n",
+			 eq->index, err);
+		return err;
+	}
+
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_go(&ionic->idev, &cmd);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	if (err) {
+		dev_err(ionic->dev, "eq %d init failed %d\n",
+			eq->index, err);
+		return err;
+	}
+
+	ionic_intr_mask(ionic->idev.intr_ctrl, eq->intr.index,
+			IONIC_INTR_MASK_CLEAR);
+
+	eq->is_init = true;
+
+	return 0;
+}
+
+int ionic_eqs_init(struct ionic *ionic)
+{
+	int i, err;
+
+	for (i = 0; i < ionic->neth_eqs; i++) {
+		if (ionic->eqs[i]) {
+			err = ionic_eq_init(ionic->eqs[i]);
+			if (err)
+				return err;
+		}
+	}
+
+	return 0;
+}
+
 int ionic_cq_init(struct ionic_lif *lif, struct ionic_cq *cq,
 		  struct ionic_intr_info *intr,
 		  unsigned int num_descs, size_t desc_size)
@@ -572,7 +889,7 @@ void ionic_q_post(struct ionic_queue *q, bool ring_doorbell, ionic_desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	dev_dbg(dev, "lif=%d qname=%s qid=%d qtype=%d p_index=%d ringdb=%d\n",
+	dev_dbg(dev, "lif=%d qname=%s hw_type=%d hw_index=%d p_index=%d ringdb=%d\n",
 		q->lif->index, q->name, q->hw_type, q->hw_index,
 		q->head->index, ring_doorbell);
 

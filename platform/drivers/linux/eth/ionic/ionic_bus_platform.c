@@ -105,7 +105,7 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 	struct ionic_lif *lif;
 	int nqueues;
 
-	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+	nqueues = ionic->ntxqs_per_lif + (ionic->nlifs - 1);
 	netdev = alloc_netdev_mqs(sizeof(struct ionic_lif), ionic->pfdev->name,
 				  NET_NAME_USER, ether_setup, nqueues, nqueues);
 	if (!netdev)
@@ -298,6 +298,12 @@ static int ionic_probe(struct platform_device *pfdev)
 	err = ionic_lifs_init(ionic);
 	if (err) {
 		dev_err(dev, "Cannot init LIFs, aborting\n");
+		goto err_out_deinit_lifs;
+	}
+
+	err = ionic_lifs_init_queues(ionic);
+	if (err) {
+		dev_err(dev, "Cannot init LIF queues: %d, aborting\n", err);
 		goto err_out_deinit_lifs;
 	}
 

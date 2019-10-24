@@ -81,9 +81,9 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 	/* Create a netdev big enough to handle all the queues
 	 * needed for lif0 and any macvlan slave lifs.
 	 */
-	nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
-	dev_dbg(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d nintrs=%d\n",
-		ionic->ntxqs_per_lif, ionic->nslaves,
+	nqueues = ionic->ntxqs_per_lif + (ionic->nlifs - 1);
+	dev_dbg(ionic->dev, "nxqs=%d nlifs=%d nqueues=%d nintrs=%d\n",
+		ionic->ntxqs_per_lif, ionic->nlifs,
 		nqueues, ionic->nintrs);
 
 	return alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
@@ -273,10 +273,30 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_free_lifs;
 	}
 
+	if (ionic->neth_eqs) {
+		err = ionic_eqs_alloc(ionic);
+		if (err) {
+			dev_err(dev, "Cannot allocate EQs: %d, aborting\n", err);
+			goto err_out_deinit_lifs;
+		}
+
+		err = ionic_eqs_init(ionic);
+		if (err) {
+			dev_err(dev, "Cannot init EQs: %d, aborting\n", err);
+			goto err_out_free_eqs;
+		}
+	}
+
+	err = ionic_lifs_init_queues(ionic);
+	if (err) {
+		dev_err(dev, "Cannot init LIF queues: %d, aborting\n", err);
+		goto err_out_free_eqs;
+	}
+
 	err = ionic_lifs_register(ionic);
 	if (err) {
 		dev_err(dev, "Cannot register LIFs: %d, aborting\n", err);
-		goto err_out_deinit_lifs;
+		goto err_out_deinit_eqs;
 	}
 
 	err = ionic_devlink_register(ionic);
@@ -285,6 +305,10 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	return 0;
 
+err_out_deinit_eqs:
+	ionic_eqs_deinit(ionic);
+err_out_free_eqs:
+	ionic_eqs_free(ionic);
 err_out_deinit_lifs:
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
@@ -323,6 +347,8 @@ static void ionic_remove(struct pci_dev *pdev)
 
 	ionic_devlink_unregister(ionic);
 	ionic_lifs_unregister(ionic);
+	ionic_eqs_deinit(ionic);
+	ionic_eqs_free(ionic);
 	ionic_lifs_deinit(ionic);
 	ionic_lifs_free(ionic);
 	ionic_bus_free_irq_vectors(ionic);

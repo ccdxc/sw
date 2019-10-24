@@ -123,6 +123,7 @@ static int identity_show(struct seq_file *seq, void *v)
 
 	seq_printf(seq, "nlifs:            %d\n", ident->dev.nlifs);
 	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);
+	seq_printf(seq, "eth_eq_count:     %d\n", ident->dev.eq_count);
 	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->dev.ndbpgs_per_lif);
 	seq_printf(seq, "intr_coal_mult:   %d\n", ident->dev.intr_coal_mult);
 	seq_printf(seq, "intr_coal_div:    %d\n", ident->dev.intr_coal_div);
@@ -222,6 +223,8 @@ void ionic_debugfs_add_qcq(struct ionic_lif *lif, struct ionic_qcq *qcq)
 
 	debugfs_create_x32("total_size", 0400, qcq_dentry, &qcq->total_size);
 	debugfs_create_x64("base_pa", 0400, qcq_dentry, &qcq->base_pa);
+
+	debugfs_create_bool("armed", 0400, qcq_dentry, &qcq->armed);
 
 	q_dentry = debugfs_create_dir("q", qcq_dentry);
 	if (IS_ERR_OR_NULL(q_dentry))
@@ -454,6 +457,38 @@ void ionic_debugfs_del_lif(struct ionic_lif *lif)
 {
 	debugfs_remove_recursive(lif->dentry);
 	lif->dentry = NULL;
+}
+
+void ionic_debugfs_add_eq(struct ionic_eq *eq)
+{
+	const int ring_bytes = sizeof(struct ionic_eq_comp) * IONIC_EQ_DEPTH;
+	struct device *dev = eq->ionic->dev;
+	struct debugfs_blob_wrapper *blob;
+	struct debugfs_regset32 *regset;
+	struct dentry *ent;
+	char name[40];
+
+	snprintf(name, sizeof(name), "eq%02u", eq->index);
+
+	ent = debugfs_create_dir(name, eq->ionic->dentry);
+	if (IS_ERR_OR_NULL(ent))
+		return;
+
+	blob = devm_kzalloc(dev, sizeof(*blob), GFP_KERNEL);
+	blob->data = eq->ring[0].base;
+	blob->size = ring_bytes;
+	debugfs_create_blob("ring0", 0400, ent, blob);
+
+	blob = devm_kzalloc(dev, sizeof(*blob), GFP_KERNEL);
+	blob->data = eq->ring[1].base;
+	blob->size = ring_bytes;
+	debugfs_create_blob("ring1", 0400, ent, blob);
+
+	regset = devm_kzalloc(dev, sizeof(*regset), GFP_KERNEL);
+	regset->regs = intr_ctrl_regs;
+	regset->nregs = ARRAY_SIZE(intr_ctrl_regs);
+	regset->base = &eq->ionic->idev.intr_ctrl[eq->intr.index];
+	debugfs_create_regset32("intr_ctrl", 0400, ent, regset);
 }
 
 void ionic_debugfs_del_qcq(struct ionic_qcq *qcq)

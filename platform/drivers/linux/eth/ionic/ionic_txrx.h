@@ -9,6 +9,7 @@ void ionic_tx_flush(struct ionic_cq *cq);
 
 void ionic_rx_fill(struct ionic_queue *q);
 void ionic_rx_empty(struct ionic_queue *q);
+void ionic_tx_empty(struct ionic_queue *q);
 int ionic_rx_napi(struct napi_struct *napi, int budget);
 #ifndef HAVE_NDO_SELECT_QUEUE_SB_DEV
 u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,

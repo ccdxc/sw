@@ -16,7 +16,7 @@
  * much of its internal structs changed, both upstream and internally,
  * but the ionic_if.h hasn't been reworked yet internally as that
  * forces changes throughout all our drivers and Naples code.
- * 
+ *
  * Until we can do the global internal changes, we'll need to use
  * this ugly little oilslick hack for our API transition.
  */
@@ -99,24 +99,24 @@ int ionic_api_get_intr(struct lif *lif, int *irq)
 	struct ionic_intr_info *intr_obj;
 	int err;
 
-	if (!lif->oilslick.neqs)
+	if (!lif->oilslick.nrdma_eqs)
 		return -ENOSPC;
 
 	intr_obj = kzalloc(sizeof(*intr_obj), GFP_KERNEL);
 	if (!intr_obj)
 		return -ENOSPC;
 
-	err = ionic_intr_alloc(&lif->oilslick, intr_obj);
+	err = ionic_intr_alloc(lif->oilslick.ionic, intr_obj);
 	if (err)
 		goto done;
 
 	err = ionic_bus_get_irq(lif->oilslick.ionic, intr_obj->index);
 	if (err < 0) {
-		ionic_intr_free(&lif->oilslick, intr_obj->index);
+		ionic_intr_free(lif->oilslick.ionic, intr_obj->index);
 		goto done;
 	}
 
-	--lif->oilslick.neqs;
+	--lif->oilslick.nrdma_eqs;
 
 	*irq = err;
 	err = intr_obj->index;
@@ -128,9 +128,9 @@ EXPORT_SYMBOL_GPL(ionic_api_get_intr);
 
 void ionic_api_put_intr(struct lif *lif, int intr)
 {
-	ionic_intr_free(&lif->oilslick, intr);
+	ionic_intr_free(lif->oilslick.ionic, intr);
 
-	++lif->oilslick.neqs;
+	++lif->oilslick.nrdma_eqs;
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 

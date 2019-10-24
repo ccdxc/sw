@@ -4,6 +4,8 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
+#include <linux/radix-tree.h>
+
 #include "kcompat.h"
 
 #include "ionic_if.h"
@@ -40,13 +42,15 @@ struct ionic {
 	unsigned int num_bars;
 	bool is_mgmt_nic;
 	struct ionic_lif *master_lif;
-	struct list_head lifs;
+	struct radix_tree_root lifs;
+	struct ionic_eq **eqs;
 	struct identity ident;
 	unsigned int nnqs_per_lif;
-	unsigned int neqs_per_lif;
+	unsigned int nrdma_eqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
-	unsigned int nslaves;
+	unsigned int nlifs;
+	unsigned int neth_eqs;
 	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
@@ -62,6 +66,18 @@ struct ionic {
 	struct timer_list watchdog_timer;
 	int watchdog_period;
 };
+
+/* Since we have a bitmap of the allocated lifs, we can use
+ * that to look up each lif specifically, rather than digging
+ * through the whole tree with radix_tree_for_each_slot
+ */
+#define for_each_lif(_ion, _bit, _lif) \
+	for ((_bit) = find_first_bit((_ion)->lifbits, IONIC_LIFS_MAX),   \
+		(_lif) = radix_tree_lookup(&(_ion)->lifs, (_bit));       \
+	     (_bit) < IONIC_LIFS_MAX;                                    \
+	     (_bit) = find_next_bit((_ion)->lifbits,                     \
+				    IONIC_LIFS_MAX, ((_bit) + 1)),       \
+		(_lif) = radix_tree_lookup(&(_ion)->lifs, (_bit)))
 
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
