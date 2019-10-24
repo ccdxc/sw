@@ -5,7 +5,7 @@ feature:
     package     : test.networking
     module      : networking
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
 

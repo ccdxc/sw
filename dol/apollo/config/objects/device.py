@@ -11,6 +11,7 @@ import apollo.config.objects.base as base
 import apollo.config.objects.tunnel as tunnel
 import apollo.config.utils as utils
 
+import device_pb2 as device_pb2
 import types_pb2 as types_pb2
 
 class DeviceObject(base.ConfigObjectBase):
@@ -19,7 +20,12 @@ class DeviceObject(base.ConfigObjectBase):
         self.SetBaseClassAttr()
         self.GID("Device1")
 
+        self.stack = getattr(spec, 'stack', 'ipv4')
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
+        self.Mode = getattr(spec, 'mode', 'bitw')
+        self.BridgingEnabled = getattr(spec, 'bridging', False)
+        self.LearningEnabled = getattr(spec, 'learning', False)
+        #TODO: based on stack, get ip & gw addr
         self.IPAddr = next(resmgr.TepIpAddressAllocator)
         self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
         self.MACAddr = spec.macaddress
@@ -55,6 +61,12 @@ class DeviceObject(base.ConfigObjectBase):
         grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
         grpcmsg.Request.MACAddr = self.MACAddr.getnum()
+        if self.Mode == "bitw":
+            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_BITW
+        elif self.Mode == "host":
+            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_HOST
+        grpcmsg.Request.BridgingEn = self.BridgingEnabled
+        grpcmsg.Request.LearningEn = self.LearningEnabled
         return
 
     def GetGrpcReadMessage(self):

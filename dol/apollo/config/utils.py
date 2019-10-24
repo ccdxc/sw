@@ -5,6 +5,7 @@ import ipaddress
 import socket
 from random import sample
 from scapy.layers.l2 import Dot1Q
+import time
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -117,6 +118,12 @@ def GetFilteredObjects(objs, maxlimits, random=True):
 
 def IsDryRun():
     return GlobalOptions.dryrun
+
+def Sleep(timeout=1):
+    if IsDryRun():
+        return
+    time.sleep(timeout)
+    return
 
 def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
     return expApiStatus == resp.ApiStatus

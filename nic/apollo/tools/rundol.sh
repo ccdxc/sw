@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
 DOLDIR=`readlink -f $NICDIR/../dol/`
+DRYRUN=0
 START_VPP=0
 
 argc=$#
@@ -11,10 +12,14 @@ argv=($@)
 for (( j=0; j<argc; j++ )); do
     if [ ${argv[j]} == '--pipeline' ];then
         PIPELINE=${argv[j+1]}
+    elif [ ${argv[j]} == '--feature' ];then
+        FEATURE=${argv[j+1]}
+    elif [[ ${argv[j]} =~ .*'--dry'.* ]];then
+        DRYRUN=1
     fi
 done
 
-if [ ${NICMGR_SIM_MODE} == 1 ];then
+if [ $DRYRUN == 0 ] && [ $FEATURE == 'rfc' -o $PIPELINE == 'apulu' ]; then
     START_VPP=1
 fi
 

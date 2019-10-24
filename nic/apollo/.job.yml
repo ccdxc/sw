@@ -202,6 +202,15 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/dol/vxlan:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/vxlan"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
   apulu/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_scale_test_mock"]
     owners: ["email:saratk@pensando.io", "email:akoradha@pensando.io" ]

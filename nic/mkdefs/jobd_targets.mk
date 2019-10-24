@@ -161,11 +161,11 @@ jobd/dol/gft: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/mplsoudp
 jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
-	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
 
 .PHONY: jobd/dol/apollo/vxlan
 jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
-	APOLLO_TEST_TEP_ENCAP=1 NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
+	APOLLO_TEST_TEP_ENCAP=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
 
 .PHONY: jobd/dol/apollo/lpm
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}
@@ -173,7 +173,7 @@ jobd/dol/apollo/lpm: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/rfc
 jobd/dol/apollo/rfc: ${JOBD_PREREQS}
-	NICMGR_SIM_MODE=1 ${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo rfc --feature rfc
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo rfc --feature rfc
 
 .PHONY: jobd/dol/apollo/mirror
 jobd/dol/apollo/mirror: ${JOBD_PREREQS}
@@ -446,3 +446,8 @@ jobd/apulu/gtest_1: ${JOBD_PREREQS}
 .PHONY: jobd/apulu/gtest_2
 jobd/apulu/gtest_2: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/apulu/run_gtests_apulu_2.sh ${COVERAGE_OPTS}
+
+.PHONY: jobd/dol/apulu/vxlan
+jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking --dryrun
+

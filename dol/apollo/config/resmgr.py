@@ -12,6 +12,7 @@ def irange(start, end):
     return range(start, end+1)
 
 HostMemoryAllocator = None
+HostIntf2DevCmdAddrMap = dict()
 Lif2QstateMap = None
 
 EpochAllocator = iter(irange(1,4096))
@@ -25,6 +26,7 @@ LocalMappingIdAllocator = iter(irange(1,33*1024))
 VnicVlanIdAllocator = iter(irange(1,1024))
 VnicMplsSlotIdAllocator = iter(irange(10000,11024))
 VnicIdAllocator = iter(irange(1,1024))
+InterfaceIdAllocator = iter(irange(1, 8))
 V4RouteTableIdAllocator = iter(irange(1,1024))
 V6RouteTableIdAllocator = iter(irange(10001,11024))
 V4SecurityPolicyIdAllocator = iter(irange(1,2048))
@@ -46,7 +48,6 @@ IGWVxlanIdAllocator = iter(irange(50001, 51024))
 VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
-InterfaceIdAllocator = iter(irange(1, 2))
 PortIdAllocator = iter(irange(1, 2))
 
 # ---------------------------------------------------------------------------------
@@ -191,6 +192,22 @@ def __hostmemmgr_init():
     HostMemoryAllocator = objects.GetHostMemMgrObject()
     assert HostMemoryAllocator is not None
 
+def __hostif_init():
+    # reads nicmgr.log and generate host if to devcmd mem addr mapping
+    global HostIntf2DevCmdAddrMap
+    nicmgrlog = os.path.join(os.environ['WS_TOP'], "nic/nicmgr.log")
+    pattern = ' eth(\d+): regs_mem_addr (\w+) devcmd_mem_addr (\w+)'
+    f = open(nicmgrlog, "r")
+    for line in f:
+        match = re.search(pattern, line)
+        if match is None:
+            continue
+        ifname = "eth%d" % (int(match.groups()[0]))
+        devcmdaddr = int(match.groups()[2], base=16)
+        HostIntf2DevCmdAddrMap.update({ifname: devcmdaddr})
+    f.close()
+    return
+
 def __lif2qstatemap_init():
     global Lif2QstateMap
     Lif2QstateMap = dict()
@@ -212,4 +229,5 @@ def __lif2qstatemap_init():
 
 def InitNicMgrObjects():
     __hostmemmgr_init()
+    __hostif_init()
     __lif2qstatemap_init()

@@ -1,12 +1,12 @@
-# VxLAN Topology Specification
+# VxLAN Topology Specification for Host mode
 meta:
-    id: TOPO_VxLAN
+    id: TOPO_VxLAN_HOSTMODE
 
 uplink:
     - entry:
         id      : uplink0
         port    : 1
-        mode    : host
+        mode    : switch
         status  : UP
 
     - entry:
@@ -17,14 +17,13 @@ uplink:
 
 interface:
     host:
-        count       : 2
+        count       : 8
         lif         : ref://store/specs/id=LIF_ETH
         lifbase     : 70
         lifcount    : 1
 
-
 device:
-    mode        : bitw # bitw (default), host
+    mode        : host # bitw (default), host
     stack       : ipv4 # ipv4 (default), ipv6
     bridging    : false # false (default), true
     learning    : false # false (default), true
@@ -122,7 +121,7 @@ vpc:
       count : 2
       type  : tenant
       subnet:
-        - count     : 16
+        - count     : 2
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:

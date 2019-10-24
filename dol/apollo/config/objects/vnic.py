@@ -9,6 +9,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
+import apollo.config.objects.interface as interface
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.meter as meter
@@ -37,6 +38,7 @@ class VnicObject(base.ConfigObjectBase):
         self.TxMirror = txmirror
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
+        self.HostIf = interface.client.GetHostInterface()
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self._derive_oper_info()
@@ -72,6 +74,8 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
+        if self.HostIf:
+            logger.info("- HostInterface:", self.HostIf.Ifname)
         return
 
     def SetBaseClassAttr(self):
@@ -102,6 +106,7 @@ class VnicObject(base.ConfigObjectBase):
             spec.TxMirrorSessionId.append(int(txmirror))
         spec.V4MeterId = self.V4MeterId
         spec.V6MeterId = self.V6MeterId
+        #TODO: get ifindex of Host LIF
         return
 
     def ValidateSpec(self, spec):

@@ -77,23 +77,28 @@ descriptors:
         fields:
             status     : 0x0
 
-trigger:
 
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/eth0/lif/queue_types/id=TX
+session:
+    - step:
 
-expect:
+        trigger:
 
-    delay    :    1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
 
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=TO_SWITCH_PKT
-            port    : ref://testcase/config/switchport
+        expect:
 
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/eth0/lif/queue_types/id=TX
+            delay    :    1
+
+            # TODO: create new topo & Fix uplink ports
+            #packets:
+            #    - packet:
+            #        object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            #        port    : ref://testcase/config/switchport
+
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX

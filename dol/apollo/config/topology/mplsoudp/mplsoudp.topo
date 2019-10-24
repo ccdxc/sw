@@ -16,21 +16,11 @@ uplink:
         status  : UP
 
 interface:
-    - entry:
-        id      : eth0
-        port    : 1
-        mode    : host
-        status  : UP
-        lif     : ref://store/specs/id=LIF_ETH
-        lifns   : range/70/70
-
-    - entry:
-        id      : eth1
-        port    : 2
-        mode    : host
-        status  : UP
-        lif     : ref://store/specs/id=LIF_ETH
-        lifns   : range/71/71
+    host:
+        count       : 2
+        lif         : ref://store/specs/id=LIF_ETH
+        lifbase     : 70
+        lifcount    : 1
 
 device:
     ipaddress   : None # Taken from resmgr

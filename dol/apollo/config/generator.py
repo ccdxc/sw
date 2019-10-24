@@ -5,14 +5,10 @@ import json
 import re
 import sys
 import time
-from collections import defaultdict
 
-import infra.common.defs as defs
-import infra.common.utils as utils
 import infra.common.parser as parser
 import infra.common.timeprofiler as timeprofiler
 
-import apollo.config.agent.api as agentapi
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as agentapi
 
@@ -32,6 +28,7 @@ import apollo.config.objects.vnic as vnic
 import apollo.config.objects.vpc as vpc
 import apollo.config.objects.interface as interface
 import apollo.config.objects.port as port
+import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
@@ -80,8 +77,10 @@ def __generate(topospec):
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
 
-    # Generate Mirror session configuration before vnic
-    mirror.client.GenerateObjects(topospec)
+    if not utils.IsPipelineApulu():
+        #TODO: enable mirror
+        # Generate Mirror session configuration before vnic
+        mirror.client.GenerateObjects(topospec)
 
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
@@ -103,6 +102,10 @@ def __create():
 
     # Commit the Batch
     batch.client.Commit()
+
+    if utils.IsPipelineApulu():
+        #TODO: enable mirror
+        return
 
     # Start separate batch for mirror
     # so that mapping gets programmed before mirror
@@ -147,10 +150,7 @@ def __is_nicmgr_up():
     return False
 
 def __wait_on_nicmgr():
-    if GlobalOptions.dryrun:
-        return
-    if os.environ.get('NICMGR_SIM_MODE', None) is None:
-        logger.info("nicmgr is NOT running - skip waiting")
+    if GlobalOptions.dryrun or not utils.IsInterfaceSupported():
         return
     logger.info("Wait until nicmgr is UP")
     if not __is_nicmgr_up():
@@ -176,8 +176,10 @@ def Main():
 
     logger.info("Creating objects in Agent")
     __create()
-    logger.info("Reading objects via Agent")
-    __read()
+    if not utils.IsPipelineApulu():
+        #TODO: fix as & when impl gets added
+        logger.info("Reading objects via Agent")
+        __read()
     timeprofiler.ConfigTimeProfiler.Stop()
 
     ModelConnector.ConfigDone()

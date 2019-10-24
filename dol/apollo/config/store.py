@@ -18,7 +18,6 @@ class ApolloConfigStore:
         self.batchClient = None
         self.hostport = None
         self.switchport = None
-        self.hostinterfaces = {}
         return
 
     def SetBatchClient(self, obj):
@@ -47,12 +46,6 @@ class ApolloConfigStore:
 
     def GetSwitchPort(self):
         return self.switchport
-
-    def AddHostInterface(self, key, obj):
-        self.hostinterfaces[key] = obj
-
-    def GetHostInterface(self, key):
-        return self.hostinterfaces.get(key, None)
 
     def SetSubstrateVPC(self, obj):
         self.substrate_vpc = obj

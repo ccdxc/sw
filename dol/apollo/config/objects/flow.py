@@ -49,8 +49,6 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.devicecfg = self.__dev
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
-        obj.eth0 = Store.GetHostInterface('eth0')
-        obj.eth1 = Store.GetHostInterface('eth1')
         return
 
     def __repr__(self):

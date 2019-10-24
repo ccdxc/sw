@@ -44,6 +44,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.EgV6SecurityPolicyId = policy.client.GetEgV6SecurityPolicyId(parent.VPCId)
         self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
+        self.Vnid = next(resmgr.VxlanIdAllocator)
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
         self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
@@ -148,6 +149,7 @@ class SubnetObject(base.ConfigObjectBase):
         spec.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
         spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
         spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
+        utils.GetRpcEncap(0, self.Vnid, spec.FabricEncap)
         return
 
 

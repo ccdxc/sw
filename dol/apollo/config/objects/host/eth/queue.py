@@ -14,6 +14,7 @@ from apollo.config.objects.host.queue       import QueueObject
 def log2(x):
     return (x - 1).bit_length()
 
+# nic/include/eth_common.h
 eth_qstate_common_fields_desc = [
         # intr
         ByteField("pc", 0),

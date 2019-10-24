@@ -55,8 +55,12 @@ class VpcObject(base.ConfigObjectBase):
         else:
             self.PfxSel = 0
         self.Vnid = 0
-        if utils.IsPipelineArtemis() and Store.IsDeviceEncapTypeVXLAN() :
+        if (utils.IsPipelineArtemis() or utils.IsPipelineApulu()) and Store.IsDeviceEncapTypeVXLAN() :
             self.Vnid = next(resmgr.VpcVxlanIdAllocator)
+        self.VirtualRouterMACAddr = None
+        if utils.IsPipelineApulu():
+            #TODO: assign default route table - but rt gets generated after VPC
+            self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
@@ -156,6 +160,8 @@ class VpcObject(base.ConfigObjectBase):
         spec.Type = self.Type
         utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
         utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
+        if self.VirtualRouterMACAddr:
+            spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         if self.Vnid:
             utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
@@ -221,6 +227,11 @@ class VpcObjectClient:
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VPC, msgs)
+
+        if utils.IsPipelineApulu():
+            #TODO: fix as & when impl gets added
+            subnet.client.CreateObjects()
+            return
 
         # Create Nexthop object
         nexthop.client.CreateObjects()

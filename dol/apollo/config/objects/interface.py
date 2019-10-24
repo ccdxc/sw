@@ -2,6 +2,7 @@
 import pdb
 
 from infra.common.logging import logger
+import infra.common.objects as objects
 
 from apollo.config.store import Store
 
@@ -12,6 +13,9 @@ import apollo.config.objects.base as base
 import apollo.config.objects.host.lif as lif
 
 import interface_pb2 as interface_pb2
+
+class InterfaceSpec_:
+    pass
 
 class InterfaceInfoObject(base.ConfigObjectBase):
     def __init__(self, iftype, ifinfo):
@@ -50,7 +54,7 @@ class InterfaceObject(base.ConfigObjectBase):
         self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         self.InterfaceId = next(resmgr.InterfaceIdAllocator)
-        self.ifname = spec.id
+        self.Ifname = spec.id
         self.Type = utils.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
         info = None
@@ -84,8 +88,7 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def __create_lifs(self, spec):
-        lif = spec.lif.Get(Store)
-        self.obj_helper_lif.Generate(lif, self.lifns)
+        self.obj_helper_lif.Generate(spec.devcmd_addr, spec.lifspec, self.lifns)
         self.obj_helper_lif.Configure()
         self.lif = self.obj_helper_lif.GetRandomHostLif()
         logger.info(" Selecting %s for Test" % self.lif.GID())
@@ -95,21 +98,50 @@ class InterfaceObject(base.ConfigObjectBase):
 class InterfaceObjectClient:
     def __init__(self):
         self.__objs = dict()
+        self.__hostifs = dict()
+        self.__hostifs_iter = None
         return
 
     def Objects(self):
         return self.__objs.values()
+
+    def GetHostInterface(self):
+        if self.__hostifs:
+            return self.__hostifs_iter.rrnext()
+        return None
+
+    def __generate_host_interfaces(self, ifspec):
+        if not ifspec:
+            return
+        spec = InterfaceSpec_()
+        spec.port = 0
+        spec.status = 'UP'
+        spec.mode = 'host'
+        spec.lifspec = ifspec.lif.Get(Store)
+        lifbase = ifspec.lifbase
+        lifcount = ifspec.lifcount
+        for i in range(ifspec.count):
+            spec.id = "eth%d" % (i)
+            spec.lifbase = lifbase
+            spec.lifcount =lifcount
+            spec.lifns = objects.TemplateFieldObject("range/%d/%d"%(lifbase, lifbase+lifcount-1))
+            lifbase = lifbase + lifcount
+            spec.devcmd_addr = resmgr.HostIntf2DevCmdAddrMap.get(spec.id, None)
+            ifobj = InterfaceObject(spec)
+            self.__objs.update({ifobj.InterfaceId: ifobj})
+            self.__hostifs.update({ifobj.InterfaceId: ifobj})
+
+        if self.__hostifs:
+            self.__hostifs_iter = utils.rrobiniter(self.__hostifs.values())
+        return
 
     def GenerateObjects(self, topospec):
         if utils.IsInterfaceSupported() is False:
             return
         iflist = getattr(topospec, 'interface', None)
         if iflist:
-            for spec in iflist:
-                ifobj = InterfaceObject(spec.entry)
-                self.__objs.update({ifobj.InterfaceId: ifobj})
-                if ifobj.Type ==  utils.InterfaceTypes.HOST:
-                    Store.AddHostInterface(ifobj.ifname, ifobj)
+            hostifspec = getattr(iflist, 'host', None)
+            self.__generate_host_interfaces(hostifspec)
         return
 
     def GetGrpcReadAllMessage(self):

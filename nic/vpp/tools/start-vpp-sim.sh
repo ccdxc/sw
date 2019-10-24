@@ -22,7 +22,6 @@ done
 #set -x
 #echo $NICDIR
 
-#if [[ $PIPELINE != 'apollo' && $PIPELINE != 'artemis' ]];then
 if [[ $PIPELINE != 'apollo' && $PIPELINE != 'apulu' ]];then
     echo "Not starting VPP for pipeline - $PIPELINE"
     exit 0
