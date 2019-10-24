@@ -63,21 +63,6 @@
         "timeout": 0.0
     },
     {
-        "name": "asicerrord",
-        "command": "/platform/bin/asicerrord",
-        "dependencies": [
-            {
-                "kind": "service",
-                "service-name": "delphi"
-            },
-            {
-                "kind": "service",
-                "service-name": "hal"
-            }],
-        "flags": [],
-        "timeout": 0.0
-    },
-    {
         "name": "nmd",
         "command": "/bin/sh /nic/tools/start-nmd.sh",
         "dependencies": [

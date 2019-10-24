@@ -68,22 +68,6 @@
         "cpu-affinity": "0xC"
     },
     {
-        "name": "asicerrord",
-        "command": "/platform/bin/asicerrord",
-        "dependencies": [
-            {
-                "kind": "service",
-                "service-name": "delphi"
-            },
-            {
-                "kind": "service",
-                "service-name": "hal"
-            }],
-        "flags": [],
-        "timeout": 0.0,
-        "cpu-affinity": "0xC"
-    },
-    {
         "name": "nmd",
         "command": "/bin/sh /nic/tools/start-nmd.sh",
         "dependencies": [
