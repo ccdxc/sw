@@ -39,7 +39,8 @@ typedef int (*program_marvell_fn_t)(uint8_t addr, uint32_t data);
 typedef int (*marvell_link_status_fn_t)(uint8_t addr, uint16_t *data, uint8_t phy);
 typedef int (*get_cpld_id_fn_t)(void);
 typedef int (*get_cpld_rev_fn_t)(void);
-                               
+typedef int (*cpld_write_qsfp_temp_fn_t)(uint32_t temperature, uint32_t port);
+
 typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
     reg_read_fn_t               reg_read;
@@ -66,6 +67,7 @@ typedef struct pal_hw_vectors_s {
     marvell_link_status_fn_t    marvell_link_status;
     get_cpld_id_fn_t            get_cpld_id;
     get_cpld_rev_fn_t           get_cpld_rev;
+    cpld_write_qsfp_temp_fn_t   cpld_write_qsfp_temp;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -162,6 +164,9 @@ pal_init_hw_vectors (void)
                                                      "pal_get_cpld_rev");
     SDK_ASSERT(gl_hw_vecs.get_cpld_rev);
 
+    gl_hw_vecs.cpld_write_qsfp_temp = (cpld_write_qsfp_temp_fn_t)dlsym(gl_lib_handle,
+                                                     "pal_write_qsfp_temp");
+    SDK_ASSERT(gl_hw_vecs.cpld_write_qsfp_temp);
     return PAL_RET_OK;
 }
 
@@ -412,6 +417,13 @@ pal_hw_get_cpld_rev(void) {
     return (*gl_hw_vecs.get_cpld_rev)();
 }
 
+static int
+pal_hw_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port)
+{
+    return (*gl_hw_vecs.cpld_write_qsfp_temp)(temperature, port);
+}
+
+
 static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
@@ -441,6 +453,7 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.marvell_link_status = pal_hw_marvell_link_status;
     gl_pal_info.rwvecs.get_cpld_rev = pal_hw_get_cpld_rev;
     gl_pal_info.rwvecs.get_cpld_id = pal_hw_get_cpld_id;
+    gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_hw_cpld_write_qsfp_temp;
 
     pal_init_hw_vectors();
 

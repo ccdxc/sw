@@ -370,6 +370,9 @@ xcvr_poll_timer (void)
             }
             break;
         case xcvr_state_t::XCVR_SPROM_READ:
+            // TODO add function call here
+            // sdk::lib::pal_cpld_write_qsfp_temp(50,port);
+            break;
         case xcvr_state_t::XCVR_SPROM_READ_ERR:
             break;
         }

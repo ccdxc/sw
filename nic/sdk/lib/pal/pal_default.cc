@@ -185,6 +185,12 @@ pal_default_get_cpld_id(void)
     return -1;
 }
 
+static inline int
+pal_default_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port) {
+    SDK_TRACE_DEBUG("PAL default write cpld temperature");
+    return -1;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -217,6 +223,7 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.marvell_link_status = pal_default_marvell_link_status;
     gl_pal_info.rwvecs.get_cpld_id = pal_default_get_cpld_id;
     gl_pal_info.rwvecs.get_cpld_rev = pal_default_get_cpld_rev;
+    gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_default_cpld_write_qsfp_temp;
 
     return PAL_RET_OK;
 }

@@ -70,11 +70,12 @@ typedef struct pal_rwvectors_s {
     pal_ret_t   (*marvell_link_status)(uint8_t marvell_addr, uint16_t *data, uint8_t phy);
     int         (*get_cpld_rev)(void);
     int         (*get_cpld_id)(void);
+    int         (*cpld_write_qsfp_temp)(uint32_t temperature, uint32_t port);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
     platform_type_t platform_type;
-    pal_rwvectors_t             rwvecs;
+    pal_rwvectors_t rwvecs;
 } __PACK__ pal_info_t;
 extern pal_info_t   gl_pal_info;
 
@@ -244,6 +245,11 @@ inline bool
 pal_cpld_rev_old (void)
 {
     return pal_get_cpld_rev() <= MAX_CPLD_REV_OLD? true : false;
+}
+
+static inline int
+pal_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port) {
+    return gl_pal_info.rwvecs.cpld_write_qsfp_temp(temperature, port);
 }
 
 }    // namespace lib

@@ -127,6 +127,12 @@ pal_cpld_hwlock_enabled(void)
 {
     return false;
 }
+
+int
+pal_write_qsfp_temp(int data, int port)
+{
+    return -1;
+}
 #else
 #include <string.h>
 
@@ -428,6 +434,19 @@ pal_write_board_temp(int data)
 {
     data = (data > 127) ? 127 : data;
     cpld_reg_wr(CPLD_REGISTER_BOARD_TEMP, data);
+}
+
+int
+pal_write_qsfp_temp(int data, int port)
+{
+    data = (data > 127) ? 127 : data;
+    if (port == QSFP_PORT1) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT1_TEMP, data);
+    } else if (port == QSFP_PORT2) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT2_TEMP, data);
+    } else {
+        return -1;
+    }
 }
 
 void
