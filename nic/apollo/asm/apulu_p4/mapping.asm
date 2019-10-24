@@ -7,7 +7,7 @@ struct mapping_k_   k;
 struct mapping_d    d;
 struct phv_         p;
 
-#define HASH_MSB 31:20
+#define HASH_MSB 31:22
 
 %%
 

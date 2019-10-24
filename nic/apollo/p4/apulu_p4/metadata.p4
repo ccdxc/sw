@@ -85,9 +85,9 @@ header_type scratch_metadata_t {
         epoch               : 8;
         local_mapping_hash  : 15;
         local_mapping_hint  : 14;
-        mapping_hash        : 12;
-        mapping_hint        : 18;
-        flow_hash           : 12;
+        mapping_hash        : 10;
+        mapping_hint        : 19;
+        flow_hash           : 11;
         flow_hint           : 18;
         in_packets          : 64;
         in_bytes            : 64;

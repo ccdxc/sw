@@ -7,7 +7,7 @@ struct flow_k_ k;
 struct flow_d  d;
 struct phv_ p;
 
-#define FLOW_HASH_MSB 31:20
+#define FLOW_HASH_MSB 31:21
 
 %%
 
