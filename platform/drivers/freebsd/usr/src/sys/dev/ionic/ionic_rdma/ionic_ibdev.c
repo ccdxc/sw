@@ -6473,6 +6473,8 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		dev->eq_vec[eq_i] = eq;
 	}
 
+	dev->eq_count = eq_i;
+
 	dev->aq_vec = kmalloc_array(dev->aq_count, sizeof(*dev->aq_vec),
 				      GFP_KERNEL);
 	if (!dev->aq_vec) {
