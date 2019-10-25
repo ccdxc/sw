@@ -61,6 +61,13 @@ message TunnelSpec {
   // public IP of the remote service tunnel that is used as SIPo
   // in the encapped VXLAN packet in the Tx direction
   types.IPAddress RemoteServicePublicIP = 11;
+  // Tunnel points to a underlay nexthop or nexthop group (ECMP)
+  oneof nh {
+    // underlay nexthop for this tunnel
+    uint32        NexthopId             = 12;
+    // underlay nexthop group for this tunnel
+    uint32        NexthopGroupId        = 13;
+  }
 }
 
 // operational status of the tunnel, if any

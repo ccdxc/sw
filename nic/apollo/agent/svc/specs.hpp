@@ -1004,7 +1004,7 @@ pds_vpc_peer_proto_to_api_spec (pds_vpc_peer_spec_t *api_spec,
 }
 
 // populate proto buf spec from tep API spec
-static inline void
+static inline sdk_ret_t
 pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
                            const pds_tep_spec_t *api_spec)
 {
@@ -1042,6 +1042,19 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
             proto_spec->mutable_remoteservicepublicip(),
             &api_spec->remote_svc_public_ip);
     }
+    switch (api_spec->nh_type) {
+    case PDS_NH_TYPE_UNDERLAY:
+        proto_spec->set_nexthopid(api_spec->nh.id);
+        break;
+    case PDS_NH_TYPE_UNDERLAY_ECMP:
+        proto_spec->set_nexthopid(api_spec->nh_group.id);
+        break;
+    default:
+        //PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
+                      //api_spec->nh_type, api_spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
 }
 
 // populate proto buf status from tep API status
@@ -1074,7 +1087,7 @@ pds_tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
 }
 
 // build TEP API spec from protobuf spec
-static inline void
+static inline sdk_ret_t
 pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
                            const pds::TunnelSpec &proto_spec)
 {
@@ -1110,6 +1123,22 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
         ipaddr_proto_spec_to_api_spec(&api_spec->remote_svc_public_ip,
                                       proto_spec.remoteservicepublicip());
     }
+    switch (proto_spec.nh_case()) {
+    case pds::TunnelSpec::kNexthopId:
+        api_spec->nh_type = PDS_NH_TYPE_UNDERLAY;
+        api_spec->nh.id = proto_spec.nexthopid();
+        break;
+    case pds::TunnelSpec::kNexthopGroupId:
+        api_spec->nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+        api_spec->nh_group.id = proto_spec.nexthopgroupid();
+        break;
+    default:
+        //PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
+                      //proto_spec.nh_case(), api_spec->key.id);
+        return SDK_RET_INVALID_ARG;
+        break;
+    }
+    return SDK_RET_OK;
 }
 
 // populate proto buf spec from service API spec
