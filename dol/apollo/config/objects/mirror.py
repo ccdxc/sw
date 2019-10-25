@@ -34,7 +34,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             self.Dscp = dscp
             self.SrcIP = srcip
             self.DstIP = dstip
-            self.TunnelID = tunnel_id
+            self.TunnelId = tunnel_id
         else:
             assert(0)
         ################# PRIVATE ATTRIBUTES OF MIRROR OBJECT #####################
@@ -53,7 +53,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
                         (self.Interface, self.VlanId))
         elif self.SpanType == 'ERSPAN':
             logger.info("- VPCId:%d|TunnelId:%d|DstIP:%s|SrcIP:%s|Dscp:%d|SpanID:%d" %\
-                        (self.VPCId, self.TunnelID, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
+                        (self.VPCId, self.TunnelId, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
         else:
             assert(0)
         return
@@ -75,7 +75,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.RspanSpec.Encap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.RspanSpec.Encap.value.VlanId = self.VlanId
         elif self.SpanType == 'ERSPAN':
-            spec.ErspanSpec.TunnelID = self.TunnelID
+            spec.ErspanSpec.TunnelId = self.TunnelId
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID

@@ -53,7 +53,7 @@ message MappingSpec {
   // dstinfo is expected to empty for local mappings
   oneof dstinfo {
       // Tunnel ID of the remote TEP
-      uint32          TunnelID       = 3;
+      uint32          TunnelId       = 3;
       // overlay nexthop/TEP group
       uint32          NexthopGroupId = 4;
   }

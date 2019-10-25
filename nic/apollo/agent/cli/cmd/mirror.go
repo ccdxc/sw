@@ -150,6 +150,6 @@ func printErspanMirrorSession(ms *pds.MirrorSession) {
 	    fmt.Printf("%-6d%-10s%-10d%-16s%-16d\n",
                        spec.GetId(), spanTypeStr,spec.GetSnapLen(),
                        utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIP()),
-                       spec.GetErspanSpec().GetTunnelID())
+                       spec.GetErspanSpec().GetTunnelId())
     }
 }

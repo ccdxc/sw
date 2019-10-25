@@ -2724,7 +2724,7 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     }
 
     switch (proto_spec.dstinfo_case()) {
-    case pds::MappingSpec::kTunnelID:
+    case pds::MappingSpec::kTunnelId:
         remote_spec->nh_type = PDS_NH_TYPE_OVERLAY;
         remote_spec->tep.id = proto_spec.tunnelid();
         break;

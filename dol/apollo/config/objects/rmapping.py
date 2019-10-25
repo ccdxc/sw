@@ -76,7 +76,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.Id.IPKey.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
-        spec.TunnelID = self.TunID
+        spec.TunnelId = self.TunID
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():

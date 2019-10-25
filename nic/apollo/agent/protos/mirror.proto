@@ -31,7 +31,7 @@ message ERSpanSpec {
   uint32          VPCId  = 1;
   oneof erspandst {
       // Tunnel ID of the ERSPAN destination
-      uint32    TunnelID = 2;
+      uint32    TunnelId = 2;
       // Mapping key of the ERSPAN destination
       uint32    Id       = 3;
   }
