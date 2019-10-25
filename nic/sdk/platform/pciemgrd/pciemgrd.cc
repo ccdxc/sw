@@ -256,6 +256,67 @@ pciemgrd_param_ull(const char *name, const u_int64_t def)
     return getenv_override_ull("pciemgrd", name, def);
 }
 
+#ifdef VPD_HAS_SYSINFO
+#include "platform/capri/csrint/csr_init.hpp"
+
+typedef struct pciemgrd_sysinfo_s {
+    unsigned int cclk_mhz;
+    unsigned int vin_mv;
+    unsigned int vdd_mv;
+    unsigned int vcpu_mv;
+    unsigned int pin_uw;
+} pciemgrd_sysinfo_t;
+
+static int
+pciemgrd_get_sysinfo(pciemgrd_sysinfo_t *sysinfo)
+{
+    memset(sysinfo, 0, sizeof(*sysinfo));
+
+    // XXX fix cap_top_s... crash
+    // sdk::platform::capri::csr_init();
+    //sysinfo->cclk = cap_top_sbus_get_core_freq(0, 0);
+
+    system_voltage_t voltages = { 0 };
+    read_voltages(&voltages);
+
+    sysinfo->vin_mv = voltages.vin;
+    sysinfo->vdd_mv = voltages.vout1;
+    sysinfo->vcpu_mv = voltages.vout2;
+
+    system_power_t powers = { 0 };
+    read_powers(&powers);
+
+    sysinfo->pin_uw = powers.pin;
+
+    return 0;
+}
+#endif
+
+static void
+pciemgrd_sbus_lock(void)
+{
+    pal_lock_ret_t r = pal_wr_lock(SBUSLOCK);
+    assert(r == LCK_SUCCESS);
+}
+
+static void
+pciemgrd_sbus_unlock(void)
+{
+    pal_lock_ret_t r = pal_wr_unlock(SBUSLOCK);
+    assert(r == LCK_SUCCESS);
+}
+
+static void
+pciemgrd_sbus_locker_init(pciemgrenv_t *pme)
+{
+    static pciesys_sbus_locker_t sbus_locker = {
+        .sbus_lock   = pciemgrd_sbus_lock,
+        .sbus_unlock = pciemgrd_sbus_unlock,
+    };
+
+    pciesys_set_sbus_locker(&sbus_locker);
+}
+
 static void
 pciemgrd_vpd_params(pciemgrenv_t *pme)
 {
@@ -285,7 +346,7 @@ pciemgrd_vpd_params(pciemgrenv_t *pme)
     boost::property_tree::read_json("/nic/etc/VERSION.json", ver);
     S(fwvers, ver.get<std::string>("sw.version").c_str());
 
-#if 0
+#ifdef VPD_HAS_SYSINFO
     char misc[PCIEMGR_STRSZ], *mp = misc;
     int misc_left = PCIEMGR_STRSZ;
 #define MISC_APPEND(fmt, val) \
@@ -531,6 +592,7 @@ pciemgrd_sys_init(pciemgrenv_t *pme)
     pciemgrd_mem_init(pme);
     pciemgrd_sched_init(pme);
     pciemgrd_evmon_init(pme);
+    pciemgrd_sbus_locker_init(pme);
 }
 
 void

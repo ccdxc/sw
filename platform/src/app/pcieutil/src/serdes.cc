@@ -132,9 +132,11 @@ serdesfw(int argc, char *argv[])
         }
     }
 
+    pal_wr_lock(SBUSLOCK);
     lanes_ready = pciesd_lanes_ready(lanemask);
     pciesd_core_interrupt(lanes_ready, 0, 0, &build);
     pciesd_core_interrupt(lanes_ready, 0x3f, 0, &revid);
+    pal_wr_unlock(SBUSLOCK);
 
     for (int i = 0; i < 16; i++) {
         const uint16_t lanebit = 1 << i;
@@ -195,7 +197,9 @@ serdesint(int argc, char *argv[])
         return;
     }
 
+    pal_wr_lock(SBUSLOCK);
     pciesd_core_interrupt(lanemask, code, data, &result);
+    pal_wr_unlock(SBUSLOCK);
 
     for (int i = 0; i < 16; i++) {
         const uint16_t lanebit = 1 << i;

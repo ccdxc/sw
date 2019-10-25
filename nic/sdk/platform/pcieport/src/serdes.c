@@ -95,7 +95,9 @@ pcieport_serdes_init(void)
 
     gen = pcieport_serdes_fw_gen();
     pal_reg_trace("================ cap_pcie_serdes_setup start\n");
+    pciesys_sbus_lock();
     r = cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
+    pciesys_sbus_unlock();
     pal_reg_trace("================ cap_pcie_serdes_setup end %d\n", r);
     return r;
 }

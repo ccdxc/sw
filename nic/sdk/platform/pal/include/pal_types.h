@@ -19,6 +19,7 @@ typedef enum {
 typedef enum {
     MEMLOCK = 0,
     CPLDLOCK,
+    SBUSLOCK,
     LOCK_LAST // MUST BE LAST
 } pal_lock_id_t;
 

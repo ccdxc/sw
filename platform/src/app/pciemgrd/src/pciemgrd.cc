@@ -70,44 +70,6 @@ parse_linkspec(const char *s, u_int8_t *genp, u_int8_t *widthp)
     return 1;
 }
 
-#if !defined(PCIEMGRD_GOLD) && defined(__aarch64__)
-#include "platform/capri/csrint/csr_init.hpp"
-
-int
-pciemgrd_get_sysinfo(pciemgrd_sysinfo_t *sysinfo)
-{
-    memset(sysinfo, 0, sizeof(*sysinfo));
-
-    // XXX fix cap_top_s... crash
-    // sdk::platform::capri::csr_init();
-    //sysinfo->cclk = cap_top_sbus_get_core_freq(0, 0);
-
-    system_voltage_t voltages = { 0 };
-    read_voltages(&voltages);
-
-    sysinfo->vin_mv = voltages.vin;
-    sysinfo->vdd_mv = voltages.vout1;
-    sysinfo->vcpu_mv = voltages.vout2;
-
-    system_power_t powers = { 0 };
-    read_powers(&powers);
-
-    sysinfo->pin_uw = powers.pin;
-
-    return 0;
-}
-
-#else
-
-int
-pciemgrd_get_sysinfo(pciemgrd_sysinfo_t *sysinfo)
-{
-    memset(sysinfo, 0, sizeof(*sysinfo));
-    return 0;
-}
-
-#endif /* PCIEMGRD_GOLD */
-
 int
 main(int argc, char *argv[])
 {

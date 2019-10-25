@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -95,4 +95,34 @@ pciesys_logerror(const char *fmt, ...)
     va_start(ap, fmt);
     current_logger->logerror(fmt, ap);
     va_end(ap);
+}
+
+static void
+pciesys_sbus_nop(void)
+{
+}
+
+static pciesys_sbus_locker_t default_sbus_locker = {
+    .sbus_lock   = pciesys_sbus_nop,
+    .sbus_unlock = pciesys_sbus_nop,
+};
+
+static pciesys_sbus_locker_t *sbus_locker = &default_sbus_locker;
+
+void
+pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker)
+{
+    sbus_locker = locker;
+}
+
+void
+pciesys_sbus_lock(void)
+{
+    sbus_locker->sbus_lock();
+}
+
+void
+pciesys_sbus_unlock(void)
+{
+    sbus_locker->sbus_unlock();
 }

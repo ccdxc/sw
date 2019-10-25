@@ -53,14 +53,4 @@ update_pcie_port_status(const int port,
                         const char *faultstr = "");
 void update_pcie_metrics(const int port);
 
-typedef struct pciemgrd_sysinfo_s {
-    unsigned int cclk_mhz;
-    unsigned int vin_mv;
-    unsigned int vdd_mv;
-    unsigned int vcpu_mv;
-    unsigned int pin_uw;
-} pciemgrd_sysinfo_t;
-
-int pciemgrd_get_sysinfo(pciemgrd_sysinfo_t *sysinfo);
-
 #endif /* __LIB_PCIEMGRD_IMPL_H__ */

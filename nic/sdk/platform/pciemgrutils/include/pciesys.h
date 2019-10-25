@@ -36,6 +36,16 @@ typedef struct pciesys_logger_s {
 
 void pciesys_set_logger(pciesys_logger_t *logger);
 
+void pciesys_sbus_lock(void);
+void pciesys_sbus_unlock(void);
+
+typedef struct pciesys_sbus_locker_s {
+    void (*sbus_lock)(void);
+    void (*sbus_unlock)(void);
+} pciesys_sbus_locker_t;
+
+void pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker);
+
 #ifdef __cplusplus
 }
 #endif
