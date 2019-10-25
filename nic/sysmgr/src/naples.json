@@ -39,10 +39,6 @@
             {
                 "kind": "service",
                 "service-name": "delphi"
-            },
-            {
-                "kind": "service",
-                "service-name": "nicmgr"
             }],
         "flags": [],
         "timeout": 30.0
