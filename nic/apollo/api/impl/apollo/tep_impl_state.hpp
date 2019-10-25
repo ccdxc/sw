@@ -11,7 +11,7 @@
 #ifndef __TEP_IMPL_STATE_HPP__
 #define __TEP_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -45,15 +45,14 @@ public:
     ///        library instances
     /// return SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
-
 private:
-    directmap *tep_tbl(void) { return tep_tbl_; }
+    sldirectmap *tep_tbl(void) { return tep_tbl_; }
     friend class tep_impl;         ///< tep_impl is friend of tep_impl_state
     friend class mapping_impl;     ///< mapping_impl is friend of tep_impl_state
     friend class device_impl;      ///< device_impl is friend of tep_impl_state
 
 private:
-    directmap *tep_tbl_;    ///< directmap table for TEP
+    sldirectmap *tep_tbl_;    ///< sldirectmap table for TEP
 };
 
 ///   \@}

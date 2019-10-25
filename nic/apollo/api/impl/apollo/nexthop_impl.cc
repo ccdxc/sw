@@ -14,6 +14,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/nexthop.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -45,18 +46,22 @@ nexthop_impl::destroy(nexthop_impl *impl) {
 sdk_ret_t
 nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    nexthop_actiondata_t nh_data;
     pds_nexthop_spec_t *spec;
 
     spec = &obj_ctxt->api_params->nexthop_spec;
     // for blackhole nexthop we can use PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID
     if (spec->type != PDS_NH_TYPE_BLACKHOLE) {
         // reserve an entry in NEXTHOP table
-        ret = nexthop_impl_db()->nh_tbl()->reserve(&hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, &nh_data, NULL);
+        ret = nexthop_impl_db()->nh_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in nexthop table, err %u",
                           ret);
             return ret;
         }
+        hw_id_ = tparams.handle.pindex();
     } else {
         hw_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     }
@@ -65,18 +70,24 @@ nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 nexthop_impl::release_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams;
+
     if ((hw_id_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) &&
         (hw_id_ != 0xFFFFFFFF)) {
-        return nexthop_impl_db()->nh_tbl()->release(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, NULL, NULL);
+        return nexthop_impl_db()->nh_tbl()->release(&tparams);
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_impl::nuke_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams;
+
     if ((hw_id_ != PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID) &&
         (hw_id_ != 0xFFFFFFFF)) {
-        return nexthop_impl_db()->nh_tbl()->remove(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, NULL, NULL);
+        return nexthop_impl_db()->nh_tbl()->remove(&tparams);
     }
     return SDK_RET_OK;
 }
@@ -86,6 +97,7 @@ sdk_ret_t
 nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
+    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
 
     spec = &obj_ctxt->api_params->nexthop_spec;
@@ -119,7 +131,8 @@ nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         goto error;
         break;
     }
-    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, hw_id_);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, &nh_data, NULL);
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table at %u, err %u",
                       hw_id_, ret);

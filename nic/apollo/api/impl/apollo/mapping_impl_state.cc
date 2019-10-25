@@ -13,12 +13,11 @@
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/mapping_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
-
-using sdk::table::sdk_table_factory_params_t;
 
 namespace api {
 namespace impl {
@@ -28,8 +27,9 @@ namespace impl {
 /// \@{
 
 mapping_impl_state::mapping_impl_state(pds_state *state) {
-    p4pd_table_properties_t       tinfo;
-    sdk_table_factory_params_t    mhparams;
+    p4pd_table_properties_t                   tinfo;
+    sdk::table::sdk_table_factory_params_t    mhparams;
+    sdk::table::sdk_table_api_params_t        api_params;
 
     // instantiate P4 tables for bookkeeping
     bzero(&mhparams, sizeof(mhparams));
@@ -60,14 +60,16 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     remote_vnic_mapping_tx_tbl_ = mem_hash::factory(&mhparams);
     SDK_ASSERT(remote_vnic_mapping_tx_tbl_ != NULL);
 
-    p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
-    nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
-                                  tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size,
-                                  false, false, NULL);
+    bzero(&mhparams, sizeof(mhparams));
+    mhparams.table_id = P4TBL_ID_NAT;
+    mhparams.entry_trace_en = true;
+    nat_tbl_ = sldirectmap::factory(&mhparams);
     SDK_ASSERT(nat_tbl_ != NULL);
     // reserve 0th entry for no xlation
-    nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params,
+                                          NAT_TX_TBL_RSVD_ENTRY_IDX,
+                                          NULL, NULL);
+    nat_tbl_->reserve_index(&api_params);
 
     // create a slab for mapping impl entries
     mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
@@ -79,7 +81,7 @@ mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(local_ip_mapping_tbl_);
     mem_hash::destroy(remote_vnic_mapping_rx_tbl_);
     mem_hash::destroy(remote_vnic_mapping_tx_tbl_);
-    directmap::destroy(nat_tbl_);
+    sldirectmap::destroy(nat_tbl_);
     slab::destroy(mapping_impl_slab_);
 }
 

@@ -3,8 +3,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __SDK_LIB_TABLE_DIRECTMAP_RTE_BITMAP_SLAB_OP_HPP__
-#define __SDK_LIB_TABLE_DIRECTMAP_RTE_BITMAP_SLAB_OP_HPP__
+#ifndef __SDK_LIB_RTE_BITMAP_SLAB_OP_HPP__
+#define __SDK_LIB_RTE_BITMAP_SLAB_OP_HPP__
 
 #include <rte_bitmap.h>
 
@@ -116,5 +116,79 @@ rte_compare_indexes(uint32_t index1, uint32_t index2)
     return (array1_index1 == array1_index2);
 }
 
-#endif   // __SDK_LIB_TABLE_DIRECTMAP_RTE_BITMAP_SLAB_OP_HPP__
+// find highest set bit(MSB) in the indexer
+//
+// \param[in]  indxr rte bitmap indexer
+// \param[out] slab  slab containing pos
+// \param[out] pos   position of the MSB
+// \return     1 if position found else 0
+static inline uint32_t
+rte_find_highest_free_bit(rte_bitmap *indxr, uint64_t *slab,
+                          uint32_t *pos)
+{
+    int offset;
+    uint64_t *slab1;
+
+    for (uint32_t id = indxr->array1_size - 1; id >= 0; id--) {
+        slab1 = indxr->array1 + id;
+        //TODO: replace u32 by u64 once dpdk lib is updated to latest
+        offset = rte_fls_u32((uint32_t)*slab1);
+        if (offset) {
+            indxr->index1 = id;
+            indxr->offset1 = offset - 1;
+            __rte_bitmap_index2_set(indxr);
+            rte_prefetch0((void *)(indxr->array2 + indxr->index2));
+            do {
+                *slab = *(indxr->array2 + indxr->index2);
+                offset = rte_fls_u32((uint32_t)*slab);
+                if (offset) {
+                    *pos = rte_bitmap_get_global_bit_pos(indxr->index2, (offset - 1));
+                    return 1;
+                } else {
+                    indxr->index2--;
+                    rte_prefetch1((void *)(indxr->array2 + indxr->index2));
+                }
+            } while (indxr->index2 & RTE_BITMAP_CL_SLAB_MASK);
+        }
+    }
+    return 0;
+}
+
+// find lowest set bit(MSB) in the indexer
+//
+// \param[in]  indxr rte bitmap indexer
+// \param[out] slab  slab containing pos
+// \param[out] pos   position of the LSB
+// \return     1 if position found else 0
+static inline uint32_t
+rte_find_lowest_free_bit(rte_bitmap *indxr, uint64_t *slab,
+                         uint32_t *pos)
+{
+    uint64_t *slab1;
+    uint32_t offset2 = 0;
+
+    indxr->index1 = 0;
+    for (uint32_t id = 0 ; id < indxr->array1_size; id++, __rte_bitmap_index1_inc(indxr)) {
+        slab1 = indxr->array1 + indxr->index1;
+        indxr->offset1 = 0;
+        if (rte_bsf64_safe(*slab1, &indxr->offset1)) {
+            __rte_bitmap_index2_set(indxr);
+            rte_prefetch0((void *)(indxr->array2 + indxr->index2));
+            do {
+                *slab = *(indxr->array2 + indxr->index2);
+                offset2 = 0;
+                if (rte_bsf64_safe(*slab, &offset2)) {
+                    *pos = rte_bitmap_get_global_bit_pos(indxr->index2, offset2);
+                    return 1;
+                } else {
+                    indxr->index2++;
+                    rte_prefetch1((void *)(indxr->array2 + indxr->index2));
+                }
+            } while (indxr->index2 & RTE_BITMAP_CL_SLAB_MASK);
+        }
+    }
+    return 0;
+}
+
+#endif   // __SDK_LIB_RTE_BITMAP_SLAB_OP_HPP__
 

@@ -55,7 +55,21 @@ TEST_F(rte_indexer_test, test1) {
     rte_indexer::destroy(ind);
 }
 
-TEST_F(rte_indexer_test, scale_test1M) {
+TEST_F(rte_indexer_test, scale_test1M_thread_unsafe) {
+    uint32_t i;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(1024*1024, false);
+
+    for (auto c = 0; c < 1024*1024; c++) {
+        // Allocate index
+        sdk_ret_t rs  = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+    rte_indexer::destroy(ind);
+}
+
+TEST_F(rte_indexer_test, scale_test1M_thread_safe) {
     uint32_t i;
 
     // Instantiate the indexer
@@ -252,7 +266,6 @@ TEST_F(rte_indexer_test, test8) {
 
     // Allocate with new index
     rs  = ind->alloc(++i);
-    std::cout << "rs: " << rs << "\n";
     ASSERT_TRUE(rs == SDK_RET_OK);
 
     // Duplicate allocate with same index
@@ -337,6 +350,70 @@ TEST_F(rte_indexer_test, test10) {
     // Allocate same index
     rs = ind->alloc(i);
     ASSERT_TRUE(rs == SDK_RET_OK);
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 11:
+//
+// Summary:
+// --------
+//  - Testcase to verify allocating next available bit always
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test11) {
+    uint32_t i, j;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(4096);
+
+    for (auto c = 0; c < 4000; c++) {
+        // Allocate index
+        rs  = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    for (auto c = 0; c < 1000; c++) {
+        rs = ind->free(c);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->alloc(&j);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(j == (i + 1));
+
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 12:
+//
+// Summary:
+// --------
+//  - Testcase to verify wrap around of indexer
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test12) {
+    uint32_t i, j;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(4096);
+
+    for (auto c = 0; c < 4096; c++) {
+        // Allocate index
+        rs  = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    for (auto c = 0; c < 1000; c++) {
+        rs = ind->free(c);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->alloc(&j);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(j == (i + 1) % 4096);
+
     rte_indexer::destroy(ind);
 }
 

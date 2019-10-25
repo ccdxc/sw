@@ -22,23 +22,29 @@ namespace impl {
 /// \@{
 
 nexthop_impl_state::nexthop_impl_state(pds_state *state) {
-    p4pd_table_properties_t    tinfo;
+    sdk::table::sdk_table_factory_params_t params = { 0 };
+    sdk::table::sdk_table_api_params_t api_params;
 
-    p4pd_global_table_properties_get(P4TBL_ID_NEXTHOP, &tinfo);
-    nh_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NEXTHOP,
-                                 tinfo.tabledepth,
-                                 tinfo.actiondata_struct_size,
-                                 false, true, NULL);
+    params.table_id = P4TBL_ID_NEXTHOP;
+    params.entry_trace_en = true;
+    nh_tbl_ = sldirectmap::factory(&params);
     SDK_ASSERT(nh_tbl_ != NULL);
+
     // reserve system default blackhole/drop nexthop entry
-    nh_tbl_->reserve_index(PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params,
+                                          PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID,
+                                          NULL, NULL);
+    SDK_ASSERT(nh_tbl_->reserve_index(&api_params) == SDK_RET_OK);
 
     // reserve mytep nexthop entry
-    nh_tbl_->reserve_index(PDS_IMPL_MYTEP_NEXTHOP_HW_ID);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params,
+                                          PDS_IMPL_MYTEP_NEXTHOP_HW_ID,
+                                          NULL, NULL);
+    SDK_ASSERT(nh_tbl_->reserve_index(&api_params) == SDK_RET_OK);
 }
 
 nexthop_impl_state::~nexthop_impl_state() {
-    directmap::destroy(nh_tbl_);
+    sldirectmap::destroy(nh_tbl_);
 }
 
 sdk_ret_t

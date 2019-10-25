@@ -43,4 +43,8 @@ echo "Running indexer test"
 $GDB indexer_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/indexer_test.xml" > ${SDKDIR}/indexer_test.log.txt
 [[ $? -ne 0 ]] && echo "indexer_test failed!" && exit 1
 
+echo "Running sldirectmap test"
+$GDB sldirectmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/sldirectmap_test.xml" > ${SDKDIR}/sldirectmap_test.log.txt
+[[ $? -ne 0 ]] && echo "sldirectmap_test failed!" && exit 1
+
 echo "Success"

@@ -196,7 +196,7 @@ apollo_impl::key_native_init_(void) {
     key_native_swkey_t         key;
     key_native_swkey_mask_t    mask;
     key_native_actiondata_t    data;
-    sdk_table_api_params_t     tparams = { 0 };
+    sdk_table_api_params_t     tparams;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -214,7 +214,7 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_IPV4_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
@@ -225,7 +225,6 @@ apollo_impl::key_native_init_(void) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 1;
     key.ethernet_2_valid = 0;
@@ -237,7 +236,7 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_IPV6_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
@@ -248,7 +247,6 @@ apollo_impl::key_native_init_(void) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -260,7 +258,7 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_NATIVE_NATIVE_NONIP_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_native_tbl()->insert(&tparams);
@@ -276,7 +274,7 @@ sdk_ret_t
 apollo_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
     uint32_t                     idx = 0;
-    sdk_table_api_params_t       tparams = { 0 };
+    sdk_table_api_params_t       tparams;
     key_tunneled_swkey_t         key;
     key_tunneled_swkey_mask_t    mask;
     key_tunneled_actiondata_t    data;
@@ -297,8 +295,7 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
@@ -317,8 +314,7 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
@@ -337,8 +333,7 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    memset(&tparams, 0, sizeof(tparams));
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&tparams);
@@ -387,7 +382,7 @@ apollo_impl::egress_drop_stats_init_(void) {
     p4e_drop_stats_swkey_t       key = { 0 };
     p4e_drop_stats_swkey_mask_t  key_mask = { 0 };
     p4e_drop_stats_actiondata_t  data = { 0 };
-    sdk_table_api_params_t       tparams = { 0 };
+    sdk_table_api_params_t       tparams;
 
     for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         memset(&tparams, 0, sizeof(tparams));
@@ -395,7 +390,7 @@ apollo_impl::egress_drop_stats_init_(void) {
         key_mask.control_metadata_p4e_drop_reason_mask =
             key.control_metadata_p4e_drop_reason;
         data.action_id = P4E_DROP_STATS_P4E_DROP_STATS_ID;
-        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
                                        P4E_DROP_STATS_P4E_DROP_STATS_ID,
                                        sdk::table::handle_t::null());
         ret = apollo_impl_db()->egress_drop_stats_tbl()->insert(&tparams);
@@ -411,7 +406,7 @@ apollo_impl::ingress_drop_stats_init_(void) {
     p4i_drop_stats_swkey_t       key = { 0 };
     p4i_drop_stats_swkey_mask_t  key_mask = { 0 };
     p4i_drop_stats_actiondata_t  data = { 0 };
-    sdk_table_api_params_t       tparams = { 0 };
+    sdk_table_api_params_t       tparams;
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
         memset(&tparams, 0, sizeof(tparams));
@@ -419,7 +414,7 @@ apollo_impl::ingress_drop_stats_init_(void) {
         key_mask.control_metadata_p4i_drop_reason_mask =
             key.control_metadata_p4i_drop_reason;
         data.action_id = P4I_DROP_STATS_P4I_DROP_STATS_ID;
-        PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &key_mask, &data,
                                        P4I_DROP_STATS_P4I_DROP_STATS_ID,
                                        sdk::table::handle_t::null());
         ret = apollo_impl_db()->ingress_drop_stats_tbl()->insert(&tparams);

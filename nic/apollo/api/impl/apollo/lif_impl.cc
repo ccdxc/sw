@@ -93,7 +93,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
     nacl_actiondata_t      data =  { 0 };
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t tparams;
     uint32_t               idx;
 
     // ARM -> uplink
@@ -103,7 +103,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -116,7 +116,6 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
 
     // uplink -> ARM
     key.capri_intrinsic_lif =
@@ -127,7 +126,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -144,7 +143,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
     nacl_actiondata_t      data =  { 0 };
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t tparams;
     uint32_t               idx;
 
     // ARM -> uplink (untag packets)
@@ -158,7 +157,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -171,7 +170,6 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
 
     // uplink -> ARM (untag packets)
     key.capri_intrinsic_lif =
@@ -186,7 +184,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -203,7 +201,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t           key = { 0 };
     nacl_swkey_mask_t      mask = { 0 };
     nacl_actiondata_t      data =  { 0 };
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t tparams;
     uint32_t               idx;
 
     // Flow Miss -> CPU
@@ -216,7 +214,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.action_u.nacl_nacl_redirect.qtype = 0;
     data.action_u.nacl_nacl_redirect.qid = 0;
     data.action_u.nacl_nacl_redirect.vlan_strip = 0;
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -257,7 +255,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     nacl_actiondata_t data =  { 0 };
     lif_impl *host_mgmt_lif = NULL, *mnic_int_mgmt_lif = NULL;
     lif_internal_mgmt_ctx_t cb_ctx = {0};
-    sdk_table_api_params_t  tparams = { 0 };
+    sdk_table_api_params_t  tparams;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
         host_mgmt_lif = this;
@@ -282,7 +280,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = mnic_int_mgmt_lif->key();
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);
@@ -303,7 +301,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = host_mgmt_lif->key();
-    PDS_IMPL_FILL_TCAM_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
     ret = apollo_impl_db()->nacl_tbl()->insert(&tparams);

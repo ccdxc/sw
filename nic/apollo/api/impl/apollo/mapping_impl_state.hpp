@@ -12,6 +12,7 @@
 #define __MAPPING_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -77,16 +78,16 @@ private:
     mem_hash *remote_vnic_mapping_tx_tbl(void) {
         return remote_vnic_mapping_tx_tbl_;
     }
-    directmap *nat_tbl(void) { return nat_tbl_; }
+    sldirectmap *nat_tbl(void) { return nat_tbl_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
 
 private:
-    mem_hash  *local_ip_mapping_tbl_;
-    mem_hash  *remote_vnic_mapping_rx_tbl_;
-    mem_hash  *remote_vnic_mapping_tx_tbl_;
-    directmap *nat_tbl_;
-    slab      *mapping_impl_slab_;
+    mem_hash    *local_ip_mapping_tbl_;
+    mem_hash    *remote_vnic_mapping_rx_tbl_;
+    mem_hash    *remote_vnic_mapping_tx_tbl_;
+    sldirectmap *nat_tbl_;
+    slab        *mapping_impl_slab_;
 };
 
 /// \@}

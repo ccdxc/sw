@@ -11,7 +11,7 @@
 #ifndef __NEXTHOP_IMPL_STATE_HPP__
 #define __NEXTHOP_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -47,13 +47,13 @@ public:
 
     /// \brief  return the nexthop table instance
     /// \return pointer to the nexthop table instance
-    directmap *nh_tbl(void) { return nh_tbl_; }
+    sldirectmap *nh_tbl(void) { return nh_tbl_; }
 
 private:
     friend class nexthop_impl;   // nexthop_impl is friend of nexthop_impl_state
 
 private:
-    directmap *nh_tbl_;    // directmap table for nexthop
+    sldirectmap *nh_tbl_;    // sldirectmap table for nexthop
 };
 
 /// @}

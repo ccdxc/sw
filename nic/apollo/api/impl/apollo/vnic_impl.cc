@@ -52,7 +52,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
-    sdk_table_api_params_t api_params = { 0 };;
+    sdk_table_api_params_t api_params;
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
     local_vnic_by_vlan_tx_swkey_t local_vnic_by_vlan_tx_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t local_vnic_by_vlan_tx_mask = { 0 };
@@ -88,7 +88,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     local_vnic_by_vlan_tx_handle_ = tparams.handle;
 
     // reserve an entry in EGRESS_LOCAL_VNIC_INFO table
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->reserve_index(hw_id_);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, NULL, NULL);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->reserve_index(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in EGRESS_LOCAL_VNIC_INFO "
                       "table for vnic %u, err %u", spec->key.id, ret);
@@ -123,7 +124,8 @@ vnic_impl::release_resources(api_base *api_obj) {
 
         api_params.handle = local_vnic_by_vlan_tx_handle_;
         vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->release(&api_params);
-        vnic_impl_db()->egress_local_vnic_info_tbl()->release(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_, NULL, NULL);
+        vnic_impl_db()->egress_local_vnic_info_tbl()->release(&api_params);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
 
     }
@@ -163,7 +165,8 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         api_params.handle = local_vnic_by_vlan_tx_handle_;
         vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->remove(&api_params);
 
-        vnic_impl_db()->egress_local_vnic_info_tbl()->remove(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_, NULL, NULL);
+        vnic_impl_db()->egress_local_vnic_info_tbl()->remove(&api_params);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
     this->release_resources(api_obj);
@@ -180,6 +183,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     egress_local_vnic_info_actiondata_t       egress_vnic_data = { 0 };
     vnic_rx_stats_actiondata_t                vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
+    sdk_table_api_params_t                    api_params;
 
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
@@ -226,8 +230,9 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             egress_vnic_data.egress_local_vnic_info_action.mirror_session =
                 spec->rx_mirror_session_bmap;
         }
-        ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
-                                                                        hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_,
+                                              &egress_vnic_data, NULL);
+        ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&api_params);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -252,13 +257,15 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_entry *subnet;
     egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
+    sdk_table_api_params_t api_params;
 
     subnet_key = vnic->subnet();
     subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
 
     // read EGRESS_LOCAL_VNIC_INFO table entry of this vnic
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
-              hw_id_, &egress_vnic_data);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_,
+                                          &egress_vnic_data, NULL);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->get(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
                       "vnic %u, err %u", vnic->key().id, ret);
@@ -268,8 +275,9 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     // update fields dependent on other objects and reprogram
     sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(hw_id_,
-                                                               &egress_vnic_data);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_,
+                                          &egress_vnic_data, NULL);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(&api_params);
     return ret;
 }
 
@@ -796,7 +804,7 @@ sdk_ret_t
 vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
-    sdk_table_api_params_t api_params = { 0 };
+    sdk_table_api_params_t api_params;
     sdk_table_api_params_t slot_api_params = { 0 };
     local_vnic_by_vlan_tx_swkey_t vnic_by_vlan_key = { 0 };
     local_vnic_by_vlan_tx_swkey_mask_t vnic_by_vlan_mask = { 0 };
@@ -810,8 +818,9 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
 
     //TODO: epoch support
     // read EGRESS_LOCAL_VNIC_INFO table
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
-              hw_id_, &egress_vnic_data);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_,
+                                          &egress_vnic_data, NULL);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->get(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
                       "vnic %u, err %u", vkey->id, ret);

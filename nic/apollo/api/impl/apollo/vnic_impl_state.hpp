@@ -11,7 +11,7 @@
 #ifndef __VNIC_IMPL_STATE_HPP__
 #define __VNIC_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/sdk/lib/table/sltcam/sltcam.hpp"
@@ -56,7 +56,7 @@ private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     sltcam *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_tbl_; }
     slhash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_tbl_; }
-    directmap *egress_local_vnic_info_tbl(void) { return egress_local_vnic_info_tbl_; }
+    sldirectmap *egress_local_vnic_info_tbl(void) { return egress_local_vnic_info_tbl_; }
     friend class vnic_impl;       ///< vnic_impl class is friend of vnic_impl_state
     friend class mapping_impl;    ///< mapping_impl class is friend of vnic_impl_state
 
@@ -67,7 +67,7 @@ private:
     //       index using hw_id_ of vnic and and bzero out when we create vnic
     sltcam    *local_vnic_by_vlan_tx_tbl_;     ///< tcam table for LOCAL_VNIC_BY_VLAN_TX
     slhash  *local_vnic_by_slot_rx_tbl_;     ///< hash table for LOCAL_VNIC_BY_SLOT_RX
-    directmap *egress_local_vnic_info_tbl_;    ///< directmap table for EGRESS_LOCAL_VNIC_INFO
+    sldirectmap *egress_local_vnic_info_tbl_;    ///< sldirectmap table for EGRESS_LOCAL_VNIC_INFO
 };
 
 /// \@}

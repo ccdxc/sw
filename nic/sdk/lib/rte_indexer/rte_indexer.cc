@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <rte_memory.h>
+#include <rte_common.h>
 #include <rte_bitmap.h>
 #include "lib/rte_indexer/rte_indexer.hpp"
 #include "lib/rte_indexer/rte_slab_op.hpp"
@@ -12,6 +13,14 @@ namespace sdk {
 namespace lib {
 
 #define INDEXER ((rte_bitmap *)indexer_)
+
+void
+rte_indexer::set_curr_slab_(uint64_t pos)
+{
+    rte_bitmap *indxr = (rte_bitmap *)indexer_;
+
+    this->curr_slab_ = *(indxr->array2 + (pos >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2));
+}
 
 //---------------------------------------------------------------------------
 // factory method to instantiate the class
@@ -73,6 +82,9 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
     uint32_t indx = 0;
     rte_bitmap *indxr = NULL;
     sdk_ret_t rs = SDK_RET_OK;
+    uint32_t array2_64s, array2_lbits;
+    uint32_t array1_64s, array1_lbits;
+    uint32_t array1_nbits;
 
     size_ = size;
     thread_safe_ = thread_safe;
@@ -91,21 +103,51 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
         }
         indexer_ = rte_bitmap_init(size, bits_, sz);
         indxr = (rte_bitmap *)indexer_;
-        memset(indxr->array1, RTE_BITMAP_START_SLAB_SCAN_POS,
-               (indxr->array1_size * sizeof(uint64_t)));
-        memset(indxr->array2, RTE_BITMAP_START_SLAB_SCAN_POS,
-               (indxr->array2_size * sizeof(uint64_t)));
-        indxr->go2 = 0;
-        this->curr_slab_ = 0;
+        // number of 64 bits chunks
+        array2_64s = size / RTE_BITMAP_SLAB_BIT_SIZE;
+        // number of active bits in the last 64 bit chunk.
+        array2_lbits = size % RTE_BITMAP_SLAB_BIT_SIZE;
+        // each bits in array1 maps to cacheline of 64 bytes of array2
+        // array1_nbits = array2_bits / CACHELINE_BITS  + 1/0(reminder)
+        array1_nbits =  (indxr->array2_size * RTE_BITMAP_SLAB_BIT_SIZE) /
+                         RTE_BITMAP_CL_BIT_SIZE;
+        array1_nbits += (((indxr->array2_size * RTE_BITMAP_SLAB_BIT_SIZE) %
+                           RTE_BITMAP_CL_BIT_SIZE) != 0) ? 1 : 0;
+        // Number of 64 bits chunks
+        array1_64s  =  array1_nbits / RTE_BITMAP_SLAB_BIT_SIZE;
+        // Number of active bits in the last 64 bit chunk
+        array1_lbits = array1_nbits % RTE_BITMAP_SLAB_BIT_SIZE;
+
+        // Set the memory
+        if (array2_64s) {
+            memset(indxr->array2, 0xff, array2_64s * sizeof(uint64_t));
+        }
+        if (array2_lbits) {
+            *(indxr->array2 + array2_64s) = (1ULL << array2_lbits) - 1;
+        }
+        if (array1_64s) {
+            memset(indxr->array1, 0xff, array1_64s * sizeof(uint64_t));
+        }
+        if (array1_lbits) {
+            *(indxr->array1 + array1_64s) = (1ULL << array1_lbits) - 1;
+        }
+        rte_bitmap_set(indxr, 0);
         this->curr_index_ = 0;
+        this->curr_slab_ = 0;
     }
+
+    usage_ = 0;
 
     // skip 0th entry, if asked
     skip_zero_ = skip_zero;
     if (skip_zero_) {
         rs = this->alloc(indx, 1);
+        if (rs == SDK_RET_OK) {
+            usage_ += 1;
+            this->curr_index_ = indx;
+            this->set_curr_slab_(indx);
+        }
     }
-    usage_ = 0;
 
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), false);
@@ -122,8 +164,9 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 rte_indexer::alloc(uint32_t *index, uint32_t block_size) {
-    uint32_t offset2;
-    uint32_t  pos = 0, next_pos = 0;
+    uint32_t nextpos = 0;
+    uint64_t curr_slab = 0;
+    bool go2_next = false;
     sdk_ret_t rs = SDK_RET_OK;
     rte_bitmap *indxr = (rte_bitmap *)indexer_;
 
@@ -136,37 +179,30 @@ rte_indexer::alloc(uint32_t *index, uint32_t block_size) {
         goto end;
     }
 
-    if (indxr->go2) {
-        if (rte_bitmap_slab_scan(curr_slab_, curr_index_, &next_pos) == 0) {
-            // no bit set in current slab, go to next slab
-            curr_index_ = RTE_BITMAP_START_SLAB_SCAN_POS;
-        } else {
-            curr_index_ = next_pos;
+    if (this->curr_slab_) {
+        if (!rte_bitmap_slab_scan(this->curr_slab_, this->curr_index_,
+                                  &nextpos)) {
+            go2_next = true;
         }
     }
-    if (curr_index_ == 0 || curr_index_ != next_pos) {
-        if (rte_bitmap_scan(indxr, &pos, &curr_slab_) == 0) {
+
+    if (this->curr_slab_ == 0 || go2_next) {
+        if (!rte_bitmap_scan(indxr, &nextpos, &curr_slab)) {
             rs = SDK_RET_NO_RESOURCE;
             goto end;
         }
-        curr_index_ = pos;
     }
 
-    // modify curr_slab_ as well
-    offset2 = curr_index_ & RTE_BITMAP_SLAB_BIT_MASK;
-    curr_slab_ &= ~(1llu << offset2);
-
-    *index = curr_index_;
+    *index = nextpos;
     rte_bitmap_clear(INDEXER, *index);
-    SDK_TRACE_DEBUG("Scan name: curr_pos %u next_pos %u idx %u slab %lx",
-                    curr_index_, next_pos, *index, (long)curr_slab_);
+    this->curr_index_ = nextpos;
+    this->set_curr_slab_(this->curr_index_);
+    SDK_TRACE_DEBUG("Allocated idx %u and slab %lx", *index, (long)this->curr_slab_);
     usage_++;
-
 end:
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), SDK_RET_ERR);
     }
-
     return rs;
 }
 
@@ -177,7 +213,6 @@ end:
 //---------------------------------------------------------------------------
 sdk_ret_t
 rte_indexer::alloc(uint32_t index, uint32_t block_size) {
-    uint32_t offset2;
     uint64_t sel_word = 0;
     sdk_ret_t rs = SDK_RET_OK;
 
@@ -196,14 +231,9 @@ rte_indexer::alloc(uint32_t index, uint32_t block_size) {
         goto end;
     }
 
-    // <curr_slab_> contains this <index> then modify
-    // <curr_slab_> as well
-    if (rte_compare_indexes(curr_index_, index)) {
-        offset2 = index & RTE_BITMAP_SLAB_BIT_MASK;
-        curr_slab_ &= ~(1llu << offset2);
-    }
-
     rte_bitmap_clear(INDEXER, index);
+    if (rte_compare_indexes(this->curr_index_, index))
+        this->set_curr_slab_(index);
     usage_++;
 
 end:
@@ -218,7 +248,6 @@ end:
 //---------------------------------------------------------------------------
 sdk_ret_t
 rte_indexer::free(uint32_t index, uint32_t block_size) {
-    uint32_t offset2 = 0;
     sdk_ret_t rs = SDK_RET_OK;
 
     // TODO: handle block size of > 1 in free()
@@ -238,14 +267,9 @@ rte_indexer::free(uint32_t index, uint32_t block_size) {
         goto end;
     }
 
-    // <curr_slab_> contains this <index> then modify
-    // <curr_slab_> as well
-    if (rte_compare_indexes(curr_index_, index)) {
-        offset2 = index & RTE_BITMAP_SLAB_BIT_MASK;
-        curr_slab_ |= (1llu << offset2);
-    }
-
     rte_bitmap_set(INDEXER, index);
+    if (rte_compare_indexes(this->curr_index_, index))
+        this->set_curr_slab_(index);
     usage_--;
 end:
     if (thread_safe_) {
@@ -261,39 +285,23 @@ end:
 bool
 rte_indexer::is_index_allocated(uint32_t index) {
     uint64_t sel_word   = 0;
-    bool     is_alloced = false;
+    bool     is_allocated = false;
 
     sel_word = rte_bitmap_get(INDEXER, index);
     if (!sel_word) {
-        is_alloced = true;
+        is_allocated = true;
     }
 
-    return is_alloced;
+    return is_allocated;
 }
 
 //---------------------------------------------------------------------------
-// return number of indices allocate so far
+// return number of indices allocated so far
 //---------------------------------------------------------------------------
 uint64_t
-rte_indexer::compute_num_indices_allocated(void) {
-    uint32_t usage = 0;
-
-    for (uint32_t i = 0; i < size_; i++) {
-        if (is_index_allocated(i) && !(skip_zero_ && i == 0)) {
-            // Don't count 0 if skip_zero is set
-            usage++;
-        }
-    }
-    SDK_TRACE_DEBUG("Usage internal %u, usage computed %u", usage_, usage);
-    SDK_ASSERT(usage_ == usage);
-    return usage;
-}
-
-//---------------------------------------------------------------------------
-// return number of indices allocate so far
-//---------------------------------------------------------------------------
-uint64_t
-rte_indexer::num_indices_allocated(void) {
+rte_indexer::usage(void) const {
+    if (this->skip_zero_)
+        return (usage_ - 1);
     return usage_;
 }
 

@@ -56,7 +56,7 @@ public:
     bool operator ==(const handle_t& h) { return value_ == h.value_; }
     bool operator !=(const handle_t& h) { return value_ != h.value_; }
     char *tostr(char *buff, uint32_t len) {
-        assert(len >= SDK_TABLE_HANDLE_STR_LEN); 
+        assert(len >= SDK_TABLE_HANDLE_STR_LEN);
         snprintf(buff, len, "%d.%d.%d.%d", pvalid_, pindex_, svalid_, sindex_);
         return buff;
     }
@@ -130,8 +130,8 @@ typedef struct sdk_table_factory_params_ {
     // If this table uses hints to resolve collisions,
     // specific the number of hints used by this table.
     uint32_t num_hints;
-    // If collision in this table is resolved using 
-    // recircs, then specify the maximum number of 
+    // If collision in this table is resolved using
+    // recircs, then specify the maximum number of
     // recircs allowed.
     uint32_t max_recircs;
     // Convert key to string
@@ -158,8 +158,14 @@ typedef struct sdk_table_api_params_ {
     };
     // [Input] Key mask of the entry
     void *mask;
-    // [Input] Data of the entry
-    void *appdata;
+    union {
+        // [Input] Data of the entry
+        void *appdata;
+        // [Input] Action data directly
+        void *actiondata;
+    };
+    // [Input] Action Data mask
+    void *actiondata_mask;
     // [Input] ActionID of the entry
     uint8_t action_id;
     // [Input/Output] (Input is Optional)
@@ -256,6 +262,7 @@ typedef struct properties_ {
     // Secondary Base Virtual Address
     uint64_t stable_base_mem_va;
 } properties_t;
+
 
 } // namespace table
 } // namespace sdk

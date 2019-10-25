@@ -11,7 +11,7 @@
 #ifndef __SECURITY_POLICY_STATE_IMPL_HPP__
 #define __SECURITY_POLICY_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"

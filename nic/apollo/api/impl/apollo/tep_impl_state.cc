@@ -11,9 +11,11 @@
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "include/sdk/table.hpp"
 
 namespace api {
 namespace impl {
@@ -23,22 +25,21 @@ namespace impl {
 /// \@{
 
 tep_impl_state::tep_impl_state(pds_state *state) {
-    p4pd_table_properties_t tinfo;
+    sdk::table::sdk_table_factory_params_t params = { 0 };
+    sdk::table::sdk_table_api_params_t api_params;
 
-    // instantiate P4 tables for bookkeeping
-    p4pd_table_properties_get(P4TBL_ID_TEP, &tinfo);
-    tep_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_TEP,
-                                  tinfo.tabledepth,
-                                  tinfo.actiondata_struct_size,
-                                  false, true, NULL);
-    // reserve entry for mytep
-    tep_tbl_->reserve_index(PDS_IMPL_MYTEP_HW_ID);
-
+    params.table_id = P4TBL_ID_TEP;
+    params.entry_trace_en = true;
+    tep_tbl_ = sldirectmap::factory(&params);
     SDK_ASSERT(tep_tbl_ != NULL);
+    // reserve entry for mytep
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params,
+                                          PDS_IMPL_MYTEP_HW_ID, NULL, NULL);
+    SDK_ASSERT(tep_tbl_->reserve_index(&api_params) == SDK_RET_OK);
 }
 
 tep_impl_state::~tep_impl_state() {
-    directmap::destroy(tep_tbl_);
+    sldirectmap::destroy(tep_tbl_);
 }
 
 sdk_ret_t

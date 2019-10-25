@@ -13,6 +13,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/tep_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 
@@ -27,6 +28,8 @@ namespace impl {
 #define tep_ipv4_vxlan_action     action_u.tep_ipv4_vxlan_tep
 #define tep_ipv6_vxlan_action     action_u.tep_ipv6_vxlan_tep
 #define nh_action                 action_u.nexthop_nexthop_info
+
+using sdk::table::sdk_table_api_params_t;
 
 tep_impl *
 tep_impl::factory(pds_tep_spec_t *pds_tep) {
@@ -49,33 +52,42 @@ sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
+    sdk_table_api_params_t tparams;
 
     // reserve an entry in TEP_table
-    ret = tep_impl_db()->tep_tbl()->reserve(&idx);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, idx, NULL, NULL);
+    ret = tep_impl_db()->tep_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in TEP table, err %u", ret);
         return ret;
     }
+    idx = tparams.handle.pindex();
     hw_id_ = idx & 0xFFFF;
 
     // reserve an entry in NH_TX table
-    ret = nexthop_impl_db()->nh_tbl()->reserve(&idx);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, idx, NULL, NULL);
+    ret = nexthop_impl_db()->nh_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in NH table, err %u", ret);
         return ret;
     }
+    idx = tparams.handle.pindex();
     nh_id_ = idx & 0xFFFF;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams;
+
     if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->tep_tbl()->release(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, NULL, NULL);
+        tep_impl_db()->tep_tbl()->release(&tparams);
         hw_id_ = 0xFFFF;
     }
     if (nh_id_ != 0xFFFF) {
-        nexthop_impl_db()->nh_tbl()->release(nh_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, nh_id_, NULL, NULL);
+        nexthop_impl_db()->nh_tbl()->release(&tparams);
         nh_id_ = 0xFFFF;
     }
     return SDK_RET_OK;
@@ -83,12 +95,16 @@ tep_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 tep_impl::nuke_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams;
+
     if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->tep_tbl()->remove(hw_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, NULL, NULL);
+        tep_impl_db()->tep_tbl()->remove(&tparams);
         hw_id_ = 0xFFFF;
     }
     if (nh_id_ != 0xFFFF) {
-        nexthop_impl_db()->nh_tbl()->remove(nh_id_);
+        PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, nh_id_, NULL, NULL);
+        nexthop_impl_db()->nh_tbl()->remove(&tparams);
         nh_id_ = 0xFFFF;
     }
     return SDK_RET_OK;
@@ -102,7 +118,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_tep_spec_t          *tep_spec;
     tep_actiondata_t        tep_data = { 0 };
     nexthop_actiondata_t    nh_data = { 0 };
-
+    sdk_table_api_params_t  api_params;
 
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
@@ -140,7 +156,8 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-    ret = tep_impl_db()->tep_tbl()->insert_atid(&tep_data, hw_id_);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, hw_id_, &tep_data, NULL);
+    ret = tep_impl_db()->tep_tbl()->insert_atid(&api_params);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("TEP Tx table programming failed for TEP %s, "
                       "TEP hw id %u, err %u", api_obj->key2str().c_str(),
@@ -168,7 +185,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.action_u.nexthop_nexthop_info.dst_slot_id =
             tep_spec->encap.val.value;
     }
-    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_id_);
+
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params, nh_id_, &nh_data, NULL);
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&api_params);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
                       "nexthop hw id %u, err %u", api_obj->key2str().c_str(),
@@ -257,16 +276,17 @@ sdk_ret_t
 tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     nexthop_actiondata_t nh_data;
     tep_actiondata_t tep_data;
+    sdk_table_api_params_t tparams;
     pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
     (void)api_obj;
     (void)key;
 
-    if (nexthop_impl_db()->nh_tbl()->retrieve(nh_id_,
-                                              &nh_data) != SDK_RET_OK) {
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, nh_id_, &nh_data, NULL);
+    if (nexthop_impl_db()->nh_tbl()->get(&tparams) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (tep_impl_db()->tep_tbl()->retrieve(hw_id_,
-                                           &tep_data) != SDK_RET_OK) {
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, hw_id_, &tep_data, NULL);
+    if (tep_impl_db()->tep_tbl()->get(&tparams) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     fill_spec_(&nh_data, &tep_data, &tep_info->spec);

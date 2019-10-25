@@ -131,6 +131,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 sdk_ret_t
 device_impl::program_mytep_(device_entry *device) {
     sdk_ret_t            ret;
+    sdk_table_api_params_t params;
     tep_actiondata_t     tep_data = { 0 };
     nexthop_actiondata_t nh_data  = { 0 };
     uint32_t             tep_hw_id = PDS_IMPL_MYTEP_HW_ID;
@@ -147,7 +148,8 @@ device_impl::program_mytep_(device_entry *device) {
         memcpy(tep_data.tep_mpls_udp_action.dmac, device->mac(), ETH_ADDR_LEN);
     }
 
-    ret = tep_impl_db()->tep_tbl()->insert_atid(&tep_data, tep_hw_id);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&params, tep_hw_id, &tep_data, NULL);
+    ret = tep_impl_db()->tep_tbl()->insert_atid(&params);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("TEP Tx table programming failed for TEP %s, "
                       "TEP hw id %u, err %u", ipaddr2str(&tep_ip_addr),
@@ -159,7 +161,8 @@ device_impl::program_mytep_(device_entry *device) {
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.action_u.nexthop_nexthop_info.tep_index = tep_hw_id;
 
-    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&nh_data, nh_hw_id);
+    PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&params, nh_hw_id, &nh_data, NULL);
+    ret = nexthop_impl_db()->nh_tbl()->insert_atid(&params);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
                       "nexthop hw id %u, err %u", ipaddr2str(&tep_ip_addr),

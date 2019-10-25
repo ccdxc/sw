@@ -33,6 +33,15 @@
         p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
     }
 
+#define PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(tparams, idx, actiondata_,     \
+                                              actiondata_mask_)              \
+{                                                                            \
+    memset((tparams), 0, sizeof(*(tparams)));                                \
+    (tparams)->handle.pindex(idx);                                           \
+    (tparams)->actiondata = actiondata_;                                     \
+    (tparams)->actiondata_mask = actiondata_mask_;                           \
+}
+
 namespace api {
 namespace impl {
 

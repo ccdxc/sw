@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/impl/apollo/vnic_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -44,11 +45,10 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     SDK_ASSERT(local_vnic_by_slot_rx_tbl_ != NULL);
 
     // EGRESS_LOCAL_VNIC_INFO index table
-    p4pd_table_properties_get(P4TBL_ID_EGRESS_LOCAL_VNIC_INFO, &tinfo);
-    egress_local_vnic_info_tbl_ =
-        directmap::factory(tinfo.tablename, P4TBL_ID_EGRESS_LOCAL_VNIC_INFO,
-                           tinfo.tabledepth, tinfo.actiondata_struct_size,
-                           false, true, NULL);
+    memset(&table_params, 0, sizeof(table_params));
+    table_params.table_id = P4TBL_ID_EGRESS_LOCAL_VNIC_INFO;
+    table_params.entry_trace_en = true;
+    egress_local_vnic_info_tbl_ = sldirectmap::factory(&table_params);
     SDK_ASSERT(egress_local_vnic_info_tbl_ != NULL);
 }
 
@@ -56,7 +56,7 @@ vnic_impl_state::~vnic_impl_state() {
     indexer::destroy(vnic_idxr_);
     sltcam::destroy(local_vnic_by_vlan_tx_tbl_);
     slhash::destroy(local_vnic_by_slot_rx_tbl_);
-    directmap::destroy(egress_local_vnic_info_tbl_);
+    sldirectmap::destroy(egress_local_vnic_info_tbl_);
 }
 
 sdk_ret_t

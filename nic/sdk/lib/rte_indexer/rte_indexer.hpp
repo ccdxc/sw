@@ -26,13 +26,14 @@ public:
     sdk_ret_t free(uint32_t index, uint32_t block_size = 1);
     bool is_index_allocated(uint32_t index);
     uint32_t size(void) const { return size_; }
-    uint64_t num_indices_allocated(void);
-    uint64_t compute_num_indices_allocated(void);
+    uint64_t usage(void) const;
 
 private:
     rte_indexer();
     ~rte_indexer();
-    bool init_(uint32_t size, bool thread_safe = true, bool skip_zero = false);
+    bool init_(uint32_t size, bool thread_safe = true,
+               bool skip_zero = false);
+    void set_curr_slab_(uint64_t pos);
 
 private:
     uint64_t        curr_slab_;      // current slab value
