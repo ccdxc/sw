@@ -57,7 +57,7 @@
           </div>
           <div fxLayout="row">
             <app-advanced-search #advancedSearchComponent
-                                 [formArray]="fieldFormArray" [cols]="cols"
+                                 [formArray]="fieldFormArray" [cols]="advSearchCols"
                                  [customQueryOptions]="customQueryOptions"
                                  (cancelEmitter)="onCancelSearch($event)"
                                  (searchEmitter)="getDistributedServiceCards()"
@@ -120,6 +120,17 @@
                         [inline]="true"
                         class="global-alert-critical-icon naples-bad-indicator-icon ">error
               </mat-icon>
+            </div>
+            <div *ngSwitchCase="'workloads'">
+              <div *ngFor="let w of rowData['associatedWorkloads'] let i=index"
+                   class="naples-workloads-div">
+                <ng-container *roleGuard="'workloadworkload_read'">
+                  <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
+                     [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+                  <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
+                     [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
+                </ng-container>
+              </div>
             </div>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}

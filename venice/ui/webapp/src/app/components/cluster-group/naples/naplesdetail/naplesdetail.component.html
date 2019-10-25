@@ -220,6 +220,10 @@
                    fxLayoutAlign="start center">
                 <div>Processor</div>
               </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Workloads</div>
+              </div>
             </div>
             <div fxFlex="40px"></div>
             <!-- Values -->
@@ -252,6 +256,18 @@
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-auto-admit-nics">
                   {{ selectedObj?.status['system-info']['os-info']['processor'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+                <div class="naplesdetail-panel-auto-admit-nics naplesdetail-workloads-container"
+                     *ngIf="selectedObj">
+                  <div *ngFor="let w of selectedObj['associatedWorkloads'] let i=index"
+                       class="naplesdetail-workloads-div">
+                    <ng-container *roleGuard="'workloadworkload_read'">
+                      <a routerLink="/workload" class="naplesdetail-panel-auto-admit-nics"
+                         [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+                    </ng-container>
+                  </div>
                 </div>
               </div>
             </div>

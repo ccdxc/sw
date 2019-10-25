@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy} from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -18,7 +18,10 @@ import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_que
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import {LabelEditorMetadataModel} from '@components/shared/labeleditor';
+import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { WorkloadService } from '@app/services/generated/workload.service';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -27,6 +30,7 @@ import {LabelEditorMetadataModel} from '@components/shared/labeleditor';
   animations: [Animations]
 })
 export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDestroy {
+  public static NAPLEDETAIL_FIELD_WORKLOADS: string = 'associatedWorkloads';
   subscriptions = [];
 
   bodyicon: any = {
@@ -52,8 +56,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   showExpandedDetailsCard: boolean;
 
   // Holds all objects, should be only one item in the array
-  objList: ReadonlyArray<IClusterDistributedServiceCard>;
-  objEventUtility: HttpEventUtility<IClusterDistributedServiceCard>;
+  objList: ReadonlyArray<ClusterDistributedServiceCard>;
+  objEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
 
   // Whether we show a deletion overlay
   showDeletionScreen: boolean;
@@ -90,11 +94,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   labelEditorMetaData: LabelEditorMetadataModel;
 
+  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
+  dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
+  workloads: ReadonlyArray<WorkloadWorkload> = [];
+
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
-    protected UIConfigService: UIConfigsService
+    protected UIConfigService: UIConfigsService,
+    protected workloadService: WorkloadService,
   ) {
     super(_controllerService, UIConfigService);
   }
@@ -106,6 +115,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       const id = params.get('id');
       this.selectedId = id;
       this.initializeData();
+      this.getWorkloads();
       this.getNaplesDetails();
       this.setNapleDetailToolbar(id); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
     });
@@ -140,7 +150,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.objList = [];
     this.selectedObj = null;
     this.alertseventsSelector = null;
-    this.showExpandedDetailsCard = false;
+    this.showExpandedDetailsCard = true;
 
     this.heroCards.forEach((card) => {
       card.firstStat.value = null;
@@ -149,6 +159,21 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       card.lineData.data = [];
       card.cardState = CardStates.LOADING;
     });
+  }
+
+  /**
+   * Fetch workloads.
+   */
+  getWorkloads() {
+    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
+    this.workloads = this.workloadEventUtility.array;
+    const subscription = this.workloadService.WatchWorkload().subscribe(
+      (response) => {
+        this.workloadEventUtility.processEvents(response);
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
+    );
+    this.subscriptions.push(subscription);
   }
 
   getNaplesDetails() {
@@ -170,7 +195,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       }
     );
     this.subscriptions.push(getSubscription);
-    this.objEventUtility = new HttpEventUtility<IClusterDistributedServiceCard>();
+    this.objEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>();
     this.objList = this.objEventUtility.array;
     const subscription = this.clusterService.WatchDistributedServiceCard({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
@@ -210,6 +235,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             card.cardState = CardStates.READY;
           });
           this.selectedObj = null;
+        }
+        if (this.selectedObj) {
+          this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.objList);
+          this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] = (this.dscsWorkloadsTuple[this.selectedObj.meta.name]) ?
+            this.dscsWorkloadsTuple[this.selectedObj.meta.name].workloads : [];
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
@@ -402,7 +432,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   handleEditSave(newObjects: ClusterDistributedServiceCard[]) {
     if (newObjects.length > 0) {
       const name = newObjects[0].meta.name;
-      const sub = this.clusterService.UpdateDistributedServiceCard(name, newObjects[0], '',  this.objList[0]).subscribe(response => {
+      const sub = this.clusterService.UpdateDistributedServiceCard(name, newObjects[0], '', this.objList[0]).subscribe(response => {
         this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${name}'s labels`);
       }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
       this.subscriptions.push(sub);
@@ -441,7 +471,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   isNICHealthy(data: Readonly<ClusterDistributedServiceCard>): boolean {
-  if (Utility.isNaplesNICHealthy(data)) {
+    if (Utility.isNaplesNICHealthy(data)) {
       return true;
     }
     return false;

@@ -1,28 +1,30 @@
 import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormArray } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
+import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
+import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
+import { TableCol } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-import { Table } from 'primeng/table';
-import { Subscription, forkJoin, Observable } from 'rxjs';
-import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
-import { NaplesConditionValues } from '.';
-import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
-import { FormArray } from '@angular/forms';
-import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SearchService } from '@app/services/generated/search.service';
-import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { RepeaterData, ValueType} from 'web-app-framework';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { MetricsPollingQuery, MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
 import { SearchUtil } from '@components/search/SearchUtil';
-import * as _ from 'lodash';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
+import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
+import { Table } from 'primeng/table';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import { RepeaterData, ValueType } from 'web-app-framework';
+import { NaplesConditionValues } from '.';
 
 @Component({
   selector: 'app-naples',
@@ -42,6 +44,8 @@ import { TableCol } from '@app/components/shared/tableviewedit';
  */
 
 export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy {
+  public static  NAPLES_FIELD_WORKLOADS: string  = 'associatedWorkloads';
+
   @ViewChild('naplesTable') naplesTurboTable: Table;
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
@@ -58,7 +62,12 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   conditionNaplesMap: { [condition: string]: Array<string> };
 
   fieldFormArray = new FormArray([]);
-  maxRecords: number = 8000;
+  maxSearchRecords: number = 8000;
+
+  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
+  dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
+  workloads: ReadonlyArray<WorkloadWorkload> = [];
+  maxWorkloadsPerRow: number = 10;
 
   cols: TableCol[] = [
     { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
@@ -68,9 +77,13 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
     { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true},
     { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true},
+    { field: 'workloads', header: 'Workloads', class: 'naples-column-workloads', sortable: false, localSearch: true },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
   ];
+
+  advSearchCols: TableCol[] = [];
+
   subscriptions: Subscription[] = [];
 
   bodyicon: any = {
@@ -128,12 +141,15 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
     protected searchService: SearchService,
+    protected workloadService: WorkloadService,
   ) {
     super(controllerService);
   }
 
 
   ngOnInit() {
+    this.buildAdvSearchCols();
+    this.getWorkloads();
     this.getNaples();
     this.getMetrics();
     this.provideCustomOptions();
@@ -141,6 +157,27 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       buttons: [],
       breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/naples' }]
     });
+  }
+
+  buildAdvSearchCols() {
+   this.advSearchCols =  this.cols.filter( (col: TableCol) => {
+       return (col.field !== 'workloads'); // TODO: don't add workloads in advanced-search
+   });
+  }
+
+  /**
+   * Fetch workloads.
+   */
+  getWorkloads() {
+    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
+    this.workloads = this.workloadEventUtility.array;
+    const subscription = this.workloadService.WatchWorkload().subscribe(
+      (response) => {
+        this.workloadEventUtility.processEvents(response);
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
+    );
+    this.subscriptions.push(subscription);
   }
 
   updateSelectedNaples() {
@@ -195,6 +232,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       response => {
         this.naplesEventUtility.processEvents(response);
         this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
+        this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.naples);
         for (const naple of this.naples) {
           this.naplesMap[naple.meta.name] = naple;
           // Create search object for condition
@@ -212,6 +250,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
                 (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
                 break;
           }
+          naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
         }
         if (this.selectedNaples.length > 0) {
           this.updateSelectedNaples();
@@ -221,6 +260,13 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+  getDSCWorkloads(naple: ClusterDistributedServiceCard): WorkloadWorkload[] {
+    if (this.dscsWorkloadsTuple[naple.meta.name]) {
+      return this.dscsWorkloadsTuple[naple.meta.name].workloads;
+    } else {
+      return [];
+    }
   }
 
   displayColumn(data, col): any {
@@ -418,7 +464,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    */
   getDistributedServiceCards(field = this.naplesTurboTable.sortField,
     order = this.naplesTurboTable.sortOrder) {
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxRecords);
+    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxSearchRecords);
     const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
     if (localSearchResult.err) {
       this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
@@ -576,5 +622,17 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });
+  }
+
+  buildMoreWorkloadTooltip(dsc: ClusterDistributedServiceCard): string {
+    const wltips = [];
+     const workloads = dsc[NaplesComponent.NAPLES_FIELD_WORKLOADS] ;
+     for ( let i = 0; i < workloads.length ; i ++ ) {
+       if (i >= this.maxWorkloadsPerRow) {
+         const workload = workloads[i];
+         wltips.push(workload.meta.name);
+       }
+     }
+     return wltips.join(' , ');
   }
 }

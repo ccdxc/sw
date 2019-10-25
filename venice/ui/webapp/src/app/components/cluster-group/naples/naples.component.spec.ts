@@ -1,29 +1,29 @@
-import {  ComponentFixture, TestBed } from '@angular/core/testing';
-import { configureTestSuite } from 'ng-bullet';
-
-import { NaplesComponent } from './naples.component';
-import { Component } from '@angular/core';
-import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component, DebugElement } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatIconRegistry } from '@angular/material';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
+import { TestingUtility } from '@app/common/TestingUtility';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
+import { AuthService } from '@app/services/auth.service';
 import { ControllerService } from '@app/services/controller.service';
-import { ConfirmationService } from 'primeng/primeng';
-import { LogService } from '@app/services/logging/log.service';
-import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MatIconRegistry } from '@angular/material';
-import { By } from '@angular/platform-browser';
-import { TestingUtility } from '@app/common/TestingUtility';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
+import { SearchService } from '@app/services/generated/search.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
-import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { SearchService } from '@app/services/generated/search.service';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { configureTestSuite } from 'ng-bullet';
+import { ConfirmationService } from 'primeng/primeng';
+import { NaplesComponent } from './naples.component';
+
 
 @Component({
   template: ''
@@ -130,7 +130,8 @@ describe('NaplesComponent', () => {
         MatIconRegistry,
         MetricsqueryService,
         MessageService,
-        SearchService
+        SearchService,
+        WorkloadService
       ]
     });
       });
@@ -153,7 +154,20 @@ describe('NaplesComponent', () => {
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
-    TestingUtility.verifyTable([new ClusterDistributedServiceCard(naples1), new ClusterDistributedServiceCard(naples2), new ClusterDistributedServiceCard(naples3)], component.cols, tableBody, {}, '', true);
+    TestingUtility.verifyTable([new ClusterDistributedServiceCard(naples1), new ClusterDistributedServiceCard(naples2), new ClusterDistributedServiceCard(naples3)], component.cols,
+    tableBody, {
+      'workloads': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+        const workloads = component.getDSCWorkloads(rowData);
+        expect(workloads.length).toBeGreaterThanOrEqual(0);
+        if (workloads.length > 0) {
+          expect(fieldElem.nativeElement.textContent).toContain(
+            workloads[0].meta.name
+          );
+        } else {
+          expect(fieldElem.nativeElement.textContent.length).toEqual(0);
+        }
+      }
+    }, '', true);
   });
 
   describe('RBAC', () => {

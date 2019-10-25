@@ -19,6 +19,11 @@ export interface HostWorkloadTuple {
     host: ClusterHost;
 }
 
+export interface DSCWorkloadsTuple {
+    workloads: WorkloadWorkload[];
+    dsc: ClusterDistributedServiceCard;
+}
+
 export interface DSCnameToMacMap {
     [key: string]: string; // dsc.spec.id - dsc.meta.name
 }
@@ -142,7 +147,7 @@ export class ObjectsRelationsUtility {
         for (const dsc of naples) {
             const hostNameFromDsc = dsc.status.host;
             const host: ClusterHost = this.getHostByMetaName(hosts, hostNameFromDsc);
-            const linkworkloads = this.findWorkloadsByHost(workloads, hosts);
+            const linkworkloads = this.findAllWorkloadsInHosts(workloads, hosts);
             const newTuple: DSCWorkloadHostTuple = {
                 workloads: linkworkloads,
                 host: host,
@@ -168,17 +173,72 @@ export class ObjectsRelationsUtility {
     ): { [hostKey: string]: HostWorkloadTuple; } {
             const hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; } = {};
             for (const host of hosts) {
-            const linkworkloads = this.findWorkloadsByHost(workloads, hosts);
+            const linkworkloads = this.findAssociatedWorkloadsByHost(workloads, host);
             const newTuple: HostWorkloadTuple = {
                 workloads: linkworkloads,
                 host: host
             };
             hostWorkloadsTuple[host.meta.name] = newTuple;
-            return hostWorkloadsTuple;
         }
+        return hostWorkloadsTuple;
     }
 
-    public static findWorkloadsByHost (workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[] ): WorkloadWorkload[] {
+    /**
+     * Build a map key=dsc.meta.name, value = 'DSCWorkloadsTuple' object
+     *
+     * dsc -- 1:1 --> host
+     * host -- 1:m --> workloads
+     * @param workloads
+     * @param naples
+     */
+    public static buildDscWorkloadsMaps(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], naples: ReadonlyArray<ClusterDistributedServiceCard> | ClusterDistributedServiceCard[])
+    : { [dscKey: string]: DSCWorkloadsTuple; } {
+        const dscWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; } = {};
+        for (const naple of naples) {
+            const linkworkloads = this.findAssociatedWorkloadsByDSC(workloads, naple);
+            const newTuple: DSCWorkloadsTuple = {
+                workloads: linkworkloads,
+                dsc: naple
+            };
+            dscWorkloadsTuple[naple.meta.name] = newTuple;
+        }
+        return dscWorkloadsTuple;
+    }
+
+    /**
+     * Given a DSC/Naple, find all associated workloads
+     *  dsc -- 1:1 --> host  -- 1..m -> workloads
+     * @param workloads
+     * @param naple
+     */
+    public static findAssociatedWorkloadsByDSC(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], naple: ClusterDistributedServiceCard): WorkloadWorkload[] {
+        const workloadWorkloads: WorkloadWorkload[] = [];
+        for (const workload of workloads) {
+            const hostname = naple.status.host;
+            if (workload.spec['host-name'] === hostname) {
+                workloadWorkloads.push(workload);
+            }
+        }
+        return workloadWorkloads;
+    }
+
+    /**
+     * Give a ClusterHost, find all the workloads that associated with this host
+     * @param workloads
+     * @param host
+     */
+    public static findAssociatedWorkloadsByHost(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], host: ClusterHost  ): WorkloadWorkload[] {
+        const workloadWorkloads: WorkloadWorkload[] = [];
+        for (const workload of workloads) {
+            const workloadSpecHostName = workload.spec['host-name'];
+            if (host.meta.name === workloadSpecHostName) {
+                workloadWorkloads.push(workload);
+            }
+        }
+        return workloadWorkloads;
+    }
+
+    public static findAllWorkloadsInHosts (workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[] ): WorkloadWorkload[] {
         const workloadWorkloads: WorkloadWorkload[] = [];
         for (const workload of workloads) {
             const workloadSpecHostName = workload.spec['host-name'];

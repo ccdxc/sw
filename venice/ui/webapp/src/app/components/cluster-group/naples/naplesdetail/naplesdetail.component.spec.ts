@@ -1,35 +1,35 @@
-import {  ComponentFixture, TestBed } from '@angular/core/testing';
-import { configureTestSuite } from 'ng-bullet';
-
-import { ControllerService } from '@app/services/controller.service';
-import { ConfirmationService } from 'primeng/primeng';
-import { LogService } from '@app/services/logging/log.service';
-import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MatIconRegistry } from '@angular/material';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService } from '@app/services/message.service';
-import { MetricsqueryService } from '@app/services/metricsquery.service';
-import { ClusterService } from '@app/services/generated/cluster.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatIconRegistry } from '@angular/material';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ActivatedRoute } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
+import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
+import { TestingUtility } from '@app/common/TestingUtility';
+import { Utility } from '@app/common/Utility';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
-import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, ReplaySubject, Observable } from 'rxjs';
-import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
-import { RouterTestingModule } from '@angular/router/testing';
 import { AlerttableService } from '@app/services/alerttable.service';
-import { SearchService } from '@app/services/generated/search.service';
-import { EventsService } from '@app/services/events.service';
-import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { NaplesdetailComponent } from './naplesdetail.component';
-import { Utility } from '@app/common/Utility';
-import { TestingUtility } from '@app/common/TestingUtility';
-import { By } from '@angular/platform-browser';
-import { IClusterDistributedServiceCard, ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { AuthService } from '@app/services/auth.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { ControllerService } from '@app/services/controller.service';
+import { EventsService } from '@app/services/events.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { SearchService } from '@app/services/generated/search.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { LogService } from '@app/services/logging/log.service';
+import { MessageService } from '@app/services/message.service';
+import { MetricsqueryService } from '@app/services/metricsquery.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { configureTestSuite } from 'ng-bullet';
+import { ConfirmationService } from 'primeng/primeng';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
+import { NaplesdetailComponent } from './naplesdetail.component';
+
 
 class MockActivatedRoute extends ActivatedRoute {
   id = '4444.4444.0002';
@@ -62,7 +62,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterDistributedServiceCard) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(8); // there are 8 columns defined in naplesdetail.c.ts
+    expect(fields.length).toBe(13); // there are 13 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -156,6 +156,7 @@ describe('NaplesdetailComponent', () => {
         EventsService,
         AuthService,
         MonitoringService,
+        WorkloadService,
         {
           provide: ActivatedRoute,
           useClass: MockActivatedRoute
