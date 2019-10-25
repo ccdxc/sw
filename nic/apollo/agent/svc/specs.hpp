@@ -863,6 +863,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
         api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
     }
+    api_spec->host_ifindex = proto_spec.hostifindex();
     return SDK_RET_OK;
 }
 
@@ -915,6 +916,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
         proto_spec->set_egv6securitypolicyid(i, api_spec->egr_v6_policy[i].id);
     }
+    proto_spec->set_hostifindex(api_spec->host_ifindex);
 }
 
 // populate proto buf status from vnic API status
