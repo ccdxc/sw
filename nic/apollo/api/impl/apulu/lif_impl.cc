@@ -165,6 +165,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
         goto error;
     }
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+                    key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
+                    nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
 
     // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
@@ -200,6 +203,10 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
         goto error;
     }
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+                    key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
+                    nh_idx_ + 1, nh_data.nexthop_info.lif,
+                    nh_data.nexthop_info.port);
 
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
@@ -272,6 +279,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                       "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
         return ret;
     }
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+                    key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
+                    nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
 
     // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
@@ -309,6 +319,10 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                       "lif %u, err %u", pinned_if_idx_, key_, ret);
         goto error;
     }
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+                    key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
+                    nh_idx_ + 1, nh_data.nexthop_info.lif,
+                    nh_data.nexthop_info.port);
 
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
@@ -574,14 +588,17 @@ lif_impl::create(pds_lif_spec_t *spec) {
         ret = create_oob_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT:
-        ret = create_inb_mnic_(spec);
+        //ret = create_inb_mnic_(spec);
+        ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_MNIC_CPU:
-        ret = create_datapath_mnic_(spec);
+        //ret = create_datapath_mnic_(spec);
+        ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
-        ret = create_internal_mgmt_mnic_(spec);
+        //ret = create_internal_mgmt_mnic_(spec);
+        ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST:
         ret = create_host_lif_(spec);
