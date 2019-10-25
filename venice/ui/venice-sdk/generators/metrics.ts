@@ -10,7 +10,7 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
     // Delete all contents
     rmdir.sync(outputFolder);
   }
-  fs.mkdirSync(outputFolder);
+  fs.mkdirSync(outputFolder, {recursive: true});
 
   const basetypeToJSType = {
     int8: 'number',
@@ -30,6 +30,9 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
     complex128: 'number',
     byte: 'number',
     number: 'number',
+    Gauge: 'number',
+    PrecisionGauge: 'number',
+    Bitmap: 'number',
 
     string: 'string',
   }
@@ -64,6 +67,10 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
           throw new Error("base type " + field.BaseType + " not recognized for field " + field.Name);
         }
         field.jsType = basetypeToJSType[field.BaseType];
+        if (field.BaseType === 'Bitmap') {
+          // Set as debug metric for now
+          field.tags = ["Level7"]
+        }
         return _.transform(field, function (result, val, key) {
           result[_.camelCase(key)] = val;
         });
