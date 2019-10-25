@@ -84,7 +84,8 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4i_drop_stats_actiondata_t data = { 0 };
     const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
         "drop_vni_invalid",
-        "drop_nacl"
+        "drop_nacl",
+        "drop_vnic_policer_tx",
     };
 
     SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));
@@ -111,7 +112,9 @@ device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
     const char edrop[][PDS_MAX_DROP_NAME_LEN] = {
         "drop_session_invalid",
         "drop_session_hit",
-        "drop_nexthop_invalid"
+        "drop_nexthop_invalid",
+        "drop_vnic_policer_rx",
+        "drop_copp",
     };
 
     SDK_ASSERT(sizeof(edrop)/sizeof(edrop[0]) == (P4E_DROP_REASON_MAX + 1));

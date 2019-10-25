@@ -21,6 +21,7 @@
 #include "nat.p4"
 #include "nexthops.p4"
 #include "checksum.p4"
+#include "policers.p4"
 #include "stats.p4"
 #include "inter_pipe.p4"
 #include "offloads.p4"
@@ -49,6 +50,7 @@ control ingress {
     flow_lookup();
     nacl();
     offloads();
+    tx_policers();
     ingress_stats();
     ingress_inter_pipe();
 }
@@ -68,6 +70,7 @@ control egress {
             nat();
             nexthops();
             update_checksums();
+            rx_policers();
             egress_stats();
         }
     }

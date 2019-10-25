@@ -10,6 +10,8 @@ struct phv_         p;
 %%
 
 session_info:
+    seq             c1, k.p4e_i2e_copp_policer_id, r0
+    phvwr.!c1       p.control_metadata_copp_policer_valid, TRUE
     seq             c1, k.p4e_i2e_session_id, r0
     // r7 : packet length
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1

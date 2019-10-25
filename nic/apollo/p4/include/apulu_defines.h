@@ -31,13 +31,16 @@
 #define P4I_DROP_REASON_MIN             0
 #define P4I_DROP_VNI_INVALID            0
 #define P4I_DROP_NACL                   1
-#define P4I_DROP_REASON_MAX             1
+#define P4I_DROP_VNIC_POLICER_TX        2
+#define P4I_DROP_REASON_MAX             2
 
 #define P4E_DROP_REASON_MIN             0
 #define P4E_DROP_SESSION_INVALID        0
 #define P4E_DROP_SESSION_HIT            1
 #define P4E_DROP_NEXTHOP_INVALID        2
-#define P4E_DROP_REASON_MAX             2
+#define P4E_DROP_VNIC_POLICER_RX        3
+#define P4E_DROP_COPP                   4
+#define P4E_DROP_REASON_MAX             4
 
 /*****************************************************************************/
 /* nexthop types                                                            */
@@ -147,7 +150,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APULU_P4I_TO_RXDMA_HDR_SZ       52
-#define APULU_I2E_HDR_SZ                34
+#define APULU_I2E_HDR_SZ                36
 #define APULU_P4_TO_ARM_HDR_SZ          17
 
 #define APULU_INGRESS_MIRROR_BLOB_SZ    (CAPRI_P4_INTRINSIC_HDR_SZ + \

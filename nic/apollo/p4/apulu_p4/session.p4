@@ -11,6 +11,9 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
              offset_metadata.l2_1);
     modify_field(control_metadata.rx_packet, p4e_i2e.rx_packet);
     modify_field(control_metadata.update_checksum, p4e_i2e.update_checksum);
+    if (p4e_i2e.copp_policer_id != 0) {
+        modify_field(control_metadata.copp_policer_valid, TRUE);
+    }
 
     if (p4e_i2e.session_id == 0) {
         egress_drop(P4E_DROP_SESSION_INVALID);

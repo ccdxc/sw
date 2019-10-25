@@ -59,6 +59,7 @@ header_type control_metadata_t {
         learn_enabled           : 1;
         device_profile_id       : 4;
         to_device_ip            : 1;
+        copp_policer_valid      : 1;
     }
 }
 
@@ -111,6 +112,18 @@ header_type scratch_metadata_t {
         ipv6_addr           : 128;
         update_ip_chksum    : 1;
         update_l4_chksum    : 1;
+
+        // policer
+        policer_valid       : 1;
+        policer_pkt_rate    : 1;
+        policer_rlimit_en   : 1;
+        policer_rlimit_prof : 2;
+        policer_color_aware : 1;
+        policer_rsvd        : 1;
+        policer_axi_wr_pend : 1;
+        policer_burst       : 40;
+        policer_rate        : 40;
+        policer_tbkt        : 40;
     }
 }
 

@@ -15,5 +15,7 @@ header_type apulu_i2e_metadata_t {
         nexthop_type        : 2;
         mapping_bypass      : 1;
         update_checksum     : 1;
+        pad1                : 6;
+        copp_policer_id     : 10;
     }
 }

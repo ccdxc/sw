@@ -16,7 +16,7 @@ table vnic_tx_stats {
     actions {
         vnic_tx_stats;
     }
-    size : VNIC_STATS_TABLE_SIZE;
+    size : VNIC_TABLE_SIZE;
 }
 
 /*****************************************************************************/
@@ -66,7 +66,7 @@ table vnic_rx_stats {
     actions {
         vnic_rx_stats;
     }
-    size : VNIC_STATS_TABLE_SIZE;
+    size : VNIC_TABLE_SIZE;
 }
 
 action p4e_drop_stats(drop_stats_pad, drop_stats_pkts) {
