@@ -34,3 +34,7 @@ void EventLogger::LogOverTempExitAlarmEvent(std::string description, int tempera
 {
     this->recorder->event(eventtypes::NAPLES_OVER_TEMP_EXIT, description.c_str(), temperature);
 }
+
+void EventLogger::LogFatalInterruptEvent(const char *desc) {
+    this->recorder->event(eventtypes::NAPLES_FATAL_INTERRUPT, desc);
+}

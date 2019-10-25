@@ -15,6 +15,7 @@ public:
     void LogCriticalTempEvent(std::string description);
     void LogOverTempAlarmEvent(std::string description, int temperature);
     void LogOverTempExitAlarmEvent(std::string description, int temperature);
+    void LogFatalInterruptEvent(const char *desc);
 };
 typedef std::shared_ptr<EventLogger> EventLoggerPtr;
 

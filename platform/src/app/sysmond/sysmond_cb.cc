@@ -52,12 +52,18 @@ void
 intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 {
     bool iscattrip = false;
+    std::string desc;
 
     switch (field->severity) {
     case INTR_SEV_TYPE_HW_RMA:
+        desc = string(reg->name) + "_" + string(field->name) + ":" +
+               string(field->desc);
+        eventrecorder_fatal_interrupt_event_cb(desc.c_str());
+
     case INTR_SEV_TYPE_FATAL:
     case INTR_SEV_TYPE_ERR:
-        TRACE_INFO(GetAsicErrObflLogger(), "name: {}_{}, count: {}, severity: {}, desc: {}",
+        TRACE_INFO(GetAsicErrObflLogger(),
+                   "name: {}_{}, count: {}, severity: {}, desc: {}",
                    reg->name, field->name, field->count,
                    get_severity_str(field->severity).c_str(), field->desc);
         break;
