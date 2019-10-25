@@ -24,6 +24,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "nic/apollo/p4/include/apulu_defines.h"
 
 using sdk::table::ftlv6;
 using sdk::table::ftlv4;
@@ -35,6 +36,8 @@ using sdk::table::sdk_table_factory_params_t;
 namespace pt = boost::property_tree;
 #define FLOW_TEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 #define MAX_NEXTHOP_GROUP_INDEX 1024
+
+FILE *g_fp;
 
 static char *
 flow_key2str(void *key) {
@@ -72,12 +75,11 @@ flow_appdata2str(void *appdata) {
 static void
 dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 ipv6_addr_t v6_addr_dip) {
-    return;
-    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+    // return;
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
-    if (d_fp) {
-        fprintf(d_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
+    if (g_fp) {
+        fprintf(g_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
                 "nexthop_group_index %d, flow_role %d, ktype %d, bd_id %d\n",
                 entry->proto,
                 entry->session_id,
@@ -89,19 +91,18 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 entry->flow_role,
                 entry->ktype,
                 entry->bd_id);
-        fflush(d_fp);
+        fflush(g_fp);
     }
 }
 
 static void
 dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 ipv4_addr_t v4_addr_dip) {
-    return;
-    static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
+    // return;
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
-    if (d_fp) {
-        fprintf(d_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
+    if (g_fp) {
+        fprintf(g_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
                 "nexthop_group_index %d, flow_role %d, bd_id %d\n",
                 entry->proto,
                 entry->session_id,
@@ -112,8 +113,23 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 entry->nexthop_id,
                 entry->flow_role,
                 entry->bd_id);
-        fflush(d_fp);
+        fflush(g_fp);
     }
+}
+
+static void
+dump_session_info(uint32_t vpc,
+                  session_actiondata_t *actiondata)
+{
+#ifdef SIM
+    if (g_fp) {
+        fprintf(g_fp, "vpc %u, tx rewrite flags 0x%x, "
+                "rx rewrite flags 0x%x\n", vpc,
+                actiondata->action_u.session_session_info.tx_rewrite_flags,
+                actiondata->action_u.session_session_info.rx_rewrite_flags);
+        fflush(g_fp);
+    }
+#endif
 }
 
 #define MAX_VPCS        512
@@ -174,6 +190,7 @@ private:
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
+    uint32_t session_index;
 
 private:
 
@@ -280,7 +297,7 @@ public:
         factory_params.max_recircs = 8;
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
-        factory_params.entry_trace_en = false;
+        factory_params.entry_trace_en = true;
         v6table = ftlv6::factory(&factory_params);
         assert(v6table);
 
@@ -290,7 +307,7 @@ public:
         factory_params.max_recircs = 8;
         factory_params.key2str = NULL;
         factory_params.appdata2str = NULL;
-        factory_params.entry_trace_en = false;
+        factory_params.entry_trace_en = true;
         v4table = ftlv4::factory(&factory_params);
         assert(v4table);
 
@@ -300,7 +317,7 @@ public:
         nexthop_group_index = 1;
         hash = 0;
         with_hash = w;
-
+        session_index = 1;
     }
 
     void set_port_bases(uint16_t spbase, uint16_t dpbase) {
@@ -463,6 +480,35 @@ public:
         return;
     }
 
+    sdk_ret_t create_session_info(uint32_t vpc, uint32_t session_index) {
+        p4pd_error_t p4pd_ret;
+        uint32_t tableid = P4TBL_ID_SESSION;
+        session_actiondata_t actiondata;
+
+        memset(&actiondata, 0, sizeof(session_actiondata_t));
+        actiondata.action_id = SESSION_SESSION_INFO_ID;
+
+        actiondata.action_u.session_session_info.tx_rewrite_flags =
+                 ((TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+                  (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+                  (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+
+        actiondata.action_u.session_session_info.rx_rewrite_flags =
+               ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+                (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
+
+        dump_session_info(vpc, &actiondata);
+
+        p4pd_ret = p4pd_global_entry_write(
+                            tableid, session_index, NULL, NULL, &actiondata);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            SDK_TRACE_ERR("Failed to create session info index %u",
+                          session_index);
+            return SDK_RET_ERR;
+        }
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t v6_addr_sip,
                           ipv6_addr_t v6_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
@@ -556,6 +602,7 @@ public:
                                 return ret;
                             }
                         }
+                        create_session_info(vpc, session_index++);
                         nflows++;
                         if (nflows >= count) {
                             return SDK_RET_OK;
@@ -662,6 +709,8 @@ public:
     }
 
     sdk_ret_t create_flows() {
+        g_fp = fopen("/data/flow_log.log", "w+");
+
         if (cfg_params.valid == false) {
             parse_cfg_json_();
         }
