@@ -1,11 +1,20 @@
 #! /usr/bin/python3
 import json
-import glob
-import iota.harness.api as api
 #import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import time
 import re
 import pdb
+import os
+from scapy.utils import *
+from scapy.utils import rdpcap
+from scapy.utils import wrpcap
+from scapy import packet
+from scapy.all import Ether
+import glob
+import iota.harness.api as api
+
+global uplink_vlan
+uplink_vlan = 0
 
 def GetProtocolDirectory(feature, proto):
     return api.GetTopologyDirectory() + "/gen/telemetry/{}/{}".format(feature, proto)
@@ -67,9 +76,23 @@ def VerifyCmd(cmd, action, feature):
     result = api.types.status.SUCCESS
     if 'tcpdump' in cmd.command:
         if feature == 'mirror':
-            matchObj = re.search( r'(.*) GREv0, length(.*)', cmd.stdout, 0)
-            if matchObj is None:
-                result = api.types.status.FAILURE
+            if 'pcap' in cmd.command:
+                dir_path = os.path.dirname(os.path.realpath(__file__))
+                mirrorscapy = dir_path + '/' + "mirror.pcap"
+                api.Logger.info("File Name: %s" % (mirrorscapy))
+                pkts = rdpcap(mirrorscapy)
+                spanpktsfound = False
+                for pkt in pkts:
+                    if pkt.haslayer('GRE'):
+                       spanpktsfound = True
+                    inner=Ether(pkt['Raw'].load[12:])
+                    if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
+                        result = api.types.status.FAILURE
+                    elif (inner.haslayer('Dot1Q') and inner['Dot1Q'].vlan != uplink_vlan):
+                        result = api.types.status.FAILURE
+                        api.Logger.info("Vlan id: %s" % (inner['Dot1Q'].vlan))
+                if spanpktsfound == False:
+                    result = api.types.status.FAILURE
         elif feature == 'flowmon':
             matchObj = re.search( r'(.*)2055: UDP, length(.*)', cmd.stdout, 0)
             if matchObj is None:
@@ -99,6 +122,8 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
                                    "ping -c1 %s -I %s" % (destination_ip, collector_w.interface))
     if feature == 'mirror':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+                               "tcpdump -c 10 -nnSXi %s ip proto gre -w mirror.pcap" % (collector_w.interface), background=True)
+        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -c 10 -nni %s ip proto gre" % (collector_w.interface), background=True)
     elif feature == 'flowmon':
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
@@ -113,11 +138,15 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
         time.sleep(6)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    if feature == 'mirror':
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        api.CopyFromWorkload(collector_w.node_name, collector_w.workload_name, ['mirror.pcap'], dir_path)
     for cmd in resp.commands:
         result = VerifyCmd(cmd, action, feature)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
             break;
+
     return result
 
 def GetSourceWorkload(verif, tc):
@@ -125,6 +154,9 @@ def GetSourceWorkload(verif, tc):
     sip = verif['src_ip']
     src_wl = None
     for wl in workloads:
+        api.Logger.info("Uplink vlan: {}".format(wl.uplink_vlan))
+        if (wl.uplink_vlan != 0):
+            uplink_vlan = wl.uplink_vlan
         if '/24' in sip or 'any' in sip:
             if verif['dst_ip'] != wl.ip_address:
                 src_wl = wl

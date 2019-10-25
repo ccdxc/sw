@@ -95,8 +95,19 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
             mirror_flowupd.mirror_info.mirror_en = true;
             mirror_flowupd.mirror_info.ing_mirror_session = 0;
+            mirror_flowupd.mirror_info.egr_mirror_session = 0;
             for (int i = 0; i < frule->action.num_mirror_dest; i++) {
-                mirror_flowupd.mirror_info.ing_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+                /*
+                 * We always want to send user-vlan while mirroring.
+                 * so pick the mirroring as ingress or egress depending on the
+                 * flow direction. There is a bit of a cost to do the recirc
+                 * for egress in P4. TBD: Move to user configurable option
+                 */
+                if (ctx.flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
+                    mirror_flowupd.mirror_info.egr_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+                } else {
+                    mirror_flowupd.mirror_info.ing_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+                }
             }
         }
         if (frule->action.num_collector > 0) {

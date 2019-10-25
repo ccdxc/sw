@@ -1119,7 +1119,7 @@ pd_session_delete (pd_func_args_t *pd_func_args)
 
     // del flow hash table entries
     ret = p4pd_del_flow_hash_table_entries(session_pd);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    //SDK_ASSERT(ret == HAL_RET_OK);
 
     session_pd_free(session_pd);
     args->session->pd = NULL;

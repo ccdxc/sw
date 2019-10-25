@@ -26,6 +26,8 @@ def Trigger(tc):
         tc.cmd_cookies.append(cmd_cookie)
 
         api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
+                               "tcpdump -nni %s ether proto arp" % (w2.interface), background=True)
+        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                                "tcpdump -nni %s ip proto gre" % (w2.interface), background=True)
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                                "ping -f -c 50 -s %d %s" % (tc.iterators.pktsize, w2.ip_address))
