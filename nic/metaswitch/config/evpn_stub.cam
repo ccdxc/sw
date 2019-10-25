@@ -62,6 +62,7 @@ BEGIN_SI nodeA_1
      limInterfaceCfgIpv4Forwarding    AMB_TRISTATE_TRUE
      limInterfaceCfgIpv6Enabled       AMB_TRISTATE_TRUE
      limInterfaceCfgIpv6Forwarding    AMB_TRISTATE_TRUE
+     limInterfaceCfgForwardingMode    AMB_LIM_FWD_MODE_L3
     end limInterfaceCfgTable 7
 
     begin limInterfaceCfgTable 8

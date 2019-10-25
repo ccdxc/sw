@@ -155,13 +155,13 @@ dependencies:
     - reference: venice/ui
   nic:
     - reference: iota/test/venice
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
     - reference: iota/test/standalone/sanity/esx
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
     - reference: iota/test/standalone/sanity/freebsd
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
     - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch"]
+      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
   nic/agent:
     - reference: api
     - reference: test/ci_targets/e2e
