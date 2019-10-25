@@ -207,6 +207,11 @@ def Setup(tc):
     tc.skip = False
     result = api.types.status.SUCCESS
 
+    if not api.RunningOnSameSwitch():
+        tc.skip = True
+        api.Logger.error("MC MAC filter : Setup -> Multi switch topology not supported yet - So skipping the TC")
+        return api.types.status.IGNORED
+
     tc.skip, tc.workloads, tc.naples_node = filters_utils.getNaplesNodeandWorkloads()
     if tc.skip:
         api.Logger.error("MC MAC filter : Setup -> No Naples Topology - So skipping the TC")

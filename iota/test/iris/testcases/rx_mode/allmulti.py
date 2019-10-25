@@ -12,6 +12,11 @@ def Setup(tc):
     tc.skip = False
     node_names = api.GetWorkloadNodeHostnames()
 
+    if not api.RunningOnSameSwitch():
+        tc.skip = True
+        api.Logger.error("Rx Mode MC : Setup -> Multi switch topology not supported yet - So skipping the TC")
+        return api.types.status.IGNORED
+
     if  api.IsNaplesNode(node_names[0]):
         tc.naples_node = node_names[0]
         tc.peer_node = node_names[1]

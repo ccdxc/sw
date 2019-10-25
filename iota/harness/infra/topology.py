@@ -136,24 +136,6 @@ class Node(object):
         else:
             Logger.info("Skipping management IP read as no console info %s" % self.__name)
 
-
-    def Switches(self):
-        switch_ips = {}
-        for node_name in self.__nodes:
-            data_networks = self.__nodes[node_name].GetDataNetworks()
-            for nw in data_networks:
-                switch_ctx = switch_ips.get(nw.SwitchIP, None)
-                if not switch_ctx:
-                    switch_ctx = req.data_switches.add()
-                    switch_ips[nw.SwitchIP] = switch_ctx
-                switch_ctx.username = nw.SwitchUsername
-                switch_ctx.password = nw.SwitchPassword
-                switch_ctx.ip = nw.SwitchIP
-                switch_ctx.ports.append(nw.Name)
-        
-        #Just return the switch IPs for now
-        return switch_ips.keys()
-
     def GetNicType(self):
         if getattr(self.__inst, "Resource", None):
             if getattr(self.__inst.Resource, "DataNicType", None):
@@ -420,6 +402,22 @@ class Topology(object):
 
         return types.status.SUCCESS
 
+    def Switches(self):
+        switch_ips = {}
+        req = topo_pb2.SwitchMsg()
+        for node_name in self.__nodes:
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            for nw in data_networks:
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+        #Just return the switch IPs for now
+        return switch_ips.keys()
 
     def FlapDataPorts(self, node_names, num_ports_per_node = 1, down_time = 5,
         flap_count = 1, interval = 5):

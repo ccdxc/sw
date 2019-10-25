@@ -143,6 +143,11 @@ def Setup(tc):
     result = api.types.status.SUCCESS
     global __IS_FREEBSD
 
+    if not api.RunningOnSameSwitch():
+        tc.skip = True
+        api.Logger.error("MTU filter : Setup -> Multi switch topology not supported yet - So skipping the TC")
+        return api.types.status.IGNORED
+
     tc.naples_node, res = naples_host_utils.GetNaplesNodeName()
     if res is False:
         tc.skip = True
