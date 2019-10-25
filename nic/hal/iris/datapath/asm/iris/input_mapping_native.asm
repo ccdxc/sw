@@ -54,6 +54,9 @@ native_ipv4_packet_common:
   or            r1, r1, k.udp_dstPort, 16
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
   phvwr.c1      p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r1
+  seq.!c1       c1, k.ipv4_protocol, IP_PROTO_TCP
+  seq.!c1       c1, k.ipv4_protocol, IP_PROTO_ICMP
+  phvwr.!c1     p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r0
   phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwr.f       p.l4_metadata_tcp_data_len, r7
 
@@ -81,6 +84,9 @@ native_ipv6_packet_common:
   or            r1, r1, k.udp_dstPort, 16
   seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
   phvwr.c1      p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r1
+  seq.!c1       c1, k.l3_metadata_ipv6_ulp, IP_PROTO_TCP
+  seq.!c1       c1, k.l3_metadata_ipv6_ulp, IP_PROTO_ICMPV6
+  phvwr.!c1     p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r0
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr

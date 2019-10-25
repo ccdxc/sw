@@ -108,6 +108,12 @@ action native_ipv4_packet() {
             }
             modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
         }
+        if ((ipv4.protocol != IP_PROTO_TCP) and
+            (ipv4.protocol != IP_PROTO_UDP) and
+            (ipv4.protocol != IP_PROTO_ICMP)) {
+            modify_field(flow_lkp_metadata.lkp_sport, 0);
+            modify_field(flow_lkp_metadata.lkp_dport, 0);
+        }
     }
     set_packet_type(ethernet.dstAddr);
 
@@ -127,13 +133,19 @@ action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (ipv6.payloadLen - (tcp.dataOffset) * 4));
-    if (ipv6.nextHdr == IP_PROTO_UDP) {
+    if (l3_metadata.ipv6_ulp == IP_PROTO_UDP) {
         if (roce_bth.valid == TRUE) {
             modify_field(flow_lkp_metadata.lkp_sport, 0);
         } else {
             modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
         }
         modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
+    }
+    if ((l3_metadata.ipv6_ulp!= IP_PROTO_TCP) and
+        (l3_metadata.ipv6_ulp != IP_PROTO_UDP) and
+        (l3_metadata.ipv6_ulp != IP_PROTO_ICMPV6)) {
+        modify_field(flow_lkp_metadata.lkp_sport, 0);
+        modify_field(flow_lkp_metadata.lkp_dport, 0);
     }
     set_packet_type(ethernet.dstAddr);
 

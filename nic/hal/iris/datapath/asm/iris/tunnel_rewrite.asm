@@ -68,15 +68,15 @@ encap_vxlan:
 
 .align
 encap_vlan:
-  or          r5, r0, k.capri_p4_intrinsic_packet_len
-  add         r1, r5, 4
-  phvwr       p.capri_p4_intrinsic_packet_len, r1
-  phvwr       p.vlan_tag_etherType, k.ethernet_etherType
+  seq         c1, k.vlan_tag_valid, FALSE
+  add         r1, k.capri_p4_intrinsic_packet_len, 4
+  phvwr.c1    p.vlan_tag_valid, 1
+  phvwr.c1    p.vlan_tag_etherType, k.ethernet_etherType
+  phvwr.c1    p.ethernet_etherType, ETHERTYPE_VLAN
+  phvwr.c1    p.capri_p4_intrinsic_packet_len, r1
   phvwr       p.{vlan_tag_dei, vlan_tag_vid}, k.rewrite_metadata_tunnel_vnid[11:0]
-  seq         c7, k.qos_metadata_cos_en, 1
+  seq.e       c7, k.qos_metadata_cos_en, 1
   phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
-  phvwr.e     p.vlan_tag_valid, 1
-  phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align
 encap_mpls_udp:

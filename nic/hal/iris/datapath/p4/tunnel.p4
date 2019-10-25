@@ -185,10 +185,13 @@ table tunnel_decap {
 /* VLAN encap                                                                */
 /*****************************************************************************/
 action f_encap_vlan(vlan_id, ethertype) {
-    add_header(vlan_tag);
-    modify_field(vlan_tag.etherType, ethertype);
+    if (vlan_tag.valid == FALSE) {
+        add_header(vlan_tag);
+        modify_field(vlan_tag.etherType, ethertype);
+        modify_field(ethernet.etherType, ETHERTYPE_VLAN);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
+    }
     modify_field(vlan_tag.vid, vlan_id);
-    modify_field(ethernet.etherType, ETHERTYPE_VLAN);
     if (qos_metadata.cos_en == TRUE) {
         modify_field(vlan_tag.pcp, qos_metadata.cos);
     }
@@ -196,7 +199,6 @@ action f_encap_vlan(vlan_id, ethertype) {
 
 action encap_vlan() {
     f_encap_vlan(rewrite_metadata.tunnel_vnid, ethernet.etherType);
-    add_to_field(capri_p4_intrinsic.packet_len, 4);
 }
 
 /*****************************************************************************/
@@ -237,7 +239,6 @@ action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -283,7 +284,6 @@ action encap_mpls_udp(mac_sa, mac_da, ip_sa, ip_da, ip_type,
 
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -333,7 +333,6 @@ action encap_vxlan_gpe(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_i
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -388,7 +387,6 @@ action encap_genv(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
 
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -441,7 +439,6 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -480,7 +477,6 @@ action encap_gre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -535,7 +531,6 @@ action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) 
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
@@ -565,7 +560,6 @@ action encap_ip(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
-        add_to_field(capri_p4_intrinsic.packet_len, 4);
     } else {
         modify_field(ethernet.etherType, scratch_metadata.ethtype);
     }
