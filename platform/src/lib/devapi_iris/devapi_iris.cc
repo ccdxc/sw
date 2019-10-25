@@ -262,6 +262,63 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::lif_upd_rx_bmode(uint32_t lif_id, bool broadcast)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx mode. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->update_recbcast(broadcast);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_upd_rx_mmode(uint32_t lif_id, bool all_multicast)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx mode. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->update_recallmc(all_multicast);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx mode. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->update_recprom(promiscuous);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_iris::lif_upd_name(uint32_t lif_id, std::string name)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -286,30 +343,6 @@ devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
 {
     return devapi_lif::get_max_filters(ucast_filters, 
                                        mcast_filters);
-}
-
-sdk_ret_t
-devapi_iris::swm_update(bool enable, 
-                        uint32_t port_num, uint32_t vlan, mac_t mac)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-
-    if (enable) {
-        ret = devapi_swm::swm_configure(port_num, vlan, mac);
-        if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("Failed to configure single wire management. err: {}", ret);
-            goto end;
-        }
-    } else {
-        ret = devapi_swm::swm_unconfigure();
-        if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("Failed to unconfigure single wire management. err: {}", ret);
-            goto end;
-        }
-    }
-
-end:
-    return ret;
 }
 
 sdk_ret_t
@@ -695,5 +728,82 @@ end:
     return ret;
 }
 
+sdk_ret_t
+devapi_iris::swm_enable(void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = devapi_swm::swm_initialize(this);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to configure single wire management. err: {}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::swm_disable(void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = devapi_swm::swm_uninitialize();
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to uniinitialize single wire management. err: {}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::swm_set_port(uint32_t port_num)
+{
+    return devapi_swm::swm()->upd_uplink(port_num);
+}
+
+sdk_ret_t 
+devapi_iris::swm_add_mac(mac_t mac) 
+{
+    return devapi_swm::swm()->add_mac(mac);
+}
+
+sdk_ret_t
+devapi_iris::swm_del_mac(mac_t mac)
+{
+    return devapi_swm::swm()->del_mac(mac);
+}
+
+sdk_ret_t 
+devapi_iris::swm_add_vlan(vlan_t vlan) 
+{
+    return devapi_swm::swm()->add_vlan(vlan);
+}
+
+sdk_ret_t
+devapi_iris::swm_del_vlan(vlan_t vlan)
+{
+    return devapi_swm::swm()->del_vlan(vlan);
+}
+
+sdk_ret_t 
+devapi_iris::swm_upd_rx_bmode(bool broadcast)
+{
+    return devapi_swm::swm()->upd_rx_bmode(broadcast);
+}
+
+sdk_ret_t 
+devapi_iris::swm_upd_rx_mmode(bool all_multicast)
+{
+    return devapi_swm::swm()->upd_rx_mmode(all_multicast);
+}
+
+sdk_ret_t 
+devapi_iris::swm_upd_rx_pmode(bool promiscuous)
+{
+    return devapi_swm::swm()->upd_rx_pmode(promiscuous);
+}
 
 }    // namespace iris

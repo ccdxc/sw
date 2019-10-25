@@ -34,6 +34,9 @@ public:
                                            bool vlan_insert) = 0;
     virtual sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                                       bool all_multicast, bool promiscuous) = 0;
+    virtual sdk_ret_t lif_upd_rx_bmode(uint32_t lif_id, bool broadcast) = 0;
+    virtual sdk_ret_t lif_upd_rx_mmode(uint32_t lif_id, bool all_multicast) = 0;
+    virtual sdk_ret_t lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) = 0;
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) = 0;
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) = 0;
     virtual sdk_ret_t lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state) = 0;
@@ -63,10 +66,16 @@ public:
     }
 
     // single wire management APIs
-    virtual sdk_ret_t swm_update(bool enable, 
-                                 uint32_t port_num, /* Uplink port number */ 
-                                 uint32_t vlan, /* 0: untag */
-                                 mac_t mac) = 0;
+    virtual sdk_ret_t swm_enable(void) = 0;
+    virtual sdk_ret_t swm_disable(void) = 0;
+    virtual sdk_ret_t swm_set_port(uint32_t port_num) = 0;
+    virtual sdk_ret_t swm_add_mac(mac_t mac) = 0;
+    virtual sdk_ret_t swm_del_mac(mac_t mac) = 0;
+    virtual sdk_ret_t swm_add_vlan(vlan_t vlan) = 0;
+    virtual sdk_ret_t swm_del_vlan(vlan_t vlan) = 0;
+    virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast) = 0;
+    virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast) = 0;
+    virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous) = 0;
 
     // accel APIs
     virtual sdk_ret_t accel_rgroup_add(string name,

@@ -53,7 +53,7 @@ public:
     static devapi_l2seg *lookup(devapi_vrf *vrf, vlan_t vlan);
 
     sdk_ret_t add_uplink(devapi_uplink *uplink);
-    sdk_ret_t del_uplink(devapi_uplink *uplink);
+    sdk_ret_t del_uplink(devapi_uplink *uplink, bool trigger_hal_update = true);
     sdk_ret_t add_enic(devapi_enic *enic);
     sdk_ret_t del_enic(devapi_enic *enic);
 

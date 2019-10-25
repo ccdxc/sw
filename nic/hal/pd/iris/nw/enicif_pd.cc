@@ -205,11 +205,14 @@ pd_enicif_get (pd_if_get_args_t *args)
         classic_enic_info->set_inp_prop_nat_l2seg_classic(enicif_pd->inp_prop_native_l2seg_clsc);
         dllist_for_each(lnode, &(hal_if->l2seg_list_clsc_head)) {
             entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-            auto member_info = classic_enic_info->add_membership_info();
             pd_if_l2seg_entry_t *pd_entry = (pd_if_l2seg_entry_t *)(entry->pd);
+            auto member_info = classic_enic_info->add_membership_info();
 
             member_info->mutable_l2segment_key_or_handle()->set_l2segment_handle(entry->l2seg_handle);
-            member_info->set_inp_prop_idx(pd_entry->inp_prop_idx);
+            // For SWM enic, we wont be having pd entries
+            if (pd_entry != NULL) {
+                member_info->set_inp_prop_idx(pd_entry->inp_prop_idx);
+            }
         }
     }
 
@@ -912,6 +915,11 @@ is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
     if_native_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
     if (if_native_l2seg) {
         if (if_native_l2seg->seg_id == l2seg->seg_id) {
+#if 0
+        if (if_native_l2seg->seg_id == l2seg->seg_id ||
+            (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q &&
+             l2seg->wire_encap.val == NATIVE_VLAN_ID)) {
+#endif
             is_native = true;
         }
     }
@@ -1103,6 +1111,11 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     bool                                    direct_to_otcam = false;
     // bool                                    vlan_insert_en = false;
     bool                                    key_changed = false;
+
+    if (enicif_is_swm(hal_if)) {
+        HAL_TRACE_DEBUG("Skipping for swm enicif");
+        return ret;
+    }
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1636,6 +1649,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
     bool                        set_drop            = false;
     bool                        egress_en           = false;
+    bool                        encap_vlan_id_valid = false;
     vlan_id_t                   encap_vlan          = 0;
 
     memset(&data, 0, sizeof(data));
@@ -1674,8 +1688,19 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     if_enicif_get_native_l2seg_clsc_vlan((if_t *)pd_enicif->pi_if,
                                          &access_vlan_classic);
 
-    tm_oport = TM_PORT_DMA;
-    p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    if (lif && lif->type == types::LIF_TYPE_SWM) {
+        // Get tm_oprt of OOB of swm's lif
+        if_t *oob_if = find_if_by_handle(lif->oob_uplink);
+        tm_oport = oob_if->uplink_port_num;
+        p4plus_app_id = P4PLUS_APPTYPE_DEFAULT;
+        access_vlan_classic = 0;
+        encap_vlan = 0;
+        encap_vlan_id_valid = false;
+    } else {
+        tm_oport = TM_PORT_DMA;
+        p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+        encap_vlan_id_valid = true;
+    }
 
 
     // Enable it once DOL pushes filters
@@ -1704,7 +1729,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             om_tmoport_enforce.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
             om_tmoport_enforce.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
                                                                           pd_lif->pi_lif) : false;
-            om_tmoport_enforce.encap_vlan_id_valid = 1;
+            om_tmoport_enforce.encap_vlan_id_valid = encap_vlan_id_valid;
             om_tmoport_enforce.encap_vlan_id       = encap_vlan;
             om_tmoport_enforce.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
                                                                                pd_lif->pi_lif,
@@ -1719,7 +1744,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
             om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
                                                                           pd_lif->pi_lif) : false;
-            om_tmoport.encap_vlan_id_valid = 1;
+            om_tmoport.encap_vlan_id_valid = encap_vlan_id_valid;
             om_tmoport.encap_vlan_id       = encap_vlan;
             om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
                                                                                pd_lif->pi_lif,

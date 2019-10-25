@@ -15,6 +15,7 @@ private:
     uint32_t port_num_;           // uplinks port number
     uint32_t num_lifs_;           // # of lifs pinned to this uplink
     bool is_oob_;                 // Out of Band mgmt. uplink
+    uint32_t lif_id_;             // lif id of uplink. populated only for oob
     InterfaceSpec if_spec_;       // Interface spec for HAL
     devapi_vrf *vrf_;             // Vrf on the uplink. Appl. in classic.
     devapi_l2seg *native_l2seg_;  // Native L2seg
@@ -24,6 +25,7 @@ private:
 
 private:
     sdk_ret_t init_(uplink_id_t id, uint32_t port_num, bool is_oob = false);
+    sdk_ret_t populate_lif_(uplink_id_t id);
     devapi_uplink() {}
     ~devapi_uplink() {}
 
@@ -45,6 +47,7 @@ public:
     uint32_t get_num_lifs(void);
     devapi_vrf *get_vrf(void);
     devapi_l2seg *get_native_l2seg(void);
+    uint32_t get_lif_id(void);
 
     void set_port_num(uint32_t port_num);
     void set_native_l2seg(devapi_l2seg *l2seg);

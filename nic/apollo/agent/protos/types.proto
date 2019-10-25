@@ -224,6 +224,7 @@ enum LifType {
   LIF_TYPE_MNIC_INTERNAL_MANAGEMENT = 4;
   LIF_TYPE_MNIC_INBAND_MANAGEMENT   = 5;
   LIF_TYPE_MNIC_CPU                 = 6;
+  LIF_TYPE_SWM                      = 7;
 }
 
 // BatchCtxt is opaque to application(s) and is expected to be passed

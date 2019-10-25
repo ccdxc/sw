@@ -40,7 +40,8 @@ typedef enum lif_type_e {
     LIF_TYPE_MNIC_OOB_MGMT,
     LIF_TYPE_MNIC_INTERNAL_MGMT,
     LIF_TYPE_MNIC_INBAND_MGMT,
-    LIF_TYPE_MNIC_CPU
+    LIF_TYPE_MNIC_CPU,
+    LIF_TYPE_SWM
 } lif_type_t;
 
 typedef enum lif_state {

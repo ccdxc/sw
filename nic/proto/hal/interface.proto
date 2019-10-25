@@ -155,6 +155,7 @@ message LifSpec {
   uint32                     nvme_max_ns                 = 25;   // NVME: maximum number of namespaces
   uint32                     nvme_max_sess               = 26;   // NVME: maximum number of sessions
   uint32                     nvme_host_page_size         = 27;   // NVME: host page size, must be power of 2
+  kh.InterfaceKeyHandle      swm_oob                     = 28;   // SWM: Uplink to reach BMC
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

@@ -506,7 +506,7 @@ DeviceManager::HalEventHandler(bool status)
         init_done = true;
 
         // Setup swm on native vlan
-        // dev_api->swm_update(true, 1, 0, 0x00AECD0005CF);
+        // swm_update(true, 1, 10, 0x00AECD00113F);
     }
 
     // Bringup OOB first
@@ -554,7 +554,10 @@ void
 DeviceManager::swm_update(bool enable,
                           uint32_t port_num, uint32_t vlan, mac_t mac)
 {
-    dev_api->swm_update(enable, port_num, vlan, mac);
+    dev_api->swm_enable();
+    dev_api->swm_set_port(port_num);
+    dev_api->swm_add_mac(mac);
+    dev_api->swm_add_vlan(vlan);
 }
 
 void

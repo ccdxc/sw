@@ -59,9 +59,6 @@ private:
 
     sdk_ret_t update_vlanstrip(bool vlan_strip_en);
     sdk_ret_t update_vlanins(bool vlan_insert_en);
-    sdk_ret_t update_recbcast(bool receive_broadcast);
-    sdk_ret_t update_recallmc(bool receive_all_multicast);
-    sdk_ret_t update_recprom(bool receive_promiscuous);
 
 public:
     static devapi_lif *factory(lif_info_t *info);
@@ -80,6 +77,9 @@ public:
     sdk_ret_t upd_vlanoff(bool vlan_strip, bool vlan_insert);
     sdk_ret_t upd_rxmode(bool broadcast, bool all_multicast,
                          bool promiscuous);
+    sdk_ret_t update_recbcast(bool receive_broadcast);
+    sdk_ret_t update_recallmc(bool receive_all_multicast);
+    sdk_ret_t update_recprom(bool receive_promiscuous);
 
     sdk_ret_t upd_name(std::string name);
     sdk_ret_t reset(void);
@@ -101,6 +101,7 @@ public:
     lif_info_t *get_lifinfo(void);
     static devapi_lif *lookup(uint32_t lif_id);
     static devapi_lif *get_intmgmt_lif(void) { return devapi_lif::internal_mgmt_ethlif; }
+    bool is_swm(void);
 
     // Set APIs
     void set_enic(devapi_enic *enic);

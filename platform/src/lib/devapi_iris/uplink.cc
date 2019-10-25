@@ -63,6 +63,11 @@ devapi_uplink::init_(uplink_id_t id, uint32_t port_num, bool is_oob)
     vrf_          = NULL;
     native_l2seg_ = NULL;
 
+    if (is_oob) {
+        // Get lif for oob to be used in SWM
+        populate_lif_(id);
+    }
+
     return SDK_RET_OK;
 }
 
@@ -79,6 +84,35 @@ devapi_uplink::destroy(devapi_uplink *uplink)
 
     uplink->~devapi_uplink();
     DEVAPI_FREE(DEVAPI_MEM_ALLOC_UPLINK, uplink);
+}
+
+sdk_ret_t
+devapi_uplink::populate_lif_(uplink_id_t id)
+{
+    sdk_ret_t                 ret = SDK_RET_OK;
+    grpc::Status              status;
+    InterfaceGetRequest       *req __attribute__((unused));
+    InterfaceGetResponse      rsp;
+    InterfaceGetRequestMsg    req_msg;
+    InterfaceGetResponseMsg   rsp_msg;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_interface_id(id_);
+    VERIFY_HAL();
+    status = hal->interface_get(req_msg, rsp_msg);
+    if (status.ok()) {
+        SDK_ASSERT(rsp_msg.response().size() == 1);
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            if (rsp.spec().type() == intf::IF_TYPE_UPLINK) {
+                lif_id_ = rsp.status().uplink_info().hw_lif_id();
+            }
+        }
+    }
+
+end:
+    NIC_LOG_DEBUG("oob uplink's lif: {}", lif_id_);
+    return ret;
 }
 
 devapi_uplink *
@@ -252,6 +286,12 @@ devapi_l2seg *
 devapi_uplink::get_native_l2seg(void)
 {
     return native_l2seg_;
+}
+
+uint32_t 
+devapi_uplink::get_lif_id(void)
+{
+    return lif_id_;
 }
 
 bool

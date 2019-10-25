@@ -4661,6 +4661,13 @@ end:
     return ret;
 }
 
+bool
+enicif_is_swm (if_t *hal_if)
+{
+    lif_t *lif = find_lif_by_handle(hal_if->lif_handle);
+    return (lif && lif->type == types::LIF_TYPE_SWM);
+}
+
 hal_ret_t
 enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
                                              dllist_ctxt_t *l2seg_list,

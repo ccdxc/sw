@@ -104,8 +104,10 @@ devapi_enic::enic_halcreate(void)
     req->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     req->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
     req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_->get_id());
-    req->mutable_if_enic_info()->mutable_classic_enic_info()->
-        set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+    if (lif_->get_nativel2seg()) {
+        req->mutable_if_enic_info()->mutable_classic_enic_info()->
+            set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+    }
 
     VERIFY_HAL();
     status = hal->interface_create(req_msg, rsp_msg);
@@ -264,6 +266,13 @@ devapi_enic::add_vlan(vlan_t vlan)
             // Cleaning up
             del_vlan(vlan, true /* skip_hal */);
         }
+    } else {
+#if 0
+        // vlan is NATIVE_VLAN_ID. for SWM Lif we may have to retrigger native l2seg change
+        if (lif_->is_swm()) {
+            ret = trigger_halupdate();
+        }
+#endif
     }
 
 end:

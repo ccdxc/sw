@@ -2185,6 +2185,19 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                                            false, true,
                                            true, true, update_prom);
             }
+        } else {
+            // No change in swm but we have to handle change in oiflist. 
+            // - SWM's uplink change
+            // TODO
+            if (l2seg_clone->single_wire_mgmt) {
+                update_prom = l2seg_is_oob_mgmt(l2seg_clone) ? true : false;
+                ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, 
+                                           true, true,
+                                           true, true, update_prom);
+                ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, 
+                                           false, true,
+                                           true, true, update_prom);
+            }
         }
     }
 

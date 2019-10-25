@@ -31,6 +31,10 @@ public:
     sdk_ret_t lif_upd_vlan_offload(uint32_t lif_id, bool vlan_strip, bool vlan_insert);
     sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                               bool all_multicast, bool promiscuous);
+    sdk_ret_t lif_upd_rx_bmode(uint32_t lif_id, bool broadcast);
+    sdk_ret_t lif_upd_rx_mmode(uint32_t lif_id, bool all_multicast);
+    sdk_ret_t lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous);
+
     sdk_ret_t lif_upd_name(uint32_t lif_id, std::string name);
     sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, 
                                   uint32_t *mcast_filters);
@@ -50,11 +54,17 @@ public:
     // Generic APIs
     sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
 
-    // single wire management APIs
-    sdk_ret_t swm_update(bool enable, 
-                         uint32_t port_num, /* Uplink port number */ 
-                         uint32_t vlan, /* 0: untag */
-                         mac_t mac);
+    // Single Wire Management(SWM) APIs
+    sdk_ret_t swm_enable(void);
+    sdk_ret_t swm_disable(void);
+    sdk_ret_t swm_set_port(uint32_t port_num);
+    sdk_ret_t swm_add_mac(mac_t mac);
+    sdk_ret_t swm_del_mac(mac_t mac);
+    sdk_ret_t swm_add_vlan(vlan_t vlan);
+    sdk_ret_t swm_del_vlan(vlan_t vlan);
+    sdk_ret_t swm_upd_rx_bmode(bool broadcast);
+    sdk_ret_t swm_upd_rx_mmode(bool all_multicast);
+    sdk_ret_t swm_upd_rx_pmode(bool promiscuous);
 
     // Port APIs
     sdk_ret_t port_get_status(uint32_t port_num,

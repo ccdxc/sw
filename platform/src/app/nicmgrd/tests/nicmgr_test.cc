@@ -479,6 +479,33 @@ TEST_F(nicmgr_test, test3)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
 
+    devapi *dev_api = devmgr->DevApi();
+    // Enable SWM
+    dev_api->swm_enable();
+    // Add Uplink
+    dev_api->swm_set_port(1);
+    // Add Mac
+    dev_api->swm_add_mac(0x000000010001);
+    // Add Untagged Vlan
+    dev_api->swm_add_vlan(0);
+    // Remove BC 
+    dev_api->swm_upd_rx_bmode(false);
+    // Remove ALL_MC 
+    dev_api->swm_upd_rx_mmode(false);
+    // Add to BC 
+    dev_api->swm_upd_rx_bmode(true);
+    // Add to ALL_MC 
+    dev_api->swm_upd_rx_mmode(true);
+    // Add a new vlan
+    dev_api->swm_add_vlan(10);
+    // Del vlan
+    dev_api->swm_del_vlan(10);
+    // Disable SWM
+    dev_api->swm_disable();
+
+    
+
+#if 0
     // Enable swm
     devmgr->swm_update(true, 1, 0, 0);
 
@@ -487,6 +514,7 @@ TEST_F(nicmgr_test, test3)
 
     // Disable swm
     devmgr->swm_update(false, 0, 0, 0);
+#endif
 }
 
 int main(int argc, char **argv) {

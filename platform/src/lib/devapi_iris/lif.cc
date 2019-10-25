@@ -105,11 +105,17 @@ devapi_lif::factory(lif_info_t *info)
             lif->set_nativel2seg(native_l2seg);
         }
     } else {
+#if 0
+        // Skip native vlan for SWM lif
+        if (lif->get_uplink()->get_num_lifs() == 1 &&
+            info->type != sdk::platform::LIF_TYPE_SWM)
+#endif
         if (lif->get_uplink()->get_num_lifs() == 1) {
 
-            NIC_LOG_INFO("First lif id: {},on uplink {}",
+            NIC_LOG_INFO("First lif id: {},on uplink {}, vrf: {}",
                          lif->get_id(),
-                         lif->get_uplink()->get_id());
+                         lif->get_uplink()->get_id(),
+                         lif->get_uplink()->get_vrf()->get_id());
 
             // Create native l2seg to hal
             native_l2seg = devapi_l2seg::lookup(lif->get_uplink()->get_vrf(),
@@ -137,6 +143,8 @@ devapi_lif::factory(lif_info_t *info)
 
                 // Update l2seg's mbrifs on uplink
                 // native_l2seg->Adddevapi_uplink(lif->get_uplink());
+            } else {
+                NIC_LOG_INFO("Native l2seg: {}", native_l2seg->get_id());
             }
         }
     }
@@ -150,7 +158,6 @@ devapi_lif::factory(lif_info_t *info)
     }
     lif->set_enic(enic);
 
-    // Add Vlan filter on devapi_lif
     lif->add_vlan(NATIVE_VLAN_ID);
 
     // No need as we are not supporting filters
@@ -263,7 +270,11 @@ devapi_lif::destroy(devapi_lif *lif)
                 lif->set_vrf(NULL);
             }
         } else {
-
+            /*
+             * SWM check is for l2seg for OOB to not get deleted when OOB lif 
+             * is being removed.
+             * It will be deleted from swm.cc
+             */
             if (lif->get_uplink() && (lif->get_uplink()->get_num_lifs() == 0) &&
                 (!(lif->get_uplink()->get_native_l2seg() &&
                  lif->get_uplink()->get_native_l2seg()->is_single_wire_mgmt()))) {
@@ -1016,7 +1027,11 @@ devapi_lif::remove_vlanfilters(bool skip_native_vlan)
 
     for (auto it = vlan_table_.begin(); it != vlan_table_.end();) {
         vlan = *it;
-        if (skip_native_vlan && vlan == NATIVE_VLAN_ID) {
+#if 0
+        if (skip_native_vlan && (vlan == NATIVE_VLAN_ID &&
+                                 info_.type != sdk::platform::LIF_TYPE_SWM)) 
+#endif
+        if (skip_native_vlan && (vlan == NATIVE_VLAN_ID)) {
             it++;
             continue;
         }
@@ -1210,13 +1225,22 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
     req->set_enable_rdma(lif_info->enable_rdma);
 
+    if (lif_info->type == sdk::platform::LIF_TYPE_SWM) {
+        req->mutable_swm_oob()->
+            set_interface_id(devapi_uplink::get_oob_uplink()->get_id());
+    }
+
     if (lif_info->rx_limit_bytes) {
-        req->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(lif_info->rx_limit_bytes);
-        req->mutable_rx_policer()->mutable_bps_policer()->set_burst_bytes(lif_info->rx_burst_bytes);
+        req->mutable_rx_policer()->mutable_bps_policer()->
+            set_bytes_per_sec(lif_info->rx_limit_bytes);
+        req->mutable_rx_policer()->mutable_bps_policer()->
+            set_burst_bytes(lif_info->rx_burst_bytes);
     }
     if (lif_info->tx_limit_bytes) {
-        req->mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(lif_info->tx_limit_bytes);
-        req->mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(lif_info->tx_burst_bytes);
+        req->mutable_tx_policer()->mutable_bps_policer()->
+            set_bytes_per_sec(lif_info->tx_limit_bytes);
+        req->mutable_tx_policer()->mutable_bps_policer()->
+            set_burst_bytes(lif_info->tx_burst_bytes);
 
     }
 
@@ -1350,6 +1374,12 @@ devapi_lif::is_classicfwd(vlan_t vlan)
         return true;
     }
     return false;
+}
+
+bool
+devapi_lif::is_swm(void)
+{
+    return (info_.type == sdk::platform::LIF_TYPE_SWM);
 }
 
 }    // namespce iris

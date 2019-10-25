@@ -634,65 +634,71 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("{}:create add cb {}",
                     __FUNCTION__, lif->lif_id);
 
-    /*
-     * Who creates LIFs:
-     * 1. DOL
-     *   - Qstate programming has to be done in HAL.qstate_pgm_in_hal:true
-     * 2. NIC Mgr (In HW & HAPs)
-     *    NIC Mgr allocates hw_lif_id and does qstate programming.
-     *    Only for those lifs, qstate_pgm_in_hal:false.
-     * 3. HAL
-     *    Service LIFs & CPU LIF are created inside HAL, so qsate programmins
-     *    is also done in HAL. qstate_pgm_in_hal:true
-     *    Service LIFs are reserved during init
-     */
-    // allocate a hw lif id
-    if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
-        hw_lif_id = lif_hal_info->hw_lif_id;
-        // Check that only service lifs are already allocated
-        if (hw_lif_id >= HAL_LIF_CPU && hw_lif_id <= HAL_LIF_ID_SVC_LIF_MAX) {
-            lif->qstate_pgm_in_hal = true;
-        } else {
-            // Nicmgr LIFs
-            sret = lif_manager()->reserve_id(hw_lif_id, 1);
-            if (sret != SDK_RET_OK) {
-                HAL_TRACE_ERR("Failed to mark lif allocated, info hw_lif_id : {} "
-                              "hw_lif_id: {}", lif_hal_info->hw_lif_id, hw_lif_id);
-                ret = HAL_RET_ERR;
-                goto end;
-            }
-        }
-        memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
-        dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
-    } else {
-        // DOL
-        sret = lif_manager()->alloc_id(&hw_lif_id, 1);
-        if (sret != SDK_RET_OK) {
-            HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
-            ret = HAL_RET_NO_RESOURCE;
-            goto end;
-        }
-        lif->qstate_pgm_in_hal = true;
+    // For SWM lif, no need of qstate
+    if (lif->type == types::LIF_TYPE_SWM) {
         lif_info.with_hw_lif_id = 1;
-        lif_info.hw_lif_id = hw_lif_id;
-    }
-    app_ctxt->hw_lif_id = hw_lif_id;
-
-    if (spec->lif_qstate_map_size()) {
-        // init queue state map
-        ret = lif_qstate_map_init(*spec, hw_lif_id, lif, dont_zero_qstate_mem);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-        if (spec->lif_qstate_size()) {
-            // init queues
-            ret = lif_qstate_init(*spec, hw_lif_id, lif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to do lif qstate: ret: {}", ret);
+        lif_info.hw_lif_id = lif_hal_info->hw_lif_id;
+    } else {
+        /*
+         * Who creates LIFs:
+         * 1. DOL
+         *   - Qstate programming has to be done in HAL.qstate_pgm_in_hal:true
+         * 2. NIC Mgr (In HW & HAPs)
+         *    NIC Mgr allocates hw_lif_id and does qstate programming.
+         *    Only for those lifs, qstate_pgm_in_hal:false.
+         * 3. HAL
+         *    Service LIFs & CPU LIF are created inside HAL, so qsate programmins
+         *    is also done in HAL. qstate_pgm_in_hal:true
+         *    Service LIFs are reserved during init
+         */
+        // allocate a hw lif id
+        if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
+            hw_lif_id = lif_hal_info->hw_lif_id;
+            // Check that only service lifs are already allocated
+            if (hw_lif_id >= HAL_LIF_CPU && hw_lif_id <= HAL_LIF_ID_SVC_LIF_MAX) {
+                lif->qstate_pgm_in_hal = true;
+            } else {
+                // Nicmgr LIFs
+                sret = lif_manager()->reserve_id(hw_lif_id, 1);
+                if (sret != SDK_RET_OK) {
+                    HAL_TRACE_ERR("Failed to mark lif allocated, info hw_lif_id : {} "
+                                  "hw_lif_id: {}", lif_hal_info->hw_lif_id, hw_lif_id);
+                    ret = HAL_RET_ERR;
+                    goto end;
+                }
+            }
+            memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
+            dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
+        } else {
+            // DOL
+            sret = lif_manager()->alloc_id(&hw_lif_id, 1);
+            if (sret != SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
+                ret = HAL_RET_NO_RESOURCE;
                 goto end;
             }
+            lif->qstate_pgm_in_hal = true;
+            lif_info.with_hw_lif_id = 1;
+            lif_info.hw_lif_id = hw_lif_id;
         }
-        lif->qstate_init_done = true;
+        app_ctxt->hw_lif_id = hw_lif_id;
+
+        if (spec->lif_qstate_map_size()) {
+            // init queue state map
+            ret = lif_qstate_map_init(*spec, hw_lif_id, lif, dont_zero_qstate_mem);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            if (spec->lif_qstate_size()) {
+                // init queues
+                ret = lif_qstate_init(*spec, hw_lif_id, lif);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Failed to do lif qstate: ret: {}", ret);
+                    goto end;
+                }
+            }
+            lif->qstate_init_done = true;
+        }
     }
 
     // create the lif now
@@ -927,6 +933,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         return HAL_RET_OOM;
     }
     auto uplink_if = if_lookup_key_or_handle(spec.pinned_uplink_if_key_handle());
+    auto oob_uplink_if = if_lookup_key_or_handle(spec.swm_oob());
 
     // consume the config
     lif->lif_id              = spec.key_or_handle().lif_id();
@@ -942,6 +949,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->vlan_insert_en      = spec.vlan_insert_en();
     lif->is_management       = spec.is_management();
     lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle :
+                               HAL_HANDLE_INVALID;
+    lif->oob_uplink          = oob_uplink_if ? oob_uplink_if->hal_handle :
                                HAL_HANDLE_INVALID;
     lif->packet_filters.receive_broadcast = spec.packet_filter().
                                             receive_broadcast();
@@ -983,42 +992,44 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         lif->qos_info.tx_qos_class_handle = qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID;
     }
 
-    // cosA of a LIF will always be the ADMIN-COS.
-    pd_func_args.pd_qos_class_get_admin_cos = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
-                      __FUNCTION__, lif->lif_id, ret);
-    }
-
-    // Fetch cos for control-qos-class
-    if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {
-        q_args.qos_class= control_qos_class;
-        q_args.dest_if = uplink_if;
-        q_args.qos_class_id = &control_cos;
-        pd_func_args.pd_qos_class_get_qos_class_id = &q_args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, &pd_func_args);
+    if (lif->type != types::LIF_TYPE_SWM) {
+        // cosA of a LIF will always be the ADMIN-COS.
+        pd_func_args.pd_qos_class_get_admin_cos = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, &pd_func_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
-                          "{} ret {}",
-                          control_qos_class->key, ret);
-            return ret;
+            HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
+                            __FUNCTION__, lif->lif_id, ret);
         }
-    } else {
-        HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch control cos of lif {}, err : {}",
-                      __FUNCTION__, lif->lif_id, ret);
-    }
 
-    cosA = args.cos;
+        // Fetch cos for control-qos-class
+        if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {
+            q_args.qos_class= control_qos_class;
+            q_args.dest_if = uplink_if;
+            q_args.qos_class_id = &control_cos;
+            pd_func_args.pd_qos_class_get_qos_class_id = &q_args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, &pd_func_args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
+                              "{} ret {}",
+                              control_qos_class->key, ret);
+                return ret;
+            }
+        } else {
+            HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch control cos of lif {}, err : {}",
+                            __FUNCTION__, lif->lif_id, ret);
+        }
 
-    HAL_TRACE_DEBUG("cosA: {}, cosB: {}, control_cos: {}", cosA, cosB, control_cos);
+        cosA = args.cos;
 
-    lif->qos_info.cos_bmp =  0xffff; //Burn scheduler bit for all coses for each (lif,queue).
-    lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
+        HAL_TRACE_DEBUG("cosA: {}, cosB: {}, control_cos: {}", cosA, cosB, control_cos);
 
-    if (spec.has_rx_qos_class()) {
-        qos_class = find_qos_class_by_key_handle(spec.rx_qos_class());
-        lif->qos_info.rx_qos_class_handle = qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID;
+        lif->qos_info.cos_bmp =  0xffff; //Burn scheduler bit for all coses for each (lif,queue).
+        lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
+
+        if (spec.has_rx_qos_class()) {
+            qos_class = find_qos_class_by_key_handle(spec.rx_qos_class());
+            lif->qos_info.rx_qos_class_handle = qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID;
+        }
     }
 
     // allocate hal handle id

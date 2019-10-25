@@ -13,6 +13,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 
 namespace hal {
 namespace pd {
@@ -404,6 +405,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
     hal_ret_t ret;
     uint8_t is_tagged;
     uint16_t vlan_id;
+    vrf_t *vrf = NULL;
 
     // pi_if is supposed to be a pinned if. In smart switch mode, there may not
     // be a pinned interface for enic.
@@ -455,6 +457,20 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
             switch (pi_l2seg->wire_encap.type) {
                 case types::encapType ::ENCAP_TYPE_NONE:
                 case types::encapType ::ENCAP_TYPE_DOT1Q: {
+#if 0
+                    /*
+                     * Traffic BMC => Uplink
+                     * - No-op of rewrites.
+                     */
+                    vrf = vrf_lookup_by_handle(pi_l2seg->vrf_handle);
+                    if (l2seg_is_oob_mgmt(pi_l2seg) && 
+                        !vrf_if_is_designated_uplink(vrf, pi_if)) {
+                        data->is_qid = 0;
+                        data->rewrite_index = 0;
+                        data->tunnel_rewrite_index = 0;
+                        break;
+                    }
+#endif
 
                     ret = if_l2seg_get_encap(pi_if, pi_l2seg, &is_tagged,
                                              &vlan_id);

@@ -205,9 +205,10 @@ end:
 hal_ret_t
 lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
 {
+    sdk_ret_t           sdk_ret;
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
-    sdk_ret_t sdk_ret;
+    lif_t                *lif = (lif_t *)pd_lif->pi_lif;
 
 
 #if 0
@@ -243,18 +244,20 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
-
-    asicpd_scheduler_lif_params_t apd_lif;
-    pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
-    //Allocate tx scheduler resource for this lif if qstate-map init is done.
-    if (args->lif->qstate_init_done) {
-       sdk_ret = asicpd_tx_scheduler_map_alloc(&apd_lif);
-       ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-       if (ret != HAL_RET_OK) {
-            goto end;
-       }
-       // Copy scheduler-info back to pd_lif.
-       pd_lif_copy_asicpd_sched_params(pd_lif, &apd_lif);
+    
+    if (lif->type != types::LIF_TYPE_SWM) { 
+        asicpd_scheduler_lif_params_t apd_lif;
+        pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
+        //Allocate tx scheduler resource for this lif if qstate-map init is done.
+        if (args->lif->qstate_init_done) {
+            sdk_ret = asicpd_tx_scheduler_map_alloc(&apd_lif);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            // Copy scheduler-info back to pd_lif.
+            pd_lif_copy_asicpd_sched_params(pd_lif, &apd_lif);
+        }
     }
 
 end:
@@ -378,10 +381,14 @@ lif_pd_init (pd_lif_t *lif)
 hal_ret_t
 lif_pd_program_hw (pd_lif_t *pd_lif)
 {
-    hal_ret_t            ret;
+    hal_ret_t            ret = HAL_RET_OK;
     lif_t                *lif = (lif_t *)pd_lif->pi_lif;
     sdk_ret_t sdk_ret;
 
+
+    if (lif->type == types::LIF_TYPE_SWM) {
+        goto end;
+    }
 
     // Program the rx-policer.
     ret = lif_pd_rx_policer_program_hw(pd_lif, false);
@@ -444,9 +451,14 @@ end:
 hal_ret_t
 lif_pd_deprogram_hw (pd_lif_t *pd_lif)
 {
-    hal_ret_t            ret = HAL_RET_OK;
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    lif_t                           *lif = (lif_t *)pd_lif->pi_lif;
     asicpd_scheduler_lif_params_t   apd_lif;
-    sdk_ret_t sdk_ret;
+
+    if (lif->type == types::LIF_TYPE_SWM) {
+        goto end;
+    }
 
     pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
     // Deprogram output mapping table

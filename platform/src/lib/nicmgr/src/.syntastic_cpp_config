@@ -38,4 +38,5 @@
 -I ../../../../../nic/sdk/platform/devapi
 -I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/include
 -I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/include
+-D__FNAME__
 -std=c++11

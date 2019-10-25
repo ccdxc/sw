@@ -49,6 +49,15 @@ devapi_l2seg::factory(devapi_vrf *vrf, vlan_t vlan)
         if (ret != SDK_RET_OK) {
             goto end;
         }
+#if 0
+        // if vlan is native, add l2seg as native to uplink and push uplink
+        if (l2seg->get_vlan() == NATIVE_VLAN_ID) {
+            if (l2seg->get_vrf()->get_uplink()) {
+                l2seg->get_vrf()->get_uplink()->set_native_l2seg(l2seg);
+                l2seg->get_vrf()->get_uplink()->update_hal_native_l2seg(l2seg->get_id());
+            }
+        }
+#endif
     }
 
     // Store in DB
@@ -69,6 +78,15 @@ devapi_l2seg::destroy(devapi_l2seg *l2seg)
     l2seg_key_t key(l2seg->get_vrf()->get_id(), l2seg->get_vlan());
 
     api_trace("l2seg delete");
+
+#if 0
+    if (l2seg->get_vlan() == NATIVE_VLAN_ID) {
+        if (l2seg->get_vrf()->get_uplink()) {
+            l2seg->get_vrf()->get_uplink()->update_hal_native_l2seg(0);
+            l2seg->get_vrf()->get_uplink()->set_native_l2seg(NULL);
+        }
+    }
+#endif
 
     // remove from hal
     l2seg->l2seg_haldelete();
@@ -292,13 +310,15 @@ devapi_l2seg::add_uplink(devapi_uplink *uplink)
 
     // Sends update to Hal
     return trigger_halupdate();
+
+    return SDK_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
 // Deletes uplink to l2segment
 //-----------------------------------------------------------------------------
 sdk_ret_t
-devapi_l2seg::del_uplink(devapi_uplink *uplink)
+devapi_l2seg::del_uplink(devapi_uplink *uplink, bool trigger_hal_update)
 {
     // Check for the presence of uplink
     if (uplink_refs_.find(uplink->get_id()) == uplink_refs_.end()) {
@@ -309,8 +329,12 @@ devapi_l2seg::del_uplink(devapi_uplink *uplink)
     // Del uplink from the map
     uplink_refs_.erase(uplink->get_id());
 
-    // Sends update to Hal
-    return trigger_halupdate();
+    if (trigger_hal_update) {
+        // Sends update to Hal
+        return trigger_halupdate();
+    }
+
+    return SDK_RET_OK;
 }
 
 //-----------------------------------------------------------------------------

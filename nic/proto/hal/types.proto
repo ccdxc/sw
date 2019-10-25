@@ -243,6 +243,8 @@ enum LifType {
   LIF_TYPE_MNIC_OOB_MANAGEMENT      = 3;
   LIF_TYPE_MNIC_INTERNAL_MANAGEMENT = 4;
   LIF_TYPE_MNIC_INBAND_MANAGEMENT   = 5;
+  LIF_TYPE_MNIC_CPU                 = 6;
+  LIF_TYPE_SWM                      = 7;
 }
 
 // Types of Work Ring
