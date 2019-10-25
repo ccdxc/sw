@@ -77,6 +77,7 @@ nic/build/aarch64/iris/lib/libcfg_plugin*.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libcore.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libcrypto.so.1.1                         /nic/lib/
 nic/build/aarch64/iris/lib/libdirectmap.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libsldirectmap.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libeventmgr.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libfsm.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libhal_lib.so                            /nic/lib/
@@ -95,6 +96,7 @@ nic/build/aarch64/iris/lib/libmemhash.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libht.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libindexer.so                            /nic/lib/
+nic/build/aarch64/iris/lib/librte_indexer.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                           /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                               /nic/lib/
