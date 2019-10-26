@@ -575,8 +575,19 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
                       key_, ret);
         return ret;
     }
+    vnic_hw_id_ = idx;
     // program the LIF table
-    return program_lif_table_(key_, idx);
+    ret = program_lif_table_(key_, vnic_hw_id_);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
+    return SDK_RET_OK;
+
+error:
+
+    vnic_impl_db()->vnic_idxr()->free(vnic_hw_id_);
+    vnic_hw_id_ = 0xFFFF;
+    return ret;
 }
 
 sdk_ret_t
