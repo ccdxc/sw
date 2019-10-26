@@ -79,6 +79,7 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return SDK_RET_OK;
 }
 
+#define PDS_NUM_NH_NO_ECMP 1
 #define tunnel_action    action_u.tunnel_tunnel_info
 sdk_ret_t
 tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
@@ -99,7 +100,7 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
     } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
         nh_impl = (nexthop_impl *)nexthop_db()->find(&spec->nh)->impl();
         tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
-        tep_data.tunnel_action.num_nexthops = 1;
+        tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
     } else {
         // TODO: uncomment once testapp is fixed
         //SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
@@ -155,9 +156,61 @@ tep_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return ret;
 }
 
+void
+tep_impl::fill_status_(pds_tep_status_t *status) {
+    status->hw_id = hw_id_;
+}
+
+sdk_ret_t
+tep_impl::fill_spec_(pds_tep_spec_t *spec) {
+    tunnel_actiondata_t tep_data;
+    p4pd_error_t p4pdret;
+
+    p4pdret = p4pd_global_entry_read(P4TBL_ID_TUNNEL, hw_id_,
+                                     NULL, NULL, &tep_data);
+    if (unlikely(p4pdret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("p4 global entry read failed for hw id %u, ret %d",
+                      hw_id_, p4pdret);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    switch (tep_data.tunnel_action.ip_type) {
+    case IPTYPE_IPV4:
+        spec->remote_ip.af = IP_AF_IPV4;
+        memcpy(&spec->remote_ip.addr.v4_addr, tep_data.tunnel_action.dipo,
+               IP4_ADDR8_LEN);
+        break;
+    case IPTYPE_IPV6:
+        spec->remote_ip.af = IP_AF_IPV6;
+        sdk::lib::memrev(spec->remote_ip.addr.v6_addr.addr8,
+                         tep_data.tunnel_action.dipo,
+                         IP6_ADDR8_LEN);
+        break;
+    default:
+        break;
+    }
+    sdk::lib::memrev(spec->mac, tep_data.tunnel_action.dmaci, ETH_ADDR_LEN);
+    if (tep_data.tunnel_action.num_nexthops > PDS_NUM_NH_NO_ECMP) {
+        spec->nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+    } else if (tep_data.tunnel_action.num_nexthops == PDS_NUM_NH_NO_ECMP) {
+        spec->nh_type = PDS_NH_TYPE_UNDERLAY;
+    }
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_OK;
+    sdk_ret_t rv;
+    pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
+
+    rv = fill_spec_(&tep_info->spec);
+    if (unlikely(rv != sdk::SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware table for TEP %s",
+                      api_obj->key2str().c_str());
+        return rv;
+    }
+
+    fill_status_(&tep_info->status);
+    return sdk::SDK_RET_OK;
 }
 
 /// \@}

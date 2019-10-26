@@ -134,6 +134,14 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_(pds_epoch_t epoch, tep_entry *tep);
 
+    /// \brief      populate specification with hardware information
+    /// \param[out] spec     specification
+    sdk_ret_t fill_spec_(pds_tep_spec_t *spec);
+
+    /// \brief      populate status with hardware information
+    /// \param[out] status   status
+    void fill_status_(pds_tep_status_t *status);
+
 private:
     // P4 datapath specific state
     uint16_t   hw_id_;    ///< hardware id for this tep
