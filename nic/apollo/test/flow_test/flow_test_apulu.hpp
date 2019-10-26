@@ -35,6 +35,11 @@ using sdk::table::sdk_table_factory_params_t;
 
 namespace pt = boost::property_tree;
 #define FLOW_TEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
+#define IPV4_MAPPING_NH_HW_IDX_START    1
+#define IPV4_MAPPING_NH_HW_IDX_END      512
+#define IPV6_MAPPING_NH_HW_IDX_START    512
+#define IPV6_MAPPING_NH_HW_IDX_END      1020
+
 #define MAX_NEXTHOP_GROUP_INDEX 1024
 
 FILE *g_fp;
@@ -80,12 +85,12 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "proto %u, session_id %u, smac %s, sip %s, dmac %s, "
-                "dip %s, sport %u, dport %u, nh_idx %u, flow_role %u, "
-                "ktype %u, bd_id %u\n", entry->proto, entry->session_id,
-                macaddr2str(smac), src_ip_str, macaddr2str(dmac), dst_ip_str,
-                entry->sport, entry->dport, entry->nexthop_id,
-                entry->flow_role, entry->ktype, entry->bd_id);
+        fprintf(g_fp, "vpc %u, proto %u, session_id %u, smac %s, sip %s, "
+                "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, flow_role %u, "
+                "ktype %u\n", entry->bd_id, entry->proto,
+                entry->session_id, macaddr2str(smac), src_ip_str,
+                macaddr2str(dmac), dst_ip_str, entry->sport, entry->dport,
+                entry->nexthop_id, entry->flow_role, entry->ktype);
         fflush(g_fp);
     }
 }
@@ -97,12 +102,12 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip, mac_addr_t smac,
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "proto %u, session_id %d, smac %s, sip %s, dmac %s, dip %s, "
-                "sport %u, dport %u, nh_idx %u, flow_role %u, "
-                "bd_id %u\n", entry->proto, entry->session_id,
+        fprintf(g_fp, "vpc %u, proto %u, session_id %d, smac %s, sip %s, "
+                "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, "
+                "flow_role %u\n", entry->bd_id, entry->proto, entry->session_id,
                 macaddr2str(smac), src_ip_str,  macaddr2str(dmac), dst_ip_str,
                 entry->sport, entry->dport, entry->nexthop_id,
-                entry->flow_role, entry->bd_id);
+                entry->flow_role);
         fflush(g_fp);
     }
 }
@@ -181,7 +186,6 @@ private:
     ftlv4 *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_id;
-    uint32_t nexthop_group_index;
     uint32_t hash;
     uint16_t sport_base;
     uint16_t sport;
@@ -318,7 +322,6 @@ public:
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
         session_id = 1;
-        nexthop_group_index = 1;
         hash = 0;
         with_hash = w;
         session_index = 1;
@@ -536,22 +539,20 @@ public:
     sdk_ret_t create_flow(uint32_t vpc,
                           ipv6_addr_t v6_addr_sip, mac_addr_t smac,
                           ipv6_addr_t v6_addr_dip, mac_addr_t dmac,
-                          uint8_t proto, uint16_t sport, uint16_t dport) {
+                          uint8_t proto, uint16_t sport, uint16_t dport,
+                          uint32_t nh_idx) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
-        v6entry.ktype = 2;
-        v6entry.bd_id = vpc - 1;
+        v6entry.ktype = KEY_TYPE_IPV6;
+        v6entry.bd_id = vpc;
         v6entry.sport = sport;
         v6entry.dport = dport;
         v6entry.proto = proto;
         sdk::lib::memrev(v6entry.src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
         sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.session_id = session_id++;
-        v6entry.set_nhgroup_index(nexthop_group_index++);
-
-        // reset nexthop_group_index if it reaches max
-        if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
-            nexthop_group_index = 1;
-        }
+        v6entry.set_nexthop_index(nh_idx);
+        v6entry.nexthop_valid = 1;
+        v6entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
         auto ret = insert_(&v6entry);
         if (ret != SDK_RET_OK) {
             return ret;
@@ -564,21 +565,19 @@ public:
     sdk_ret_t create_flow(uint32_t vpc,
                           ipv4_addr_t v4_addr_sip, mac_addr_t smac,
                           ipv4_addr_t v4_addr_dip, mac_addr_t dmac,
-                          uint8_t proto, uint16_t sport, uint16_t dport) {
+                          uint8_t proto, uint16_t sport, uint16_t dport,
+                          uint32_t nh_idx) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = vpc - 1;
+        v4entry.bd_id = vpc;
         v4entry.sport = sport;
         v4entry.dport = dport;
         v4entry.proto = proto;
         v4entry.src = v4_addr_sip;
         v4entry.dst = v4_addr_dip;
         v4entry.session_id = session_id++;
-        v4entry.set_nhgroup_index(nexthop_group_index++);
-
-        // reset nexthop_group_index if it reaches max
-        if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
-            nexthop_group_index = 1;
-        }
+        v4entry.set_nexthop_index(nh_idx);
+        v4entry.nexthop_valid = 1;
+        v4entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
         auto ret = insert_(&v4entry);
         if (ret != SDK_RET_OK) {
             return ret;
@@ -591,7 +590,8 @@ public:
     sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto,
                                       bool ipv6) {
         uint16_t local_port = 0, remote_port = 0;
-        uint32_t i = 0;
+        uint32_t i = 0, v4_nh_idx = IPV4_MAPPING_NH_HW_IDX_START;
+        uint32_t v6_nh_idx = IPV6_MAPPING_NH_HW_IDX_START;
         uint16_t fwd_sport = 0, fwd_dport = 0;
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
@@ -623,7 +623,8 @@ public:
                                                    ep_pairs[i].rip6,
                                                    ep_pairs[i].rmac6,
                                                    proto,
-                                                   fwd_sport, fwd_dport);
+                                                   fwd_sport, fwd_dport,
+                                                   v6_nh_idx);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -631,8 +632,9 @@ public:
                             auto ret = create_flow(vpc, ep_pairs[i].lip,
                                                    ep_pairs[i].lmac,
                                                    ep_pairs[i].rip,
-                                                    ep_pairs[i].rmac,
-                                                   proto, fwd_sport, fwd_dport);
+                                                   ep_pairs[i].rmac,
+                                                   proto, fwd_sport, fwd_dport,
+                                                   v4_nh_idx);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
@@ -642,6 +644,18 @@ public:
                         if (nflows >= count) {
                             return SDK_RET_OK;
                         }
+                    }
+                }
+                if (ipv6) {
+                    v6_nh_idx++;
+                    // reset nh_idx if it reaches max
+                    if (v6_nh_idx > IPV6_MAPPING_NH_HW_IDX_END) {
+                        v6_nh_idx = 1;
+                    }
+                } else {
+                    v4_nh_idx++;
+                    if (v4_nh_idx > IPV4_MAPPING_NH_HW_IDX_END) {
+                        v4_nh_idx = 1;
                     }
                 }
             }
@@ -705,21 +719,24 @@ public:
 
     sdk_ret_t create_flows_all_protos_(bool ipv6) {
         if (cfg_params.num_tcp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_tcp, IP_PROTO_TCP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_tcp,
+                                               IP_PROTO_TCP, ipv6);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
 
         if (cfg_params.num_udp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_udp, IP_PROTO_UDP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_udp,
+                                               IP_PROTO_UDP, ipv6);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
 
         if (cfg_params.num_icmp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_icmp, IP_PROTO_ICMP, ipv6);
+            auto ret = create_flows_one_proto_(cfg_params.num_icmp,
+                                               IP_PROTO_ICMP, ipv6);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
@@ -745,7 +762,7 @@ public:
 
     sdk_ret_t create_flows(void) {
 #ifdef SIM
-        g_fp = fopen("/tmp/flow_log.log", "w+");
+        g_fp = fopen("./flow_log.log", "w+");
 #else
         // tmp doesn't have sufficient memory
         g_fp = fopen("/data/flow_log.log", "w+");

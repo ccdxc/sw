@@ -38,7 +38,7 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
 #ifdef __cplusplus
 
 public:
-    void set_nhgroup_index(uint32_t index) {
+    void set_nexthop_index(uint32_t index) {
         nexthop_id = index & 0xffffffff;
     }
 
@@ -241,7 +241,7 @@ public:
                   uint16_t dst_port,
                   uint16_t lookup_id,
                   uint8_t key_type)
-    {   
+    {
         uint64_t *dptr = (uint64_t *)src;
         uint64_t *sptr = (uint64_t *)sip;
         dptr[0] = sptr[0];

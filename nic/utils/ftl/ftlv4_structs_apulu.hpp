@@ -31,7 +31,7 @@ struct __attribute__((__packed__)) ftlv4_entry_t {
 
 #ifdef __cplusplus
 public:
-    void set_nhgroup_index(uint32_t index) {
+    void set_nexthop_index(uint32_t index) {
         nexthop_id = index & 0xffff;    // 16 bits
     }
 
@@ -215,7 +215,7 @@ public:
     void set_session_index(uint32_t session) {
         session_id = session;
     }
- 
+
     void set_key(uint32_t sip,
                  uint32_t dip,
                  uint8_t ip_proto,

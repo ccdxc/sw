@@ -90,6 +90,7 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
     nexthop_group_impl *nhgroup_impl;
     tunnel_actiondata_t tep_data = { 0 };
 
+    PDS_TRACE_DEBUG("Activating TEP %u create, hw id %u", spec->key.id, hw_id_);
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();

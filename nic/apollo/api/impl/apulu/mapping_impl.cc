@@ -379,6 +379,8 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
             tep = (tep_impl *)tep_db()->find(&spec->tep)->impl();
             mapping_data.nexthop_type = NEXTHOP_TYPE_TUNNEL;
             mapping_data.nexthop_id = tep->hw_id();
+            //PDS_TRACE_DEBUG("nh type %u, nh id %u",
+                            //NEXTHOP_TYPE_TUNNEL, mapping_data.nexthop_id);
             break;
 
         case PDS_NH_TYPE_OVERLAY_ECMP:

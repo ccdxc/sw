@@ -158,8 +158,9 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
 
-    PDS_TRACE_DEBUG("Activating subnet %u, vpc %u, fabric encap (%u, %u)",
-                    spec->key.id, spec->vpc.id, spec->fabric_encap.type,
+    PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, vpc %u, "
+                    "fabric encap (%u, %u)", spec->key.id, subnet->hw_id(),
+                    spec->vpc.id, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
     vpc = vpc_db()->find(&spec->vpc);
     if (vpc == NULL) {

@@ -155,8 +155,9 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Activating vpc %u create, type %u, fabric encap (%u, %u)",
-                    spec->key.id, spec->type, spec->fabric_encap.type,
+    PDS_TRACE_DEBUG("Activating vpc %u, hw id %u create, type %u, "
+                    "fabric encap (%u, %u)", spec->key.id, vpc->hw_id(),
+                    spec->type, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
