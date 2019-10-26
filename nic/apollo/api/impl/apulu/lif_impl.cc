@@ -129,8 +129,10 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Creating oob lif %u", key_);
+    // TODO: fix this once block indexer starts working
     // allocate required nexthops
-    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for oob "
                       "lif %u, err %u", key_, ret);
@@ -169,15 +171,23 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
                     nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
 
+    // TODO: fix this once block indexer starts working
+    // allocate required nexthops
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entries for oob "
+                      "lif %u, err %u", key_, ret);
+        return ret;
+    }
     // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.lif = key_;
     nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_ + 1);
+                      "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -193,7 +203,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
+    data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -205,7 +215,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
-                    nh_idx_ + 1, nh_data.nexthop_info.lif,
+                    nh_idx_, nh_data.nexthop_info.lif,
+                    //nh_idx_ + 1, nh_data.nexthop_info.lif,
                     nh_data.nexthop_info.port);
 
     // allocate vnic h/w id for this lif
@@ -244,7 +255,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
 
     PDS_TRACE_DEBUG("Creating inband lif %u", key_);
     // allocate required nexthops
-    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for inband "
                       "lif %u, err %u", key_, ret);
@@ -283,15 +295,25 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
                     nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
 
+
+    // TODO: clean this up once block indexer is fixed
+    // allocate required nexthops
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entries for inband "
+                      "lif %u, err %u", key_, ret);
+        return ret;
+    }
+
     // program the nexthop for uplink to ARM traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.lif = key_;
     nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_ + 1);
+                      "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -309,7 +331,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     mask.control_metadata_tunneled_packet_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
+    data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -321,7 +343,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
-                    nh_idx_ + 1, nh_data.nexthop_info.lif,
+                    nh_idx_, nh_data.nexthop_info.lif,
+                    //nh_idx_ + 1, nh_data.nexthop_info.lif,
                     nh_data.nexthop_info.port);
 
     // allocate vnic h/w id for this lif
@@ -461,8 +484,10 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     PDS_TRACE_DEBUG("Programming NACLs for internal management");
+    // TOOD: fix this once block indexer starts working
     // allocate required nexthops
-    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for internal mgmt. "
                       "lifs %u, %u, err %u", host_mgmt_lif->key(),
@@ -501,16 +526,26 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // TOOD: fix this once block indexer starts working
+    // allocate required nexthops
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entries for internal mgmt. "
+                      "lifs %u, %u, err %u", host_mgmt_lif->key(),
+                      int_mgmt_lif->key(), ret);
+        return ret;
+    }
+
     // program the nexthop for internal mgmt. lif to host mgmt. lif traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nh_data.nexthop_info.lif = host_mgmt_lif->key();
     nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_ + 1,
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for internal mgmt. "
                       "lif %u to host mgmt. lif %u traffic at idx %u",
-                      int_mgmt_lif->key(), host_mgmt_lif->key(), nh_idx_ + 1);
+                      int_mgmt_lif->key(), host_mgmt_lif->key(), nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -524,7 +559,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    data.nacl_redirect_action.nexthop_id = nh_idx_ + 1;
+    data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -599,16 +634,15 @@ lif_impl::create(pds_lif_spec_t *spec) {
         ret = create_oob_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT:
-        //ret = create_inb_mnic_(spec);
-        ret = SDK_RET_OK;
+        ret = create_inb_mnic_(spec);
         break;
     case sdk::platform::LIF_TYPE_MNIC_CPU:
-        //ret = create_datapath_mnic_(spec);
+        ret = create_datapath_mnic_(spec);
         ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
-        //ret = create_internal_mgmt_mnic_(spec);
+        ret = create_internal_mgmt_mnic_(spec);
         ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST:
