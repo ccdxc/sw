@@ -681,27 +681,6 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);
     SDK_ASSERT_GOTO((ret == HAL_RET_OK), cleanup);
 
-    // start the asic-rw thread
-    HAL_TRACE_DEBUG("Starting asic-rw thread ...");
-    hal_thread =
-        hal_thread_create(std::string("asicrw").c_str(),
-            HAL_THREAD_ID_ASIC_RW,
-            sdk::lib::THREAD_ROLE_CONTROL,
-            0x0,    // use all control cores
-            sdk::asic::asicrw_start,
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            hal_cfg);
-    SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
-                            "asicrw thread creation failure");
-    hal_thread->start(hal_thread);
-
-    HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
-    // wait for ASIC RW thread to be ready before initializing table entries
-    while (!sdk::asic::is_asicrw_ready()) {
-        pthread_yield();
-    }
-
     ph2_args.cfg_path = mem_init_args.cfg_path;
     ph2_args.hal_cfg = hal_cfg;
     pd_func_args.pd_mem_init_phase2 = &ph2_args;
@@ -725,6 +704,27 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);
         goto cleanup;
+    }
+
+    // start the asic-rw thread
+    HAL_TRACE_DEBUG("Starting asic-rw thread ...");
+    hal_thread =
+        hal_thread_create(std::string("asicrw").c_str(),
+            HAL_THREAD_ID_ASIC_RW,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            sdk::asic::asicrw_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            hal_cfg);
+    SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+                            "asicrw thread creation failure");
+    hal_thread->start(hal_thread);
+
+    HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
+    // wait for ASIC RW thread to be ready before initializing table entries
+    while (!sdk::asic::is_asicrw_ready()) {
+        pthread_yield();
     }
 
     return HAL_RET_OK;

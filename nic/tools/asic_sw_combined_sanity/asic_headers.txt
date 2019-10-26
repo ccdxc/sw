@@ -43,6 +43,7 @@
 ./capri/model/cap_top/cap_top_csr_defines.h
 ./capri/model/cap_top/cap_top_csr.h
 ./capri/model/cap_top/csr_defines/cap_hens_c_hdr.h
+./capri/model/cap_top/csr_defines/cap_pict_c_hdr.h
 ./capri/model/cap_top/csr_defines/cap_pics_c_hdr.h
 ./capri/model/cap_top/csr_defines/cap_ms_c_hdr.h
 ./capri/model/cap_top/csr_defines/cap_pr_c_hdr.h
