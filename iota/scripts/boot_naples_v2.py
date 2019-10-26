@@ -124,9 +124,10 @@ def IsNaplesGoldFWLatest():
     return gold_fw_latest
 
 def IpmiReset():
+    print('calling ipmitool power cycle')
     cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password)
-    subprocess.check_call(cmd, shell=True, stdout=subprocess.STDOUT, stderr=subprocess.STDOUT)
+    subprocess.check_call(cmd, shell=True)
 
 # Error codes for all module exceptions
 @unique
