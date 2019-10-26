@@ -312,7 +312,9 @@ class EntityManagement:
 
     def RunCommoandOnConsoleWithOutput(self, cmd):
         self.__run_cmd(cmd)
-        return self.hdl.before
+        output = self.hdl.before
+        print("output of command \"{0}\" is \"{1}\"".format(cmd,output))
+        return output
 
     @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
     def CopyIN(self, src_filename, entity_dir):
@@ -523,11 +525,11 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadRunningFirmwareType(self):
-        fwType = str(self.RunCommoandOnConsoleWithOutput("fwupdate -r"))
-        if re.search('mainfwa',fwType):
+        fwType = self.RunCommoandOnConsoleWithOutput("fwupdate -r").decode('utf-8')
+        if re.search('\nmainfw',fwType):
             print('determined running firmware to be type MAIN')
             return FIRMWARE_TYPE_MAIN
-        elif re.search('goldfw',fwType):
+        elif re.search('\ngoldfw',fwType):
             print('determined running firmware to be type GOLD')
             return FIRMWARE_TYPE_GOLD
         else:
@@ -536,11 +538,11 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadSavedFirmwareType(self):
-        fwType = str(self.RunCommoandOnConsoleWithOutput("fwupdate -S"))
-        if re.search('mainfwa',fwType):
+        fwType = self.RunCommoandOnConsoleWithOutput("fwupdate -S").decode('utf-8')
+        if re.search('\nmainfw',fwType):
             print('determined saved firmware to be type MAIN')
             return FIRMWARE_TYPE_MAIN
-        elif re.search('goldfw',fwType):
+        elif re.search('\ngoldfw',fwType):
             print('determined saved firmware to be type GOLD')
             return FIRMWARE_TYPE_GOLD
         else:
@@ -669,7 +671,7 @@ class HostManagement(EntityManagement):
         self.RunSshCmd("uptime")
         if dryrun == False:
             self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
-        time.sleep(60)
+        time.sleep(120)
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
@@ -913,7 +915,7 @@ class EsxHostManagement(HostManagement):
         self.RunSshCmd("uptime")
         if dryrun == False:
             self.RunSshCmd("reboot", ignore_failure = True)
-        time.sleep(60)
+        time.sleep(120)
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
