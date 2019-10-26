@@ -2,7 +2,8 @@
 
 TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
-DOLDIR=`readlink -f $NICDIR/../dol/`
+# for mock runs, point obfl logging to /tmp
+export PERSISTENT_LOG_DIR=/tmp/
 echo $NICDIR
 
 $NICDIR/apollo/tools/apulu/start-agent-mock.sh > agent.log 2>&1 &

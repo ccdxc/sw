@@ -74,45 +74,35 @@ flow_appdata2str(void *appdata) {
 
 static void
 dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
-                ipv6_addr_t v6_addr_dip) {
+                mac_addr_t smac, ipv6_addr_t v6_addr_dip,
+                mac_addr_t dmac) {
     // return;
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d, flow_role %d, ktype %d, bd_id %d\n",
-                entry->proto,
-                entry->session_id,
-                src_ip_str,
-                dst_ip_str,
-                entry->sport,
-                entry->dport,
-                entry->nexthop_id,
-                entry->flow_role,
-                entry->ktype,
-                entry->bd_id);
+        fprintf(g_fp, "proto %u, session_id %u, smac %s, sip %s, dmac %s, "
+                "dip %s, sport %u, dport %u, nh_idx %u, flow_role %u, "
+                "ktype %u, bd_id %u\n", entry->proto, entry->session_id,
+                macaddr2str(smac), src_ip_str, macaddr2str(dmac), dst_ip_str,
+                entry->sport, entry->dport, entry->nexthop_id,
+                entry->flow_role, entry->ktype, entry->bd_id);
         fflush(g_fp);
     }
 }
 
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
-                ipv4_addr_t v4_addr_dip) {
+dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip, mac_addr_t smac,
+                ipv4_addr_t v4_addr_dip, mac_addr_t dmac) {
     // return;
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "proto %d, session_id %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d, flow_role %d, bd_id %d\n",
-                entry->proto,
-                entry->session_id,
-                src_ip_str,
-                dst_ip_str,
-                entry->sport,
-                entry->dport,
-                entry->nexthop_id,
-                entry->flow_role,
-                entry->bd_id);
+        fprintf(g_fp, "proto %u, session_id %d, smac %s, sip %s, dmac %s, dip %s, "
+                "sport %u, dport %u, nh_idx %u, flow_role %u, "
+                "bd_id %u\n", entry->proto, entry->session_id,
+                macaddr2str(smac), src_ip_str,  macaddr2str(dmac), dst_ip_str,
+                entry->sport, entry->dport, entry->nexthop_id,
+                entry->flow_role, entry->bd_id);
         fflush(g_fp);
     }
 }
@@ -137,6 +127,16 @@ dump_session_info(uint32_t vpc,
 #define MAX_REMOTE_EPS  1024
 #define MAX_EP_PAIRS_PER_VPC (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
 
+typedef struct ipv4_eps_s {
+    mac_addr_t mac;
+    uint32_t v4_addr;
+} ipv4_ep_t;
+
+typedef struct ipv6_ep_s {
+    mac_addr_t mac;
+    ipv6_addr_t v6_addr;
+} ipv6_ep_t;
+
 typedef struct vpc_epdb_s {
     uint32_t vpc_id;
     uint32_t valid;
@@ -144,18 +144,22 @@ typedef struct vpc_epdb_s {
     uint32_t v6_lcount;
     uint32_t v4_rcount;
     uint32_t v6_rcount;
-    uint32_t lips[MAX_LOCAL_EPS];
-    ipv6_addr_t lip6s[MAX_LOCAL_EPS];
-    uint32_t rips[MAX_REMOTE_EPS];
-    ipv6_addr_t rip6s[MAX_REMOTE_EPS];
+    ipv4_ep_t leps[MAX_LOCAL_EPS];
+    ipv6_ep_t lep6s[MAX_LOCAL_EPS];
+    ipv4_ep_t reps[MAX_REMOTE_EPS];
+    ipv6_ep_t rep6s[MAX_REMOTE_EPS];
 } vpc_epdb_t;
 
 typedef struct vpc_ep_pair_s {
     uint32_t vpc_id;
     uint32_t lip;
+    mac_addr_t lmac;
     ipv6_addr_t lip6;
+    mac_addr_t lmac6;
     uint32_t rip;
+    mac_addr_t rmac;
     ipv6_addr_t rip6;
+    mac_addr_t rmac6;
     uint32_t valid;
 } vpc_ep_pair_t;
 
@@ -378,14 +382,20 @@ public:
                 return;
             }
             epdb[vpc_id].valid = 1;
-            epdb[vpc_id].lips[epdb[vpc_id].v4_lcount] = ip_addr.addr.v4_addr;
+            epdb[vpc_id].leps[epdb[vpc_id].v4_lcount].v4_addr =
+                ip_addr.addr.v4_addr;
+            memcpy(epdb[vpc_id].leps[epdb[vpc_id].v4_lcount].mac,
+                   local_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].v4_lcount++;
         } else {
             if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
                 return;
             }
             epdb[vpc_id].valid = 1;
-            epdb[vpc_id].lip6s[epdb[vpc_id].v6_lcount] = ip_addr.addr.v6_addr;
+            epdb[vpc_id].lep6s[epdb[vpc_id].v6_lcount].v6_addr =
+                ip_addr.addr.v6_addr;
+            memcpy(epdb[vpc_id].lep6s[epdb[vpc_id].v6_lcount].mac,
+                   local_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].v6_lcount++;
         }
         //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
@@ -405,14 +415,20 @@ public:
                 return;
             }
             epdb[vpc_id].valid = 1;
-            epdb[vpc_id].rips[epdb[vpc_id].v4_rcount] = ip_addr.addr.v4_addr;
+            epdb[vpc_id].reps[epdb[vpc_id].v4_rcount].v4_addr =
+                ip_addr.addr.v4_addr;
+            memcpy(epdb[vpc_id].reps[epdb[vpc_id].v4_rcount].mac,
+                   remote_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].v4_rcount++;
         } else {
             if (epdb[vpc_id].v6_rcount >= MAX_REMOTE_EPS) {
                 return;
             }
             epdb[vpc_id].valid = 1;
-            epdb[vpc_id].rip6s[epdb[vpc_id].v6_rcount] = ip_addr.addr.v6_addr;
+            epdb[vpc_id].rep6s[epdb[vpc_id].v6_rcount].v6_addr =
+                ip_addr.addr.v6_addr;
+            memcpy(epdb[vpc_id].rep6s[epdb[vpc_id].v6_rcount].mac,
+                   remote_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].v6_rcount++;
         }
         //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
@@ -429,13 +445,21 @@ public:
         for (uint32_t lid = 0; lid < lcount; lid++) {
             for (uint32_t rid = 0; rid < rcount; rid++) {
                 ep_pairs[pid].vpc_id = vpc;
-                ep_pairs[pid].lip = epdb[vpc].lips[lid];
-                ep_pairs[pid].lip6 = epdb[vpc].lip6s[lid];
-                ep_pairs[pid].rip = epdb[vpc].rips[rid];
-                ep_pairs[pid].rip6 = epdb[vpc].rip6s[rid];
+                ep_pairs[pid].lip = epdb[vpc].leps[lid].v4_addr;
+                memcpy(ep_pairs[pid].lmac, epdb[vpc].leps[lid].mac,
+                       ETH_ADDR_LEN);
+                ep_pairs[pid].lip6 = epdb[vpc].lep6s[lid].v6_addr;
+                memcpy(ep_pairs[pid].lmac6, epdb[vpc].lep6s[lid].mac,
+                       ETH_ADDR_LEN);
+                ep_pairs[pid].rip = epdb[vpc].reps[rid].v4_addr;
+                memcpy(ep_pairs[pid].rmac, epdb[vpc].reps[rid].mac,
+                       ETH_ADDR_LEN);
+                ep_pairs[pid].rip6 = epdb[vpc].rep6s[rid].v6_addr;
+                memcpy(ep_pairs[pid].rmac6, epdb[vpc].reps[rid].mac,
+                       ETH_ADDR_LEN);
                 ep_pairs[pid].valid = 1;
                 //printf("Appending EP pair: Vcn=%d LIP=%#x RIP=%#x\n", vpc,
-                //       epdb[vpc].lips[lid], epdb[vpc].rips[rid]);
+                //       epdb[vpc].leps[lid].v4_addr, epdb[vpc].rips[rid]);
                 pid++;
             }
         }
@@ -509,9 +533,10 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t v6_addr_sip,
-                          ipv6_addr_t v6_addr_dip, uint8_t proto,
-                          uint16_t sport, uint16_t dport) {
+    sdk_ret_t create_flow(uint32_t vpc,
+                          ipv6_addr_t v6_addr_sip, mac_addr_t smac,
+                          ipv6_addr_t v6_addr_dip, mac_addr_t dmac,
+                          uint8_t proto, uint16_t sport, uint16_t dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
         v6entry.ktype = 2;
         v6entry.bd_id = vpc - 1;
@@ -532,13 +557,14 @@ public:
             return ret;
         }
         // print entry info
-        dump_flow_entry(&v6entry, v6_addr_sip, v6_addr_dip);
+        dump_flow_entry(&v6entry, v6_addr_sip, smac, v6_addr_dip, dmac);
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, ipv4_addr_t v4_addr_sip,
-                          ipv4_addr_t v4_addr_dip, uint8_t proto,
-                          uint16_t sport, uint16_t dport) {
+    sdk_ret_t create_flow(uint32_t vpc,
+                          ipv4_addr_t v4_addr_sip, mac_addr_t smac,
+                          ipv4_addr_t v4_addr_dip, mac_addr_t dmac,
+                          uint8_t proto, uint16_t sport, uint16_t dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
         v4entry.bd_id = vpc - 1;
         v4entry.sport = sport;
@@ -558,11 +584,12 @@ public:
             return ret;
         }
         // print entry info
-        dump_flow_entry(&v4entry, v4_addr_sip, v4_addr_dip);
+        dump_flow_entry(&v4entry, v4_addr_sip, smac, v4_addr_dip, dmac);
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool ipv6) {
+    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto,
+                                      bool ipv6) {
         uint16_t local_port = 0, remote_port = 0;
         uint32_t i = 0;
         uint16_t fwd_sport = 0, fwd_dport = 0;
@@ -572,8 +599,10 @@ public:
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, ipv6);
             for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
-                for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
-                    for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
+                for (auto lp = cfg_params.sport_lo;
+                     lp <= cfg_params.sport_hi; lp++) {
+                    for (auto rp = cfg_params.dport_lo;
+                         rp <= cfg_params.dport_hi; rp++) {
                         local_port = lp;
                         remote_port = rp;
                         if (ep_pairs[i].valid == 0) {
@@ -590,13 +619,19 @@ public:
 
                         if (ipv6) {
                             auto ret = create_flow(vpc, ep_pairs[i].lip6,
-                                                   ep_pairs[i].rip6, proto,
+                                                   ep_pairs[i].lmac6,
+                                                   ep_pairs[i].rip6,
+                                                   ep_pairs[i].rmac6,
+                                                   proto,
                                                    fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
                         } else {
-                            auto ret = create_flow(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
+                            auto ret = create_flow(vpc, ep_pairs[i].lip,
+                                                   ep_pairs[i].lmac,
+                                                   ep_pairs[i].rip,
+                                                    ep_pairs[i].rmac,
                                                    proto, fwd_sport, fwd_dport);
                             if (ret != SDK_RET_OK) {
                                 return ret;
@@ -708,8 +743,13 @@ public:
         show_cfg_params_();
     }
 
-    sdk_ret_t create_flows() {
+    sdk_ret_t create_flows(void) {
+#ifdef SIM
+        g_fp = fopen("/tmp/flow_log.log", "w+");
+#else
+        // tmp doesn't have sufficient memory
         g_fp = fopen("/data/flow_log.log", "w+");
+#endif
 
         if (cfg_params.valid == false) {
             parse_cfg_json_();

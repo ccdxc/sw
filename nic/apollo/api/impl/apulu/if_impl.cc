@@ -198,7 +198,7 @@ if_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 if_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                        api_op_t api_op) {
+                       api_op_t api_op) {
     return SDK_RET_ERR;
 }
 

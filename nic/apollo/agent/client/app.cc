@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 
 #define __STDC_FORMAT_MACROS
+
 #include "nic/apollo/agent/client/utils.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
@@ -23,6 +24,7 @@ std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
 std::unique_ptr<pds::MeterSvc::Stub>             g_meter_stub_;
 std::unique_ptr<pds::TagSvc::Stub>               g_tag_stub_;
 std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
+std::unique_ptr<pds::IfSvc::Stub>                g_if_stub_;
 std::unique_ptr<pds::Svc::Stub>                  g_svc_mapping_stub_;
 
 RouteTableRequest        g_route_table_req;
@@ -40,6 +42,7 @@ NexthopRequest           g_nexthop_req;
 SvcMappingRequest        g_svc_mapping_req;
 VPCDeleteRequest         g_vpc_req_del;
 VPCGetRequest            g_vpc_req_get;
+InterfaceRequest         g_if_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -275,6 +278,29 @@ read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
         }
     }
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_l3_intf_grpc (pds_if_spec_t *spec)
+{
+    ClientContext     context;
+    InterfaceResponse response;
+    Status            ret_status;
+
+    if (spec != NULL) {
+        pds::InterfaceSpec *proto_spec = g_if_req.add_request();
+        pds_if_api_spec_to_proto(proto_spec, spec);
+    }
+    if ((g_if_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+        ret_status = g_if_stub_->InterfaceCreate(&context, g_if_req, &response);
+        if (!ret_status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_if_req.clear_request();
+    }
     return SDK_RET_OK;
 }
 
@@ -517,6 +543,7 @@ test_app_init (void)
     g_meter_stub_ = pds::MeterSvc::NewStub(channel);
     g_tag_stub_ = pds::TagSvc::NewStub(channel);
     g_nexthop_stub_ = pds::NhSvc::NewStub(channel);
+    g_if_stub_ = pds::IfSvc::NewStub(channel);
     g_svc_mapping_stub_ = pds::Svc::NewStub(channel);
 
     return;

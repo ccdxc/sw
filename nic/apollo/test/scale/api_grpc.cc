@@ -98,6 +98,12 @@ create_vpc_peer (pds_vpc_peer_spec_t *pds_vpc_peer)
 }
 
 sdk_ret_t
+create_l3_intf (pds_if_spec_t *pds_if)
+{
+    return create_l3_intf_grpc(pds_if);
+}
+
+sdk_ret_t
 create_tag (pds_tag_spec_t *pds_tag)
 {
     return create_tag_grpc(pds_tag);

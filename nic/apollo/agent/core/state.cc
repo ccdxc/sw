@@ -135,6 +135,9 @@ cfg_db::init(void) {
     }
     mirror_session_map_ = new(mem) mirror_session_db_t();
 
+    slabs_[SLAB_ID_IF] =
+        slab::factory("vpc", SLAB_ID_IF, sizeof(pds_if_spec_t),
+                      16, true, true, true);
     slabs_[SLAB_ID_VPC] =
         slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vpc_spec_t),
                       16, true, true, true);

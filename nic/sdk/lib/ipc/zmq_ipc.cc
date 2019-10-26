@@ -221,12 +221,12 @@ zmq_ipc_server::init(uint32_t id) {
     assert(id <= IPC_MAX_ID);
 
     this->id_ = id;
-        
+
     this->zsocket_ = zmq_socket(g_zmq_ctx, ZMQ_ROUTER);
     rc = zmq_bind(this->zsocket_, ipc_path_external(id).c_str());
     assert(rc == 0);
     SDK_TRACE_DEBUG("Listening on %s", ipc_path_external(id).c_str());
-        
+
     rc = zmq_bind(this->zsocket_, ipc_path_internal(id).c_str());
     assert(rc == 0);
     SDK_TRACE_DEBUG("Listening on %s", ipc_path_internal(id).c_str());
@@ -311,7 +311,7 @@ zmq_ipc_client::connect(uint32_t recipient) {
     // Todo: Fixme: check local/remote
     this->is_recipient_internal_ = true;
 
-    this->create_socket();    
+    this->create_socket();
 
     if (this->is_recipient_internal_) {
         path = ipc_path_internal(this->recipient_);
@@ -389,7 +389,7 @@ void
 zmq_ipc_client_async::send(const void *data, size_t data_length,
                            const void *cookie) {
     int rc;
-    
+
     // We use a Dealer socket talking to Router socket. See ZMQ documentation
     // why we need this
     rc = zmq_send(this->zsocket_, NULL, 0, ZMQ_SNDMORE);
@@ -407,7 +407,7 @@ zmq_ipc_client_async::recv(const void **cookie) {
     if (!this->is_event_pending()) {
         return nullptr;
     }
-    
+
     // We use a Dealer socket talking to Router socket. See ZMQ documentation
     // why we need this
     rc = zmq_recv(this->zsocket_, NULL, 0, 0);
@@ -429,7 +429,7 @@ zmq_ipc_client_sync::create_socket(void) {
 zmq_ipc_user_msg_ptr
 zmq_ipc_client_sync::send_recv(const void *data, size_t data_length) {
     zmq_ipc_user_msg_ptr msg = std::make_shared<zmq_ipc_user_msg>();
-    
+
     this->send_msg(this->recipient_, data, data_length, NULL,
                    this->is_recipient_internal_);
 

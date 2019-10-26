@@ -61,7 +61,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "0",
+            "num_udp": "262144",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "101",

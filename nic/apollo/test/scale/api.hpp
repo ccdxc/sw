@@ -37,6 +37,7 @@ sdk_ret_t create_tunnel(uint32_t id, pds_tep_spec_t *pds_tep);
 sdk_ret_t create_device(pds_device_spec_t *device);
 sdk_ret_t create_policy(pds_policy_spec_t *policy);
 sdk_ret_t create_mirror_session(pds_mirror_session_spec_t *ms);
+sdk_ret_t create_l3_intf(pds_if_spec_t *intf);
 sdk_ret_t create_objects_init(test_params_t *test_params);
 sdk_ret_t create_objects_end(void);
 

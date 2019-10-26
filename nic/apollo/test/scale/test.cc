@@ -698,7 +698,7 @@ create_vpc_peers (uint32_t num_vpcs)
                                 "create vpc peer %u failed, ret %u",
                                 vpc_peer_id - 1, rv);
     }
-    // push leftover vpc and subnet objects
+    // push leftover vpc peer objects
     rv = create_vpc_peer(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create vpc peer failed, ret %u", rv);
@@ -1326,6 +1326,35 @@ create_rspan_mirror_sessions (uint32_t num_sessions)
 }
 
 sdk_ret_t
+create_l3_intfs (uint32_t num_if)
+{
+    sdk_ret_t rv;
+    uint64_t l3if_mac = 0x00AAAAAAA1ULL;
+    pds_if_spec_t pds_if;
+
+    for (uint32_t i = 1; i <= num_if; i++) {
+        pds_if.key.id = i;
+        pds_if.type = PDS_IF_TYPE_L3;
+        pds_if.admin_state = PDS_IF_STATE_UP;
+        pds_if.l3_if_info.vpc.id = i;
+        pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
+        pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr =
+            (g_test_params.tep_pfx.addr.addr.v4_addr | 0x01200000) + i;
+        pds_if.l3_if_info.port_num = i;
+        MAC_UINT64_TO_ADDR(pds_if.l3_if_info.mac_addr, (l3if_mac + i));
+        rv = create_l3_intf(&pds_if);
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create l3 intf failed, l3if %u, err %u",
+                                i, rv);
+    }
+    // push any left over l3 interface objects
+    rv = create_l3_intf(NULL);
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create l3 intf failed, ret %u", rv);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 create_objects (void)
 {
     sdk_ret_t ret;
@@ -1345,6 +1374,11 @@ create_objects (void)
                             &g_test_params.device_gw_ip);
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+
+    if (apulu()) {
+        // create L3 interfaces
+        ret = create_l3_intfs(2);
     }
 
     if (artemis()) {
