@@ -85,6 +85,34 @@ typedef struct pds_encap_s {
     pds_encap_val_t  val;     ///< encap value
 } pds_encap_t;
 
+static inline char *
+encap2str (const pds_encap_t *encap) 
+{
+    static thread_local char       encap_str[4][20];
+    static thread_local uint8_t    encap_str_next = 0;
+    char                           *buf;
+
+    buf = encap_str[encap_str_next++ & 0x3];
+    switch (encap->type) {
+    case PDS_ENCAP_TYPE_DOT1Q:
+        snprintf(buf, 20, "Dot1q/%u", encap->val.value);
+        break;
+    case PDS_ENCAP_TYPE_QINQ:
+        snprintf(buf, 20, "QinQ/%u", encap->val.value);
+        break;
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        snprintf(buf, 20, "MPLSoUDP/%u", encap->val.value);
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        snprintf(buf, 20, "VxLAN/%u", encap->val.value);
+        break;
+    default:
+        snprintf(buf, 20, "-");
+        break;
+    }
+    return buf;
+}
+
 /// \brief    VPC key
 typedef struct pds_vpc_key_s {
     pds_vpc_id_t id;    ///< VPC id

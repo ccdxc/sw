@@ -13,11 +13,11 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
+#include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
 #define vni_info    action_u.vni_vni_info
-#define bd_info     action_u.bd_bd_info
 
 namespace api {
 namespace impl {

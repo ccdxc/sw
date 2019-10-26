@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	vpcID     uint32
-	mappingIP string
+	vpcID       uint32
+	mappingIP   string
+	mappingType string
 )
 
 var mappingShowCmd = &cobra.Command{
@@ -29,6 +30,7 @@ func init() {
 	showCmd.AddCommand(mappingShowCmd)
 	mappingShowCmd.Flags().Uint32Var(&vpcID, "vpc-id", 0, "Specify VPC ID")
 	mappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
+	mappingShowCmd.Flags().StringVar(&mappingType, "type", "all", "Specify mapping type - all, local or remote")
 }
 
 func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -50,25 +52,50 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	mType := pds.MappingDumpType_MAPPING_DUMP_ALL
+	if cmd.Flags().Changed("type") {
+		switch mappingType {
+		case "all":
+			mType = pds.MappingDumpType_MAPPING_DUMP_ALL
+		case "local":
+			mType = pds.MappingDumpType_MAPPING_DUMP_LOCAL
+		case "remote":
+			mType = pds.MappingDumpType_MAPPING_DUMP_REMOTE
+		default:
+			fmt.Printf("Invalid mapping type specified\n")
+			return
+		}
+	}
 	var cmdCtxt *pds.CommandCtxt
 
 	if cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
 		// dump specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
-            Keyinfo: &pds.MappingKey_IPKey{
-                IPKey: &pds.L3MappingKey{
-                    VPCId:  vpcID,
-                    IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
-                },
-            },
+			Keyinfo: &pds.MappingKey_IPKey{
+				IPKey: &pds.L3MappingKey{
+					VPCId:  vpcID,
+					IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
+				},
+			},
 		}
 		cmdCtxt = &pds.CommandCtxt{
 			Version: 1,
 			Cmd:     pds.Command_CMD_MAPPING_DUMP,
 			CommandFilter: &pds.CommandCtxt_MappingDumpFilter{
 				MappingDumpFilter: &pds.MappingDumpFilter{
-					Key: key,
+					Key:  key,
+					Type: mType,
+				},
+			},
+		}
+	} else if cmd.Flags().Changed("type") {
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_MAPPING_DUMP,
+			CommandFilter: &pds.CommandCtxt_MappingDumpFilter{
+				MappingDumpFilter: &pds.MappingDumpFilter{
+					Type: mType,
 				},
 			},
 		}

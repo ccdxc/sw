@@ -25,57 +25,6 @@
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)             \
-{                                                                            \
-    memset((key), 0, sizeof(*(key)));                                        \
-    (key)->key_metadata_local_mapping_lkp_id = vpc_hw_id;                    \
-    if ((ip)->af == IP_AF_IPV6) {                                            \
-        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV6;          \
-        sdk::lib::memrev((key)->key_metadata_local_mapping_lkp_addr,         \
-                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
-    } else {                                                                 \
-        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;          \
-        memcpy((key)->key_metadata_local_mapping_lkp_addr,                   \
-               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
-    }                                                                        \
-}
-
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx)  \
-{                                                                            \
-    memset(data, 0, sizeof(*(data)));                                        \
-    (data)->vnic_id = (vnic_hw_id);                                          \
-}
-
-#define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \
-{                                                                            \
-    memset((key), 0, sizeof(*(key)));                                        \
-    (key)->p4e_i2e_mapping_lkp_id = vpc_hw_id;                               \
-    if ((ip)->af == IP_AF_IPV6) {                                            \
-        (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV6;                     \
-        sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr,                    \
-                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
-    } else {                                                                 \
-        (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;                     \
-        memcpy((key)->p4e_i2e_mapping_lkp_addr,                              \
-               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
-    }                                                                        \
-}
-
-#define nat_action action_u.nat_nat_rewrite
-#define PDS_IMPL_FILL_NAT_DATA(data, xlate_ip, xlate_port)                   \
-{                                                                            \
-    memset((data), 0, sizeof(*(data)));                                      \
-    (data)->action_id = NAT_NAT_REWRITE_ID;                                  \
-    if ((xlate_ip)->af == IP_AF_IPV6) {                                      \
-        sdk::lib::memrev((data)->nat_action.ip,                              \
-                         (xlate_ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);     \
-    } else {                                                                 \
-        memcpy((data)->nat_action.ip, &(xlate_ip)->addr.v4_addr,             \
-               IP4_ADDR8_LEN);                                               \
-    }                                                                        \
-    /* (data)->port = (xlate_port); */                                       \
-}
-
 using sdk::table::sdk_table_api_params_t;
 
 namespace api {
@@ -614,18 +563,124 @@ mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
-    return SDK_RET_INVALID_OP;
+mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
+    mapping_swkey_t mapping_key;
+    nexthop_group_impl *nh_group;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
+    p4pd_error_t p4pd_ret;
+    bd_actiondata_t bd_data;
+    pds_mapping_spec_t *spec = &info->spec;
+    pds_mapping_status_t *status = &info->status;
+    sdk_ret_t ret;
+
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                   &spec->key.ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                   &mapping_data, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    switch (mapping_data.nexthop_type) {
+    case NEXTHOP_TYPE_TUNNEL:
+        spec->nh_type = PDS_NH_TYPE_OVERLAY;
+        break;
+    case NEXTHOP_TYPE_ECMP:
+        spec->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+        break;
+    case NEXTHOP_TYPE_NEXTHOP:
+        spec->nh_type = PDS_NH_TYPE_UNDERLAY;
+        break;
+    case NEXTHOP_TYPE_VPC:
+        spec->nh_type = PDS_NH_TYPE_PEER_VPC;
+        break;
+    default:
+        return SDK_RET_ERR;
+    }
+    sdk::lib::memrev(spec->overlay_mac, mapping_data.dmaci, ETH_ADDR_LEN);
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, mapping_data.egress_bd_id,
+                                      NULL, NULL, &bd_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    spec->fabric_encap.val.vnid = bd_data.bd_info.vni;
+    spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+
+    status->subnet_hw_id = mapping_data.egress_bd_id;
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
-mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
-    return SDK_RET_INVALID_OP;
+mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
+    sdk_ret_t                           ret;
+    local_mapping_swkey_t               local_mapping_key;
+    local_mapping_appdata_t             local_mapping_data;
+    sdk_table_api_params_t              tparams;
+    nat_actiondata_t                    nat_data;
+    pds_mapping_spec_t                  *spec = &info->spec;
+    pds_mapping_status_t                *status = &info->status;
+    p4pd_error_t                        p4pd_ret;
+
+    // first read the remote mapping, it can provide all the info except vnic id
+    ret = read_remote_mapping_(vpc, info);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // read the local mapping
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+                                         &spec->key.ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
+                                   &local_mapping_data, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    status->vnic_hw_id = local_mapping_data.vnic_id;
+
+    if (to_public_ip_nat_idx_ != 0xFFFF) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT, to_public_ip_nat_idx_,
+                                          NULL, NULL, &nat_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        spec->public_ip_valid = true;
+        spec->public_ip.af = spec->key.ip_addr.af;
+        if (spec->public_ip.af == IP_AF_IPV6) {
+            sdk::lib::memrev(spec->public_ip.addr.v6_addr.addr8,
+                             nat_data.nat_action.ip, IP6_ADDR8_LEN);
+        } else {
+            memcpy(&spec->public_ip.addr.v4_addr, nat_data.nat_action.ip, IP4_ADDR8_LEN);
+        }
+    }
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    nat_actiondata_t nat_data = { 0 };
+    pds_mapping_key_t *mkey = (pds_mapping_key_t *)key;
+    pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;
+    mapping_entry *mapping = (mapping_entry *)api_obj;
+
+    is_local_ = mapping->is_local();
+    vpc = vpc_db()->find(&mkey->vpc);
+    memcpy(&minfo->spec.key, mkey, sizeof(pds_mapping_key_t));
+    if (is_local_) {
+        ret = read_local_mapping_(vpc, minfo);
+    } else {
+        ret = read_remote_mapping_(vpc, minfo);
+    }
+    return ret;
 }
 
 /// \@}

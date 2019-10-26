@@ -521,6 +521,20 @@ pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
     }
 }
 
+static inline mapping_dump_type_t
+proto_mapping_dump_type_to_pds (pds::MappingDumpType type)
+{
+    switch (type) {
+    case pds::MAPPING_DUMP_LOCAL:
+        return MAPPING_DUMP_TYPE_LOCAL;
+    case pds::MAPPING_DUMP_REMOTE:
+        return MAPPING_DUMP_TYPE_REMOTE;
+    case pds::MAPPING_DUMP_ALL:
+    default:
+        return MAPPING_DUMP_TYPE_ALL;
+    }
+}
+
 static inline void
 pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
                            pds::CommandCtxt *proto_ctxt,
@@ -529,11 +543,17 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
     cmd_ctxt->fd = fd;
     cmd_ctxt->cmd = pds_proto_cmd_to_api_cmd(proto_ctxt->cmd());
     if (proto_ctxt->has_mappingdumpfilter()) {
-        auto key = proto_ctxt->mappingdumpfilter().key();
         cmd_ctxt->args.valid = true;
-        cmd_ctxt->args.mapping_dump.key.vpc.id = key.ipkey().vpcid();
-        ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
-                                      key.ipkey().ipaddr());
+        if (proto_ctxt->mappingdumpfilter().has_key()) {
+            auto key = proto_ctxt->mappingdumpfilter().key();
+            cmd_ctxt->args.mapping_dump.key_valid = true;
+            cmd_ctxt->args.mapping_dump.key.vpc.id = key.ipkey().vpcid();
+            ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
+                                          key.ipkey().ipaddr());
+        }
+        cmd_ctxt->args.mapping_dump.type = 
+                proto_mapping_dump_type_to_pds(
+                proto_ctxt->mappingdumpfilter().type());
     }
 }
 

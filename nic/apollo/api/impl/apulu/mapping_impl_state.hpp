@@ -64,6 +64,12 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief     API to dump mapping entries
+    /// \param[in] fd   file descriptor where entries are dumped
+    /// \param[in] args command arguments
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t mapping_dump(int fd, cmd_args_t *args);
+
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
@@ -71,6 +77,7 @@ private:
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
     friend class vnic_impl;
+    friend void local_mapping_dump_cb(sdk_table_api_params_t *params);
 
 private:
     mem_hash    *local_mapping_tbl_;

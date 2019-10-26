@@ -434,12 +434,19 @@ message QueueCreditsGetResponse {
 }
 
 enum Command {
-  CMD_MAPPING_NONE = 0;
+  CMD_NONE         = 0;
   CMD_MAPPING_DUMP = 1;
 }
 
+enum MappingDumpType {
+  MAPPING_DUMP_ALL    = 0;
+  MAPPING_DUMP_LOCAL  = 1;
+  MAPPING_DUMP_REMOTE = 2;
+}
+
 message MappingDumpFilter {
-  pds.MappingKey Key = 1;
+  pds.MappingKey  Key  = 1;
+  MappingDumpType Type = 2;
 }
 
 message CommandCtxt {

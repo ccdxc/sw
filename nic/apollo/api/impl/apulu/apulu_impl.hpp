@@ -35,6 +35,81 @@
 namespace api {
 namespace impl {
 
+#define bd_info action_u.bd_bd_info
+
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)             \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->key_metadata_local_mapping_lkp_id = vpc_hw_id;                    \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV6;          \
+        sdk::lib::memrev((key)->key_metadata_local_mapping_lkp_addr,         \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;          \
+        memcpy((key)->key_metadata_local_mapping_lkp_addr,                   \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx)  \
+{                                                                            \
+    memset(data, 0, sizeof(*(data)));                                        \
+    (data)->vnic_id = (vnic_hw_id);                                          \
+}
+
+#define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->p4e_i2e_mapping_lkp_id = vpc_hw_id;                               \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV6;                     \
+        sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr,                    \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;                     \
+        memcpy((key)->p4e_i2e_mapping_lkp_addr,                              \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
+#define nat_action action_u.nat_nat_rewrite
+#define PDS_IMPL_FILL_NAT_DATA(data, xlate_ip, xlate_port)                   \
+{                                                                            \
+    memset((data), 0, sizeof(*(data)));                                      \
+    (data)->action_id = NAT_NAT_REWRITE_ID;                                  \
+    if ((xlate_ip)->af == IP_AF_IPV6) {                                      \
+        sdk::lib::memrev((data)->nat_action.ip,                              \
+                         (xlate_ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);     \
+    } else {                                                                 \
+        memcpy((data)->nat_action.ip, &(xlate_ip)->addr.v4_addr,             \
+               IP4_ADDR8_LEN);                                               \
+    }                                                                        \
+    /* (data)->port = (xlate_port); */                                       \
+}
+
+static inline void
+nexthop_type_to_string (std::string &nexthop_str, uint8_t nexthop_type)
+{
+    switch (nexthop_type) {
+    case NEXTHOP_TYPE_VPC:
+        nexthop_str = "vpc";
+        break;
+    case NEXTHOP_TYPE_ECMP:
+        nexthop_str = "ecmp";
+        break;
+    case NEXTHOP_TYPE_TUNNEL:
+        nexthop_str = "tunnel";
+        break;
+    case NEXTHOP_TYPE_NEXTHOP:
+        nexthop_str = "nexthop";
+        break;
+    default:
+        nexthop_str = "-";
+        break;
+    }
+}
+
 /// \defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
 /// \ingroup PDS_PIPELINE
 /// @{
@@ -143,6 +218,11 @@ public:
     /// \param[in]  idx     Index for flow to be cleared
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t flow_clear(uint32_t idx) override;
+
+    /// \brief API to handle CLI calls
+    /// \param[in]  ctxt    CLI command context
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t handle_cmd(cmd_ctxt_t *ctxt) override;
 
 private:
     /// \brief constructor

@@ -625,6 +625,20 @@ apulu_impl::flow_clear(uint32_t idx) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
+    switch (ctxt->cmd) {
+    case CLI_CMD_MAPPING_DUMP:
+        g_pds_impl_state.mapping_impl_db()->mapping_dump(ctxt->fd,
+                    (ctxt->args.valid == true) ? &ctxt->args : NULL);
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl

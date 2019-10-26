@@ -203,15 +203,15 @@ private:
 
     /// \brief         read the configured values from the local mapping tables
     /// \param[in]     vpc  pointer to the vpc entry
-    /// \param[in/out] spec pointer to the spec
+    /// \param[in/out] info pointer to the info
     /// \return        SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
+    sdk_ret_t read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info);
 
     /// \brief         read the configured values from the local mapping tables
     /// \param[in]     vpc  pointer to the vpc entry
-    /// \param[in/out] spec pointer to the spec
+    /// \param[in/out] info pointer to the info
     /// \return        SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
+    sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_info_t *info);
 
     /// \brief     release all the resources reserved for local mapping
     /// \param[in] api_obj mapping object

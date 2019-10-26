@@ -70,8 +70,16 @@ typedef struct session_stats_entry_s {
     uint64_t rflow_packet_count;
 } pds_session_debug_stats_t;
 
+typedef enum mapping_dump_type_e {
+    MAPPING_DUMP_TYPE_ALL = 0,
+    MAPPING_DUMP_TYPE_LOCAL,
+    MAPPING_DUMP_TYPE_REMOTE,
+} mapping_dump_type_t;
+
 typedef struct mapping_dump_args_s {
+    bool key_valid;
     pds_mapping_key_t key;
+    mapping_dump_type_t type;
 } mapping_dump_args_t;
 
 typedef struct cmd_args_s {

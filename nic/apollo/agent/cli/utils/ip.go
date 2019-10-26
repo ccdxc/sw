@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
@@ -15,11 +16,24 @@ func IPAddrStrtoUint32(ip string) uint32 {
 
 // IPAddrStrToPDSIPAddr converts string ip address to pds native IPAddress Type
 func IPAddrStrToPDSIPAddr(ip string) *pds.IPAddress {
-	ipAddr := &pds.IPAddress{
-		Af: pds.IPAF_IP_AF_INET,
-		V4OrV6: &pds.IPAddress_V4Addr{
-			V4Addr: IPAddrStrtoUint32(ip),
-		},
+	netIP := net.ParseIP(ip)
+	isV6 := (netIP.To4() == nil)
+
+	var ipAddr *pds.IPAddress
+	if isV6 {
+		ipAddr = &pds.IPAddress{
+			Af: pds.IPAF_IP_AF_INET6,
+			V4OrV6: &pds.IPAddress_V6Addr{
+				V6Addr: netIP,
+			},
+		}
+	} else {
+		ipAddr = &pds.IPAddress{
+			Af: pds.IPAF_IP_AF_INET,
+			V4OrV6: &pds.IPAddress_V4Addr{
+				V4Addr: IPAddrStrtoUint32(ip),
+			},
+		}
 	}
 	return ipAddr
 }
