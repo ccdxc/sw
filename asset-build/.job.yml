@@ -8,7 +8,6 @@ targets:
     sub-area:
     feature:
     build-dependencies:
-      - build-iris-arm
       - build-venice-image
 
 image:

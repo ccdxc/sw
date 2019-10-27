@@ -1,12 +1,18 @@
 package main
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
+	"time"
 
 	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
@@ -29,11 +35,13 @@ func main() {
 			Name:   "assets-server-colo, ac",
 			Value:  asset.EndpointColo,
 			EnvVar: "ASSETS_HOST_COLO",
+			Usage:  "host name of colo asset server. if hostname is NULL, it means not push to colo",
 		},
 		cli.StringFlag{
 			Name:   "assets-server-hq, ah",
 			Value:  asset.EndpointHQ,
 			EnvVar: "ASSETS_HOST_HQ",
+			Usage:  "host name of hq asset server. if hostname is NULL, it means not push to hq",
 		},
 	}
 
@@ -56,49 +64,213 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
-	assetServerHQ := ctx.GlobalString("assets-server-hq")
 	bucket := ctx.Args()[0]
 	dirName, version, filename := ctx.Args()[1], ctx.Args()[2], ctx.Args()[3]
-	if bucket == "builds" {
-		// because builds is an NFS mount point at HQ, move one level up
-		// also use different minio server due to minio limitation
-		bucket = dirName
-		dirName = version
-		version = ""
-		assetServerHQ = "assets-hq.pensando.io:9001"
+	remote := []string{}
+	if ctx.GlobalString("assets-server-colo") != "NULL" {
+		remote = append(remote, ctx.GlobalString("assets-server-colo"))
 	}
+	if ctx.GlobalString("assets-server-hq") != "NULL" {
+		assetServerHQ := ctx.GlobalString("assets-server-hq")
+		if bucket == "builds" {
+			// because builds is an NFS mount point at HQ, move one level up
+			// also use different minio server due to minio limitation
+			bucket = dirName
+			dirName = version
+			version = ""
+			assetServerHQ = "assets-hq.pensando.io:9001"
+		}
+		remote = append(remote, assetServerHQ)
+	}
+
+	assetPath := path.Join(dirName, version, filename)
+
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return err
 	}
 
+	if fi.IsDir() {
+		assetPath = assetPath + ".tar.gz"
+		return uploadDir(bucket, filename, assetPath, remote)
+	}
+
+	return uploadFile(bucket, filename, assetPath, remote, fi)
+}
+
+func uploadFile(bucket, localFile, remoteFile string, remoteHosts []string, fi os.FileInfo) error {
 	size := fi.Size()
 	if !fi.Mode().IsRegular() {
 		var err error
-		filename, size, err = mktemp(filename)
+		localFile, size, err = mktemp(localFile)
 		if err != nil {
 			return err
 		}
-		defer os.Remove(filename)
+		defer os.Remove(localFile)
 	}
 
-	f, err := os.Open(filename)
+	f, err := os.Open(localFile)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	assetPath := path.Join(dirName, version, filename)
 
-	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), assetServerHQ} {
-		logrus.Infof("Uploading %s %f MB to %s...", filename, float64(size>>10)/float64(1024), ep)
+	for _, ep := range remoteHosts {
+		logrus.Infof("Uploading %s %f MB to %s...", localFile, float64(size>>10)/float64(1024), ep)
 
 		if _, err := f.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		if err := upload(bucket, assetPath, ep, f); err != nil {
+		if err := upload(bucket, remoteFile, ep, f); err != nil {
 			logrus.Errorf("Failed to push to %s: %v", ep, err)
 		}
 	}
+	return nil
+}
+
+// skip .git and submodule .git directories.
+// TODO: add more skipped condition if needed
+func skipDir(name string) bool {
+	return strings.HasPrefix(name, ".git")
+}
+
+func getTotalFilesCount(localPath string) (int, int, error) {
+	var totalFiles, totalDirs int
+	err := filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			if skipDir(info.Name()) {
+				return filepath.SkipDir
+			}
+
+			totalDirs++
+			return nil
+		}
+		totalFiles++
+		return nil
+	})
+	return totalDirs, totalFiles, err
+}
+
+func walkAndTar(localPath string, totalDirs, totalFiles int, tw *tar.Writer, gzw *gzip.Writer, pw *io.PipeWriter) {
+	defer func() {
+		if err := tw.Close(); err != nil {
+			logrus.Errorf("failed to close tar writer: %v", err)
+		}
+		if err := gzw.Close(); err != nil {
+			logrus.Errorf("failed to close gzip writer: %v", err)
+		}
+		if err := pw.Close(); err != nil {
+			logrus.Errorf("failed to close pipe writer: %v", err)
+		}
+	}()
+
+	var processedDirs, processedFiles int
+	var processedBytes int64
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		start := time.Now()
+
+		spinner := []string{"-", "/", "-", "\\"}
+		i := 0
+		for {
+			after := time.After(time.Second)
+			select {
+			case <-done:
+				fmt.Printf("\n%d bytes compressed!\n", processedBytes)
+				return
+			case <-after:
+				fmt.Printf("\r[elapsed: %v | files: %d%% - %d(%d) | dirs: %d%% - %d(%d) | bytes: %d] %s", time.Since(start),
+					int(100.0*processedFiles/totalFiles), processedFiles, totalFiles,
+					int(100.0*processedDirs/totalDirs), processedDirs, totalDirs,
+					processedBytes, spinner[i%len(spinner)])
+				i++
+			}
+		}
+	}()
+
+	err := filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		link := ""
+		if info.IsDir() {
+			if skipDir(info.Name()) {
+				logrus.Infof("skip %s\n", path)
+				return filepath.SkipDir
+			}
+			processedDirs++
+			return nil
+		} else if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			if link, err = os.Readlink(path); err != nil {
+				return err
+			}
+		}
+
+		header, err := tar.FileInfoHeader(info, link)
+		if err != nil {
+			return err
+		}
+
+		header.Name = path
+		err = tw.WriteHeader(header)
+		if err != nil {
+			return errors.New("tar " + path + " got " + err.Error())
+		}
+
+		processedFiles++
+
+		if !info.Mode().IsRegular() { //nothing more to do for non-regular
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		size, err := io.Copy(tw, file)
+		if err != nil {
+			return errors.New("copy " + path + " got " + err.Error())
+		}
+		processedBytes += size
+		return nil
+	})
+	if err != nil {
+		logrus.Errorf("while walking directory, got %v", err)
+	}
+}
+
+func uploadDir(bucket, localPath, remotePath string, remoteHosts []string) error {
+	totalDirs, totalFiles, err := getTotalFilesCount(localPath)
+	if err != nil {
+		return err
+	}
+
+	for _, ep := range remoteHosts {
+		logrus.Infof("Uploading (total %d files / %d dirs) under %s to %s@%s", totalFiles, totalDirs, localPath, remotePath, ep)
+		pr, pw := io.Pipe()
+		defer func() {
+			if err := pr.Close(); err != nil {
+				logrus.Errorf("failed to close pipe reader: %v", err)
+			}
+		}()
+		gzw := gzip.NewWriter(pw)
+		tw := tar.NewWriter(gzw)
+		go walkAndTar(localPath, totalDirs, totalFiles, tw, gzw, pw)
+
+		err := upload(bucket, remotePath, ep, pr)
+		if err != nil {
+			logrus.Errorf("failed to upload: %v", err)
+		}
+	}
+
 	return nil
 }
 
