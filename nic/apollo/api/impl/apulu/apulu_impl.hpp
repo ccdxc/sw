@@ -286,6 +286,15 @@ private:
     pipeline_cfg_t      pipeline_cfg_;
 };
 
+/// \brief helper function to program LIF table
+/// \param[in] lif_hw_id    hw id of the lif to be programmed
+/// \param[in] vpc_hw_id    hw id of the vpc for this lif
+/// \param[in] bd_hw_id     hw id of the BD for this lif
+/// \param[in] vnic_hw_id   hw id of the vnic for this lif
+/// \return SDK_RET_OK on success, failure status code on error
+sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint16_t vpc_hw_id,
+                            uint16_t bd_hw_id, uint16_t vnic_hw_id);
+
 /// \@}
 
 }    // namespace impl

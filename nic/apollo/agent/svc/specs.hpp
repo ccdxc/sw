@@ -551,7 +551,7 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
             ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
                                           key.ipkey().ipaddr());
         }
-        cmd_ctxt->args.mapping_dump.type = 
+        cmd_ctxt->args.mapping_dump.type =
                 proto_mapping_dump_type_to_pds(
                 proto_ctxt->mappingdumpfilter().type());
     }
@@ -2528,6 +2528,7 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
+    proto_spec->set_hostifindex(api_spec->host_ifindex);
 }
 
 // populate proto buf status from subnet API status
@@ -2581,6 +2582,7 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->egr_v4_policy.id = proto_spec.egv4securitypolicyid();
     api_spec->egr_v6_policy.id = proto_spec.egv6securitypolicyid();
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
+    api_spec->host_ifindex = proto_spec.hostifindex();
 }
 
 // build VPC API spec from protobuf spec

@@ -196,23 +196,7 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
     }
 
     SubnetSpec *spec = req->add_request();
-    ipv4pfx_api_spec_to_proto_spec(spec->mutable_v4prefix(),
-                                   &subnet->v4_prefix);
-    ippfx_api_spec_to_ipv6pfx_proto_spec(spec->mutable_v6prefix(),
-                                         &subnet->v6_prefix);
-    spec->set_ipv4virtualrouterip(subnet->v4_vr_ip);
-    spec->set_ipv6virtualrouterip(subnet->v6_vr_ip.addr.v6_addr.addr8,
-                                  IP6_ADDR8_LEN);
-    spec->set_id(subnet->key.id);
-    spec->set_vpcid(subnet->vpc.id);
-    spec->set_virtualroutermac(MAC_TO_UINT64(subnet->vr_mac));
-    spec->set_v4routetableid(subnet->v4_route_table.id);
-    spec->set_v6routetableid(subnet->v6_route_table.id);
-    spec->set_ingv4securitypolicyid(subnet->ing_v4_policy.id);
-    spec->set_ingv6securitypolicyid(subnet->ing_v6_policy.id);
-    spec->set_egv4securitypolicyid(subnet->egr_v4_policy.id);
-    spec->set_egv6securitypolicyid(subnet->egr_v6_policy.id);
-
+    pds_subnet_api_spec_to_proto(spec, subnet);
     return;
 }
 

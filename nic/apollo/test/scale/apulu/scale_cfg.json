@@ -30,7 +30,7 @@
         {
             "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
-            "count" : "64",
+            "count" : "8",
             "prefix" : "2.0.0.0/8",
             "v6-prefix" : "2019::/96",
             "subnets" : "1"

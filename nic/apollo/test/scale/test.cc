@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <math.h>
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/api.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -25,7 +26,7 @@ using std::string;
 
 extern char *g_input_cfg_file;
 extern std::string g_pipeline;
-pds_device_spec_t g_device = {0};
+pds_device_spec_t g_device = { 0 };
 test_params_t g_test_params;
 uint32_t tep_id = 0;
 
@@ -34,6 +35,8 @@ uint32_t tep_id = 0;
 
 #define TEP_ID_START 1
 #define TEP_ID_MYTEP TEP_ID_START
+#define HOST_LIF_ID_MIN        71
+#define HOST_LIF_ID_MAX        78
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -471,6 +474,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     uint16_t vnic_key = 1;
     static pds_meter_id_t v4_meter_id = 1;
     static pds_meter_id_t v6_meter_id = num_meter+1;
+    static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= PDS_MAX_VNIC);
     for (uint32_t i = 1; i <= (uint64_t)num_vpcs; i++) {
@@ -527,6 +531,12 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 if (v6_meter_id > (2 * num_meter)) {
                     v6_meter_id = num_meter+1;
                 }
+                if (apulu()) {
+                    pds_vnic.host_ifindex = LIF_IFINDEX(lif_id++);
+                    if (lif_id > HOST_LIF_ID_MAX) {
+                        lif_id = HOST_LIF_ID_MIN;
+                    }
+                }
                 rv = create_vnic(&pds_vnic);
                 SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                         "create vnic failed, vpc %u, ret %u",
@@ -574,6 +584,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
     pds_subnet_spec_t pds_subnet;
     static uint32_t route_table_id = 1;
     static uint32_t policy_id = 1;
+    static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
@@ -600,12 +611,17 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
         if (apulu()) {
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-            pds_subnet.fabric_encap.val.vnid = num_vpcs + (vpc_id - 1) * num_subnets + i;
+            pds_subnet.fabric_encap.val.vnid =
+                num_vpcs + (vpc_id - 1) * num_subnets + i;
+            pds_subnet.host_ifindex = LIF_IFINDEX(lif_id++);
+            if (lif_id > HOST_LIF_ID_MAX) {
+                lif_id = HOST_LIF_ID_MIN;
+            }
         }
-        policy_id++;
         rv = create_subnet(&pds_subnet);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create subnet %u failed, ret %u", i, rv);
+        policy_id++;
     }
     return SDK_RET_OK;
 }

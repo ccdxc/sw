@@ -53,6 +53,10 @@ message SubnetSpec {
   // mapped to this subnet and traffic from workloads in this subnet will carry
   // this encap towards the fabric side
   types.Encap    FabricEncap           = 14;
+  /// when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
+  /// present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
+  /// HostIfIndex is the interface index of such VF/PF
+  uint32          HostIfIndex           = 15;
 }
 
 // operational status of the subnet, if any

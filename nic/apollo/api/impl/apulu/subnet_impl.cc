@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -153,15 +154,19 @@ sdk_ret_t
 subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
                               pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
+    lif_impl *lif;
     vpc_entry *vpc;
+    pds_lif_key_t lif_key;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
 
     PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, vpc %u, "
-                    "fabric encap (%u, %u)", spec->key.id, subnet->hw_id(),
+                    "fabric encap (%u, %u), host if 0x%x",
+                    spec->key.id, subnet->hw_id(),
                     spec->vpc.id, spec->fabric_encap.type,
-                    spec->fabric_encap.val.vnid);
+                    spec->fabric_encap.val.vnid,
+                    spec->host_ifindex);
     vpc = vpc_db()->find(&spec->vpc);
     if (vpc == NULL) {
         PDS_TRACE_ERR("No vpc %u found to program subnet %u",
@@ -181,6 +186,20 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
                       spec->key.id, ret);
+    }
+
+    // if the subnet is enabled on host interface, update the lif table with
+    // subnet and vpc ids appropriately
+    if ((spec->host_ifindex != IFINDEX_INVALID) &&
+        (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW)) {
+        lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        lif = lif_impl_db()->find(&lif_key);
+        ret = program_lif_table(lif_key, vpc->hw_id(), subnet->hw_id(),
+                                lif->vnic_hw_id());
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u create, "
+                          "err %u", spec->host_ifindex, spec->key.id, ret);
+        }
     }
     return ret;
 }

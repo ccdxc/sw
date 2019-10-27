@@ -51,29 +51,6 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     vnic_hw_id_ = 0xFFFF;
 }
 
-#define lif_action              action_u.lif_lif_info
-static inline sdk_ret_t
-program_lif_table_ (uint16_t lif_hw_id, uint16_t vnic_hw_id)
-{
-    sdk_ret_t ret;
-    p4pd_error_t p4pd_ret;
-    lif_actiondata_t lif_data = { 0 };
-
-    // program the LIF table
-    lif_data.action_id = LIF_LIF_INFO_ID;
-    lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
-    lif_data.lif_action.vnic_id = vnic_hw_id;
-    lif_data.lif_action.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
-    lif_data.lif_action.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, lif_hw_id,
-                                       NULL, NULL, &lif_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program LIF table for oob lif %u", lif_hw_id);
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-    return SDK_RET_OK;
-}
-
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
 lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
@@ -226,7 +203,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
     // program the LIF table
-    ret = program_lif_table_(key_, idx);
+    ret = program_lif_table(key_, PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, idx);
     if (ret != SDK_RET_OK) {
         goto error;
     }
@@ -354,7 +332,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
     // program the LIF table
-    ret = program_lif_table_(key_, idx);
+    ret = program_lif_table(key_, PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, idx);
     if (ret != SDK_RET_OK) {
         goto error;
     }
@@ -425,7 +404,8 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
     // program the LIF table
-    ret = program_lif_table_(key_, idx);
+    ret = program_lif_table(key_, PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, idx);
     if (ret != SDK_RET_OK) {
         goto error;
     }
@@ -578,13 +558,15 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
     // program the LIF table entry for host mgmt lif
-    ret = program_lif_table_(host_mgmt_lif->key(), idx);
+    ret = program_lif_table(host_mgmt_lif->key(), PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, idx);
     if (ret != SDK_RET_OK) {
         goto error;
     }
 
     // program the LIF table entry for host mgmt lif
-    ret = program_lif_table_(int_mgmt_lif->key(), idx + 1);
+    ret = program_lif_table(int_mgmt_lif->key(), PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, idx + 1);
     if (ret != SDK_RET_OK) {
         goto error;
     }
@@ -604,6 +586,8 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     lif_actiondata_t lif_data = { 0 };
 
+    PDS_TRACE_DEBUG("Creating host lif %u", key_);
+
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
@@ -612,7 +596,8 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     }
     vnic_hw_id_ = idx;
     // program the LIF table
-    ret = program_lif_table_(key_, vnic_hw_id_);
+    ret = program_lif_table(key_, PDS_IMPL_RSVD_VPC_HW_ID,
+                            PDS_IMPL_RSVD_BD_HW_ID, vnic_hw_id_);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }

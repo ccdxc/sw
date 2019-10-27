@@ -133,9 +133,10 @@ main (int argc, char **argv)
               string(get_cfg_json_name());
     system(cmd.c_str());
 
-    // Init app
+    // init app
     test_app_init();
-    // Push configs
+
+    // push configs
     if (test_app_push_configs() != SDK_RET_OK) {
         fprintf(stderr, "Config push failed!\n");
         exit(1);

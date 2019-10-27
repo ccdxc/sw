@@ -434,7 +434,6 @@ inline sdk_ret_t
 parse_test_cfg (test_params_t *test_params, string pipeline)
 {
     string cfg_file = get_cfg_json(pipeline.c_str());
-    printf ("cfg file: %s\n", cfg_file.c_str());
     return parse_test_cfg(cfg_file.c_str(), test_params);
 }
 
