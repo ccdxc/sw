@@ -77,6 +77,17 @@ func NewNMD(pipeline Pipeline,
 	var emdb emstore.Emstore
 	var err error
 
+	// Create /sysconfig/config0 and /sysconfig/config1 directory if it doesn't exist
+	err = os.MkdirAll(globals.NaplesConfig, 0777)
+	if err != nil {
+		log.Errorf("Failed to create %v. Err: %v", globals.NaplesConfig, err)
+	}
+
+	err = os.MkdirAll(globals.NaplesConfigBackup, 0777)
+	if err != nil {
+		log.Errorf("Failed to create %v. Err: %v", globals.NaplesConfigBackup, err)
+	}
+
 	// create a platform agent
 
 	pa, err := platform.NewNaplesPlatformAgent()

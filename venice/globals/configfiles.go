@@ -58,4 +58,10 @@ var (
 
 	// NaplesTrustRootsBackupFile is the location of the file containing backup of the Venice trust roots on NAPLES
 	NaplesTrustRootsBackupFile = "/sysconfig/config1/clusterTrustRoots.pem"
+
+	// NaplesConfig is the directory where config files for Naples are kept
+	NaplesConfig = "/sysconfig/config0"
+
+	// NaplesConfigBackup is the directory where all the config files are backed up
+	NaplesConfigBackup = "/sysconfig/config1"
 )
