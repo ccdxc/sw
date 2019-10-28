@@ -90,7 +90,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 					NetworkName: network.Name,
 					UsegVlan:    c.Template.USegVlanOffset + uint32(i),
 					MacAddress:  epMac,
-					IPv4Address: epIP,
+					IPv4Addresses: []string{epIP},
 					NodeUUID:    nodeUUID,
 				},
 			}
@@ -147,7 +147,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 			Spec: netproto.EndpointSpec{
 				NetworkName: network.Name,
 				MacAddress:  epMac,
-				IPv4Address: epIP,
+				IPv4Addresses: []string{epIP},
 				NodeUUID:    defaultRemoteUUIDName,
 			},
 		}
@@ -173,7 +173,9 @@ func (c *CfgGen) GetRemoteEndpointsIPs() []string {
 	remoteEPs := []string{}
 	for _, ep := range eps {
 		if ep.Spec.NodeUUID == defaultRemoteUUIDName {
-			remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
+			for _, address := range ep.Spec.IPv4Addresses {
+				remoteEPs = append(remoteEPs, address)
+			}
 		}
 	}
 

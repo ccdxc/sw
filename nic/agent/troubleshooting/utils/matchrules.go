@@ -272,13 +272,18 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 				}
 				epObj, err := findEndpoint(epMeta)
 				if err == nil {
-					if epObj.Spec.IPv4Address != "" {
-						srcIPs = append(srcIPs, BuildIPAddrDetails(epObj.Spec.IPv4Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv4Address)
+					for _, address := range epObj.Spec.IPv4Addresses {
+						if address != "" {
+							srcIPs = append(srcIPs, BuildIPAddrDetails(address))
+							srcIPStrings = append(srcIPStrings, address)
+						}
 					}
-					if epObj.Spec.IPv6Address != "" {
-						srcIPs = append(srcIPs, BuildIPAddrDetails(epObj.Spec.IPv6Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv6Address)
+
+					for _, address := range epObj.Spec.IPv6Addresses {
+						if address != "" {
+							srcIPs = append(srcIPs, BuildIPAddrDetails(address))
+							srcIPStrings = append(srcIPStrings, address)
+						}
 					}
 				}
 			}
@@ -308,14 +313,18 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 				}
 				epObj, err := findEndpoint(epMeta)
 				if err == nil {
-
-					if epObj.Spec.IPv4Address != "" {
-						destIPs = append(destIPs, BuildIPAddrDetails(epObj.Spec.IPv4Address))
-						destIPStrings = append(destIPStrings, epObj.Spec.IPv4Address)
+					for _, address := range epObj.Spec.IPv4Addresses {
+						if address != "" {
+							destIPs = append(destIPs, BuildIPAddrDetails(address))
+							destIPStrings = append(destIPStrings, address)
+						}
 					}
-					if epObj.Spec.IPv6Address != "" {
-						destIPs = append(destIPs, BuildIPAddrDetails(epObj.Spec.IPv6Address))
-						destIPStrings = append(destIPStrings, epObj.Spec.IPv6Address)
+
+					for _, address := range epObj.Spec.IPv6Addresses {
+						if address != "" {
+							destIPs = append(destIPs, BuildIPAddrDetails(address))
+							destIPStrings = append(destIPStrings, address)
+						}
 					}
 				}
 			}

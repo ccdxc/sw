@@ -69,11 +69,11 @@ message EndpointSpec {
     // Interface name of the endpoint. Required
     string Interface                        = 9 [(gogoproto.jsontag) = "interface,omitempty"];
     // IP Address of the endpoint in CIDR IP/Prefix format. Required
-    string IPv4Address                      = 10  [(gogoproto.jsontag) = "ipv4-address,omitempty"];
+    repeated string IPv4Addresses           = 10  [(gogoproto.jsontag) = "ipv4-addresses,omitempty"];
     // IP Gateway of the endpoint. Optional
     string IPv4Gateway                      = 11  [(gogoproto.jsontag) = "ipv4-gateway,omitempty"];
     // IPv6 Address of the endpoint. Optional
-    string IPv6Address                      = 12  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
+    repeated string IPv6Addresses           = 12  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
     // IPv6 Gateway of the endpoint. Optional
     string IPv6Gateway                      = 13  [(gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // MAC Address of the endpoint. Required

@@ -115,9 +115,9 @@ func (c *CfgGen) GenerateEPPairs(namespace, nodeUUID string, count int) (nwEpPai
 		for _, ep := range eps {
 			if ep.Namespace == namespace && ep.Spec.NetworkName == nw.GetObjectMeta().GetName() {
 				if ep.Spec.NodeUUID == nodeUUID {
-					localEPs = append(localEPs, ep.Spec.IPv4Address)
+					localEPs = append(localEPs, ep.Spec.IPv4Addresses...)
 				} else {
-					remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
+					remoteEPs = append(remoteEPs, ep.Spec.IPv4Addresses...)
 				}
 			}
 		}

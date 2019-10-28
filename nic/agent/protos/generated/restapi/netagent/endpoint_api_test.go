@@ -56,7 +56,7 @@ func TestEndpointPost(t *testing.T) {
 			InterfaceType: "UPLINK",
 			Interface:     "uplink128",
 			NodeUUID:      "dummy-node-uuid",
-			IPv4Address:   "10.1.1.0/24",
+			IPv4Addresses: []string{"10.1.1.0/24"},
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &postData, &resp)
@@ -138,7 +138,7 @@ func TestEndpointDelete(t *testing.T) {
 			InterfaceType: "UPLINK",
 			Interface:     "uplink128",
 			NodeUUID:      "dummy-node-uuid",
-			IPv4Address:   "10.1.1.0/24",
+			IPv4Addresses: []string{"10.1.1.0/24"},
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/endpoints/", &deleteData, &resp)

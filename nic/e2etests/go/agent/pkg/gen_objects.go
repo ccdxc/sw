@@ -373,7 +373,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "infra-nw",
 				UsegVlan:      uint32(i) + 1,
-				IPv4Address:   fmt.Sprintf("%s/32", ipAddr),
+				IPv4Addresses:   []string{fmt.Sprintf("%s/32", ipAddr)},
 				MacAddress:    epMACAddresses[i],
 				InterfaceType: "uplink",
 				Interface:     fmt.Sprintf("uplink%d", (i%UPLINK_COUNT)+UPLINK_START),
@@ -422,7 +422,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 			Spec: netproto.EndpointSpec{
 				NetworkName:   network,
 				UsegVlan:      uint32(i) + 1,
-				IPv4Address:   fmt.Sprintf("%s/32", epIP),
+				IPv4Addresses:   []string{fmt.Sprintf("%s/32", epIP)},
 				MacAddress:    epMAC,
 				InterfaceType: ifType,
 				Interface:     ifName,

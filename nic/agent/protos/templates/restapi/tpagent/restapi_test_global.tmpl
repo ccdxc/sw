@@ -96,8 +96,8 @@ func setup() (*restapi.RestServer, error) {
 		log.Errorf("Could not meet prerequisites for testing Endpoint CRUD Methods")
 		return nil, err
 	}
-	
-	
+
+
 	return restapi.NewRestServer(nagent, tsagent, tpa, agentRestURL)
 
 }
@@ -151,7 +151,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "preCreatedNetwork",
 			NodeUUID:     "dummy-node-uuid",
-			IPv4Address:  "10.1.1.0/24",
+			IPv4Addresses:[]string{"10.1.1.0/24"},
 			MacAddress:   "42:42:42:42:42:42",
 		},
 	}

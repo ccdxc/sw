@@ -279,9 +279,12 @@ func (na *Nagent) reconcileLateralObjects(owner string, lateralObjName, mgmtIP, 
 		}
 		// Find EP and add refcount
 		for _, ep := range na.ListEndpoint() {
-			epIP, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
-			if epIP.String() == destIP {
-				knownCollector = ep
+			for _, address := range ep.Spec.IPv4Addresses {
+				epIP, _, _ := net.ParseCIDR(address)
+				if epIP.String() == destIP {
+					knownCollector = ep
+					break
+				}
 			}
 		}
 
@@ -300,9 +303,12 @@ func (na *Nagent) reconcileLateralObjects(owner string, lateralObjName, mgmtIP, 
 
 	// Find EP and add refcount
 	for _, ep := range na.ListEndpoint() {
-		epIP, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
-		if epIP.String() == destIP {
-			knownCollector = ep
+		for _, address := range ep.Spec.IPv4Addresses {
+			epIP, _, _ := net.ParseCIDR(address)
+			if epIP.String() == destIP {
+				knownCollector = ep
+				break
+			}
 		}
 	}
 	if knownCollector != nil {
@@ -432,7 +438,7 @@ func (na *Nagent) generateLateralEP(objectName, destIP, mgmtIP string) (*netprot
 		Spec: netproto.EndpointSpec{
 			NetworkName:   "_internal_untagged_nw",
 			NodeUUID:      "REMOTE",
-			IPv4Address:   fmt.Sprintf("%s/32", epIP),
+			IPv4Addresses: []string{fmt.Sprintf("%s/32", epIP)},
 			MacAddress:    dMAC,
 			InterfaceType: epIfType,
 			Interface:     epIf,

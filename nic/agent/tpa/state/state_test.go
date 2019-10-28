@@ -207,8 +207,8 @@ func TestFindNumExports(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}
@@ -219,8 +219,8 @@ func TestFindNumExports(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}
@@ -653,8 +653,8 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}
@@ -836,8 +836,8 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}
@@ -1022,8 +1022,8 @@ func TestNetagentInfo(t *testing.T) {
 	na.EndpointDB[key] = &netproto.Endpoint{
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Namespace: "default", Tenant: "default"},
 		Spec: netproto.EndpointSpec{
-			NetworkName: "default",
-			IPv4Address: "10.10.10.1/32",
+			NetworkName:   "default",
+			IPv4Addresses: []string{"10.10.10.1/32"},
 		},
 		Status: netproto.EndpointStatus{},
 	}
@@ -1177,8 +1177,8 @@ func TestTpaDebug(t *testing.T) {
 	na.EndpointDB[key] = &netproto.Endpoint{
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Namespace: "default", Tenant: "default"},
 		Spec: netproto.EndpointSpec{
-			NetworkName: "default",
-			IPv4Address: "10.10.10.1/32",
+			NetworkName:   "default",
+			IPv4Addresses: []string{"10.10.10.1/32"},
 		},
 		Status: netproto.EndpointStatus{},
 	}
@@ -1187,8 +1187,8 @@ func TestTpaDebug(t *testing.T) {
 	na.EndpointDB[key] = &netproto.Endpoint{
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Namespace: "default", Tenant: "default"},
 		Spec: netproto.EndpointSpec{
-			NetworkName: "default",
-			IPv4Address: "10.10.10.2/32",
+			NetworkName:   "default",
+			IPv4Addresses: []string{"10.10.10.2/32"},
 		},
 		Status: netproto.EndpointStatus{},
 	}
@@ -1322,8 +1322,8 @@ func TestPolicyOps(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}
@@ -1596,8 +1596,8 @@ func TestMatchRule(t *testing.T) {
 		na.EndpointDB[key] = &netproto.Endpoint{
 			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
 			Spec: netproto.EndpointSpec{
-				NetworkName: "default",
-				IPv4Address: addr,
+				NetworkName:   "default",
+				IPv4Addresses: []string{addr},
 			},
 			Status: netproto.EndpointStatus{},
 		}

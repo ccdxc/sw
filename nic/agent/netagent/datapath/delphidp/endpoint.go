@@ -39,8 +39,8 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
-	if len(ep.Spec.IPv4Address) > 0 {
-		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+	for _, address := range ep.Spec.IPv4Addresses {
+		ipaddr, _, err := net.ParseCIDR(address)
 		if err != nil {
 			return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 		}
@@ -53,7 +53,6 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		}
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
-
 	}
 
 	vrfKey := halproto.VrfKeyHandle{
@@ -168,8 +167,8 @@ func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
-	if len(ep.Spec.IPv4Address) > 0 {
-		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+	for _, address := range ep.Spec.IPv4Addresses {
+		ipaddr, _, err := net.ParseCIDR(address)
 		if err != nil {
 			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 		}
@@ -182,7 +181,6 @@ func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		}
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
-
 	}
 
 	// get sg ids
@@ -290,8 +288,8 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
-	if len(ep.Spec.IPv4Address) > 0 {
-		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+	for _, address := range ep.Spec.IPv4Addresses {
+		ipaddr, _, err := net.ParseCIDR(address)
 		if err != nil {
 			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 		}
@@ -304,7 +302,6 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 		}
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
-
 	}
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
@@ -377,8 +374,8 @@ func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
 
-	if len(ep.Spec.IPv4Address) > 0 {
-		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+	for _, address := range ep.Spec.IPv4Addresses {
+		ipaddr, _, err := net.ParseCIDR(address)
 		if err != nil {
 			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
 		}
@@ -391,7 +388,6 @@ func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 		}
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
-
 	}
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle

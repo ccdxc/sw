@@ -160,8 +160,8 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 				return errors.Wrapf(err, "Error getting traffic interface %s",
 					epPair.Dst.Spec.Interface)
 			}
-			fmt.Println("SRC EP :", epPair.Src.Spec.GetIPv4Address(), epPair.Src.Spec.Interface, srcIntf)
-			fmt.Println("DST EP :", epPair.Dst.Spec.GetIPv4Address(), epPair.Dst.Spec.Interface, dstIntf)
+			fmt.Println("SRC EP :", epPair.Src.Spec.GetIPv4Addresses()[0], epPair.Src.Spec.Interface, srcIntf)
+			fmt.Println("DST EP :", epPair.Dst.Spec.GetIPv4Addresses()[0], epPair.Dst.Spec.Interface, dstIntf)
 			srcEphandle := newEpFromAgentConfig(&epPair.Src,
 				getNetworkFromConfig(epPair.Src.Spec.GetNetworkName(), agentCfg.Networks),
 				srcIntf)

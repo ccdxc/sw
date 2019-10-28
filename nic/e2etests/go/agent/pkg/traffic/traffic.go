@@ -80,7 +80,7 @@ func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf stri
 
 	infraEp.Interface.Name = vlanIntf
 	infraEp.Interface.MacAddress = ep.Spec.GetMacAddress()
-	infraEp.Interface.IPAddress = strings.Split(ep.Spec.GetIPv4Address(), "/")[0]
+	infraEp.Interface.IPAddress = strings.Split(ep.Spec.GetIPv4Addresses()[0], "/")[0]
 	infraEp.Interface.PrefixLen, _ = strconv.Atoi(strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1])
 
 	infraEp.Init(false)
@@ -173,7 +173,7 @@ func SetUpEPs(trafficHelper TrafficHelper, agentCfg *Pkg.AgentConfig) error {
 		nwKey := srcIntf + strconv.Itoa(int(nw.Spec.GetVlanID()))
 		if otherEp, ok := nwKeyMap[nwKey]; ok {
 			fmt.Printf("Skipping EP %s(%s) setup as same Network Vlan already created for EP (%s)(%s)",
-				ep.Name, ep.Spec.GetIPv4Address(), otherEp.Name, otherEp.Spec.GetIPv4Address())
+				ep.Name, ep.Spec.GetIPv4Addresses(), otherEp.Name, otherEp.Spec.GetIPv4Addresses())
 			continue
 		}
 		nwKeyMap[nwKey] = ep

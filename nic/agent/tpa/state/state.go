@@ -440,20 +440,21 @@ func (s *PolicyState) getVrfID(tenant, namespace, vrfName string) (uint64, error
 func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.NetworkStatus, error) {
 	epList := s.netAgent.ListEndpoint()
 	for _, ep := range epList {
-		epAddr, _, err := net.ParseCIDR(ep.Spec.GetIPv4Address())
-		if err != nil {
-			log.Errorf("failed to parse endpoint address {%+v} ", ep)
-			continue
-		}
-
-		if ep.ObjectMeta.Tenant == tenant && ep.ObjectMeta.Namespace == namespace &&
-			epAddr.String() == address {
-			netName := ep.Spec.GetNetworkName()
-			netObj, err := s.netAgent.FindNetwork(api.ObjectMeta{Tenant: tenant, Namespace: namespace, Name: netName})
+		for _, addr := range ep.Spec.IPv4Addresses {
+			epAddr, _, err := net.ParseCIDR(addr)
 			if err != nil {
-				return nil, fmt.Errorf("failed to find network %s of this {%s}", netName, address)
+				log.Errorf("failed to parse endpoint address {%+v} ", ep)
+				continue
 			}
-			return &netObj.Status, nil
+			if ep.ObjectMeta.Tenant == tenant && ep.ObjectMeta.Namespace == namespace &&
+				epAddr.String() == address {
+				netName := ep.Spec.GetNetworkName()
+				netObj, err := s.netAgent.FindNetwork(api.ObjectMeta{Tenant: tenant, Namespace: namespace, Name: netName})
+				if err != nil {
+					return nil, fmt.Errorf("failed to find network %s of this {%s}", netName, address)
+				}
+				return &netObj.Status, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("failed to find l2 segment id for %s", address)
@@ -521,17 +522,16 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 	if srcIPAddr == "" {
 		// get local endpoint
 		if ep, err := p.state.netAgent.FindLocalEndpoint(p.objMeta.Tenant, p.objMeta.Namespace); err == nil {
-			epAddr := ep.Spec.GetIPv4Address()
-			if epAddr == "" {
-				// pick ipv6
-				epAddr = ep.Spec.GetIPv6Address()
+			for _, addr := range ep.Spec.IPv4Addresses {
+				srcAddr, _, err := net.ParseCIDR(addr)
+				if err != nil {
+					log.Errorf("failed to parse local endpoint address {%+v} ", addr)
+					return fmt.Errorf("invalid local endpoint address %s, %s", srcAddr, err)
+				}
+				srcIPAddr = srcAddr.String()
+				// Use the first IP Address
+				break
 			}
-			srcAddr, _, err := net.ParseCIDR(epAddr)
-			if err != nil {
-				log.Errorf("failed to parse local endpoint address {%+v} ", epAddr)
-				return fmt.Errorf("invalid local endpoint address %s, %s", srcAddr, err)
-			}
-			srcIPAddr = srcAddr.String()
 		}
 	}
 

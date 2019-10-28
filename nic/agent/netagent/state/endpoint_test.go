@@ -967,12 +967,12 @@ func TestEndpointCreateInvalidIPAddress(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
-			IPv4Address:  "A.B.C.D",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			NodeUUID:      "remote",
+			MacAddress:    "4242.4242.4242",
+			IPv4Addresses: []string{"A.B.C.D"},
 		},
 	}
 
@@ -1014,12 +1014,12 @@ func TestEndpointCreateCIDRIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
-			IPv4Address:  "10.1.1.1/24",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			NodeUUID:      "remote",
+			MacAddress:    "4242.4242.4242",
+			IPv4Addresses: []string{"10.1.1.1/24"},
 		},
 	}
 
@@ -1061,12 +1061,12 @@ func TestEndpointCreateIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
-			IPv4Address:  "10.1.1.1",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			NodeUUID:      "remote",
+			MacAddress:    "4242.4242.4242",
+			IPv4Addresses: []string{"10.1.1.1"},
 		},
 	}
 
@@ -1075,5 +1075,5 @@ func TestEndpointCreateIP(t *testing.T) {
 	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
 	foundEP, err := ag.FindEndpoint(epinfo.ObjectMeta)
 	AssertOk(t, err, "Failed to find the endpoint. Err: %v", err)
-	AssertEquals(t, "10.1.1.1", foundEP.Spec.IPv4Address, "Endpoints specifying just the IP Addresses must have a /32 prefix")
+	AssertEquals(t, []string{"10.1.1.1/32"}, foundEP.Spec.IPv4Addresses, "Endpoints specifying just the IP Addresses must have a /32 prefix")
 }

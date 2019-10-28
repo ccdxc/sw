@@ -125,8 +125,8 @@ def Main():
     EP_nodes = []
 
     for i in range(0, len(obj["objects"])):
-        print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
-        EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-address"]))
+        print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-addresses"][0]))
+        EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-addresses"][0]))
         EP_nodes.append(obj["objects"][i]["spec"]["node-uuid"])
 
     GlobalOptions.topology_dir = GlobalOptions.topology_dir + '/gen/telemetry/flowmon'

@@ -143,12 +143,12 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "preCreatedNetwork",
-			NodeUUID:     "dummy-node-uuid",
-			IPv4Address:  "10.1.1.0/24",
-			MacAddress:   "42:42:42:42:42:42",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "preCreatedNetwork",
+			NodeUUID:      "dummy-node-uuid",
+			IPv4Addresses: []string{"10.1.1.0/24"},
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 	err = nagent.CreateEndpoint(&ep)

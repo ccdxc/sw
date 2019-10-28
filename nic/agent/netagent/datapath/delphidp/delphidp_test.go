@@ -234,12 +234,12 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
-			IPv4Address:  "10.1.1.1/24",
-			IPv4Gateway:  "20.1.1.254",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			MacAddress:    "4242.4242.4242",
+			IPv4Addresses: []string{"10.1.1.1/24"},
+			IPv4Gateway:   "20.1.1.254",
 		},
 	}
 
@@ -301,12 +301,12 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
-			IPv4Address:  "10.1.1.1/24",
-			IPv4Gateway:  "20.1.1.254",
+			EndpointUUID:  "testEndpointUUID",
+			WorkloadUUID:  "testWorkloadUUID",
+			NetworkName:   "default",
+			MacAddress:    "4242.4242.4242",
+			IPv4Addresses: []string{"10.1.1.1/24"},
+			IPv4Gateway:   "20.1.1.254",
 		},
 	}
 

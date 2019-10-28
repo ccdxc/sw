@@ -16,7 +16,7 @@ gl_json_template = {
         "network-name"      : "",
         "interface-type"    : "lif",
         "interface"         : "",
-        "ipv4-address"      : "",
+        "ipv4-addresses"    : [""],
         "mac-address"       : "",
         "useg-vlan"         : 0
     },

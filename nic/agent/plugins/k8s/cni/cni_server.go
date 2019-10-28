@@ -226,7 +226,7 @@ func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 			NetworkName:    "default", // FIXME: get the network name from somewhere
 			HomingHostAddr: "",        // FIXME: get my host name/addr
 			HomingHostName: "",
-			IPv4Address:    "10.1.1.1/24",
+			IPv4Addresses:  []string{"10.1.1.1/24"},
 			IPv4Gateway:    "10.1.1.254",
 		},
 	}
@@ -248,7 +248,7 @@ func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 	}
 
 	// create ipv4 address and netmask
-	ipAddr, ipNet, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+	ipAddr, ipNet, _ := net.ParseCIDR(ep.Spec.IPv4Addresses[0])
 	ipv4AddrMask := net.IPNet{
 		IP:   ipAddr,
 		Mask: ipNet.Mask,

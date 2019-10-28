@@ -101,7 +101,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			log.Errorf("Failed to create vrf. {%v}", vrf)
 			return
 	}
-	
+
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
@@ -132,7 +132,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "preCreatedNetwork",
 			NodeUUID:     "dummy-node-uuid",
-			IPv4Address:  "10.1.1.0/24",
+			IPv4Addresses:[]string{"10.1.1.0/24"},
 			MacAddress:   "42:42:42:42:42:42",
 		},
 	}

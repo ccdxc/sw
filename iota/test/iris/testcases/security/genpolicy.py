@@ -33,7 +33,7 @@ def get_ip_addr(a, b, c):
 
 def generate_ip_list(count):
     gen_count = 0
-    ip_list = [] 
+    ip_list = []
     a = 1
     b = 0
     c = 0
@@ -90,7 +90,7 @@ def get_source(src_ip):
 def get_rule(dst_ip, src_ip, protocol, port, action):
     rule = {}
     rule['destination'] = get_destination(dst_ip, protocol, port)
-    rule['source'] = get_source(src_ip) 
+    rule['source'] = get_source(src_ip)
     rule['action'] = action
     return rule
 
@@ -99,7 +99,7 @@ endpoint_file = topology_dir + "/endpoints.json"
 protocols = ["udp", "tcp", "icmp"]
 	directories = ["udp", "tcp", "icmp", "mixed", "scale", "halcfg-expansion", "netagent-expansion"]
 	ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250", "10000-20000", "65535"]
-	generate_expansion = True 
+	generate_expansion = True
 	target_dir = "gen"
 	actions = ["PERMIT", "DENY", "REJECT"]
 	total_policies = 0
@@ -128,12 +128,12 @@ protocols = ["udp", "tcp", "icmp"]
 
 	    with open(endpoint_file, 'r') as fp:
 		obj = json.load(fp)
-	    EP = [] 
+	    EP = []
 	    FILENAME = []
 
 	    for i in range(0, len(obj["endpoints"])):
-		print("EP[%d] : %s" % (i, obj["endpoints"][i]["spec"]["ipv4-address"]))
-		EP.append(StripIpMask(obj["endpoints"][i]["spec"]["ipv4-address"]))
+		print("EP[%d] : %s" % (i, obj["endpoints"][i]["spec"]["ipv4-addresses"][0]))
+		EP.append(StripIpMask(obj["endpoints"][i]["spec"]["ipv4-addresses"][0]))
         FILENAME.append("endpoint")
 
     #EP.append(GetIpRange(str(EP[0])))
@@ -153,7 +153,7 @@ protocols = ["udp", "tcp", "icmp"]
             sgpolicy = sgpolicy_template['sgpolicies'][0]
             policy_rules = sgpolicy['spec']['policy-rules']
             del policy_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP) - 1):
                 for j in range(i, len(EP)):
                     for k in ports:
@@ -165,7 +165,7 @@ protocols = ["udp", "tcp", "icmp"]
             total_policies = total_policies + 1
             print("SGPOLICY = {}".format(sgpolicy))
             print(topology_dir + "/" +target_dir +"/{}/{}_{}_verif.json".format(protocol, protocol, action))
-          
+
             json.dump(verif, open(topology_dir + "/" +target_dir +"/{}/{}_{}_verif.json".format(protocol, protocol, action), "w"))
             json.dump(sgpolicy, open(topology_dir + "/" +target_dir + "/{}/{}_{}_policy.json".format(protocol, protocol, action), "w"), indent=4)
 
@@ -175,7 +175,7 @@ protocols = ["udp", "tcp", "icmp"]
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
             del policy_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP) - 1):
                 for k in ports:
                     rule = get_rule(EP[i], "any", protocol, k, action)
@@ -184,14 +184,14 @@ protocols = ["udp", "tcp", "icmp"]
             total_policies = total_policies + 1
             json.dump(sgpolicy, open(topology_dir + "/" +target_dir +"/{}/{}_{}_any_policy.json".format(protocol, protocol, action), "w"), indent=4)
             json.dump(verif, open(topology_dir + "/" +target_dir + "/{}/{}_{}_any_verif.json".format(protocol, protocol, action), "w"), indent=4)
-    
+
     # Specific Policy
     for protocol in protocols:
         for action in actions:
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
             del policy_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP) - 4):
                 for j in range(i, len(EP) - 3):
                     for k in ports:
@@ -211,7 +211,7 @@ protocols = ["udp", "tcp", "icmp"]
                 sgpolicy = sgpolicy_template
                 policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
                 del policy_rules[:]
-                verif =[] 
+                verif =[]
                 for i in range(0, len(EP) - 4):
                     for j in range(i + 1, len(EP)):
                         action = actions[random.randint(0, len(actions) - 1)]
@@ -250,27 +250,27 @@ protocols = ["udp", "tcp", "icmp"]
             k = k + 1
             if (k >= 65536):
                 k = 1
-                proto_i = proto_i + 1              
+                proto_i = proto_i + 1
                 protocol = protocols[proto_i]
-           
+
                 j = j + 1
                 if (j == len(EP)):
-                    i = i + 1 
+                    i = i + 1
                     j = i + 1
- 
+
                 if (i == len(EP) - 1):
                     print("Breaking from here I = {} J = {} RULE_CNT = {}".format(i, j, rule_count))
                     break
-   
-        print("Writing rule for scale {}".format(count))     
+
+        print("Writing rule for scale {}".format(count))
         total_policies = total_policies + 1
         json.dump(sgpolicy, open(topology_dir + "/" +target_dir + "/scale/{}_scale_policy.json".format(count), "w"), indent=4)
         json.dump(verif, open(topology_dir + "/" +target_dir + "/scale/{}_scale_verif.json".format(count), "w"), indent=4)
 
     #Expansion Config
-    if generate_expansion : 
+    if generate_expansion :
         pow_2 = [4 ** x for x in range(6)]
-        ip_list = generate_ip_list(1024) 
+        ip_list = generate_ip_list(1024)
 
         for n in pow_2:
             for m in pow_2:
@@ -280,7 +280,7 @@ protocols = ["udp", "tcp", "icmp"]
                 verif =[]
                 src_ip = ip_list[0 : n]
                 dst_ip = ip_list[512 : 512 + m]
-                     
+
                 for port in range(1, 9):
                     action = actions[random.randint(0, len(actions) - 1)]
                     rule = get_rule(src_ip, dst_ip, protocol, str(port), action)

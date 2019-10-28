@@ -43,7 +43,7 @@ def generate_ip_list(count, cur_ip, EP):
     b = 0
     c = 0
     d = 2
-    i = 1 
+    i = 1
 
     while gen_count < count and i < len(EP) :
         if EP[i] != cur_ip and EP[i] != "any":
@@ -106,7 +106,7 @@ def get_source(src_ip):
 def get_rule(dst_ip, src_ip, protocol, port, action):
     rule = {}
     rule['destination'] = get_destination(dst_ip, protocol, port)
-    rule['source'] = get_source(src_ip) 
+    rule['source'] = get_source(src_ip)
     rule['action'] = action
     return rule
 
@@ -150,13 +150,13 @@ def Main():
     with open(endpoint_file, 'r') as fp:
         print("Reading endpoint file from : {}".format(endpoint_file))
         obj = json.load(fp)
-    EP = [] 
+    EP = []
     FILENAME = []
 
     for i in range(0, len(obj["objects"])):
         if obj["objects"][i]["kind"] == "Endpoint" :
-            print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
-            EP.append(StripIpMask((obj["objects"][i]["spec"]["ipv4-address"])))
+            print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-addresses"][0]))
+            EP.append(StripIpMask((obj["objects"][i]["spec"]["ipv4-addresses"][0])))
             FILENAME.append("endpoint")
 
     EP.append("any")
@@ -266,19 +266,19 @@ def Main():
             k = k + 1
             if (k >= 65536):
                 k = 1
-                proto_i = proto_i + 1              
+                proto_i = proto_i + 1
                 protocol = protocols[proto_i]
-           
+
                 j = j + 1
                 if (j == len(EP)):
-                    i = i + 1 
+                    i = i + 1
                     j = i + 1
- 
+
                 if (i == len(EP) - 1):
                     print("Breaking from here I = {} J = {} RULE_CNT = {}".format(i, j, rule_count))
                     break
-   
-        print("Writing rule for scale {}".format(count))     
+
+        print("Writing rule for scale {}".format(count))
         policy_rules.append(default_policy)
         total_policies = total_policies + 1
         policy_objects["objects"].append(sgpolicy)
@@ -345,7 +345,7 @@ def Main():
                 policy_rules = sgpolicy_template['spec']['policy-rules']
                 del policy_rules[:]
                 verif =[]
-        
+
                 src_ip = ip_list[0 : n]
                 dst_ip = ip_list[512 : 512 + m]
 

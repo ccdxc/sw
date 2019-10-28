@@ -115,7 +115,7 @@ func (c *CfgGen) generateExportConfigs(namespace string) (exportCfg []monitoring
 	}
 	for _, ep := range eps {
 		if ep.Namespace == namespace && ep.Spec.NodeUUID != defaultRemoteUUIDName {
-			ipAddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+			ipAddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Addresses[0])
 			dst = ipAddr.String()
 			break
 		}

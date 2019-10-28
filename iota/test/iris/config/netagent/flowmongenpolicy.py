@@ -124,8 +124,8 @@ def Main():
     EP = []
 
     for i in range(0, len(obj["objects"])):
-        print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
-        EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-address"]))
+        print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-addresses"][0]))
+        EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-addresses"][0]))
 
     #EP.append(GetIpRange(EP[0]))
     EP = [ep.decode() for ep in EP]

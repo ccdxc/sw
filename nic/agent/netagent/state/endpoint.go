@@ -122,19 +122,22 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 
 		sgs = append(sgs, sg)
 	}
-	origSpecIPAddress := ep.Spec.IPv4Address
+	origSpecIPAddresses := ep.Spec.IPv4Addresses
 
 	// Validate EP IP.
-	if len(ep.Spec.IPv4Address) > 0 {
-		// Parse as CIDR
-		if _, _, err := net.ParseCIDR(ep.Spec.IPv4Address); err != nil {
+	for idx, address := range ep.Spec.IPv4Addresses {
+		if len(address) == 0 {
+			continue
+		}
+
+		if _, _, err := net.ParseCIDR(address); err != nil {
 			// Try parsing as IP
-			if len(net.ParseIP(ep.Spec.IPv4Address)) == 0 {
-				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
-				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+			if len(net.ParseIP(address)) == 0 {
+				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
+				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
 			}
 			// Slap a /32 if not specified
-			ep.Spec.IPv4Address = fmt.Sprintf("%s/32", ep.Spec.IPv4Address)
+			ep.Spec.IPv4Addresses[idx] = fmt.Sprintf("%s/32", address)
 		}
 	}
 
@@ -178,7 +181,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 			return err
 		}
 	}
-	ep.Spec.IPv4Address = origSpecIPAddress
+	ep.Spec.IPv4Addresses = origSpecIPAddresses
 	err = na.Solver.Add(nw, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", nw, ep)
@@ -341,16 +344,19 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// Validate EP IP.
-	if len(ep.Spec.IPv4Address) > 0 {
-		// Parse as CIDR
-		if _, _, err := net.ParseCIDR(ep.Spec.IPv4Address); err != nil {
+	for idx, address := range ep.Spec.IPv4Addresses {
+		if len(address) == 0 {
+			continue
+		}
+
+		if _, _, err := net.ParseCIDR(address); err != nil {
 			// Try parsing as IP
-			if len(net.ParseIP(ep.Spec.IPv4Address)) == 0 {
-				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
-				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+			if len(net.ParseIP(address)) == 0 {
+				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
+				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
 			}
 			// Slap a /32 if not specified
-			ep.Spec.IPv4Address = fmt.Sprintf("%s/32", ep.Spec.IPv4Address)
+			ep.Spec.IPv4Addresses[idx] = fmt.Sprintf("%s/32", address)
 		}
 	}
 

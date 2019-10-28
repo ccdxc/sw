@@ -18,7 +18,7 @@ def __prepare_ip_address_str_for_endpoint(ep):
     objects = netagent_api.QueryConfigs(kind='Network', filter=nw_filter)
     assert(len(objects) == 1)
     nw_obj = objects[0]
-    ep_spec_ip = ep.spec.ipv4_address
+    ep_spec_ip = ep.spec.ipv4_addresses[0]
     nw_spec_subnet = nw_obj.spec.ipv4_subnet
     ip_str = ep_spec_ip.split('/')[0] + '/' + nw_spec_subnet.split('/')[1]
     return ip_str

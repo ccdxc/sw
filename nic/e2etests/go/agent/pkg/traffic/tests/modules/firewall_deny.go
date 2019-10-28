@@ -37,8 +37,8 @@ func (FirewallDeny) FilterEpPairs(epPairs []TestApi.EpPair, agentCfg *Pkg.AgentC
 		for _, epPair := range epPairs {
 			srcEp := epPair.Src
 			dstEp := epPair.Dst
-			if strings.Split(srcEp.Spec.GetIPv4Address(), "/")[0] == sip &&
-				strings.Split(dstEp.Spec.GetIPv4Address(), "/")[0] == dip {
+			if strings.Split(srcEp.Spec.GetIPv4Addresses()[0], "/")[0] == sip &&
+				strings.Split(dstEp.Spec.GetIPv4Addresses()[0], "/")[0] == dip {
 				return &epPair
 			}
 		}

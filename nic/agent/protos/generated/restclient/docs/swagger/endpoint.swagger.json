@@ -548,8 +548,11 @@
           "type": "string",
           "title": "Interface name of the endpoint. Required"
         },
-        "ipv4-address": {
-          "type": "string",
+        "ipv4-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "IP Address of the endpoint in CIDR IP/Prefix format. Required"
         },
         "ipv4-gateway": {
@@ -557,7 +560,10 @@
           "title": "IP Gateway of the endpoint. Optional"
         },
         "ipv6-address": {
-          "type": "string",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "IPv6 Address of the endpoint. Optional"
         },
         "ipv6-gateway": {
