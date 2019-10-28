@@ -153,36 +153,117 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
   metrics:
     - reference: venice/ui
-  nic:
-    - reference: iota/test/venice
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
-    - reference: iota/test/standalone/sanity/esx
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
-    - reference: iota/test/standalone/sanity/freebsd
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
-    - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["apollo", "doc", "elektra", "phoebus", "l2switch", "metaswitch"]
+  #nic/apollo:
+  #  - reference: iota/test/venice
+  #  - reference: iota/test/standalone/sanity/esx
+  #  - reference: iota/test/standalone/sanity/freebsd
+  #  - reference: iota/test/standalone/sanity/linux
   nic/agent:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
     - reference: api
     - reference: test/ci_targets/e2e
+  nic/asm:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/buildroot:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/conf:
+    - reference: iota/test/standalone/sanity/linux
+  nic/debug_cli:
+    - reference: iota/test/standalone/sanity/linux
+  nic/delphi:
+    - reference: iota/test/standalone/sanity/linux
+  nic/fte:
+    - reference: iota/test/standalone/sanity/linux
+  nic/hal:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/include:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/linkmgr:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/p4-hlir:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/p4:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/proto:
+    - reference: iota/test/standalone/sanity/esx
+  nic/sdk:
+    - reference: iota/test/standalone/sanity/linux
+    - reference: nic/apollo
+  nic/sysmgr:
+    - reference: iota/test/standalone/sanity/linux
+  nic/third-party:
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  nic/tools:
+    - reference: iota/test/standalone/sanity/linux
+  nic/upgrade_manager:
+    - reference: iota/test/standalone/sanity/esx
+  nic/utils:
+    - reference: iota/test/standalone/sanity/linux
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:
     - reference: nic/apollo
   nic/debug_cli/apollo:
     - reference: nic/apollo
-  nic/sdk:
-    - reference: nic/apollo
-  platform:
+  platform/src/app/asicerrord:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/captrace:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/cpld:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/diag:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/fructl:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/nicmgrd:
     - reference: nic/apollo
     - reference: iota/test/venice
-      exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
     - reference: iota/test/standalone/sanity/esx
-      exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
     - reference: iota/test/standalone/sanity/freebsd
-      exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
     - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
+  platform/src/app/pciemgrd:
+    - reference: iota/test/standalone/sanity/linux
+    - reference: nic/apollo
+  platform/src/app/pcieutil/src:
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/app/sysmond:
+    - reference: iota/test/standalone/sanity/linux
+ # platform:
+ #   - reference: nic/apollo
+ #     exclude_dirs: ["doc", "drivers"]
+ #   - reference: iota/test/venice
+ #     exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
+ #   - reference: iota/test/standalone/sanity/esx
+ #     exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
+ #   - reference: iota/test/standalone/sanity/freebsd
+ #     exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
+ #   - reference: iota/test/standalone/sanity/linux
+ #     exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
   platform/src/third-party/app/pciutils:
     - reference: platform/src/app/pciemgrd
   storage/offload:
