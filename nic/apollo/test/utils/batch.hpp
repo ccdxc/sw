@@ -8,7 +8,7 @@
 
 #include "nic/apollo/api/include/pds_batch.hpp"
 #ifdef AGENT_MODE
-#include "nic/apollo/agent/client/app.hpp"
+#include "nic/apollo/agent/test/client/app.hpp"
 #endif
 
 namespace api_test {

@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <math.h>
-#include "nic/apollo/agent/client/app.hpp"
+#include "nic/apollo/agent/test/client/app.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
 
 static int g_epoch = 1;

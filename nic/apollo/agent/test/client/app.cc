@@ -4,7 +4,7 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include "nic/apollo/agent/client/utils.hpp"
+#include "nic/apollo/agent/test/client/utils.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using std::string;

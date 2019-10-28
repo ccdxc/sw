@@ -15,7 +15,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #ifdef AGENT_MODE
-#include "nic/apollo/agent/client/app.hpp"
+#include "nic/apollo/agent/test/client/app.hpp"
 #endif
 #include "nic/apollo/test/scale/api.hpp"
 

@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = agent.bin
+MODULE_TARGET   = pdsagent.bin
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam ftlv6 ftlv4 \

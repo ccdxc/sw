@@ -26,7 +26,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
-#include "nic/apollo/agent/client/app.hpp"
+#include "nic/apollo/agent/test/client/app.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 
 using std::string;
