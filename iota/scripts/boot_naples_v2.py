@@ -750,7 +750,7 @@ class EsxHostManagement(HostManagement):
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s vm@%s:%s" %\
+            ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
                            (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
             if ret:
                 raise Exception("Cmd failed : " + cmd)
@@ -1072,7 +1072,7 @@ def Main():
             __fullUpdate()
         naples.Reboot()
     else:
-        host.InitForUpgrade()
+        naples.InitForUpgrade(goldfw = True)
         host.Reboot()
         naples.Close()
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
