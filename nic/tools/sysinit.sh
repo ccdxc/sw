@@ -58,7 +58,7 @@ if [[ -f /sysconfig/config0/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"
 else
     echo "Running Power On Self Test (POST) ..."
-    /nic/bin/diag_test post 2>&1 | tee /var/log/pensando/post_report_`date +"%Y%m%d-%T"`.txt
+    /nic/bin/diag_test post 2>&1 | tee /var/log/pensando/post_report_`date +"%Y%m%d-%T"`.txt &
 fi
 
 cd /
@@ -71,7 +71,7 @@ ifconfig lo up
 # at boot-time.  will be preserved across a live-update, and so always
 # provides a record of how things looked when we booted (seen with fwupdate -L)
 if [[ ! -r /var/run/fwupdate.cache ]]; then
-    /nic/tools/fwupdate -C
+    /nic/tools/fwupdate -C &
 fi
 
 # check for all the binaries
