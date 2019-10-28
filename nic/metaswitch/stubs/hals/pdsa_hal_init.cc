@@ -5,7 +5,7 @@
 #include "pdsa_li.hpp"
 #include "pdsa_l2f.hpp"
 
-void pdsa_hal_init ()
+void pdsa_hal_init()
 {
     pdsa_stub::LiIntegSubcomponent pli;
     /* LI stub implementation instance needs to be registered with Metaswitch*/

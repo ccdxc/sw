@@ -66,7 +66,7 @@ MS_LD_LIBS = -ldcgeolocn -ldchm -ldci3dl -ldcadll -ldctpl -ldchals -ldcjoinxcpi 
 			 -ldcjointpqi -ldcl2f -ldcjoinbdpi -ldcjoinmai -ldcjoinmmi \
 			 -ldcmal -ldcbasewo -ldcfte -ldchasl -ldcai3 -ldccss -ldccssu \
 			 -ldcsm -ldcamb -ldchaf -ldcamkl -ldcnbase -ldcregex   \
-			 -lpthread -lrt -lstdc++ -lcrypto -lxml2
+			 -lpthread -lrt -lstdc++ -lcrypto
 
 SHARED_LIB = $(LIB_DIR)/libpdsahal.so
 
@@ -92,7 +92,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 include $(DEP_FILES)
 
-$(OBJ_DIR)/%.d: %.cc
+$(OBJ_DIR)/%.d: %.cc $(OBJ_DIR)
 	@$(CPP) $(CPPFLAGS) $< -MM -MT $(@:.d=.o) >$@
 
 .PHONY: install clean
