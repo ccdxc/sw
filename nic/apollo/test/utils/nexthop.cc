@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/encap_utils.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
@@ -16,23 +17,31 @@ namespace api_test {
 void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
                      pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
-                     pds_vpc_id_t vpc_id) {
+                     pds_vpc_id_t vpc_id, pds_if_id_t if_id) {
     this->id = id;
     this->type = type;
-    extract_ip_addr(ip_str.c_str(), &this->ip);
-    this->mac = mac;
-    this->vlan = vlan;
-    this->vpc_id = vpc_id;
     this->num_obj = num_obj;
+    this->mac = mac;
+    if (type == PDS_NH_TYPE_IP) {
+        extract_ip_addr(ip_str.c_str(), &this->ip);
+        this->vlan = vlan;
+        this->vpc_id = vpc_id;
+    } else if (type == PDS_NH_TYPE_UNDERLAY) {
+        this->if_id = if_id;
+    }
 }
 
 void
 nexthop_feeder::iter_next(int width) {
-    ip.addr.v4_addr += width;
-    mac += width;
-    vlan += width;
     id += width;
+    mac += width;
     cur_iter_pos++;
+    if (type == PDS_NH_TYPE_IP) {
+        if_id += width;
+    } else if (type == PDS_NH_TYPE_UNDERLAY) {
+        ip.addr.v4_addr += width;
+        vlan += width;
+    }
 }
 
 void
@@ -47,10 +56,15 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     this->key_build(&spec->key);
 
     spec->type = this->type;
-    spec->vpc.id = this->vpc_id;
-    spec->ip = this->ip;
-    spec->vlan = this->vlan;
-    MAC_UINT64_TO_ADDR(spec->mac, this->mac);
+    if (this->type == PDS_NH_TYPE_IP) {
+        spec->l3_if.id = this->if_id;
+        MAC_UINT64_TO_ADDR(spec->underlay_mac, this->mac);
+    } else if (this->type == PDS_NH_TYPE_UNDERLAY) {
+        MAC_UINT64_TO_ADDR(spec->mac, this->mac);
+        spec->ip = this->ip;
+        spec->vpc.id = this->vpc_id;
+        spec->vlan = this->vlan;
+    }
 }
 
 bool
@@ -97,6 +111,36 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 
 // do not modify these sample values as rest of system is sync with these
 static nexthop_feeder k_nexthop_feeder;
+
+void sample_if_setup(pds_batch_ctxt_t bctxt) {
+    pds_if_spec_t spec;
+    pds_encap_val_t val;
+
+    spec.key.id = 1;
+    spec.type = PDS_IF_TYPE_L3;
+    spec.admin_state = PDS_IF_STATE_UP;
+    spec.l3_if_info.vpc.id = 1;
+    spec.l3_if_info.port_num = 1;
+    spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_VXLAN;
+    val.vlan_tag = 1;
+    val.qinq_tag.c_tag = 1;
+    val.qinq_tag.s_tag = 1;
+    val.vnid = 1;
+    val.mpls_tag = 1;
+    val.value = 1;
+    memcpy(&val, &spec.l3_if_info.encap.val, sizeof(pds_encap_val_t));
+    MAC_UINT64_TO_ADDR(spec.l3_if_info.mac_addr, 0x010203040506);
+    extract_ip_pfx("1.2.3.4", &spec.l3_if_info.ip_prefix);
+
+    pds_if_create(&spec, bctxt);
+}
+
+void sample_if_teardown(pds_batch_ctxt_t bctxt) {
+    pds_if_key_t key;
+
+    key.id = 1;
+    pds_if_delete(&key, bctxt);
+}
 
 void sample_nexthop_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync

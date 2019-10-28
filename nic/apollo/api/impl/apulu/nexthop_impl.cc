@@ -193,6 +193,24 @@ nexthop_impl::fill_status_(pds_nexthop_status_t *status) {
 
 sdk_ret_t
 nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data;
+
+    if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
+        spec->type = PDS_NH_TYPE_BLACKHOLE;
+        return SDK_RET_OK;
+    }
+    spec->type = PDS_NH_TYPE_UNDERLAY;
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
+                                      NULL, NULL, &nh_data);
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("Failed to read nexthop table at index %u ret %u",
+                      hw_id_, p4pd_ret);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    sdk::lib::memrev(spec->underlay_mac,
+                     nh_data.nexthop_info.dmaco, ETH_ADDR_LEN);
+    // TODO walk if db and identify the l3_if
     return SDK_RET_OK;
 }
 
