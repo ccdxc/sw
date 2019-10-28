@@ -3,11 +3,11 @@ package datapath
 import (
 	"sync"
 
+	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/golang/mock/gomock"
-
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
 )
 
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
@@ -17,6 +17,7 @@ type Kind string
 type Hal struct {
 	client               *grpc.ClientConn
 	mockCtrl             *gomock.Controller
+	StateAPI             types.CtrlerIntf
 	MockClients          mockClients
 	Epclient             halproto.EndpointClient
 	Ifclient             halproto.InterfaceClient
@@ -31,6 +32,7 @@ type Hal struct {
 	PortClient           halproto.PortClient
 	TCPProxyPolicyClient halproto.TcpProxyClient
 	SystemClient         halproto.SystemClient
+	EventClient          halproto.EventClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
@@ -48,6 +50,7 @@ type mockClients struct {
 	MockTCPProxyClient *halproto.MockTcpProxyClient
 	MockPortClient     *halproto.MockPortClient
 	MockSystemClient   *halproto.MockSystemClient
+	MockEventClient    *halproto.MockEventClient
 }
 
 // DB holds all the state information.

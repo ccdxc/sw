@@ -3,6 +3,8 @@ package state
 import (
 	"testing"
 
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -204,4 +206,159 @@ func TestNonExistentInterfaceObjects(t *testing.T) {
 	err = ag.DeleteInterface(badLif.Tenant, badLif.Namespace, badLif.Name)
 	Assert(t, err != nil, "Non existent tenant interface deletes should fail, it passed instead")
 
+}
+
+func TestInterfaceUpdateHandlerUPToDOWNTransition(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	mockLif, ok := ag.findIntfByName("lif1")
+
+	// Trigger a mock If down
+	hwLifResp := &halproto.LifGetResponse{
+		ApiStatus: 0,
+		Spec: &halproto.LifSpec{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+		},
+		Status: &halproto.LifStatus{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			LifStatus: halproto.IfStatus_IF_STATUS_DOWN,
+		},
+	}
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	err := ag.LifUpdateHandler(hwLifResp)
+	AssertOk(t, err, "LifUpdateHandler failed.")
+
+	updatedMockLif, ok := ag.findIntfByName("lif1")
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	AssertEquals(t, "DOWN", updatedMockLif.Status.OperStatus, "Oper status doesn't reflect down status")
+}
+
+func TestInterfaceUpdateHandlerDOWNToUPTransition(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	mockLif, ok := ag.findIntfByName("lif1")
+
+	// Trigger a mock If down
+	hwLifResp := &halproto.LifGetResponse{
+		ApiStatus: 0,
+		Spec: &halproto.LifSpec{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+		},
+		Status: &halproto.LifStatus{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			LifStatus: halproto.IfStatus_IF_STATUS_DOWN,
+		},
+	}
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	err := ag.LifUpdateHandler(hwLifResp)
+	AssertOk(t, err, "LifUpdateHandler failed.")
+
+	updatedHwLifResp := &halproto.LifGetResponse{
+		ApiStatus: 0,
+		Spec: &halproto.LifSpec{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+		},
+		Status: &halproto.LifStatus{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			LifStatus: halproto.IfStatus_IF_STATUS_UP,
+		},
+	}
+	err = ag.LifUpdateHandler(updatedHwLifResp)
+	AssertOk(t, err, "LifUpdateHandler failed.")
+
+	updatedMockLif, ok := ag.findIntfByName("lif1")
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	AssertEquals(t, "UP", updatedMockLif.Status.OperStatus, "Oper status doesn't reflect up status")
+}
+
+func TestInterfaceUpdateHandlerNameChanges(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	mockLif, ok := ag.findIntfByName("lif1")
+
+	// Trigger a mock If down
+	hwLifResp := &halproto.LifGetResponse{
+		ApiStatus: 0,
+		Spec: &halproto.LifSpec{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			Name: "gandalf-the-grey",
+		},
+		Status: &halproto.LifStatus{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			LifStatus: halproto.IfStatus_IF_STATUS_DOWN,
+		},
+	}
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	err := ag.LifUpdateHandler(hwLifResp)
+	AssertOk(t, err, "LifUpdateHandler failed.")
+
+	AssertEquals(t, "gandalf-the-grey", mockLif.Status.IFHostStatus.HostIfName, "IF Names did not match")
+
+	updatedHwLifResp := &halproto.LifGetResponse{
+		ApiStatus: 0,
+		Spec: &halproto.LifSpec{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			Name: "gandalf-the-white",
+		},
+		Status: &halproto.LifStatus{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: mockLif.Status.InterfaceID,
+				},
+			},
+			LifStatus: halproto.IfStatus_IF_STATUS_UP,
+		},
+	}
+	err = ag.LifUpdateHandler(updatedHwLifResp)
+	AssertOk(t, err, "LifUpdateHandler failed.")
+
+	updatedMockLif, ok := ag.findIntfByName("lif1")
+	AssertEquals(t, true, ok, "Failed to find lif1")
+	AssertEquals(t, "UP", updatedMockLif.Status.OperStatus, "Oper status doesn't reflect up status")
+	AssertEquals(t, "gandalf-the-white", mockLif.Status.IFHostStatus.HostIfName, "IF Names did not match")
 }

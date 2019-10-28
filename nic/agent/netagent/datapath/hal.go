@@ -77,6 +77,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client)
 		hal.PortClient = halproto.NewPortClient(hal.client)
 		hal.SystemClient = halproto.NewSystemClient(hal.client)
+		hal.EventClient = halproto.NewEventClient(hal.client)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -95,6 +96,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		MockTCPProxyClient: halproto.NewMockTcpProxyClient(hal.mockCtrl),
 		MockPortClient:     halproto.NewMockPortClient(hal.mockCtrl),
 		MockSystemClient:   halproto.NewMockSystemClient(hal.mockCtrl),
+		MockEventClient:    halproto.NewMockEventClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -201,6 +203,8 @@ func (hd *Hal) setExpectations() {
 
 	hd.MockClients.MockSystemClient.EXPECT().SystemUuidGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
+	hd.MockClients.MockEventClient.EXPECT().EventListen(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
 }
 
 func (hd *Hal) createNewGRPCClient() (*grpc.ClientConn, error) {
@@ -248,6 +252,12 @@ func (hd *Hal) isHalConnected() (*grpc.ClientConn, error) {
 	grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
 	grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	return grpc.Dial(halURL, grpcOpts...)
+}
+
+// RegisterStateAPI gives datapath interface access to Agent State APIs.
+// This will ensure that object changes are mandated only via API and not by direct access to internal state.
+func (hd *Datapath) RegisterStateAPI(na types.CtrlerIntf) {
+	hd.Hal.StateAPI = na
 }
 
 // SetAgent sets the agent for this datapath

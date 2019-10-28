@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
@@ -375,7 +377,7 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 			},
 		}
 
-		uplink.Status.IFUplinkStatus = &netproto.InterfaceUplinkStatus{PortID: uint32(p.Status.PortID)}
+		uplink.Status.IFUplinkStatus = netproto.InterfaceUplinkStatus{PortID: uint32(p.Status.PortID)}
 
 		key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
 
@@ -402,4 +404,40 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 	}
 
 	return nil
+}
+
+// LifUpdateHandler handles async updates to lifs from HAL
+func (na *Nagent) LifUpdateHandler(lifResp *halproto.LifGetResponse) error {
+	lif, err := na.findInterfaceByID(lifResp.Spec.KeyOrHandle.GetLifId())
+
+	if err != nil {
+		log.Errorf("Failed to find the interface %v", lifResp)
+		return fmt.Errorf("failed to find the interface %v", lifResp)
+	}
+	lif.Status.IFHostStatus.HostIfName = lifResp.Spec.GetName()
+	status := lifResp.Status.GetLifStatus()
+	switch status {
+	case halproto.IfStatus_IF_STATUS_UP:
+		lif.Status.OperStatus = "UP"
+	case halproto.IfStatus_IF_STATUS_DOWN:
+		lif.Status.OperStatus = "DOWN"
+	}
+
+	na.Lock()
+	key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
+	na.HwIfDB[key] = lif
+	na.Unlock()
+	na.saveInterface(lif)
+	return nil
+}
+
+func (na *Nagent) findInterfaceByID(id uint64) (*netproto.Interface, error) {
+	for _, intf := range na.ListHwInterface() {
+		if intf.Status.InterfaceID == id {
+			log.Infof("Found an existing interface: %v", intf)
+			return intf, nil
+		}
+	}
+	log.Errorf("Interface DB: %v", na.HwIfDB)
+	return nil, fmt.Errorf("interface with ID %d not found", id)
 }

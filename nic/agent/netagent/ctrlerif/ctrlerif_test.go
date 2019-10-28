@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -49,6 +51,11 @@ type fakeAgent struct {
 	appAdded   map[string]*netproto.App
 	appUpdated map[string]*netproto.App
 	appDeleted map[string]bool
+}
+
+// LifUpdateHandler stubbed out to satisfy interface
+func (ag *fakeAgent) LifUpdateHandler(lif *halproto.LifGetResponse) error {
+	return nil
 }
 
 func createFakeAgent(name string) *fakeAgent {

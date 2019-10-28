@@ -161,7 +161,7 @@ func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: 100,
-			IFUplinkStatus: &netproto.InterfaceUplinkStatus{
+			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: uint32(port.Status.PortID),
 			},
 		},

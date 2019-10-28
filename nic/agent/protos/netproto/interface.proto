@@ -191,8 +191,10 @@ message InterfaceStatus {
                                                    (gogoproto.jsontag) = "oper-status,omitempty"];
     string PrimaryMac                           = 5 [(venice.check) = "EmptyOr(MacAddr())",
                                                    (gogoproto.jsontag) = "primary-mac,omitempty"];
-    InterfaceHostStatus IFHostStatus            = 6 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
-    InterfaceUplinkStatus IFUplinkStatus        = 7 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
+    InterfaceHostStatus IFHostStatus            = 6 [(gogoproto.nullable) = false,
+                                                     (gogoproto.jsontag) = "if-host-status,omitempty"];
+    InterfaceUplinkStatus IFUplinkStatus        = 7 [(gogoproto.nullable) = false,
+                                                     (gogoproto.jsontag) = "if-uplink-status,omitempty"];
 
     bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
 }

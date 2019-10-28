@@ -213,6 +213,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 		DoneCache: make(map[string]context.CancelFunc),
 	}
 	na.LateralDB = make(map[string][]string)
+	dp.RegisterStateAPI(na)
 }
 
 // PurgeConfigs deletes all netagent configs. This is called during decommission workflow where the NAPLES is moved to host managed mode

@@ -196,12 +196,42 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 			},
 		}
 
+		evtReqMsg := &halproto.EventRequest{
+			EventId:        halproto.EventId_EVENT_ID_LIF_ADD_UPDATE,
+			EventOperation: halproto.EventOp_EVENT_OP_SUBSCRIBE,
+		}
+
 		// ToDo Add lif checks once nic mgr is integrated
 		lifs, err = hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
 		if err != nil {
 			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
 			return nil, nil, nil
 		}
+
+		lifStream, err := hd.Hal.EventClient.EventListen(context.Background(), evtReqMsg)
+		if err != nil {
+			log.Errorf("Failed to establish LIF Update event listener")
+			return nil, nil, err
+		}
+
+		go func(stream halproto.Event_EventListenClient) {
+			for {
+				resp, err := stream.Recv()
+				if err != nil {
+					log.Errorf("Lif stream receive failed. Err: %v", err)
+				}
+				if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					log.Errorf("Hal returned non OK status for lif stream. Status: %v", resp.ApiStatus.String())
+				}
+
+				lif := resp.GetLifEvent()
+				err = hd.Hal.StateAPI.LifUpdateHandler(lif)
+				if err != nil {
+					log.Errorf("Failed to handle lif update event. Lif: %v | Err: %v", lif, err)
+				}
+			}
+
+		}(lifStream)
 
 		// get all ports
 		portReq := &halproto.PortInfoGetRequest{}

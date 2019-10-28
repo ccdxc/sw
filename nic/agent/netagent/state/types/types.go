@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+
 	"github.com/mdlayher/arp"
 
 	"github.com/pensando/sw/api"
@@ -280,6 +282,7 @@ type CtrlerIntf interface {
 	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to delete dependent objects
 	PurgeConfigs() error                                                                    // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                        // Allow client to query for options to use for watch
+	LifUpdateHandler(lif *halproto.LifGetResponse) error
 }
 
 // PluginIntf is the API provided by the netagent to plugins
@@ -362,6 +365,8 @@ type NetDatapathAPI interface {
 	CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
 	UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
 	DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
+
+	RegisterStateAPI(stateAPI CtrlerIntf)
 	GetUUID() (string, error)
 }
 
