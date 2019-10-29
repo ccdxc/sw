@@ -28,6 +28,7 @@ testcases:
     -   name    : TxSG
         testcase: testcases.drivers.txsg
         enable  : True
+        ignore  : True
 
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
