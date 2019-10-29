@@ -3,9 +3,14 @@
 NEW_OVTOOL=ovftool
 VCSA_OVA=output/venice.ova
 
-ESXI_HOST=192.168.68.204
-ESXI_USERNAME=root
-ESXI_PASSWORD='pen123!'
+if [ "$#" -ne 4 ]; then
+    echo "syntax: $0 [esxi host] [esxi login] [esxi password] [datastore name]"
+    exit
+fi
+
+ESXI_HOST=$1
+ESXI_USERNAME=$2
+ESXI_PASSWORD=$3
 
 VCSA_VMNAME=venice-test
 VCSA_HOSTNAME=$VCSA_VMNAME
@@ -14,7 +19,7 @@ VCSA_NETMASK="255.255.252.0"
 VCSA_GATEWAY="192.168.68.1"
 VCSA_DNS="192.168.68.2"
 VM_NETWORK="VM Network"
-VM_DATASTORE='datastore1 (2)'
+VM_DATASTORE="$4"
 PASSWORD="pensando123"
 VCSA_DOMAIN="pensando.io"
 

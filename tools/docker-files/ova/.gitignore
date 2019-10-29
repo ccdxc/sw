@@ -1,11 +1,6 @@
-# Ignore everything in this directory. They are installed by build scripts
-*
-# Except this file
-!.gitignore
-!Makefile
-!README.txt
-!entrypoint.sh
-!venice-livecd-2.json
-!venice-livecd.json
-!venice_livecd_packer_post.py
-!wait_for_venice_install.sh
+# These are all the binaries we do not want to commit to the repository
+VMware-ovftool-4.3.0-13981069-lin.x86_64.bundle
+buildit
+output/
+packer
+pen-install.iso
