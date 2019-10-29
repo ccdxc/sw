@@ -61,6 +61,7 @@ namespace hal {
 // forward declarations
 typedef struct flow_s flow_t;
 typedef struct session_s session_t;
+typedef struct flow_telemetry_state_s flow_telemetry_state_t;
 
 // from p4pd.h
 typedef enum tunnel_rewrite_actions_enum {
@@ -137,6 +138,20 @@ enum nat_type_t {
     NAT_TYPE_DNAT         = 2,    // destination NAT
     NAT_TYPE_TWICE_NAT    = 3,    // twice NAT
 };
+
+// FlowTelemetry enums
+enum {
+    FLOW_TELEMETRY_RAW         = 0,
+    FLOW_TELEMETRY_DROP        = 1,
+    FLOW_TELEMETRY_PERFORMANCE = 2,
+    FLOW_TELEMETRY_LATENCY     = 3,
+    FLOW_TELEMETRY_BEHAVIORAL  = 4,
+    FLOW_TELEMETRY_MAX         = 4,
+};
+#define	FLOW_TELEMETRY_DEFAULT	((1 << FLOW_TELEMETRY_RAW) | \
+                                 (1 << FLOW_TELEMETRY_PERFORMANCE) | \
+                                 (1 << FLOW_TELEMETRY_LATENCY) | \
+                                 (1 << FLOW_TELEMETRY_BEHAVIORAL))
 
 // exceptions seen on flows
 // TODO: define more !!
@@ -258,6 +273,103 @@ typedef struct flow_stats_s {
     uint8_t              num_tcp_rst_sent;       // Number of TCP reset sent as a result of aging
 } __PACK__ flow_stats_t;
 
+#define	FLOW_TELEMETRY_DELAYED_AGE_TICKS_40SECS	40
+struct flow_telemetry_state_s {
+    union {
+        struct {
+            uint64_t instances;
+            uint64_t packets;            // packet count on this flow
+            uint64_t bytes;              // byte count on this flow
+            uint64_t last_packets;
+            uint64_t last_bytes;
+
+            uint32_t last_flow_table_packets;
+            uint32_t last_flow_table_bytes;
+        } __PACK__ raw_metrics;
+        struct {
+            uint64_t instances;
+            uint64_t packets;            // packets dropped for this flow
+            uint64_t bytes;              // bytes dropped for this flow
+            uint64_t first_timestamp;    // drop-event first-timestamp
+            uint64_t last_timestamp;     // drop-event last-timestamp
+            uint64_t reason;             // drop-reason on this flow
+
+            uint32_t last_flow_table_packets;
+            uint32_t last_flow_table_bytes;
+        } __PACK__ drop_metrics;
+        struct {
+            uint64_t instances;
+            uint64_t peak_pps;           // Peak-packet-rate
+            uint64_t peak_pps_timestamp; // Peak-packet-rate Timestamp
+            uint64_t peak_bw;            // Peak-Bandwidth
+            uint64_t peak_bw_timestamp;  // Peak-Bandwidth Timestamp
+        } __PACK__ performance_metrics;
+        struct {
+            uint64_t instances;
+            uint64_t min_setup_latency;
+          //uint64_t min_setup_latency_timestamp;
+            uint64_t max_setup_latency;
+          //uint64_t max_setup_latency_timestamp;
+            uint64_t min_rtt_latency;
+            uint64_t min_rtt_latency_timestamp;
+            uint64_t max_rtt_latency;
+            uint64_t max_rtt_latency_timestamp;
+        } __PACK__ latency_metrics;
+        struct {
+            uint64_t instances;
+            uint64_t pps_threshold;
+            uint64_t pps_threshold_exceed_events;
+            uint64_t pps_threshold_exceed_event_first_timestamp;
+          //uint64_t pps_threshold_exceed_event_last_timestamp;
+            uint64_t bw_threshold;
+            uint64_t bw_threshold_exceed_events;
+            uint64_t bw_threshold_exceed_event_first_timestamp;
+          //uint64_t bw_threshold_exceed_event_last_timestamp;
+        } __PACK__ behavioral_metrics;
+    } __PACK__ u1;
+
+    flow_telemetry_state_t *prev_p;
+    flow_telemetry_state_t *next_p;
+
+    uint32_t stats_idx;
+    uint8_t  present_flags;
+    uint8_t  clear_on_export_flags;
+    union {
+        uint16_t last_age_timer_ticks;
+        uint16_t delayed_age_ticks;
+    } __PACK__ u2;
+
+    struct {
+        uint32_t svrf;
+        uint32_t dvrf;
+        union {
+            struct {
+                uint32_t l2seg_id;
+                uint32_t ether_type;
+                uint64_t smac;
+                uint64_t dmac;
+            } __PACK__ l2;
+            struct {
+                uint32_t sip;
+                uint32_t dip;
+                uint16_t sport;
+                uint16_t dport;
+                uint8_t  proto;
+            } __PACK__ v4;
+            struct {
+                uint64_t sip_hi;
+                uint64_t sip_lo;
+                uint64_t dip_hi;
+                uint64_t dip_lo;
+                uint16_t sport;
+                uint16_t dport;
+                uint8_t  proto;
+            } __PACK__ v6;
+        } __PACK__ u;
+        uint8_t flow_type;
+    } __PACK__ key;
+} __PACK__;
+
 // flow state
 struct flow_s {
     sdk_spinlock_t        slock;               // lock to protect this structure
@@ -276,6 +388,12 @@ struct flow_s {
 
     // meta data maintained for flow
     ht_ctxt_t         flow_key_ht_ctxt;    // flow key based hash table context
+
+    flow_telemetry_state_t  *flow_telemetry_state_p;
+
+    // FlowProto Enablement/Creation control
+    uint8_t             flow_telemetry_enable_flags;
+    uint8_t             flow_telemetry_create_flags;
 } __PACK__;
 
 typedef struct flow_state_s {
@@ -325,6 +443,8 @@ typedef struct session_state_s {
     flow_state_t        rflow_state;
     flow_state_t        iflow_aug_state;
     flow_state_t        rflow_aug_state;
+
+    uint16_t            current_age_timer_ticks;
 } __PACK__ session_state_t;
 
 typedef struct session_cfg_s {
@@ -426,7 +546,6 @@ typedef struct session_get_stream_filter_ {
     grpc::ServerWriter<session::SessionGetResponseMsg> *writer;
     uint32_t                                            count;
 } session_get_stream_filter_t;
-
 
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_CFG_MAX_SESSIONS               131072

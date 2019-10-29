@@ -165,6 +165,7 @@ nic/build/aarch64/iris/lib/librdmamgr_iris.so                       /nic/lib/
 nic/build/aarch64/iris/lib/liblfq.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libpciemgrd.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libdropstatsproto.so                     /nic/lib/
+nic/build/aarch64/iris/lib/libflowstatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/librulestatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/libhal_mem.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsdkring.so                            /nic/lib/

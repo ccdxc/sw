@@ -1,0 +1,770 @@
+{
+  "FileName": "flowstats.proto",
+  "Package": "flowstats",
+  "Prefix": "flowstats",
+  "Messages": [
+    {
+      "Name": "IPv4FlowBehavioralMetrics",
+      "Description": "Key index - IPv4-Flow Key",
+      "DisplayName": "IPv4-Flow Behavioral-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThreshold",
+          "DisplayName": "PPS-Threshold",
+          "Description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEvents",
+          "DisplayName": "PPS-Threshold-Exceed Events",
+          "Description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEventFirstTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PpsThresholdExceedEventLastTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThreshold",
+          "DisplayName": "BW-Threshold",
+          "Description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEvents",
+          "DisplayName": "BW-Threshold-Exceed Events",
+          "Description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEventFirstTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThresholdExceedEventLastTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv4FlowDropMetrics",
+      "Description": "Key index - IPv4-Flow Key",
+      "DisplayName": "IPv4-Flow Drop-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropPackets",
+          "DisplayName": "Drop Packets",
+          "Description": "Number of packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropBytes",
+          "DisplayName": "Drop Bytes",
+          "Description": "Number of bytes dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropFirstTimestamp",
+          "DisplayName": "Drop First-Timestamp",
+          "Description": "First-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropLastTimestamp",
+          "DisplayName": "Drop Last-Timestamp",
+          "Description": "Last-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropReason",
+          "DisplayName": "Drop Reason",
+          "Description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv4FlowLatencyMetrics",
+      "Description": "Key index - IPv4-Flow Key",
+      "DisplayName": "IPv4-Flow Latency-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinSetupLatency",
+          "DisplayName": "Min TCP-Syn-Ack-Latency",
+          "Description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinSetupLatencyTimestamp",
+          "DisplayName": "Min TCP-Syn-Ack-Latency",
+          "Description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MaxSetupLatency",
+          "DisplayName": "Max TCP-Syn-Ack-Latency",
+          "Description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MaxSetupLatencyTimestamp",
+          "DisplayName": "Max TCP-Syn-Ack-Latency",
+          "Description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MinRttLatency",
+          "DisplayName": "Min TCP-RTT-Latency",
+          "Description": "Min RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinRttLatencyTimestamp",
+          "DisplayName": "Min TCP-RTT-Latency",
+          "Description": "Min RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MaxRttLatency",
+          "DisplayName": "Max TCP-RTT-Latency",
+          "Description": "Max RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MaxRttLatencyTimestamp",
+          "DisplayName": "Max TCP-RTT-Latency",
+          "Description": "Max RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv4FlowPerformanceMetrics",
+      "Description": "Key index - IPv4-Flow Key",
+      "DisplayName": "IPv4-Flow Performance-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PeakPps",
+          "DisplayName": "Peak PPS",
+          "Description": "Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakPpsTimestamp",
+          "DisplayName": "Peak PPS Timestamp",
+          "Description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBw",
+          "DisplayName": "Peak BW",
+          "Description": "Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBwTimestamp",
+          "DisplayName": "Peak BW Timestamp",
+          "Description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv4FlowRawMetrics",
+      "Description": "Key index - IPv4-Flow Key",
+      "DisplayName": "IPv4-Flow Raw-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Packets",
+          "DisplayName": "Total Packets",
+          "Description": "Total Number of packets in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Bytes",
+          "DisplayName": "Total Bytes",
+          "Description": "Total Number of bytes in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv6FlowBehavioralMetrics",
+      "Description": "Key index - IPv6-Flow Key",
+      "DisplayName": "IPv6-Flow Behavioral-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThreshold",
+          "DisplayName": "PPS-Threshold",
+          "Description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEvents",
+          "DisplayName": "PPS-Threshold-Exceed Events",
+          "Description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEventFirstTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PpsThresholdExceedEventLastTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThreshold",
+          "DisplayName": "BW-Threshold",
+          "Description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEvents",
+          "DisplayName": "BW-Threshold-Exceed Events",
+          "Description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEventFirstTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThresholdExceedEventLastTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv6FlowDropMetrics",
+      "Description": "Key index - IPv6-Flow Key",
+      "DisplayName": "IPv6-Flow Drop-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropPackets",
+          "DisplayName": "Drop Packets",
+          "Description": "Number of packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropBytes",
+          "DisplayName": "Drop Bytes",
+          "Description": "Number of bytes dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropFirstTimestamp",
+          "DisplayName": "Drop First-Timestamp",
+          "Description": "First-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropLastTimestamp",
+          "DisplayName": "Drop Last-Timestamp",
+          "Description": "Last-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropReason",
+          "DisplayName": "Drop Reason",
+          "Description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv6FlowLatencyMetrics",
+      "Description": "Key index - IPv6-Flow Key",
+      "DisplayName": "IPv6-Flow Latency-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinSetupLatency",
+          "DisplayName": "Min TCP-Syn-Ack-Latency",
+          "Description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinSetupLatencyTimestamp",
+          "DisplayName": "Min TCP-Syn-Ack-Latency",
+          "Description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MaxSetupLatency",
+          "DisplayName": "Max TCP-Syn-Ack-Latency",
+          "Description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MaxSetupLatencyTimestamp",
+          "DisplayName": "Max TCP-Syn-Ack-Latency",
+          "Description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MinRttLatency",
+          "DisplayName": "Min TCP-RTT-Latency",
+          "Description": "Min RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MinRttLatencyTimestamp",
+          "DisplayName": "Min TCP-RTT-Latency",
+          "Description": "Min RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "MaxRttLatency",
+          "DisplayName": "Max TCP-RTT-Latency",
+          "Description": "Max RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "MaxRttLatencyTimestamp",
+          "DisplayName": "Max TCP-RTT-Latency",
+          "Description": "Max RTT-Latency seen in this TCP-Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv6FlowPerformanceMetrics",
+      "Description": "Key index - IPv6-Flow Key",
+      "DisplayName": "IPv6-Flow Performance-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PeakPps",
+          "DisplayName": "Peak PPS",
+          "Description": "Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakPpsTimestamp",
+          "DisplayName": "Peak PPS Timestamp",
+          "Description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBw",
+          "DisplayName": "Peak BW",
+          "Description": "Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBwTimestamp",
+          "DisplayName": "Peak BW Timestamp",
+          "Description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "IPv6FlowRawMetrics",
+      "Description": "Key index - IPv6-Flow Key",
+      "DisplayName": "IPv6-Flow Raw-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Packets",
+          "DisplayName": "Total Packets",
+          "Description": "Total Number of packets in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Bytes",
+          "DisplayName": "Total Bytes",
+          "Description": "Total Number of bytes in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "L2FlowBehavioralMetrics",
+      "Description": "Key index - L2-Flow Key",
+      "DisplayName": "L2-Flow Behavioral-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThreshold",
+          "DisplayName": "PPS-Threshold",
+          "Description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEvents",
+          "DisplayName": "PPS-Threshold-Exceed Events",
+          "Description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsThresholdExceedEventFirstTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PpsThresholdExceedEventLastTimestamp",
+          "DisplayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThreshold",
+          "DisplayName": "BW-Threshold",
+          "Description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEvents",
+          "DisplayName": "BW-Threshold-Exceed Events",
+          "Description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "BwThresholdExceedEventFirstTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event First-Timestamp",
+          "Description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "BwThresholdExceedEventLastTimestamp",
+          "DisplayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+          "Description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "L2FlowDropMetrics",
+      "Description": "Key index - L2-Flow Key",
+      "DisplayName": "L2-Flow Drop-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropPackets",
+          "DisplayName": "Drop Packets",
+          "Description": "Number of packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropBytes",
+          "DisplayName": "Drop Bytes",
+          "Description": "Number of bytes dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DropFirstTimestamp",
+          "DisplayName": "Drop First-Timestamp",
+          "Description": "First-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropLastTimestamp",
+          "DisplayName": "Drop Last-Timestamp",
+          "Description": "Last-time when drops occurred in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "DropReason",
+          "DisplayName": "Drop Reason",
+          "Description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "L2FlowPerformanceMetrics",
+      "Description": "Key index - L2-Flow Key",
+      "DisplayName": "L2-Flow Performance-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PeakPps",
+          "DisplayName": "Peak PPS",
+          "Description": "Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakPpsTimestamp",
+          "DisplayName": "Peak PPS Timestamp",
+          "Description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBw",
+          "DisplayName": "Peak BW",
+          "Description": "Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        },
+        {
+          "Name": "PeakBwTimestamp",
+          "DisplayName": "Peak BW Timestamp",
+          "Description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Gauge"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "L2FlowRawMetrics",
+      "Description": "Key index - L2-Flow Key",
+      "DisplayName": "L2-Flow Raw-Metrics",
+      "Fields": [
+        {
+          "Name": "Instances",
+          "DisplayName": "Total Instances",
+          "Description": "Total Instances seen in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Packets",
+          "DisplayName": "Total Packets",
+          "Description": "Total Number of packets in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Bytes",
+          "DisplayName": "Total Bytes",
+          "Description": "Total Number of bytes in this Flow-Context",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    }
+  ]
+}

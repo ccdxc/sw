@@ -278,6 +278,7 @@ public:
           {{end}}
 	static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
+	static delphi::error DeleteComposite({{$pkgName}}::{{.GetCppTypeName}} key);
         static void Release({{$msgName}}Ptr ptr);
         {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *valptr);
@@ -779,6 +780,22 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
           {{end}}
+}
+
+// DeleteComposite deletes the metric instance
+delphi::error {{$msgName}}::DeleteComposite({{$pkgName}}::{{.GetCppTypeName}} key) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    auto keystr = key.SerializeAsString();
+
+    // get the table
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    assert(tbl != NULL);
+
+    // delete the key
+    return tbl->Delete((char *)keystr.c_str(), keystr.length());
 }
 
 // Release release the metrics object memory

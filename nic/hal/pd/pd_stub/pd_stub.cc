@@ -116,6 +116,7 @@ PD_FUNC_STUB(pd_session_create);
 PD_FUNC_STUB(pd_session_update);
 PD_FUNC_STUB(pd_session_delete);
 PD_FUNC_STUB(pd_session_get);
+PD_FUNC_STUB(pd_session_get_for_age_thread);
 PD_FUNC_STUB(pd_get_cpu_bypass_flowid);
 PD_FUNC_STUB(pd_flow_hash_get);
 

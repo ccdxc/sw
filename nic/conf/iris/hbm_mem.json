@@ -545,6 +545,18 @@
             "reset": true
         },
         {
+            "_comment" : "64K entries resources of 128 Bytes each",
+            "_comment1" : "These are allocated on-demand as and when needed",
+            "_comment2" : "For Flow-Drops, these are allocated on first drop",
+            "_comment3" : "For other aspects of flow-exposition, they are",
+            "_comment4" : "consumer driven through flow-level enablement.",
+            "_comment5" : "The eventual goal is to reclaim deprecated HBM",
+            "_comment6" : "tables and use them for Flow-Visibility initiative",
+            "name": "flow_telemetry_stats",
+            "size": "8M",
+            "reset": true
+        },
+        {
             "_comment" : "32 entries of 64 Bytes each",
             "name": "opaque_tag",
             "size": "2K",

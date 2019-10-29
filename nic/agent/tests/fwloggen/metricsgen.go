@@ -392,6 +392,96 @@ func metricsInit() {
 		fmt.Printf("failed to init FteLifQMetrics")
 	}
 
+	if it, err := goproto.NewIPv4FlowBehavioralMetricsIterator(); err == nil {
+		n := &goproto.IPv4FlowBehavioralMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv4FlowBehavioralMetrics")
+	}
+
+	if it, err := goproto.NewIPv4FlowDropMetricsIterator(); err == nil {
+		n := &goproto.IPv4FlowDropMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv4FlowDropMetrics")
+	}
+
+	if it, err := goproto.NewIPv4FlowLatencyMetricsIterator(); err == nil {
+		n := &goproto.IPv4FlowLatencyMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv4FlowLatencyMetrics")
+	}
+
+	if it, err := goproto.NewIPv4FlowPerformanceMetricsIterator(); err == nil {
+		n := &goproto.IPv4FlowPerformanceMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv4FlowPerformanceMetrics")
+	}
+
+	if it, err := goproto.NewIPv4FlowRawMetricsIterator(); err == nil {
+		n := &goproto.IPv4FlowRawMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv4FlowRawMetrics")
+	}
+
+	if it, err := goproto.NewIPv6FlowBehavioralMetricsIterator(); err == nil {
+		n := &goproto.IPv6FlowBehavioralMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv6FlowBehavioralMetrics")
+	}
+
+	if it, err := goproto.NewIPv6FlowDropMetricsIterator(); err == nil {
+		n := &goproto.IPv6FlowDropMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv6FlowDropMetrics")
+	}
+
+	if it, err := goproto.NewIPv6FlowLatencyMetricsIterator(); err == nil {
+		n := &goproto.IPv6FlowLatencyMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv6FlowLatencyMetrics")
+	}
+
+	if it, err := goproto.NewIPv6FlowPerformanceMetricsIterator(); err == nil {
+		n := &goproto.IPv6FlowPerformanceMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv6FlowPerformanceMetrics")
+	}
+
+	if it, err := goproto.NewIPv6FlowRawMetricsIterator(); err == nil {
+		n := &goproto.IPv6FlowRawMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init IPv6FlowRawMetrics")
+	}
+
 	if it, err := goproto.NewIntrintrintintreccMetricsIterator(); err == nil {
 		n := &goproto.IntrintrintintreccMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -399,6 +489,42 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init IntrintrintintreccMetrics")
+	}
+
+	if it, err := goproto.NewL2FlowBehavioralMetricsIterator(); err == nil {
+		n := &goproto.L2FlowBehavioralMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init L2FlowBehavioralMetrics")
+	}
+
+	if it, err := goproto.NewL2FlowDropMetricsIterator(); err == nil {
+		n := &goproto.L2FlowDropMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init L2FlowDropMetrics")
+	}
+
+	if it, err := goproto.NewL2FlowPerformanceMetricsIterator(); err == nil {
+		n := &goproto.L2FlowPerformanceMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init L2FlowPerformanceMetrics")
+	}
+
+	if it, err := goproto.NewL2FlowRawMetricsIterator(); err == nil {
+		n := &goproto.L2FlowRawMetrics{}
+		if fillKey(n.GetKey()) == true {
+			it.Create(n.GetKey())
+		}
+	} else {
+		fmt.Printf("failed to init L2FlowRawMetrics")
 	}
 
 	if it, err := goproto.NewLifMetricsIterator(); err == nil {

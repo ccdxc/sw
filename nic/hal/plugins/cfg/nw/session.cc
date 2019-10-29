@@ -25,6 +25,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
+#include "gen/proto/flowstats/flowstats.delphi.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -51,11 +52,17 @@ using sys::QInfo;
 
 using namespace sdk::lib;
 
+#define	HAL_FLOW_TELEMETRY_MAX_STATS_STATE	65536
+#define	FLOW_TELEMETRY_STATS_SHIFT		7
+
 #define TCP_IPV4_DOT1Q_PKT_SZ (sizeof(ether_header_t)+sizeof(vlan_header_t)+\
                               sizeof(ipv4_header_t)+sizeof(tcp_header_t)+TCP_TS_OPTION_LEN)
 #define TCP_IPV4_PKT_SZ (sizeof(ether_header_t)+\
                          sizeof(ipv4_header_t)+sizeof(tcp_header_t))
 #define TIME_DIFF(val1, val2) ((val1 <= val2)?(val2-val1):(val1-val2))
+
+sdk::lib::indexer      *g_flow_proto_state_indexer;
+sdk::types::mem_addr_t  g_flow_telemetry_hbm_start;
 
 namespace hal {
 
@@ -76,15 +83,19 @@ std::ostream& operator<<(std::ostream& os, const hal::flow_state_t& val) {
 thread_local void *t_session_timer;
 session_stats_t  *g_session_stats;
 
+flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
+flow_telemetry_state_t *g_flow_telemetry_state_age_tail_p;
+uint16_t                g_age_timer_ticks;
+
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
 #define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (3 * TIME_MSECS_PER_SEC)
-#define HAL_SESSION_AGE_SCAN_INTVL                 (250)
+#define HAL_SESSION_AGE_SCAN_INTVL                 (1000)
 #define HAL_FTE_STATS_TIMER_INTVL                  (10 * TIME_MSECS_PER_SEC)
 #define HAL_FTE_STATS_TIMER_INTVL_SECS             (10)
-#define HAL_SESSIONS_TO_SCAN_PER_INTVL             (500)
+#define HAL_SESSIONS_TO_SCAN_PER_INTVL             (2000)
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
 #define HAL_MAX_SESSION_PER_ENQ                     128 
@@ -1290,6 +1301,9 @@ flow_create_fte (const flow_cfg_t *cfg,
     SDK_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_SHARED);
     flow->flow_key_ht_ctxt.reset();
 
+    // Enable FlowTelemetryDrop by default
+    flow->flow_telemetry_enable_flags |= (1 << FLOW_TELEMETRY_DROP);
+
     if (cfg){
         flow->config = *cfg;
     }
@@ -1332,6 +1346,858 @@ void incr_global_session_tcp_rst_stats (uint8_t fte_id) {
 
 void incr_global_session_icmp_error_stats (uint8_t fte_id) {
     HAL_SESSION_STATS_PTR(fte_id)->num_icmp_error_sent += 1;
+}
+
+void
+get_l2_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+                           flowstats::L2FlowKey *key_p)
+{
+    key_p->set_svrf(flow_telemetry_state_p->key.svrf);
+    key_p->set_dvrf(flow_telemetry_state_p->key.dvrf);
+    key_p->set_l2seg_id(flow_telemetry_state_p->key.u.l2.l2seg_id);
+    key_p->set_smac(flow_telemetry_state_p->key.u.l2.smac);
+    key_p->set_dmac(flow_telemetry_state_p->key.u.l2.dmac);
+    key_p->set_ether_type(flow_telemetry_state_p->key.u.l2.ether_type);
+}
+
+void
+get_ipv4_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+                             flowstats::IPv4FlowKey *key_p)
+{
+    key_p->set_svrf(flow_telemetry_state_p->key.svrf);
+    key_p->set_dvrf(flow_telemetry_state_p->key.dvrf);
+    key_p->set_sip(flow_telemetry_state_p->key.u.v4.sip);
+    key_p->set_dip(flow_telemetry_state_p->key.u.v4.dip);
+    key_p->set_sport(flow_telemetry_state_p->key.u.v4.sport);
+    key_p->set_dport(flow_telemetry_state_p->key.u.v4.dport);
+    key_p->set_ip_proto(flow_telemetry_state_p->key.u.v4.proto);
+}
+
+void
+get_ipv6_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+                             flowstats::IPv6FlowKey *key_p)
+{
+    key_p->set_svrf(flow_telemetry_state_p->key.svrf);
+    key_p->set_dvrf(flow_telemetry_state_p->key.dvrf);
+    key_p->set_sip_hi(flow_telemetry_state_p->key.u.v6.sip_hi);
+    key_p->set_sip_lo(flow_telemetry_state_p->key.u.v6.sip_lo);
+    key_p->set_dip_hi(flow_telemetry_state_p->key.u.v6.dip_hi);
+    key_p->set_dip_lo(flow_telemetry_state_p->key.u.v6.dip_lo);
+    key_p->set_sport(flow_telemetry_state_p->key.u.v6.sport);
+    key_p->set_dport(flow_telemetry_state_p->key.u.v6.dport);
+    key_p->set_ip_proto(flow_telemetry_state_p->key.u.v6.proto);
+}
+
+inline void
+get_l2_flow_proto_key (flow_key_t *flow_key_p, flowstats::L2FlowKey *key_p)
+{
+    key_p->set_svrf(flow_key_p->svrf_id);
+    key_p->set_dvrf(flow_key_p->dvrf_id);
+    key_p->set_l2seg_id(flow_key_p->l2seg_id);
+    key_p->set_smac(MAC_TO_UINT64(flow_key_p->smac));
+    key_p->set_dmac(MAC_TO_UINT64(flow_key_p->dmac));
+    key_p->set_ether_type(flow_key_p->ether_type);
+}
+
+inline void
+get_ipv4_flow_proto_key (flow_key_t *flow_key_p, flowstats::IPv4FlowKey *key_p)
+{
+    key_p->set_svrf(flow_key_p->svrf_id);
+    key_p->set_dvrf(flow_key_p->dvrf_id);
+    key_p->set_sip(flow_key_p->sip.v4_addr);
+    key_p->set_dip(flow_key_p->dip.v4_addr);
+    key_p->set_sport(flow_key_p->sport);
+    key_p->set_dport(flow_key_p->dport);
+    key_p->set_ip_proto(flow_key_p->proto);
+}
+
+inline void
+get_ipv6_flow_proto_key (flow_key_t *flow_key_p, flowstats::IPv6FlowKey *key_p)
+{
+    key_p->set_svrf(flow_key_p->svrf_id);
+    key_p->set_dvrf(flow_key_p->dvrf_id);
+    key_p->set_sip_hi(flow_key_p->sip.v6_addr.addr64[0]);
+    key_p->set_sip_lo(flow_key_p->sip.v6_addr.addr64[1]);
+    key_p->set_dip_hi(flow_key_p->dip.v6_addr.addr64[0]);
+    key_p->set_dip_lo(flow_key_p->dip.v6_addr.addr64[1]);
+    key_p->set_sport(flow_key_p->sport);
+    key_p->set_dport(flow_key_p->dport);
+    key_p->set_ip_proto(flow_key_p->proto);
+}
+
+void
+initialize_flow_telemetry_hbm_stats_state (flow_t *flow_p, 
+                                           flow_state_t *flow_state_p)
+{
+    flow_telemetry_state_t *flow_telemetry_state_p;
+    uint32_t                delta_packets, delta_bytes;
+
+    flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
+    if (flow_p->flow_telemetry_enable_flags & (1 << FLOW_TELEMETRY_RAW)) {
+        // Compute Delta-Packets/Bytes since last capture
+        delta_packets = (uint32_t) flow_state_p->packets - 
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets;
+        delta_bytes = (uint32_t) flow_state_p->bytes - flow_telemetry_state_p->
+                                 u1.raw_metrics.last_flow_table_bytes;
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets =
+                                (uint32_t) flow_state_p->packets;
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_bytes =
+                                (uint32_t) flow_state_p->bytes;
+
+        // Packets / Bytes are accumulated to handle Telemetry-HBM-resource
+        // Re-use case
+        flow_telemetry_state_p->u1.raw_metrics.packets += delta_packets;
+        flow_telemetry_state_p->u1.raw_metrics.bytes += delta_bytes;
+    }
+
+    if (flow_p->flow_telemetry_enable_flags & (1 << FLOW_TELEMETRY_DROP)) {
+        timespec_t ctime;
+        uint64_t   ctime_ns;
+
+        clock_gettime(CLOCK_MONOTONIC, &ctime);
+        sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+
+        // Sense for first-time occurring drop-events
+        if (flow_telemetry_state_p->u1.drop_metrics.packets == 0)
+            flow_telemetry_state_p->u1.drop_metrics.first_timestamp = ctime_ns;
+        flow_telemetry_state_p->u1.drop_metrics.last_timestamp = ctime_ns;
+
+        // Compute Delta-Packets/Bytes since last capture
+        delta_packets = (uint32_t) flow_state_p->drop_packets -
+        flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets;
+        delta_bytes = (uint32_t) flow_state_p->drop_bytes - 
+        flow_telemetry_state_p->u1.drop_metrics.last_flow_table_bytes;
+        flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets =
+                                (uint32_t) flow_state_p->drop_packets;
+        flow_telemetry_state_p->u1.drop_metrics.last_flow_table_bytes =
+                                (uint32_t) flow_state_p->drop_bytes;
+
+        // Packets / Bytes are accumulated to handle Telemetry-HBM-resource
+        // Re-use case
+        flow_telemetry_state_p->u1.drop_metrics.packets += delta_packets;
+        flow_telemetry_state_p->u1.drop_metrics.bytes += delta_bytes;
+        flow_telemetry_state_p->u1.drop_metrics.reason |= flow_state_p->
+                                                          exception_bmap;
+    }
+}
+
+flow_telemetry_state_t *
+check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
+                                                flow_state_t *flow_state_p)
+{
+    flow_telemetry_state_t *flow_telemetry_state_p = NULL;
+    sdk::types::mem_addr_t  vaddr, pal_addr = INVALID_MEM_ADDRESS;
+    uint8_t flow_type,      flow_telemetry_create_flags;
+
+    flow_telemetry_create_flags = flow_p->flow_telemetry_create_flags;
+    flow_type = flow_p->config.key.flow_type;
+    switch (flow_type) {
+        case FLOW_TYPE_L2:
+            {
+                flowstats::L2FlowKey key;
+
+                get_l2_flow_proto_key(&flow_p->config.key, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::L2FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::L2FlowDropMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+            }
+            break;
+        case FLOW_TYPE_V4:
+            {
+                flowstats::IPv4FlowKey key;
+
+                get_ipv4_flow_proto_key(&flow_p->config.key, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv4FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv4FlowDropMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+            }
+            break;
+        case FLOW_TYPE_V6:
+            {
+                flowstats::IPv6FlowKey key;
+
+                get_ipv6_flow_proto_key(&flow_p->config.key, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv6FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv6FlowDropMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        pal_addr = m_ptr->GetPalAddr();
+                        break;
+                    }
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
+    // Re-use HBM-resource, if applicable
+    if (pal_addr != INVALID_MEM_ADDRESS) {
+        sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(
+                                            pal_addr, &vaddr);
+        SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+        flow_telemetry_state_p = (flow_telemetry_state_t *) vaddr;
+
+        // De-link Re-use HBM-resource from the Age-list
+        if (flow_telemetry_state_p->prev_p == NULL) {
+            g_flow_telemetry_state_age_head_p = flow_telemetry_state_p->next_p;
+            if (g_flow_telemetry_state_age_head_p == NULL)
+                g_flow_telemetry_state_age_tail_p = NULL;
+            else
+                g_flow_telemetry_state_age_head_p->prev_p = NULL;
+        }
+        else if (flow_telemetry_state_p->next_p == NULL) {
+            g_flow_telemetry_state_age_tail_p = flow_telemetry_state_p->prev_p;
+            g_flow_telemetry_state_age_tail_p->next_p = NULL;
+        }
+        else {
+            flow_telemetry_state_t *next_p = flow_telemetry_state_p->next_p;
+            flow_telemetry_state_t *prev_p = flow_telemetry_state_p->prev_p;
+
+            prev_p->next_p = next_p;
+            next_p->prev_p = prev_p;
+        }
+        flow_telemetry_state_p->prev_p = NULL;
+        flow_telemetry_state_p->next_p = NULL;
+        if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+            flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets = 0;
+            flow_telemetry_state_p->u1.raw_metrics.last_flow_table_bytes = 0;
+        }
+        if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+            flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets = 0;
+            flow_telemetry_state_p->u1.drop_metrics.last_flow_table_bytes = 0;
+        }
+
+        flow_telemetry_state_p->u1.drop_metrics.instances++;
+        flow_p->flow_telemetry_state_p = flow_telemetry_state_p;
+
+        initialize_flow_telemetry_hbm_stats_state(flow_p, flow_state_p);
+    }
+
+    return(flow_telemetry_state_p);
+}
+
+void
+allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p, 
+                                         flow_state_t *flow_state_p)
+{
+    sdk::lib::indexer::status rs;
+    sdk::types::mem_addr_t vaddr, pal_addr;
+    flow_telemetry_state_t *flow_telemetry_state_p;
+    uint32_t idx;
+
+    // No need to allocate HBM-resource if already allocated
+    if (flow_p->flow_telemetry_state_p != NULL)
+        return;
+
+    // Check and re-use if concerned Delphi-object is not deleted yet
+    flow_telemetry_state_p = check_for_flow_telemetry_hbm_stats_state_reuse(
+                             flow_p, flow_state_p);
+    if (flow_telemetry_state_p != NULL)
+        return;
+
+    //
+    // Allocate Flow-Proto-State in HBM, if we run out of HBM resources
+    // exit gracefully
+    //
+    pal_addr = get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
+    SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
+
+    rs = g_flow_proto_state_indexer->alloc(&idx);
+    if (rs != sdk::lib::indexer::SUCCESS)
+        return;
+
+    //
+    // Convert Physical-Flow-Proto-State-ptr to Virtual-address
+    //
+    pal_addr += idx * (1 << FLOW_TELEMETRY_STATS_SHIFT);
+    sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(
+                                        pal_addr, &vaddr);
+    SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+    flow_telemetry_state_p = (flow_telemetry_state_t *) vaddr;
+    flow_p->flow_telemetry_state_p = flow_telemetry_state_p;
+
+    //
+    // Initialize Flow-Proto-State with defaults
+    //
+    *flow_telemetry_state_p = {0};
+    flow_telemetry_state_p->stats_idx = idx;
+    flow_telemetry_state_p->u1.drop_metrics.instances++;
+
+    // Initialize Key fields
+    flow_telemetry_state_p->key.flow_type = flow_p->config.key.flow_type;
+    flow_telemetry_state_p->key.svrf = (uint32_t) flow_p->config.key.svrf_id;
+    flow_telemetry_state_p->key.dvrf = (uint32_t) flow_p->config.key.dvrf_id;
+    switch (flow_p->config.key.flow_type) {
+        case FLOW_TYPE_L2:
+            flow_telemetry_state_p->key.u.l2.l2seg_id = (uint32_t) flow_p->
+                                                         config.key.l2seg_id;
+            flow_telemetry_state_p->key.u.l2.ether_type = flow_p->config.key.
+                                                          ether_type;
+            flow_telemetry_state_p->key.u.l2.smac = MAC_TO_UINT64(flow_p->
+                                                    config.key.smac);
+            flow_telemetry_state_p->key.u.l2.dmac = MAC_TO_UINT64(flow_p->
+                                                    config.key.dmac);
+            break;
+        case FLOW_TYPE_V4:
+            flow_telemetry_state_p->key.u.v4.sip = flow_p->config.key.sip.
+                                                           v4_addr;
+            flow_telemetry_state_p->key.u.v4.dip = flow_p->config.key.dip.
+                                                           v4_addr;
+            flow_telemetry_state_p->key.u.v4.sport = flow_p->config.key.sport;
+            flow_telemetry_state_p->key.u.v4.dport = flow_p->config.key.dport;
+            flow_telemetry_state_p->key.u.v4.proto = flow_p->config.key.proto;
+            break;
+        case FLOW_TYPE_V6:
+            flow_telemetry_state_p->key.u.v6.sip_hi = flow_p->config.key.sip.
+                                                              v6_addr.addr64[0];
+            flow_telemetry_state_p->key.u.v6.sip_lo = flow_p->config.key.sip.
+                                                              v6_addr.addr64[1];
+            flow_telemetry_state_p->key.u.v6.dip_hi = flow_p->config.key.dip.
+                                                              v6_addr.addr64[0];
+            flow_telemetry_state_p->key.u.v6.dip_lo = flow_p->config.key.dip.
+                                                              v6_addr.addr64[1];
+            flow_telemetry_state_p->key.u.v6.sport = flow_p->config.key.sport;
+            flow_telemetry_state_p->key.u.v6.dport = flow_p->config.key.dport;
+            flow_telemetry_state_p->key.u.v6.proto = flow_p->config.key.proto;
+            break;
+        default:
+            break;
+    }
+    initialize_flow_telemetry_hbm_stats_state(flow_p, flow_state_p);
+}
+
+void
+free_flow_telemetry_hbm_stats_state (flow_telemetry_state_t 
+                                     *flow_telemetry_state_p)
+{
+    g_flow_proto_state_indexer->free(flow_telemetry_state_p->stats_idx);
+}
+
+void
+delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
+                         uint8_t flow_telemetry_delete_flags)
+{
+    uint8_t flow_type;
+
+    flow_type = flow_telemetry_state_p->key.flow_type;
+    switch (flow_type) {
+        case FLOW_TYPE_L2:
+            {
+                flowstats::L2FlowKey key;
+
+                get_l2_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::L2FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::L2FlowRawMetrics::Release(m_ptr);
+                        delphi::objects::L2FlowRawMetrics::DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::L2FlowDropMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::L2FlowDropMetrics::Release(m_ptr);
+                        delphi::objects::L2FlowDropMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::L2FlowPerformanceMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::L2FlowPerformanceMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::L2FlowBehavioralMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::L2FlowBehavioralMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+            }
+            break;
+        case FLOW_TYPE_V4:
+            {
+                flowstats::IPv4FlowKey key;
+
+                get_ipv4_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv4FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv4FlowRawMetrics::Release(m_ptr);
+                        delphi::objects::IPv4FlowRawMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv4FlowDropMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv4FlowDropMetrics::Release(m_ptr);
+                        delphi::objects::IPv4FlowDropMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv4FlowPerformanceMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::IPv4FlowPerformanceMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv4FlowLatencyMetrics::Release(m_ptr);
+                        delphi::objects::IPv4FlowLatencyMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv4FlowBehavioralMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::IPv4FlowBehavioralMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+            }
+            break;
+        case FLOW_TYPE_V6:
+            {
+                flowstats::IPv6FlowKey key;
+
+                get_ipv6_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv6FlowRawMetrics::Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv6FlowRawMetrics::Release(m_ptr);
+                        delphi::objects::IPv6FlowRawMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv6FlowDropMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv6FlowDropMetrics::Release(m_ptr);
+                        delphi::objects::IPv6FlowDropMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv6FlowPerformanceMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::IPv6FlowPerformanceMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv6FlowLatencyMetrics::Release(m_ptr);
+                        delphi::objects::IPv6FlowLatencyMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+
+                if (flow_telemetry_delete_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
+                                 Find(key);
+                    if (m_ptr != NULL) {
+                        delphi::objects::IPv6FlowBehavioralMetrics::
+                                         Release(m_ptr);
+                        delphi::objects::IPv6FlowBehavioralMetrics::
+                                         DeleteComposite(key);
+                    }
+                }
+            }
+            break;
+        default:
+            return;
+    }
+
+    // De-Remember applicable FlowProto creation flags
+    flow_telemetry_state_p->present_flags &= ~flow_telemetry_delete_flags;
+}
+
+void
+create_flow_proto_state (flow_t *flow_p)
+{
+    sdk::types::mem_addr_t  stats_addr[FLOW_TELEMETRY_MAX], pal_addr;
+    flow_telemetry_state_t *flow_telemetry_state_p;
+    flow_telemetry_state_t *flow_telemetry_hbm_addr;
+    uint8_t                 flow_type;
+    uint8_t                 flow_telemetry_create_flags;
+    uint8_t                 flow_telemetry_delete_flags;
+
+    // No need to create if flow is not created (could happen for rflow)
+    if (flow_p == NULL || flow_p->flow_telemetry_state_p == NULL)
+        return;
+
+    // Handle "on-the-fly" FlowProto disablement case
+    flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
+    flow_telemetry_delete_flags = (~flow_p->flow_telemetry_enable_flags &
+                                   flow_telemetry_state_p->present_flags);
+    if (flow_telemetry_delete_flags)
+        delete_flow_proto_state(flow_telemetry_state_p, 
+                                flow_telemetry_delete_flags);
+
+    // No need to create if FlowProto creation is not enabled or
+    // FlowProto is already created
+    flow_telemetry_create_flags = (flow_p->flow_telemetry_enable_flags &
+                                   flow_p->flow_telemetry_create_flags &
+                                  ~flow_telemetry_state_p->present_flags);
+    if (flow_telemetry_create_flags == 0)
+        return;
+
+    // Fetch ptrs for various mertics blocks
+    pal_addr = g_flow_telemetry_hbm_start + (flow_telemetry_state_p->stats_idx *                                            (1 << FLOW_TELEMETRY_STATS_SHIFT));
+    flow_telemetry_hbm_addr = (flow_telemetry_state_t *) pal_addr;
+    stats_addr[FLOW_TELEMETRY_RAW] = (mem_addr_t) &flow_telemetry_hbm_addr->
+                                      u1.raw_metrics.instances;
+    stats_addr[FLOW_TELEMETRY_DROP] = (mem_addr_t) &flow_telemetry_hbm_addr->
+                                       u1.drop_metrics.instances;
+    stats_addr[FLOW_TELEMETRY_PERFORMANCE] = (mem_addr_t) 
+                     &flow_telemetry_hbm_addr->u1.performance_metrics.instances;
+    stats_addr[FLOW_TELEMETRY_LATENCY] = (mem_addr_t) &flow_telemetry_hbm_addr->
+                                          u1.latency_metrics.instances;
+    stats_addr[FLOW_TELEMETRY_BEHAVIORAL] = (mem_addr_t) 
+                      &flow_telemetry_hbm_addr->u1.behavioral_metrics.instances;
+
+    flow_type = flow_p->config.key.flow_type;
+    switch (flow_type) {
+        case FLOW_TYPE_L2:
+            {
+                flowstats::L2FlowKey key;
+
+                get_l2_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::L2FlowRawMetrics::
+                                 NewL2FlowRawMetrics(key, 
+                                 stats_addr[FLOW_TELEMETRY_RAW]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::L2FlowDropMetrics::
+                                 NewL2FlowDropMetrics(key, 
+                                 stats_addr[FLOW_TELEMETRY_DROP]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
+                                 NewL2FlowPerformanceMetrics(key, 
+                                 stats_addr[FLOW_TELEMETRY_PERFORMANCE]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
+                                 NewL2FlowBehavioralMetrics(key, 
+                                 stats_addr[FLOW_TELEMETRY_BEHAVIORAL]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+            }
+            break;
+        case FLOW_TYPE_V4:
+            {
+                flowstats::IPv4FlowKey key;
+
+                get_ipv4_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv4FlowRawMetrics::
+                                 NewIPv4FlowRawMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_RAW]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv4FlowDropMetrics::
+                                 NewIPv4FlowDropMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_DROP]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
+                                 NewIPv4FlowPerformanceMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_PERFORMANCE]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
+                                 NewIPv4FlowLatencyMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_LATENCY]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
+                                 NewIPv4FlowBehavioralMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_BEHAVIORAL]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+            }
+            break;
+        case FLOW_TYPE_V6:
+            {
+                flowstats::IPv6FlowKey key;
+
+                get_ipv6_flow_telemetry_key(flow_telemetry_state_p, &key);
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
+                    auto m_ptr = delphi::objects::IPv6FlowRawMetrics::
+                                 NewIPv6FlowRawMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_RAW]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
+                    auto m_ptr = delphi::objects::IPv6FlowDropMetrics::
+                                 NewIPv6FlowDropMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_DROP]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_PERFORMANCE)) {
+                    auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
+                                 NewIPv6FlowPerformanceMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_PERFORMANCE]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_LATENCY)) {
+                    auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
+                                 NewIPv6FlowLatencyMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_LATENCY]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+
+                if (flow_telemetry_create_flags & 
+                   (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
+                    auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
+                                 NewIPv6FlowBehavioralMetrics(key,
+                                 stats_addr[FLOW_TELEMETRY_BEHAVIORAL]);
+                    SDK_ASSERT(m_ptr != NULL);
+                }
+            }
+            break;
+        default:
+            return;
+    }
+
+    // Remember FlowProto creation
+    flow_telemetry_state_p->present_flags |= flow_telemetry_create_flags;
+    flow_p->flow_telemetry_create_flags = 0;
+}
+
+void
+enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p)
+{
+    flow_telemetry_state_t *flow_telemetry_state_p;
+
+    // No need to enqueue to Age-list if no Proto-states are created
+    if (flow_p == NULL || flow_p->flow_telemetry_state_p == NULL)
+        return;
+
+    // If Flow-Proto Delphi-objects are already purged, free up HBM memory
+    flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
+    if (flow_telemetry_state_p->present_flags == 0) {
+        free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
+    }
+    else {
+        // Enqueue Flow-Proto-State to Age-list queue
+        if (g_flow_telemetry_state_age_tail_p == NULL) {
+            g_flow_telemetry_state_age_head_p = flow_telemetry_state_p;
+            g_flow_telemetry_state_age_tail_p = flow_telemetry_state_p;
+        }
+        else {
+            flow_telemetry_state_p->prev_p = g_flow_telemetry_state_age_tail_p;
+            g_flow_telemetry_state_age_tail_p->next_p = flow_telemetry_state_p;
+            g_flow_telemetry_state_age_tail_p = flow_telemetry_state_p;
+        }
+        flow_telemetry_state_p->u2.delayed_age_ticks = 
+                                        FLOW_TELEMETRY_DELAYED_AGE_TICKS_40SECS;
+    }
+
+    flow_p->flow_telemetry_state_p = NULL;
+}
+
+void
+dequeue_flow_telemetry_state_from_age_list (
+                                 flow_telemetry_state_t *flow_telemetry_state_p)
+{
+    // Dequeue Flow-Proto-State to Age-list queue
+    //
+    // The assumption here is that head-of-age-list is being dequeued since
+    // that would be the first one to age out
+    g_flow_telemetry_state_age_head_p = g_flow_telemetry_state_age_head_p->
+                                        next_p;
+    if (g_flow_telemetry_state_age_head_p == NULL)
+        g_flow_telemetry_state_age_tail_p = NULL;;
+
+    // Free Flow-Proto-Stats-State after deleting Delphi object
+    delete_flow_proto_state(flow_telemetry_state_p, 
+                            flow_telemetry_state_p->present_flags);
+    free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
 }
 
 inline void
@@ -1581,6 +2447,11 @@ session_delete(const session_args_t *args, session_t *session)
 
     SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
+    // Handle Delphi-object referenced states in HBM in a delayed fashion
+    // to make sure that last-updated data has been streamed out
+    enqueue_flow_telemetry_state_to_age_list(session->iflow);
+    enqueue_flow_telemetry_state_to_age_list(session->rflow);
+
     del_session_from_db(args->sep_handle, args->dep_handle, session);
 
     // allocate all PD resources and finish programming, if any
@@ -1808,20 +2679,61 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
 
 static session_aged_ret_t
 hal_has_session_aged (session_t *session, uint64_t ctime_ns,
-                     session_state_t *session_state_p)
+                      session_state_t *session_state_p, bool age_thread)
 {
-    flow_t                                    *iflow, *rflow = NULL;
-    session_state_t                            session_state = {0};
+    flow_t                                    *iflow, *rflow;
     uint64_t                                   session_timeout;
     pd::pd_session_get_args_t                  args;
-    SessionSpec                                spec;
-    SessionResponse                            rsp;
     hal_ret_t                                  ret;
     session_aged_ret_t                         retval = SESSION_AGED_NONE;
     pd::pd_func_args_t                         pd_func_args = {0};
     bool                                       tcp_session = false;
 
+    // read the initiator flow record
+    iflow = session->iflow;
+    rflow = session->rflow;
+    if (!iflow) {
+        HAL_TRACE_ERR("session {} has no iflow, ignoring ...",
+                      session->hal_handle);
+        return retval;
+    }
+
     tcp_session = (session->iflow->config.key.proto == IPPROTO_TCP);
+
+    // Call applicable pd-session-get depending upon age_thread context or
+    // otherwise 
+    args.session = session;
+    args.session_state = session_state_p;
+    pd_func_args.pd_session_get = &args;
+    if (age_thread) {
+        // Pass Age-timer-ticks via session-state for pps / bw metrics 
+        // calculations
+        session_state_p->current_age_timer_ticks = g_age_timer_ticks;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD,
+                              &pd_func_args);
+    }
+    else {
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch session state for session {}",
+                      session->hal_handle);
+        return retval;
+    }
+
+    // Create Flow-Proto-Stats-State in HBM, as hinted by create_flags
+    if (age_thread) {
+        if (iflow->flow_telemetry_create_flags) {
+            allocate_flow_telemetry_hbm_stats_state(iflow, &session_state_p->
+                                                            iflow_state);
+            create_flow_proto_state(iflow);
+        }
+        if (rflow && rflow->flow_telemetry_create_flags) {
+            allocate_flow_telemetry_hbm_stats_state(rflow, &session_state_p->
+                                                            rflow_state);
+            create_flow_proto_state(rflow);
+        }
+    }
 
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
@@ -1832,25 +2744,6 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session {} connection tracking timer is on -- bailing aging",
                         session->hal_handle);
-        return retval;
-    }
-
-    // read the initiator flow record
-    iflow = session->iflow;
-    if (!iflow) {
-        HAL_TRACE_ERR("session {} has no iflow, ignoring ...",
-                      session->hal_handle);
-        return retval;
-    }
-
-    rflow = session->rflow;
-    args.session = session;
-    args.session_state = &session_state;
-    pd_func_args.pd_session_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to fetch session state for session {}",
-                      session->hal_handle);
         return retval;
     }
 
@@ -1868,23 +2761,23 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // connections if half-closed timeout is disabled.
 #if SESSION_AGE_DEBUG
     HAL_TRACE_VERBOSE("retval {} session handle: {}, session iflow state: {}, session rflow state: {}",
-                    retval, session->hal_handle, session_state.iflow_state, session_state.rflow_state);
+                    retval, session->hal_handle, session_state_p->iflow_state, session_state_p->rflow_state);
     HAL_TRACE_VERBOSE("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
-                    session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
+                    session_state_p->iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
-    if ((TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) ||
-        (tcp_session && session_state.iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
-         session_state.iflow_state.state != session->iflow->state)) {
+    if ((TIME_DIFF(ctime_ns, session_state_p->iflow_state.last_pkt_ts) >= session_timeout) ||
+        (tcp_session && session_state_p->iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+         session_state_p->iflow_state.state != session->iflow->state)) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
 
-    if (session->rflow) {
+    if (rflow) {
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
-        if ((TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
-            (tcp_session && session_state.rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
-             session_state.rflow_state.state != session->rflow->state)) {
+        if ((TIME_DIFF(ctime_ns, session_state_p->rflow_state.last_pkt_ts) >= session_timeout) ||
+            (tcp_session && session_state_p->rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+             session_state_p->rflow_state.state != session->rflow->state)) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
@@ -1892,8 +2785,6 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                 retval = SESSION_AGED_RFLOW;
         }
     }
-
-   *session_state_p = session_state;
 
 #if SESSION_AGE_DEBUG
    HAL_TRACE_VERBOSE("Session Aged: {}", retval);
@@ -1925,7 +2816,7 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
-    hal_has_session_aged(session, ctime_ns, &session_state);
+    hal_has_session_aged(session, ctime_ns, &session_state, false);
 
     /*
      * We cannot rely on the timestamp here as our tickle would have
@@ -2139,8 +3030,6 @@ session_age_cb (void *entry, void *ctxt)
 {
     session_t              *session = (session_t *)entry;
     session_age_cb_args_t  *args = (session_age_cb_args_t *)ctxt;
-    SessionSpec             spec;
-    SessionResponse         rsp;
     session_state_t         session_state;
     tcptkle_timer_ctx_t    *tklectx = NULL;
     session_aged_ret_t      retval = SESSION_AGED_NONE;
@@ -2152,23 +3041,9 @@ session_age_cb (void *entry, void *ctxt)
         return false;
     }
 
-    // Check if its a TCP flow with connection tracking enabled.
-    // And connection tracking timer is not NULL. This means the session
-    // is one of connection establishment or connection close phase. Disable
-    // aging at that time as the timer would eventually fire and clean up the
-    // session anyway.
-    if (session->iflow->config.key.proto == IPPROTO_TCP &&
-        session->conn_track_en &&
-        session->tcp_cxntrack_timer != NULL) {
-#if SESSION_AGE_DEBUG
-        HAL_TRACE_VERBOSE("Session connection tracking timer is on for {} -- bailing aging",
-                        session->hal_handle);
-#endif
-        return false;
-    }
+    retval = hal_has_session_aged(session, args->ctime_ns, &session_state,
+                                  true);
 
-
-    retval = hal_has_session_aged(session, args->ctime_ns, &session_state);
     if (retval != SESSION_AGED_NONE) {
 #if SESSION_AGE_DEBUG
 	    HAL_TRACE_VERBOSE("Aged session: {}", session->iflow->config.key);
@@ -2239,11 +3114,35 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     hal_ret_t             ret = HAL_RET_OK;
     uint8_t               fte_id = 0;
     uint32_t              num_sessions = 0, bucket_no = 0;
+    flow_telemetry_state_t *flow_telemetry_state_p;
 
     session_age_cb_args_t args;
 #if SESSION_AGE_DEBUG
     HAL_TRACE_VERBOSE("session age walk cb bucket {} context {:p}", bucket, ctxt);
 #endif
+
+    // Keep track of age_timer_ticks for pps / bw calculations
+    g_age_timer_ticks++;
+
+    //
+    // Scan Flow-Proto-State in Age-list and free if applicable
+    //
+    // Flow-Proto-State will remain in the Age-list for up to 1-min since
+    // the time concerned flow got deleted. That way, TMAGENT will have an
+    // opportunity to expose the last-updated-data in that flow-context
+    //
+    flow_telemetry_state_p = g_flow_telemetry_state_age_head_p;
+    while (flow_telemetry_state_p != NULL) {
+        flow_telemetry_state_t *next_p;
+
+        next_p = flow_telemetry_state_p->next_p;
+
+        flow_telemetry_state_p->u2.delayed_age_ticks--;
+        if (flow_telemetry_state_p->u2.delayed_age_ticks == 0)
+            dequeue_flow_telemetry_state_from_age_list(flow_telemetry_state_p);
+
+        flow_telemetry_state_p = next_p;
+    }
 
     // We dont have any sessions yet - bail
     if (!g_hal_state->session_hal_handle_ht()->num_entries())
@@ -2362,17 +3261,17 @@ session_init (hal_cfg_t *hal_cfg)
 
     } else {
         sdk::types::mem_addr_t vaddr;
-        sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
-        HAL_TRACE_VERBOSE("Start addr: {:p}", start_addr);
-        SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
+        sdk::types::mem_addr_t pal_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
+        HAL_TRACE_VERBOSE("Start addr: {:p}", pal_addr);
+        SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
         for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {
              //Register with Delphi
              auto session_global_stats =
-                   delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, start_addr);
+                   delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, pal_addr);
              SDK_ASSERT(session_global_stats != NULL);
 
-             sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
+             sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(pal_addr, &vaddr);
              SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
 
              if (!fte) {
@@ -2380,8 +3279,18 @@ session_init (hal_cfg_t *hal_cfg)
                  bzero(g_session_stats, sizeof(session_stats_t));
              }
 
-             start_addr += 1 << HAL_SESSION_STATS_SHIFT;
+             pal_addr += 1 << HAL_SESSION_STATS_SHIFT;
         }
+
+        // Flow-Proto Stats Indexer Init
+        g_flow_proto_state_indexer = sdk::lib::indexer::factory(
+                                          HAL_FLOW_TELEMETRY_MAX_STATS_STATE, true);
+        SDK_ASSERT(g_flow_proto_state_indexer != NULL);
+
+        pal_addr = get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
+        SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
+
+        g_flow_telemetry_hbm_start = pal_addr;
     }
 
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);

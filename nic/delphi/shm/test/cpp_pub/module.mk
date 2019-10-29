@@ -1,4 +1,4 @@
-# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+# {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = publish_tool.bin
@@ -6,7 +6,8 @@ MODULE_PIPELINE = iris
 MODULE_ARCH     = x86_64 
 MODULE_INCS     = ${BLD_GEN_DIR}/proto
 MODULE_SOLIBS   = delphisdk halproto upgradeproto nicmgrproto pciemgrproto \
-		  ftestatsproto commonproto sdkpal logger dropstatsproto rulestatsproto
+                  ftestatsproto commonproto sdkpal logger dropstatsproto \
+                  rulestatsproto flowstatsproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl
 MODULE_ARLIBS   = delphishm
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)

@@ -433,6 +433,1285 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerASIC",
   "objectKind": "DistributedServiceCard"
 },
+  IPv4FlowBehavioralMetrics: {
+  "name": "IPv4FlowBehavioralMetrics",
+  "description": "Key index - IPv4-Flow Key",
+  "displayName": "IPv4-Flow Behavioral-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThreshold",
+      "displayName": "PPS-Threshold",
+      "description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEvents",
+      "displayName": "PPS-Threshold-Exceed Events",
+      "description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventFirstTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventLastTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThreshold",
+      "displayName": "BW-Threshold",
+      "description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEvents",
+      "displayName": "BW-Threshold-Exceed Events",
+      "description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventFirstTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventLastTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv4FlowDropMetrics: {
+  "name": "IPv4FlowDropMetrics",
+  "description": "Key index - IPv4-Flow Key",
+  "displayName": "IPv4-Flow Drop-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropPackets",
+      "displayName": "Drop Packets",
+      "description": "Number of packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropBytes",
+      "displayName": "Drop Bytes",
+      "description": "Number of bytes dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropFirstTimestamp",
+      "displayName": "Drop First-Timestamp",
+      "description": "First-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropLastTimestamp",
+      "displayName": "Drop Last-Timestamp",
+      "description": "Last-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropReason",
+      "displayName": "Drop Reason",
+      "description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv4FlowLatencyMetrics: {
+  "name": "IPv4FlowLatencyMetrics",
+  "description": "Key index - IPv4-Flow Key",
+  "displayName": "IPv4-Flow Latency-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinSetupLatency",
+      "displayName": "Min TCP-Syn-Ack-Latency",
+      "description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinSetupLatencyTimestamp",
+      "displayName": "Min TCP-Syn-Ack-Latency",
+      "description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxSetupLatency",
+      "displayName": "Max TCP-Syn-Ack-Latency",
+      "description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxSetupLatencyTimestamp",
+      "displayName": "Max TCP-Syn-Ack-Latency",
+      "description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinRttLatency",
+      "displayName": "Min TCP-RTT-Latency",
+      "description": "Min RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinRttLatencyTimestamp",
+      "displayName": "Min TCP-RTT-Latency",
+      "description": "Min RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxRttLatency",
+      "displayName": "Max TCP-RTT-Latency",
+      "description": "Max RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxRttLatencyTimestamp",
+      "displayName": "Max TCP-RTT-Latency",
+      "description": "Max RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv4FlowPerformanceMetrics: {
+  "name": "IPv4FlowPerformanceMetrics",
+  "description": "Key index - IPv4-Flow Key",
+  "displayName": "IPv4-Flow Performance-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPps",
+      "displayName": "Peak PPS",
+      "description": "Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPpsTimestamp",
+      "displayName": "Peak PPS Timestamp",
+      "description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBw",
+      "displayName": "Peak BW",
+      "description": "Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBwTimestamp",
+      "displayName": "Peak BW Timestamp",
+      "description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv4FlowRawMetrics: {
+  "name": "IPv4FlowRawMetrics",
+  "description": "Key index - IPv4-Flow Key",
+  "displayName": "IPv4-Flow Raw-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Packets",
+      "displayName": "Total Packets",
+      "description": "Total Number of packets in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Bytes",
+      "displayName": "Total Bytes",
+      "description": "Total Number of bytes in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv6FlowBehavioralMetrics: {
+  "name": "IPv6FlowBehavioralMetrics",
+  "description": "Key index - IPv6-Flow Key",
+  "displayName": "IPv6-Flow Behavioral-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThreshold",
+      "displayName": "PPS-Threshold",
+      "description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEvents",
+      "displayName": "PPS-Threshold-Exceed Events",
+      "description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventFirstTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventLastTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThreshold",
+      "displayName": "BW-Threshold",
+      "description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEvents",
+      "displayName": "BW-Threshold-Exceed Events",
+      "description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventFirstTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventLastTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv6FlowDropMetrics: {
+  "name": "IPv6FlowDropMetrics",
+  "description": "Key index - IPv6-Flow Key",
+  "displayName": "IPv6-Flow Drop-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropPackets",
+      "displayName": "Drop Packets",
+      "description": "Number of packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropBytes",
+      "displayName": "Drop Bytes",
+      "description": "Number of bytes dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropFirstTimestamp",
+      "displayName": "Drop First-Timestamp",
+      "description": "First-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropLastTimestamp",
+      "displayName": "Drop Last-Timestamp",
+      "description": "Last-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropReason",
+      "displayName": "Drop Reason",
+      "description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv6FlowLatencyMetrics: {
+  "name": "IPv6FlowLatencyMetrics",
+  "description": "Key index - IPv6-Flow Key",
+  "displayName": "IPv6-Flow Latency-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinSetupLatency",
+      "displayName": "Min TCP-Syn-Ack-Latency",
+      "description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinSetupLatencyTimestamp",
+      "displayName": "Min TCP-Syn-Ack-Latency",
+      "description": "Min Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxSetupLatency",
+      "displayName": "Max TCP-Syn-Ack-Latency",
+      "description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxSetupLatencyTimestamp",
+      "displayName": "Max TCP-Syn-Ack-Latency",
+      "description": "Max Syn-Ack-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinRttLatency",
+      "displayName": "Min TCP-RTT-Latency",
+      "description": "Min RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MinRttLatencyTimestamp",
+      "displayName": "Min TCP-RTT-Latency",
+      "description": "Min RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxRttLatency",
+      "displayName": "Max TCP-RTT-Latency",
+      "description": "Max RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "MaxRttLatencyTimestamp",
+      "displayName": "Max TCP-RTT-Latency",
+      "description": "Max RTT-Latency seen in this TCP-Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv6FlowPerformanceMetrics: {
+  "name": "IPv6FlowPerformanceMetrics",
+  "description": "Key index - IPv6-Flow Key",
+  "displayName": "IPv6-Flow Performance-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPps",
+      "displayName": "Peak PPS",
+      "description": "Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPpsTimestamp",
+      "displayName": "Peak PPS Timestamp",
+      "description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBw",
+      "displayName": "Peak BW",
+      "description": "Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBwTimestamp",
+      "displayName": "Peak BW Timestamp",
+      "description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  IPv6FlowRawMetrics: {
+  "name": "IPv6FlowRawMetrics",
+  "description": "Key index - IPv6-Flow Key",
+  "displayName": "IPv6-Flow Raw-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Packets",
+      "displayName": "Total Packets",
+      "description": "Total Number of packets in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Bytes",
+      "displayName": "Total Bytes",
+      "description": "Total Number of bytes in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  L2FlowBehavioralMetrics: {
+  "name": "L2FlowBehavioralMetrics",
+  "description": "Key index - L2-Flow Key",
+  "displayName": "L2-Flow Behavioral-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThreshold",
+      "displayName": "PPS-Threshold",
+      "description": "Packet-rate-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEvents",
+      "displayName": "PPS-Threshold-Exceed Events",
+      "description": "Number of Packet-rate-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventFirstTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsThresholdExceedEventLastTimestamp",
+      "displayName": "PPS-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Packet-rate-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThreshold",
+      "displayName": "BW-Threshold",
+      "description": "Bandwidth-Monitoring-Threshold set for this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEvents",
+      "displayName": "BW-Threshold-Exceed Events",
+      "description": "Number of Bandwidth-Monitoring-Threshold-Exceed Events seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventFirstTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event First-Timestamp",
+      "description": "First-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "BwThresholdExceedEventLastTimestamp",
+      "displayName": "BW-Threshold-Exceed-Event Last-Timestamp",
+      "description": "Last-Time when Bandwidth-Monitoring-Threshold-Exceed-Event seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  L2FlowDropMetrics: {
+  "name": "L2FlowDropMetrics",
+  "description": "Key index - L2-Flow Key",
+  "displayName": "L2-Flow Drop-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropPackets",
+      "displayName": "Drop Packets",
+      "description": "Number of packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropBytes",
+      "displayName": "Drop Bytes",
+      "description": "Number of bytes dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropFirstTimestamp",
+      "displayName": "Drop First-Timestamp",
+      "description": "First-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropLastTimestamp",
+      "displayName": "Drop Last-Timestamp",
+      "description": "Last-time when drops occurred in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DropReason",
+      "displayName": "Drop Reason",
+      "description": "Drop-Reason Bitmap for packets dropped in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  L2FlowPerformanceMetrics: {
+  "name": "L2FlowPerformanceMetrics",
+  "description": "Key index - L2-Flow Key",
+  "displayName": "L2-Flow Performance-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPps",
+      "displayName": "Peak PPS",
+      "description": "Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakPpsTimestamp",
+      "displayName": "Peak PPS Timestamp",
+      "description": "Timestamp when Peak Packet-rate seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBw",
+      "displayName": "Peak BW",
+      "description": "Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PeakBwTimestamp",
+      "displayName": "Peak BW Timestamp",
+      "description": "Timestamp when Peak Bandwidth seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Gauge",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  L2FlowRawMetrics: {
+  "name": "L2FlowRawMetrics",
+  "description": "Key index - L2-Flow Key",
+  "displayName": "L2-Flow Raw-Metrics",
+  "fields": [
+    {
+      "name": "Instances",
+      "displayName": "Total Instances",
+      "description": "Total Instances seen in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Packets",
+      "displayName": "Total Packets",
+      "description": "Total Number of packets in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Bytes",
+      "displayName": "Total Bytes",
+      "description": "Total Number of bytes in this Flow-Context",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
   FteCPSMetrics: {
   "name": "FteCPSMetrics",
   "description": "Key index - FTE ID",

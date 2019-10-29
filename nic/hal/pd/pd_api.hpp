@@ -3588,7 +3588,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_TCP_RINGS_REGISTER,       332, "PD_FUNC_ID_TCP_RINGS_REGISTER")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_POLL,           333, "PD_FUNC_ID_TCP_RINGS_POLL")\
     ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      335, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
+    ENTRY(PD_FUNC_ID_MAX,                      336, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -4159,6 +4160,7 @@ PD_FUNCP_TYPEDEF(pd_session_create);
 PD_FUNCP_TYPEDEF(pd_session_update);
 PD_FUNCP_TYPEDEF(pd_session_delete);
 PD_FUNCP_TYPEDEF(pd_session_get);
+PD_FUNCP_TYPEDEF(pd_session_get_for_age_thread);
 PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
 PD_FUNCP_TYPEDEF(pd_flow_hash_get);
 

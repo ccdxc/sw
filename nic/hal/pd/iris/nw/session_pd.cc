@@ -23,6 +23,11 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include <string.h>
 
+#define	FLOW_RATE_COMPUTE_TIME_1SEC	1
+#define	FLOW_RATE_COMPUTE_TIME_2SEC	2
+#define	FLOW_RATE_COMPUTE_TIME_4SEC	4
+#define	FLOW_RATE_COMPUTE_TIME_8SEC	8
+
 namespace hal {
 namespace pd {
 
@@ -1327,6 +1332,330 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     }
 
     return ret;
+}
+
+// Optimized pd_flow_get() version for Flow-age thread to conserve 
+// compute cycles
+hal_ret_t
+pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
+                            uint16_t current_age_timer_ticks)
+{
+    hal_ret_t                            ret;
+    pd_conv_hw_clock_to_sw_clock_args_t  clock_args;
+    pd_flow_get_args_t                  *args;
+    flow_stats_actiondata_t              d;
+    directmap                           *stats_table;
+    pd_flow_t                            pd_flow;
+    flow_telemetry_state_t              *flow_telemetry_state_p;
+    sdk_ret_t                            sdk_ret;
+    timespec_t                           ctime;
+    uint64_t                             ctime_ns;
+    uint64_t                             current_hw_drop_packets;
+    uint64_t                             pps = 0, bw = 0;
+    uint64_t                             flow_table_packets, flow_table_bytes;
+    uint32_t                             delta_packets, delta_bytes;
+
+    args = pd_func_args->pd_flow_get;
+    if (args->pd_session == NULL ||
+        ((pd_session_t *)args->pd_session)->session == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (args->role == FLOW_ROLE_INITIATOR) {
+        pd_flow = args->pd_session->iflow;
+    } else {
+        pd_flow = args->pd_session->rflow;
+    }
+
+    // read the d-vector
+    stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    SDK_ASSERT(stats_table != NULL);
+
+    sdk_ret = stats_table->retrieve(pd_flow.assoc_hw_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        session_t *session;
+
+        session = (session_t *)((pd_session_t *)args->pd_session)->session;
+        HAL_TRACE_ERR(
+        "Error reading stats action entry flow {} hw-id {} ret {}",
+        session->hal_handle, pd_flow.assoc_hw_id, ret);
+        return ret;
+    }
+
+    //Retrieve Last-seen-packet-timestamp in this Flow-context
+    clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
+    clock_args.hw_tick = (clock_args.hw_tick << 16);
+    clock_args.sw_ns = &args->flow_state->last_pkt_ts;
+    pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
+    pd_conv_hw_clock_to_sw_clock(pd_func_args);
+
+    //Flow-Proto-States are created dynamically on-demand based on the
+    // drop_packets symptoms observed in Flow-stats-table D-vector
+    //
+    // Flow-Age thread creates such states in HBM (for exposition via gRPC)
+    current_hw_drop_packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.
+                                              drop_packets);
+    flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
+    if (flow_telemetry_state_p == NULL) {
+
+        // Gather Flow Raw Stats in scratch buffer
+        args->flow_state->packets = BYTES_TO_UINT64(d.action_u.
+                                    flow_stats_flow_stats.permit_packets);
+        args->flow_state->bytes = BYTES_TO_UINT64(d.action_u.
+                                  flow_stats_flow_stats.permit_bytes);
+        args->flow_state->drop_packets = current_hw_drop_packets;
+        args->flow_state->drop_bytes = BYTES_TO_UINT64(d.action_u.
+                                       flow_stats_flow_stats.drop_bytes);
+        args->flow_state->exception_bmap = d.action_u.
+                                           flow_stats_flow_stats.drop_reason;
+
+        // Create FlowDropProto on first Non-firewall-policy flow-drop seen
+        flow_p->flow_telemetry_create_flags = flow_p->
+                                              flow_telemetry_enable_flags;
+        if (current_hw_drop_packets == 0 ||
+            d.action_u.flow_stats_flow_stats.drop_reason == 
+           (1 << DROP_FLOW_HIT)) {
+            flow_p->flow_telemetry_create_flags &= ~(1 << FLOW_TELEMETRY_DROP);
+        }
+        return ret;
+    }
+
+    // Extract Raw-Flow-stats from HW for exposition via gRPC
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+
+    if (flow_p->flow_telemetry_enable_flags & (1 << FLOW_TELEMETRY_RAW)) {
+        // Get current snapshot of Packets/Bytes
+        flow_table_packets = BYTES_TO_UINT64(
+                             d.action_u.flow_stats_flow_stats.permit_packets);
+        flow_table_bytes = BYTES_TO_UINT64(
+                           d.action_u.flow_stats_flow_stats.permit_bytes);
+
+        // Compute Delta-Packets/Bytes since last capture
+        delta_packets = (uint32_t) flow_table_packets - flow_telemetry_state_p->
+                                   u1.raw_metrics.last_flow_table_packets;
+        delta_bytes = (uint32_t) flow_table_bytes - flow_telemetry_state_p->
+                                 u1.raw_metrics.last_flow_table_bytes;
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets =
+                                (uint32_t) flow_table_packets;
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_bytes = 
+                                (uint32_t) flow_table_bytes;
+
+        // Packets / Bytes are accumulated to handle Telemetry-HBM-resource
+        // Re-use case
+        flow_telemetry_state_p->u1.raw_metrics.packets += delta_packets;
+        flow_telemetry_state_p->u1.raw_metrics.bytes += delta_bytes;
+    }
+
+    // Extract Drop-Flow-stats from HW for exposition via gRPC
+    if (current_hw_drop_packets) {
+        uint32_t last_drops;
+
+        // Update soft-drop-stats only if needed, i.e. when newer drops seen
+        last_drops = flow_telemetry_state_p->u1.drop_metrics.
+                                             last_flow_table_packets;
+        if (last_drops != current_hw_drop_packets) {
+            // Sense for first-time occurring drop-events
+            if (flow_telemetry_state_p->u1.drop_metrics.packets == 0)
+                flow_telemetry_state_p->u1.drop_metrics.first_timestamp = 
+                                        ctime_ns;
+            flow_telemetry_state_p->u1.drop_metrics.last_timestamp = ctime_ns;
+
+            // Get current snapshot of Packets/Bytes
+            flow_table_packets = BYTES_TO_UINT64(
+                                 d.action_u.flow_stats_flow_stats.drop_packets);
+            flow_table_bytes = BYTES_TO_UINT64(
+                               d.action_u.flow_stats_flow_stats.drop_bytes);
+
+            // Compute Delta-Packets/Bytes since last capture
+            delta_packets = (uint32_t) flow_table_packets - 
+            flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets;
+            delta_bytes = (uint32_t) flow_table_bytes - flow_telemetry_state_p->
+                                     u1.drop_metrics.last_flow_table_bytes;
+            flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets =
+                                    (uint32_t) flow_table_packets;
+            flow_telemetry_state_p->u1.drop_metrics.last_flow_table_bytes =
+                                    (uint32_t) flow_table_bytes;
+
+            // Packets / Bytes are accumulated to handle Telemetry-HBM-resource
+            // Re-use case
+            flow_telemetry_state_p->u1.drop_metrics.packets += delta_packets;
+            flow_telemetry_state_p->u1.drop_metrics.bytes += delta_bytes;
+            flow_telemetry_state_p->u1.drop_metrics.reason |= 
+                                   d.action_u.flow_stats_flow_stats.drop_reason;
+        }
+    }
+
+    // Derive Performance-Flow-stats for exposition via gRPC, if enabled
+    if (flow_p->flow_telemetry_enable_flags & (1<<FLOW_TELEMETRY_PERFORMANCE)) {
+        if (flow_telemetry_state_p->u2.last_age_timer_ticks) {
+            uint32_t flow_rate_compute_time;
+
+            flow_rate_compute_time = current_age_timer_ticks - 
+                                flow_telemetry_state_p->u2.last_age_timer_ticks;
+            switch (flow_rate_compute_time) {
+                case FLOW_RATE_COMPUTE_TIME_1SEC:
+                    pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
+                           flow_telemetry_state_p->u1.raw_metrics.last_packets);
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                          flow_telemetry_state_p->u1.raw_metrics.last_bytes);
+                    break;
+                case FLOW_RATE_COMPUTE_TIME_2SEC:
+                    pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
+                      flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 1;
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                        flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 1;
+                    break;
+                case FLOW_RATE_COMPUTE_TIME_4SEC:
+                    pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
+                      flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 2;
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                        flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 2;
+                    break;
+                case FLOW_RATE_COMPUTE_TIME_8SEC:
+                    pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
+                      flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 3;
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                        flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 3;
+                    break;
+                default:
+                    // Non-optimal case ==> divide operation
+                    //
+                    // For optimal cases, we do shift operations as above
+                    pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
+                           flow_telemetry_state_p->u1.raw_metrics.last_packets)/
+                           flow_rate_compute_time;
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                          flow_telemetry_state_p->u1.raw_metrics.last_bytes) / 
+                          flow_rate_compute_time;
+                    break;
+            }
+
+            if (pps > flow_telemetry_state_p->u1.performance_metrics.peak_pps) {
+                flow_telemetry_state_p->u1.performance_metrics.peak_pps = pps;
+                flow_telemetry_state_p->u1.performance_metrics.
+                                        peak_pps_timestamp = ctime_ns;
+            }
+            if (bw > flow_telemetry_state_p->u1.performance_metrics.peak_bw) {
+                flow_telemetry_state_p->u1.performance_metrics.peak_bw = bw;
+                flow_telemetry_state_p->u1.performance_metrics.
+                                        peak_bw_timestamp = ctime_ns;
+            }
+        }
+        flow_telemetry_state_p->u1.raw_metrics.last_packets = 
+                                flow_telemetry_state_p->u1.raw_metrics.packets;
+        flow_telemetry_state_p->u1.raw_metrics.last_bytes = 
+                                flow_telemetry_state_p->u1.raw_metrics.bytes;
+        flow_telemetry_state_p->u2.last_age_timer_ticks = 
+                                current_age_timer_ticks;
+    }
+                
+    // Derive Behavioral-Flow-stats for exposition via gRPC, if enabled
+    if (flow_p->flow_telemetry_enable_flags & (1<<FLOW_TELEMETRY_BEHAVIORAL)) {
+
+        if (pps > flow_telemetry_state_p->u1.behavioral_metrics.pps_threshold) {
+            // Sense for first-time occurring event and update timestamp 
+            // accordingly
+            if (flow_telemetry_state_p->u1.behavioral_metrics.
+                                        pps_threshold_exceed_events == 0)
+                flow_telemetry_state_p->u1.behavioral_metrics.
+                          pps_threshold_exceed_event_first_timestamp = ctime_ns;
+          //flow_telemetry_state_p->u1.behavioral_metrics.
+          //               pps_threshold_exceed_event_last_timestamp = ctime_ns;
+
+            flow_telemetry_state_p->u1.behavioral_metrics.
+                                    pps_threshold_exceed_events++;
+        }
+
+        if (bw > flow_telemetry_state_p->u1.behavioral_metrics.bw_threshold) {
+            // Sense for first-time occurring event and update timestamp 
+            // accordingly
+            if (flow_telemetry_state_p->u1.behavioral_metrics.
+                                        bw_threshold_exceed_events == 0)
+                flow_telemetry_state_p->u1.behavioral_metrics.
+                           bw_threshold_exceed_event_first_timestamp = ctime_ns;
+          //flow_telemetry_state_p->u1.behavioral_metrics.
+          //                bw_threshold_exceed_event_last_timestamp = ctime_ns;
+
+            flow_telemetry_state_p->u1.behavioral_metrics.
+                                    bw_threshold_exceed_events++;
+        }
+    }
+
+    // Support on-the-fly FlowStats Telemetry Disablement
+    flow_p->flow_telemetry_create_flags |= 
+    ~flow_p->flow_telemetry_enable_flags&flow_telemetry_state_p->present_flags;
+
+    return ret;
+}
+
+// Optimized pd_session_get() version for Flow-age thread to conserve 
+// compute cycles
+hal_ret_t
+pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                               ret;
+    sdk_ret_t                               sdk_ret;
+    pd_session_get_args_t                  *args;
+    pd_session_t                           *pd_session;
+    pd_flow_get_args_t                      flow_get_args;
+    pd_func_args_t                          pd_func_args1;
+    session_state_actiondata_t              d;
+    directmap                              *session_state_table;
+    session_state_t                        *ss;
+    session_state_tcp_session_state_info_t  info;
+
+    args = pd_func_args->pd_session_get;
+    if (args->session == NULL || args->session->pd == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+    pd_session = args->session->pd;
+
+    ss = args->session_state;
+    if (args->session->conn_track_en) {
+        session_state_table = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+        SDK_ASSERT(session_state_table != NULL);
+
+        sdk_ret = session_state_table->retrieve(pd_session->session_state_idx, 
+                                                &d);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret == HAL_RET_OK) {
+            info = d.action_u.session_state_tcp_session_state_info;
+            ss->iflow_state.state = (session::FlowTCPState)info.iflow_tcp_state;
+            ss->rflow_state.state = (session::FlowTCPState)info.rflow_tcp_state;
+        }
+    }
+
+    flow_get_args.pd_session = pd_session;
+    flow_get_args.role = FLOW_ROLE_INITIATOR;
+    flow_get_args.flow_state = &ss->iflow_state;
+    flow_get_args.aug = false;
+    pd_func_args1.pd_flow_get = &flow_get_args;
+    ret = pd_flow_get_for_age_thread(&pd_func_args1, args->session->iflow,
+                                     ss->current_age_timer_ticks);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Initiator Flow get failed session {}",
+                      args->session->hal_handle);
+        return ret;
+    }
+
+    if (args->session->rflow) {
+        flow_get_args.pd_session = pd_session;
+        flow_get_args.role = FLOW_ROLE_RESPONDER;
+        flow_get_args.flow_state = &ss->rflow_state;
+        flow_get_args.aug = false;
+        pd_func_args1.pd_flow_get = &flow_get_args;
+        ret = pd_flow_get_for_age_thread(&pd_func_args1, args->session->rflow,
+                                         ss->current_age_timer_ticks);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Responder Flow get failed session {}",
+                          args->session->hal_handle);
+            return ret;
+        }
+    }
+
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------------

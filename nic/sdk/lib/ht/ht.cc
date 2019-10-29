@@ -433,7 +433,7 @@ end:
 }
 
 sdk_ret_t
-ht::walk_bucket_safe(uint32_t bucket, ht_walk_cb_t walk_cb, void *ctxt)
+ht::walk_bucket_safe(uint64_t bucket, ht_walk_cb_t walk_cb, void *ctxt)
 {
     ht_ctxt_t    *curr, *next;
     bool         stop_walk = false;

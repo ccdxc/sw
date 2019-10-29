@@ -1,4 +1,4 @@
-# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+# {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 export GRPC_CPP_PLUGIN  := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_cpp_plugin
 export GRPC_PY_PLUGIN   := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_python_plugin
@@ -245,8 +245,8 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
-			                   ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
-							   vmotion
+                               ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
+                               vmotion flowstatsproto
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

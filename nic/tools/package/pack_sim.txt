@@ -103,6 +103,7 @@ nic/build/x86_64/iris/lib/libpciemgrproto.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libftestatsproto.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libdropstatsproto.so                      /nic/lib/
+nic/build/x86_64/iris/lib/libflowstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/librulestatsproto.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                         /nic/lib/
 
