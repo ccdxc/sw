@@ -21,6 +21,7 @@ DelphiClient::DelphiClient() {
     this->reconnectTimer_.set<DelphiClient, &DelphiClient::reconnectTimerHandler>(this);
     pthread_mutex_init(&msgQlock_, NULL);
     this->isConnected_     = false;
+    this->reconnectPeriod_ = CLIENT_INITIAL_RECONNECT_PERIOD;
     this->isMountComplete_ = false;
     this->adminMode_       = false;
     this->currObjectID_    = 1;
@@ -43,7 +44,12 @@ error DelphiClient::Connect() {
         LogInfo("Error({}) connecting to hub. Will try again", err);
 
         // reconnect in background
-        this->reconnectTimer_.start(0, CLIENT_RECONNECT_PERIOD);
+        this->reconnectTimer_.start(0, this->reconnectPeriod_);
+        if (this->reconnectPeriod_ < CLIENT_MAX_RECONNECT_PERIOD) {
+            this->reconnectPeriod_ *= 2;
+        } else {
+            this->reconnectPeriod_ = CLIENT_MAX_RECONNECT_PERIOD;
+        }
 
         return error::OK();
     }
@@ -848,7 +854,9 @@ error DelphiClient::SocketClosed() {
     this->eventQueue_.clear();
     
     // reconnect in background
-    this->reconnectTimer_.start(0, CLIENT_RECONNECT_PERIOD);
+    this->reconnectPeriod_ = CLIENT_INITIAL_RECONNECT_PERIOD;
+    this->reconnectTimer_.start(0, this->reconnectPeriod_);
+    this->reconnectPeriod_ *= 2;
 
     return error::OK();
 }
