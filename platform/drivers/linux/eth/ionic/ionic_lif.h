@@ -225,19 +225,6 @@ static inline bool ionic_is_vf(struct ionic *ionic)
 	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
 }
 
-static inline bool ionic_is_25g(struct ionic *ionic)
-{
-	return ionic_is_pf(ionic) &&
-	       ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_25;
-}
-
-static inline bool ionic_is_100g(struct ionic *ionic)
-{
-	return ionic_is_pf(ionic) &&
-	       (ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_4 ||
-		ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_8);
-}
-
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
 void ionic_lifs_deinit(struct ionic *ionic);

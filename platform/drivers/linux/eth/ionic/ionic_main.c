@@ -176,6 +176,10 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_FW_DOWNLOAD";
 	case CMD_OPCODE_FW_CONTROL:
 		return "CMD_OPCODE_FW_CONTROL";
+	case CMD_OPCODE_VF_GETATTR:
+		return "CMD_OPCODE_VF_GETATTR";
+	case CMD_OPCODE_VF_SETATTR:
+		return "CMD_OPCODE_VF_SETATTR";
 	default:
 		return "DEVCMD_UNKNOWN";
 	}

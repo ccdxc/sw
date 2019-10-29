@@ -365,23 +365,79 @@ static void ionic_remove(struct pci_dev *pdev)
 	ionic_devlink_free(ionic);
 }
 
-static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)
+static int ionic_sriov_configure(struct pci_dev *pdev, int num_vfs)
 {
-	int err;
+	struct ionic *ionic = pci_get_drvdata(pdev);
+	struct device *dev = ionic->dev;
+	unsigned int size;
+	int i, err = 0;
 
-	if (numvfs > 0) {
-		err = pci_enable_sriov(pdev, numvfs);
+	if (!ionic_is_pf(ionic))
+		return -ENODEV;
+
+	if (num_vfs > 0) {
+		err = pci_enable_sriov(pdev, num_vfs);
 		if (err) {
 			dev_err(&pdev->dev, "Cannot enable SRIOV, err=%d\n",
 				err);
 			return err;
 		}
+
+		size = sizeof(struct ionic_vf *) * num_vfs;
+		ionic->vf = kzalloc(size, GFP_KERNEL);
+		if (!ionic->vf) {
+			pci_disable_sriov(pdev);
+			return -ENOMEM;
+		}
+
+		for (i = 0; i < num_vfs; i++) {
+			struct ionic_vf *v;
+
+			v = kzalloc(sizeof(*v), GFP_KERNEL);
+			if (!v) {
+				err = -ENOMEM;
+				num_vfs = 0;
+				goto remove_vfs;
+			}
+
+			v->stats_pa = dma_map_single(dev, &v->stats,
+						     sizeof(struct lif_stats),
+						     DMA_FROM_DEVICE);
+			if (dma_mapping_error(dev, v->stats_pa)) {
+				err = -ENODEV;
+				kfree(v);
+				ionic->vf[i] = NULL;
+				num_vfs = 0;
+				goto remove_vfs;
+			}
+
+			ionic->vf[i] = v;
+			ionic->num_vfs++;
+		}
+
+		return num_vfs;
 	}
 
-	if (numvfs == 0)
+remove_vfs:
+	if (num_vfs == 0) {
+		if (err)
+			dev_err(&pdev->dev, "Enable SRIOV failed: %d\n", err);
+
 		pci_disable_sriov(pdev);
 
-	return numvfs;
+		for (i = 0; i < ionic->num_vfs; i++) {
+			dma_unmap_single(dev, ionic->vf[i]->stats_pa,
+					 sizeof(struct lif_stats),
+					 DMA_FROM_DEVICE);
+			kfree(ionic->vf[i]);
+		}
+
+		kfree(ionic->vf);
+		ionic->vf = NULL;
+		ionic->num_vfs = 0;
+	}
+
+	return err;
 }
 
 static struct pci_driver ionic_driver = {

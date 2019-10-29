@@ -84,7 +84,7 @@ else
 	VER=`git describe`
 fi
 echo "Setting Linux driver version to '$VER'"
-sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+sed -i "s/^\\(#define IONIC_DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
 	"$GEN_DIR/drivers/eth/ionic/ionic.h"
 
 # Generate tarball of the prepared package

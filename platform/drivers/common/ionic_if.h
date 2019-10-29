@@ -52,6 +52,10 @@ enum cmd_opcode {
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
 	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
 
+	/* SR/IOV commands */
+	CMD_OPCODE_VF_GETATTR			= 60,
+	CMD_OPCODE_VF_SETATTR			= 61,
+
 	/* QoS commands */
 	CMD_OPCODE_QOS_CLASS_IDENTIFY		= 240,
 	CMD_OPCODE_QOS_CLASS_INIT		= 241,
@@ -1661,6 +1665,93 @@ struct rx_filter_del_cmd {
 
 typedef struct admin_comp rx_filter_del_comp;
 
+enum ionic_vf_attr {
+	IONIC_VF_ATTR_SPOOFCHK	= 1,
+	IONIC_VF_ATTR_TRUST	= 2,
+	IONIC_VF_ATTR_MAC	= 3,
+	IONIC_VF_ATTR_LINKSTATE	= 4,
+	IONIC_VF_ATTR_VLAN	= 5,
+	IONIC_VF_ATTR_RATE	= 6,
+	IONIC_VF_ATTR_STATSADDR	= 7,
+};
+
+/**
+ * VF link status
+ */
+enum ionic_vf_link_status {
+	IONIC_VF_LINK_STATUS_AUTO = 0,	/* link state of the uplink */
+	IONIC_VF_LINK_STATUS_UP   = 1,	/* link is always up */
+	IONIC_VF_LINK_STATUS_DOWN = 2,	/* link is always down */
+};
+
+/**
+ * struct ionic_vf_setattr_cmd - Set VF attributes on the NIC
+ * @opcode:     Opcode
+ * @index:      VF index
+ * @attr:       Attribute type (enum ionic_vf_attr)
+ *	macaddr		mac address
+ *	vlanid		vlan ID
+ *	maxrate		max Tx rate in Mbps
+ *	spoofchk	enable address spoof checking
+ *	trust		enable VF trust
+ *	linkstate	set link up or down
+ *	stats_pa	set DMA address for VF stats
+ */
+struct ionic_vf_setattr_cmd {
+	u8     opcode;
+	u8     attr;
+	__le16 vf_index;
+	union {
+		u8     macaddr[6];
+		__le16 vlanid;
+		__le32 maxrate;
+		u8     spoofchk;
+		u8     trust;
+		u8     linkstate;
+		__le64 stats_pa;
+		u8     pad[60];
+	};
+};
+
+struct ionic_vf_setattr_comp {
+	u8     status;
+	u8     attr;
+	__le16 vf_index;
+	__le16 comp_index;
+	u8     rsvd[9];
+	u8     color;
+};
+
+/**
+ * struct ionic_vf_getattr_cmd - Get VF attributes from the NIC
+ * @opcode:     Opcode
+ * @index:      VF index
+ * @attr:       Attribute type (enum ionic_vf_attr)
+ */
+struct ionic_vf_getattr_cmd {
+	u8     opcode;
+	u8     attr;
+	__le16 vf_index;
+	u8     rsvd[60];
+};
+
+struct ionic_vf_getattr_comp {
+	u8     status;
+	u8     attr;
+	__le16 vf_index;
+	union {
+		u8     macaddr[6];
+		__le16 vlanid;
+		__le32 maxrate;
+		u8     spoofchk;
+		u8     trust;
+		u8     linkstate;
+		__le64 stats_pa;
+		u8     pad[11];
+	};
+	u8     color;
+};
+
 /**
  * struct qos_identify_cmd - QoS identify command
  * @opcode:    opcode
@@ -2495,6 +2586,8 @@ union adminq_cmd {
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_add_cmd rx_filter_add;
 	struct rx_filter_del_cmd rx_filter_del;
+	struct ionic_vf_setattr_cmd vf_setattr;
+	struct ionic_vf_getattr_cmd vf_getattr;
 	struct rdma_reset_cmd rdma_reset;
 	struct rdma_queue_cmd rdma_queue;
 	struct fw_download_cmd fw_download;
@@ -2508,6 +2601,8 @@ union adminq_comp {
 	struct q_init_comp q_init;
 	struct lif_setattr_comp lif_setattr;
 	struct lif_getattr_comp lif_getattr;
+	struct ionic_vf_setattr_comp vf_setattr;
+	struct ionic_vf_getattr_comp vf_getattr;
 	struct rx_filter_add_comp rx_filter_add;
 	struct fw_control_comp fw_control;
 };

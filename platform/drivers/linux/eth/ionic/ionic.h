@@ -23,13 +23,21 @@
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF	0x1003
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
 
-#define IONIC_SUBDEV_ID_NAPLES_25	0x4000
-#define IONIC_SUBDEV_ID_NAPLES_100_4	0x4001
-#define IONIC_SUBDEV_ID_NAPLES_100_8	0x4002
-
 extern unsigned int max_slaves;
 extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;
+
+struct ionic_vf {
+	u16	 index;
+	u8	 macaddr[6];
+	__le32	 maxrate;
+	__le16	 vlanid;
+	u8	 spoofchk;
+	u8	 trusted;
+	u8	 linkstate;
+	dma_addr_t       stats_pa;
+	struct lif_stats stats;
+};
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -62,6 +70,8 @@ struct ionic {
 #ifdef IONIC_DEVLINK
 	struct devlink_port dl_port;
 #endif
+	int num_vfs;
+	struct ionic_vf **vf;
 
 	struct timer_list watchdog_timer;
 	int watchdog_period;

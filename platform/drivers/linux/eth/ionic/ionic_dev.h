@@ -118,6 +118,12 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct rxq_desc) != 16);
 	BUILD_BUG_ON(sizeof(struct rxq_sg_desc) != 128);
 	BUILD_BUG_ON(sizeof(struct rxq_comp) != 16);
+
+	/* SR/IOV */
+	BUILD_BUG_ON(sizeof(struct ionic_vf_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_vf_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_vf_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_vf_getattr_comp) != 16);
 }
 
 struct ionic_dev {
