@@ -183,6 +183,7 @@ FIRMWARE_TYPE_MAIN = 'mainfwa'
 FIRMWARE_TYPE_GOLD = 'goldfw'
 FIRMWARE_TYPE_UNKNOWN = 'unknown'
 
+
 class bootNaplesException(Exception):
 
     def __init__(self, error_code, message='', *args, **kwargs):
@@ -220,12 +221,15 @@ class _exceptionWrapper(object):
             try:
                 return original_func(*args,**kwargs)
             except bootNaplesException as cex:
+                print(traceback.format_exc())
                 if  cex.error_code != self.exceptCode:
                     raise bootNaplesException(self.exceptCode, "\n" + cex.error_code.name + ":" + str(cex.message))
                 raise cex
             except Exception as ex:
+                print(traceback.format_exc())
                 raise bootNaplesException(self.exceptCode, str(ex))
             except:
+                print(traceback.format_exc())
                 raise bootNaplesException(self.exceptCode, self.msg)
 
         return wrappee
@@ -260,7 +264,7 @@ class EntityManagement:
 
     def SendlineExpect(self, line, expect, hdl = None,
                        timeout = GlobalOptions.timeout):
-        print("\n{0}\n".format(time.asctime()))
+        os.system("date")
         if hdl is None: hdl = self.hdl
         hdl.sendline(line)
         return hdl.expect_exact(expect, timeout)
@@ -307,7 +311,7 @@ class EntityManagement:
         return retcode
 
     def __run_cmd(self, cmd):
-        print("\n{0}\n".format(time.asctime()))
+        os.system("date")
         self.hdl.sendline(cmd)
         self.hdl.expect("#")
 
@@ -387,15 +391,34 @@ class NaplesManagement(EntityManagement):
             #Send Ctrl-c as we did not get IP
             self.SendlineExpect('\003', "#")
 
-    @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
-    def __login(self):
+    def IpmiResetAndWait(self):
+        print('calling IpmiResetAndWait')
+        os.system("date")
+        IpmiReset()
+        print("sleeping 120 seconds after IpmiReset")
+        time.sleep(120)
+        print("finished 120 second sleep. Looking for prompt now...")
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                                   hdl = self.hdl, timeout = 120)
+                               hdl = self.hdl, timeout = 120)
         if midx == 0: return
         # Got capri login prompt, send username/password.
         self.SendlineExpect(GlobalOptions.username, "Password:")
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
+
+    @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
+    def __login(self):
+        try:
+            midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
+                                   hdl = self.hdl, timeout = 120)
+            if midx == 0: return
+            # Got capri login prompt, send username/password.
+            self.SendlineExpect(GlobalOptions.username, "Password:")
+            ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+            if ret == 1: self.SendlineExpect("", "#")
+        except pexpect.exceptions.TIMEOUT:
+            print("failed to find login prompt. calling ipmi power cycle")
+            self.IpmiResetAndWait()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
@@ -406,8 +429,8 @@ class NaplesManagement(EntityManagement):
             self.host.Reboot()
             self.host.WaitForSsh()
             self.SendlineExpect("", "capri-gold login:")
-
         self.__login()
+        print("sleeping 60 seconds in RebootGoldFw")
         time.sleep(60)
         self.__read_ip()
         self.WaitForSsh()
@@ -499,6 +522,7 @@ class NaplesManagement(EntityManagement):
     def Login(self, bringup_oob=True):
         self.__login()
         if bringup_oob:
+            print("sleeping 60 seconds in Login")
             time.sleep(60)
             self.__read_ip()
 
@@ -672,8 +696,11 @@ class HostManagement(EntityManagement):
         self.RunSshCmd("uptime")
         if dryrun == False:
             self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
-        time.sleep(120)
+            print("sleeping 60 after shutdown -r in Reboot")
+            time.sleep(60)
+            self.WaitForSsh()    
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
+        self.RunSshCmd("uptime")
         return
 
     def InstallPrep(self):
@@ -688,7 +715,8 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        assert(self.RunSshCmd("sudo lspci | grep 1dd8") == 0)
+        if self.RunSshCmd("sudo lspci | grep 1dd8"):
+            self.IpmiResetAndWait()
         self.InstallPrep()
 
         if copy_fw:
@@ -777,9 +805,8 @@ class EsxHostManagement(HostManagement):
         return retcode
 
     def __check_naples_deivce(self):
-        ret = self.RunSshCmd("lspci | grep Pensando")
-        if ret:
-            raise Exception("Cmd failed lspci | grep Pensando")
+        if self.RunSshCmd("lspci | grep Pensando"):
+            self.IpmiResetAndWait()
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
     def __esx_host_init(self):
@@ -852,6 +879,7 @@ class EsxHostManagement(HostManagement):
     def WaitForSsh(self, port = 22):
         super().WaitForSsh(port)
         super().WaitForSsh(443)
+        print("sleeping 30 seconds after WaitForSsh")
         time.sleep(30)
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
@@ -916,6 +944,7 @@ class EsxHostManagement(HostManagement):
         self.RunSshCmd("uptime")
         if dryrun == False:
             self.RunSshCmd("reboot", ignore_failure = True)
+        print("sleeping 120 seconds after run ssh reboot")
         time.sleep(120)
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
@@ -1042,7 +1071,6 @@ def Main():
             host.UnloadDriver()
 
     naples.Connect()
-
     host.WaitForSsh()
 
     if GlobalOptions.only_init == True:

@@ -71,7 +71,6 @@ def buildNodesFromTestbedFile(testbed):
     except:
         msg="failed to build nodes from testbed file. error was:"
         msg+=traceback.format_exc()
-        print(msg)
         Logger.debug(msg)
     return nodes
 
@@ -127,7 +126,6 @@ def CollectTechSupport(tsName):
         #    return types.status.CRITICAL
         return result
     except:
-        print('failed to collect tech support')
         Logger.debug('failed to collect tech support. error was: {0}'.format(traceback.format_exc()))
         return types.status.CRITICAL
 
