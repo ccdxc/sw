@@ -141,8 +141,8 @@ struct sqcb0_t {
 
     spec_enable                   : 1;
     skip_pt                       : 1;
-    rsvd2                         : 6;
-
+    bktrack_marker_in_progress    : 1;
+    rsvd2                         : 5;
 };
 
 struct sqcb1_t {

@@ -491,6 +491,8 @@ header_type req_tx_sqcb_to_wqe_info_t {
 header_type req_tx_to_stage_fence_info_t {
     fields {
         wqe_addr                         : 64;
+        bktrack_fence_marker_phv         : 1;
+        pad                              : 63;
     }
 }
 
@@ -2187,6 +2189,8 @@ action req_tx_sqcb2_fence_process () {
 
     // to stage
     modify_field(to_s1_fence_info_scr.wqe_addr, to_s1_fence_info.wqe_addr);
+    modify_field(to_s1_fence_info_scr.bktrack_fence_marker_phv, to_s1_fence_info.bktrack_fence_marker_phv);
+    modify_field(to_s1_fence_info_scr.pad, to_s1_fence_info.pad);
 
     // stage to stage
 }

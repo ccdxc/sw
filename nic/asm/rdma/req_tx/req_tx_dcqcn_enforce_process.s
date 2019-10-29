@@ -154,14 +154,10 @@ load_write_back:
     SQCB2_ADDR_GET(r2)  
     bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
     // Same k info as write_back is passed to add_headers as well
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
 skip_add_headers:
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
@@ -170,7 +166,8 @@ bubble_to_next_stage:
 
     //invoke the same routine, but with valid header_template_addr as d[] vector
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te2_phv_table_addr)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te2_phv_table_addr)
+
 exit:
     nop.e
     nop
@@ -178,16 +175,6 @@ exit:
 poll_fail:
 spec_fail:
 drop_phv:
-    // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
-
-    SQCB2_ADDR_GET(r2)
-    phvwr       p.common.common_t3_s2s_s2s_data, K_S2S_DATA
-    phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_INFO_RD, rate_enforce_failed), 1
-    phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
-
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
-
 #if !(defined (HAPS) || defined (HW))
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
@@ -199,5 +186,7 @@ drop_phv:
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
 #endif
 
-    nop.e
-    nop
+    // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
+    SQCB2_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)

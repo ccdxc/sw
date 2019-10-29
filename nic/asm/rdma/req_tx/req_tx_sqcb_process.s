@@ -370,12 +370,11 @@ in_progress_spec:
 
     .brcase        SQ_BKTRACK_RING_ID
         bbeq           d.busy, 1, exit
-
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
-    
+        bbeq           d.bktrack_marker_in_progress, 1, exit 
         
-        seq            c1, d.frpmr_in_progress, 1
+        seq            c1, d.frpmr_in_progress, 1 // Branch Delay Slot
         tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr.c1       d.frpmr_in_progress, 0
 
@@ -394,13 +393,10 @@ skip_rl_failure_reset:
          * then there is no phvs in the pipeline. In case of in_progress
          * processing, spec_sq_cindex is always sq_c_index+1 and speculation
          * is disabled. So backracking can start in the middle of in_progress
-         * processing, when busy flags are not set
-         * Also there is no way to recover from fence if fence is set and bktrack 
-         * is triggered at the same time since req-rx will be freezed during bktrack. 
-         * Hence skip spec-cindex  and cindex check and clear fence bit.
+         * processing, when busy flags are not set.
          */
         seq            c2, d.fence, 1
-        bcf            [c2], skip_cindex_check
+        bcf            [c2], bktrack_fence_in_progress
         sne            c1, SQ_C_INDEX, SPEC_SQ_C_INDEX //BD-slot
         sne            c3, d.in_progress, 1 
         bcf            [c1 & c3], exit
@@ -466,6 +462,22 @@ sq_bktrack1:
 
         phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r1, \
                   CAPRI_PHV_RANGE(TO_S6_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
+
+bktrack_fence_in_progress:
+        /*
+         * Send a bktrack-marker-phv down to clear fence bit and set fence-done bit in sqcb0/sqcb2.
+         * If there is a phv in pipeline, which could make progress, it would have passed fence check in stage-1
+         * and set fence-done bit. So marker-phv will check for this bit by loading req_tx_sqcb2_fence_process.
+         * If fence-done bit is set, bktrack-marker-phv will reset bktrack_marker_in_progress and fence bit in writeback stage
+         * and wait for phv in pipeline to make spec-cindex to cindex before triggering bktrack.
+         * If fence-done bit is not set, in addition to resetting bktrack_marker_in_progress and fence bit, bktrack-marker-phv will
+         * also set dcqcn-rl-failure bit in writeback. This would eventually make spec-cindex equal to cindex before triggering bktrack.
+         */
+        tblwr       d.bktrack_marker_in_progress, 1
+        phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, bktrack_fence_marker_phv), 1
+        SQCB2_ADDR_GET(r2)
+        CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_fence_process, r2)
+                
         
     .brcase        TIMER_RING_ID
         // reset sched_eval_done 

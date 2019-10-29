@@ -289,7 +289,7 @@ class RdmaSQCB0state(Packet):
         LEShortField("c_index2", 0),
         LEShortField("p_index3", 0),
         LEShortField("c_index3", 0),
-        LEShortField("sqd_cindex", 0),
+        ShortField("sqd_cindex", 0),
         ByteField("sqcb0_rsvd1", 0),
 
         XByteField("phy_base_addr_8", 0),
@@ -331,8 +331,10 @@ class RdmaSQCB0state(Packet):
         BitField("li_fence", 0, 1),
         BitField("busy", 0, 1),
 
+        BitField("spec_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("sqcb0_rsvd2", 0, 7),
+        BitField("bktrack_marker_in_progress", 0, 1)
+        BitField("sqcb0_rsvd2", 0, 5),
     ]
         
 class RdmaSQCB1state(Packet):

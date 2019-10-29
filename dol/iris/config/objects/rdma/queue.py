@@ -427,7 +427,8 @@ class RdmaSQstate(Packet):
 
         BitField("spec_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("sqcb0_rsvd2", 0, 6),
+        BitField("bktrack_marker_in_progress", 0, 1),
+        BitField("sqcb0_rsvd2", 0, 5),
         
 
         # SQCB1 
