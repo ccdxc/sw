@@ -22,6 +22,7 @@ namespace lib {
 namespace ipc {
 
 static void *g_zmq_ctx = zmq_ctx_new();
+static bool g_internal_endpoints[IPC_MAX_ID + 1];
 
 static std::string
 ipc_path_external (uint32_t id)
@@ -231,6 +232,8 @@ zmq_ipc_server::init(uint32_t id) {
     assert(rc == 0);
     SDK_TRACE_DEBUG("Listening on %s", ipc_path_internal(id).c_str());
 
+    g_internal_endpoints[id] = true;
+
     return 0;
 }
 
@@ -308,8 +311,7 @@ zmq_ipc_client::connect(uint32_t recipient) {
     int    rc;
 
     this->recipient_ = recipient;
-    // Todo: Fixme: check local/remote
-    this->is_recipient_internal_ = true;
+    this->is_recipient_internal_ = g_internal_endpoints[recipient];
 
     this->create_socket();
 

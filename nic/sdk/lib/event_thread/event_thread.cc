@@ -188,6 +188,7 @@ event_thread::run_(void) {
 
     ev_loop_destroy(this->loop_);
     this->loop_ = NULL;
+    ipc::ipc_server::destroy(this->ipc_server_);
 }
 
 sdk_ret_t
