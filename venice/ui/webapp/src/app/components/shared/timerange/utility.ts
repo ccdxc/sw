@@ -111,6 +111,16 @@ export class TimeRange {
         startTime: startTime,
         endTime: endTime
       };
+    // check end time is now -1d, now -1w, now -1m
+    } else if (endTime.isSame(moment().subtract(1, 'day'), 'second') ||
+        endTime.isSame(moment().subtract(1, 'week'), 'second') ||
+        endTime.isSame(moment().subtract(1, 'month'), 'second')) {
+      // Text will be Previous XXXX
+      return {
+        timeStr: 'Previous ' + startTime.from(endTime, true),
+        startTime: startTime,
+        endTime: endTime
+      };
     }
     // Else we don't do any special casing
     return {
