@@ -51,6 +51,15 @@ const routes: Routes = [
         loadChildren: '@app/components/monitoring-group/telemetry/telemetry.module#TelemetryModule'
       }
     ]
+  },
+  {
+    path: 'troubleshooting',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/troubleshooting/troubleshooting.module#TroubleshootingModule'
+      }
+    ]
   }
 ];
 

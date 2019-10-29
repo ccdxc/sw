@@ -6,10 +6,10 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { MonitoringGroupComponent } from './monitoring-group.component';
 import { MonitoringRoutingModule } from './monitoring-group.route';
-import { TroubleshootingComponent } from './troubleshooting/troubleshooting.component';
 import { SyslogComponent } from './syslog/syslog.component';
 import { MatchruleComponent } from './matchrule/matchrule.component';
 import { SharedModule } from '../shared/shared.module';
+import { NetworkgraphComponent } from './mirrorsessions/networkgraph/networkgraph.component';
 
 
 
@@ -26,7 +26,7 @@ import { SharedModule } from '../shared/shared.module';
     MonitoringRoutingModule,
     SharedModule
   ],
-  declarations: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent],
-  exports: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent]
+  declarations: [ MonitoringGroupComponent, SyslogComponent, MatchruleComponent, NetworkgraphComponent],
+  exports: [ MonitoringGroupComponent, SyslogComponent, MatchruleComponent]
 })
 export class MonitoringGroupModule { }

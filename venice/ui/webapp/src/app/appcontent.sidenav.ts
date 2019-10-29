@@ -170,6 +170,15 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
         link: ['/monitoring', 'flowexport']
+      },
+      {
+        label: 'Troubleshooting',
+        icon: {
+          cssClass: 'app-l-side-nav-monitoring-flowexport'
+        },
+        featureGuard: Features.troubleshooting,
+        roleGuard: UIRolePermissions.monitoringtroubleshootingsession_read,
+        link: ['/monitoring', 'troubleshooting']
       }
     ]
   },

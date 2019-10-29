@@ -1,3 +1,64 @@
-<p>
-  troubleshooting works!
-</p>
+<app-pagebody [icon]="bodyicon" title="Troubleshooting">
+  <div fxLayout="column">
+    <!-- Troubleshooting config bar -->
+    <div fxFlex="70px" fxLayout="row" class="troubleshooting-config">
+      <div fxFlex="none" class="troubleshooting-config-item">
+        Source:
+        <mat-form-field floatLabel="never">
+          <input matInput [formControl]="sourceFormControl" (blur)="submitSource()"
+                 placeholder="IP/Port">
+        </mat-form-field>
+      </div>
+      <div fxFlex="none" class="troubleshooting-config-item">
+        Destination:
+        <mat-form-field floatLabel="never">
+          <input [formControl]="destFormControl" (blur)="submitDest()" matInput
+                 placeholder="IP/Port">
+        </mat-form-field>
+      </div>
+      <div fxFlex="none" class="troubleshooting-config-item">
+        <mat-form-field floatLabel="never">
+          <input matInput [matDatepicker]="picker" placeholder="start date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div fxFlex="none" class="troubleshooting-config-item">
+        <mat-form-field floatLabel="never">
+          <input matInput [matDatepicker]="picker2" placeholder="end date">
+          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+          <mat-datepicker #picker2></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div fxFlex="none" class="troubleshooting-config-item">
+        <mat-form-field floatLabel="never">
+          <mat-select placeholder="Tools...">
+            <mat-option *ngFor="let option of toolOptions">
+              {{ option }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div fxFlex="40px" fxLayout="row" class="troubleshooting-tab-container"
+         [ngStyle]="{'background-color': showTabs ? 'white' : 'rgb(250, 250, 250)'}">
+      <mat-tab-group fxFlex *ngIf="showTabs" class="troubleshooting-tab-group"
+                     (selectedTabChange)="tabChange($event)">
+        <mat-tab label="EVENTS">
+        </mat-tab>
+        <mat-tab label="INGRESS POLICIES">
+        </mat-tab>
+        <mat-tab label="EGRESS POLICIES">
+        </mat-tab>
+        <mat-tab label="STATS">
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+    <!-- Graph -->
+    <div fxFlex="415px" fxLayout="column">
+      <div fxFlex fxLayout="column" id="troubleshooting-graph">
+        <app-networkgraph #networkgraph fxFlex fxLayout="row"></app-networkgraph>
+      </div>
+    </div>
+  </div>
+</app-pagebody>

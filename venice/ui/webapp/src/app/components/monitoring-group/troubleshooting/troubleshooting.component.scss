@@ -1,1 +1,21 @@
+.troubleshooting-config {
+  background-color: rgb(244, 244, 244);
+}
 
+.troubleshooting-config-item {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+// Taken from network graph scss so that the graph isn't affected
+// when the tabs show up after user enters in source and dest
+.troubleshooting-tab-container {
+  background-size: 10px 10px;
+  background-color: rgb(250, 250, 250);
+  background-image: linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px);
+}
+
+.troubleshooting-tab-group {
+  background-color: white;
+  position: absolute;
+}

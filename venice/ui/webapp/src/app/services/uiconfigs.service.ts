@@ -14,6 +14,7 @@ export enum Features {
   help = 'help',
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
+  troubleshooting = 'troubleshooting'
 }
 
 interface UIConfig {
@@ -91,6 +92,11 @@ export class UIConfigsService {
       defaultPerm: [
         UIRolePermissions.monitoringalert_read,
         UIRolePermissions.eventsevent_read,
+      ]
+    },
+    'monitoring/troubleshooting/': {
+      requiredFeatures: [
+        Features.troubleshooting,
       ]
     },
     'monitoring/alertsevents/alertpolicies': {

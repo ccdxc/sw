@@ -1,0 +1,137 @@
+#networkgraph-graph {
+  background-size: 10px 10px;
+  background-color: rgb(250, 250, 250);
+  background-image: linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px);
+}
+
+$healthy: #a3d771;
+$neutral: #a4c7f0;
+$error: #e57553;
+
+%text-fira {
+  font-family: "Fira Sans Condensed";
+  font-size: 16px;
+  fill: #676763;
+}
+
+%text-roboto {
+  font-family: "Roboto Condensed";
+  font-size: 12px;
+  fill: #676763;
+}
+
+.networkgraph-sourcelink {
+  stroke: $neutral;
+  fill: #e1efff;
+}
+
+/* Workload Source */
+.networkgraph-node-workloadSource {
+  stroke: $neutral;
+  fill: #e1efff;
+}
+
+.networkgraph-node-workloadSource-label {
+  @extend %text-fira;
+  fill: #6ba0e5;
+}
+
+.networkgraph-node-workloadSource-label-secondary {
+  @extend %text-fira;
+  fill: #6ba0e5;
+  font-weight: bold;
+}
+
+/* Workload Destination */
+.networkgraph-node-workloadDestination {
+  stroke: $neutral;
+  fill: #e1efff;
+}
+
+.networkgraph-node-workloadDestination-label {
+  @extend %text-fira;
+}
+
+.networkgraph-node-workloadDestination-label-secondary {
+  @extend %text-fira;
+  font-weight: bold;
+}
+
+/* Security Group */
+.networkgraph-node-securityGroup {
+  stroke: #b7d594;
+  fill: #e2f2d0;
+}
+
+.networkgraph-node-securityGroup-label {
+  @extend %text-roboto;
+}
+
+/* Security Policy */
+.networkgraph-node-securityPolicy {
+  stroke: #c1c1c1;
+  fill: #dddddd;
+}
+
+.networkgraph-node-securityPolicy.networkgraph-nodestate-pulsing {
+  stroke: $error;
+}
+
+.networkgraph-node-securityPolicy-label {
+
+  @extend %text-roboto;
+}
+
+/* Naples */
+.networkgraph-node-naples {
+  stroke: #e2bd02;
+  fill: #ffef9b;
+}
+
+.networkgraph-node-naples-label {
+  @extend %text-roboto;
+  font-size: 14px;
+}
+
+/* Network */
+.networkgraph-node-network {
+  stroke: #a5d9b7;
+  fill: #def5e6;
+}
+
+/* Link States */
+.networkgraph-linkstate-healthy {
+  stroke: $healthy;
+  stroke-width: 2px;
+}
+
+.networkgraph-linkstate-neutral {
+  stroke: $neutral;
+  stroke-width: 2px;
+}
+
+.networkgraph-linkstate-error {
+  stroke: $error;
+  stroke-width: 2px;
+}
+
+/* Node States */
+.networkgraph-nodestate-unknown {
+  fill: transparent;
+  stroke: #dddddd;
+  stroke-dasharray: 5, 5;
+  stroke-width: 3px;
+}
+
+.networkgraph-nodestate-error {
+  stroke: $error;
+}
+
+/* Marker colors */
+.networkgraph-marker-healthy {
+  fill: $healthy;
+}
+
+.networkgraph-marker-error {
+  fill: $error;
+}
