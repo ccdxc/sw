@@ -103,10 +103,6 @@ def __create():
     # Commit the Batch
     batch.client.Commit()
 
-    if utils.IsPipelineApulu():
-        #TODO: enable mirror
-        return
-
     # Start separate batch for mirror
     # so that mapping gets programmed before mirror
     batch.client.Start()
@@ -164,6 +160,7 @@ def Main():
     timeprofiler.ConfigTimeProfiler.Start()
     agentapi.Init()
 
+    resmgr.Init()
     __wait_on_nicmgr()
 
     logger.info("Initializing object info")

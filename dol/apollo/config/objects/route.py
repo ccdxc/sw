@@ -311,6 +311,9 @@ class RouteObjectClient:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
     def CreateObjects(self):
+        if utils.IsPipelineApulu():
+            logger.error("Route Table object not supported yet - Skip creating!!!")
+            return
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.ROUTE, msgs)

@@ -12,7 +12,6 @@ from infra.common.glopts        import GlobalOptions
 import infra.config.base        as base
 
 import apollo.config.utils as utils
-import apollo.config.resmgr     as resmgr
 from apollo.config.store        import Store
 import apollo.config.objects.host.queue_type as queue_type
 
@@ -81,14 +80,13 @@ class LifObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('LIF'))
         return
 
-    def Init(self, devcmdaddr, spec, namespace = None):
+    def Init(self, ifinfo, spec, namespace = None):
         self.id = namespace.get()
         self.GID("Lif%d" % self.id)
-        self.qstate_base = {}
         self.spec       = spec
-        #TODO: get hw lif id from interface
         self.hw_lif_id = self.id
-        self.devcmdaddr = devcmdaddr
+        self.devcmdaddr = ifinfo.DevcmdMemAddr
+        self.qstate_base = ifinfo.Lif2QstateMap.get(self.hw_lif_id, {})
         self.queue_types = objects.ObjectDatabase()
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
         self.obj_helper_q.Generate(self, spec)
@@ -129,7 +127,6 @@ class LifObject(base.ConfigObjectBase):
     def ConfigureQueueTypes(self):
         if GlobalOptions.dryrun:
             return 0
-        self.qstate_base = resmgr.Lif2QstateMap.get(self.hw_lif_id, None)
         logger.info("Configuring lif %d qstate base %s " %(self.hw_lif_id, list(map(lambda x: hex(x), self.qstate_base))))
         self.obj_helper_q.Configure()
 
@@ -144,14 +141,14 @@ class LifObjectHelper:
     def __init__(self):
         self.lifs = []
 
-    def Generate(self, devcmdaddr, spec, namespace):
+    def Generate(self, ifinfo, spec, namespace):
         if namespace is None:
             return
         count = namespace.GetCount()
         logger.info("Generating %d Lifs" % (count))
         for l in range(count):
             lif = LifObject()
-            lif.Init(devcmdaddr, spec, namespace)
+            lif.Init(ifinfo, spec, namespace)
             self.lifs.append(lif)
         return
 

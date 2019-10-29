@@ -47,10 +47,14 @@ IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name
 
 class InterfaceTypes(enum.IntEnum):
     NONE = 0
-    HOST = 1
-    UPLINK = 2
-    UPLINKPC = 3
-    L3INTERFACE = 4
+    ETH = 1
+    ETH_PC = 2
+    TUNNEL = 3
+    MGMT = 4
+    UPLINK = 5
+    UPLINKPC = 6
+    L3 = 7
+    LIF = 8
 
 class PortTypes(enum.IntEnum):
     NONE = 0
@@ -62,8 +66,18 @@ class PortTypes(enum.IntEnum):
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
 INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH }
-MODE2INTF_TBL = { 'host' : InterfaceTypes.HOST, 'switch': InterfaceTypes.UPLINK,
+MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH, 'switch': InterfaceTypes.UPLINK,
         'uplink': InterfaceTypes.UPLINK }
+
+
+IF_TYPE_SHIFT = 28
+LIF_IF_LIF_ID_MASK = 0xFFFFFF
+
+def LifId2LifIfIndex(lifid):
+    return ((InterfaceTypes.LIF << IF_TYPE_SHIFT) | (lifid))
+
+def LifIfindex2LifId(lififindex):
+    return (lififindex & LIF_IF_LIF_ID_MASK)
 
 class L3MatchType(enum.IntEnum):
     PFX = 0
@@ -374,6 +388,9 @@ def IsPipelineApulu():
     if GlobalOptions.pipeline == 'apulu':
         return True
     return False
+
+def GetPipelineName():
+    return GlobalOptions.pipeline
 
 def IsHostLifSupported():
     if IsPipelineArtemis():

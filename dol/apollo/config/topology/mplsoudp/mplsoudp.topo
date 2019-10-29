@@ -17,10 +17,7 @@ uplink:
 
 interface:
     host:
-        count       : 2
         lif         : ref://store/specs/id=LIF_ETH
-        lifbase     : 70
-        lifcount    : 1
 
 device:
     ipaddress   : None # Taken from resmgr

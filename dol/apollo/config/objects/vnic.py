@@ -106,7 +106,8 @@ class VnicObject(base.ConfigObjectBase):
             spec.TxMirrorSessionId.append(int(txmirror))
         spec.V4MeterId = self.V4MeterId
         spec.V6MeterId = self.V6MeterId
-        #TODO: get ifindex of Host LIF
+        if self.HostIf:
+            spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
 
     def ValidateSpec(self, spec):

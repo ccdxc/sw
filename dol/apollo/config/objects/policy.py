@@ -664,6 +664,9 @@ class PolicyObjectClient:
         return
 
     def CreateObjects(self):
+        if utils.IsPipelineApulu():
+            logger.error("Policy object not supported yet - Skip creating!!!")
+            return
         #Show before create as policy gets modified after GenerateObjects()
         self.ShowObjects()
         logger.info("Creating Policy Objects in agent")

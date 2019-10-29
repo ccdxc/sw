@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import ipaddress
+import json
 import os
 import re
 
@@ -12,8 +13,9 @@ def irange(start, end):
     return range(start, end+1)
 
 HostMemoryAllocator = None
-HostIntf2DevCmdAddrMap = dict()
-Lif2QstateMap = None
+HostIfs = dict()
+NICMGR_HOST_LIF_BASE = 71
+NICMGR_HOST_LIF_COUNT = 1
 
 EpochAllocator = iter(irange(1,4096))
 # tunnel id=1 is mytep
@@ -192,42 +194,99 @@ def __hostmemmgr_init():
     HostMemoryAllocator = objects.GetHostMemMgrObject()
     assert HostMemoryAllocator is not None
 
-def __hostif_init():
-    # reads nicmgr.log and generate host if to devcmd mem addr mapping
-    global HostIntf2DevCmdAddrMap
-    nicmgrlog = os.path.join(os.environ['WS_TOP'], "nic/nicmgr.log")
-    pattern = ' eth(\d+): regs_mem_addr (\w+) devcmd_mem_addr (\w+)'
-    f = open(nicmgrlog, "r")
-    for line in f:
-        match = re.search(pattern, line)
-        if match is None:
-            continue
-        ifname = "eth%d" % (int(match.groups()[0]))
-        devcmdaddr = int(match.groups()[2], base=16)
-        HostIntf2DevCmdAddrMap.update({ifname: devcmdaddr})
-    f.close()
-    return
+class NicmgrInterface:
+    def __init__(self, ifname):
+        self.IfName = ifname
+        self.DevcmdMemAddr = None
+        self.LifBase = 0
+        self.LifCount = 1
+        self.Lif2QstateMap = dict()
+        return
 
-def __lif2qstatemap_init():
-    global Lif2QstateMap
-    Lif2QstateMap = dict()
-    nicmgrlog = os.path.join(os.environ['WS_TOP'], "nic/nicmgr.log")
-    pattern = ' lif-(\d{2}): qtype: (\d{1}), qstate_base: (\w+)'
+    def SetLifBase(self, lifbase):
+        self.LifBase = lifbase
+
+    def SetLifCount(self, lifcount):
+        self.Lifcount = lifcount
+
+    def SetDevCmdAddr(self, devcmd_mem_addr):
+        self.DevcmdMemAddr = devcmd_mem_addr
+
+def __get_nicmgr_log_path():
+    rel_path = "nic/nicmgr.log"
+    abs_path = os.path.join(os.environ['WS_TOP'], rel_path)
+    return abs_path
+
+def __hostif_init():
+    # reads nicmgr.log and get interface info
+    global HostIfs
+    nicmgrlog = __get_nicmgr_log_path()
     f = open(nicmgrlog, "r")
-    for line in f:
-        match = re.search(pattern, line)
-        if match is None:
-            continue
-        lif_id = int(match.groups()[0])
-        q_type = int(match.groups()[1])
-        qstate_base  = int(match.groups()[2], base=16)
-        qstateaddr_list = Lif2QstateMap.get(lif_id, [])
-        qstateaddr_list.insert(q_type, qstate_base)
-        Lif2QstateMap.update({lif_id: qstateaddr_list})
+    for ifobj in HostIfs.values():
+        # get lifbase and count
+        pattern = ' %s: lif_base (\w+) lif_count (\w+)' % (ifobj.IfName)
+        for line in f:
+            match = re.search(pattern, line)
+            if match is None:
+                continue
+            lifbase = int(match.groups()[0])
+            lifcount = int(match.groups()[1])
+            ifobj.SetLifBase(lifbase)
+            ifobj.SetLifCount(lifcount)
+            break
+
+        # get devcmd addr
+        pattern = ' %s: regs_mem_addr (\w+) devcmd_mem_addr (\w+)' % (ifobj.IfName)
+        for line in f:
+            match = re.search(pattern, line)
+            if match is None:
+                continue
+            devcmdaddr = int(match.groups()[1], base=16)
+            ifobj.SetDevCmdAddr(devcmdaddr)
+            break
+
+        # get qstate addr for all lifs under this device
+        for i in range(lifcount):
+            lif_id = lifbase + i
+            pattern = ' lif-%d: qtype: (\d{1}), qstate_base: (\w+)' % (lif_id)
+            for line in f:
+                match = re.search(pattern, line)
+                if match is None:
+                    continue
+                q_type = int(match.groups()[0])
+                qstate_base  = int(match.groups()[1], base=16)
+                qstateaddr_list = ifobj.Lif2QstateMap.get(lif_id, [])
+                qstateaddr_list.insert(q_type, qstate_base)
+                ifobj.Lif2QstateMap.update({lif_id: qstateaddr_list})
+                if (q_type == 7):
+                    break
     f.close()
     return
 
 def InitNicMgrObjects():
     __hostmemmgr_init()
     __hostif_init()
-    __lif2qstatemap_init()
+
+def __get_device_json_path():
+    rel_path = "nic/conf/%s/device.json" % (utils.GetPipelineName())
+    abs_path = os.path.join(os.environ['WS_TOP'], rel_path)
+    return abs_path
+
+def __initialize_hostifs():
+    global HostIfs
+    with open(__get_device_json_path(), 'r') as fp:
+        obj = json.load(fp)
+    lifbase = NICMGR_HOST_LIF_BASE
+    lifcount = NICMGR_HOST_LIF_COUNT
+    # read host interface info from device.json
+    for ethdev in obj["eth_dev"]:
+        if ethdev["type"] != 'host':
+            continue
+        ifname = ethdev["name"]
+        intf = NicmgrInterface(ifname)
+        intf.SetLifBase(lifbase)
+        HostIfs.update({ifname: intf})
+        lifbase += lifcount
+
+def Init():
+    __initialize_hostifs()

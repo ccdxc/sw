@@ -45,14 +45,13 @@ class PortObjectClient:
         portlist = getattr(topospec, 'uplink', None)
         if portlist is None:
             return
-        else:
-            for spec in portlist:
-                obj = PortObject(spec.entry)
-                self.__objs.update({obj.PortId: obj})
-                if obj.Mode == 'host':
-                    Store.SetHostPort(obj.Port)
-                elif obj.Mode == 'switch':
-                    Store.SetSwitchPort(obj.Port)
+        for spec in portlist:
+            obj = PortObject(spec.entry)
+            self.__objs.update({obj.PortId: obj})
+            if obj.Mode == 'host':
+                Store.SetHostPort(obj.Port)
+            elif obj.Mode == 'switch':
+                Store.SetSwitchPort(obj.Port)
         return
 
 client = PortObjectClient()

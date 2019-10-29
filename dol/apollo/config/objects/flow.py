@@ -47,6 +47,7 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.route = self.__routeTblObj
         obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
+        #TODO: Handle host mode
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
         return

@@ -73,6 +73,16 @@ class DeviceObject(base.ConfigObjectBase):
         grpcmsg = types_pb2.Empty()
         return grpcmsg
 
+    def IsBitwMode(self):
+        if self.Mode == "bitw":
+            return True
+        return False
+
+    def IsHostMode(self):
+        if self.Mode == "host":
+            return True
+        return False
+
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
             return True

@@ -25,7 +25,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             self.port_num = ifinfo
         elif (iftype == utils.InterfaceTypes.UPLINKPC):
             self.port_bmap = ifinfo
-        elif (iftype == utils.InterfaceTypes.L3INTERFACE):
+        elif (iftype == utils.InterfaceTypes.L3):
             self.VPC = ifinfo.VPC
             self.ip_prefix = ifinfo.ip_prefix
             self.port_num = ifinfo.port_num
@@ -88,7 +88,7 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def __create_lifs(self, spec):
-        self.obj_helper_lif.Generate(spec.devcmd_addr, spec.lifspec, self.lifns)
+        self.obj_helper_lif.Generate(spec.ifinfo, spec.lifspec, self.lifns)
         self.obj_helper_lif.Configure()
         self.lif = self.obj_helper_lif.GetRandomHostLif()
         logger.info(" Selecting %s for Test" % self.lif.GID())
@@ -118,15 +118,12 @@ class InterfaceObjectClient:
         spec.status = 'UP'
         spec.mode = 'host'
         spec.lifspec = ifspec.lif.Get(Store)
-        lifbase = ifspec.lifbase
-        lifcount = ifspec.lifcount
-        for i in range(ifspec.count):
-            spec.id = "eth%d" % (i)
-            spec.lifbase = lifbase
-            spec.lifcount =lifcount
-            spec.lifns = objects.TemplateFieldObject("range/%d/%d"%(lifbase, lifbase+lifcount-1))
-            lifbase = lifbase + lifcount
-            spec.devcmd_addr = resmgr.HostIntf2DevCmdAddrMap.get(spec.id, None)
+        for obj in resmgr.HostIfs.values():
+            spec.id = obj.IfName
+            spec.ifinfo = obj
+            lifstart = obj.LifBase
+            lifend = lifstart + obj.LifCount - 1
+            spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
             ifobj = InterfaceObject(spec)
             self.__objs.update({ifobj.InterfaceId: ifobj})
             self.__hostifs.update({ifobj.InterfaceId: ifobj})

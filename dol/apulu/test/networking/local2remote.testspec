@@ -44,12 +44,6 @@ packets:
                 ttl     : 64
                 tos     : 0
                 id      : 0
-            outermpls:
-                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
-                ttl     : 0
-            mpls:
-                label   : ref://testcase/config/remotemapping/MplsSlot
-                ttl     : 0
             vxlan:
                 vni     : ref://testcase/config/remotemapping/Vnid
 
@@ -93,10 +87,10 @@ session:
             delay    :    1
 
             # TODO: create new topo & Fix uplink ports
-            #packets:
-            #    - packet:
-            #        object  : ref://testcase/packets/id=TO_SWITCH_PKT
-            #        port    : ref://testcase/config/switchport
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=TO_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
 
             descriptors:
                 - descriptor:

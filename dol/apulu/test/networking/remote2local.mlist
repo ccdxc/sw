@@ -1,0 +1,16 @@
+# Feature networking Modules List for Remote to Local scenario
+feature:
+    id          : networking
+    sub         : remote2local
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : L3_IPV4_TCP_ENCAP
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

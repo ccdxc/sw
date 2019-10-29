@@ -68,6 +68,12 @@ class ApolloConfigStore:
         else:
             return None,-1
 
+    def IsBitwMode(self):
+        return self.device.IsBitwMode()
+
+    def IsHostMode(self):
+        return self.device.IsHostMode()
+
     def IsDeviceEncapTypeMPLS(self):
         return self.device.IsEncapTypeMPLS()
 

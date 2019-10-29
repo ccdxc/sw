@@ -58,7 +58,7 @@ class NexthopObject(base.ConfigObjectBase):
 class NexthopObjectClient:
     def __init__(self):
         def __isObjSupported():
-            if utils.IsPipelineArtemis() or utils.IsPipelineApulu():
+            if utils.IsPipelineArtemis():
                 return True
             return False
 
