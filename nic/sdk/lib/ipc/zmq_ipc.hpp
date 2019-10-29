@@ -13,12 +13,12 @@
 #include <zmq.h>
 
 namespace sdk {
-namespace lib {
 namespace ipc {
 
 typedef struct zmq_ipc_msg_preamble {
     uint32_t sender;
     uint32_t recipient;
+    uint32_t msg_code;
     uint32_t serial;
     const void *cookie;
     bool     is_pointer;
@@ -30,8 +30,9 @@ class zmq_ipc_msg : public ipc_msg {
 public:
     zmq_ipc_msg();
     ~zmq_ipc_msg();
-    virtual void *data(void);
-    virtual size_t length(void);
+    virtual uint32_t code(void) override;
+    virtual void *data(void) override;
+    virtual size_t length(void) override;
     zmq_msg_t *zmsg(void);
 private:
     zmq_msg_t zmsg_;
@@ -40,8 +41,9 @@ typedef std::shared_ptr<zmq_ipc_msg> zmq_ipc_msg_ptr;
 
 class zmq_ipc_user_msg : public zmq_ipc_msg {
 public:
-    virtual void *data(void);
-    virtual size_t length(void);
+    virtual uint32_t code(void) override;
+    virtual void *data(void) override;
+    virtual size_t length(void) override;
     std::vector<std::shared_ptr<zmq_ipc_msg> > &headers(void);
     uint32_t sender(void);
     void add_header(std::shared_ptr<zmq_ipc_msg> header);
@@ -59,9 +61,8 @@ public:
     ~zmq_ipc_endpoint();
     bool is_event_pending(void);
     uint32_t get_next_serial(void);
-    void send_msg(uint32_t recipient, const void *data,
-                  size_t data_length, const void *cookie,
-                  bool send_pointer);
+    void send_msg(uint32_t recipient, uint32_t msg_code, const void *data,
+                  size_t data_length, const void *cookie, bool send_pointer);
     void recv_msg(zmq_ipc_user_msg_ptr msg);
 protected:
     uint32_t id_;
@@ -104,7 +105,8 @@ public:
     int init(uint32_t recipient);
     virtual void create_socket(void);
     virtual int fd(void);
-    virtual void send(const void *data, size_t data_length, const void *cookie);
+    virtual void send(uint32_t msg_code, const void *data, size_t data_length,
+                      const void *cookie);
     virtual ipc_msg_ptr recv(const void** cookie);
 private:
     zmq_ipc_client_async();
@@ -115,12 +117,12 @@ typedef std::shared_ptr<zmq_ipc_client_async> zmq_ipc_client_async_ptr;
 class zmq_ipc_client_sync : public zmq_ipc_client {
 public:
     virtual void create_socket(void);
-    zmq_ipc_user_msg_ptr send_recv(const void *data, size_t data_length);
+    zmq_ipc_user_msg_ptr send_recv(uint32_t msg_code, const void *data,
+                                   size_t data_length);
 };
 typedef std::shared_ptr<zmq_ipc_client_sync> zmq_ipc_client_sync_ptr;
 
 } // namespace ipc
-} // napespace lib
 } // namespace sdk
     
 #endif // __SDK_ZMQ_IPC_H__

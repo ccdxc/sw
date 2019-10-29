@@ -251,17 +251,15 @@ spawn_nicmgr_thread (pds_state *state)
 sdk_ret_t
 spawn_api_thread (pds_state *state)
 {
-    sdk::lib::event_thread    *new_thread;
+    sdk::event_thread::event_thread *new_thread;
 
     new_thread =
-        sdk::lib::event_thread::factory("cfg", THREAD_ID_API,
+        sdk::event_thread::event_thread::factory("cfg", THREAD_ID_API,
                                         sdk::lib::THREAD_ROLE_CONTROL,
                                         0x0,    // use all control cores
                                         api::api_thread_init_fn,
                                         api::api_thread_exit_fn,
                                         api::api_thread_event_cb,
-                                        api::api_thread_ipc_cb,
-                                        NULL, // ipc client cb
                                         sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                                         sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                                         NULL);

@@ -93,6 +93,7 @@ enum {
     SDK_MEM_ALLOC_INFRA,
     SDK_MEM_ALLOC_LIB_IPC_CLIENT,
     SDK_MEM_ALLOC_LIB_IPC_SERVER,
+    SDK_MEM_ALLOC_LFQ_MSG,
 };
 
 static inline void *

@@ -5,6 +5,8 @@
 #ifndef __SDK_EVENT_THREAD_HPP__
 #define __SDK_EVENT_THREAD_HPP__
 
+#include <map>
+
 #include <ev.h>
 
 #include "lib/thread/thread.hpp"
@@ -14,77 +16,98 @@
 #define EVENT_WRITE 0x2
 
 namespace sdk {
-namespace lib {
+namespace event_thread {
 
 class event_thread;
 
 //
 // IO
 //
-typedef void(*event_io_cb)(struct event_io *, int fd, int events);
+typedef void(*io_cb)(struct io_ *, int fd, int events);
 
-typedef struct event_io {
-    ev_io       ev_watcher; // private
-    event_io_cb callback;
-    void        *ctx;
-} event_io_t;
+typedef struct io_ {
+    ev_io ev_watcher; // private
+    io_cb callback;
+    void  *ctx;
+} io_t;
 
 // Wrapper around ev_io_init
-void event_io_init(event_io_t *io, event_io_cb callback, int fd, int events);
+void io_init(io_t *io, io_cb callback, int fd, int events);
 // Wrapper around ev_io_start
-void event_io_start(event_io_t *io);
+void io_start(io_t *io);
 // Wrapper around ev_io_stop
-void event_io_stop(event_io_t *io);
+void io_stop(io_t *io);
 
 //
 // Timer
 //
-typedef void (*event_timer_cb)(struct event_timer *);
+typedef void (*timer_cb)(struct timer_ *);
 
-typedef struct event_timer {
-    ev_timer       ev_watcher; // private
-    event_timer_cb callback;
-    void           *ctx;
-} event_timer_t;
+typedef struct timer_ {
+    ev_timer ev_watcher; // private
+    timer_cb callback;
+    void     *ctx;
+} timer_t;
 
 // Wapper around ev_timer_init
-void event_timer_init(event_timer_t *timer, event_timer_cb callback,
-                      double initial_delay, double repeat);
+void timer_init(timer_t *timer, timer_cb callback,
+                double initial_delay, double repeat);
 // Wrapper around ev_timer_set
-void event_timer_set(event_timer_t *timer, double initial_delay, double repeat);
+void timer_set(timer_t *timer, double initial_delay, double repeat);
 // Wrapper around ev_timer_start
-void event_timer_start(event_timer_t *timer);
+void timer_start(timer_t *timer);
 // Wrapper around ev_timer_stop
-void event_timer_stop(event_timer_t *timer);
+void timer_stop(timer_t *timer);
 // Wrapper around ev_timer_again. Restarts the timer.
-void event_timer_again(event_timer_t *timer);
+void timer_again(timer_t *timer);
 
 //
 // Message
 //
-typedef void (*event_message_cb)(void *message, void *ctx);
+typedef void (*message_cb)(void *message, void *ctx);
 
 // Send a message to a thread
-void event_message_send(uint32_t thread_id, void *message);
+void message_send(uint32_t thread_id, void *message);
 
 //
-// IPC Server
+// Pub-Sub
 //
-typedef void (*event_ipc_cb)(ipc::ipc_msg_ptr ipc_msg, void *ctx);
+
+// Callback for subscribed message
+typedef void (*sub_cb)(void *data, size_t data_length, void *ctx);
+
+// Subscribe to a message
+void subscribe(uint32_t msg_code, sub_cb callback);
+
+// Publish a message
+void publish(uint32_t msg_code, void *data, size_t data_length);
+
+//
+// RPC
+//
+
+// RPC request callback
+typedef void (*rpc_request_cb)(ipc::ipc_msg_ptr ipc_msg, void *ctx);
+
+// Register an request handler
+void rpc_reg_request_handler(uint32_t msg_code,
+                             rpc_request_cb callback);
 
 // Send a reply to an ipc_msg(Must always send a reply!)
-void event_ipc_reply(ipc::ipc_msg_ptr ipc_msg, const void *data,
-                     size_t data_length);
+void rpc_response(ipc::ipc_msg_ptr ipc_msg, const void *data,
+                  size_t data_length);
 
-//
-// IPC Client
-//
-typedef void (*event_ipc_client_cb)(uint32_t sender, ipc::ipc_msg_ptr ipc_msg,
-                                    void *ctx, const void *cookie);
+// RPC response callback
+typedef void (*rpc_response_cb)(uint32_t sender, ipc::ipc_msg_ptr ipc_msg,
+                                void *ctx, const void *cookie);
 
-// Send a message to an IPC server. The response will come on the callback above
-void event_ipc_send(uint32_t recipient, const void *data, size_t data_length,
-                    const void *cookie);
+// Register response callback
+void rpc_reg_response_handler(uint32_t msg_code,
+                              rpc_response_cb callback);
+
+// Send a message to an RPC server. The response will come on the callback above
+void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
+                 size_t data_length, const void *cookie);
 
 // Use this function to set the initial watchers
 typedef void (*loop_init_func_t)(void *ctx);
@@ -97,45 +120,52 @@ typedef void (loop_exit_func_t)(void *ctx);
 // The main class for the thread. Users should not need to use any of the methods
 // directly
 //
-class event_thread : public thread
+class event_thread : public sdk::lib::thread
 {
 public:
     static event_thread *factory(const char *name, uint32_t thread_id,
-                                 thread_role_t thread_role, uint64_t cores_mask,
+                                 sdk::lib::thread_role_t thread_role,
+                                 uint64_t cores_mask,
                                  loop_init_func_t init_func,
                                  loop_exit_func_t exit_func,
-                                 event_message_cb message_cb,
-                                 event_ipc_cb ipc_cb,
-                                 event_ipc_client_cb client_cb,
+                                 message_cb message_cb,
                                  uint32_t prio, int sched_policy,
                                  bool can_yield);
 
-    void io_init(event_io_t *);
-    void io_start(event_io_t *);
-    void io_stop(event_io_t *);
+    void io_init(io_t *);
+    void io_start(io_t *);
+    void io_stop(io_t *);
     
-    void timer_start(event_timer_t *);
-    void timer_again(event_timer_t *);
-    void timer_stop(event_timer_t *);
+    void timer_start(timer_t *);
+    void timer_again(timer_t *);
+    void timer_stop(timer_t *);
 
     void message_send(void *message);
 
-    void ipc_reply(ipc::ipc_msg_ptr msg, const void *data,
-                   size_t data_legnth);
+    void subscribe(uint32_t msg_code, sub_cb callback);
+    void publish(uint32_t msg_code, void *data, size_t data_length);
 
-    void ipc_send(uint32_t recipient, const void *data, size_t data_length,
-                  const void *cookie);
+    void rpc_reg_request_handler(uint32_t msg_code,
+                                 rpc_request_cb callback);
+    
+    void rpc_response(ipc::ipc_msg_ptr msg, const void *data,
+                      size_t data_legnth);
+
+    void rpc_reg_response_handler(uint32_t msg_code,
+                                  rpc_response_cb callback);
+    
+    void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
+                     size_t data_length, const void *cookie);
 
     virtual sdk_ret_t start(void *ctx) override;
     virtual sdk_ret_t stop(void) override;
     
 protected:
     virtual int init(const char *name, uint32_t thread_id,
-                     thread_role_t thread_role, uint64_t cores_mask,
+                     sdk::lib::thread_role_t thread_role, uint64_t cores_mask,
                      loop_init_func_t init_func, loop_exit_func_t exit_func,
-                     event_message_cb message_cb, event_ipc_cb ipc_cb,
-                     event_ipc_client_cb client_cb,
-                     uint32_t prio, int sched_policy, bool can_yield);
+                     message_cb message_cb, uint32_t prio,
+                     int sched_policy, bool can_yield);
     event_thread();
     ~event_thread();
 
@@ -149,9 +179,10 @@ private:
     ev_async async_watcher_;
     loop_init_func_t init_func_;
     loop_init_func_t exit_func_;
-    event_message_cb message_cb_;
-    event_ipc_cb ipc_cb_;
-    event_ipc_client_cb ipc_client_cb_;
+    message_cb message_cb_;
+    std::map<uint32_t, sub_cb> sub_cbs_;
+    std::map<uint32_t, rpc_request_cb> rpc_req_cbs_;
+    std::map<uint32_t, rpc_response_cb > rpc_rsp_cbs_;
     void *user_ctx_;
     void run_(void);
     void handle_async_(void);

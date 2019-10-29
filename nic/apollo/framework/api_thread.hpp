@@ -31,10 +31,11 @@ void api_thread_exit_fn(void *ctxt);
 /// \param[in] ctxt    opaque context
 void api_thread_event_cb(void *msg, void *ctx);
 
-/// \brief    callback function invoked to process IPC msgs received by API thread
+/// \brief    callback function invoked to process BATCH IPC msgs received by
+///           API thread
 /// \param[in] msg     IPC msg received
 /// \param[in] ctxt    opaque context
-void api_thread_ipc_cb(sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt);
+void api_thread_ipc_batch_cb(sdk::ipc::ipc_msg_ptr msg, void *ctxt);
 
 /// \brief    return true if API thread is ready to receive events
 /// \return true or false based on whether API thread is ready or not

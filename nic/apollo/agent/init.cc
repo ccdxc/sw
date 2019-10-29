@@ -18,7 +18,7 @@
 
 namespace core {
 
-static sdk::lib::event_thread *g_cmd_server_thread;
+static sdk::event_thread::event_thread *g_cmd_server_thread;
 
 #define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
@@ -229,14 +229,11 @@ spawn_cmd_server_thread (void)
 {
     // spawn periodic thread that does background tasks
     g_cmd_server_thread =
-        sdk::lib::event_thread::factory("cfg", THREAD_ID_AGENT_CMD_SERVER,
-                                        sdk::lib::THREAD_ROLE_CONTROL,
-                                        0x0, core::cmd_server_thread_init,
-                                        core::cmd_server_thread_exit,
-                                        NULL, // message
-                                        NULL, // ipc_server_callback
-                                        NULL, // ipc_client_callback
-                                        sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+        sdk::event_thread::event_thread::factory(
+            "cfg", THREAD_ID_AGENT_CMD_SERVER, sdk::lib::THREAD_ROLE_CONTROL,
+            0x0, core::cmd_server_thread_init, core::cmd_server_thread_exit,
+            NULL, // message
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             true);
 

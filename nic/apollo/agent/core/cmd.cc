@@ -19,10 +19,10 @@
 
 namespace core {
 
-static thread_local sdk::lib::event_io cmd_accept_io;
+static thread_local sdk::event_thread::io_t cmd_accept_io;
 
 static void
-cmd_server_read_cb (sdk::lib::event_io_t *io, int fd, int events)
+cmd_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
     char iov_data[CMD_IOVEC_DATA_LEN];
     int cmd_fd,bytes_read;
@@ -54,15 +54,15 @@ cmd_server_read_cb (sdk::lib::event_io_t *io, int fd, int events)
     // close connection
     close(fd);
     // stop the watcher
-    sdk::lib::event_io_stop(io);
+    sdk::event_thread::io_stop(io);
     // free the watcher
     SDK_FREE(PDS_MEM_ALLOC_CMD_READ_IO, io);
 }
 
 static void
-cmd_server_accept_cb (sdk::lib::event_io_t *io, int fd, int events)
+cmd_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
-    sdk::lib::event_io *cmd_read_io;
+    sdk::event_thread::io_t *cmd_read_io;
     int fd2;
 
     // accept incoming connection
@@ -72,17 +72,18 @@ cmd_server_accept_cb (sdk::lib::event_io_t *io, int fd, int events)
     }
 
     // allocate memory for cmd_read_io
-    cmd_read_io = (sdk::lib::event_io *)
+    cmd_read_io = (sdk::event_thread::io_t *)
                     SDK_MALLOC(PDS_MEM_ALLOC_CMD_READ_IO,
-                              sizeof(sdk::lib::event_io));
+                               sizeof(sdk::event_thread::io_t));
     if (cmd_read_io == NULL) {
         PDS_TRACE_ERR("Memory allocation for cmd_read_io failed");
         return;
     }
 
     // Initialize and start watcher to read client requests
-    sdk::lib::event_io_init(cmd_read_io, cmd_server_read_cb, fd2, EVENT_READ);
-    sdk::lib::event_io_start(cmd_read_io);
+    sdk::event_thread::io_init(cmd_read_io, cmd_server_read_cb, fd2,
+                               EVENT_READ);
+    sdk::event_thread::io_start(cmd_read_io);
 }
 
 void
@@ -111,14 +112,15 @@ cmd_server_thread_init (void *ctxt)
         return;
     }
 
-    sdk::lib::event_io_init(&cmd_accept_io, cmd_server_accept_cb, fd, EVENT_READ);
-    sdk::lib::event_io_start(&cmd_accept_io);
+    sdk::event_thread::io_init(&cmd_accept_io, cmd_server_accept_cb, fd,
+                               EVENT_READ);
+    sdk::event_thread::io_start(&cmd_accept_io);
 }
 
 void
 cmd_server_thread_exit (void *ctxt)
 {
-    sdk::lib::event_io_stop(&cmd_accept_io);
+    sdk::event_thread::io_stop(&cmd_accept_io);
 }
 
 }    // namespace core

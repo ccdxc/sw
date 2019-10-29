@@ -25,6 +25,10 @@ api_thread_init_fn (void *ctxt)
 
     api_engine_init();
     this_thread->set_ready(true);
+
+    sdk::event_thread::rpc_reg_request_handler(
+        API_MSG_ID_BATCH, api_thread_ipc_batch_cb);
+                                            
 }
 
 void
@@ -38,29 +42,19 @@ api_thread_event_cb (void *msg, void *ctxt)
 }
 
 void
-api_thread_ipc_cb (sdk::lib::ipc::ipc_msg_ptr msg, void *ctxt)
+api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, void *ctxt)
 {
     sdk_ret_t ret;
     api_msg_t *api_msg = *(api_msg_t **)msg->data();
 
     PDS_TRACE_DEBUG("Rcvd IPC msg");
     // basic validation
-    if (unlikely(api_msg == NULL)) {
-        PDS_TRACE_ERR("Empty ipc msg received");
-        return;
-    }
+    assert(likely(api_msg != NULL));
+    assert(likely(api_msg->msg_id == API_MSG_ID_BATCH));
 
-    switch (api_msg->msg_id) {
-    case API_MSG_ID_BATCH:
-        ret = api_engine_get()->batch_commit(&api_msg->batch);
-        break;
+    ret = api_engine_get()->batch_commit(&api_msg->batch);
 
-    default:
-        PDS_TRACE_ERR("Unknown ipc msg %u", api_msg->msg_id);
-        break;
-    }
-    sdk::lib::event_ipc_reply(msg, &ret, sizeof(ret));
-    return;
+    sdk::event_thread::rpc_response(msg, &ret, sizeof(ret));
 }
 
 bool

@@ -8,6 +8,7 @@
 #include "lib/ipc/ipc.hpp"
 
 using namespace sdk::lib;
+namespace event = sdk::event_thread;
 
 #define THREAD_T1 1
 #define THREAD_T2 2
@@ -19,13 +20,13 @@ using namespace sdk::lib;
 
 class event_thread_test : public ::testing::Test {
 public:
-    event_thread *t1;
-    event_thread *t2;
-    event_thread *t3;
-    event_timer timer;
-    event_timer timer2;
-    event_io    io;
-    int         fd[2];
+    event::event_thread *t1;
+    event::event_thread *t2;
+    event::event_thread *t3;
+    event::timer_t timer;
+    event::timer_t timer2;
+    event::io_t io;
+    int fd[2];
     bool got_ping = false;
     bool got_pong = false;
     bool got_ping_on_fd = false;
@@ -52,13 +53,13 @@ protected:
 };
 
 void
-timer_callback (event_timer_t *timer)
+timer_callback (event::timer_t *timer)
 {
-    event_message_send(THREAD_T2, (void *)"PING");
+    event::message_send(THREAD_T2, (void *)"PING");
 }
 
 void
-io_callback (event_io_t *io, int fd, int events)
+io_callback (event::io_t *io, int fd, int events)
 {
     char buf[5];
     int n;
@@ -83,8 +84,8 @@ init1 (void *ctx)
 {
     event_thread_test *test = (event_thread_test *)ctx;
     test->timer.ctx = ctx;
-    event_timer_init(&test->timer, timer_callback, 1., 0.);
-    event_timer_start(&test->timer);
+    event::timer_init(&test->timer, timer_callback, 1., 0.);
+    event::timer_start(&test->timer);
 }
 
 void
@@ -92,8 +93,8 @@ init3 (void *ctx)
 {
     event_thread_test *test = (event_thread_test *)ctx;
     test->io.ctx = ctx;
-    event_io_init(&test->io, io_callback, test->fd[0], EVENT_READ);
-    event_io_start(&test->io);
+    event::io_init(&test->io, io_callback, test->fd[0], EVENT_READ);
+    event::io_start(&test->io);
 }
 
 void
@@ -112,7 +113,7 @@ msg2 (void *message, void *ctx)
     test->got_ping = (strcmp((char *)message, "PING") == 0);
     printf("%s\n", (char *)message);
     write(test->fd[1], "PING", 5);
-    event_message_send(THREAD_T1, (void *)"PONG");
+    event::message_send(THREAD_T1, (void *)"PONG");
 }
 
 void
@@ -130,15 +131,15 @@ exit2 (void *ctx)
 }
 
 TEST_F (event_thread_test, basic_functionality) {
-    this->t1 = event_thread::factory("t1", THREAD_T1, THREAD_ROLE_CONTROL,
-                                     0x0, init1, exit1, msg1, NULL, NULL, 0,
-                                     SCHED_OTHER, true);
-    this->t2 = event_thread::factory("t2", THREAD_T2, THREAD_ROLE_CONTROL,
-                                     0x0, NULL, exit2, msg2, NULL, NULL, 0,
-                                     SCHED_OTHER, true);
-    this->t3 = event_thread::factory("t3", THREAD_T3, THREAD_ROLE_CONTROL,
-                                     0x0, init3, NULL, NULL, NULL, NULL, 0,
-                                     SCHED_OTHER, true);
+    this->t1 = event::event_thread::factory(
+        "t1", THREAD_T1, THREAD_ROLE_CONTROL, 0x0, init1, exit1, msg1, 0,
+        SCHED_OTHER, true);
+    this->t2 = event::event_thread::factory(
+        "t2", THREAD_T2, THREAD_ROLE_CONTROL, 0x0, NULL, exit2, msg2, 0,
+        SCHED_OTHER, true);
+    this->t3 = event::event_thread::factory(
+        "t3", THREAD_T3, THREAD_ROLE_CONTROL, 0x0, init3, NULL, NULL, 0,
+        SCHED_OTHER, true);
     
     this->t1->start(this);
     this->t2->start(this);
@@ -163,42 +164,62 @@ TEST_F (event_thread_test, basic_functionality) {
 }
 
 void
-ipc_cb (ipc::ipc_msg_ptr msg, void *ctx)
+ipc_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
 {
     printf("Server got: %s\n", (char *)msg->data());
-    event_ipc_reply(msg, msg->data(), msg->length());
+    event::rpc_response(msg, msg->data(), msg->length());
+
+    printf("Also publishing: broadcast\n");
+    event::publish(0x123, (void *)"broadcast", 10);
 }
 
 void
-timer2_callback (event_timer_t *timer)
+timer2_callback (event::timer_t *timer)
 {
     const char message[] = "echo from event";
-    event_ipc_send(THREAD_T4, (void *)message, sizeof(message),
-                   (const void *)0x1234);
+    event::rpc_request(THREAD_T4, 0, (void *)message, sizeof(message),
+                      (const void *)0x1234);
 }
 
 void
-init_ipc_client(void *ctx)
+init_ipc_server (void *ctx)
 {
-    event_thread_test *test = (event_thread_test *)ctx;
-    test->timer2.ctx = ctx;
-    event_timer_init(&test->timer2, timer2_callback, 1., 0.);
-    event_timer_start(&test->timer2);
+    event::rpc_reg_request_handler(0, ipc_cb);
 }
 
 void
-ipc_client_cb (uint32_t sender, ipc::ipc_msg_ptr msg, void *ctx,
+ipc_client_cb (uint32_t sender, sdk::ipc::ipc_msg_ptr msg, void *ctx,
                const void *cookie)
 {
     printf("Client got: %s, cookie: %p\n", (char *)msg->data(),
            cookie);
 }
 
+void
+subscribe_cb (void *data, size_t data_length, void *ctx)
+{
+    printf("Subscriber got: %s\n", (char *)data);
+}
+
+void
+init_ipc_client (void *ctx)
+{
+    event_thread_test *test = (event_thread_test *)ctx;
+    test->timer2.ctx = ctx;
+    event::timer_init(&test->timer2, timer2_callback, 1., 0.);
+    event::timer_start(&test->timer2);
+
+    event::rpc_reg_request_handler(0, ipc_cb);
+    event::rpc_reg_response_handler(0, ipc_client_cb);
+
+    event::subscribe(0x123, subscribe_cb);
+}
+
+
 TEST_F (event_thread_test, ipc_functionality) {
-    event_thread *t4 = event_thread::factory("t4", THREAD_T4,
-                                             THREAD_ROLE_CONTROL, 0x0,
-                                             NULL, NULL, NULL, ipc_cb, NULL,
-                                             0, SCHED_OTHER, true);
+    event::event_thread *t4 = event::event_thread::factory(
+        "t4", THREAD_T4, THREAD_ROLE_CONTROL, 0x0, init_ipc_server, NULL, NULL,
+        0, SCHED_OTHER, true);
     t4->start(NULL);
 
     //
@@ -211,26 +232,23 @@ TEST_F (event_thread_test, ipc_functionality) {
     //
     // async client
     //
-    event_thread *t5 = event_thread::factory("t5", THREAD_T5,
-                                             THREAD_ROLE_CONTROL, 0x0,
-                                             init_ipc_client, NULL, NULL,
-                                             ipc_cb,
-                                             ipc_client_cb,
-                                             0, SCHED_OTHER, true);
+    event::event_thread *t5 = event::event_thread::factory(
+        "t5", THREAD_T5, THREAD_ROLE_CONTROL, 0x0, init_ipc_client, NULL, NULL,
+        0, SCHED_OTHER, true);
     t5->start(this);
     sleep(2);
     
     //
     // sync client
     //
-    ipc::ipc_msg_ptr msg;
-    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
+    sdk::ipc::ipc_msg_ptr msg;
+    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
+    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
+    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
-    msg = ipc::send_recv(THREAD_T4, "ipc ping", 9);
+    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
     printf("%s\n", (char *)msg->data());
     sleep(2);
 }

@@ -1,6 +1,10 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+#include <memory>
+#include <mutex>
+#include <set>
+
 #include "event_thread.hpp"
 
 #include "include/sdk/mem.hpp"
@@ -8,15 +12,51 @@
 #define MAX_THREAD_ID 63
 
 namespace sdk {
-namespace lib {
+namespace event_thread {
+
+typedef struct pubsub_meta_ {
+    uint32_t sender;
+    uint32_t recipient;
+    uint32_t msg_code;
+    uint32_t serial;
+    size_t   data_length;
+} pubsub_meta_t;
+
+class lfq_msg {
+public:
+    static lfq_msg *factory(void);
+    static void destroy(lfq_msg *msg);
+    enum lfq_msg_type {
+        USER_MSG,
+        PUBSUB_MSG,
+    } type;
+    void *payload;
+    pubsub_meta_t pubsub_meta;
+private:
+    lfq_msg();
+    ~lfq_msg();
+};
+typedef std::shared_ptr<lfq_msg> lfq_msg_ptr;
+
+class pubsub_mgr {
+public:
+    void subscribe(uint32_t msg_code, uint32_t client_id);
+    std::set<uint32_t> subscriptions(uint32_t msg_code);
+private:
+    std::map<uint32_t, std::shared_ptr<std::set<uint32_t> > > subscriptions_;
+    std::mutex mutex_;
+};
+typedef std::shared_ptr<pubsub_mgr> pubsub_msg_ptr;
 
 static thread_local event_thread *t_event_thread_ = NULL;
 
 static event_thread *g_event_thread_table[MAX_THREAD_ID + 1];
 
+static pubsub_mgr g_pubsubs;
+
 // Converts ev values to event values.
 // e.g. EV_READ to EVENT_READ
-int
+static int
 ev_to_event (int ev_value) {
     int event_value = 0;
 
@@ -32,7 +72,7 @@ ev_to_event (int ev_value) {
 
 // Converts event values to ev values
 // e.g. EVENT_READ to EV_READ
-int
+static int
 event_to_ev (int event_value) {
     int ev_value = 0;
 
@@ -46,13 +86,60 @@ event_to_ev (int event_value) {
     return ev_value;
 }
 
+lfq_msg *
+lfq_msg::factory(void) {
+    void    *mem;
+    lfq_msg *new_msg;
+
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LFQ_MSG, sizeof(*new_msg));
+    if (!mem) {
+        return NULL;
+    }
+    new_msg = new (mem) lfq_msg();
+
+    return new_msg;
+}
+
+void
+lfq_msg::destroy(lfq_msg *msg) {
+    assert(msg != NULL);
+    msg->~lfq_msg();
+    SDK_FREE(SDK_MEM_ALLOC_LFQ_MSG, msg);
+}
+
+lfq_msg::lfq_msg() {
+}
+
+lfq_msg::~lfq_msg() {
+}
+
+void
+pubsub_mgr::subscribe(uint32_t msg_code, uint32_t client_id) {
+    this->mutex_.lock();
+    if (this->subscriptions_.count(msg_code) == 0) {
+        this->subscriptions_[msg_code] = std::make_shared<std::set<uint32_t> >();
+    }
+    this->subscriptions_[msg_code]->insert(client_id);
+    this->mutex_.unlock();
+}
+
+std::set<uint32_t>
+pubsub_mgr::subscriptions(uint32_t msg_code) {
+    std::set<uint32_t> res;
+    this->mutex_.lock();
+    if (this->subscriptions_.count(msg_code) > 0) {
+        res = *this->subscriptions_[msg_code];
+    }
+    this->mutex_.unlock();
+    return res;
+};
+
 event_thread *
 event_thread::factory(const char *name, uint32_t thread_id,
-                      thread_role_t thread_role, uint64_t cores_mask,
+                      sdk::lib::thread_role_t thread_role, uint64_t cores_mask,
                       loop_init_func_t init_func, loop_exit_func_t exit_func,
-                      event_message_cb message_cb, event_ipc_cb ipc_cb,
-                      event_ipc_client_cb ipc_client_cb,
-                      uint32_t prio, int sched_policy, bool can_yield) {
+                      message_cb message_cb, uint32_t prio,
+                      int sched_policy, bool can_yield) {
     int          rv;
     void         *mem;
     event_thread *new_thread;
@@ -64,8 +151,8 @@ event_thread::factory(const char *name, uint32_t thread_id,
 
     new_thread = new (mem) event_thread();
     rv = new_thread->init(name, thread_id, thread_role, cores_mask,
-                          init_func, exit_func, message_cb, ipc_cb,
-                          ipc_client_cb, prio, sched_policy, can_yield);
+                          init_func, exit_func, message_cb, prio,
+                          sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~event_thread();
         SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, new_thread);
@@ -77,11 +164,10 @@ event_thread::factory(const char *name, uint32_t thread_id,
 
 int
 event_thread::init(const char *name, uint32_t thread_id,
-                   thread_role_t thread_role, uint64_t cores_mask,
+                   sdk::lib::thread_role_t thread_role, uint64_t cores_mask,
                    loop_init_func_t init_func, loop_exit_func_t exit_func,
-                   event_message_cb message_cb, event_ipc_cb ipc_cb,
-                   event_ipc_client_cb ipc_client_cb,
-                   uint32_t prio, int sched_policy, bool can_yield) {
+                   message_cb message_cb, uint32_t prio, int sched_policy,
+                   bool can_yield) {
     int rc;
 
     if (thread_id > MAX_THREAD_ID) {
@@ -103,8 +189,6 @@ event_thread::init(const char *name, uint32_t thread_id,
     this->init_func_ = init_func;
     this->exit_func_ = exit_func;
     this->message_cb_ = message_cb;
-    this->ipc_cb_ = ipc_cb;
-    this->ipc_client_cb_ = ipc_client_cb;
     this->user_ctx_ = NULL;
 
     // The async watcher is for getting messages from different threads
@@ -153,15 +237,26 @@ event_thread::handle_async_(void) {
 
 void
 event_thread::process_lfq_(void) {
-    void *message;
+    lfq_msg *msg;
     while (true) {
-        message = this->dequeue();
-        if (message == NULL) {
+        msg = (lfq_msg *)this->dequeue();
+        if (msg == NULL) {
             return;
         }
-        if (this->message_cb_) {
-            this->message_cb_(message, this->user_ctx_);
+        if (msg->type == lfq_msg::USER_MSG) {
+            assert(this->message_cb_ != NULL);
+            this->message_cb_(msg->payload, this->user_ctx_);
+        } else if (msg->type == lfq_msg::PUBSUB_MSG) {
+            assert(this->sub_cbs_.count(msg->pubsub_meta.msg_code) > 0);
+            SDK_TRACE_DEBUG("Subscribed message rx: sender: %u, recipient: %u, "
+                            "msg_code: %u, ",
+                            msg->pubsub_meta.sender, msg->pubsub_meta.recipient,
+                            msg->pubsub_meta.msg_code);
+            this->sub_cbs_[msg->pubsub_meta.msg_code](
+                msg->payload, msg->pubsub_meta.data_length, this->user_ctx_);
+            free(msg->payload);
         }
+        lfq_msg::destroy(msg);
     }
 }
 
@@ -215,38 +310,12 @@ event_thread::stop(void) {
 static void
 ev_io_callback_ (struct ev_loop *loop, ev_io *watcher, int revents)
 {
-    event_io_t *io = (event_io_t *)watcher;
+    io_t *io = (io_t *)watcher;
     io->callback(io, watcher->fd, ev_to_event(revents));
 }
 
 void
-event_io_init (event_io_t *io, event_io_cb callback, int fd, int events)
-{
-    io->callback = callback;
-    ev_io_init(&io->ev_watcher, &ev_io_callback_, fd,
-               event_to_ev(events));
-}
-
-void
-event_io_start (event_io_t *io)
-{
-    // We can only add and remove events from inside the context of the thread
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->io_start(io);
-}
-
-void
-event_io_stop (event_io_t *io)
-{
-    // We can only add and remove events from inside the context of the thread
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->io_stop(io);
-}
-
-void
-event_thread::io_start(event_io_t *io) {
+event_thread::io_start(io_t *io) {
     assert(t_event_thread_ == this);
     assert(io->ev_watcher.cb == ev_io_callback_);
 
@@ -254,7 +323,7 @@ event_thread::io_start(event_io_t *io) {
 }
 
 void
-event_thread::io_stop(event_io_t *io) {
+event_thread::io_stop(io_t *io) {
     assert(t_event_thread_ == this);
 
     ev_io_stop(this->loop_, &io->ev_watcher);
@@ -263,48 +332,12 @@ event_thread::io_stop(event_io_t *io) {
 static void
 ev_timer_callback_ (struct ev_loop *loop, ev_timer *watcher, int revents)
 {
-    event_timer_t *timer = (event_timer_t *)watcher;
+    timer_t *timer = (timer_t *)watcher;
     timer->callback(timer);
 }
 
 void
-event_timer_init (event_timer_t *timer, event_timer_cb callback,
-                  double initial_delay, double repeat)
-{
-    timer->callback = callback;
-    ev_timer_init(&timer->ev_watcher, &ev_timer_callback_, initial_delay,
-        repeat);
-}
-
-void
-event_timer_start (event_timer_t *timer)
-{
-    // We can only add and remove events from inside the context of the thread
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->timer_start(timer);
-}
-
-void
-event_timer_stop (event_timer_t *timer)
-{
-    // We can only add and remove events from inside the context of the thread
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->timer_stop(timer);
-}
-
-void
-event_timer_again (event_timer_t *timer)
-{
-    // We can only manipulate events from inside the context of the thread
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->timer_again(timer);
-}
-
-void
-event_thread::timer_start(event_timer_t *timer) {
+event_thread::timer_start(timer_t *timer) {
     assert(t_event_thread_ == this);
     assert(timer->ev_watcher.cb == ev_timer_callback_);
 
@@ -312,26 +345,17 @@ event_thread::timer_start(event_timer_t *timer) {
 }
 
 void
-event_thread::timer_stop(event_timer_t *timer) {
+event_thread::timer_stop(timer_t *timer) {
     assert(t_event_thread_ == this);
 
     ev_timer_stop(this->loop_, &timer->ev_watcher);
 }
 
 void
-event_thread::timer_again(event_timer_t *timer) {
+event_thread::timer_again(timer_t *timer) {
     assert(t_event_thread_ == this);
 
     ev_timer_again(this->loop_, &timer->ev_watcher);
-}
-
-void
-event_message_send (uint32_t thread_id, void *message)
-{
-    assert(thread_id <= MAX_THREAD_ID);
-    assert(g_event_thread_table[thread_id] != NULL);
-
-    g_event_thread_table[thread_id]->message_send(message);
 }
 
 void
@@ -344,6 +368,39 @@ event_thread::message_send(void *message) {
 }
 
 void
+event_thread::subscribe(uint32_t msg_code, sub_cb callback) {
+    assert(t_event_thread_ == this);
+    assert(this->sub_cbs_.count(msg_code) == 0);
+
+    this->sub_cbs_[msg_code] = callback;
+    g_pubsubs.subscribe(msg_code, this->thread_id());
+}
+
+void
+event_thread::publish(uint32_t msg_code, void *data, size_t data_length) {
+    std::set<uint32_t> subs;
+
+    subs = g_pubsubs.subscriptions(msg_code);
+
+    for (auto sub: subs) {
+        lfq_msg *msg = lfq_msg::factory();
+        void *data_copy = malloc(data_length);
+        memcpy(data_copy, data, data_length);
+        msg->type = lfq_msg::PUBSUB_MSG;
+        msg->payload = data_copy;
+        msg->pubsub_meta.data_length = data_length;
+        msg->pubsub_meta.sender = this->thread_id();
+        msg->pubsub_meta.recipient = sub;
+        msg->pubsub_meta.msg_code = msg_code;
+        msg->pubsub_meta.serial = 0;
+        SDK_TRACE_DEBUG("Published message: sender: %u, recipient: %u, "
+                        "msg_code: %u, ",
+                        this->thread_id(), sub, msg_code);
+        g_event_thread_table[sub]->message_send(msg);
+    }
+}
+
+void
 event_thread::handle_ipc_(void) {
     while (1) {
         ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
@@ -351,8 +408,8 @@ event_thread::handle_ipc_(void) {
             return;
         }
         // We received an IPC message but don't have a handler
-        assert(this->ipc_cb_ != NULL);
-        this->ipc_cb_(msg, this->user_ctx_);
+        assert(this->rpc_req_cbs_.count(msg->code()) > 0);
+        this->rpc_req_cbs_[msg->code()](msg, this->user_ctx_);
     }
 }
 
@@ -373,22 +430,22 @@ event_thread::handle_ipc_client_(ev_io *watcher) {
             return;
         }
         // We received an IPC reply but don't have a handler
-        assert(this->ipc_client_cb_ != NULL);
-        this->ipc_client_cb_(sender, msg, this->user_ctx_, cookie);
+        assert(this->rpc_rsp_cbs_.count(msg->code()) > 0);
+        this->rpc_rsp_cbs_[msg->code()](sender, msg, this->user_ctx_, cookie);
     }
 }
 
 void
-event_ipc_reply (ipc::ipc_msg_ptr msg, const void *data, size_t data_length)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->ipc_reply(msg, data, data_length);
+event_thread::rpc_reg_request_handler(uint32_t msg_code,
+                                      rpc_request_cb callback) {
+    assert(t_event_thread_ == this);
+    assert(this->rpc_req_cbs_.find(msg_code) == this->rpc_req_cbs_.end());
+    this->rpc_req_cbs_[msg_code] = callback;
 }
 
 void
-event_thread::ipc_reply(ipc::ipc_msg_ptr msg, const void *data,
-                        size_t data_length) {
+event_thread::rpc_response(ipc::ipc_msg_ptr msg, const void *data,
+                           size_t data_length) {
     assert(t_event_thread_ == this);
     this->ipc_server_->reply(msg, data, data_length);
 }
@@ -400,16 +457,17 @@ event_thread::ipc_callback_(struct ev_loop *loop, ev_io *watcher, int revents) {
 }
 
 void
-event_ipc_send (uint32_t recipient, const void *data, size_t data_length,
-                const void *cookie)
-{
-    assert(t_event_thread_ != NULL);
-    t_event_thread_->ipc_send(recipient, data, data_length, cookie);
+event_thread::rpc_reg_response_handler(uint32_t msg_code,
+                                       rpc_response_cb callback) {
+    assert(t_event_thread_ == this);
+    assert(this->rpc_rsp_cbs_.find(msg_code) == this->rpc_rsp_cbs_.end());
+    this->rpc_rsp_cbs_[msg_code] = callback;
 }
 
 void
-event_thread::ipc_send(uint32_t recipient, const void *data, size_t data_length,
-                       const void *cookie)
+event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
+                          const void *data, size_t data_length,
+                          const void *cookie)
 {
     ipc::ipc_client *client;
     
@@ -429,7 +487,7 @@ event_thread::ipc_send(uint32_t recipient, const void *data, size_t data_length,
         // It doesn't play ver well with libevent
         client->recv(NULL);
     }
-    client->send(data, data_length, cookie);
+    client->send(msg_code, data, data_length, cookie);
 }
 
 void
@@ -438,5 +496,130 @@ event_thread::ipc_client_callback_(struct ev_loop *loop, ev_io *watcher,
     ((event_thread *)watcher->data)->handle_ipc_client_(watcher);
 }
 
-} // namespace lib
+void
+io_init (io_t *io, io_cb callback, int fd, int events)
+{
+    io->callback = callback;
+    ev_io_init(&io->ev_watcher, &ev_io_callback_, fd,
+               event_to_ev(events));
+}
+
+void
+io_start (io_t *io)
+{
+    // We can only add and remove events from inside the context of the thread
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->io_start(io);
+}
+
+void
+io_stop (io_t *io)
+{
+    // We can only add and remove events from inside the context of the thread
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->io_stop(io);
+}
+
+
+void
+timer_init (timer_t *timer, timer_cb callback,
+            double initial_delay, double repeat)
+{
+    timer->callback = callback;
+    ev_timer_init(&timer->ev_watcher, &ev_timer_callback_, initial_delay,
+        repeat);
+}
+
+void
+timer_start (timer_t *timer)
+{
+    // We can only add and remove events from inside the context of the thread
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->timer_start(timer);
+}
+
+void
+timer_stop (timer_t *timer)
+{
+    // We can only add and remove events from inside the context of the thread
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->timer_stop(timer);
+}
+
+void
+timer_again (timer_t *timer)
+{
+    // We can only manipulate events from inside the context of the thread
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->timer_again(timer);
+}
+
+void
+message_send (uint32_t thread_id, void *message)
+{
+    assert(thread_id <= MAX_THREAD_ID);
+    assert(g_event_thread_table[thread_id] != NULL);
+
+    lfq_msg *msg = lfq_msg::factory();
+    msg->type = lfq_msg::USER_MSG;
+    msg->payload = message;
+    g_event_thread_table[thread_id]->message_send(msg);
+}
+
+void
+subscribe (uint32_t msg_code, sub_cb callback)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->subscribe(msg_code, callback);
+}
+
+void
+publish (uint32_t msg_code, void *data, size_t data_length)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->publish(msg_code, data, data_length);
+}
+
+void
+rpc_reg_request_handler (uint32_t msg_code, rpc_request_cb callback)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->rpc_reg_request_handler(msg_code, callback);
+}
+
+void
+rpc_response (ipc::ipc_msg_ptr msg, const void *data, size_t data_length)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->rpc_response(msg, data, data_length);
+}
+
+void
+rpc_reg_response_handler (uint32_t msg_code,
+                          rpc_response_cb callback)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->rpc_reg_response_handler(msg_code, callback);
+}
+
+void
+rpc_request (uint32_t recipient, uint32_t msg_code,
+                   const void *data, size_t data_length, const void *cookie)
+{
+    assert(t_event_thread_ != NULL);
+    t_event_thread_->rpc_request(recipient, msg_code, data, data_length,
+                                 cookie);
+}
+
+} // namespace event_thread
 } // namespace sdk
