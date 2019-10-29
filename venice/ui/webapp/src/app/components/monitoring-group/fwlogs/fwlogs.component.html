@@ -54,8 +54,9 @@
     </ng-container>
     <ng-container *ngSwitchCase="'policy'">
       <div class="fwlogs-sgpolicyredirect">
-        <a
+        <a *ngIf="displayPolicyName(rowData)"
            routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
+        <span *ngIf="!displayPolicyName(rowData)">No Policy Found</span>
       </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
