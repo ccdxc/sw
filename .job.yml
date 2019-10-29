@@ -230,6 +230,14 @@ dependencies:
     - reference: nic/apollo
   nic/debug_cli/apollo:
     - reference: nic/apollo
+  nic/sdk/platform/cfgspace:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pciehdevices:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pciemgr:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pciemgrd:
+    - reference: platform/src/app/pciemgrd
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/captrace:

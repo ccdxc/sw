@@ -1262,14 +1262,18 @@ pciehw_barsz(const u_int8_t port, const u_int16_t bdf, const int i)
  * Called by lspci, this function might be called to read any
  * arbitrary byte(s) of vpd.  The underlying worker function expects
  * dword-aligned access only since that is what the pcie spec allows.
- * We have to account for unaligned head and tail.
+ * We have to account for unaligned head and tail here.
  */
 int
 pciehw_read_vpd(const u_int8_t port, const u_int16_t bdf,
                 const u_int16_t addr, void *buf, const size_t len)
 {
+    const u_int16_t aligned_addr = addr & ~0x3;
+    const size_t aligned_len = roundup(addr + len, 4) - aligned_addr;
+    u_int8_t vpddata[PCIEHW_VPDSZ];
     pciehwdev_t *phwdev;
-    u_int8_t *vpddata;
+    u_int32_t *vp;
+    int i;
 
     phwdev = pciehwdev_by_bdf(port, bdf);
     if (phwdev == NULL) {
@@ -1279,7 +1283,10 @@ pciehw_read_vpd(const u_int8_t port, const u_int16_t bdf,
         return 0;
     }
 
-    vpddata = pciehw_vpd_getdata(phwdev);
+    vp = (u_int32_t *)&vpddata[aligned_addr];
+    for (i = aligned_addr; i < aligned_addr + aligned_len; i += 4, vp++) {
+        *vp = pciehw_vpd_read(phwdev, i);
+    }
     memcpy(buf, &vpddata[addr], len);
     return 1;
 }
