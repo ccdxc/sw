@@ -369,6 +369,7 @@ parser.add_argument("-skipnode0", action='store_true', default=False, help="skip
 parser.add_argument("-nettype", type=str, default="bridge",help="network type: valid values are bridge, macvlan")
 parser.add_argument("-first_venice_ip", type=str, default="192.168.30.11",help="First Venice IP")
 parser.add_argument("-first_naples_ip", type=str, default="192.168.30.21",help="First Naples IP")
+parser.add_argument("-vc_ip", type=str, default="192.168.30.100",help="vCenter IP")
 parser.add_argument("-num_naples", type=int, default=1, help="number of naples nodes")
 parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum nodes")
 parser.add_argument("-num_nodes", type=int, default=1, help="number of venice nodes")
@@ -379,6 +380,7 @@ parser.add_argument("-restart", action='store_true', default=False, help="restar
 parser.add_argument("-delete", action='store_true', default=False, help="delete cluster by deleting containers")
 parser.add_argument("-stop", action='store_true', default=False, help="stop venice cluster but keep containers")
 parser.add_argument("-disableTmpfs", action='store_true', default=False, help="dont use tmpfs partition for data")
+parser.add_argument("-deployvc", action='store_true', default=False, help="deploy a vc sim container")
 args = parser.parse_args()
 
 dev_mode = True
@@ -478,6 +480,9 @@ testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + nu
 createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip, args.nettype)
 if not args.skipnode0:
     testMgmtNode.startNode()
+    #vcNode.startNode()
+    if args.deployvc:
+        runCommand("""docker run --dns-search my.dummy -td -p 8989:8989 -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} pen-vcsim:latest /bin/sh """.format(args.vc_ip, "vc", "vc"))
     copyK8sAccessCredentials()
     copyElasticAccessCredentials()
     copyEtcdAccessCredentials()
