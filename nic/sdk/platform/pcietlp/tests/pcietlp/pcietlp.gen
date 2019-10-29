@@ -1,5 +1,6 @@
 #!/bin/sh
 
-PROG=../../../../../build/x86_64/iris/bin/pcietlp
+PROG=${BLD_OUT_DIR}/../bin/pcietlp
+export LD_LIBRARY_PATH=${BLD_OUT_DIR}/../lib
 
 $PROG $*
