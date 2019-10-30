@@ -208,7 +208,17 @@ ipv6addr2str (ipv6_addr_t v6_addr)
     char                           *buf;
 
     buf = ipaddr_str[ipaddr_str_next++ & 0x3];
-    inet_ntop(AF_INET6, v6_addr.addr8, buf, 40);
+    // inet_ntop(AF_INET6, v6_addr.addr8, buf, 40);
+    sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:"        
+            "%02x%02x:%02x%02x:%02x%02x:%02x%02x",    
+            v6_addr.addr8[0], v6_addr.addr8[1],    
+            v6_addr.addr8[2], v6_addr.addr8[3],    
+            v6_addr.addr8[4], v6_addr.addr8[5],    
+            v6_addr.addr8[6], v6_addr.addr8[7],    
+            v6_addr.addr8[8], v6_addr.addr8[9],    
+            v6_addr.addr8[10], v6_addr.addr8[11],    
+            v6_addr.addr8[12], v6_addr.addr8[13],    
+            v6_addr.addr8[14], v6_addr.addr8[15]);
     return buf;
 }
 
