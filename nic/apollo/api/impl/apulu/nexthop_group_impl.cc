@@ -249,13 +249,44 @@ nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status) {
 
 sdk_ret_t
 nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
-    return SDK_RET_ERR;
+    uint16_t nh_base_hw_id;
+    p4pd_error_t p4pd_ret;
+    ecmp_actiondata_t ecmp_data;
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
+                                      NULL, NULL, &ecmp_data);
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("Failed to read nexthop group table at index %u ret %u",
+                      hw_id_, p4pd_ret);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    spec->num_nexthops = ecmp_data.ecmp_info.num_nexthops;
+    if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+        spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+        // TODO - fetch nh spec from ecmp_data tunnel ids
+    } else if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
+        spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+        nh_base_hw_id = ecmp_data.ecmp_info.nexthop_base;
+        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+            fill_nh_spec_(&spec->nexthops[i], nh_base_hw_id + i);
+        }
+    }
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_group_impl::read_hw(api_base *api_obj, obj_key_t *key,
                             obj_info_t *info) {
-    return SDK_RET_ERR;
+    sdk_ret_t ret;
+    pds_nexthop_group_info_t *dinfo = (pds_nexthop_group_info_t *)info;
+
+    ret = fill_spec_(&dinfo->spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    fill_status_(&dinfo->status);
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_IMPL
