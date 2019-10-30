@@ -206,7 +206,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libagentclient.so                   /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/agent                               /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pdsagent                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
 
