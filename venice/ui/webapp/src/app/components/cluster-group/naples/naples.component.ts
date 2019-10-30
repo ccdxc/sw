@@ -574,6 +574,9 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
+      if (naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS]) {  // remove UI fields
+        delete naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+      }
       const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
       observables.push(sub);
     }

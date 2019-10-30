@@ -429,12 +429,19 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.inLabelEditMode = false;
   }
 
-  handleEditSave(newObjects: ClusterDistributedServiceCard[]) {
-    if (newObjects.length > 0) {
-      const name = newObjects[0].meta.name;
-      const sub = this.clusterService.UpdateDistributedServiceCard(name, newObjects[0], '', this.objList[0]).subscribe(response => {
-        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${name}'s labels`);
-      }, this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY));
+  handleEditSave(dscs: ClusterDistributedServiceCard[]) {
+    if (dscs.length > 0) {
+      const naple = dscs[0];
+      const dscNaple = naple.meta.name;
+      if (naple[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS]) {
+        delete naple[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS]; // remove UI field
+      }
+      const sub = this.clusterService.UpdateDistributedServiceCard(dscNaple, dscs[0], '', this.objList[0]).subscribe(
+        response => {
+             this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${dscNaple}'s labels`);
+        },
+        this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
+      );
       this.subscriptions.push(sub);
       this.inLabelEditMode = false;
     }

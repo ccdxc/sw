@@ -1160,6 +1160,7 @@ export class SearchUtil {
   // orderValue = {
   // requirements: [{
   //   keyFormControl: "key",
+  //   keytextFormName "env"   -- when we have label selector, keyFormControl is always "text", keytextFormName contains the user input
   //   operatorFormControl: "in",
   //   valueFormControl: ["1"]}]
   // }
@@ -1170,12 +1171,12 @@ export class SearchUtil {
     }
 
     let retData = data.filter((item) => {
-      return !Utility.isEmpty(item.keyFormControl) && !Utility.isEmpty(item.valueFormControl) && item.valueFormControl.length !== 0;
+      return (!Utility.isEmpty(item.keyFormControl) || !Utility.isEmpty(item.keytextFormName) ) && !Utility.isEmpty(item.valueFormControl) && item.valueFormControl.length !== 0;
     });
     // make sure the value field is an array
     retData = retData.map((item) => {
       const searchExpression: SearchExpression = {
-        key: ((addMetatag) ? 'meta.labels.' : '')  + item.keyFormControl,
+        key: ((addMetatag) ? 'meta.labels.' : '')  +  (item.keytextFormName) ? item.keytextFormName : item.keyFormControl,
         operator: item.operatorFormControl,
         values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
       };
