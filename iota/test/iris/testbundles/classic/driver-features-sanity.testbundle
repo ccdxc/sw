@@ -246,3 +246,8 @@ testcases:
         iterators :
         args      :
 
+    -   name    : DriverFlowCtrl
+        testcase: testcases.drivers.driverflowctrl
+        disable : False
+        iterators :
+
