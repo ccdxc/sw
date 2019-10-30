@@ -48,7 +48,7 @@ MS_INCLPATH = code/comn/intface        \
 
 OBJ_DIR = obj
 LIB_DIR = lib
-INC_DIRS = -I../common/ -I. $(addprefix -I$(MS_ROOT)/,$(MS_INCLPATH))
+INC_DIRS = -I$(TOPDIR)/ -I$(TOPDIR)/../ -I$(TOPDIR)/sdk/ -I../common/ -I. $(addprefix -I$(MS_ROOT)/,$(MS_INCLPATH))
 LD_LIBS = -lpthread -ldl -lzmq
 
 SRC_FILES = $(wildcard *.cc)

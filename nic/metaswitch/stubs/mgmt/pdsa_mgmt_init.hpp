@@ -4,6 +4,6 @@
 #ifndef __PDSA_MGMT_INIT_HPP__
 #define __PDSA_MGMT_INIT_HPP__
 
-void pdsa_stub_mgmt_init();
+bool pdsa_stub_mgmt_init();
 
 #endif

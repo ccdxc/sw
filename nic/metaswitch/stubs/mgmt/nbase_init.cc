@@ -204,7 +204,8 @@ EXIT_LABEL:
 }
 
 
-void pdsa_stub_mgmt_init()
+bool pdsa_stub_mgmt_init()
 {
     nbase_init();
+    return true;
 }

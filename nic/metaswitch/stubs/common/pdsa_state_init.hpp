@@ -1,15 +1,16 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Initialize Stubs that drive the dataplane
+// Stub state initialization 
 //---------------------------------------------------------------
 
-#ifndef __PDSA_HAL_INIT_HPP__
-#define __PDSA_HAL_INIT_HPP__
+#ifndef __PDSA_STATE_INIT_HPP__
+#define __PDSA_STATE_INIT_HPP__
 
 namespace pdsa_stub {
 
-bool hal_init(void);
-void hal_deinit(void);
+bool state_init(void);
+void state_deinit(void);
 
 }
+
 #endif

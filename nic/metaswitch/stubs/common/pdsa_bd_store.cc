@@ -1,15 +1,11 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Initialize Stubs that drive the dataplane
+// PDSA stub Overlay Bridge Domain store
 //---------------------------------------------------------------
 
-#ifndef __PDSA_HAL_INIT_HPP__
-#define __PDSA_HAL_INIT_HPP__
+#include "pdsa_bd_store.hpp"
 
 namespace pdsa_stub {
-
-bool hal_init(void);
-void hal_deinit(void);
-
+template<> sdk::lib::slab* slab_obj_t<bd_obj_t>::slab_ = nullptr;
 }
-#endif
+

@@ -10,7 +10,9 @@ MS_TARGET = $(MS_LIB_DIR)/dcsi
 CXX = g++
 CPPFLAGS += -std=c++11 -pthread -g -c -Wall -Werror -O0
 INC_DIRS = -Istubs/common/ -Istubs/hals/ -Istubs/mgmt/ -Istubs
-LD_FLAGS = -Lstubs/common/lib -Lstubs/hals/lib -Lstubs/mgmt/lib
+LD_PATHS = -Lstubs/common/lib -Lstubs/hals/lib -Lstubs/mgmt/lib
+PDSA_LD_LIBS  = -lpegasusmgmt -lpdsacmn -lpdsahal
+PEGASUS_LD_LIBS  = -lpegasusmgmt
 
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -27,13 +29,14 @@ $(BIN_DIR):
 SRC_FILES = $(wildcard *.cc)
 OBJ_FILES = $(SRC_FILES:%.cc=$(OBJ_DIR)/%.o)
 DEP_FILES = $(OBJ_FILES:.o=.d)
+
 $(PDSA_BIN): $(OBJ_FILES) $(MS_TARGET) PDSA_STUBS MGMT_STUBS
 	@echo Building PDSA binary
-	$(CXX) -g -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_FLAGS) $(DLD_FLAGS) -lpegasusmgmt -lpdsahal
+	$(CXX) -g -DNAPLES_BUILD -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_PATHS) $(DLD_FLAGS) $(PDSA_LD_LIBS)
 
 $(PEGASUS_BIN): $(OBJ_FILES) $(MS_TARGET) MGMT_STUBS
 	@echo Building Pegasus binary
-	$(CXX) -g -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_FLAGS) $(DLD_FLAGS) -lpegasusmgmt
+	$(CXX) -g -DVENICE_BUILD -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_PATHS) $(DLD_FLAGS) $(PEGASUS_LD_LIBS)
 
 CXX = g++
 CPPFLAGS = -I/usr/local/include -std=c++11 \
@@ -41,6 +44,7 @@ CPPFLAGS = -I/usr/local/include -std=c++11 \
 $(OBJ_DIR)/%.o: %.cc
 	@echo Compiling $@
 	$(CXX) $(CPPFLAGS) -c $< -o $@
+
 include $(DEP_FILES)
 
 $(OBJ_DIR)/%.d: %.cc $(OBJ_DIR)
@@ -50,6 +54,7 @@ $(OBJ_DIR)/%.d: %.cc $(OBJ_DIR)
 
 .PHONY: PDSA_STUBS
 PDSA_STUBS: 				
+	$(MAKE) -C stubs/common
 	$(MAKE) -C stubs/hals
 
 .PHONY: MGMT_STUBS
@@ -66,7 +71,16 @@ $(MS_BUILD_CFG):
 
 .PHONY: clean
 clean:
+	$(MAKE) clean -C stubs/common		 
 	$(MAKE) clean -C stubs/hals		 
 	$(MAKE) clean -C stubs/mgmt
 	rm -rf $(PDSA_BIN)
+	rm -rf $(PEGASUS_BIN)
 	rm -rf $(OBJ_DIR)
+
+.PHONY: cleandep
+cleandep:
+	$(MAKE) cleandep -C stubs/common
+	$(MAKE) cleandep -C stubs/hals
+	$(MAKE) cleandep -C stubs/mgmt
+	rm -f $(DEP_FILES)
