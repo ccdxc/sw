@@ -715,7 +715,9 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        if self.RunSshCmd("sudo lspci | grep 1dd8"):
+        try: self.RunSshCmd("sudo lspci | grep 1dd8")
+        except:
+            print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
         self.InstallPrep()
 
@@ -805,7 +807,9 @@ class EsxHostManagement(HostManagement):
         return retcode
 
     def __check_naples_deivce(self):
-        if self.RunSshCmd("lspci | grep Pensando"):
+        try: self.RunSshCmd("lspci | grep Pensando")
+        except: 
+            print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
