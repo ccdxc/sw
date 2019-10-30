@@ -514,10 +514,14 @@ func ifIndexToIfType(ifindex uint32) string {
 }
 
 func ifIndexToPortIdStr(ifIndex uint32) string {
-	slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
-	parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-	ifTypeStr := ifIndexToIfType(ifIndex)
-	return ifTypeStr + slotStr + "/" + parentPortStr
+	if ifIndex != 0 {
+		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+		ifTypeStr := ifIndexToIfType(ifIndex)
+		return ifTypeStr + slotStr + "/" + parentPortStr
+	} else {
+		return "-"
+	}
 }
 
 func printPortStats(resp *pds.Port) {

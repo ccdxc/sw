@@ -1028,6 +1028,9 @@ static inline sdk_ret_t
 pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
                            const pds_tep_spec_t *api_spec)
 {
+    if (!api_spec || !proto_spec) {
+        return SDK_RET_INVALID_ARG;
+    }
     proto_spec->set_id(api_spec->key.id);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
                                   &api_spec->remote_ip);
@@ -1166,6 +1169,10 @@ static inline void
 pds_service_api_spec_to_proto (pds::SvcMappingSpec *proto_spec,
                                const pds_svc_mapping_spec_t *api_spec)
 {
+    if (!proto_spec || !api_spec) {
+        return;
+    }
+
     auto proto_key = proto_spec->mutable_key();
     proto_key->set_vpcid(api_spec->key.vpc.id);
     proto_key->set_svcport(api_spec->key.svc_port);
@@ -1963,7 +1970,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
 }
 
 // populate proto buf spec from route table API spec
-inline void
+static inline void
 pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
                                    const pds_route_table_spec_t *api_spec)
 {
@@ -1977,12 +1984,19 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
     }
-#if 0
-    // we don't store routes in db for now
+
     for (uint32_t i = 0; i < api_spec->num_routes; i++) {
-        pds::Route *proto_route = proto_spec->add_routes();
+        pds::Route *route = proto_spec->add_routes();
+        ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
+                                     &api_spec->routes[i].prefix);
+        if (api_spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+            route->set_vpcid(api_spec->routes[i].vpc.id);
+        } else if (api_spec->routes[i].nh_type == PDS_NH_TYPE_OVERLAY) {
+            route->set_tunnelid(api_spec->routes[i].tep.id);
+        } else if (api_spec->routes[i].nh_type == PDS_NH_TYPE_IP) {
+            route->set_nexthopid(api_spec->routes[i].nh.id);
+        }
     }
-#endif
 
     return;
 }
@@ -2615,6 +2629,9 @@ static inline void
 pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
                            const pds_vpc_spec_t *api_spec)
 {
+    if (!api_spec || !proto_spec) {
+        return;
+    }
     proto_spec->set_id(api_spec->key.id);
     if (api_spec->type == PDS_VPC_TYPE_TENANT) {
         proto_spec->set_type(pds::VPC_TYPE_TENANT);
@@ -2663,7 +2680,50 @@ pds_vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
     pds_vpc_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-// build VPC API spec from protobuf spec
+static inline void
+pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
+                                     const pds_local_mapping_spec_t *local_spec)
+{
+    if (!proto_spec || !local_spec) {
+        return;
+    }
+
+    switch (local_spec->key.type) {
+    case PDS_MAPPING_TYPE_L2:
+        {
+            auto key = proto_spec->mutable_id()->mutable_mackey();
+            key->set_macaddr(MAC_TO_UINT64(local_spec->key.mac_addr));
+            key->set_subnetid(local_spec->key.subnet.id);
+        }
+        break;
+    case PDS_MAPPING_TYPE_L3:
+        {
+            auto key = proto_spec->mutable_id()->mutable_ipkey();
+            ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
+                                          &local_spec->key.ip_addr);
+            key->set_vpcid(local_spec->key.vpc.id);
+        }
+        break;
+    default:
+        return;
+    }
+
+    proto_spec->set_subnetid(local_spec->subnet.id);
+    proto_spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(), &local_spec->fabric_encap);
+    proto_spec->set_vnicid(local_spec->vnic.id);
+    if (local_spec->public_ip_valid) {
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_publicip(),
+                                      &local_spec->public_ip);
+    }
+    if (local_spec->provider_ip_valid) {
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_providerip(),
+                                      &local_spec->provider_ip);
+    }
+    proto_spec->set_servicetag(local_spec->svc_tag);
+}
+
+// build PC API spec from protobuf spec
 static inline sdk_ret_t
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
@@ -2671,8 +2731,6 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
-                                  key.ipkey().ipaddr());
 
     switch (key.keyinfo_case()) {
     case pds::MappingKey::kMACKey:
@@ -2715,6 +2773,52 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     MAC_UINT64_TO_ADDR(local_spec->vnic_mac, proto_spec.macaddr());
     local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
     return SDK_RET_OK;
+}
+
+static inline void
+pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
+                                      const pds_remote_mapping_spec_t *remote_spec)
+{
+    if (!proto_spec || !remote_spec) {
+        return;
+    }
+
+    switch (remote_spec->key.type) {
+    case PDS_MAPPING_TYPE_L2:
+        {
+            auto key = proto_spec->mutable_id()->mutable_mackey();
+            key->set_macaddr(MAC_TO_UINT64(remote_spec->key.mac_addr));
+            key->set_subnetid(remote_spec->key.subnet.id);
+        }
+        break;
+    case PDS_MAPPING_TYPE_L3:
+        {
+            auto key = proto_spec->mutable_id()->mutable_ipkey();
+            ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
+                                          &remote_spec->key.ip_addr);
+            key->set_vpcid(remote_spec->key.vpc.id);
+        }
+        break;
+    default:
+        return;
+    }
+    switch (remote_spec->nh_type) {
+    case PDS_NH_TYPE_OVERLAY:
+        proto_spec->set_tunnelid(remote_spec->tep.id);
+        break;
+    case PDS_NH_TYPE_OVERLAY_ECMP:
+        proto_spec->set_nexthopgroupid(remote_spec->nh_group.id);
+        break;
+    default:
+        return;
+    }
+    proto_spec->set_subnetid(remote_spec->subnet.id);
+    proto_spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(), &remote_spec->fabric_encap);
+    if (remote_spec->provider_ip_valid) {
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_providerip(),
+                                      &remote_spec->provider_ip);
+    }
 }
 
 static inline sdk_ret_t

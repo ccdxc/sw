@@ -4,10 +4,49 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include "nic/apollo/agent/test/client/utils.hpp"
+#include <grpc++/grpc++.h>
+#include "gen/proto/batch.grpc.pb.h"
+#include "gen/proto/gogo.grpc.pb.h"
+#include "gen/proto/mapping.grpc.pb.h"
+#include "gen/proto/vpc.grpc.pb.h"
+#include "gen/proto/route.grpc.pb.h"
+#include "gen/proto/policy.grpc.pb.h"
+#include "gen/proto/subnet.grpc.pb.h"
+#include "gen/proto/device.grpc.pb.h"
+#include "gen/proto/tunnel.grpc.pb.h"
+#include "gen/proto/vnic.grpc.pb.h"
+#include "gen/proto/mirror.grpc.pb.h"
+#include "gen/proto/meter.grpc.pb.h"
+#include "gen/proto/tags.grpc.pb.h"
+#include "gen/proto/nh.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
+#include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using std::string;
+using grpc::Channel;
+using grpc::Status;
+using grpc::ClientContext;
+using pds::VPCDeleteResponse;
+using pds::VPCGetResponse;
+using pds::VPCPeerResponse;
+using pds::NexthopResponse;
+using pds::NexthopSpec;
+using pds::BatchSpec;
+using pds::BatchStatus;
+using types::BatchCtxt;
 
 std::string g_svc_endpoint_;
 
@@ -27,22 +66,22 @@ std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
 std::unique_ptr<pds::IfSvc::Stub>                g_if_stub_;
 std::unique_ptr<pds::Svc::Stub>                  g_svc_mapping_stub_;
 
-RouteTableRequest        g_route_table_req;
-SecurityPolicyRequest    g_policy_req;
-MappingRequest           g_mapping_req;
-VnicRequest              g_vnic_req;
-SubnetRequest            g_subnet_req;
-VPCRequest               g_vpc_req;
-VPCPeerRequest           g_vpc_peer_req;
-TunnelRequest            g_tunnel_req;
-MirrorSessionRequest     g_mirror_session_req;
-MeterRequest             g_meter_req;
-TagRequest               g_tag_req;
-NexthopRequest           g_nexthop_req;
-SvcMappingRequest        g_svc_mapping_req;
-VPCDeleteRequest         g_vpc_req_del;
-VPCGetRequest            g_vpc_req_get;
-InterfaceRequest         g_if_req;
+pds::RouteTableRequest        g_route_table_req;
+pds::SecurityPolicyRequest    g_policy_req;
+pds::MappingRequest           g_mapping_req;
+pds::VnicRequest              g_vnic_req;
+pds::SubnetRequest            g_subnet_req;
+pds::VPCRequest               g_vpc_req;
+pds::VPCPeerRequest           g_vpc_peer_req;
+pds::TunnelRequest            g_tunnel_req;
+pds::MirrorSessionRequest     g_mirror_session_req;
+pds::MeterRequest             g_meter_req;
+pds::TagRequest               g_tag_req;
+pds::NexthopRequest           g_nexthop_req;
+pds::SvcMappingRequest        g_svc_mapping_req;
+pds::VPCDeleteRequest         g_vpc_req_del;
+pds::VPCGetRequest            g_vpc_req_get;
+pds::InterfaceRequest         g_if_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -53,7 +92,9 @@ create_route_table_grpc (pds_route_table_spec_t *spec)
     RouteTableResponse  response;
     Status              ret_status;
 
-    populate_route_table_request(&g_route_table_req, spec);
+    if (spec) {
+        pds_route_table_api_spec_to_proto(g_route_table_req.add_request(), spec);
+    }
     if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_route_table_stub_->RouteTableCreate(&context, g_route_table_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
@@ -98,7 +139,9 @@ create_local_mapping_grpc (pds_local_mapping_spec_t *spec)
     MappingResponse response;
     Status          ret_status;
 
-    populate_local_mapping_request(&g_mapping_req, spec);
+    if (spec) {
+        pds_local_mapping_api_spec_to_proto(g_mapping_req.add_request(), spec);
+    }
     if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
@@ -118,7 +161,9 @@ create_remote_mapping_grpc (pds_remote_mapping_spec_t *spec)
     MappingResponse response;
     Status          ret_status;
 
-    populate_remote_mapping_request(&g_mapping_req, spec);
+    if (spec) {
+        pds_remote_mapping_api_spec_to_proto(g_mapping_req.add_request(), spec);
+    }
     if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
@@ -161,7 +206,9 @@ create_subnet_grpc (pds_subnet_spec_t *spec)
     SubnetResponse  response;
     Status          ret_status;
 
-    populate_subnet_request(&g_subnet_req, spec);
+    if (spec) {
+        pds_subnet_api_spec_to_proto(g_subnet_req.add_request(), spec);
+    }
     if ((g_subnet_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_subnet_stub_->SubnetCreate(&context, g_subnet_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
@@ -181,7 +228,9 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
     VPCResponse     response;
     Status          ret_status;
 
-    populate_vpc_request(&g_vpc_req, spec);
+    if (spec) {
+        pds_vpc_api_spec_to_proto(g_vpc_req.add_request(), spec);
+    }
     if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
         if (!ret_status.ok() ||
@@ -204,7 +253,9 @@ update_vpc_grpc (pds_vpc_spec_t *vpc)
     VPCResponse     response;
     Status          ret_status;
 
-    populate_vpc_request(&g_vpc_req, vpc);
+    if (vpc) {
+        pds_vpc_api_spec_to_proto(g_vpc_req.add_request(), vpc);
+    }
     if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc) {
         ret_status = g_vpc_stub_->VPCUpdate(&context, g_vpc_req, &response);
         if (!ret_status.ok() ||
@@ -226,7 +277,7 @@ delete_vpc_grpc (pds_vpc_key_t *key)
     VPCDeleteResponse     response;
     Status          ret_status;
 
-    populate_vpc_delete_request(&g_vpc_req_del, key);
+    g_vpc_req_del.add_id(key->id);
 
     if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !key) {
         ret_status = g_vpc_stub_->VPCDelete(&context, g_vpc_req_del, &response);
@@ -258,7 +309,7 @@ read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
     pds::VPCSpec vpcspec;
 
     // TODO - check if batching is needed for read APIs, for now dont batch
-    populate_vpc_get_request(&g_vpc_req_get, key);
+    g_vpc_req_get.add_id(key->id);
     if ((g_vpc_req_get.id_size() >= APP_GRPC_BATCH_COUNT) || !key || 1) {
         ret_status = g_vpc_stub_->VPCGet(&context, g_vpc_req_get, &response);
         if (!ret_status.ok()) {
@@ -402,7 +453,9 @@ create_tunnel_grpc (uint32_t id, pds_tep_spec_t *spec)
     TunnelResponse  response;
     Status          ret_status;
 
-    populate_tunnel_request(&g_tunnel_req, id, spec);
+    if (spec) {
+        pds_tep_api_spec_to_proto(g_tunnel_req.add_request(), spec);
+    }
     if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         ret_status =
             g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
@@ -425,7 +478,9 @@ create_device_grpc (pds_device_spec_t *spec)
     DeviceResponse  response;
     Status          ret_status;
 
-    populate_device_request(&request, spec);
+    if (spec) {
+        pds_device_api_spec_to_proto(request.mutable_request(), spec);
+    }
     ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed!\n", __FUNCTION__);
@@ -442,7 +497,9 @@ create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
     MirrorSessionResponse    response;
     Status                   status;
 
-    populate_mirror_session_request(&g_mirror_session_req, spec);
+    if (spec) {
+        pds_mirror_session_api_spec_to_proto(g_mirror_session_req.add_request(), spec);
+    }
     if ((g_mirror_session_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         status = g_mirror_stub_->MirrorSessionCreate(&context,
                                                      g_mirror_session_req,
@@ -465,7 +522,9 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
     SvcMappingResponse    response;
     Status                status;
 
-    populate_svc_mapping_request(&g_svc_mapping_req, spec);
+    if (spec) {
+        pds_service_api_spec_to_proto(g_svc_mapping_req.add_request(), spec);
+    }
     if ((g_svc_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
         status = g_svc_mapping_stub_->SvcMappingCreate(&context,
                                                        g_svc_mapping_req,
@@ -490,7 +549,7 @@ batch_start_grpc (int epoch)
     BatchStatus         status;
 
     params.epoch = epoch;
-    populate_batch_spec(&spec, &params);
+    spec.set_epoch(params.epoch);
 
     // batch start
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);

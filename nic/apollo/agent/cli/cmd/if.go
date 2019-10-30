@@ -90,7 +90,7 @@ func printIfHeader() {
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-14s%-10s%-11s%-8s%-6s%-18s%-14s%-20s\n",
-		"ID", "Type", "AdminState", "PortNum",
+		"ID", "Type", "AdminState", "Port",
 		"VPC", "IPPrefix", "Encap", "MACAddress")
 	fmt.Println(hdrLine)
 }
@@ -169,10 +169,10 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printLifHeader() {
-	hdrLine := strings.Repeat("-", 45)
+	hdrLine := strings.Repeat("-", 62)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-14s%-25s\n",
-		"ID", "PinnedIfID", "LifType")
+	fmt.Printf("%-6s%-15s%-16s%-25s\n",
+		"ID", "Name", "PinnedInterface", "Type")
 	fmt.Println(hdrLine)
 }
 
@@ -180,8 +180,8 @@ func printLif(lif *pds.Lif) {
 	spec := lif.GetSpec()
 	lifType := strings.Replace(spec.GetType().String(), "LIF_TYPE_", "", -1)
 	lifType = strings.Replace(lifType, "_", "-", -1)
-	fmt.Printf("%-6d%-14s%-25s\n",
-		spec.GetLifId(),
+	fmt.Printf("%-6d%-15s%-16s%-25s\n",
+		spec.GetLifId(), "",
 		ifIndexToPortIdStr(spec.GetPinnedInterfaceId()),
 		lifType)
 }

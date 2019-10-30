@@ -279,6 +279,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
                     memset(&pds_local_mapping, 0, sizeof(pds_local_mapping));
+                    pds_local_mapping.key.type = PDS_MAPPING_TYPE_L3;
                     pds_local_mapping.key.vpc.id = i;
                     pds_local_mapping.key.ip_addr.af = IP_AF_IPV4;
                     pds_local_mapping.key.ip_addr.addr.v4_addr =
@@ -377,6 +378,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
                 memset(&pds_remote_mapping, 0, sizeof(pds_remote_mapping));
+                pds_remote_mapping.key.type = PDS_MAPPING_TYPE_L3;
                 pds_remote_mapping.key.vpc.id = i;
                 pds_remote_mapping.key.ip_addr.af = IP_AF_IPV4;
                 pds_remote_mapping.key.ip_addr.addr.v4_addr =
