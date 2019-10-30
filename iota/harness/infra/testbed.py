@@ -1,11 +1,12 @@
 #! /usr/bin/python3
-import pdb
+import copy
 import os
+import pdb
+import socket
+import subprocess
 import sys
 import time
-import subprocess
-import copy
-import socket
+import traceback
 
 import iota.harness.api as api
 import iota.harness.infra.types as types
@@ -104,12 +105,23 @@ class _Testbed:
 
     def __read_testbed_json(self):
         self.__tbspec = parser.JsonParse(GlobalOptions.testbed_json)
-        for instance in self.__tbspec.Instances:
-            if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
-                instance.NodeOs = self.__tbspec.Provision.Vars.BmOs
-            if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'VmOs') and instance.Type == "vm":
-                instance.NodeOs = self.__tbspec.Provision.Vars.VmOs
-        return
+        if not self.__tbspec.Instances:
+            msg = 'failed to process testbed file {0}. no instances found'.format(GlobalOptions.testbed_json)
+            print(msg)
+            Logger.debug(msg)
+            sys.exit(types.status.TESTBED_FAILURE)
+        try:
+            for instance in self.__tbspec.Instances:
+                if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
+                    instance.NodeOs = self.__tbspec.Provision.Vars.BmOs
+                if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'VmOs') and instance.Type == "vm":
+                    instance.NodeOs = self.__tbspec.Provision.Vars.VmOs
+            return
+        except:
+            print('failed parsing testbed json')
+            Logger.debug("failed parsing testbed json. error was: {0}".format(traceback.format_exc()))
+            Logger.debug("failed on node instance: {0}".format(instance.__dict__)) 
+            sys.exit(types.status.TESTBED_FAILURE)
 
     def __get_full_path(self, path):
         if path[0] == '/':
