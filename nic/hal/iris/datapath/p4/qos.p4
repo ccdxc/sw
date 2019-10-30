@@ -14,6 +14,9 @@ header_type qos_metadata_t {
 metadata qos_metadata_t qos_metadata;
 
 action qos(egress_tm_oq, dest_tm_oq, cos_en, cos, dscp_en, dscp) {
+    modify_field(control_metadata.lif_tx_stats_idx,
+                 ((control_metadata.src_lif << 4) +
+                  (LIF_STATS_TX_UCAST_BYTES_OFFSET / 64)));
     /* copy the oq to iq, needed by PBC */
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);

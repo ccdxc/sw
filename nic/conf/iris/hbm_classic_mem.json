@@ -324,6 +324,12 @@
             "cache": "p4plus-all"
         },
         {
+            "name": "ingress_tx_stats",
+            "size": "1024K",
+            "base_region": "lif_stats",
+            "_comment": "Alias to lif-stats region"
+        },
+        {
             "name": "p4_program",
             "size": "64K"
         },

@@ -139,9 +139,8 @@ flow_miss_multicast:
                      p.capri_intrinsic_tm_replicate_en, 1
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     k.flow_miss_metadata_tunnel_originate
-  or            r1, k.flow_miss_metadata_rewrite_index_s8_e10, \
-                   k.flow_miss_metadata_rewrite_index_s0_e7, 3
-  or            r2, k.flow_miss_metadata_rewrite_index_s11_e11, r1, 1
+  or            r2, k.flow_miss_metadata_rewrite_index_s8_e11, \
+                   k.flow_miss_metadata_rewrite_index_s0_e7, 4
   phvwr         p.rewrite_metadata_rewrite_index[11:0], r2
   phvwr         p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
   or.e          r1, k.flow_miss_metadata_tunnel_rewrite_index_s8_e9, \

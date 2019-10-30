@@ -9,6 +9,9 @@ struct phv_  p;
 
 %%
 qos:
+  add       r1, (LIF_STATS_TX_UCAST_BYTES_OFFSET / 64), \
+                k.control_metadata_src_lif, 4
+  phvwr     p.control_metadata_lif_tx_stats_idx, r1
   /* copy the oq to iq, needed by PBC */
   sne       c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
   phvwr.c1  p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

@@ -325,7 +325,7 @@
 
 #define LIF_STATS_RDMA_REQ_STAT(i) \
         ((i - LIF_STATS_REQ_DEBUG_ERR_START_OFFSET) / 8)
-        
+
 //RDMA Requester error/debug counters(768-895)
 #define LIF_STATS_REQ_DEBUG_ERR_START_OFFSET        768
 
@@ -347,7 +347,7 @@
 
 #define LIF_STATS_RDMA_RESP_STAT(i) \
         ((i - LIF_STATS_RESP_DEBUG_ERR_START_OFFSET) / 8)
-        
+
 //RDMA Responder error/debug counters(896-1023)
 #define LIF_STATS_RESP_DEBUG_ERR_START_OFFSET       896
 #define LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET        896

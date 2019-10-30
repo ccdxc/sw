@@ -15,7 +15,7 @@
 #define QOS_TABLE_SIZE                                     32
 #define DROP_STATS_TABLE_SIZE                              64
 #define IPSG_TABLE_SIZE                                    1024
-#define TX_STATS_TABLE_SIZE                                2048
+#define TX_STATS_TABLE_SIZE                                16384
 
 #define OUTPUT_MAPPING_TABLE_SIZE                          2048
 #define TWICE_NAT_TABLE_SIZE                               2048
