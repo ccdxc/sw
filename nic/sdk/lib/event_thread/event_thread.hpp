@@ -143,7 +143,6 @@ public:
     void message_send(void *message);
 
     void subscribe(uint32_t msg_code, sub_cb callback);
-    void publish(uint32_t msg_code, void *data, size_t data_length);
 
     void rpc_reg_request_handler(uint32_t msg_code,
                                  rpc_request_cb callback);

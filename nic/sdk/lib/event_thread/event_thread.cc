@@ -378,30 +378,6 @@ event_thread::subscribe(uint32_t msg_code, sub_cb callback) {
 }
 
 void
-event_thread::publish(uint32_t msg_code, void *data, size_t data_length) {
-    std::set<uint32_t> subs;
-
-    subs = g_pubsubs.subscriptions(msg_code);
-
-    for (auto sub: subs) {
-        lfq_msg *msg = lfq_msg::factory();
-        void *data_copy = malloc(data_length);
-        memcpy(data_copy, data, data_length);
-        msg->type = lfq_msg::PUBSUB_MSG;
-        msg->payload = data_copy;
-        msg->pubsub_meta.data_length = data_length;
-        msg->pubsub_meta.sender = this->thread_id();
-        msg->pubsub_meta.recipient = sub;
-        msg->pubsub_meta.msg_code = msg_code;
-        msg->pubsub_meta.serial = 0;
-        SDK_TRACE_DEBUG("Published message: sender: %u, recipient: %u, "
-                        "msg_code: %u, ",
-                        this->thread_id(), sub, msg_code);
-        g_event_thread_table[sub]->message_send(msg);
-    }
-}
-
-void
 event_thread::handle_ipc_(void) {
     while (1) {
         ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
@@ -583,9 +559,31 @@ subscribe (uint32_t msg_code, sub_cb callback)
 void
 publish (uint32_t msg_code, void *data, size_t data_length)
 {
-    assert(t_event_thread_ != NULL);
+    std::set<uint32_t> subs;
+    uint32_t sender_id = MAX_THREAD_ID + 1;
 
-    t_event_thread_->publish(msg_code, data, data_length);
+    if (t_event_thread_ != NULL) {
+        sender_id = t_event_thread_->thread_id();
+    }
+
+    subs = g_pubsubs.subscriptions(msg_code);
+
+    for (auto sub: subs) {
+        lfq_msg *msg = lfq_msg::factory();
+        void *data_copy = malloc(data_length);
+        memcpy(data_copy, data, data_length);
+        msg->type = lfq_msg::PUBSUB_MSG;
+        msg->payload = data_copy;
+        msg->pubsub_meta.data_length = data_length;
+        msg->pubsub_meta.sender = sender_id;
+        msg->pubsub_meta.recipient = sub;
+        msg->pubsub_meta.msg_code = msg_code;
+        msg->pubsub_meta.serial = 0;
+        SDK_TRACE_DEBUG("Published message: sender: %u, recipient: %u, "
+                        "msg_code: %u, ", sender_id, sub, msg_code);
+        g_event_thread_table[sub]->message_send(msg);
+    }
+
 }
 
 void
