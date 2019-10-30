@@ -79,7 +79,10 @@ vpc:
           rmap:                       # Remote IP mappings per subnet
             - count : 4
       nexthop:
-        - count : 10
+        - type : ip
+          count : 10
+        - type : underlay
+          count : 2
       routetbl:
         - type: specific
           routetype: only_default
@@ -139,7 +142,10 @@ vpc:
           rmap:
             - count : 4
       nexthop:
-        - count : 10
+        - type : ip
+          count : 10
+        - type : underlay
+          count : 2
       routetbl:
              - type: base
                routetype: adjacent
