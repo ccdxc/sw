@@ -1100,6 +1100,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
     sdk_ret_t      rv;
     pds_tep_spec_t pds_tep;
     uint32_t       ipaddr_offset;
+    static uint32_t unh = 1;
 
     tep_id = TEP_ID_MYTEP;
 
@@ -1127,6 +1128,13 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         } else {
             pds_tep.encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
             pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
+        }
+        if (apulu()) {
+            pds_tep.nh_type = PDS_NH_TYPE_UNDERLAY;
+            pds_tep.nh.id = unh++;
+            if (unh > g_test_params.max_underlay_nh) {
+                unh = 1;
+            }
         }
         rv = create_tunnel(tep_id, &pds_tep);
         if (rv != SDK_RET_OK) {
@@ -1345,7 +1353,7 @@ sdk_ret_t
 create_l3_intfs (uint32_t num_if)
 {
     sdk_ret_t rv;
-    uint64_t l3if_mac = 0x00AAAAAAA1ULL;
+    uint64_t l3if_mac = 0x00AAAAAAA0ULL;
     pds_if_spec_t pds_if;
 
     for (uint32_t i = 1; i <= num_if; i++) {
@@ -1356,7 +1364,8 @@ create_l3_intfs (uint32_t num_if)
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr =
             (g_test_params.tep_pfx.addr.addr.v4_addr | 0x01200000) + i;
-        pds_if.l3_if_info.port_num = i;
+        pds_if.l3_if_info.ip_prefix.len = 30;
+        pds_if.l3_if_info.port_num = i - 1;
         MAC_UINT64_TO_ADDR(pds_if.l3_if_info.mac_addr, (l3if_mac + i));
         rv = create_l3_intf(&pds_if);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
@@ -1367,6 +1376,33 @@ create_l3_intfs (uint32_t num_if)
     rv = create_l3_intf(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                             "create l3 intf failed, ret %u", rv);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_underlay_nexthops (uint32_t num_nh)
+{
+    sdk_ret_t rv;
+    pds_nexthop_spec_t pds_nh;
+    uint64_t peer_mac = 0x00BBBBBBB0ULL;
+
+    for (uint32_t i = 1; i <= num_nh; i++) {
+        pds_nh.key.id = i;
+        pds_nh.type = PDS_NH_TYPE_UNDERLAY;
+        pds_nh.l3_if.id = i;
+        MAC_UINT64_TO_ADDR(pds_nh.underlay_mac, (peer_mac + i));
+        rv = create_nexthop(&pds_nh);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+    }
+
+    // push leftover objects
+    rv = create_nexthop(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
     return SDK_RET_OK;
 }
 
@@ -1394,7 +1430,15 @@ create_objects (void)
 
     if (apulu()) {
         // create L3 interfaces
-        ret = create_l3_intfs(2);
+        ret = create_l3_intfs(g_test_params.max_l3_if);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        ret = create_underlay_nexthops(g_test_params.max_underlay_nh);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     if (artemis()) {

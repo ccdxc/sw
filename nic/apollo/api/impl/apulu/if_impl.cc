@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -58,6 +59,8 @@ if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         break;
 
     case PDS_IF_TYPE_L3:
+        // L3 interface can point to either uplink port 0 or 1
+        SDK_ASSERT(spec->l3_if_info.port_num <= 1);
         // TODO: what are we using this for in case of L3 if ??
         ret = if_impl_db()->l3if_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
@@ -103,7 +106,8 @@ if_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_INVALID_OP;
 }
 
-#define lif_action              action_u.lif_lif_info
+#define lif_action         action_u.lif_lif_info
+#define p4i_device_info    action_u.p4i_device_info_p4i_device_info
 sdk_ret_t
 if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -111,6 +115,7 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_if_spec_t *spec;
     p4pd_error_t p4pd_ret;
     lif_actiondata_t lif_data = { 0 };
+    p4i_device_info_actiondata_t p4i_device_info_data;
 
     spec = &obj_ctxt->api_params->if_spec;
     if (spec->type == PDS_IF_TYPE_UPLINK) {
@@ -136,6 +141,29 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to program LIF table for uplink lif %u",
                           hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+    } else if (spec->type == PDS_IF_TYPE_L3) {
+        // expecting MAC to passed in L3 interface configuration
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                          NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        // TODO: cleanup capri dependency
+        if (spec->l3_if_info.port_num == TM_PORT_UPLINK_0) {
+            sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                             spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
+        } else if (spec->l3_if_info.port_num == TM_PORT_UPLINK_1) {
+            sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr2,
+                             spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
+        }
+        // program the P4I_DEVICE_INFO table
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
     }
