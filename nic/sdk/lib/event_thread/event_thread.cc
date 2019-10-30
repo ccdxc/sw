@@ -301,6 +301,7 @@ event_thread::stop(void) {
     // This function will be called from different thread
     // No locking required
     this->stop_ = true;
+    this->set_running(false);
 
     ev_async_send(this->loop_, &this->async_watcher_);
 
