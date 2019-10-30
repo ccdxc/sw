@@ -558,15 +558,21 @@ func (n *NMD) NaplesRolloutDeleteHandler(r *http.Request) (interface{}, error) {
 // NaplesFileUploadHandler is the REST handler for Naples File Upload POST operation
 func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// parse and validate file and post parameters
-	file, fileHeader, err := r.FormFile("file")
+	file, fileHeader, err := r.FormFile("uploadFile")
 	if err != nil {
 		renderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
+	uploadPath := r.FormValue("uploadPath")
+	if uploadPath == "" {
+		renderError(w, "Upload Path Not Specified\n", http.StatusBadRequest)
+		return
+	}
 
 	fileNameSlice := strings.Split(fileHeader.Filename, "/")
-	newPath := "/update/" + fileNameSlice[len(fileNameSlice)-1]
+
+	newPath := uploadPath + fileNameSlice[len(fileNameSlice)-1]
 
 	// write file
 	newFile, err := os.Create(newPath)

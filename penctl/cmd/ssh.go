@@ -7,6 +7,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -81,7 +82,12 @@ func setSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 	if errF := canOpen(uploadPubKeyFile); errF != nil {
 		return errF
 	}
-	_, err := restPostFile("update/", uploadPubKeyFile)
+	//prepare the reader instances to encode
+	values := map[string]io.Reader{
+		"uploadFile": mustOpen(uploadPubKeyFile),
+		"uploadPath": strings.NewReader("/update/"),
+	}
+	_, err := restPostForm("update/", values)
 	if err != nil {
 		fmt.Println(err)
 		return err

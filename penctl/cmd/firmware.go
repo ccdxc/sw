@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -170,8 +171,12 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	if errF := canOpen(uploadFile); errF != nil {
 		return errF
 	}
-
-	resp, err := restPostFile("update/", uploadFile)
+	//prepare the reader instances to encode
+	values := map[string]io.Reader{
+		"uploadFile": mustOpen(uploadFile),
+		"uploadPath": strings.NewReader("/update/"),
+	}
+	resp, err := restPostForm("update/", values)
 	if err != nil {
 		fmt.Println(err)
 		return err
