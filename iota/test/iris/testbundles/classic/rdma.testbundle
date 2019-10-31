@@ -69,6 +69,20 @@ testcases:
         args    :
             type: remote_only
 
+    -   name    : Rc_SendBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [4096, 65535]
+            duration : [5]
+            command  : ['ib_send_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
+        args    :
+            type: remote_only
+
     -   name    : Rc_SendLat_Only
         testcase: testcases.rdma.rdma_perftest
         stress  : True
@@ -102,6 +116,21 @@ testcases:
             num_qp   : [8]
             size     : [32, 10000, 12602]
             command  : ['ib_write_bw']
+        args    :
+            type: remote_only
+
+
+    -   name    : Rc_WriteBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [4096, 65535]
+            duration : [5]
+            command  : ['ib_write_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
         args    :
             type: remote_only
 
@@ -139,6 +168,20 @@ testcases:
             num_qp   : [8]
             size     : [1024, 10000, 12603]
             command  : ['ib_read_bw']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_ReadBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [4096, 65535]
+            duration : [5]
+            command  : ['ib_read_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
         args    :
             type: remote_only
 

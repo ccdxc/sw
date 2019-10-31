@@ -73,6 +73,8 @@ def Trigger(tc):
     server_idx    = 0
     client_idx    = 1
     bkg_timeout   = 130
+    sq_drain_opt  = ''
+    async_event_stats_opt = ''
 
     #==============================================================
     # update non-default cmd options
@@ -124,6 +126,14 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'cmp_swp') and \
        tc.iterators.cmp_swp == 'yes':
        atomic_opt = ' -A CMP_AND_SWAP '
+
+    if hasattr(tc.iterators, 'sq_drain') and \
+       tc.iterators.sq_drain == 'yes':
+       sq_drain_opt = ' --sq-drain '
+
+    if hasattr(tc.iterators, 'async_event_stats') and \
+       tc.iterators.async_event_stats == 'yes':
+       async_event_stats_opt = ' --report-async-ev-stats '
 
     #==============================================================
     # run the cmds
@@ -182,7 +192,7 @@ def Trigger(tc):
         cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt
         # add numsges_opt only for Naples
         if w2.IsNaples():
-            cmd   += numsges_opt
+            cmd   += numsges_opt + sq_drain_opt + async_event_stats_opt
         # append server's ip_address 
         cmd       += w1.ip_address
 
