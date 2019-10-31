@@ -53,11 +53,11 @@
          routerLink="/cluster/naples/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
     </ng-container>
     <ng-container *ngSwitchCase="'policy'">
-      <div class="fwlogs-sgpolicyredirect">
-        <a *ngIf="displayPolicyName(rowData)"
+      <div *ngIf="displayPolicyName(rowData)" class="fwlogs-sgpolicyredirect">
+        <a
            routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
-        <span *ngIf="!displayPolicyName(rowData)">No Policy Found</span>
       </div>
+      <span *ngIf="!displayPolicyName(rowData)">No Policy Found</span>
     </ng-container>
     <ng-container *ngSwitchDefault>
       <ng-container *roleGuard="col.roleGuard">
@@ -70,7 +70,8 @@
 <ng-template #actionTemplate let-rowData>
   <div *roleGuard="'securitynetworksecuritypolicy_read'" class="global-column-action-icon-container"
        fxLayout="row" fxLayoutGap="5px">
-    <mat-icon svgIcon="security-policy" class="global-table-action-svg-icon"
+    <mat-icon *ngIf="displayPolicyName(rowData)" svgIcon="security-policy"
+              class="global-table-action-svg-icon"
               (mouseenter)="ruleDetailsOverlay.toggle($event); handleHover(rowData);"
               (mouseleave)="rowLeave()" (click)="handleRuleClick()" fxLayoutAlign="center center">
     </mat-icon>
