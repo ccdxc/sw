@@ -5,6 +5,10 @@ meta:
     targetcount : 120
 
 testcases:
+    -   name    : EventQ
+        testcase: testcases.drivers.eventq
+        enable : True
+
     -   name    : UplinkIntf_INTR_COAL
         testcase: testcases.drivers.interruptcoalescing
         disable : False

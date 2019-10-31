@@ -12,6 +12,10 @@ testcases:
             pktsize : [ 64, 1500]
             ipaf    : [ ipv4 ]
 
+    -   name    : EventQ
+        testcase: testcases.drivers.eventq
+        enable : True
+
     -   name    : Netcat
         testcase: testcases.mplsudp.nc
 
