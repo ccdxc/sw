@@ -152,7 +152,7 @@ public:
 
     void io_start(io_t *);
     void io_stop(io_t *);
-    
+
     void timer_start(timer_t *);
     void timer_again(timer_t *);
     void timer_stop(timer_t *);
@@ -163,19 +163,20 @@ public:
 
     void rpc_reg_request_handler(uint32_t msg_code,
                                  rpc_request_cb callback);
-    
+
     void rpc_response(ipc::ipc_msg_ptr msg, const void *data,
                       size_t data_legnth);
 
     void rpc_reg_response_handler(uint32_t msg_code,
                                   rpc_response_cb callback);
-    
+
     void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
                      size_t data_length, const void *cookie);
 
     virtual sdk_ret_t start(void *ctx) override;
     virtual sdk_ret_t stop(void) override;
-    
+    struct ev_loop *ev_loop(void) { return loop_; }
+
 protected:
     virtual int init(const char *name, uint32_t thread_id,
                      sdk::lib::thread_role_t thread_role, uint64_t cores_mask,
@@ -219,5 +220,5 @@ private:
 
 } // namespace sdk
 } // namespace lib
-    
+
 #endif

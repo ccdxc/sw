@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
 DOLDIR=`readlink -f $NICDIR/../dol/`
+export PERSISTENT_LOG_DIR=$NICDIR
 DRYRUN=0
 START_VPP=0
 

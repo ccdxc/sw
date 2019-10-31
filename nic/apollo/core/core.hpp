@@ -44,6 +44,7 @@ sdk_ret_t spawn_nicmgr_thread(pds_state *state);
 sdk_ret_t spawn_pciemgr_thread(pds_state *state);
 sdk_ret_t spawn_api_thread(pds_state *state);
 //sdk_ret_t spawn_fte_thread(pds_state *state);
+bool is_nicmgr_ready(void);
 void threads_stop(void);
 sdk::lib::thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,

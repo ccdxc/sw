@@ -31,41 +31,6 @@ pciemgrapi::pciemgr_thread_start(void *ctxt) {
     logger_init();
     PDS_TRACE_INFO("Initializing PCIe manager ...");
     pciemgrd_start();
-
-#if 0
-    evutil_check log_check, port_status_check;
-    string config_file = "/nic/conf/device.json";
-    fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
-    platform_t platform = PLATFORM_HW;
-
-    // instantiate the logger
-    utils::logger::init();
-
-    // initialize pciemgr
-    if (platform_is_hw(platform)) {
-        PDS_TRACE_INFO("initializing pciemgr");
-        pciemgr = new class pciemgr("pciemgrd");
-        pciemgr->initialize();
-    }
-
-    PDS_TRACE_INFO("Initializing device manager ...");
-    devmgr = new DeviceManager(config_file, fwd_mode, platform);
-    devmgr->LoadConfig(config_file);
-
-    // creating mnets
-    PDS_TRACE_INFO("Creating mnets ...");
-    devmgr->HalEventHandler(true);
-
-    evutil_add_check(&log_check, &log_flush, NULL);
-
-    // port status event handler
-    evutil_add_check(&port_status_check,
-                     &pciemgrapi::port_status_handler_, NULL);
-
-    PDS_TRACE_INFO("Listening to events ...");
-    evutil_run();
-
-#endif
     return NULL;
 }
 

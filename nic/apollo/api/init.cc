@@ -272,6 +272,9 @@ pds_init (pds_init_params_t *params)
     core::spawn_periodic_thread(&api::g_pds_state);
 
     // trigger linkmgr initialization
+    while (!core::is_nicmgr_ready()) {
+        pthread_yield();
+    }
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 

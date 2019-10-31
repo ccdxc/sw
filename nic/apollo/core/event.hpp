@@ -21,22 +21,33 @@
 typedef enum event_id_e {
     EVENT_ID_NONE = 0,
     EVENT_ID_PORT = 1,
+    EVENT_ID_XCVR = 2,
 } event_id_t;
 
 namespace core {
 
 // port event specific information
 typedef struct port_event_info_s {
-    uint32_t        port_id;
+    pds_ifindex_t   ifindex;
     port_event_t    event;
     port_speed_t    speed;
 } port_event_info_t;
+
+// xcvr event specific information
+typedef struct xcvr_event_info_s {
+    pds_ifindex_t   ifindex;
+    xcvr_state_t    state;
+    xcvr_pid_t      pid;
+    cable_type_t    cable_type;
+    uint8_t         sprom[XCVR_SPROM_SIZE];
+} xcvr_event_info_t;
 
 // event structure that gets passed around for every event
 typedef struct event_s {
     event_id_t               event_id;
     union {
         port_event_info_t    port;
+        xcvr_event_info_t    xcvr;
     };
 } event_t;
 

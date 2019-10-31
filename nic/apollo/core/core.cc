@@ -229,23 +229,34 @@ spawn_pciemgr_thread (pds_state *state)
 sdk_ret_t
 spawn_nicmgr_thread (pds_state *state)
 {
-    sdk::lib::thread    *new_thread;
+    sdk::event_thread::event_thread *new_thread;
 
     if (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL) {
         // spawn nicmgr thread
         new_thread =
-            thread_create("nicmgr", THREAD_ID_NICMGR,
+            sdk::event_thread::event_thread::factory(
+                "nicmgr", THREAD_ID_NICMGR,
                 sdk::lib::THREAD_ROLE_CONTROL,
                 0x0,    // use all control cores
-                nicmgr::nicmgrapi::nicmgr_thread_start,
+                nicmgr::nicmgrapi::nicmgr_thread_init,
+                nicmgr::nicmgrapi::nicmgr_thread_exit,
+                nicmgr::nicmgrapi::nicmgr_event_handler,
                 sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                 sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                state);
+                true);
         SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                                 "nicmgr thread create failure");
+        new_thread->set_data(state);
+        g_thread_store[THREAD_ID_NICMGR] = new_thread;
         new_thread->start(new_thread);
     }
     return SDK_RET_OK;
+}
+
+bool
+is_nicmgr_ready (void)
+{
+    return g_thread_store[THREAD_ID_NICMGR]->ready();
 }
 
 sdk_ret_t
@@ -254,15 +265,16 @@ spawn_api_thread (pds_state *state)
     sdk::event_thread::event_thread *new_thread;
 
     new_thread =
-        sdk::event_thread::event_thread::factory("cfg", THREAD_ID_API,
-                                        sdk::lib::THREAD_ROLE_CONTROL,
-                                        0x0,    // use all control cores
-                                        api::api_thread_init_fn,
-                                        api::api_thread_exit_fn,
-                                        api::api_thread_event_cb,
-                                        sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                                        sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                                        NULL);
+        sdk::event_thread::event_thread::factory(
+            "cfg", THREAD_ID_API,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            api::api_thread_init_fn,
+            api::api_thread_exit_fn,
+            api::api_thread_event_cb,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
      SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                              "cfg thread create failure");
      g_thread_store[THREAD_ID_API] = new_thread;

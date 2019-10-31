@@ -203,7 +203,7 @@ typedef struct port_event_info_s {
     port_speed_t       speed;           // speed of the port
     port_type_t        type;            // type of the port
     uint32_t           num_lanes;       // number of lanes for the port
-    bool               auto_neg_enable; // 
+    bool               auto_neg_enable; //
 } port_event_info_t;
 
 typedef void (*port_event_notify_t)(port_event_info_t *port_event_info);
@@ -231,6 +231,7 @@ using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
 using sdk::types::xcvr_type_t;
 using sdk::types::xcvr_state_t;
+using sdk::types::xcvr_pid_t;
 
 #endif    // __SDK_TYPES_HPP__
 

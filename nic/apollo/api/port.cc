@@ -10,6 +10,7 @@
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -26,32 +27,27 @@ namespace api {
 void
 port_event_cb (port_event_info_t *port_event_info)
 {
-    ::core::event_t *evnt;
-    uint32_t logical_port = port_event_info->logical_port;
+    ::core::event_t event;
     port_event_t port_event = port_event_info->event;
     port_speed_t port_speed = port_event_info->speed;
+    uint32_t logical_port = port_event_info->logical_port;
 
     sdk::linkmgr::port_set_leds(logical_port, port_event);
-    evnt = ::core::event_alloc();
-    if (evnt) {
-        evnt->event_id = EVENT_ID_PORT;
-        evnt->port.port_id =
-            sdk::lib::catalog::logical_port_to_ifindex(logical_port);
-        evnt->port.event = port_event;
-        evnt->port.speed = port_speed;
-    }
-    if (event_enqueue(evnt, core::THREAD_ID_NICMGR) == false) {
-        PDS_TRACE_ERR("Failed to enqueue event %u to thread %u",
-                      EVENT_ID_PORT, core::THREAD_ID_NICMGR);
-        ::core::event_free(evnt);
-    }
-}
 
+    memset(&event, 0, sizeof(event));
+    event.event_id = EVENT_ID_PORT;
+    event.port.ifindex =
+        sdk::lib::catalog::logical_port_to_ifindex(logical_port);
+    event.port.event = port_event;
+    event.port.speed = port_speed;
+    sdk::event_thread::publish(EVENT_ID_PORT, &event, sizeof(event));
+}
 
 bool
 xvcr_event_walk_cb (void *entry, void *ctxt)
 {
     int phy_port;
+    ::core::event_t event;
     uint32_t logical_port;
     pds_ifindex_t ifindex;
     if_entry *intf = (if_entry *)entry;
@@ -60,12 +56,19 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
     ifindex = intf->ifindex();
     logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
     phy_port = sdk::lib::catalog::logical_port_to_phy_port(logical_port);
-    if (phy_port == -1 ||
-        phy_port != (int)xcvr_event_info->phy_port) {
+    if ((phy_port == -1) ||
+        (phy_port != (int)xcvr_event_info->phy_port)) {
         return false;
     }
     sdk::linkmgr::port_update_xcvr_event(intf->port_info(), xcvr_event_info);
-    // TODO: notify interested parties
+
+    memset(&event, 0, sizeof(event));
+    event.xcvr.ifindex = ifindex;
+    event.xcvr.state = xcvr_event_info->state;
+    event.xcvr.pid = xcvr_event_info->pid;
+    event.xcvr.cable_type = xcvr_event_info->cable_type;
+    memcpy(event.xcvr.sprom, xcvr_event_info->xcvr_sprom, XCVR_SPROM_SIZE);
+    sdk::event_thread::publish(EVENT_ID_XCVR, &event, sizeof(event));
     return false;
 }
 
