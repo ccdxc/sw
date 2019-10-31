@@ -169,6 +169,22 @@ typedef struct ep_update_app_ctxt_s {
     vlan_id_t               new_useg_vlan;
 } __PACK__ ep_update_app_ctxt_t;
 
+typedef struct ep_sess_upd_ctxt_s {
+    uint8_t     fte_id;
+    block_list  *sess_list;
+} ep_sess_upd_ctxt_t;
+
+typedef struct ep_sess_walk_s {
+    ep_t *ep;
+    ep_sess_upd_ctxt_t *ep_upd_ctxt;
+} __PACK__ ep_sess_walk_t;
+
+typedef struct ep_create_sess_ctxt_s {
+    uint8_t fte_id;
+    uint32_t count;
+    hal_handle_t *sess_hdl_list;
+} __PACK__ ep_create_sess_ctxt_t;
+
 const char *ep_l2_key_to_str(ep_t *ep);
 
 static inline void
@@ -244,6 +260,10 @@ uint32_t ep_restore_cb(void *obj, uint32_t len);
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
 void register_arp_ep_status_callback(arp_status_func_t func);
 void register_sessions_empty_callback(sessions_empty_cb_t func);
+
+hal_ret_t endpoint_create_process_sessions(ep_t *ep);
+void fte_session_update_list(void *data);
+void ep_create_session_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
 
 
 // Filter APIs

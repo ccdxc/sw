@@ -160,6 +160,9 @@ update_fwding_info(fte::ctx_t&ctx)
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
+        // RXDMA expects P4 to drive qtype. qid is derived internally in RXDMA
+        // - All cases we drive qtype as RX and its 0. So skipping programming qtype
+#if 0
         hal::lif_t *lif = if_get_lif(dif);
         if (lif == NULL){
             return HAL_RET_LIF_NOT_FOUND;
@@ -167,6 +170,7 @@ update_fwding_info(fte::ctx_t&ctx)
         flowupd.fwding.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
         flowupd.fwding.qid_en = 1;
         flowupd.fwding.qid = 0;
+#endif
     } else if (ctx.sep()) {
 		// else if (ctx.sep() && ctx.sep()->pinned_if_handle != HAL_HANDLE_INVALID)
 	// dif = hal::find_if_by_handle(ctx.sep()->pinned_if_handle);

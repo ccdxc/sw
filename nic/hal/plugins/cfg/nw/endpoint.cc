@@ -616,8 +616,203 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    /*
+     * Process sessions which would have been created with this EP info.
+     * - Traffic to this EP from local may create sessions and those 
+     *   sessions may point to uplink. Have to change reachability of 
+     *   those sessions.
+     */
+    ret = endpoint_create_process_sessions(ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to process remote sessions. err: {}", ret);
+        goto end;
+    }
+
 end:
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Processing sessions during EP create.
+//-----------------------------------------------------------------------------
+hal_ret_t
+endpoint_create_process_sessions (ep_t *ep) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+    void *ep_timer = NULL;
+    ep_sess_walk_t ep_ctxt;
+
+    HAL_TRACE_DEBUG("Processing sessions to trigger EP move");
+
+    ep_ctxt.ep = ep;
+    ep_ctxt.ep_upd_ctxt = (ep_sess_upd_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT,
+                                                           sizeof(ep_sess_upd_ctxt_t));
+    ep_ctxt.ep_upd_ctxt->sess_list = block_list::factory(sizeof(hal_handle_t));
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t *session = (session_t *)entry;
+        ep_sess_walk_t *ep_ctxt = (ep_sess_walk_t *)ctxt;
+        ep_t *ep = ep_ctxt->ep;
+        flow_t *flow = NULL;
+
+        HAL_TRACE_DEBUG("Procession session: {}", session->hal_handle);
+
+        // Assumption there is only one fte
+        ep_ctxt->ep_upd_ctxt->fte_id = session->fte_id;
+        if (session->iflow) {
+            HAL_TRACE_DEBUG("l2segs: {}, {}; ep_mac: {}, smac: {}, dmac: {}",
+                            ep->l2_key.l2_segid, session->iflow->config.l2_info.l2seg_id,
+                            macaddr2str(ep->l2_key.mac_addr), macaddr2str(session->iflow->config.l2_info.smac),
+                            macaddr2str(session->iflow->config.l2_info.dmac));
+            if ((ep->l2_key.l2_segid == session->iflow->config.l2_info.l2seg_id) &&
+                (!memcmp(ep->l2_key.mac_addr, session->iflow->config.l2_info.smac, ETH_ADDR_LEN) ||
+                !memcmp(ep->l2_key.mac_addr, session->iflow->config.l2_info.dmac, ETH_ADDR_LEN))) {
+                HAL_TRACE_DEBUG("Triggering update for session: {}", 
+                                session->hal_handle);
+                ep_ctxt->ep_upd_ctxt->sess_list->insert(&session->hal_handle);
+                hal_print_handles_block_list(ep_ctxt->ep_upd_ctxt->sess_list);
+                return false;
+            } 
+        } 
+        if (session->rflow) {
+            HAL_TRACE_DEBUG("l2segs: {}, {}; ep_mac: {}, smac: {}, dmac: {}",
+                            ep->l2_key.l2_segid, session->rflow->config.l2_info.l2seg_id,
+                            macaddr2str(ep->l2_key.mac_addr), macaddr2str(session->rflow->config.l2_info.smac),
+                            macaddr2str(session->rflow->config.l2_info.dmac));
+            if ((ep->l2_key.l2_segid == session->rflow->config.l2_info.l2seg_id) &&
+                (!memcmp(ep->l2_key.mac_addr, session->rflow->config.l2_info.smac, ETH_ADDR_LEN) ||
+                !memcmp(ep->l2_key.mac_addr, session->rflow->config.l2_info.dmac, ETH_ADDR_LEN))) {
+                HAL_TRACE_DEBUG("Triggering update for session: {}", 
+                                session->hal_handle);
+                ep_ctxt->ep_upd_ctxt->sess_list->insert(&session->hal_handle);
+                hal_print_handles_block_list(ep_ctxt->ep_upd_ctxt->sess_list);
+                return false;
+            } 
+        }
+        return false;
+    };
+
+    sdk_ret_t sdk_ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, 
+                                                                        &ep_ctxt);
+
+    HAL_TRACE_DEBUG("Juse before timer call");
+    hal_print_handles_block_list(ep_ctxt.ep_upd_ctxt->sess_list);
+    if (ep_ctxt.ep_upd_ctxt->sess_list->num_elems()) {
+        ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
+                                            EP_UPDATE_SESSION_TIMER, 
+                                            (void *)ep_ctxt.ep_upd_ctxt,
+                                            ep_create_session_timer_cb, false); 
+
+        if (!ep_timer) {
+            HAL_TRACE_ERR("Failed to schedule the timer for the ep");
+            ret = HAL_RET_ERR;
+        }
+    } else {
+        block_list::destroy(ep_ctxt.ep_upd_ctxt->sess_list);
+        HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT, ep_ctxt.ep_upd_ctxt);
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Timer callback:
+// - Walks all sessions and only if smac or dmac matches the EP, it retriggers
+//   session update to change dlport of the flows.
+//-----------------------------------------------------------------------------
+void
+ep_create_session_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    ep_sess_upd_ctxt_t *ep_ctxt = (ep_sess_upd_ctxt_t *)ctxt;
+    ep_create_sess_ctxt_t ep_cr_ctxt;
+    uint32_t count = 0;
+    hal_handle_t *sess_hdl_list = NULL, *sess_hdl;
+
+    HAL_TRACE_DEBUG("Ep create: Session update walk cb");
+
+    hal_print_handles_block_list(ep_ctxt->sess_list);
+
+    ep_cr_ctxt.fte_id = ep_ctxt->fte_id;
+    ep_cr_ctxt.count = 0;
+    ep_cr_ctxt.sess_hdl_list = 
+        (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                                   sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+
+    for (const void *ptr : *(ep_ctxt->sess_list)) {
+        sess_hdl = (hal_handle_t *)ptr;
+
+        HAL_TRACE_DEBUG("Adding session to list: {}, count: {}", 
+                        *sess_hdl, count);
+
+        ep_cr_ctxt.sess_hdl_list[count] = *sess_hdl;
+        count++;
+
+
+        // Batch session updates.
+        if (count == HAL_MAX_SESSIONS_PER_UPDATE) {
+            ret = fte::fte_softq_enqueue(ep_cr_ctxt.fte_id,
+                                         fte_session_update_list,
+                                         (void *)ep_cr_ctxt.sess_hdl_list);
+
+            count = 0;
+            ep_cr_ctxt.sess_hdl_list = 
+                (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                                           sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+
+        }
+    }
+
+    if (count != 0) {
+        ret = fte::fte_softq_enqueue(ep_cr_ctxt.fte_id,
+                                     fte_session_update_list,
+                                     (void *)ep_cr_ctxt.sess_hdl_list);
+    } else {
+        HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_LIST, ep_cr_ctxt.sess_hdl_list);
+    }
+
+#if 0
+    auto walk_cb = [](void *entry, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+        hal_handle_t sess_handle = *((hal_handle_t *)entry);
+        ep_create_sess_ctxt_t *ep_cr_ctxt = (ep_create_sess_ctxt_t *)ctxt;
+
+        
+        ep_cr_ctxt->sess_hdl_list[ep_cr_ctxt->count] = sess_handle;
+        ep_cr_ctxt->count++;
+
+        HAL_TRACE_DEBUG("Adding session to list: {}, count: {}", 
+                        sess_handle, ep_cr_ctxt->count);
+
+        // Batch session updates.
+        if (ep_cr_ctxt->count == HAL_MAX_SESSIONS_PER_UPDATE) {
+            ret = fte::fte_softq_enqueue(ep_cr_ctxt->fte_id,
+                                         fte_session_update_list,
+                                         (void *)ep_cr_ctxt->sess_hdl_list);
+
+            ep_cr_ctxt->count = 0;
+            ep_cr_ctxt->sess_hdl_list = 
+                (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                                           sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+
+        }
+
+        return false;
+    };
+
+    ep_ctxt->sess_list->iterate(walk_cb, (void *)&ep_cr_ctxt);
+
+    if (ep_cr_ctxt.count != 0) {
+        ret = fte::fte_softq_enqueue(ep_cr_ctxt.fte_id,
+                                     fte_session_update_list,
+                                     (void *)ep_cr_ctxt.sess_hdl_list);
+    } else {
+        HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_LIST, ep_cr_ctxt.sess_hdl_list);
+    }
+#endif
+
+    block_list::destroy(ep_ctxt->sess_list);
+    HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT, ep_ctxt);
 }
 
 //------------------------------------------------------------------------------
@@ -1135,9 +1330,13 @@ fte_session_update_list (void *data)
     // Set the feature id to run update on
     uint64_t      bitmap = (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
 
+    HAL_TRACE_DEBUG("FTE session update");
+
     for (uint8_t i=0; i<HAL_MAX_SESSIONS_PER_UPDATE; i++) {
-        if (session_list[i])
+        if (session_list[i]) {
+            HAL_TRACE_DEBUG("FTE: updating session: {}", session_list[i]);
             fte::session_update_in_fte(session_list[i], bitmap);
+        }
     }
     HAL_FREE(HAL_MEM_ALLOC_SESS_UPD_LIST, session_list);
 }
