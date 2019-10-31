@@ -34,6 +34,10 @@ func NewDistributedVirtualSwitch(c *vim25.Client, ref types.ManagedObjectReferen
 	}
 }
 
+func (s DistributedVirtualSwitch) GetInventoryPath() string {
+	return s.InventoryPath
+}
+
 func (s DistributedVirtualSwitch) EthernetCardBackingInfo(ctx context.Context) (types.BaseVirtualDeviceBackingInfo, error) {
 	return nil, ErrNotSupported // TODO: just to satisfy NetworkReference interface for the finder
 }
@@ -77,4 +81,18 @@ func (s DistributedVirtualSwitch) FetchDVPorts(ctx context.Context, criteria *ty
 		return nil, err
 	}
 	return res.Returnval, nil
+}
+
+func (s DistributedVirtualSwitch) ReconfigureDVPort(ctx context.Context, spec []types.DVPortConfigSpec) (*Task, error) {
+	req := types.ReconfigureDVPort_Task{
+		This: s.Reference(),
+		Port: spec,
+	}
+
+	res, err := methods.ReconfigureDVPort_Task(ctx, s.Client(), &req)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewTask(s.Client(), res.Returnval), nil
 }

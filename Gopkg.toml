@@ -231,7 +231,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 # vic plugin has a hard dependency. ToDo Move this to a released version after upgrading govmomi
 [[override]]
   name = "github.com/vmware/govmomi"
-  revision = "6712f991d8852a25ae4304a720463301c1ac4c64"
+  revision = "a9b0a80589c6b412b139f2cec86efff6a40b7ddc"
 
 # Overrride needed for supporting mux.RunOnAddr() call. ToDo Move to gorilla mux
 [[override]]
