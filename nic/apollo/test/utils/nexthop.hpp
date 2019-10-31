@@ -12,6 +12,8 @@
 
 namespace api_test {
 
+extern const pds_nh_type_t k_nh_type;
+
 // NH test feeder class
 class nexthop_feeder : public feeder {
 public:
@@ -35,7 +37,7 @@ public:
               uint64_t mac=0x0E0D0A0B0200,
               uint32_t num_obj=PDS_MAX_NEXTHOP,
               pds_nexthop_id_t id=1,
-              pds_nh_type_t type=PDS_NH_TYPE_IP,
+              pds_nh_type_t type=k_nh_type,
               uint16_t vlan=1, pds_vpc_id_t vpc_id=1,
               pds_if_id_t if_id = 1);
 

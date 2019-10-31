@@ -250,8 +250,10 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
 {
     if (tep_data->action_id == TEP_MPLS_UDP_TEP_ID) {
         spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        // spec->key.ip_addr.af = IP_AF_IPV4;
-        // spec->key.ip_addr.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
+        spec->remote_ip.af = IP_AF_IPV4;
+        spec->remote_ip.addr.v4_addr = tep_data->tep_mpls_udp_action.dipo;
+        memcpy(spec->mac, tep_data->action_u.tep_mpls_udp_tep.dmac,
+               ETH_ADDR_LEN);
         switch (nh_data->nh_action.encap_type) {
         case GW_ENCAP:
             spec->type = PDS_TEP_TYPE_IGW;
@@ -266,8 +268,10 @@ tep_impl::fill_spec_(nexthop_actiondata_t *nh_data,
         spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->encap.val.vnid =
             nh_data->action_u.nexthop_nexthop_info.dst_slot_id;
-        // spec->key.ip_addr.af = IP_AF_IPV4;
-        // spec->key.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
+        spec->remote_ip.af = IP_AF_IPV4;
+        spec->remote_ip.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
+        memcpy(spec->mac, tep_data->action_u.tep_ipv4_vxlan_tep.dmac,
+               ETH_ADDR_LEN);
     }
     spec->nat = nh_data->action_u.nexthop_nexthop_info.snat_required;
 }

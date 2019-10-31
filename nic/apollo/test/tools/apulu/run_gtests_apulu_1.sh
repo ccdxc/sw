@@ -54,9 +54,9 @@ echo "Running vnic test"
 $GDB apulu_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_vnic_test.xml" > apulu_vnic_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_vnic_test failed!" && exit 1
 
-#echo "Running tep test"
-#$GDB apulu_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_tep_test.xml" > apulu_tep_test.log.txt
-#[[ $? -ne 0 ]] && echo "apulu_tep_test failed!" && exit 1
+echo "Running tep test"
+$GDB apulu_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_tep_test.xml" > apulu_tep_test.log.txt
+[[ $? -ne 0 ]] && echo "apulu_tep_test failed!" && exit 1
 
 #echo "Running mapping test"
 #$GDB apulu_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_mapping_test.xml" > /dev/null

@@ -14,32 +14,36 @@
 namespace api_test {
 
 extern const pds_encap_t k_default_tep_encap;
-extern const pds_tep_type_t k_default_tep_type;
 extern const pds_encap_t k_zero_encap;
+extern const pds_nexthop_key_t k_base_nh_key;
+extern const pds_nexthop_group_key_t k_base_nh_group_key;
+extern const uint64_t k_tep_mac;
+extern const uint16_t k_max_tep;
 
-// NH test feeder class
+// TEP test feeder class
 class tep_feeder : public feeder {
 public:
-    uint32_t id;
-    ip_addr_t remote_ip;
-    ip_addr_t dipi;
-    uint64_t dmac;
-    pds_tep_type_t type;
-    pds_encap_t encap;
-    bool nat;
+    pds_tep_spec_t spec;
 
     // Constructor
     tep_feeder() { };
     tep_feeder(const tep_feeder& feeder) {
-        init(feeder.id, ipaddr2str(&feeder.remote_ip), feeder.num_obj, feeder.encap, feeder.nat,
-             feeder.type, ipaddr2str(&feeder.dipi), feeder.dmac);
+        memcpy(&this->spec, &feeder.spec, sizeof(pds_tep_spec_t));
+        this->num_obj = feeder.num_obj;
     }
 
-    // Initialize feeder with the base set of values
-    void init(uint32_t id, std::string ip_str, uint32_t num_tep=PDS_MAX_TEP,
+    // Initialize feeder with the base set of values for apollo & artemis
+    void init(uint32_t id, std::string ip_str, uint32_t num_tep=k_max_tep,
               pds_encap_t encap=k_default_tep_encap, bool nat=FALSE,
-              pds_tep_type_t type=k_default_tep_type,
-              std::string dipi_str="0.0.0.0", uint64_t dmac=0);
+              pds_tep_type_t type=PDS_TEP_TYPE_WORKLOAD,
+              std::string dipi_str="0.0.0.0", uint64_t dmac=k_tep_mac);
+
+    // Initialize feeder with the base set of values for apulu
+    void init(uint32_t id, uint64_t dmac, std::string ip_str,
+              uint32_t num_tep=k_max_tep,
+              pds_nh_type_t nh_type=PDS_NH_TYPE_UNDERLAY,
+              pds_nexthop_key_t nh=k_base_nh_key,
+              pds_nexthop_group_key_t base_nh_group=k_base_nh_group_key);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -56,14 +60,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const tep_feeder& obj) {
-    os << "TEP feeder =>"
-       << " ID: " << obj.id
-       << " IP: " << obj.remote_ip
-       << " type: " << obj.type
-       << " DIPi: " << obj.dipi
-       << " dmac: " << mac2str(obj.dmac)
-       << " nat: " << obj.nat
-       << " encap: " << pds_encap2str(obj.encap) << " ";
+    os << "Tep feeder =>" << &obj.spec << " ";
     return os;
 }
 

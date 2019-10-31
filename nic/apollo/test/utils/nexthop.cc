@@ -10,6 +10,8 @@
 
 namespace api_test {
 
+const pds_nh_type_t k_nh_type = apulu() ? PDS_NH_TYPE_UNDERLAY : PDS_NH_TYPE_IP;
+
 //----------------------------------------------------------------------------
 // NEXTHOP feeder class routines
 //----------------------------------------------------------------------------
@@ -36,9 +38,9 @@ nexthop_feeder::iter_next(int width) {
     id += width;
     mac += width;
     cur_iter_pos++;
-    if (type == PDS_NH_TYPE_IP) {
-        if_id += width;
-    } else if (type == PDS_NH_TYPE_UNDERLAY) {
+    if (type == PDS_NH_TYPE_UNDERLAY) {
+        // if_id += width;
+    } else if (type == PDS_NH_TYPE_IP) {
         ip.addr.v4_addr += width;
         vlan += width;
     }
@@ -56,10 +58,11 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     this->key_build(&spec->key);
 
     spec->type = this->type;
-    if (this->type == PDS_NH_TYPE_IP) {
+    if (this->type == PDS_NH_TYPE_UNDERLAY) {
         spec->l3_if.id = this->if_id;
+        printf(" NH id %u l3 if id %u mac 0x%x\n", spec->key.id, spec->l3_if.id, this->mac);
         MAC_UINT64_TO_ADDR(spec->underlay_mac, this->mac);
-    } else if (this->type == PDS_NH_TYPE_UNDERLAY) {
+    } else if (this->type == PDS_NH_TYPE_IP) {
         MAC_UINT64_TO_ADDR(spec->mac, this->mac);
         spec->ip = this->ip;
         spec->vpc.id = this->vpc_id;

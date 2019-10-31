@@ -153,7 +153,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
 
 sdk_ret_t
 nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
-    return SDK_RET_ERR;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

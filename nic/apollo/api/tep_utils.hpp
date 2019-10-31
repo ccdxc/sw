@@ -25,12 +25,27 @@ operator<<(std::ostream& os, const pds_tep_key_t *key) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
     os << &spec->key
+       << " vpc: " << spec->vpc.id
        << " type: " << spec->type
        << " remote ip: " << spec->remote_ip
        << " DIPi: " << spec->ip_addr
        << " dmac: " << macaddr2str(spec->mac)
        << " nat: " << spec->nat
-       << " encap: " << pds_encap2str(spec->encap);
+       << " encap: " << pds_encap2str(spec->encap)
+       << " remote svc: " << spec->remote_svc
+       << " remote svc encap: " << pds_encap2str(spec->remote_svc_encap)
+       << " remote svc public ip: " << spec->remote_svc_public_ip
+       << " nh type: " << spec->nh_type;
+    switch (spec->nh_type) {
+    case PDS_NH_TYPE_UNDERLAY_ECMP:
+        os << " nh group id: " << spec->nh_group.id;
+        break;
+    case PDS_NH_TYPE_UNDERLAY:
+        os << " nh id: " << spec->nh.id;
+        break;
+    default:
+        break;
+    }
     return os;
 }
 

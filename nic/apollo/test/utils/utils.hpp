@@ -94,6 +94,29 @@ extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
     }
 }
 
+static inline void
+increment_ip_addr (ip_addr_t *ipaddr, int width = 1)
+{
+    switch (ipaddr->af) {
+        case IP_AF_IPV4:
+            ipaddr->addr.v4_addr += width;
+            break;
+        case IP_AF_IPV6:
+            // TODO: handle overflow ?
+            ipaddr->addr.v6_addr.addr64[1] += width;
+            break;
+        default:
+            SDK_ASSERT(0);
+    }
+}
+
+static inline void
+increment_mac_addr (mac_addr_t macaddr, int width = 1)
+{
+    uint64_t mac = MAC_TO_UINT64(macaddr) + width;
+    MAC_UINT64_TO_ADDR(macaddr, mac);
+}
+
 /// \brief Packet send function
 ///
 /// \param tx_pkt          Packet to be trasnmited

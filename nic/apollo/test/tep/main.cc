@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
@@ -15,10 +16,10 @@ namespace api_test {
 /// \cond
 // Globals
 static const char * const k_base_nh_ip = "50.50.1.1";
+static const std::string k_base_nh_ipv6 = "e1ba:50::50:1:1";
 static const std::string k_base_dipi = "50::50:1:1";
 static uint32_t g_mytep_id = 1;
 static uint32_t g_tep_id = g_mytep_id + 1;
-static constexpr int k_max_tep = PDS_MAX_TEP;
 static constexpr pds_encap_t k_mplsoudp_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 11};
 static constexpr pds_encap_t k_vxlan_encap = {PDS_ENCAP_TYPE_VXLAN, 22};
 static constexpr bool k_nat = FALSE;
@@ -36,8 +37,23 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
+        pds_batch_ctxt_t bctxt = batch_start();
+        if (apulu()) {
+            // TODO: enable once if, nh & nh_group issues are fixed
+            // sample_if_setup(bctxt);
+            // sample_nexthop_setup(bctxt);
+            // sample_nexthop_group_setup(bctxt);
+        }
+        batch_commit(bctxt);
     }
     static void TearDownTestCase() {
+        pds_batch_ctxt_t bctxt = batch_start();
+        if (apulu()) {
+            // sample_if_teardown(bctxt);
+            // sample_nexthop_teardown(bctxt);
+            // sample_nexthop_group_teardown(bctxt);
+        }
+        batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
     }
@@ -50,6 +66,16 @@ protected:
 /// \defgroup TEP TEP Tests
 /// @{
 
+TEST_F(tep_test, apulu_tep_workflow_setup) {
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    if (!apulu()) return;
+    // TODO: temporary until if, nh & nh_group issues are fixed
+    sample_if_setup(bctxt);
+    sample_nexthop_setup(bctxt);
+    batch_commit(bctxt);
+}
+
 /// \brief TEP WF_1
 /// \ref WF_1
 TEST_F(tep_test, tep_workflow_1) {
@@ -58,6 +84,8 @@ TEST_F(tep_test, tep_workflow_1) {
     if (artemis())
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip);
     else
         feeder.init(g_tep_id, k_base_nh_ip);
     workflow_1<tep_feeder>(feeder);
@@ -71,6 +99,8 @@ TEST_F(tep_test, tep_workflow_2) {
     if (artemis())
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip);
     else
         feeder.init(g_tep_id, k_base_nh_ip);
     workflow_2<tep_feeder>(feeder);
@@ -88,6 +118,10 @@ TEST_F(tep_test, tep_workflow_3) {
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
         feeder3.init(70, "30.30.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, "10.10.1.1", 10);
+        feeder2.init(40, k_tep_mac+100, "20.20.1.1", 20);
+        feeder3.init(70, k_tep_mac+200, "30.30.1.1", 30);
     } else {
         feeder1.init(10, "10.10.1.1", 10);
         feeder2.init(40, "20.20.1.1", 20);
@@ -104,6 +138,8 @@ TEST_F(tep_test, tep_workflow_4) {
     if (artemis())
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip);
     else
         feeder.init(g_tep_id, k_base_nh_ip);
     workflow_4<tep_feeder>(feeder);
@@ -121,6 +157,10 @@ TEST_F(tep_test, tep_workflow_5) {
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
         feeder3.init(70, "30.30.1.1", 30, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, "10.10.1.1", 10);
+        feeder2.init(40, k_tep_mac+100, "20.20.1.1", 20);
+        feeder3.init(70, k_tep_mac+200, "30.30.1.1", 30);
     } else {
         feeder1.init(10, "10.10.1.1", 10);
         feeder2.init(40, "20.20.1.1", 20);
@@ -143,6 +183,13 @@ TEST_F(tep_test, tep_workflow_6) {
         // feeder1B =  feeder1A + different dipi
         feeder1B.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A =  feeder1 + ipv6 remote ip
+        feeder1A.init(g_tep_id, k_tep_mac, k_base_nh_ipv6);
+        // feeder1B =  feeder1A + different mac + different nh type
+        feeder1B.init(g_tep_id, k_tep_mac+30, k_base_nh_ipv6, k_max_tep,
+                      PDS_NH_TYPE_UNDERLAY_ECMP);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A =  feeder1 + different encap
@@ -156,7 +203,7 @@ TEST_F(tep_test, tep_workflow_6) {
 
 /// \brief TEP WF_7
 /// \ref WF_7
-TEST_F(tep_test, tep_workflow7) {
+TEST_F(tep_test, tep_workflow_7) {
     tep_feeder feeder1, feeder1A, feeder1B;
 
     if (artemis()) {
@@ -168,6 +215,15 @@ TEST_F(tep_test, tep_workflow7) {
         // feeder1B =  feeder1A + different dipi
         feeder1B.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else if (apulu()) {
+        // TODO: nh group support
+        return;
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A =  feeder1 + ipv6 remote ip
+        feeder1A.init(g_tep_id, k_tep_mac, k_base_nh_ipv6);
+        // feeder1B =  feeder1A + different mac + different nh type
+        feeder1B.init(g_tep_id, k_tep_mac+30, k_base_nh_ipv6, k_max_tep,
+                      PDS_NH_TYPE_UNDERLAY_ECMP);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A =  feeder1 + different encap
@@ -181,7 +237,7 @@ TEST_F(tep_test, tep_workflow7) {
 
 /// \brief TEP WF_8
 /// \ref WF_8
-TEST_F(tep_test, DISABLED_tep_workflow8) {
+TEST_F(tep_test, DISABLED_tep_workflow_8) {
     tep_feeder feeder1, feeder1A, feeder1B;
 
     if (artemis()) {
@@ -193,6 +249,13 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
         // feeder1B =  feeder1A + different dipi
         feeder1B.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A =  feeder1 + ipv6 remote ip
+        feeder1A.init(g_tep_id, k_tep_mac, k_base_nh_ipv6);
+        // feeder1B =  feeder1A + different mac + different nh type
+        feeder1B.init(g_tep_id, k_tep_mac+30, k_base_nh_ipv6, k_max_tep,
+                      PDS_NH_TYPE_UNDERLAY_ECMP);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A =  feeder1 + different encap
@@ -206,7 +269,7 @@ TEST_F(tep_test, DISABLED_tep_workflow8) {
 
 /// \brief TEP WF_9
 /// \ref WF_9
-TEST_F(tep_test, tep_workflow9) {
+TEST_F(tep_test, tep_workflow_9) {
     tep_feeder feeder1, feeder1A;
 
     if (artemis()) {
@@ -215,6 +278,11 @@ TEST_F(tep_test, tep_workflow9) {
         // feeder1A =  feeder1 + different dipi
         feeder1A.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A =  feeder1 + different remote ip, mac & nh type
+        feeder1A.init(g_tep_id, k_tep_mac+10, k_base_nh_ipv6, k_max_tep,
+                      PDS_NH_TYPE_UNDERLAY_ECMP);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A =  feeder1 + different tunnel type, encap, nat
@@ -226,7 +294,7 @@ TEST_F(tep_test, tep_workflow9) {
 
 /// \brief TEP WF_10
 /// \ref WF_10
-TEST_F(tep_test, DISABLED_tep_workflow10) {
+TEST_F(tep_test, DISABLED_tep_workflow_10) {
     tep_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
     if (artemis()) {
@@ -242,6 +310,13 @@ TEST_F(tep_test, DISABLED_tep_workflow10) {
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:30:31", 0);
         feeder4.init(100, "40.40.1.1", 40, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "40::40:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, "10.10.1.1", 10);
+        feeder2.init(40, k_tep_mac, "20.20.1.1", 20);
+        feeder2A.init(40, k_tep_mac+20, "20:20:1::1", 20);
+        feeder3.init(70, k_tep_mac, "30.30.1.1", 30);
+        feeder3A.init(70, k_tep_mac+30, "30:30:1::1", 30);
+        feeder4.init(100, k_tep_mac, "40.40.1.1", 40);
     } else {
         feeder1.init(10, "10.10.1.1", 10);
         feeder2.init(40, "20.20.1.1", 20);
@@ -263,6 +338,8 @@ TEST_F(tep_test, tep_workflow_neg_1) {
     if (artemis())
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip);
     else
         feeder.init(g_tep_id, k_base_nh_ip);
     workflow_neg_1<tep_feeder>(feeder);
@@ -276,6 +353,8 @@ TEST_F(tep_test, tep_workflow_neg_2) {
     if (artemis())
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep+2, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip, k_max_tep+2);
     else
         feeder.init(g_tep_id, k_base_nh_ip, k_max_tep+2);
     workflow_neg_2<tep_feeder>(feeder);
@@ -289,6 +368,8 @@ TEST_F(tep_test, tep_workflow_neg_3) {
     if (artemis())
         feeder.init(g_tep_id, "150.150.1.1", k_max_tep, k_zero_encap,
                     k_nat, PDS_TEP_TYPE_SERVICE, "150::150:1:1", 0);
+    else if (apulu())
+        feeder.init(g_tep_id, k_tep_mac, "150.150.1.1");
     else
         feeder.init(g_tep_id, "150.150.1.1");
     workflow_neg_3<tep_feeder>(feeder);
@@ -304,6 +385,9 @@ TEST_F(tep_test, tep_workflow_neg_4) {
                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         feeder2.init(40, "60.60.1.1", 10, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, k_base_nh_ip, 10);
+        feeder2.init(40, k_tep_mac+10, "60.60.1.1", 10);
     } else {
         feeder1.init(10, k_base_nh_ip, 10);
         feeder2.init(40, "60.60.1.1", 10);
@@ -321,6 +405,11 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         feeder1A.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A = feeder1 + different remote ip, mac & nh type
+        feeder1A.init(g_tep_id, k_tep_mac+10, k_base_nh_ipv6, k_max_tep,
+                      PDS_NH_TYPE_UNDERLAY_ECMP);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A = feeder + different tunnel type, nat
@@ -340,6 +429,10 @@ TEST_F(tep_test, tep_workflow_neg_6) {
                      k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, 0);
         feeder1A.init(g_tep_id, k_base_nh_ip, k_max_tep+1, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
+        // feeder1A = feeder1 + v6 remote ip + different mac
+        feeder1A.init(g_tep_id, k_tep_mac+10, k_base_nh_ipv6, k_max_tep+1);
     } else {
         feeder1.init(g_tep_id, k_base_nh_ip);
         // feeder1A = feeder1 + different tunnel type, nat
@@ -361,6 +454,10 @@ TEST_F(tep_test, tep_workflow_neg_7) {
                       k_nat, PDS_TEP_TYPE_SERVICE, "60::60:1:1", 0);
         feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, "10.10.1.1", 10);
+        feeder1A.init(10, k_tep_mac+10, "10:10:1::1", 10);
+        feeder2.init(40, k_tep_mac, "20.20.1.1", 20);
     } else {
         feeder1.init(10, "10.10.1.1", 10, k_mplsoudp_encap,
                      k_nat, PDS_TEP_TYPE_IGW);
@@ -380,6 +477,9 @@ TEST_F(tep_test, tep_workflow_neg_8) {
                      k_nat, PDS_TEP_TYPE_SERVICE, "10::10:1:1", 0);
         feeder2.init(40, "20.20.1.1", 20, k_zero_encap,
                      k_nat, PDS_TEP_TYPE_SERVICE, "20::20:1:1", 0);
+    } else if (apulu()) {
+        feeder1.init(10, k_tep_mac, "10.10.1.1", 10);
+        feeder2.init(40, k_tep_mac+10, "20.20.1.1", 20);
     } else {
         feeder1.init(10, "10.10.1.1", 10, k_mplsoudp_encap,
                      k_nat, PDS_TEP_TYPE_IGW);
