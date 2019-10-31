@@ -238,6 +238,13 @@ dependencies:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciemgrd:
     - reference: platform/src/app/pciemgrd
+  platform/drivers:
+    - reference: iota/test/standalone/sanity/esx
+      exclude_dirs: ["freebsd","linux"]
+    - reference: iota/test/standalone/sanity/freebsd
+      exclude_dirs: ["linux","esx"]
+    - reference: iota/test/standalone/sanity/linux
+      exclude_dirs: ["freebsd","esx"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/captrace:
