@@ -36,7 +36,13 @@ resp_rx_rqcb1_recirc_sge_process:
     add     NUM_VALID_SGES, r0, CAPRI_KEY_FIELD(IN_TO_S_P, num_sges)
 
     sub     NUM_VALID_SGES, NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
-    
+
+    seq     c2, NUM_VALID_SGES, 1
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c2 ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    // move addr_to_load back by sizeof 3 SGE's
+    sub.c2  ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2_IMM(RQCB_TO_WQE_P, recirc_path, in_progress, (1 << 1)|1)
     phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, remaining_payload_bytes), \

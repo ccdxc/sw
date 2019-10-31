@@ -67,15 +67,18 @@ resp_rx_rqwqe_process:
     setcf       F_FIRST_PASS, [c0]  //BD Slot
 
 in_progress_init:
-    tblwr.l     d.rsvd2[63:0], 0
-    #tblwr.l     d.rsvd2[127:64], 0
-    #tblwr.l     d.rsvd2[159:128], 0
+    tblwr.l     d.rsvd[63:0], 0
+    #tblwr.l     d.rsvd[127:64], 0
+    #tblwr.l     d.rsvd[159:128], 0
 
     add         NUM_VALID_SGES, r0, CAPRI_KEY_FIELD(IN_P, num_valid_sges)
-    add         SGE_P, r0, (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    seq         c2, NUM_VALID_SGES, 1
+    //add         SGE_P, r0, (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    add.!c2     SGE_P, r0, (RQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    add.c2      SGE_P, r0, (RQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
     b           pre_loop
-    add         r7, r0, offsetof(struct rqwqe_base_t, rsvd2) //BD Slot
+    add         r7, r0, offsetof(struct rqwqe_base_t, rsvd) //BD Slot
 
 fresh_init:
     // fresh_init means it is a SEND_ONLY or SEND_FIRST
@@ -193,10 +196,10 @@ loop:
         phvwr  p.common.common_t1_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
 
     //!first_pass, in_progress
-    //write from d.rsvd2 to p.common.common_t1_s2s_s2s_data
+    //write from d.rsvd to p.common.common_t1_s2s_s2s_data
     .cscase 1
         b       write_done
-        phvwr  p.common.common_t1_s2s_s2s_data, d.rsvd2[sizeof(INFO_LKEY_T):0] //BD Slot
+        phvwr  p.common.common_t1_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
 
     //first_pass, !in_progress
     //write from d.rsvd to p.common.common_t0_s2s_s2s_data
@@ -205,10 +208,10 @@ loop:
         phvwr  p.common.common_t0_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
 
     //!first_pass, in_progress
-    //write from d.rsvd2 to p.common.common_t0_s2s_s2s_data
+    //write from d.rsvd to p.common.common_t0_s2s_s2s_data
     .cscase 3
         b       write_done
-        phvwr  p.common.common_t0_s2s_s2s_data, d.rsvd2[sizeof(INFO_LKEY_T):0] //BD Slot
+        phvwr  p.common.common_t0_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
 
    .csend
     

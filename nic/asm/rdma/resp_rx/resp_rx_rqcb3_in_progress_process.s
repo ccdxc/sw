@@ -53,6 +53,12 @@ skip_cqe_pyld_len:
     add     ADDR_TO_LOAD, CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63), WQE_OFFSET
     sub     NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_P, num_sges), CAPRI_KEY_FIELD(IN_P, current_sge_id)
 
+    seq     c2, NUM_VALID_SGES, 1
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c2 ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    // move addr_to_load back by sizeof 3 SGE's
+    sub.c2  ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+
     // we come here only in case of SEND MID/LAST packets. sometimes for MID packets also completion may be 
     // required (in case of lkey access permission failures). Hence copying wrid field always into phv's cqwqe
     // structure. It may or may not be used depending on whether completion is happening or not.
