@@ -1,0 +1,41 @@
+meta:
+    name    : hpe_ilo
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 3
+
+testcases:
+    -   name    : check_fru_manu
+        testcase: testcases.hpe_ilo.check_fru_manufacturing
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : check_fru_prod
+        testcase: testcases.hpe_ilo.check_fru_product
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : check_temp_hbm
+        testcase: testcases.hpe_ilo.check_temp_hbm
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : check_temp_core
+        testcase: testcases.hpe_ilo.check_temp_core
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : check_temp_board
+        testcase: testcases.hpe_ilo.check_temp_board
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw

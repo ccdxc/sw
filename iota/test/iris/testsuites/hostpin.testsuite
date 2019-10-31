@@ -55,6 +55,7 @@ testbundles:
         - tcp_proxy/tcp_proxy.testbundle
         - ipsec/ipsec.testbundle
         - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

@@ -13,7 +13,7 @@ esx-regression: extract-artifacts
 
 linux: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
-               --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,mode_change,post_diag_check,asic_tools,obfl_check,cpldupgrade
+               --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,mode_change,post_diag_check,asic_tools,obfl_check,cpldupgrade,hpe_ilo
 
 freebsd: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json

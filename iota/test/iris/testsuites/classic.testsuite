@@ -69,6 +69,7 @@ testbundles:
         - asic_tools/asic_tools.testbundle
         - system/obfl_check.testbundle
         - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
 
     sanity_ext:
         # Relative paths from iota/test/iris/testbundles/
