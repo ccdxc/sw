@@ -55,7 +55,7 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            tx_queue_size      : [ 1, 16]
+            tx_queue_size      : [ 1, 8 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128, 8192]
             proto              : ['udp', 'tcp']
@@ -69,7 +69,7 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            rx_queue_size      : [ 1, 16]
+            rx_queue_size      : [ 1, 8 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128, 8192]
             proto              : ['udp', 'tcp']
