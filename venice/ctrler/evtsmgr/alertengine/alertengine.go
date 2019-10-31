@@ -237,6 +237,19 @@ func (a *alertEngineImpl) processEventsFromQueue() {
 				apiCl = a.getAPIClient()
 			}
 
+			// wait until sometime for the policies to become available if they're not yet already.
+			_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+				alertPolicies := a.memDb.GetAlertPolicies()
+				if len(alertPolicies) == 0 {
+					a.logger.Info("found 0 policies, retrying...")
+					return nil, fmt.Errorf("found 0 policies")
+				}
+				return alertPolicies, nil
+			}, 100*time.Millisecond, maxRetry)
+			if err != nil {
+				a.logger.Error(err)
+			}
+
 			a.processEvent(reqID, apiCl, evt)
 		}
 	}
