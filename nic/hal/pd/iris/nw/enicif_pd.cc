@@ -566,6 +566,8 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
 {
     hal_ret_t       ret = HAL_RET_OK;
     if_t            *hal_if = (if_t *)pd_enicif->pi_if;
+    lif_t           *lif = NULL;
+    pd_lif_t        *pd_lif = NULL;
 
     // De program mac vlan table
     ret = pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif);
@@ -623,6 +625,14 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
     // De programming non-native input properties. Classic
     ret = pd_enicif_pd_depgm_inp_prop(pd_enicif,
                                       &hal_if->l2seg_list_clsc_head);
+
+    // De program RDMA sniffer if installed for lif
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        lif = if_get_lif(hal_if);
+        pd_lif = (pd_lif_t *)lif_get_pd_lif(lif);
+        ret = pd_lif_uninstall_rdma_sniffer(pd_lif);
+    }
+
 
 end:
     return ret;
@@ -765,10 +775,11 @@ pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
 hal_ret_t
 pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 {
-    hal_ret_t            ret;
-    if_t                 *hal_if = (if_t *)pd_enicif->pi_if;
-    lif_t                *lif = NULL;
-    l2seg_t              *native_l2seg_clsc = NULL;
+    hal_ret_t ret;
+    if_t      *hal_if = (if_t *)pd_enicif->pi_if;
+    lif_t     *lif = NULL;
+    l2seg_t   *native_l2seg_clsc = NULL;
+    pd_lif_t  *pd_lif = NULL;
 
     // Check if lif is promiscous
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
@@ -781,6 +792,10 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
             pd_enicif_update_num_prom_lifs(hal_if, true, false);
 
         }
+
+        // Program rdma sniffer for lif if needed
+        pd_lif = (pd_lif_t *)lif_get_pd_lif(lif);
+        ret = pd_lif_install_rdma_sniffer(pd_lif, hal_if);
     }
 
     // Check if classic

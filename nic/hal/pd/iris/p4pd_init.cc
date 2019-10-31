@@ -1104,7 +1104,7 @@ p4pd_mirror_table_init (void)
 
     // Initialize for usable span session.
     data.action_id = MIRROR_DROP_MIRROR_ID;
-    for (idx = 0; idx < 7; idx++) {
+    for (idx = 0; idx < MIRROR_RESERVED_INDICES; idx++) {
         sdk_ret = dm->insert_withid(&data, idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {

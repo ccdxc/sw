@@ -876,6 +876,17 @@ devapi_lif::upd_state(sdk::platform::lif_state_t state)
 }
 
 sdk_ret_t
+devapi_lif::upd_rdma_sniff(bool rdma_sniff)
+{
+    if (rdma_sniff == info_.rdma_sniff) {
+        NIC_LOG_WARN("RDMA sniff: {}. No change. Nop",
+                     rdma_sniff);
+    }
+    info_.rdma_sniff = rdma_sniff;
+    return lif_halupdate();
+}
+
+sdk_ret_t
 devapi_lif::create_macvlan_filter(mac_t mac, vlan_t vlan)
 {
 
@@ -1224,6 +1235,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
                            is_intmgmt());
     req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
     req->set_enable_rdma(lif_info->enable_rdma);
+    req->set_rdma_sniff_en(lif_info->rdma_sniff);
 
     if (lif_info->type == sdk::platform::LIF_TYPE_SWM) {
         req->mutable_swm_oob()->

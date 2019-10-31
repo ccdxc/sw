@@ -518,6 +518,7 @@ TEST_F(nicmgr_test, test3)
 }
 
 int main(int argc, char **argv) {
+    printf("In main test.....");
     utils::logger::init(false);
     sdk_init();
     // sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);

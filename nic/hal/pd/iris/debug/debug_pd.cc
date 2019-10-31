@@ -236,11 +236,26 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         key.entry_inactive_nacl = 1;
         mask.entry_inactive_nacl_mask = 0x1;
 
+        // Remove mirror session
+        if (fte_span_pd->mirr_sess_id != INVALID_INDEXER_INDEX) {
+            sdk_ret = mirr_dm->remove(fte_span_pd->mirr_sess_id);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to deprogram mirror session. id: {}, ret: {}",
+                              fte_span_pd->mirr_sess_id, ret);
+            } else {
+                HAL_TRACE_ERR("Deprogrammed mirror session. id: {}",
+                              fte_span_pd->mirr_sess_id);
+            }
+            fte_span_pd->mirr_sess_id = INVALID_INDEXER_INDEX;
+        }
+#if 0
         // Go back to original mirror session
         mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
         mirr_data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
         mirr_data.action_u.mirror_local_span.qid_en = 1;
         mirr_data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+#endif
 
         if (fte_span_pd->stats_index) {
             // Clean up the stats programming
@@ -367,14 +382,6 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         } 
 
         data.action_id = NACL_NACL_PERMIT_ID;
-        if (fte_span->is_egress) {
-            data.action_u.nacl_nacl_permit.egress_mirror_en = 1;
-            data.action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << 7;
-        } else {
-            data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
-            data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
-        }
-
         if (fte_span->span_lport) {
             mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
             mirr_data.action_u.mirror_local_span.dst_lport = fte_span->span_lport;
@@ -386,16 +393,39 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
             mirr_data.action_u.mirror_local_span.qid_en = 1;
             mirr_data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
         }
+
+        if (fte_span_pd->mirr_sess_id != INVALID_INDEXER_INDEX) {
+            // Updating mirror session
+            sdk_ret = mirr_dm->update(fte_span_pd->mirr_sess_id, &mirr_data);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
+                              fte_span_pd->mirr_sess_id, ret);
+                return ret;
+            } else {
+                HAL_TRACE_DEBUG("mirror session updated for id: {}",
+                                fte_span_pd->mirr_sess_id);
+            }
+        } else {
+            sdk_ret = mirr_dm->insert(&mirr_data, &fte_span_pd->mirr_sess_id);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("mirror table initialization failed err : {}", ret);
+                return ret;
+            } else {
+                HAL_TRACE_DEBUG("mirror session installed for id: {}",
+                                fte_span_pd->mirr_sess_id);
+            }
+        }
+        if (fte_span->is_egress) {
+            data.action_u.nacl_nacl_permit.egress_mirror_en = 1;
+            data.action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << fte_span_pd->mirr_sess_id;
+        } else {
+            data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+            data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << fte_span_pd->mirr_sess_id;
+        }
     }
 
-    // Programming mirror session
-    sdk_ret = mirr_dm->update(MIRROR_FTE_SPAN_IDX, &mirr_data);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
-                      MIRROR_FTE_SPAN_IDX, ret);
-        return ret;
-    }
 
     if (oper == TABLE_OPER_INSERT) {
         ret = acl_tbl->insert(&key, &mask, &data, ACL_FTE_SPAN_PRIORITY, 

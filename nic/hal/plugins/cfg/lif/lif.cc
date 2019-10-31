@@ -948,6 +948,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
     lif->is_management       = spec.is_management();
+    lif->rdma_sniff_en       = spec.rdma_sniff_en();
     lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle :
                                HAL_HANDLE_INVALID;
     lif->oob_uplink          = oob_uplink_if ? oob_uplink_if->hal_handle :
@@ -1200,6 +1201,9 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->vlan_strip_en_changed) {
         lif_clone->vlan_strip_en = spec->vlan_strip_en();
     }
+    if (app_ctxt->rdma_sniff_en_changed) {
+        lif_clone->rdma_sniff_en = spec->rdma_sniff_en();
+    }
     if (app_ctxt->vlan_insert_en_changed) {
         lif_clone->vlan_insert_en = app_ctxt->vlan_insert_en;
     }
@@ -1255,6 +1259,8 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.tx_policer_changed    = app_ctxt->tx_policer_changed;
     args.pkt_filter_prom_changed = app_ctxt->pkt_filter_prom_changed;
     args.receive_promiscous    = app_ctxt->receive_promiscous;
+    args.rdma_sniff_en_changed = app_ctxt->rdma_sniff_en_changed;
+    args.rdma_sniff_en         = app_ctxt->rdma_sniff_en;
 
     hw_lif_id = lif_hw_lif_id_get(lif);
 
@@ -1583,6 +1589,14 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->status_changed = true;
     }
 
+    if (lif->rdma_sniff_en != spec->rdma_sniff_en()) {
+        HAL_TRACE_DEBUG("lif rdma_sniff_en change: {} => {}",
+                        lif->rdma_sniff_en,
+                        spec->rdma_sniff_en());
+        app_ctxt->rdma_sniff_en_changed = true;
+        app_ctxt->rdma_sniff_en = spec->rdma_sniff_en();
+    }
+
     return ret;
 }
 
@@ -1661,7 +1675,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.pkt_filter_allmc_changed ||
           app_ctxt.pinned_uplink_changed ||
           app_ctxt.name_changed ||
-          app_ctxt.status_changed)) {
+          app_ctxt.status_changed ||
+          app_ctxt.rdma_sniff_en_changed)) {
         HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }

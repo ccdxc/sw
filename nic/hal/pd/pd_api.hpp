@@ -425,6 +425,8 @@ typedef struct pd_lif_update_args_s {
     bool    rss_config_changed;
     bool    rx_policer_changed;
     bool    tx_policer_changed;
+    bool    rdma_sniff_en_changed;
+    bool    rdma_sniff_en;
 } pd_lif_update_args_t;
 
 typedef struct pd_lif_delete_args_s {

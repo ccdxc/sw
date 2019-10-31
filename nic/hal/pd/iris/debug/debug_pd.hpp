@@ -15,6 +15,7 @@ namespace pd {
 struct pd_fte_span_s {
     acl_tcam_entry_handle_t handle;
     uint32_t         stats_index;
+    uint32_t         mirr_sess_id;
 
     fte_span_t      *fte_span;
 } __PACK__;
@@ -40,6 +41,7 @@ fte_span_pd_init (pd_fte_span_t *fte_span_pd)
     }
 
     fte_span_pd->handle = INVALID_INDEXER_INDEX;
+    fte_span_pd->mirr_sess_id = INVALID_INDEXER_INDEX;
     fte_span_pd->fte_span = NULL;
 
     return fte_span_pd;

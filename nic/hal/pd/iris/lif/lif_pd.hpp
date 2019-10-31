@@ -18,6 +18,9 @@ struct pd_lif_s {
     uint32_t    tx_sched_table_offset;
     uint32_t    tx_sched_num_table_entries;
     acl_tcam_entry_handle_t host_mgmt_acl_handle;
+    uint32_t    rdma_sniff_mirr_idx;
+    acl_tcam_entry_handle_t tx_handle;
+    acl_tcam_entry_handle_t rx_handle;
 
     // pi ptr
     void        *pi_lif;
@@ -33,6 +36,7 @@ hal_ret_t lif_pd_alloc_res(pd_lif_t *pd_lif,
                            pd_lif_create_args_t *args);
 hal_ret_t lif_pd_program_hw(pd_lif_t *pd_lif);
 hal_ret_t lif_pd_deprogram_hw (pd_lif_t *pd_lif);
+if_t *pd_lif_get_enic(lif_id_t lif_id);
 
 hal_ret_t lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif,
                                         pd_lif_update_args_t *args,
@@ -53,6 +57,16 @@ hal_ret_t pd_lif_handle_promiscous_filter_change (lif_t *lif,
 uint32_t pd_lif_get_enic_lport(lif_id_t lif_id);
 hal_ret_t pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif);
 hal_ret_t pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif);
+
+hal_ret_t pd_lif_pgm_mirror_session (pd_lif_t *pd_lif, if_t *hal_if,
+                                     table_oper_t oper);
+hal_ret_t pd_lif_depgm_mirror_session (pd_lif_t *pd_lif);
+hal_ret_t pd_lif_pgm_tx_nacl (pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_depgm_tx_nacl (pd_lif_t *pd_lif);
+hal_ret_t pd_lif_pgm_rx_nacl (pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_depgm_rx_nacl (pd_lif_t *pd_lif);
+hal_ret_t pd_lif_install_rdma_sniffer (pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_uninstall_rdma_sniffer (pd_lif_t *pd_lif);
 
 }   // namespace pd
 }   // namespace hal

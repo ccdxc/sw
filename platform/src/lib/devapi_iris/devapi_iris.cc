@@ -729,6 +729,25 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update RDMA sniff. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->upd_rdma_sniff(rdma_sniff);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_iris::swm_enable(void)
 {
     sdk_ret_t ret = SDK_RET_OK;

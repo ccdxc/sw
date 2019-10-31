@@ -806,6 +806,8 @@ TEST_F(enicif_test, test5)
     VrfResponse              ten_rsp;
     InterfaceSpec            if_spec;
     InterfaceResponse        if_rsp;
+    InterfaceDeleteRequest   del_req;
+    InterfaceDeleteResponse  del_rsp;
     LifSpec                  lif_spec;
     LifResponse              lif_rsp;
     L2SegmentSpec            l2seg_spec;
@@ -913,6 +915,53 @@ TEST_F(enicif_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Update rdma sniff
+    lif_spec.mutable_key_or_handle()->set_lif_id(51);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 51);
+    lif_spec.set_rdma_sniff_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update rdma sniff
+    lif_spec.mutable_key_or_handle()->set_lif_id(51);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 51);
+    lif_spec.set_rdma_sniff_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update rdma sniff
+    lif_spec.mutable_key_or_handle()->set_lif_id(51);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 51);
+    lif_spec.set_rdma_sniff_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 51);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create classic enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(51);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 51);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
+    auto l2kh3 = if_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh3->set_segment_id(501);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // ----------------------------------------------------------------------------

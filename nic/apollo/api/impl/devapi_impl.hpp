@@ -54,6 +54,7 @@ public:
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) override;
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) override;
     virtual sdk_ret_t lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state) override;
+    virtual sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) override;
 
     // qos APIs
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) override;

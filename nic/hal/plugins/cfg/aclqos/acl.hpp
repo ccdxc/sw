@@ -72,6 +72,7 @@ namespace hal {
 #define ACL_EPLEARN_ENTRY_PRIORITY_END         8
 #define ACL_SNAKE_TEST_PRIORITY_BEGIN          9
 #define ACL_SNAKE_TEST_PRIORITY_END            24
+#define ACL_RDMA_SNIFFER_PRIORITY              25
 
 
 typedef struct acl_eth_match_spec_s {

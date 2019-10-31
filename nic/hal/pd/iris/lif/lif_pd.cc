@@ -100,6 +100,8 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     lif_t               *lif = args->lif;
     lif_t               *lif_clone = args->lif_clone;
     pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
+    pd_lif_t            *pd_lif_clone = (pd_lif_t *)args->lif_clone->pd_lif;
+    if_t                *enic_if = NULL;
     sdk_ret_t sdk_ret;
 
 
@@ -123,6 +125,15 @@ pd_lif_update (pd_func_args_t *pd_func_args)
 
     if (args->pkt_filter_prom_changed) {
         ret = pd_lif_handle_promiscous_filter_change(lif, args, false);
+    }
+
+    if (args->rdma_sniff_en_changed) {
+        enic_if = pd_lif_get_enic(lif->lif_id);
+        if (args->rdma_sniff_en) {
+            ret = pd_lif_install_rdma_sniffer(pd_lif_clone, enic_if);
+        } else {
+            ret = pd_lif_uninstall_rdma_sniffer(pd_lif_clone);
+        }
     }
 
     // Process ETH RSS configuration changes
@@ -371,6 +382,9 @@ lif_pd_init (pd_lif_t *lif)
     // Set here if you want to initialize any fields
     lif->tx_sched_table_offset = INVALID_INDEXER_INDEX;
     lif->host_mgmt_acl_handle = INVALID_INDEXER_INDEX;
+    lif->rdma_sniff_mirr_idx = INVALID_INDEXER_INDEX;
+    lif->tx_handle = INVALID_INDEXER_INDEX;
+    lif->rx_handle = INVALID_INDEXER_INDEX;
 
     return lif;
 }
@@ -381,9 +395,10 @@ lif_pd_init (pd_lif_t *lif)
 hal_ret_t
 lif_pd_program_hw (pd_lif_t *pd_lif)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    lif_t                *lif = (lif_t *)pd_lif->pi_lif;
-    sdk_ret_t sdk_ret;
+    hal_ret_t   ret = HAL_RET_OK;
+    lif_t       *lif = (lif_t *)pd_lif->pi_lif;
+    sdk_ret_t   sdk_ret = SDK_RET_OK;
+    if_t        *enic_if = NULL;
 
 
     if (lif->type == types::LIF_TYPE_SWM) {
@@ -402,6 +417,12 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to program hw");
         goto end;
+    }
+
+    // Program RDMA sniffer
+    enic_if = pd_lif_get_enic(lif->lif_id);
+    if (lif->rdma_sniff_en) {
+        ret = pd_lif_install_rdma_sniffer(pd_lif, enic_if);
     }
 
     // Program TX scheduler and Policer.
@@ -509,6 +530,26 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
         return args->vlan_strip_en;
     }
     return lif->vlan_strip_en;
+}
+
+if_t *
+pd_lif_get_enic(lif_id_t lif_id)
+{
+    lif_t           *lif = NULL;
+    if_t            *hal_if = NULL;
+    dllist_ctxt_t   *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry  = NULL;
+
+    lif = find_lif_by_id(lif_id);
+    if (lif) {
+        dllist_for_each(lnode, &lif->if_list_head) {
+            entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+            hal_if = find_if_by_handle(entry->handle_id);
+            return hal_if;
+        }
+    }
+
+    return NULL;
 }
 
 uint32_t
@@ -1381,6 +1422,268 @@ pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif)
                             pd_lif->host_mgmt_acl_handle);
         }
     }
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Program mirror session
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_pgm_mirror_session (pd_lif_t *pd_lif, if_t *hal_if,
+                           table_oper_t oper)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret = SDK_RET_OK;
+    mirror_actiondata_t         mirr_data = { 0 };
+    directmap                   *mirr_dm;
+    lif_t                       *lif = (lif_t *)pd_lif->pi_lif;
+    uint32_t                    lport = 0;
+
+    mirr_dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
+
+    lport = if_get_lport_id(hal_if);
+    mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
+    mirr_data.action_u.mirror_local_span.dst_lport = lport;
+    mirr_data.action_u.mirror_local_span.qid_en = 0;
+    mirr_data.action_u.mirror_local_span.qid = 0; 
+
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = mirr_dm->insert(&mirr_data, &pd_lif->rdma_sniff_mirr_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("lif_id:{},{} unable to program mirror table",
+                          lif_get_lif_id(lif), ret);
+        } else {
+            HAL_TRACE_DEBUG("lif_id:{}, programmed mirror table at: {}",
+                            lif_get_lif_id(lif), pd_lif->rdma_sniff_mirr_idx);
+        }
+    } else {
+        if (pd_lif->rdma_sniff_mirr_idx != INVALID_INDEXER_INDEX) {
+            sdk_ret = mirr_dm->update(pd_lif->rdma_sniff_mirr_idx, &mirr_data);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("lif_id:{},{} unable to program mirror table",
+                              lif_get_lif_id(lif), ret);
+            } else {
+                HAL_TRACE_DEBUG("lif_id:{}, programmed mirror table at: {}",
+                                lif_get_lif_id(lif), 
+                                pd_lif->rdma_sniff_mirr_idx);
+            }
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// DeProgram mirror session
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_depgm_mirror_session (pd_lif_t *pd_lif)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
+    directmap                   *mirr_dm = NULL;
+
+    mirr_dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
+
+    if (pd_lif->rdma_sniff_mirr_idx != INVALID_INDEXER_INDEX) {
+        sdk_ret = mirr_dm->remove(pd_lif->rdma_sniff_mirr_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("lif_id:{},unable to deprogram mirror table at: {}",
+                          lif_get_lif_id((lif_t *)pd_lif->pi_lif), 
+                          pd_lif->rdma_sniff_mirr_idx);
+        } else {
+            HAL_TRACE_ERR("lif_id:{}, deprogrammed mirror table at: {} ",
+                          lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                          pd_lif->rdma_sniff_mirr_idx);
+        }
+        pd_lif->rdma_sniff_mirr_idx = INVALID_INDEXER_INDEX;
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Program TX NACL to drive egress mirror
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_pgm_tx_nacl (pd_lif_t *pd_lif, if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    nacl_swkey_t        key;
+    nacl_swkey_mask_t   mask;
+    nacl_actiondata_t   data;
+    uint32_t            lport = 0;
+    acl_tcam            *acl_tbl = NULL;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    acl_tbl = g_hal_state_pd->acl_table();
+
+    lport = if_get_lport_id(hal_if);
+
+    // (src_lport, RDMA's dport) => mirr_idx
+    key.entry_inactive_nacl = 0;
+    mask.entry_inactive_nacl_mask = 0x1;
+    key.control_metadata_src_lport = lport;
+    mask.control_metadata_src_lport_mask =
+        ~(mask.control_metadata_dst_lport_mask & 0);
+    key.flow_lkp_metadata_lkp_dport = UDP_PORT_ROCE_V2;
+    mask.flow_lkp_metadata_lkp_dport_mask =
+        ~(mask.flow_lkp_metadata_lkp_dport_mask & 0);
+
+    data.action_id = NACL_NACL_PERMIT_ID;
+    data.action_u.nacl_nacl_permit.egress_mirror_en = 1;
+    data.action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << pd_lif->rdma_sniff_mirr_idx;
+
+    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY, 
+                          &pd_lif->tx_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program TX NACL. ret: {}", ret);
+    } else {
+        HAL_TRACE_DEBUG("Programmed TX NACL at: {}", pd_lif->tx_handle);
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// DeProgram TX NACL to drive egress mirror
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_depgm_tx_nacl (pd_lif_t *pd_lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_tcam  *acl_tbl = NULL;
+
+    acl_tbl = g_hal_state_pd->acl_table();
+
+    if (pd_lif->tx_handle != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_lif->tx_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}", 
+                          pd_lif->tx_handle, ret);
+        } else {
+            HAL_TRACE_DEBUG("Deprogrammed NACL at: {}", pd_lif->tx_handle);
+        }
+        pd_lif->tx_handle = INVALID_INDEXER_INDEX;
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Program RX NACL to drive egress mirror
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_pgm_rx_nacl (pd_lif_t *pd_lif, if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    nacl_swkey_t        key;
+    nacl_swkey_mask_t   mask;
+    nacl_actiondata_t   data;
+    uint32_t            lport = 0;
+    acl_tcam            *acl_tbl = NULL;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    acl_tbl = g_hal_state_pd->acl_table();
+
+    lport = if_get_lport_id(hal_if);
+
+    // (dst_lport, RDMA's dport) => mirr_idx
+    key.entry_inactive_nacl = 0;
+    mask.entry_inactive_nacl_mask = 0x1;
+    key.control_metadata_dst_lport = lport;
+    mask.control_metadata_dst_lport_mask =
+        ~(mask.control_metadata_dst_lport_mask & 0);
+    key.flow_lkp_metadata_lkp_dport = UDP_PORT_ROCE_V2;
+    mask.flow_lkp_metadata_lkp_dport_mask =
+        ~(mask.flow_lkp_metadata_lkp_dport_mask & 0);
+
+    data.action_id = NACL_NACL_PERMIT_ID;
+    data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+    data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << pd_lif->rdma_sniff_mirr_idx;
+
+    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY, 
+                          &pd_lif->rx_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program RX NACL. ret: {}", ret);
+    } else {
+        HAL_TRACE_DEBUG("Programmed RX NACL at: {}", pd_lif->rx_handle);
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// DeProgram RX NACL to drive ingress mirror
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_depgm_rx_nacl (pd_lif_t *pd_lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    acl_tcam  *acl_tbl = NULL;
+
+    acl_tbl = g_hal_state_pd->acl_table();
+
+    if (pd_lif->rx_handle != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_lif->rx_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}", 
+                          pd_lif->rx_handle, ret);
+        } else {
+            HAL_TRACE_DEBUG("Deprogrammed NACL at: {}", pd_lif->rx_handle);
+        }
+        pd_lif->rx_handle = INVALID_INDEXER_INDEX;
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_lif_install_rdma_sniffer (pd_lif_t *pd_lif, if_t *hal_if)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    lif_t *lif = (lif_t *)pd_lif->pi_lif;
+
+    if ((lif && lif->rdma_sniff_en) &&
+        (hal_if && hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC)) {
+
+        HAL_TRACE_DEBUG("Installing RDMA Sniffer");
+
+        // Install Mirror session
+        ret = pd_lif_pgm_mirror_session(pd_lif, hal_if, TABLE_OPER_INSERT);
+
+        // Install TX and RX NACLs
+        ret = pd_lif_pgm_tx_nacl(pd_lif, hal_if);
+        ret = pd_lif_pgm_rx_nacl(pd_lif, hal_if);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_lif_uninstall_rdma_sniffer (pd_lif_t *pd_lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    lif_t *lif = (lif_t *)pd_lif->pi_lif;
+
+    HAL_TRACE_DEBUG("Un-Installing RDMA Sniffer");
+
+    // Un-Install TX and RX NACLs
+    ret = pd_lif_depgm_tx_nacl(pd_lif);
+    ret = pd_lif_depgm_rx_nacl(pd_lif);
+
+    // Un-Install Mirror session
+    ret = pd_lif_depgm_mirror_session(pd_lif);
+
     return ret;
 }
 

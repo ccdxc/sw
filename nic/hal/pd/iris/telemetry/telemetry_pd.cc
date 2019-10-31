@@ -37,6 +37,17 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: programming sesion {} failed ({})",
                 __FUNCTION__, id, ret);
+        if (sdk_ret == SDK_RET_ENTRY_NOT_FOUND) {
+            sdk_ret = session->insert_withid(action_data, id);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{}: programming sesion {} failed ({})",
+                              __FUNCTION__, id, ret);
+            } else {
+                HAL_TRACE_DEBUG("{}: programmed session {}: {}",
+                                __FUNCTION__, id, buff);
+            }
+        }
     } else {
         p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
                 action_data, buff, sizeof(buff));

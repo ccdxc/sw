@@ -152,6 +152,12 @@ EthLif::EthLif(Eth *dev,
     hal_lif_info_.type = (sdk::platform::lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
+    // For debugging: by default enables rdma sniffer on all host ifs
+#if 0
+    if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {
+        hal_lif_info_.rdma_sniff = true;
+    }
+#endif
 
     memset(qinfo, 0, sizeof(qinfo));
 

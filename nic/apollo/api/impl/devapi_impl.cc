@@ -166,6 +166,12 @@ devapi_impl::lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state) {
 }
 
 sdk_ret_t
+devapi_impl::lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters) {
     *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;

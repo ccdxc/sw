@@ -164,6 +164,12 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
         goto end;
     }
 
+    if (cur_exists && allow_same_priority_) {
+        HAL_TRACE_WARN("Table {} entry being placed with the same "
+                       "priority {}",
+                       table_name_.c_str(), priority);
+    }
+
     if (!allow_same_priority_ && cur_exists) {
         HAL_TRACE_ERR("Table {} placing entry failed due to an existing "
                       "entry with the same priority {}. Err {}",

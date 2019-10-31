@@ -139,23 +139,24 @@ message LifSpec {
   bool                       vlan_insert_en              = 9;    // Ingress vlan tag in p4plus_to_p4 hdr
   bool                       enable_rdma                 = 10;    // RDMA: enable RDMA on LIF
   bool                       is_management               = 11 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
-  PktFilter                  packet_filter               = 12;   // Packet filters
-  uint32                     hw_lif_id                   = 13;   // hw lif id. Zero will make Hal allocate it
-  uint32                     rdma_max_keys               = 14;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 15;
-  uint32                     rdma_max_pt_entries         = 16;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 17;   // Initialize Qstate
-  LifRssSpec                 rss                         = 18;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 19;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 20;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 21;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 22;   // QOS class-of-service for Tx traffic.
-  uint32                     rdma_barmap_size            = 23;   // RDMA: barmap size in bytes, rounded to power of 2
-  bool                       enable_nvme                 = 24;   // NVME: enable NVME on LIF
-  uint32                     nvme_max_ns                 = 25;   // NVME: maximum number of namespaces
-  uint32                     nvme_max_sess               = 26;   // NVME: maximum number of sessions
-  uint32                     nvme_host_page_size         = 27;   // NVME: host page size, must be power of 2
-  kh.InterfaceKeyHandle      swm_oob                     = 28;   // SWM: Uplink to reach BMC
+  bool                       rdma_sniff_en               = 12;   // Enable RDMA sniffer
+  PktFilter                  packet_filter               = 13;   // Packet filters
+  uint32                     hw_lif_id                   = 14;   // hw lif id. Zero will make Hal allocate it
+  uint32                     rdma_max_keys               = 15;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 16;
+  uint32                     rdma_max_pt_entries         = 17;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 18;   // Initialize Qstate
+  LifRssSpec                 rss                         = 19;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 20;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 21;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 22;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 23;   // QOS class-of-service for Tx traffic.
+  uint32                     rdma_barmap_size            = 24;   // RDMA: barmap size in bytes, rounded to power of 2
+  bool                       enable_nvme                 = 25;   // NVME: enable NVME on LIF
+  uint32                     nvme_max_ns                 = 26;   // NVME: maximum number of namespaces
+  uint32                     nvme_max_sess               = 27;   // NVME: maximum number of sessions
+  uint32                     nvme_host_page_size         = 28;   // NVME: host page size, must be power of 2
+  kh.InterfaceKeyHandle      swm_oob                     = 29;   // SWM: Uplink to reach BMC
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

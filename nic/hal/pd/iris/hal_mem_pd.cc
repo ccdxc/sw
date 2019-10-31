@@ -960,7 +960,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 acl_table_ = acl_tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                                tinfo.key_struct_size,
                                                tinfo.actiondata_struct_size,
-                                               false, false);
+                                               false, true);
                 SDK_ASSERT(acl_table_ != NULL);
 #if 0
             } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||

@@ -84,6 +84,7 @@ typedef struct lif_s {
     bool                vlan_strip_en;   // vlan strip enable
     bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr
     bool                is_management;   // set for OOB MNIC, int_mgmt MNIC and host management NIC
+    bool                rdma_sniff_en;   // Enable sniffer for RDMA packets
     hal_handle_t        pinned_uplink;   // uplink this LIF is pinned to
     hal_handle_t        oob_uplink;      // valid only for swm lif
     bool                enable_rdma;     // enable rdma on this LIF
@@ -150,6 +151,8 @@ typedef struct lif_update_app_ctxt_s {
     uint64_t     pinned_uplink_changed:1;
     uint64_t     rx_policer_changed:1;
     uint64_t     tx_policer_changed:1;
+    uint64_t     rdma_sniff_en_changed:1;
+    bool         rdma_sniff_en;
     uint64_t     vlan_insert_en;
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;

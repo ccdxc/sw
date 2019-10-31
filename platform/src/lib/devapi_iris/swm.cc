@@ -72,6 +72,7 @@ devapi_swm::add_mac_filters_()
     for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
         devapi_swm::add_mac(*it);
     }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -80,6 +81,7 @@ devapi_swm::add_vlan_filters_()
     for (auto it = vlan_table_.cbegin(); it != vlan_table_.cend(); it++) {
         devapi_swm::add_vlan(*it);
     }
+    return SDK_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -201,6 +203,8 @@ devapi_swm::config_oob_uplink_vlan_(vlan_t vlan)
                   oob_l2seg->get_id());
     devapi_mcast::trigger_l2seg_mcast(oob_l2seg);   // retrigger mcast. Adds undesignated uplink 
 #endif
+
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -289,7 +293,7 @@ devapi_swm::upd_uplink(uint32_t port_num)
 
         // Create mac and vlan filters
         ret = swm_->add_mac_filters_();
-        ret - swm_->add_vlan_filters_();
+        ret = swm_->add_vlan_filters_();
     }
     
     // Change oob l2seg to the remove old uplink and add new uplink
@@ -417,10 +421,10 @@ devapi_swm::swm_initialize(devapi *dapi)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_swm *swm = NULL;
-    devapi_uplink *oob_up = NULL, *swm_up = NULL; 
-    devapi_vrf *oob_vrf = NULL, *swm_vrf = NULL;
-    devapi_l2seg *oob_l2seg = NULL, *swm_l2seg = NULL;
-    devapi_ep *bmc_ep = NULL;
+    devapi_uplink *oob_up = NULL/*, *swm_up = NULL*/; 
+    // devapi_vrf *oob_vrf = NULL, *swm_vrf = NULL;
+    // devapi_l2seg *oob_l2seg = NULL, *swm_l2seg = NULL;
+    // devapi_ep *bmc_ep = NULL;
 
     api_trace("swm initialize");
 
@@ -542,7 +546,7 @@ devapi_swm::swm_initialize(devapi *dapi)
     devapi_mcast::trigger_l2seg_mcast(oob_l2seg);   // retrigger mcast. Adds undesignated uplink 
 #endif
 
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t
