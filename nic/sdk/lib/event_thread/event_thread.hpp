@@ -21,6 +21,21 @@ namespace event_thread {
 class event_thread;
 
 //
+// Prepare
+//
+typedef void(*prepare_cb)(struct prepare_ *, void *);
+
+typedef struct prepare_{
+    ev_prepare ev_watcher; // private
+    prepare_cb callback;
+    void *ctx;
+} prepare_t;
+
+void prepare_init(prepare_t *prepare, prepare_cb callback, void *ctx);
+void prepare_start(prepare_t *prepare);
+void prepare_stop(prepare_t *prepare);
+
+//
 // IO
 //
 typedef void(*io_cb)(struct io_ *, int fd, int events);
@@ -132,7 +147,9 @@ public:
                                  uint32_t prio, int sched_policy,
                                  bool can_yield);
 
-    void io_init(io_t *);
+    void prepare_start(prepare_t *prepare);
+    void prepare_stop(prepare_t *prepare);
+
     void io_start(io_t *);
     void io_stop(io_t *);
     

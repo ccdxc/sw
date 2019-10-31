@@ -26,6 +26,7 @@ public:
     event::timer_t timer;
     event::timer_t timer2;
     event::io_t io;
+    event::prepare_t prepare;
     int fd[2];
     bool got_ping = false;
     bool got_pong = false;
@@ -33,6 +34,7 @@ public:
     bool got_pong_on_fd = false;
     bool t1_stopped = false;
     bool t2_stopped = false;
+    uint32_t prepare_count = 0;
 
 protected:
   event_thread_test() {
@@ -51,6 +53,15 @@ protected:
   }
 
 };
+
+void
+prepare_callback (event::prepare_t *prepare, void *ctx)
+{
+    event_thread_test *test = (event_thread_test *)ctx;
+    test->prepare_count++;
+    event::prepare_stop(prepare);
+    printf("Prepare called and stopped\n");
+}
 
 void
 timer_callback (event::timer_t *timer)
@@ -86,6 +97,8 @@ init1 (void *ctx)
     test->timer.ctx = ctx;
     event::timer_init(&test->timer, timer_callback, 1., 0.);
     event::timer_start(&test->timer);
+    event::prepare_init(&test->prepare, prepare_callback, test);
+    event::prepare_start(&test->prepare);
 }
 
 void
@@ -161,6 +174,8 @@ TEST_F (event_thread_test, basic_functionality) {
 
     ASSERT_TRUE(this->t1_stopped);
     ASSERT_TRUE(this->t2_stopped);
+
+    ASSERT_TRUE(this->prepare_count == 1);
 }
 
 void

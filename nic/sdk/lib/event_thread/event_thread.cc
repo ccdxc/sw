@@ -309,6 +309,30 @@ event_thread::stop(void) {
 }
 
 static void
+ev_prepare_callback_ (struct ev_loop *loop, ev_prepare *watcher, int revents)
+{
+    prepare_t *prepare = (prepare_t *)watcher;
+    prepare->callback(prepare, prepare->ctx);
+}
+
+void
+event_thread::prepare_start(prepare_t *prepare)
+{
+    assert(t_event_thread_ == this);
+    assert(prepare->ev_watcher.cb == ev_prepare_callback_);
+
+    ev_prepare_start(this->loop_, &prepare->ev_watcher);
+}
+
+void
+event_thread::prepare_stop(prepare_t *prepare)
+{
+    assert(t_event_thread_ == this);
+
+    ev_prepare_stop(this->loop_, &prepare->ev_watcher);
+}
+
+static void
 ev_io_callback_ (struct ev_loop *loop, ev_io *watcher, int revents)
 {
     io_t *io = (io_t *)watcher;
@@ -471,6 +495,31 @@ void
 event_thread::ipc_client_callback_(struct ev_loop *loop, ev_io *watcher,
                                    int revents) {
     ((event_thread *)watcher->data)->handle_ipc_client_(watcher);
+}
+
+
+void
+prepare_init (prepare_t *prepare, prepare_cb cb, void *ctx)
+{
+    prepare->callback = cb;
+    prepare->ctx = ctx;
+    ev_prepare_init(&prepare->ev_watcher, &ev_prepare_callback_);
+}
+
+void
+prepare_start (prepare_t *prepare)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->prepare_start(prepare);
+}
+
+void
+prepare_stop (prepare_t *prepare)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->prepare_stop(prepare);
 }
 
 void
