@@ -158,10 +158,9 @@ public:
     }
 
     ///\brief read config
-    ///\param[in]  key Pointer to the key object
     ///\param[out] info Pointer to the info object
     ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vnic_key_t *key, pds_vnic_info_t *info);
+    sdk_ret_t read(pds_vnic_info_t *info);
 
     /// \brief     return the key/id of this vnic
     /// \return    key/id of the vnic object
@@ -211,6 +210,11 @@ private:
 
     /// \brief    destructor
     ~vnic_entry();
+
+    /// \brief      fill the vnic sw spec
+    /// \param[out] spec specification
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_vnic_spec_t *spec);
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)

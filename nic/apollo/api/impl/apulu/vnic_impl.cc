@@ -193,7 +193,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
     local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
     sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
-                      vnic->mac(), ETH_ADDR_LEN);
+                     vnic->mac(), ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
@@ -461,7 +461,6 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     return SDK_RET_OK;
 }
 
-// TODO: undo stuff if something goes wrong here !!
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -479,8 +478,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // get the subnet of this vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
-        PDS_TRACE_ERR("Failed to find subnet %u, vpc %u",
-                      spec->subnet.id, spec->vpc.id);
+        PDS_TRACE_ERR("Failed to find subnet %u", spec->subnet.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -488,6 +486,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vpc_key = subnet->vpc();
     vpc = vpc_db()->find(&vpc_key);
     if (unlikely(vpc == NULL)) {
+        PDS_TRACE_ERR("Failed to find vpc %u", vpc_key.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -545,7 +544,7 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 
 sdk_ret_t
 vnic_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -776,7 +775,32 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
 
 sdk_ret_t
 vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
-    return SDK_RET_INVALID_OP;
+    device_entry *device;
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data;
+
+    // read the nexthop table
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read NEXTHOP table for vnic %u at idx %u",
+                      spec->key.id, nh_idx_);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    device = device_db()->find();
+    if (!device) {
+        return SDK_RET_ERR;
+    }
+    if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
+        spec->vnic_encap.val.vlan_tag = nh_data.nexthop_info.vlan;
+        spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    } else {
+        SDK_ASSERT(LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex) ==
+                   nh_data.nexthop_info.lif);
+    }
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

@@ -13,6 +13,7 @@
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/policy.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
@@ -31,6 +32,7 @@ protected:
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
         pds_batch_ctxt_t bctxt = batch_start();
+        sample_device_setup(bctxt);
         sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
         sample_subnet_setup(bctxt);
         batch_commit(bctxt);
@@ -39,6 +41,7 @@ protected:
         pds_batch_ctxt_t bctxt = batch_start();
         sample_subnet_teardown(bctxt);
         sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
+        sample_device_teardown(bctxt);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
@@ -56,7 +59,7 @@ protected:
 /// \ref WF_TMP_1
 TEST_F(vnic_test, vnic_workflow_tmp_1) {
     // todo: delete this workflow when deletes are supported on artemis
-    if (apollo()) return;
+    if (apollo() || apulu()) return;
 
     vnic_feeder feeder;
 
@@ -81,6 +84,8 @@ TEST_F(vnic_test, vnic_workflow_1) {
 TEST_F(vnic_test, vnic_workflow_2) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder;
 
@@ -93,6 +98,8 @@ TEST_F(vnic_test, vnic_workflow_2) {
 TEST_F(vnic_test, vnic_workflow_3) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder2, feeder3;
 
@@ -107,6 +114,8 @@ TEST_F(vnic_test, vnic_workflow_3) {
 TEST_F(vnic_test, vnic_workflow_4) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder;
 
@@ -119,6 +128,8 @@ TEST_F(vnic_test, vnic_workflow_4) {
 TEST_F(vnic_test, vnic_workflow_5) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder2, feeder3;
 
@@ -133,6 +144,8 @@ TEST_F(vnic_test, vnic_workflow_5) {
 TEST_F(vnic_test, vnic_workflow_6) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A, feeder1B;
 
@@ -148,6 +161,8 @@ TEST_F(vnic_test, vnic_workflow_6) {
 TEST_F(vnic_test, vnic_workflow_7) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A, feeder1B;
 
@@ -163,6 +178,8 @@ TEST_F(vnic_test, vnic_workflow_7) {
 TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A, feeder1B;
 
@@ -179,6 +196,8 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
 TEST_F(vnic_test, vnic_workflow_9) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A;
 
@@ -193,6 +212,8 @@ TEST_F(vnic_test, vnic_workflow_9) {
 TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder2, feeder3, feeder4;
     vnic_feeder feeder2A, feeder3A;
@@ -214,6 +235,8 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
 TEST_F(vnic_test, vnic_workflow_neg_1) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder;
 
@@ -226,6 +249,8 @@ TEST_F(vnic_test, vnic_workflow_neg_1) {
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder;
 
@@ -238,6 +263,8 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
 TEST_F(vnic_test, vnic_workflow_neg_3) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder;
 
@@ -250,6 +277,8 @@ TEST_F(vnic_test, vnic_workflow_neg_3) {
 TEST_F(vnic_test, vnic_workflow_neg_4) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder2;
 
@@ -263,6 +292,8 @@ TEST_F(vnic_test, vnic_workflow_neg_4) {
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A;
 
@@ -277,6 +308,8 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
 TEST_F(vnic_test, vnic_workflow_neg_6) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A;
 
@@ -291,6 +324,8 @@ TEST_F(vnic_test, vnic_workflow_neg_6) {
 TEST_F(vnic_test, vnic_workflow_neg_7) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder1A, feeder2;
 
@@ -306,6 +341,8 @@ TEST_F(vnic_test, vnic_workflow_neg_7) {
 TEST_F(vnic_test, vnic_workflow_neg_8) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
+    // todo: enable for apulu when delete is fixed
+    if (apulu()) return;
 
     vnic_feeder feeder1, feeder2;
 

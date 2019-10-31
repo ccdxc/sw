@@ -65,8 +65,8 @@ pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
     if ((entry = pds_vnic_entry_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-    info->spec.key = *key;
-    return entry->read(key, info);
+
+    return entry->read(info);
 }
 
 sdk_ret_t

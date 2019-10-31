@@ -147,8 +147,37 @@ vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
 }
 
 sdk_ret_t
-vnic_entry::read(pds_vnic_key_t *key, pds_vnic_info_t *info) {
-    return impl_->read_hw(this, (impl::obj_key_t *)key,
+vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
+    subnet_entry *subnet;
+
+    subnet = subnet_db()->find(&subnet_);
+    if (subnet == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    memcpy(&spec->key, &this->key_, sizeof(pds_vnic_key_t));
+    spec->subnet = subnet_;
+    spec->vpc = subnet->vpc();
+    memcpy(&spec->mac_addr, &mac_, ETH_ADDR_LEN);
+    spec->fabric_encap = fabric_encap_;
+    spec->vnic_encap = vnic_encap_;
+    spec->v4_meter = v4_meter_;
+    spec->v6_meter = v6_meter_;
+    spec->switch_vnic = switch_vnic_;
+    spec->host_ifindex = host_ifindex_;
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_entry::read(pds_vnic_info_t *info) {
+    sdk_ret_t ret;
+
+    ret = fill_spec_(&info->spec);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                           (impl::obj_info_t *)info);
 }
 
