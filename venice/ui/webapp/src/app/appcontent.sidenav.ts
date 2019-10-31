@@ -29,6 +29,7 @@ export const sideNavMenu: SideNavItem[] = [
     icon: {
       cssClass: 'app-l-side-nav-cluster',
     },
+    link: ['/cluster'],
     roleGuard: {
       opt: [
         UIRolePermissions.clustercluster_read, UIRolePermissions.clusterdistributedservicecard_read
@@ -74,6 +75,7 @@ export const sideNavMenu: SideNavItem[] = [
     icon: {
       cssClass: 'app-l-side-nav-security',
     },
+    link: ['/security'],
     roleGuard: {
       opt: [UIRolePermissions.securitysecuritygroup_read, UIRolePermissions.securityapp_read]
     },
@@ -109,6 +111,7 @@ export const sideNavMenu: SideNavItem[] = [
     icon: {
       cssClass: 'app-l-side-nav-monitoring',
     },
+    link: ['/monitoring'],
     roleGuard: {
       opt: [
         UIRolePermissions.monitoringalert_read,
@@ -187,6 +190,7 @@ export const sideNavMenu: SideNavItem[] = [
     icon: {
       cssClass: 'app-l-side-nav-admin',
     },
+    link: ['/admin'],
     // TODO: to be included later, currently every user should have access to this object
     //           to be able to modify or see their own implicit permissions
     //

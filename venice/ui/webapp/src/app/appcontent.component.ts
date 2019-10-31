@@ -459,6 +459,14 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this._currentComponent = null;
   }
 
+  isSubMenuShown(menuLink: string[]) {
+    const currentUrl: string = this._controllerService.getCurrentRoute();
+    if (currentUrl && menuLink && menuLink.length > 0) {
+      return currentUrl.indexOf(menuLink[0] + '/') === 0;
+    }
+    return false;
+  }
+
   /**
    * This function serves html template.
    * It transforms the SideNav panel to other state
