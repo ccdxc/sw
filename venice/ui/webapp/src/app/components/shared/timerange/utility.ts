@@ -105,23 +105,76 @@ export class TimeRange {
 
     // check if end time is now
     if (endTime.isSame(moment(), 'second')) {
+      // start is now - 1h, text will be Past Hour
+      if (startTime.isSame(moment().subtract(1, 'hour'), 'second')) {
+        return {
+          timeStr: 'Past hour',
+          startTime: startTime,
+          endTime: endTime
+        };
+      }
+      // start is now - 1d, text will be Past Day
+      if (startTime.isSame(moment().subtract(1, 'day'), 'second')) {
+        return {
+          timeStr: 'Past day',
+          startTime: startTime,
+          endTime: endTime
+        };
+      }
+      // start is now - 1w, text will be Past Week
+      if (startTime.isSame(moment().subtract(1, 'week'), 'second')) {
+        return {
+          timeStr: 'Past week',
+          startTime: startTime,
+          endTime: endTime
+        };
+      }
+      // start is now - 1m, text will be Past Month
+      if (startTime.isSame(moment().subtract(1, 'month'), 'second')) {
+        return {
+          timeStr: 'Past month',
+          startTime: startTime,
+          endTime: endTime
+        };
+      }
       // Text will be Past XXXX
       return {
         timeStr: 'Past ' + startTime.fromNow(true),
         startTime: startTime,
         endTime: endTime
       };
-    // check end time is now -1d, now -1w, now -1m
-    } else if (endTime.isSame(moment().subtract(1, 'day'), 'second') ||
-        endTime.isSame(moment().subtract(1, 'week'), 'second') ||
-        endTime.isSame(moment().subtract(1, 'month'), 'second')) {
-      // Text will be Previous XXXX
+    }
+    // check end time is now -1d, and start is now -2d
+    if (endTime.isSame(moment().subtract(1, 'day'), 'second') &&
+        startTime.isSame(moment().subtract(2, 'days'), 'second')) {
+      // Text will be Previous Day
       return {
-        timeStr: 'Previous ' + startTime.from(endTime, true),
+        timeStr: 'Previous day',
         startTime: startTime,
         endTime: endTime
       };
     }
+    // check end time is now -1w, and start is now -2w
+    if (endTime.isSame(moment().subtract(1, 'week'), 'second') &&
+        startTime.isSame(moment().subtract(2, 'weeks'), 'second')) {
+      // Text will be Previous Week
+      return {
+        timeStr: 'Previous week',
+        startTime: startTime,
+        endTime: endTime
+      };
+    }
+    // check end time is now -1m, and start is now -2m
+    if (endTime.isSame(moment().subtract(1, 'month'), 'second') &&
+        startTime.isSame(moment().subtract(2, 'months'), 'second')) {
+      // Text will be Previous Month
+      return {
+        timeStr: 'Previous month',
+        startTime: startTime,
+        endTime: endTime
+      };
+    }
+
     // Else we don't do any special casing
     return {
       timeStr: this.startTime.getDisplayString() + ' to ' + this.endTime.getDisplayString(),
