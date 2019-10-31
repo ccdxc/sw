@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import time
 import traceback
 
 import iota.harness.infra.store as store
@@ -188,6 +189,7 @@ class TestBundle:
         Logger.SetTestbundle(self.Name())
         # Update logger
         Logger.info("Starting Testbundle: %s" % self.Name())
+        Logger.info("Testbundle {0} timestamp: {1}".format(self.Name(), time.asctime()))
 
         api.CurrentTestbundle = self
         self.result = self.__execute_testcases()

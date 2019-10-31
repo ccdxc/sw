@@ -3,6 +3,7 @@ import pdb
 import copy
 import os
 import subprocess
+import time
 
 import iota.harness.infra.utils.timeprofiler as timeprofiler
 import iota.harness.infra.types as types
@@ -581,6 +582,7 @@ class Testcase:
         if self.__enable:
             Logger.SetTestcase(self.Name())
             Logger.info("Starting Testcase: %s" % self.Name())
+            Logger.info("Testcase {0} timestamp: {1}".format(self.Name(), time.asctime()))
             self.__timer.Start()
             try:
                 self.status = self.__execute()

@@ -2,6 +2,7 @@
 import atexit
 import json
 import pdb
+import time
 import traceback
 
 import iota.harness.infra.store as store
@@ -278,6 +279,7 @@ class TestSuite:
         # Update logger
         Logger.SetTestsuite(self.Name())
         Logger.info("Starting Testsuite: %s" % self.Name())
+        Logger.info("Testsuite {0} timestamp: {1}".format(self.Name(), time.asctime()))
 
         if self.GetFirmwareType() == types.firmware.GOLD:
             Logger.debug("setting global firmware type to gold")
