@@ -228,7 +228,6 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/containernetworking/cni"
   revision = "98ff61aac32dcf2eb3044a0d5e5f1814837b3c75"
 
-# vic plugin has a hard dependency. ToDo Move this to a released version after upgrading govmomi
 [[override]]
   name = "github.com/vmware/govmomi"
   revision = "a9b0a80589c6b412b139f2cec86efff6a40b7ddc"
