@@ -9,11 +9,10 @@ MS_TARGET = $(MS_LIB_DIR)/dcsi
 
 CXX = g++
 CPPFLAGS += -std=c++11 -pthread -g -c -Wall -Werror -O0
+INC_DIRS = -Istubs/common/ -Istubs/hals/ -Istubs/mgmt/ -Istubs
+LD_PATHS = -Lstubs/common/lib -Lstubs/hals/lib -Lstubs/mgmt/lib
 PDSA_LD_LIBS  = -lpegasusmgmt -lpdsacmn -lpdsahal
 PEGASUS_LD_LIBS  = -lpegasusmgmt
-INC_DIRS = -Istubs/common/ -Istubs/hals/ -Istubs/mgmt/ -Istubs -I../../ -I../../nic/build/aarch64/apollo -I../../nic/build/aarch64/apollo/gen/proto
-LD_PATHS = -Lstubs/common/lib -Lstubs/hals/lib -Lstubs/mgmt/lib -Lsvc/lib
-LD_FLAGS = `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -L../build/x86_64/apollo/lib -L/usr/local/lib `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed  -lprotobuf -lpthread
 
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -31,11 +30,11 @@ SRC_FILES = $(wildcard *.cc)
 OBJ_FILES = $(SRC_FILES:%.cc=$(OBJ_DIR)/%.o)
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
-$(PDSA_BIN): $(OBJ_FILES) $(MS_TARGET) PDSA_STUBS MGMT_STUBS SVC
+$(PDSA_BIN): $(OBJ_FILES) $(MS_TARGET) PDSA_STUBS MGMT_STUBS
 	@echo Building PDSA binary
 	$(CXX) -g -DNAPLES_BUILD -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_PATHS) $(DLD_FLAGS) $(PDSA_LD_LIBS)
 
-$(PEGASUS_BIN): $(OBJ_FILES) $(MS_TARGET) MGMT_STUBS SVC
+$(PEGASUS_BIN): $(OBJ_FILES) $(MS_TARGET) MGMT_STUBS
 	@echo Building Pegasus binary
 	$(CXX) -g -DVENICE_BUILD -o $@ $(CPPFLAGS) $(INC_DIRS) $< $(LD_PATHS) $(DLD_FLAGS) $(PEGASUS_LD_LIBS)
 
@@ -62,10 +61,6 @@ PDSA_STUBS:
 MGMT_STUBS: 				
 	$(MAKE) -C stubs/mgmt
 
-.PHONY: SVC
-SVC: 				
-	$(MAKE) -C svc
-
 MS_BUILD_CFG = $(MS_ROOT)/buildcfg/build_config.mk
 
 $(MS_TARGET): $(MS_BUILD_CFG)
@@ -79,7 +74,6 @@ clean:
 	$(MAKE) clean -C stubs/common		 
 	$(MAKE) clean -C stubs/hals		 
 	$(MAKE) clean -C stubs/mgmt
-	$(MAKE) clean -C svc
 	rm -rf $(PDSA_BIN)
 	rm -rf $(PEGASUS_BIN)
 	rm -rf $(OBJ_DIR)
