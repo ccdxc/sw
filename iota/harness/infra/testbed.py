@@ -354,7 +354,12 @@ class _Testbed:
         resp = None
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         if not GlobalOptions.skip_setup:
-            self.__recover_testbed()
+            try:
+                self.__recover_testbed()
+            except:
+                Logger.error("Failed to recover testbed")
+                Logger.debug(traceback.format_exc())
+                return types.status.CRITICAL
             if GlobalOptions.dryrun:
                 status = types.status.SUCCESS
             else:
