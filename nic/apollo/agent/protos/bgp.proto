@@ -24,6 +24,19 @@ package pds;
 import "meta/meta.proto";
 import "types.proto";
 
+// The bgp service definition
+service BGP {
+  rpc BGPGlobalSpecCreate (BGPGlobalSpec) returns (BGPGlobalSpecResponseMsg) {}
+  rpc BGPGlobalSpecUpdate (BGPGlobalSpec) returns (BGPGlobalSpecResponseMsg) {}
+  rpc BGPGlobalSpecDelete (BGPGlobalSpec) returns (BGPGlobalSpecResponseMsg) {}
+  rpc BGPGlobalSpecGet (BGPGlobalSpec) returns (BGPGlobalSpecResponseMsg) {}
+}
+
+// Global status for BGP
+message BGPGlobalSpecResponseMsg {
+  // API status code
+  types.ApiStatus api_status= 1 [(gogoproto.moretags) = "venice:api_status"];
+}
 
 // Global configuration for BGP
 message BGPGlobalSpec {
