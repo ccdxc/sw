@@ -19,6 +19,7 @@ var (
 	configRegex     = regexp.MustCompile(`\(config\)\# `)
 	configIfRegex   = regexp.MustCompile(`\(config-if\)\# `)
 	configVlanRegex = regexp.MustCompile(`\(config-vlan\)\# `)
+	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
 	configPmapQos   = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
 	configClassQos  = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
 	configSystemQos = regexp.MustCompile(`\(config-sys-qos\)\# `)
@@ -262,7 +263,7 @@ func ConfigVlan(n3k *ConnectCtx, vlanRange string, igmpEnabled bool, timeout tim
 		return buf.String(), err
 	}
 
-	if err := confVlanCmd(exp, fmt.Sprintf("vlan %s\n", vlanRange), timeout); err != nil {
+	if err := confVlanCfgCmd(exp, fmt.Sprintf("vlan config %s\n", vlanRange), timeout); err != nil {
 		return buf.String(), err
 	}
 
@@ -413,6 +414,14 @@ func confVlanCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
 		return err
 	}
 	_, _, err := exp.Expect(configVlanRegex, timeout)
+	return err
+}
+
+func confVlanCfgCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
+	if err := exp.Send(cmd); err != nil {
+		return err
+	}
+	_, _, err := exp.Expect(configVlanCfgRegex, timeout)
 	return err
 }
 
