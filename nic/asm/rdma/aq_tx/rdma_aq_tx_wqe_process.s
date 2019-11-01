@@ -455,17 +455,32 @@ create_qp:
     addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
     phvwr       p.sqcb0.intrinsic.pc, r4
-    phvwr       p.sqcb1.pc, r4
 
-    add         r4, r0, d.{qp.sq_map_count}.wx //BD Slot
-    beqi        r4, 1, qp_skip_dma_pt
+    //obtain barmap end in r2
+    add        r1, r0, K_BARMAP_SIZE, BARMAP_SIZE_SHIFT
+    add        r2, r1, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+
     crestore    [c2, c1], d.{qp.rq_cmb...qp.sq_cmb}, 0x3
+    bcf         [!c2], qp_skip_rq_cmb
+    phvwr       p.sqcb1.pc, r4  // BD Slot
+
+    //obtain tail of the RQ in r5
+    add        r7, d.{qp.rq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+    add        r5, d.qp.rq_depth_log2[4:0], d.qp.rq_stride_log2[4:0]
+    sll        r5, 1, r5
+    add        r5, r7, r5
+
+    //if barmap_end < tail_of_rq, report failure
+    blt        r2, r5, report_bad_attr
+
+qp_skip_rq_cmb:
+    add         r4, r0, d.{qp.sq_map_count}.wx // BD Slot
+    beqi        r4, 1, qp_skip_dma_pt
     
     // Setting up PT translations..
-    PT_BASE_ADDR_GET2(r4) 
+    PT_BASE_ADDR_GET2(r4)   // BD Slot 
     add         r3, r4, d.{qp.sq_tbl_index_xrcd_id}.wx, CAPRI_LOG_SIZEOF_U64
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
-    phvwr       p.sqcb0.pt_base_addr, r5
 
     add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64 //BD Slot
 
@@ -478,46 +493,25 @@ create_qp:
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
     b           qp_no_skip_dma_pt
-    nop
+    phvwr       p.sqcb0.pt_base_addr, r5    // BD Slot
 
 qp_skip_dma_pt: 
 
-    bcf        [!c1 & !c2], qp_skip_cmb
-    //obtain barmap end in r2
-    add        r1, r0, K_BARMAP_SIZE, BARMAP_SIZE_SHIFT
-    add        r2, r1, K_BARMAP_BASE, BARMAP_BASE_SHIFT
-
-    bcf        [!c2], qp_skip_rq_cmb
-
-    //obtain tail of the RQ in r5
-    add        r7, d.{qp.rq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT
-    add        r5, d.qp.rq_depth_log2[4:0], d.qp.rq_stride_log2[4:0]
-    sll        r5, 1, r5
-    add        r5, r7, r5
-
-    //if barmap_end < tail_of_rq, report failure
-    blt        r2, r5, report_bad_attr
-    nop
-
-qp_skip_rq_cmb:
-
+    bcf        [!c1], qp_skip_sq_cmb
     //obtain tail of the SQ in r5
-    add        r4, d.{qp.sq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+    add        r4, d.{qp.sq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT  // BD Slot
     add        r5, d.qp.sq_depth_log2[4:0], d.qp.sq_stride_log2[4:0]
     sll        r5, 1, r5
     add        r5, r4, r5
 
     //if barmap_end < tail_of_sq, report failure
     blt        r2, r5, report_bad_attr
-    nop
 
-    phvwr      p.sqcb0.hbm_sq_base_addr, r4[33:HBM_SQ_BASE_ADDR_SHIFT]
-    phvwr      p.sqcb0.sq_in_hbm, 1
+    phvwr      p.sqcb0.hbm_sq_base_addr, r4[33:HBM_SQ_BASE_ADDR_SHIFT]  // BD Slot
+    b          qp_no_skip_dma_pt
+    phvwr      p.sqcb0.sq_in_hbm, 1     // BD Slot
 
-    b           qp_no_skip_dma_pt
-    nop
-    
-qp_skip_cmb:
+qp_skip_sq_cmb:
 
     add         r2, r0, d.{qp.sq_dma_addr}.dx
     phvwr       p.sqcb0.phy_base_addr, r2[51:12]
@@ -551,10 +545,9 @@ qp_no_skip_dma_pt:
     phvwr       p.rdma_feedback.create_qp.rq_tbl_index, d.{qp.rq_tbl_index_srq_id}.wx
     phvwr       p.rdma_feedback.create_qp.pid, d.dbid_flags
     add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
-    phvwr p.p4_to_p4plus.create_qp_ext.rq_id, r2[23:0]
 
     b           prepare_feedback
-    nop
+    phvwr p.p4_to_p4plus.create_qp_ext.rq_id, r2[23:0]  // BD Slot
     
 stats_hdrs:
     // r3: size of transfer = min(stats hdrs size, wqe.stats.length), not zero

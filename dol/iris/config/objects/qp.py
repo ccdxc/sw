@@ -691,7 +691,7 @@ class QpObjectHelper:
         #PERF RC QPs
         rc_spec = spec.perf_rc
         count = rc_spec.count
-        logger.info("Creating %d %s Perf Qps. for PD:%s" %\
+        logger.info("Creating %d %s Perf Qps (SQ/RQ in NIC). for PD:%s" %\
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
@@ -701,6 +701,31 @@ class QpObjectHelper:
             self.perf_qps.append(qp)
             j += 1
 
+        #PERF RC (Only SQ in NIC) QPs
+        rc_spec = spec.perf_rc_sqnic
+        count = rc_spec.count
+        logger.info("Creating %d %s Perf Qps (Only SQ in NIC). for PD:%s" %\
+                       (count, rc_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            sges = 2 << i
+            logger.info("PerfRC (SQ in NIC) : qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, rc_spec, sges)
+            self.perf_qps.append(qp)
+            j += 1
+
+        #PERF RC (Only RQ in NIC) QPs
+        rc_spec = spec.perf_rc_rqnic
+        count = rc_spec.count
+        logger.info("Creating %d %s Perf Qps (Only RQ in NIC). for PD:%s" %\
+                       (count, rc_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            sges = 2 << i
+            logger.info("PerfRC (RQ in NIC): qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, rc_spec, sges)
+            self.perf_qps.append(qp)
+            j += 1
 
         #UD QPs
         ud_spec = spec.ud

@@ -1088,6 +1088,41 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             self.__set_desc(desc)
             logger.ShowScapyObject(queryAh)
 
+        if self.spec != None and hasattr(self.spec.fields, 'create_qp'):
+            logger.info("Reading Admin Create QP")
+            pd_id = self.spec.fields.create_qp.pd_id if hasattr(self.spec.fields.create_qp, 'pd_id') else 0
+            priv_flags = self.spec.fields.create_qp.priv_flags if hasattr(self.spec.fields.create_qp, 'priv_flags') else 0
+            sq_cq_id = self.spec.fields.create_qp.sq_cq_id if hasattr(self.spec.fields.create_qp, 'sq_cq_id') else 0
+            sq_depth_log2 = self.spec.fields.create_qp.sq_depth_log2 if hasattr(self.spec.fields.create_qp, 'sq_depth_log2') else 0
+            sq_stride_log2 = self.spec.fields.create_qp.sq_stride_log2 if hasattr(self.spec.fields.create_qp, 'sq_stride_log2') else 0
+            sq_page_size_log2 = self.spec.fields.create_qp.sq_page_size_log2 if hasattr(self.spec.fields.create_qp, 'sq_page_size_log2') else 0
+            sq_tbl_index_xrcd_id = self.spec.fields.create_qp.sq_tbl_index_xrcd_id if hasattr(self.spec.fields.create_qp, 'sq_tbl_index_xrcd_id') else 0
+            sq_map_count = self.spec.fields.create_qp.sq_map_count if hasattr(self.spec.fields.create_qp, 'sq_map_count') else 0
+            sq_dma_addr = self.spec.fields.create_qp.sq_dma_addr if hasattr(self.spec.fields.create_qp, 'sq_dma_addr') else 0
+            rq_cq_id = self.spec.fields.create_qp.rq_cq_id if hasattr(self.spec.fields.create_qp, 'rq_cq_id') else 0
+            rq_depth_log2 = self.spec.fields.create_qp.rq_depth_log2 if hasattr(self.spec.fields.create_qp, 'rq_depth_log2') else 0
+            rq_stride_log2 = self.spec.fields.create_qp.rq_stride_log2 if hasattr(self.spec.fields.create_qp, 'rq_stride_log2') else 0
+            rq_page_size_log2 = self.spec.fields.create_qp.rq_page_size_log2 if hasattr(self.spec.fields.create_qp, 'rq_page_size_log2') else 0
+            rq_tbl_index_srq_id = self.spec.fields.create_qp.rq_tbl_index_srq_id if hasattr(self.spec.fields.create_qp, 'rq_tbl_index_srq_id') else 0
+            rq_map_count = self.spec.fields.create_qp.rq_map_count if hasattr(self.spec.fields.create_qp, 'rq_map_count') else 0
+            rq_dma_addr = self.spec.fields.create_qp.rq_dma_addr if hasattr(self.spec.fields.create_qp, 'rq_dma_addr') else 0
+            qp = RdmaAqDescriptorQP(pd_id = pd_id, priv_flags = access_perms_flags,
+                            sq_cq_id = sq_cq_id, sq_depth_log2 = sq_depth_log2,
+                            sq_stride_log2 = sq_stride_log2,
+                            sq_dir_size_log2_rsvd = 0,
+                            sq_page_size_log2 = sq_page_size_log2,
+                            sq_tbl_index_xrcd_id = sq_tbl_index_xrcd_id,
+                            sq_map_count = sq_map_count, sq_dma_addr = sq_dma_addr,
+                            rq_cq_id = rq_cq_id, rq_depth_log2 = rq_depth_log2,
+                            rq_stride_log2 = rq_stride_log2,
+                            rq_dir_size_log2_rsvd = 0,
+                            rq_page_size_log2 = rq_page_size_log2,
+                            rq_tbl_index_srq_id = rq_tbl_index_srq_id,
+                            rq_map_count = rq_map_count, rq_dma_addr = rq_dma_addr)
+            desc = self.desc/qp
+            self.__set_desc(desc)
+            logger.ShowScapyObject(qp)
+
         if self.spec != None and hasattr(self.spec.fields, 'modify_qp'):
             logger.info("Reading Admin Modify QP")
             # TODO: Read values from spec as and when relevant adminQ ModQP tests are added.
