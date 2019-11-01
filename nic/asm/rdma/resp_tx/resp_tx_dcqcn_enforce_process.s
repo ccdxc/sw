@@ -19,7 +19,7 @@ struct resp_tx_s4_t1_k k;
 #define RQCB0_WB_INFO_P t1_s2s_rqcb0_write_back_info
 
 #define IN_TO_S4_P  to_s4_dcqcn_info
-#define K_PKT_LEN CAPRI_KEY_RANGE(IN_TO_S4_P, packet_len_sbit0_ebit4, packet_len_sbit13_ebit13)
+#define K_PKT_LEN CAPRI_KEY_RANGE(IN_TO_S4_P, packet_len_sbit0_ebit3, packet_len_sbit12_ebit13)
 #define TO_S_STATS_INFO_P to_s7_stats_info
 %%
     .param rdma_num_clock_ticks_per_us
@@ -34,7 +34,7 @@ resp_tx_dcqcn_enforce_process:
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.
-    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_enable), 0 //delay slot
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_type), 0 //delay slot
     bcf           [c2], load_write_back
 
     seq           c1, CAPRI_KEY_FIELD(IN_TO_S4_P, resp_rl_failure), 1   // BD Slot
@@ -114,11 +114,11 @@ load_write_back:
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
-    //seq           c2, k.to_stage.s3.dcqcn.congestion_mgmt_enable, 0
+    //seq           c2, k.to_stage.s3.dcqcn.congestion_mgmt_type, 0
     // even though it seems to be referring to "to_s4" data, actually it is 
     // looking at "to_s3". Unfortunately, this confusion cannot be avoided
     // unless we write separate asm programs for s3 and s4.
-    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_enable), 0
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S4_P, congestion_mgmt_type), 0
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 

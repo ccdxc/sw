@@ -15,7 +15,7 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 0;
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.q_key = 0x11111111  #TODO:Need to get from rqp->q_key
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id

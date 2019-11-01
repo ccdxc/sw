@@ -54,7 +54,7 @@ req_tx_dcqcn_enforce_process:
     bcf           [!c1], bubble_to_next_stage
     
     // Skip this stage if congestion_mgmt is disabled.
-    seq           C_TEMP_1, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 0 //delay slot
+    seq           C_TEMP_1, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_type), 0 //delay slot
     bcf           [C_TEMP_1], load_write_back
     nop // BD Slot
 
@@ -115,6 +115,9 @@ token_replenish:
     slt           C_TEMP_2, r3, d.token_bucket_size
     add.!C_TEMP_2 r3, d.token_bucket_size, r0 
     tblwr         d.cur_avail_tokens, r3  
+
+    // If it's non packet wqe, skip rate enforce for both Rome and Dcqcn
+    bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
 
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens

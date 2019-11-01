@@ -17,7 +17,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
     tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0

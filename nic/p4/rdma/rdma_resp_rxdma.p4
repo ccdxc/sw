@@ -86,8 +86,10 @@
 #define rx_table_s1_t1_action2 resp_rx_atomic_resource_process
 #define rx_table_s1_t2_action resp_rx_dcqcn_cnp_process
 #define rx_table_s1_t2_action1 resp_rx_recirc_mpu_only_process
+#define rx_table_s1_t2_action2 resp_rx_rome_cnp_process
 
 #define rx_table_s1_t3_action resp_rx_dcqcn_ecn_process
+#define rx_table_s1_t3_action1 resp_rx_rome_pkt_process
 
 #define rx_table_s2_t0_action resp_rx_rqwqe_process
 #define rx_table_s2_t0_action1 resp_rx_rsq_backtrack_adjust_process
@@ -1394,6 +1396,27 @@ action resp_rx_dcqcn_ecn_process () {
     // stage to stage
     modify_field(t3_s2s_ecn_info_scr.p_key, t3_s2s_ecn_info.p_key);
     modify_field(t3_s2s_ecn_info_scr.pad, t3_s2s_ecn_info.pad);
+
+}
+
+action resp_rx_rome_pkt_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t3_s2s_ecn_info_scr.p_key, t3_s2s_ecn_info.p_key);
+    modify_field(t3_s2s_ecn_info_scr.pad, t3_s2s_ecn_info.pad);
+}
+
+action resp_rx_rome_cnp_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
 
 }
 

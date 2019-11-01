@@ -99,7 +99,7 @@ struct sqcb0_t {
     state                         : 3;  // RO S0 (WO RXDMA)
 
     sq_in_hbm                     : 1;  // RO
-    congestion_mgmt_enable        : 1;  // RO
+    rsvd5                         : 1;  // RO
     local_ack_timeout             : 5;  // RO
     ring_empty_sched_eval_done    : 1;  // RW S0
 
@@ -142,7 +142,10 @@ struct sqcb0_t {
     spec_enable                   : 1;
     skip_pt                       : 1;
     bktrack_marker_in_progress    : 1;
-    rsvd2                         : 5;
+    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+    congestion_mgmt_type          : 2;  // RO
+    rsvd2                         : 3;
+
 };
 
 struct sqcb1_t {
@@ -155,7 +158,7 @@ struct sqcb1_t {
     rrq_base_addr                  : 32; // RO S0
     log_rrq_size                   : 8;  // RO S0
     service                        : 4;  // RO S0
-    congestion_mgmt_enable         : 1;  // RO S0
+    rsvd8                          : 1;  // RO S0
     log_pmtu                       : 5;  // RO S0 
     err_retry_count                : 3;  // RO SO
     rnr_retry_count                : 3;  // RO S0
@@ -179,7 +182,9 @@ struct sqcb1_t {
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rsvd5                          : 3;
+    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+    congestion_mgmt_type           : 2;  // RO S0
+    rsvd5                          : 1;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0

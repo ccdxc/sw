@@ -130,7 +130,8 @@ bubble_to_next_stage:
 
 load_dcqcn:
     // Skip DCQCN stage if congestion-mgmt is not enabled.
-    bbeq    CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 0, dcqcn_mpu_only
+    seq     c3, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_type), 0
+    bcf     [c3], dcqcn_mpu_only
     phvwr   CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1 // BD-slot
     add     r1, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)

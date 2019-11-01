@@ -32,7 +32,7 @@ struct req_tx_s3_t0_k k;
 #define K_IMM_DATA   CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit2, imm_data2_or_inv_key2_sbit11_ebit15)
 #define K_INV_KEY    K_IMM_DATA
 #define K_NUM_SGES   CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
-#define K_WQE_ADDR   CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit48_ebit63)
+#define K_WQE_ADDR   CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit56_ebit63)
 
 %%
 

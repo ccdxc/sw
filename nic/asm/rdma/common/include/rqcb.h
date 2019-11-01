@@ -62,7 +62,7 @@ struct rqcb0_t {
     log_rq_page_size: 5;        //Ronly
     log_wqe_size: 5;            //Ronly
     log_num_wqes: 5;            //Ronly
-    congestion_mgmt_enable:1;   //Ronly
+    rsvd2: 1;
     state: 3;                   //Ronly?
     log_rsq_size: 5;            //Ronly
 
@@ -89,7 +89,9 @@ struct rqcb0_t {
     drain_in_progress: 1;       //Rw by S0
     skip_pt: 1;
     prefetch_en: 1;             //Rw by S0
-    rsvd: 4;
+    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+    congestion_mgmt_type:2;   //Ronly
+    rsvd: 2;
 
     header_template_addr: 32;   //Ronly
 
@@ -145,7 +147,7 @@ struct rqcb1_t {
     log_rq_page_size: 5;    //Ronly
     log_wqe_size: 5;        //Ronly
     log_num_wqes: 5;        //Ronly
-    congestion_mgmt_enable:1;   //Ronly
+    rsvd4: 1;   //Ronly
     state: 3;               //Ronly ?
     log_rsq_size: 5;        //Ronly     
     
@@ -169,7 +171,9 @@ struct rqcb1_t {
     work_not_done_recirc_cnt: 8; //rw by S0
 
     busy: 1; // set to 1 by S0, to 0 by S3
-    rsvd1: 7;
+    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+    congestion_mgmt_type: 2;
+    rsvd1: 5;
     in_progress: 1;         // written by S4, read by S0
     rsvd2: 7;
     spec_cindex: 16;  // cindex used for speculation

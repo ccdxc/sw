@@ -17,7 +17,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     rs.lqp.rq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
@@ -211,6 +211,6 @@ def TestCaseTeardown(tc):
     tc.pvtdata.dcqcn_profile.data = copy.deepcopy(tc.pvtdata.pre_dcqcn_profile)
     tc.pvtdata.dcqcn_profile.WriteWithDelay()
     rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 0;
     rs.lqp.sq.qstate.WriteWithDelay()
     return

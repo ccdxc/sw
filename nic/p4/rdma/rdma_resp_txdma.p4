@@ -102,7 +102,7 @@
     modify_field(phv_global_common_scr.cb_addr, phv_global_common.cb_addr);\
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
-    modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
+    modify_field(phv_global_common_scr.ah_base_addr_page_id, phv_global_common.ah_base_addr_page_id);\
     modify_field(phv_global_common_scr._error_disable_qp, phv_global_common._error_disable_qp);\
     modify_field(phv_global_common_scr._only, phv_global_common._only);\
     modify_field(phv_global_common_scr._first, phv_global_common._first);\
@@ -146,8 +146,8 @@ header_type resp_tx_rqcb_to_ack_info_t {
 header_type resp_tx_to_stage_rsq_rkey_info_t {
     fields {
         dcqcn_cb_addr                    :   34;
-        congestion_mgmt_enable           :    1;
-        rsvd                             :   93;
+        congestion_mgmt_type             :    2;
+        rsvd                             :   92;
     }
 }
 
@@ -159,7 +159,7 @@ header_type phv_global_common_t {
         cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
-        pad                              :   22;
+        ah_base_addr_page_id             :   22;
         _rsvd_flags                      :    8;
         _atomic_resp                     :    1;
         _read_resp                       :    1;
@@ -247,10 +247,10 @@ header_type resp_tx_cfg_to_dcqcn_info_t {
 header_type resp_tx_to_stage_dcqcn_info_t {
     fields {
         dcqcn_cb_addr                    :   34;
-        congestion_mgmt_enable           :    1;
+        congestion_mgmt_type             :    2;
         packet_len                       :   14;
         resp_rl_failure                  :    1;
-        rsvd                             :   46;
+        rsvd                             :   45;
         pd                               :   32;
     }
 }
@@ -643,7 +643,7 @@ action resp_tx_dcqcn_enforce_process_s2 () {
 
     // to stage
     modify_field(to_s2_dcqcn_info_scr.dcqcn_cb_addr, to_s2_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s2_dcqcn_info_scr.congestion_mgmt_enable, to_s2_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s2_dcqcn_info_scr.congestion_mgmt_type, to_s2_dcqcn_info.congestion_mgmt_type);
     modify_field(to_s2_dcqcn_info_scr.packet_len, to_s2_dcqcn_info.packet_len);
     modify_field(to_s2_dcqcn_info_scr.rsvd, to_s2_dcqcn_info.rsvd);
 
@@ -661,7 +661,7 @@ action resp_tx_dcqcn_enforce_process () {
 
     // to stage
     modify_field(to_s4_dcqcn_info_scr.dcqcn_cb_addr, to_s4_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_enable, to_s4_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_info_scr.congestion_mgmt_type, to_s4_dcqcn_info.congestion_mgmt_type);
     modify_field(to_s4_dcqcn_info_scr.packet_len, to_s4_dcqcn_info.packet_len);
     modify_field(to_s4_dcqcn_info_scr.resp_rl_failure, to_s4_dcqcn_info.resp_rl_failure);
     modify_field(to_s4_dcqcn_info_scr.rsvd, to_s4_dcqcn_info.rsvd);
@@ -673,6 +673,7 @@ action resp_tx_dcqcn_enforce_process () {
     modify_field(t1_s2s_rqcb0_write_back_info_scr.pad, t1_s2s_rqcb0_write_back_info.pad);
 
 }
+
 action resp_tx_dcqcn_rate_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -961,10 +962,11 @@ action resp_tx_rsqrkey_process () {
 
     // to stage
     modify_field(to_s3_dcqcn_info_scr.dcqcn_cb_addr, to_s3_dcqcn_info.dcqcn_cb_addr);
-    modify_field(to_s3_dcqcn_info_scr.congestion_mgmt_enable, to_s3_dcqcn_info.congestion_mgmt_enable);
+    modify_field(to_s3_dcqcn_info_scr.congestion_mgmt_type, to_s3_dcqcn_info.congestion_mgmt_type);
     modify_field(to_s3_dcqcn_info_scr.packet_len, to_s3_dcqcn_info.packet_len);
     modify_field(to_s3_dcqcn_info_scr.rsvd, to_s3_dcqcn_info.rsvd);
     modify_field(to_s3_dcqcn_info_scr.pd, to_s3_dcqcn_info.pd);
+
 
     // stage to stage
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.transfer_va, t0_s2s_rsqwqe_to_rkey_info.transfer_va);

@@ -18,7 +18,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     rs.lqp.sq.qstate.Read()
     rs.lqp.rq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.va = 0x0102030405060708;
     tc.pvtdata.r_key = 0x0A0B0C0D;

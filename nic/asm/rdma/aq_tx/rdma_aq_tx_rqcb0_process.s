@@ -39,7 +39,7 @@ hdr_update:
     // Update cos(tm_iq) in qstate.
     tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
     tblwr.c1    d.dcqcn_cfg_id, K_DCQCN_PROFILE
-    tblwr.c1    d.congestion_mgmt_enable, 1
+    tblwr.c1    d.congestion_mgmt_type, 1
 
 dst_qp:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P, dst_qp_valid), 1, rsq_base

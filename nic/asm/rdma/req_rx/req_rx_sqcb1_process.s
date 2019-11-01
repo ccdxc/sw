@@ -32,6 +32,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_rrqwqe_process
     .param    req_rx_cqcb_process
     .param    req_rx_dcqcn_ecn_process
+    .param    req_rx_rome_pkt_process
     .param    req_rx_recirc_mpu_only_process
     .param    req_rx_timer_expiry_process
     .param    req_rx_dummy_sqcb1_write_back_process
@@ -112,16 +113,27 @@ token_id_check:
     bcf         [!c2], recirc_for_turn
 
 skip_token_id_check:
+    //Check if congestion management type is Rome
+    seq            c3, d.congestion_mgmt_type, 2
+    bcf            [!c3], dcqcn_ecn_process
+
+    add            r2, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr //BD Slot
+    add            r2, r2, DCQCN_CB_T_SIZE_BYTES // rome_receiver_cb addr
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_rome_pkt_process, r2)
+    b              process_rx_pkt
+    nop //BD Slot
+
+dcqcn_ecn_process:
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
     sne            c5, k.rdma_bth_ecn, 3  // BD-Slot
-    sne            c6, d.congestion_mgmt_enable, 1
+    sne            c6, d.congestion_mgmt_type, 1
     bcf            [c5 | c6], process_rx_pkt
 
     // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
-    add     r2, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr //BD Slot
-    CAPRI_RESET_TABLE_3_ARG()
+    CAPRI_RESET_TABLE_3_ARG() //BD Slot
     phvwr   CAPRI_PHV_FIELD(ECN_INFO_P, p_key), CAPRI_APP_DATA_BTH_P_KEY
 
+    // r2 has been calculated in BD Slot
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_dcqcn_ecn_process, r2)
 
 process_rx_pkt:

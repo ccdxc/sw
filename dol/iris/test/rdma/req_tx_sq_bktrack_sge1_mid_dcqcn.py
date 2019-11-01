@@ -18,7 +18,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.sq_pre_qstate_save = copy.deepcopy(rs.lqp.sq.qstate.data)
     # Enable DCQCN
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0
 

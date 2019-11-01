@@ -39,7 +39,7 @@ hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rsq_base
     nop
 
-    tblwr       d.congestion_mgmt_enable, K_CONGESTION_MGMT_ENABLED
+    tblwr       d.congestion_mgmt_type, K_CONGESTION_MGMT_ENABLED
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr       d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
 

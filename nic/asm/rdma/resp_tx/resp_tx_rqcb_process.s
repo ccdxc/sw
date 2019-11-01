@@ -98,13 +98,14 @@ skip_memwr:
 rsq_process:
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
-        // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        phvwrpair   CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), \
-                    DCQCNCB_ADDR, \
-                    CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), \
-                    d.congestion_mgmt_enable
-
-        CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
+        // Pass congestion_mgmt_type flag to stages 3 and 4.
+        // congestion_mgmt_type: 0 means congestion mgmt is not enabled.
+        sne             c1, d.congestion_mgmt_type, 0 //BD-Slot
+        phvwrpair.c1    CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), DCQCNCB_ADDR, \
+                        CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_type), d.congestion_mgmt_type
+        // Pass congestion_mgmt_type flag to stages 4.
+        // the first bit of congestion_mgmt_type indicates DCQCN or ROME for now
+        CAPRI_SET_FIELD2_C(TO_S4_P, congestion_mgmt_type, d.congestion_mgmt_type, c1)
 
         sll             RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
         add             RSQWQE_P, RSQWQE_P, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
@@ -144,11 +145,12 @@ rsq_process:
 
         add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
-        // Pass congestion_mgmt_enable flag to stages 3 and 4.
-        phvwrpair       CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), DCQCNCB_ADDR, \
-                        CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_enable), d.congestion_mgmt_enable
-
-        CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
+        // Pass congestion_mgmt_type flag to stages 3 and 4.
+        // congestion_mgmt_type: 0 means congestion mgmt is not enabled.
+        sne             c1, d.congestion_mgmt_type, 0 //BD-Slot
+        phvwrpair.c1    CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), DCQCNCB_ADDR, \
+                        CAPRI_PHV_FIELD(TO_S3_P, congestion_mgmt_type), d.congestion_mgmt_type
+        CAPRI_SET_FIELD2_C(TO_S4_P, congestion_mgmt_type, d.congestion_mgmt_type, c1)
 
         // send serv_type and ack processing flag to stage 5 (writeback)
         //TBD: can we move setting ack_nak_process bit to ack_process program ?

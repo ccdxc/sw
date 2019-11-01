@@ -112,7 +112,7 @@ class RdmaRQstate(Packet):
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
-        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("rsvd2", 0, 1),
         BitField("cb0_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
 
@@ -126,7 +126,8 @@ class RdmaRQstate(Packet):
         BitField("drain_in_progress", 0, 1),
         BitField("skip_pt", 0, 1),
         BitField("prefetch_en", 0, 1),
-        BitField("rsvd", 0, 4),
+        BitField("congestion_mgmt_type", 0, 2),
+        BitField("rsvd", 0, 2),
 
         XIntField("header_template_addr", 0),
 
@@ -161,7 +162,7 @@ class RdmaRQstate(Packet):
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
-        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("rsvd4", 0, 1),
         BitField("cb1_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
 
@@ -185,7 +186,8 @@ class RdmaRQstate(Packet):
         ByteField("work_not_done_recirc_cnt", 0),
 
         BitField("busy", 0, 1),
-        BitField("rqcb1_rsvd1", 0, 7),
+        BitField("congestion_mgmt_type",0, 2),
+        BitField("rqcb1_rsvd1", 0, 5),
         BitField("in_progress", 0, 1),
         BitField("rqcb1_rsvd2", 0, 7),
         LEShortField("spec_cindex", 0),
@@ -402,7 +404,7 @@ class RdmaSQstate(Packet):
         BitField("flush_rq", 0, 1),
         BitField("state", 0, 3),
         BitField("sq_in_hbm", 0, 1),
-        BitField("congestion_mgmt_enable",0, 1),
+        BitField("rsvd5",0, 1),
         BitField("local_ack_timeout", 0, 5),
         BitField("ring_empty_sched_eval_done", 0, 1),
 
@@ -428,8 +430,8 @@ class RdmaSQstate(Packet):
         BitField("spec_enable", 0, 1),
         BitField("skip_pt", 0, 1),
         BitField("bktrack_marker_in_progress", 0, 1),
-        BitField("sqcb0_rsvd2", 0, 5),
-        
+        BitField("congestion_mgmt_type",0, 2),
+        BitField("sqcb0_rsvd2", 0, 3),        
 
         # SQCB1 
         ByteField("pc_offset", 0),
@@ -441,7 +443,7 @@ class RdmaSQstate(Packet):
         XIntField("sqcb1_rrq_base_addr", 0),
         ByteField("sqcb1_log_rrq_size", 0),
         BitField("service", 0, 4),
-        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("rsvd8", 0, 1),
         BitField("sqcb1_log_pmtu", 0xa, 5),
         BitField("err_retry_count", 0, 3),
         BitField("rnr_retry_count", 0, 3),
@@ -465,7 +467,8 @@ class RdmaSQstate(Packet):
         X3BytesField("msn", 0),
 
         BitField("credits", 0, 5),
-        BitField("sqcb1_rsvd5", 0, 3),
+        BitField("congestion_mgmt_type", 0, 2),
+        BitField("sqcb1_rsvd5", 0, 1),
 
         X3BytesField("max_tx_psn", 0),
         X3BytesField("max_ssn", 0),

@@ -426,13 +426,14 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
-    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, log_num_kt: {}, log_num_dcqcn: {}, ah_base_addr_page_id: {}, "
+    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, log_num_kt: {}, log_num_dcqcn: {}, log_num_ah: {},  ah_base_addr_page_id: {}, "
                     "barmap_base: {} rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
            sram_lif_entry.log_num_kt_entries,
            sram_lif_entry.log_num_dcqcn_profiles,
+           sram_lif_entry.log_num_ah_entries,
            sram_lif_entry.ah_base_addr_page_id,
            sram_lif_entry.barmap_base_addr,
            sram_lif_entry.rdma_en_qtype_mask,

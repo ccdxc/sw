@@ -61,7 +61,8 @@ invoke_dcqcn:
                 CAPRI_PHV_FIELD(RQCB0_WB_INFO_P, read_rsp_in_progress), \
                 IN_PROGRESS
 
-    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 1, dcqcn
+    seq            c3, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_type), 1
+    bcf            [c3], dcqcn
     add            r3,  r0, K_DCQCN_CB_ADDR // BD slot
 
 dcqcn_mpu_only:

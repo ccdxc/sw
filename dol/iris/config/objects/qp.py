@@ -39,6 +39,8 @@ from infra.common.glopts import GlobalOptions
 # asm/rdma/common/include/types.h
 AH_ENTRY_T_SIZE_BYTES = 72
 DCQCN_CB_T_SIZE_BYTES = 64
+AT_ENTRY_SIZE_BYTES = 200
+ROME_CB_T_SIZE_BYTES = 64
 
 class QpObject(base.ConfigObjectBase):
     def __init__(self, pd, qp_id, spec, sges):
@@ -354,11 +356,11 @@ class QpObject(base.ConfigObjectBase):
         if (GlobalOptions.dryrun): return
         # Congestion management will be enabled by the tests that need it
         self.sq.qstate.Read()
-        self.sq.qstate.data.congestion_mgmt_enable = 0
+        self.sq.qstate.data.congestion_mgmt_type = 0
         self.sq.qstate.WriteWithDelay()
 
         self.rq.qstate.Read()
-        self.rq.qstate.data.congestion_mgmt_enable = 0
+        self.rq.qstate.data.congestion_mgmt_type = 0
         self.rq.qstate.WriteWithDelay()
 
         if not self.svc == 3 and not self.remote:
@@ -558,8 +560,8 @@ class QpObject(base.ConfigObjectBase):
 
         # header_template size is 66. The address is maintained only to calculate
         # dcqcn_cb address.
-        # 136 = [ 66 (header_template_t) + 1 (ah_size) + 64 (dcqcncb_t) ] 8 byte aligned
-        self.header_temp_addr = self.lif.rdma_at_base_addr + (ah_handle * 136)
+        # 200 = [ 66 (header_template_t) + 1 (ah_size) + 64 (dcqcncb_t) + 64 (rome_receiver_cb_t)] 8 byte aligned
+        self.header_temp_addr = self.lif.rdma_at_base_addr + (ah_handle * 200)
 
         self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
         logger.info(" RdmaQpUpdate Oper: SET_AV ah_handle: %d "%
@@ -587,6 +589,41 @@ class QpObject(base.ConfigObjectBase):
         self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
         logger.ShowScapyObject(self.dcqcn_data)
         logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
+        return
+
+    def WriteRomeSenderCb(self):
+        if (GlobalOptions.dryrun): return
+        # rome_sender_cb is located after header_template. header_template is 66 bytes len and 1 byte ah_size.
+        logger.info("Writing ROME_SENDER Qstate @0x%x  size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
+        model_wrap.write_mem_pcie(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, bytes(self.rome_sender_data), ROME_CB_T_SIZE_BYTES)
+        self.ReadRomeSenderCb()
+        return
+
+    def ReadRomeSenderCb(self):
+        if (GlobalOptions.dryrun):
+            return
+        self.rome_sender_data = RdmaROME_SENDERstate(model_wrap.read_mem(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
+        logger.ShowScapyObject(self.rome_sender_data)
+        logger.info("Read ROME_SENDER Qstate @0x%x size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
+        return
+
+    # Routines to read and write to rome_cb
+    def WriteRomeReceiverCb(self):
+        if (GlobalOptions.dryrun): return
+        # rome_receiver_cb is located after ah table and dcqcn table. header_template is 66 bytes len and 1 byte ah_size.
+        logger.info("Writing ROME_RECEIVER Qstate @0x%x  size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
+        model_wrap.write_mem_pcie(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES, bytes(self.rome_receiver_data), ROME_CB_T_SIZE_BYTES)
+        self.ReadRomeReceiverCb()
+        return
+
+    def ReadRomeReceiverCb(self):
+        if (GlobalOptions.dryrun):
+            rome_receiver_data = bytes(ROME_CB_T_SIZE_BYTES)
+            self.rome_receiver_data = RdmaROME_RECEIVERstate(rome_receiver_data)
+            return
+        self.rome_receiver_data = RdmaROME_RECEIVERstate(model_wrap.read_mem(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
+        logger.ShowScapyObject(self.rome_receiver_data)
+        logger.info("Read ROME_RECEIVER Qstate @0x%x size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES, ROME_CB_T_SIZE_BYTES))
         return
 
     # Routines to read and write to atomic_res_addr
@@ -638,7 +675,6 @@ class RdmaDCQCNstate(scapy.Packet):
         scapy.BitField("resp_rl_failure", 0, 1),
         scapy.BitField("rsvd0", 0, 1),
         
-
         scapy.BitField("last_sched_timestamp", 0, 48),
         scapy.BitField("delta_tokens_last_sched", 0, 16),
         scapy.BitField("cur_avail_tokens", 0, 48),
@@ -647,6 +683,70 @@ class RdmaDCQCNstate(scapy.Packet):
 
         scapy.ByteField("num_sched_drop", 0),
         scapy.BitField("cur_timestamp", 0, 32),
+    ]
+
+class RdmaROME_SENDERstate(scapy.Packet):
+    name = "RdmaROME_SENDERstate"
+    fields_desc = [
+        scapy.BitField("localClkResolution", 0, 8),
+        scapy.BitField("remoteClkRightShift", 0, 8),
+        scapy.BitField("clkScaleFactor", 0, 31),
+        scapy.BitField("txMinRate", 0, 17),
+
+        scapy.BitField("remoteClkStartEpoch", 0, 32),
+        scapy.BitField("stalocalClkStartEpochte", 0, 48),
+        scapy.BitField("totalBytesSent", 0, 32),
+        scapy.BitField("totalBytesAcked", 0, 32),
+        scapy.BitField("window", 0, 32),
+        scapy.BitField("currentRate", 0, 27),
+        scapy.BitField("log_sq_size", 0, 5),
+        scapy.BitField("numCnpPktsRx", 0, 32),
+
+        scapy.BitField("last_sched_timestamp", 0, 48),
+        scapy.BitField("delta_ticks_last_sched", 0, 16),
+        scapy.BitField("cur_avail_tokens", 0, 48),
+        scapy.BitField("token_bucket_size", 0, 48),
+        scapy.BitField("sq_cindex", 0, 16),
+        scapy.BitField("cur_timestamp", 0, 32),
+    ]
+
+class RdmaROME_RECEIVERstate(scapy.Packet):
+    name = "RdmaROME_RECEIVERstate"
+    fields_desc = [
+        scapy.BitField("state", 0, 3),
+        scapy.BitField("rsvd0", 0, 5),
+
+        scapy.BitField("minTimestampDiff", 0, 32),
+
+        scapy.BitField("linkDataRate", 0, 2),
+        scapy.BitField("recoverRate", 0, 27),
+        scapy.BitField("minRate", 0, 27),
+
+        scapy.BitField("weight", 0, 4),
+        scapy.BitField("rxDMA_tick", 0, 3),
+        scapy.BitField("wait", 0, 1),
+
+        scapy.BitField("avgDelay", 0, 20),
+        scapy.BitField("preAvgDelay", 0, 20),
+        scapy.BitField("cycleMinDelay", 0, 20),
+        scapy.BitField("cycleMaxDelay", 0, 20),
+
+        scapy.BitField("totalBytesRx", 0, 32),
+        scapy.BitField("rxBurstBytes", 0, 16),        
+        scapy.BitField("byte_update", 0, 16),
+        scapy.BitField("th_byte", 0, 32),
+
+        scapy.BitField("cur_timestamp", 0, 10),
+        scapy.BitField("thput", 0, 27),
+        scapy.BitField("MD_amount", 0, 27),
+        scapy.BitField("last_cycle", 0, 32),
+        scapy.BitField("last_thput", 0, 32),
+        scapy.BitField("last_epoch", 0, 32),
+        scapy.BitField("last_update", 0, 32),
+
+        scapy.BitField("txDMA_tick", 0, 3),
+        scapy.BitField("fspeed_cnt", 0, 10),
+        scapy.BitField("currentRate", 0, 27),
     ]
 
 class RdmaAtomicResState(scapy.Packet):

@@ -16,13 +16,13 @@ def TestCaseSetup(tc):
 
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
-    rs.lqp.rq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.rq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.rq.qstate.WriteWithDelay()
     tc.pvtdata.test_timer = 1
 
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
-    rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
     tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0

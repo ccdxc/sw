@@ -1234,9 +1234,10 @@ union header_template_t {
 #define AH_ENTRY_T_SIZE_BYTES           72
 // DCQCN CB, bytes size of dcqcn_cb_t, size aligned to 8 bytes
 #define DCQCN_CB_T_SIZE_BYTES           64
-// AH Table Entry has header template and DCQCN CB
-#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
-
+// ROME CB, 64 bytes
+#define ROME_CB_T_SIZE_BYTES    64
+// AH Table Entry has header template, DCQCN CB and ROME CB
+#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES + ROME_CB_T_SIZE_BYTES)
 
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20
@@ -1424,6 +1425,69 @@ struct dcqcn_cb_t {
     // For model testing only.
     num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.
     cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
+};
+
+// ROME CB on sender side
+struct rome_sender_cb_t {
+    localClkResolution:      8; // power of 2 multiplier of local clk to define timestamp unit of measurement
+    remoteClkRightShift:     8; // right shift after multiply to convert result into clk ticks at the remote clk rate
+    clkScaleFactor:         31; // scaling factor to convert clk ticks from local clk rate into remote clk rate
+    txMinRate:              17; // minimum pkt transmission rate in Mbps
+
+    remoteClkStartEpoch:    32; // value of remote clk counter at the start of the current epoch
+    localClkStartEpoch:     48; // value of local hardware clk free-running counter at the start of the current epoch
+
+    totalBytesSent:         32; // total bytes transmitted on this flow modulo 2^32
+    totalBytesAcked:        32; // total bytes acknowledged by receiver on this flow modulo 2^32
+    window:                 32; // window size, max tx bytes allowed before ack
+    currentRate:            27; // current pkt transmission rate in Kbps
+    log_sq_size:             5;
+    numCnpPktsRx:           32; // number of CNP pkts received on this flow
+
+    last_sched_timestamp:   48;
+    delta_ticks_last_sched: 16;
+    cur_avail_tokens:       48;
+    token_bucket_size:      48; // DCQCN enforced BC (committed-burst) in bits.
+    sq_cindex:              16;
+    cur_timestamp:          32; // For debugging on Model since model doesnt have timestamps
+};
+
+// ROME CB on receiver side.
+struct rome_receiver_cb_t {
+    state:                   3; // flowStateEnum, current state of flow state machine
+    rsvd0:                   5;
+
+    minTimestampDiff:       32; // minimum observed difference between local and remote integer timestamps
+
+    linkDataRate:            2; // data transmission rate on wire in Kbps, set to the minimum of sender and receiver link rate, potentially only 2 bit to indicate 25G, 50G, 40G and 100G?
+    recoverRate:            27; // RxMDA: target transmission rate in Kbps
+    minRate:                27; //lowest transmission rate we can set on any flow in Kbps
+    
+    weight:                  4; // weight determines the Additive Increase amount: MinRate*weight
+    rxDMA_tick:              3; // RxMDA: tick used to sync up RxDMA and TxDMA
+    wait:                    1; // RxMDA: waiting for TxDMA to finish
+
+    avgDelay:               20; // RxMDA: exponentially weighted moving average of one-way pkt delay
+    preAvgDelay:            20; // TxMDA: value of avgDelay from the previous update period
+    cycleMinDelay:          20; // RxMDA: min pkt latency observed during current cycle of 3 update periods
+    cycleMaxDelay:          20; // RxMDA: max pkt latency observed during current cycle of 3 update periods
+
+    totalBytesRx:           32; // RxMDA: total bytes received by the QP, used to return credit in credit loop
+    rxBurstBytes:           16; // RxMDA: credit accumulator for credit loop in bytes
+    byte_update:            16; // RxMDA: bytes received since last update
+    th_byte:                32; // RxMDA: bytes accumulated since last throughput update
+
+    cur_timestamp:          10; // For debugging on Model since model doesnt have timestamps
+    thput:                  27; // RxMDA: the current measure of flow throughput
+    MD_amount:              27; // RxMDA: accumulated MD rate deduction
+    last_cycle:             32; // RxMDA: time of last min/max latency cycle reset in units of localClk
+    last_thput:             32; // RxMDA: time of last throughput measurement
+    last_epoch:             32; // RxMDA: time of last epoch of target delay reset
+    last_update:            32; // RxMDA: time of last periodic update
+
+    txDMA_tick:              3; // TxMDA: tick used to sync up RxDMA and TxDMA
+    fspeed_cnt:             10; // TxMDA: number of update-periods after reaching full speed
+    currentRate:            27; // TxMDA: current transmission rate in Kbps, changed in TxDMA
 };
 
 #define RDMA_COMPLETION_FEEDBACK      0x1
@@ -1655,6 +1719,7 @@ struct resp_rx_send_fml_t {
 #define AQ_CAPTRACE_DISABLE     8
 #define AQ_STATS_DUMP_TYPE_DCQCN_CONFIG 9
 #define AQ_STATS_DUMP_TYPE_DCQCN_CB 10
+#define AQ_STATS_DUMP_TYPE_ROME_RECEIVER 11
 
 #define AQ_QPF_LOCAL_WRITE      0x00000001
 #define AQ_QPF_REMOTE_WRITE     0x00000002

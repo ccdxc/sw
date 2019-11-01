@@ -201,7 +201,7 @@ trigger_dcqcn:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
 
-    seq           c2, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 1  
+    seq           c2, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_type), 1  
     bcf           [c1 & c2], write_back
     add           r1, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 

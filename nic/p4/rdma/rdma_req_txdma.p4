@@ -516,9 +516,9 @@ header_type req_tx_to_stage_sqsge_info_t {
     fields {
         header_template_addr             : 32;
         packet_len                       : 14;
-        congestion_mgmt_enable           : 1;
+        congestion_mgmt_type             : 2;
         priv_oper_enable                 : 1;
-        pad                              : 16;
+        pad                              : 15;
         spec_msg_psn                     : 24;
         spec_enable                      : 1;
     }
@@ -528,9 +528,9 @@ header_type req_tx_to_stage_dcqcn_bind_mw_info_t {
     fields {
         header_template_addr_or_pd       : 32; 
         packet_len                       : 14;
-        congestion_mgmt_enable           : 1; 
-        host_addr_spec_enable            : 1;
-        pad                              : 15;
+        congestion_mgmt_type             :  2; 
+        host_addr_spec_enable            :  1;
+        pad                              : 14;
         spec_reset                       :  1;
         mr_l_key                         : 32; 
         mr_cookie_msg_psn                : 32; 
@@ -541,8 +541,8 @@ header_type req_tx_to_stage_frpmr_sqlkey_info_t {
     fields {
         header_template_addr_or_pd       : 32;
         packet_len                       : 14;
-        congestion_mgmt_enable           : 1;
-        rsvd                             : 17;
+        congestion_mgmt_type             :  2;
+        rsvd                             : 16;
         len                              : 64;
     }
 }
@@ -575,7 +575,7 @@ header_type req_tx_to_stage_frpmr_sqcb_wb_info_t {
 //        spec_cindex                      :   16;
 //        header_template_addr             :   32;
 //       packet_len                       :   14;
-//        congestion_mgmt_enable           :    1;
+//        congestion_mgmt_type           :    1;
 //        fence                            :    1;
 //    }
 //}
@@ -1420,7 +1420,7 @@ action req_tx_sqlkey_recirc_process_t0 () {
 
     // to stage
     modify_field(to_s1_dcqcn_bind_mw_info_scr.header_template_addr_or_pd, to_s1_dcqcn_bind_mw_info.header_template_addr_or_pd);
-    modify_field(to_s1_dcqcn_bind_mw_info_scr.congestion_mgmt_enable, to_s1_dcqcn_bind_mw_info.congestion_mgmt_enable);
+    modify_field(to_s1_dcqcn_bind_mw_info_scr.congestion_mgmt_type, to_s1_dcqcn_bind_mw_info.congestion_mgmt_type);
 
 
     // stage to stage
@@ -1454,7 +1454,7 @@ action req_tx_sqlkey_invalidate_process_t0 () {
 
     // to stage
     modify_field(to_s4_dcqcn_bind_mw_info_scr.header_template_addr_or_pd, to_s4_dcqcn_bind_mw_info.header_template_addr_or_pd);
-    modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_enable, to_s4_dcqcn_bind_mw_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_type, to_s4_dcqcn_bind_mw_info.congestion_mgmt_type);
 
     // stage to stage
     modify_field(t0_s2s_sqwqe_to_lkey_inv_info_scr.sge_index, t0_s2s_sqwqe_to_lkey_inv_info.sge_index);
@@ -1482,7 +1482,7 @@ action req_tx_frpmr_sqlkey_process_t0 () {
 
     // to stage
     modify_field(to_s4_frpmr_sqlkey_info_scr.header_template_addr_or_pd, to_s4_frpmr_sqlkey_info.header_template_addr_or_pd);
-    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_enable, to_s4_frpmr_sqlkey_info.congestion_mgmt_enable);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_type, to_s4_frpmr_sqlkey_info.congestion_mgmt_type);
     modify_field(to_s4_frpmr_sqlkey_info_scr.len, to_s4_frpmr_sqlkey_info.len);
     modify_field(to_s4_frpmr_sqlkey_info_scr.rsvd, to_s4_frpmr_sqlkey_info.rsvd);
 
@@ -1507,7 +1507,7 @@ action req_tx_frpmr_sqlkey_process_t1 () {
 
     // to stage
     modify_field(to_s4_frpmr_sqlkey_info_scr.header_template_addr_or_pd, to_s4_frpmr_sqlkey_info.header_template_addr_or_pd);
-    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_enable, to_s4_frpmr_sqlkey_info.congestion_mgmt_enable);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_type, to_s4_frpmr_sqlkey_info.congestion_mgmt_type);
     modify_field(to_s4_frpmr_sqlkey_info_scr.len, to_s4_frpmr_sqlkey_info.len);
     modify_field(to_s4_frpmr_sqlkey_info_scr.rsvd, to_s4_frpmr_sqlkey_info.rsvd);
 
@@ -1652,7 +1652,7 @@ action req_tx_sqsge_process () {
     // to stage
     modify_field(to_s3_sqsge_info_scr.header_template_addr, to_s3_sqsge_info.header_template_addr);
     modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
-    modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
+    modify_field(to_s3_sqsge_info_scr.congestion_mgmt_type, to_s3_sqsge_info.congestion_mgmt_type);
     modify_field(to_s3_sqsge_info_scr.priv_oper_enable, to_s3_sqsge_info.priv_oper_enable);
     modify_field(to_s3_sqsge_info_scr.pad, to_s3_sqsge_info.pad);
     modify_field(to_s3_sqsge_info_scr.spec_msg_psn, to_s3_sqsge_info.spec_msg_psn);
@@ -1856,7 +1856,7 @@ action req_tx_dcqcn_enforce_process_s3 () {
 
     // to stage
     modify_field(to_s3_sqsge_info_scr.header_template_addr, to_s3_sqsge_info.header_template_addr);
-    modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
+    modify_field(to_s3_sqsge_info_scr.congestion_mgmt_type, to_s3_sqsge_info.congestion_mgmt_type);
     modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
 
     // stage to stage
@@ -1897,8 +1897,8 @@ action req_tx_dcqcn_enforce_process_s4 () {
                  to_s4_dcqcn_bind_mw_info.spec_reset);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.packet_len,
                  to_s4_dcqcn_bind_mw_info.packet_len);
-    modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_enable,
-                 to_s4_dcqcn_bind_mw_info.congestion_mgmt_enable);
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_type,
+                 to_s4_dcqcn_bind_mw_info.congestion_mgmt_type);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.mr_cookie_msg_psn,
                  to_s4_dcqcn_bind_mw_info.mr_cookie_msg_psn);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.host_addr_spec_enable,

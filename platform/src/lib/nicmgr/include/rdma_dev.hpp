@@ -32,7 +32,10 @@
 #define AH_ENTRY_T_SIZE_BYTES           72
 // DCQCN CB, bytes size of dcqcn_cb_t, aligned to 8 bytes
 #define DCQCN_CB_T_SIZE_BYTES           64
-// AH Table Entry has header template and DCQCN CB
+// ROME CB, 64 bytes
+#define ROME_CB_T_SIZE_BYTES            64
+// AH Table Entry has header template, DCQCN CB and ROME CB
+// TODO: congestion_mgmt_type is a LIF config, need to integrate with driver change. Now we are not allocating ROME_CB in hw
 #define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
 
 typedef struct qpcb_ring_s {
@@ -251,6 +254,67 @@ typedef struct dcqcn_config_cb_s {
     uint32_t		rp_hai_rate;
     uint8_t		rp_rsvd[4];
 } PACKED dcqcn_config_cb_t;
+
+typedef struct rome_sender_cb_t{
+    uint8_t  localClkResolution:8;   // power of 2 multiplier of local clk to define timestamp unit of measurement
+    uint8_t  remoteClkRightShift:8;  // right shift after multiply to convert result into clk ticks at the remote clk rate
+    uint32_t clkScaleFactor:32;     // scaling factor to convert clk ticks from local clk rate into remote clk rate
+    uint32_t txMinRate:17;          // minimum pkt transmission rate in Mbps
+
+    uint32_t remoteClkStartEpoch:32; // value of remote clk counter at the start of the current epoch
+    uint64_t localClkStartEpoch:48;  // value of local hardware clk free-running counter at the start of the current epoch
+
+    uint32_t totalBytesSent:32;   // total bytes transmitted on this flow modulo 2^32
+    uint32_t totalBytesAcked:32;  // total bytes acknowledged by receiver on this flow modulo 2^32
+    uint32_t window:32;           // window size, max tx bytes allowed before ack
+    uint32_t currentRate:27;      // current pkt transmission rate in Kbps
+    uint8_t  log_sq_size:5;
+    uint32_t numCnpPktsRx:32;     // number of CNP pkts received on this flow
+
+    uint64_t last_sched_timestamp: 48;
+    uint16_t delta_ticks_last_sched;
+    uint64_t cur_avail_tokens: 48;
+    uint64_t token_bucket_size: 48;
+    uint16_t sq_cindex;
+    uint64_t cur_timestamp: 32;
+} PACKED rome_sender_cb_t;
+
+typedef struct rome_receiver_cb_s{
+    uint8_t state:3;           // flowStateEnum, current state of flow state machine
+    uint8_t rsvd0:5;
+
+    uint32_t minTimestampDiff; // minimum observed difference between local and remote integer timestamps
+
+    uint8_t linkDataRate:2;    // data transmission rate on wire in Kbps, set to the minimum of sender and receiver link rate, potentially only 2 bit to indicate 25G, 50G, 40G and 100G?
+    uint32_t recoverRate:27;   // RxMDA: target transmission rate in Kbps
+    uint32_t minRate:27;       //lowest transmission rate we can set on any flow in Kbps
+    
+    uint8_t weight:4;          // weight determines the Additive Increase amount: MinRate*weight
+    uint8_t rxDMA_tick:3;      // RxMDA: tick used to sync up RxDMA and TxDMA
+    uint8_t wait:1;            // RxMDA: waiting for TxDMA to finish
+
+    uint32_t avgDelay:20;      // RxMDA: exponentially weighted moving average of one-way pkt delay
+    uint32_t preAvgDelay:20;   // TxMDA: value of avgDelay from the previous update period
+    uint32_t cycleMinDelay:20; // RxMDA: min pkt latency observed during current cycle of 3 update periods
+    uint32_t cycleMaxDelay:20; // RxMDA: max pkt latency observed during current cycle of 3 update periods
+
+    uint32_t totalBytesRx;      // RxMDA: total bytes received by the QP, used to return credit in credit loop
+    uint16_t rxBurstBytes;      // RxMDA: credit accumulator for credit loop in bytes
+    uint16_t byte_update;       // RxMDA: bytes received since last update
+    uint32_t th_byte;           // RxMDA: bytes accumulated since last throughput update
+
+    uint16_t cur_timestamp:10;  // For debugging on Model since model doesnt have timestamps
+    uint32_t thput:27;          // RxMDA: the current measure of flow throughput
+    uint32_t MD_amount:27;      // RxMDA: accumulated MD rate deduction
+    uint32_t last_cycle;        // RxMDA: time of last min/max latency cycle reset in units of localClk
+    uint32_t last_thput;        // RxMDA: time of last throughput measurement
+    uint32_t last_epoch;        // RxMDA: time of last epoch of target delay reset
+    uint32_t last_update;       // RxMDA: time of last periodic update
+
+    uint8_t txDMA_tick:3;       // TxMDA: tick used to sync up RxDMA and TxDMA
+    uint16_t fspeed_cnt:10;     // TxMDA: number of update-periods after reaching full speed
+    uint32_t currentRate:27;    // TxMDA: current transmission rate in Kbps, changed in TxDMA
+} PACKED rome_receiver_cb_t;
 
 typedef struct sge_s {
     uint32_t l_key;

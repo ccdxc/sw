@@ -45,6 +45,8 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_dcqcn_ecn_process
+    .param    resp_rx_rome_pkt_process
+    .param    resp_rx_rome_cnp_process
     .param    resp_rx_dcqcn_cnp_process
     .param    rdma_atomic_resource_addr
     .param    resp_rx_read_mpu_only_process
@@ -117,25 +119,46 @@ start_recirc_packet:
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
 
-    //Check if ECN bits are set in Packet and congestion management is enabled.                      
-    bbne     d.congestion_mgmt_enable, 1, skip_cnp_receive
+    // c1 - congestion_mgmt_type = 0, congestion_mgmt not enable
+    // c2 - ECN bits are not set
+    // c3 - congestion_mgmt_type = 2, Rome(Y) Dcqcn(N)
+    // c4 - OPCODE is 129, receive CNP pkt
+    seq      c1, d.congestion_mgmt_type, 0
+    bcf      [c1], skip_cnp_receive
+
+    // check congestion management type is 1: Dcqcn or 2: Rome
+    // if Rome, trigger rome_pkt_process for everytime except for CNP packet
+    seq      c3, d.congestion_mgmt_type, 2
+    bcf      [!c3], dcqcn_ecn_process
+    seq      c4, CAPRI_APP_DATA_BTH_OPCODE, RDMA_PKT_OPC_CNP // BD Slot
+
+    bcf      [!c4], rome_pkt_process
+    add      r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rome_cnp_process, r5)
+
+rome_pkt_process:
+    // do not reset table3, rome needs two piece of data from both rqcb_process and rqcb_process_ext
+    addi     r5, r5, DCQCN_CB_T_SIZE_BYTES // rome_receiver_cb addr
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rome_pkt_process, r5)
+    b        skip_cnp_receive
+    nop // BD Slot
+
+dcqcn_ecn_process:
+    //Check if ECN bits are set in Packet
     sne      c2, k.rdma_bth_ecn, 3  
     bcf      [c2], skip_cnp_send
 
     //Process sending CNP packet to the requester.
+    add      r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
     CAPRI_RESET_TABLE_3_ARG() 
-    add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
 
 skip_cnp_send:
     // Check if its CNP packet.
-    sne     c2, CAPRI_APP_DATA_BTH_OPCODE, RDMA_PKT_OPC_CNP
-    // The below check was checking if either UD or CNP. This is not needed
-    // since we already branch to UD above
-    bcf     [c2], skip_cnp_receive
+    bcf      [!c4], skip_cnp_receive
 
-    add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
+    add      r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5)
 
 skip_cnp_receive:
     // TODO: Migrate ACK_REQ flag to P4 table

@@ -92,13 +92,17 @@ process_req_tx:
         bbeq           d.poll_in_progress, 1, exit
         //nop // Branch Delay Slot
         
-        //bbeq           d.congestion_mgmt_enable, 0, process_send
+        //bbeq           d.congestion_mgmt_type, 0, process_send
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable //BD-Slot
+        // congestion_mgmt_type: 0 means congestion mgmt is not enabled.
+        sne             c1, d.congestion_mgmt_type, 0 //BD-Slot 
+        phvwrpair.c1    CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
+                        CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_type), d.congestion_mgmt_type
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
-        phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), d.congestion_mgmt_enable  // Branch Delay Slot
+        // the first bit of congestion_mgmt_type indicates DCQCN or ROME for now
+        CAPRI_SET_FIELD2_C(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_type, d.congestion_mgmt_type, c1) // BD slot
+
         // Reset spec-cindex to cindex, spec_msg_psn to msg_psn and resend packet on dcqcn-rl-failure.
         tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
         add            r2, d.msg_psn, r0
@@ -637,7 +641,7 @@ frpmr:
     // Below flags are required to increment cindex and load sqcb2_write_back in stage-5.
     phvwrpair  CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
     tblmincri  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
-    // congestion_mgmt_enable flag and header_template_addr to-stage3 info is already copied earlier in the program.
+    // congestion_mgmt_type flag and header_template_addr to-stage3 info is already copied earlier in the program.
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
 
     //Load dummy-sqpt to load sqwqe in stage 2. wqe is checked out to know lkey to load in stage4 for state update.

@@ -33,7 +33,7 @@ rdma_aq_tx_sqcb0_process:
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     // Update cos(tm_iq) in qstate.
     tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
-    tblwr       d.congestion_mgmt_enable, K_CONGESTION_ENABLE
+    tblwr       d.congestion_mgmt_type, K_CONGESTION_ENABLE
     
 timeout:
     bbne        K_LOCAL_ACK_TIMEOUT_VALID, 1, pmtu
