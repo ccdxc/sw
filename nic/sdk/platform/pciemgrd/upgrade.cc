@@ -293,9 +293,13 @@ pciemgr_state_save(void)
 static int
 file_state_restore(const char *srcfile, const char *dstfile, const int filesz)
 {
-    if (copyfile(srcfile, dstfile) != filesz) {
+    int copysz;
+
+    copysz = copyfile(srcfile, dstfile);
+    if (copysz < 0) {
         /*
-         * If the destination file already exists and is the correct size
+         * Before we fail this operation check if the destination
+         * file already exists and is the correct size, if so then
          * we assume we have restarted again on a system that did not
          * go through an upgrade/restart.  This helps make it easier to
          * test restart without having first to generate a state save event.
@@ -305,12 +309,13 @@ file_state_restore(const char *srcfile, const char *dstfile, const int filesz)
             pciesys_loginfo("file_state_restore: found %s\n", dstfile);
             return 0;
         }
-        pciesys_logerror("file_state_restore: "
-                         "copyfile %s -> %s failed\n", srcfile, dstfile);
+        pciesys_logerror("file_state_restore: copyfile %s -> %s %d failed\n",
+                         srcfile, dstfile, filesz);
         return -1;
     }
     pciesys_loginfo("file_state_restore: "
-                    "copied %s -> %s sz %d\n", srcfile, dstfile, filesz);
+                    "copied %s -> %s copysz %d filesz %d\n",
+                    srcfile, dstfile, copysz, filesz);
     return 0;
 }
 
