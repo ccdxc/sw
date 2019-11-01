@@ -79,18 +79,30 @@
 #define TX_REWRITE_SIP_FROM_NAT                 1
 #define TX_REWRITE_SIP_BITS                     3:3
 
-#define TX_REWRITE_SPORT_START                  4
+#define TX_REWRITE_DIP_START                    4
+#define TX_REWRITE_DIP_MASK                     1
+#define TX_REWRITE_DIP_NONE                     0
+#define TX_REWRITE_DIP_FROM_NAT                 1
+#define TX_REWRITE_DIP_BITS                     4:4
+
+#define TX_REWRITE_SPORT_START                  5
 #define TX_REWRITE_SPORT_MASK                   1
 #define TX_REWRITE_SPORT_NONE                   0
 #define TX_REWRITE_SPORT_FROM_NAT               1
-#define TX_REWRITE_SPORT_BITS                   4:4
+#define TX_REWRITE_SPORT_BITS                   5:5
 
-#define TX_REWRITE_ENCAP_START                  5
+#define TX_REWRITE_DPORT_START                  6
+#define TX_REWRITE_DPORT_MASK                   1
+#define TX_REWRITE_DPORT_NONE                   0
+#define TX_REWRITE_DPORT_FROM_NAT               1
+#define TX_REWRITE_DPORT_BITS                   6:6
+
+#define TX_REWRITE_ENCAP_START                  7
 #define TX_REWRITE_ENCAP_MASK                   2
 #define TX_REWRITE_ENCAP_NONE                   0
 #define TX_REWRITE_ENCAP_VLAN                   1
 #define TX_REWRITE_ENCAP_VXLAN                  2
-#define TX_REWRITE_ENCAP_BITS                   6:5
+#define TX_REWRITE_ENCAP_BITS                   8:7
 
 #define RX_REWRITE_DMAC_START                   0
 #define RX_REWRITE_DMAC_MASK                    2
@@ -105,23 +117,35 @@
 #define RX_REWRITE_SMAC_FROM_VRMAC              1
 #define RX_REWRITE_SMAC_BITS                    2:2
 
-#define RX_REWRITE_DIP_START                    3
+#define RX_REWRITE_SIP_START                    3
+#define RX_REWRITE_SIP_MASK                     1
+#define RX_REWRITE_SIP_NONE                     0
+#define RX_REWRITE_SIP_FROM_NAT                 1
+#define RX_REWRITE_SIP_BITS                     3:3
+
+#define RX_REWRITE_DIP_START                    4
 #define RX_REWRITE_DIP_MASK                     1
 #define RX_REWRITE_DIP_NONE                     0
 #define RX_REWRITE_DIP_FROM_NAT                 1
-#define RX_REWRITE_DIP_BITS                     3:3
+#define RX_REWRITE_DIP_BITS                     4:4
 
-#define RX_REWRITE_DPORT_START                  4
+#define RX_REWRITE_SPORT_START                  5
+#define RX_REWRITE_SPORT_MASK                   1
+#define RX_REWRITE_SPORT_NONE                   0
+#define RX_REWRITE_SPORT_FROM_NAT               1
+#define RX_REWRITE_SPORT_BITS                   5:5
+
+#define RX_REWRITE_DPORT_START                  6
 #define RX_REWRITE_DPORT_MASK                   1
 #define RX_REWRITE_DPORT_NONE                   0
 #define RX_REWRITE_DPORT_FROM_NAT               1
-#define RX_REWRITE_DPORT_BITS                   4:4
+#define RX_REWRITE_DPORT_BITS                   6:6
 
-#define RX_REWRITE_ENCAP_START                  5
+#define RX_REWRITE_ENCAP_START                  7
 #define RX_REWRITE_ENCAP_MASK                   1
 #define RX_REWRITE_ENCAP_NONE                   0
 #define RX_REWRITE_ENCAP_VLAN                   1
-#define RX_REWRITE_ENCAP_BITS                   5:5
+#define RX_REWRITE_ENCAP_BITS                   7:7
 
 #define TX_REWRITE(a, attr, val) \
     ((((a) >> TX_REWRITE_ ## attr ## _START) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
@@ -150,7 +174,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APULU_P4I_TO_RXDMA_HDR_SZ       52
-#define APULU_I2E_HDR_SZ                36
+#define APULU_I2E_HDR_SZ                38
 #define APULU_P4_TO_ARM_HDR_SZ          17
 
 #define APULU_INGRESS_MIRROR_BLOB_SZ    (CAPRI_P4_INTRINSIC_HDR_SZ + \

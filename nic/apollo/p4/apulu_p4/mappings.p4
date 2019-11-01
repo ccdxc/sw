@@ -1,18 +1,19 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id
+@pragma capi appdatafields vnic_id xlate_id
 @pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           hash7, hint7, hash8, hint8, hash9, hint9,
-                          hash10, hint10, more_hashes, more_hints) {
+                          hash10, hint10, more_hashes, more_hints, xlate_id) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         if (vnic_id != 0) {
             modify_field(vnic_metadata.vnic_id, vnic_id);
         }
+        modify_field(p4i_i2e.xlate_id, xlate_id);
         modify_field(ingress_recirc.local_mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1

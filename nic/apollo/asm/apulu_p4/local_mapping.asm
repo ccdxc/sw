@@ -80,7 +80,7 @@ local_mapping_miss:
 local_mapping_hit:
     sne         c1, d.local_mapping_info_d.vnic_id, r0
     phvwr.c1    p.vnic_metadata_vnic_id, d.local_mapping_info_d.vnic_id
-    nop.e
+    phvwr.e     p.p4i_i2e_xlate_id, d.local_mapping_info_d.xlate_id
     phvwr.f     p.ingress_recirc_local_mapping_done, TRUE
 
 local_mapping_hash_hit:

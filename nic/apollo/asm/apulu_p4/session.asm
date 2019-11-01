@@ -47,13 +47,27 @@ session_info_common:
 session_rx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_id, d.session_info_d.rx_policer_id
+    seq             c1, d.session_info_d.rx_xlate_id, r0
+    cmov            r1, c1, k.p4e_i2e_xlate_id, d.session_info_d.rx_xlate_id
+    sne             c1, r1, r0
+    phvwr.c1        p.control_metadata_apply_nat, TRUE
+    phvwr.c1        p.rewrite_metadata_xlate_id, r1
+    sne             c1, d.session_info_d.rx_xlate_id2, r0
+    phvwr.c1        p.control_metadata_apply_nat2, TRUE
     b               session_stats
-    phvwr           p.rewrite_metadata_xlate_id, d.session_info_d.rx_xlate_id
+    phvwr.c1        p.rewrite_metadata_xlate_id2, d.session_info_d.tx_xlate_id2
 
 session_tx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
     phvwr           p.rewrite_metadata_policer_id, d.session_info_d.tx_policer_id
-    phvwr           p.rewrite_metadata_xlate_id, d.session_info_d.tx_xlate_id
+    seq             c1, d.session_info_d.tx_xlate_id, r0
+    cmov            r1, c1, k.p4e_i2e_xlate_id, d.session_info_d.tx_xlate_id
+    sne             c1, r1, r0
+    phvwr.c1        p.control_metadata_apply_nat, TRUE
+    phvwr.c1        p.rewrite_metadata_xlate_id, r1
+    sne             c1, d.session_info_d.tx_xlate_id2, r0
+    phvwr.c1        p.control_metadata_apply_nat2, TRUE
+    phvwr.c1        p.rewrite_metadata_xlate_id2, d.session_info_d.tx_xlate_id2
 
 session_stats:
     seq             c1, k.egress_recirc_valid, TRUE

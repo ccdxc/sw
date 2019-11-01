@@ -60,13 +60,16 @@ header_type control_metadata_t {
         device_profile_id       : 4;
         to_device_ip            : 1;
         copp_policer_valid      : 1;
+        apply_nat               : 1;
+        apply_nat2              : 1;
     }
 }
 
 header_type rewrite_metadata_t {
     fields {
+        flags               : 16;
         xlate_id            : 16;
-        flags               : 8;
+        xlate_id2           : 16;
         policer_id          : 16;
         dmaci               : 48;
         device_ipv4_addr    : 32;
