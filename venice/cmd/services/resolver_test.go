@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/pkg/api/v1"
+	//v1 "k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"

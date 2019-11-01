@@ -302,5 +302,6 @@ func TestEventPolicyWatcher(t *testing.T) {
 	time.Sleep(time.Second)
 	_, err = eventPolicyClient.WatchEventPolicy(context.Background(), &api.ObjectMeta{Name: "client-4"})
 	Assert(t, err != nil && (strings.Contains(err.Error(), "transport is closing") ||
-		strings.Contains(err.Error(), "the connection is unavailable")), "RPC server failed to stop, err: %v", err)
+		strings.Contains(err.Error(), "the connection is unavailable") || strings.Contains(err.Error(), "connection refused")),
+		"RPC server failed to stop, err: %v", err)
 }

@@ -9,14 +9,17 @@ import (
 	"time"
 
 	pkgErrors "github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/pkg/api/v1"
-	clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
+
+	clientTypes "k8s.io/api/extensions/v1beta1"
+	//clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	//rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
+	rbac "k8s.io/api/rbac/v1beta1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -167,7 +170,7 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 			log.Infof("k8sService waitForAPIServerOrCancel canceled")
 			return
 		case <-ticker.C:
-			if _, err = k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
+			if _, err = k.client.ExtensionsV1beta1().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
 				err := programClusterConfig(k.client)
 				if err != nil {
 					log.Errorf("Error programming Kubernetes cluster-level config: %v", err)
@@ -262,7 +265,7 @@ func (k *k8sService) runUntilCancel() {
 // getModules gets deployed modules.
 func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 	foundModules := make(map[string]protos.Module)
-	dsList, err := client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{})
+	dsList, err := client.ExtensionsV1beta1().DaemonSets(defaultNS).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +279,7 @@ func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 			},
 		}
 	}
-	dList, err := client.Extensions().Deployments(defaultNS).List(metav1.ListOptions{})
+	dList, err := client.ExtensionsV1beta1().Deployments(defaultNS).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -430,6 +433,7 @@ func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.C
 func createDaemonSetObject(module *protos.Module) *clientTypes.DaemonSet {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
+
 	dsConfig := &clientTypes.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
@@ -479,7 +483,7 @@ func createDaemonSetObject(module *protos.Module) *clientTypes.DaemonSet {
 // createDaemonSet creates a DaemonSet object.
 func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	dsConfig := createDaemonSetObject(module)
-	d, err := client.Extensions().DaemonSets(defaultNS).Create(dsConfig)
+	d, err := client.ExtensionsV1beta1().DaemonSets(defaultNS).Create(dsConfig)
 	if err == nil {
 		log.Infof("Created DaemonSet %+v", d)
 	} else if errors.IsAlreadyExists(err) {
@@ -543,7 +547,7 @@ func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 // createDeployment creates a Deployment object.
 func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 	dConfig := createDeploymentObject(module)
-	d, err := client.Extensions().Deployments(defaultNS).Create(dConfig)
+	d, err := client.ExtensionsV1beta1().Deployments(defaultNS).Create(dConfig)
 	if err == nil {
 		log.Infof("Created Deployment %+v", d)
 	} else if errors.IsAlreadyExists(err) {
@@ -569,7 +573,7 @@ func (k *k8sService) deleteModules(modules map[string]protos.Module) {
 
 // deleteDaemonSet deletes a DaemonSet object.
 func (k *k8sService) deleteDaemonSet(name string) error {
-	err := k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
+	err := k.client.ExtensionsV1beta1().DaemonSets(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted DaemonSet %v", name)
 	} else if errors.IsNotFound(err) {
@@ -596,7 +600,7 @@ func (k *k8sService) DeleteNode(name string) error {
 
 // deleteDeployment deletes a Deployment object.
 func (k *k8sService) deleteDeployment(name string) error {
-	err := k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
+	err := k.client.ExtensionsV1beta1().Deployments(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted Deployment %v", name)
 	} else if errors.IsNotFound(err) {
@@ -708,13 +712,13 @@ func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	var retval error
 	restartSuccessful := false
 	for numTries := 0; numTries < 5; numTries++ {
-		d, err := client.Extensions().DaemonSets(defaultNS).Update(dsConfig)
+		d, err := client.ExtensionsV1beta1().DaemonSets(defaultNS).Update(dsConfig)
 		if err == nil {
 			log.Infof("Updated DaemonSet spec %+v", d)
 			//Wait for daemonset restart to be complete
 			time.Sleep(time.Second * 10)
 			for ii := 0; ii < maxIters; ii++ {
-				cd, _ := client.Extensions().DaemonSets(defaultNS).Get(module.Name, metav1.GetOptions{})
+				cd, _ := client.ExtensionsV1beta1().DaemonSets(defaultNS).Get(module.Name, metav1.GetOptions{})
 				if cd.Status.NumberReady != cd.Status.DesiredNumberScheduled {
 					log.Infof("DaemonSet not ready yet.. Waiting(%+v).. DeamonSet update Status %+v", cd.Name, cd.Status)
 					time.Sleep(sleepBetweenItersSec * time.Second)
@@ -743,13 +747,13 @@ func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error 
 	var retval error
 	restartSuccessful := false
 	for numTries := 0; numTries < 5; numTries++ {
-		d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
+		d, err := client.ExtensionsV1beta1().Deployments(defaultNS).Update(dConfig)
 		if err == nil {
 			log.Infof("Updated Deployment Spec %+v", d)
 			// Wait for service deployment to be complete
 			time.Sleep(time.Second * 10)
 			for ii := 0; ii < maxIters; ii++ {
-				cd, _ := client.Extensions().Deployments(defaultNS).Get(module.Name, metav1.GetOptions{})
+				cd, _ := client.ExtensionsV1beta1().Deployments(defaultNS).Get(module.Name, metav1.GetOptions{})
 				log.Infof("ReadyReplicas %+v AvailableReplicas %+v", cd.Status.ReadyReplicas, cd.Status.AvailableReplicas)
 				if cd.Status.ReadyReplicas == 0 || cd.Status.ReadyReplicas != cd.Status.AvailableReplicas {
 					log.Infof("Deployment not complete yet.. Waiting(%+v).. Deployment update Status %+v", cd.Name, cd.Status)

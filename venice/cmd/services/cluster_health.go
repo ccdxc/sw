@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+	k8sv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
-	v1 "k8s.io/client-go/pkg/api/v1"
-	k8sv1beta1 "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
@@ -205,7 +205,7 @@ daemonSetWatch:
 			return
 		default:
 			if utils.IsEmpty(c.daemonSetWatcher.lastSyncResourceVersion) {
-				daemonSetList, err = k8sClient.Extensions().DaemonSets(defaultNS).List(k8smeta.ListOptions{})
+				daemonSetList, err = k8sClient.ExtensionsV1beta1().DaemonSets(defaultNS).List(k8smeta.ListOptions{})
 				if err != nil {
 					c.logger.Errorf("failed to list daemon sets, err: %v", err)
 					time.Sleep(time.Second)
@@ -219,7 +219,7 @@ daemonSetWatch:
 
 			c.logger.Infof("watch daemon sets from resource version: %v", c.daemonSetWatcher.lastSyncResourceVersion)
 
-			if c.daemonSetWatcher.Interface, err = k8sStrClient.Extensions().DaemonSets(defaultNS).Watch(
+			if c.daemonSetWatcher.Interface, err = k8sStrClient.ExtensionsV1beta1().DaemonSets(defaultNS).Watch(
 				k8smeta.ListOptions{ResourceVersion: c.daemonSetWatcher.lastSyncResourceVersion}); err == nil {
 				break daemonSetWatch
 			}
@@ -251,7 +251,7 @@ deploymentWatch:
 			return
 		default:
 			if utils.IsEmpty(c.deploymentWatcher.lastSyncResourceVersion) {
-				deploymentList, err = k8sClient.Extensions().Deployments(defaultNS).List(k8smeta.ListOptions{})
+				deploymentList, err = k8sClient.ExtensionsV1beta1().Deployments(defaultNS).List(k8smeta.ListOptions{})
 				if err != nil {
 					c.logger.Errorf("failed to list deployments, err: %v", err)
 					time.Sleep(time.Second)
@@ -265,7 +265,7 @@ deploymentWatch:
 
 			c.logger.Infof("watch deployments from resource version: %v", c.deploymentWatcher.lastSyncResourceVersion)
 
-			if c.deploymentWatcher.Interface, err = k8sStrClient.Extensions().Deployments(defaultNS).Watch(
+			if c.deploymentWatcher.Interface, err = k8sStrClient.ExtensionsV1beta1().Deployments(defaultNS).Watch(
 				k8smeta.ListOptions{ResourceVersion: c.deploymentWatcher.lastSyncResourceVersion}); err == nil {
 				break deploymentWatch
 			}

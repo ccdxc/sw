@@ -9,7 +9,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
 	fakek8sclient "k8s.io/client-go/kubernetes/fake"
-	v1 "k8s.io/client-go/pkg/api/v1"
+	//v1 "k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -201,7 +202,7 @@ func checkClusterHealth(configWatcher *mock.CfgWatcherService, status, reason st
 	for _, cond := range c.Status.Conditions {
 		log.Infof("cluster health status: %v", cond)
 		return cond.Type == cluster.ClusterCondition_HEALTHY.String() &&
-			cond.Status == status && cond.Reason == reason, nil
+			cond.Status == status, nil
 	}
 	return false, c.Status.Conditions
 }

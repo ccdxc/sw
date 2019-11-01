@@ -78,7 +78,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 [[constraint]]
   name = "github.com/gogo/protobuf"
-  version = "0.5.0"
+  version = "=0.5.0"
 
 [[constraint]]
   branch = "master"
@@ -88,9 +88,13 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/golang/mock"
   version = "1.0.0"
 
-[[constraint]]
-  branch = "master"
+[[override]]
+   name = "github.com/googleapis/gnostic"
+   version = "=v0.2.0"
+
+[[override]]
   name = "github.com/golang/protobuf"
+  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[constraint]]
   name = "github.com/google/gopacket"
@@ -198,25 +202,6 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 
 # Override here is needed as k8s.io/api repo is not standardized yet. ToDo
 # Move to a released version when we upgrade all k8s packages
-[[override]]
-  name = "k8s.io/api"
-  revision = "4b8fc5be9b77d91bbb6525d18591c43699a2b4e5"
-
-[[override]]
-  name = "k8s.io/apimachinery"
-  revision = "1fd2e63a9a370677308a42f24fd40c86438afddf"
-
-[[override]]
-  name = "github.com/ugorji/go"
-  revision = "8c0409fcbb70099c748d71f714529204975f6c3f"
-
-[[override]]
-  name = "k8s.io/client-go"
-  version = "v4.0.0"
-
-[[override]]
-  name = "k8s.io/kubernetes"
-  version = "1.7"
 
 # Needed for cni plugin types compatibility. ToDo Use a released version
 [[override]]
@@ -248,7 +233,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 # Override needed for the handling unmarshal errors in Agent REST Server and NMD REST Server. ToDo Use compatible semver
 [[override]]
   name = "github.com/coreos/etcd"
-  version = "3.2.11"
+  version = "=3.3.13"
 
 # Override needed for compatible keymgr
 [[override]]
@@ -256,8 +241,8 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "github.com/miekg/pkcs11"
 
 [[override]]
-  revision = "fbae0281ffd546fa6d1959fec6075ac5da7fb577"
-  name = "github.com/uber-go/zap"
+  name = "go.uber.org/zap"
+  version = "=1.10.0"
 
 [[override]]
   revision = "805b8bc09a50b1f1dc8bc0f8e9fbf32237aa333c"
@@ -377,3 +362,15 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 [[constraint]]
   name = "github.com/cheggaaa/pb"
   version = "1.0.25"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.15.3"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.15.3"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.15.3"

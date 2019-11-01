@@ -6,11 +6,11 @@ import (
 	"flag"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 )
 
 // KubeletConfPath is the location of kubelet config file.
@@ -59,7 +59,7 @@ func (kc *KubeClient) GetPod(namespace, podName string) (*v1.Pod, error) {
 	}
 
 	// get info from API server
-	return kc.clientset.Core().Pods(namespace).Get(podName, meta_v1.GetOptions{})
+	return kc.clientset.CoreV1().Pods(namespace).Get(podName, meta_v1.GetOptions{})
 }
 
 // ListPods returns a list of all pods in a namespace
@@ -70,5 +70,5 @@ func (kc *KubeClient) ListPods(namespace string) (*v1.PodList, error) {
 	}
 
 	// get info from API server
-	return kc.clientset.Core().Pods(namespace).List(meta_v1.ListOptions{})
+	return kc.clientset.CoreV1().Pods(namespace).List(meta_v1.ListOptions{})
 }

@@ -89,7 +89,7 @@ func TestK8sService(t *testing.T) {
 	for name, module := range k8sModules {
 		switch module.Kind {
 		case daemonSet:
-			err := client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
+			err := client.ExtensionsV1beta1().DaemonSets(defaultNS).Delete(name, nil)
 			if err != nil {
 				t.Fatalf("Failed to delete DaemonSet %v", name)
 			}
@@ -330,7 +330,7 @@ func TestRestrictNodeService(t *testing.T) {
 	for name, module := range k8sModules {
 		switch module.Kind {
 		case daemonSet:
-			err := client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
+			err := client.ExtensionsV1beta1().DaemonSets(defaultNS).Delete(name, nil)
 			if err != nil {
 				t.Fatalf("Failed to delete DaemonSet %v", name)
 			}
