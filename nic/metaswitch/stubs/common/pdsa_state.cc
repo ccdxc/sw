@@ -3,13 +3,13 @@
 // Stub state implementation
 //---------------------------------------------------------------
 
-#include "pdsa_state.hpp"
-#include "pdsa_state_init.hpp"
-#include "pdsa_error.hpp"
-#include "pdsa_tep_store.hpp"
-#include "pdsa_if_store.hpp"
-#include "pdsa_bd_store.hpp"
-#include "sdk/lib/logger/logger.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
+#include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pdsa_stub {
 

@@ -7,7 +7,7 @@
 #define __PDSA_UTIL_HPP__
 
 #include <nbase.h>
-#include "sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 
 namespace pdsa_stub {
 

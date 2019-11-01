@@ -11,8 +11,8 @@
 // but is actually only a stub.
 #define L2F_TEST_INTEG_SUBCOMP_HPP_INC
 
-#include "l2f_integ_subcomp.hpp"
-#include "l2f_integ_api.hpp"
+#include "nic/third-party/metaswitch/code/stubs/l2f/l2f_integ_subcomp.hpp"
+#include "nic/third-party/metaswitch/code/stubs/l2f/l2f_integ_api.hpp"
 
 namespace pdsa_stub {
 

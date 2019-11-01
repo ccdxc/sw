@@ -3,8 +3,8 @@
 // Implementation of Metaswitch LI stub integration 
 //---------------------------------------------------------------
  
-#include "pdsa_li.hpp"
-#include "pdsa_util.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 
 namespace pdsa_stub {
 

@@ -6,10 +6,7 @@
 #ifndef __PDSA_SLAB_OBJECT_HPP__
 #define __PDSA_SLAB_OBJECT_HPP__
 
-// Somewhere in slab.hpp __FNAME__ is used that result in build failure 
-#define __FNAME__ __FUNCTION__
-
-#include "sdk/lib/slab/slab.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
 #include <new>
 
 // NBASE mempool

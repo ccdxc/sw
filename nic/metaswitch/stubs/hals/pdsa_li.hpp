@@ -6,8 +6,7 @@
 #ifndef __PDSA_LI_HPP__
 #define __PDSA_LI_HPP__
 
-#include "li_pen_is.hpp"
-
+#include "nic/third-party/metaswitch/code/stubs/li/li_pen_is.hpp"
 
 namespace pdsa_stub {
 

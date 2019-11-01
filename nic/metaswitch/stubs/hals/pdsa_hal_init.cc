@@ -3,9 +3,9 @@
 // Initialize Stubs that drive the dataplane
 //---------------------------------------------------------------
 
-#include "pdsa_hal_init.hpp"
-#include "pdsa_li.hpp"
-#include "pdsa_l2f.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_l2f.hpp"
 
 namespace pdsa_stub {
 

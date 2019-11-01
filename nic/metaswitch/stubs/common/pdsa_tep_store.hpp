@@ -6,17 +6,14 @@
 #ifndef __PDSA_TEP_STORE_HPP__
 #define __PDSA_TEP_STORE_HPP__
 
-// Somewhere in slab.hpp __FNAME__ is used that result in build failure 
-#define __FNAME__ __FUNCTION__
-
-#include "pdsa_ms_defs.hpp"
-#include "pdsa_util.hpp"
-#include "pdsa_object_store.hpp"
-#include "pdsa_slab_object.hpp"
-#include "ntl_comparators.hpp"
-#include "apollo/api/include/pds.hpp"
-#include "sdk/include/sdk/ip.hpp"
-#include "sdk/lib/slab/slab.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_object_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
+#include "nic/third-party/metaswitch/code/comn/ntlpp/ntl_comparators.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
 #include <map>
 
 namespace pdsa_stub {

@@ -6,15 +6,12 @@
 #ifndef __PDSA_STATE_HPP__
 #define __PDSA_STATE_HPP__
 
-// Somewhere in slab.hpp __FNAME__ is used that result in build failure 
-#define __FNAME__ __FUNCTION__
-
-#include "pdsa_util.hpp"
-#include "pdsa_error.hpp"
-#include "pdsa_tep_store.hpp"
-#include "pdsa_bd_store.hpp"
-#include "pdsa_if_store.hpp"
-#include "sdk/lib/slab/slab.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
 #include <memory>
 
 namespace pdsa_stub {

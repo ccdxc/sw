@@ -3,9 +3,9 @@
 // Main entry point for the Pensando Distributed Services Agent (PDSA)
 //---------------------------------------------------------------
 
-#include "pdsa_state_init.hpp"
-#include "pdsa_hal_init.hpp"
-#include "pdsa_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 
 int main(void)
 {
