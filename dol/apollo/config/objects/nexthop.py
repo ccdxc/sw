@@ -4,6 +4,8 @@ import enum
 
 from infra.common.logging import logger
 
+from apollo.config.store import Store
+
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
@@ -11,11 +13,6 @@ import apollo.config.objects.base as base
 import apollo.config.objects.tunnel as tunnel
 
 import nh_pb2 as nh_pb2
-
-class NhType(enum.IntEnum):
-    IP = 0
-    OVERLAY = 1
-    UNDERLAY = 2
 
 class NexthopObject(base.ConfigObjectBase):
     def __init__(self, parent, spec):
@@ -27,7 +24,7 @@ class NexthopObject(base.ConfigObjectBase):
         self.VPC = parent
         nh_type = getattr(spec, 'type', 'ip')
         if nh_type == 'ip':
-            self.__type = NhType.IP
+            self.__type = utils.NhType.IP
             self.PfxSel = parent.PfxSel
             self.IPAddr = {}
             self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
@@ -35,24 +32,24 @@ class NexthopObject(base.ConfigObjectBase):
             self.VlanId = next(resmgr.NexthopVlanIdAllocator)
             self.MACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'underlay':
-            self.__type = NhType.UNDERLAY
+            self.__type = utils.NhType.UNDERLAY
             self.L3InterfaceId = 1 # TODO move to l3if iterator
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
-            self.__type = NhType.OVERLAY
+            self.__type = utils.NhType.OVERLAY
             self.TunnelId = 1 # TODO use iterator from tunnel
         self.Show()
         return
 
     def __repr__(self):
-        if self.__type == NhType.IP:
+        if self.__type == utils.NhType.IP:
             nh_str = "VPCId:%d|PfxSel:%d|IP:%s|Mac:%s|Vlan:%d" %\
                      (self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
                      self.MACAddr, self.VlanId)
-        elif self.__type == NhType.UNDERLAY:
+        elif self.__type == utils.NhType.UNDERLAY:
             nh_str = "L3IfID:%d|UnderlayMac:%s" %\
                      (self.L3InterfaceId, self.underlayMACAddr)
-        elif self.__type == NhType.OVERLAY:
+        elif self.__type == utils.NhType.OVERLAY:
             nh_str = "TunnelId:%d" % (self.TunnelId)
         return "NexthopID:%d|Type:%s|%s" %\
                (self.NexthopId, self.__type, nh_str)
@@ -73,17 +70,22 @@ class NexthopObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.NexthopId
-        if self.__type == NhType.IP:
+        if self.__type == utils.NhType.IP:
             spec.IPNhInfo.VPCId = self.VPC.VPCId
             spec.IPNhInfo.Mac = self.MACAddr.getnum()
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
-        elif self.__type == NhType.UNDERLAY:
+        elif self.__type == utils.NhType.UNDERLAY:
             spec.UnderlayNhInfo.L3InterfaceId = self.L3InterfaceId
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
-        elif self.__type == NhType.OVERLAY:
+        elif self.__type == utils.NhType.OVERLAY:
             spec.TunnelId = self.TunnelId
         return
+
+    def IsUnderlay(self):
+        if self.__type == utils.NhType.UNDERLAY:
+            return True
+        return False
 
 class NexthopObjectClient:
     def __init__(self):
@@ -123,6 +125,11 @@ class NexthopObjectClient:
 
     def GetNumNextHopPerVPC(self):
         return self.__num_nh_per_vpc
+
+    def AssociateObjects(self):
+        Store.SetNexthops(self.Objects())
+        resmgr.CreateUnderlayNHAllocator()
+        tunnel.client.AssociateObjects()
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         if not self.__supported:

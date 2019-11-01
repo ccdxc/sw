@@ -20,6 +20,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
 
+        self.__nhtype = utils.NhType.NONE
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         self.LocalIPAddr = parent.IPAddr
         self.EncapValue = 0
@@ -50,6 +51,18 @@ class TunnelObject(base.ConfigObjectBase):
                 else:
                     self.Remote = False
                 self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+            else:
+                if utils.IsV4Stack(parent.stack):
+                    self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                else:
+                    self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                # nexthop / nh_group association happens later
+                if spec.type == 'underlay':
+                    self.__nhtype = utils.NhType.UNDERLAY
+                    self.NEXTHOP = None
+                elif spec.type == 'underlay-ecmp':
+                    self.__nhtype = utils.NhType.UNDERLAY_ECMP
+                    self.NEXTHOPGROUP = None
         self.RemoteIP = str(self.RemoteIPAddr) # for testspec
         self.MACAddr = resmgr.TepMacAllocator.get()
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
@@ -62,10 +75,10 @@ class TunnelObject(base.ConfigObjectBase):
         if hasattr(self, "Remote") and self.Remote is True:
             remote = " Remote:%s"% (self.Remote)
         return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s%s|" \
-               "EncapValue:%d|Nat:%s|Mac:%s" % \
+               "EncapValue:%d|Nat:%s|Mac:%s|NhType:%s" % \
                (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
                utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
-               self.Nat, self.MACAddr)
+               self.Nat, self.MACAddr, self.__nhtype)
 
     def Show(self):
         logger.info("Tunnel Object: %s" % self)
@@ -89,12 +102,20 @@ class TunnelObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)
         utils.GetRpcIPAddr(self.RemoteIPAddr, spec.RemoteIP)
         spec.Nat = self.Nat
-        if utils.IsPipelineArtemis():
+        # TODO: Fix mac addr in testspec
+        if not utils.IsPipelineApollo():
             spec.MACAddress = self.MACAddr.getnum()
+        if utils.IsServiceTunnelSupported():
             if self.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and self.Remote is True:
                 spec.RemoteService = self.Remote
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
+        if self.IsUnderlay():
+            spec.NexthopId = self.NEXTHOP.NexthopId
+            pass
+        elif self.IsUnderlayEcmp():
+            # spec.NexthopGroupId = self.NEXTHOPGROUP.Id
+            pass
         return
 
     def IsWorkload(self):
@@ -117,14 +138,26 @@ class TunnelObject(base.ConfigObjectBase):
             return True
         return False
 
+    def IsUnderlay(self):
+        if self.__nhtype == utils.NhType.UNDERLAY:
+            return True
+        return False
+
+    def IsUnderlayEcmp(self):
+        if self.__nhtype == utils.NhType.UNDERLAY_ECMP:
+            return True
+        return False
+
 class TunnelObjectClient:
     def __init__(self):
-        self.__objs = []
-        self.__lobjs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
+
+    def GetTunnelObject(self, tunnelid):
+        return self.__objs.get(tunnelid, None)
 
     def IsValidConfig(self):
         count = len(self.__objs)
@@ -133,29 +166,43 @@ class TunnelObjectClient:
                           (count, resmgr.MAX_TUNNEL)
         return True, ""
 
+    def AssociateObjects(self):
+        for tun in self.Objects():
+            if tun.IsUnderlay():
+                tun.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
+            elif tun.IsUnderlayEcmp():
+                tun.NEXTHOPGROUP = None #resmgr.UnderlayNHEcmpAllocator.rrnext()
+        return
+
     def GenerateObjects(self, parent, tunnelspec):
-        # Generate Local Tunnel object
-        self.__lobjs.append(TunnelObject(parent, None, True))
+        def __isTunFeatureSupported(tunnel_type):
+            if tunnel_type == 'service':
+                return utils.IsServiceTunnelSupported()
+            elif tunnel_type == 'underlay':# or tunnel_type == 'underlay-ecmp':
+                return utils.IsUnderlayTunnelSupported()
+            elif tunnel_type == 'internet-gateway':
+                return utils.IsIGWTunnelSupported()
+            elif tunnel_type == 'workload':
+                return utils.IsWorkloadTunnelSupported()
+            return False
+
         # Generate Remote Tunnel object
         for t in tunnelspec:
+            if not __isTunFeatureSupported(t.type):
+                continue
             for c in range(t.count):
-                if (t.type == "service") and not \
-                    utils.IsPipelineArtemis():
-                        continue
-                else:
-                    obj = TunnelObject(parent, t, False)
-                    self.__objs.append(obj)
-        Store.SetTunnels(self.__objs)
+                obj = TunnelObject(parent, t, False)
+                self.__objs.update({obj.Id: obj})
+        Store.SetTunnels(self.Objects())
         resmgr.CreateInternetTunnels()
         resmgr.CreateVnicTunnels()
         resmgr.CollectSvcTunnels()
+        resmgr.CreateUnderlayTunnels()
         return
 
     def CreateObjects(self):
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__lobjs))
-        api.client.Create(api.ObjectTypes.TUNNEL, msgs)
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.TUNNEL, msgs)
         return
 

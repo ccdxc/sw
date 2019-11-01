@@ -214,6 +214,9 @@ class VpcObjectClient:
         # Write the flow and nexthop config to agent hook file
         if utils.IsPipelineArtemis():
             self.__write_cfg(vpc_count)
+        if utils.IsPipelineApulu():
+            # Associate Nexthop objects
+            nexthop.client.AssociateObjects()
         return
 
     def CreateObjects(self):

@@ -71,7 +71,6 @@ mirror:
       tunnelid   : 3
       # TODO: Check why srcip is configurable. Until then hardcoding device ip
       srcip      : '172.16.0.1'
-      dstip      : '172.16.0.3'
 
     # ERSPAN session to substrate vpc without truncate
     - spantype   : 'ERSPAN'
@@ -80,7 +79,6 @@ mirror:
       vpcid      : 1
       tunnelid   : 3
       srcip      : '172.16.0.1'
-      dstip      : '172.16.0.3'
 
 vpc:
     - stack  : dual # dual, ipv4 , ipv6

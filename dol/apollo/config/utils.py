@@ -79,6 +79,13 @@ def LifId2LifIfIndex(lifid):
 def LifIfindex2LifId(lififindex):
     return (lififindex & LIF_IF_LIF_ID_MASK)
 
+class NhType(enum.IntEnum):
+    NONE = 0
+    OVERLAY = 2
+    UNDERLAY = 4
+    UNDERLAY_ECMP = 5
+    IP = 8
+
 class L3MatchType(enum.IntEnum):
     PFX = 0
     PFXRANGE = 1
@@ -389,6 +396,11 @@ def IsPipelineApulu():
         return True
     return False
 
+def IsPipelineApollo():
+    if GlobalOptions.pipeline == 'apollo':
+        return True
+    return False
+
 def GetPipelineName():
     return GlobalOptions.pipeline
 
@@ -399,6 +411,31 @@ def IsHostLifSupported():
 
 def IsInterfaceSupported():
     if IsPipelineArtemis():
+        return False
+    return True
+
+def IsIGWTunnelSupported():
+    if IsPipelineApulu():
+        return False
+    return True
+
+def IsWorkloadTunnelSupported():
+    if IsPipelineApulu():
+        return False
+    return True
+
+def IsServiceTunnelSupported():
+    if IsPipelineArtemis():
+        return True
+    return False
+
+def IsUnderlayTunnelSupported():
+    if IsPipelineApulu():
+        return True
+    return False
+
+def IsRouteTableSupported():
+    if IsPipelineApulu():
         return False
     return True
 

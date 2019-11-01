@@ -22,17 +22,24 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
         self.TunID = tunobj.Id
         self.TunIPAddr = tunobj.RemoteIPAddr
-        self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
-        self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
+        self.HasDefaultRoute = False
+        if tunobj.IsWorkload():
+            self.MplsSlot = next(tunobj.RemoteVnicMplsSlotIdAllocator)
+            self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
+        else:
+            self.MplsSlot = 0
+            self.Vnid = 0
         self.TUNNEL = tunobj
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
-            self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
+            if self.SUBNET.V6RouteTable:
+                self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute
         else:
             self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
-            self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
+            if self.SUBNET.V4RouteTable:
+                self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
         # Provider IP can be v4 or v6
         self.ProviderIPAddr, self.TunFamily = Store.GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # For testspec
@@ -81,6 +88,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
+        spec.TunnelId = self.TunID
         return
 
 
@@ -98,13 +106,17 @@ class RemoteMappingObjectClient:
 
         isV4Stack = utils.IsV4Stack(parent.VPC.Stack)
         isV6Stack = utils.IsV6Stack(parent.VPC.Stack)
+        if utils.IsPipelineApulu():
+            tunnelAllocator = resmgr.UnderlayTunAllocator
+        else:
+            tunnelAllocator = resmgr.RemoteMplsVnicTunAllocator
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
             c = 0
             v6c = 0
             v4c = 0
             while c < rmap_spec_obj.count:
-                tunobj = resmgr.RemoteMplsVnicTunAllocator.rrnext()
+                tunobj = tunnelAllocator.rrnext()
                 if isV6Stack:
                     obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
                     self.__objs.append(obj)

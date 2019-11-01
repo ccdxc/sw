@@ -44,6 +44,7 @@ InvalidMplsSlotIdAllocator = iter(irange(50001,90000))
 RemoteInternetNonNatTunAllocator = None
 RemoteInternetNatTunAllocator = None
 RemoteMplsVnicTunAllocator = None
+UnderlayTunAllocator = None
 PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/16').hosts()
 PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
 IGWVxlanIdAllocator = iter(irange(50001, 51024))
@@ -91,6 +92,9 @@ SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::
 SvcTunAllocator = None
 RemoteSvcTunAllocator = None
 RemoteSvcTunIPv4Addr = ipaddress.IPv4Network('30.0.0.0/24').hosts()
+
+#Apulu specific configs
+UnderlayNHAllocator = None
 
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1
@@ -161,6 +165,18 @@ def CreateVnicTunnels():
     objs = Store.GetWorkloadTunnels()
     if len(objs) != 0:
         RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
+
+def CreateUnderlayTunnels():
+    global UnderlayTunAllocator
+    objs = Store.GetUnderlayTunnels()
+    if len(objs) != 0:
+        UnderlayTunAllocator = utils.rrobiniter(objs)
+
+def CreateUnderlayNHAllocator():
+    global UnderlayNHAllocator
+    objs = Store.GetUnderlayNexthops()
+    if len(objs) != 0:
+        UnderlayNHAllocator = utils.rrobiniter(objs)
 
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():

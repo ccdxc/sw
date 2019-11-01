@@ -30,6 +30,10 @@ device:
     encap       : vxlan # vxlan or mplsodup
     tunnel      :
         - count : 16
+          type  : underlay
+        - count : 16
+          type  : underlay-ecmp
+        - count : 16
           type  : internet-gateway
           nat   : true
         - count : 16
@@ -79,8 +83,6 @@ vpc:
           rmap:                       # Remote IP mappings per subnet
             - count : 4
       nexthop:
-        - type : ip
-          count : 10
         - type : underlay
           count : 2
       routetbl:
@@ -142,8 +144,6 @@ vpc:
           rmap:
             - count : 4
       nexthop:
-        - type : ip
-          count : 10
         - type : underlay
           count : 2
       routetbl:

@@ -10,6 +10,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
+import apollo.config.objects.tunnel as tunnel
 
 import mirror_pb2 as mirror_pb2
 import types_pb2 as types_pb2
@@ -115,8 +116,9 @@ class MirrorSessionObjectClient:
                 vpcid = msspec.vpcid
                 dscp = msspec.dscp
                 tunnel_id = msspec.tunnelid
+                tunobj = tunnel.client.GetTunnelObject(tunnel_id)
                 srcip = ipaddress.ip_address(msspec.srcip)
-                dstip = ipaddress.ip_address(msspec.dstip)
+                dstip = tunobj.RemoteIP
                 obj = MirrorSessionObject(spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip, tunnel_id)
             else:
                 assert(0)

@@ -73,6 +73,8 @@ class FlowMapObjectHelper:
         return
 
     def __is_lmapping_valid(self, lobj):
+        if not utils.IsRouteTableSupported():
+            return True
         routetblobj = None
         if lobj.AddrFamily == 'IPV4':
             routetblobj = lobj.VNIC.SUBNET.V4RouteTable

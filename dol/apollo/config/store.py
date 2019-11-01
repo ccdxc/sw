@@ -12,6 +12,7 @@ class ApolloConfigStore:
         # Custom Database for easy access.
         self.trunks = ObjectDatabase()
         self.tunnels = ObjectDatabase()
+        self.nexthops = ObjectDatabase()
         self.device = None
         self.substrate_vpc = None
         # Batch client
@@ -28,6 +29,9 @@ class ApolloConfigStore:
 
     def SetTunnels(self, objs):
         return self.tunnels.SetAll(objs)
+
+    def SetNexthops(self, objs):
+        return self.nexthops.SetAll(objs)
 
     def SetDevice(self,obj):
         self.device = obj
@@ -108,6 +112,18 @@ class ApolloConfigStore:
             if tun.IsSvc() and tun.Remote is remote:
                 tunnels.append(tun)
         return tunnels
+
+    def GetUnderlayTunnels(self):
+        tunnels = []
+        for tun in self.tunnels.GetAllInList():
+            if tun.IsUnderlay() or tun.IsUnderlayEcmp(): tunnels.append(tun)
+        return tunnels
+
+    def GetUnderlayNexthops(self):
+        nhops = []
+        for nh in self.nexthops.GetAllInList():
+            if nh.IsUnderlay(): nhops.append(nh)
+        return nhops
 
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()

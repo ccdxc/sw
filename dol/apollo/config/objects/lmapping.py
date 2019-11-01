@@ -24,19 +24,22 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.VNIC = parent
         self.PublicIPAddr = None
         self.SourceGuard = parent.SourceGuard
+        self.HasDefaultRoute = False
         if ipversion == utils.IP_VERSION_6:
             self.AddrFamily = 'IPV6'
             self.IPAddr = parent.SUBNET.AllocIPv6Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
-            self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
+            if parent.SUBNET.V6RouteTable:
+                self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_6)
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
-            self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
+            if parent.SUBNET.V4RouteTable:
+                self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_4)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"

@@ -135,11 +135,14 @@ class RouteObject(base.ConfigObjectBase):
 
 class RouteObjectClient:
     def __init__(self):
+        def __isObjSupported():
+            return utils.IsRouteTableSupported()
         self.__objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
+        self.__supported = __isObjSupported()
         return
 
     def __internet_tunnel_get(self, nat, teptype=None):
@@ -178,22 +181,31 @@ class RouteObjectClient:
         return True, ""
 
     def GetRouteV4Table(self, vpcid, routetblid):
-        return self.__v4objs[vpcid].get(routetblid, None)
+        v4tables = self.GetRouteV4Tables(vpcid)
+        if not v4tables:
+            return None
+        return v4tables.get(routetblid, None)
 
     def GetRouteV6Table(self, vpcid, routetblid):
-        return self.__v6objs[vpcid].get(routetblid, None)
+        v6tables = self.GetRouteV6Tables(vpcid)
+        if not v6tables:
+            return None
+        return v6tables.get(routetblid, None)
 
     def GetRouteV4TableId(self, vpcid):
-        if self.__v4objs[vpcid]:
+        if self.GetRouteV4Tables(vpcid):
             return self.__v4iter[vpcid].rrnext().RouteTblId
         return 0
 
     def GetRouteV6TableId(self, vpcid):
-        if self.__v6objs[vpcid]:
+        if self.GetRouteV6Tables(vpcid):
             return self.__v6iter[vpcid].rrnext().RouteTblId
         return 0
 
     def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
+        if not self.__supported:
+            return
+
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
