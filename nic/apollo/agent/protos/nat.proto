@@ -15,6 +15,9 @@ service NatSvc {
   rpc NatPolicyUpdate (NatPolicyRequest) returns (NatPolicyResponse) {}
   rpc NatPolicyGet (NatPolicyGetRequest) returns (NatPolicyGetResponse) {}
   rpc NatPolicyDelete (NatPolicyDeleteRequest) returns (NatPolicyDeleteResponse) {}
+  rpc NatPortBlockCreate (NatPortBlockRequest) returns (NatPortBlockResponse) {}
+  rpc NatPortBlockDelete (NatPortBlockDeleteRequest) returns (NatPortBlockResponse) {}
+  rpc NatPortBlockPolicyGet (NatPortBlockGetRequest) returns (NatPortBlockGetResponse) {}
 }
 
 message NatPool {
@@ -108,5 +111,74 @@ message NatPolicyDeleteRequest {
 
 // NAT policy delete response
 message NatPolicyDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
+}
+
+// NAT port block specification
+message NatPortBlockSpec {
+  // unique key identifying the port block
+  uint32          Id         = 1;
+  // VPC identifier this port block is tied to
+  uint32          VpcId      = 2;
+  // NAT address to be used with this port block
+  types.Address   NatAddress = 3;
+  // range of ports to be use for NAT
+  types.PortRange Ports      = 4;
+}
+
+// operational status of NAT port block
+message NatPortBlockStatus {
+}
+
+// stats of NAT port block, if any
+message NatPortBlockStats {
+  // number of NAT ports in use
+  uint32 InUseCount   = 1;
+  // number of sessions using the port block
+  uint32 SessionCount = 2;
+}
+
+// NAT port block object
+message NatPortBlock {
+  meta.TypeMeta      TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta       ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  NatPortBlockSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  NatPortBlockStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  NatPortBlockStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// NAT port block create and update request
+message NatPortBlockRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt           BatchCtxt = 1;
+  repeated NatPortBlockSpec Request   = 2;
+}
+
+// NAT port block create and update response
+message NatPortBlockResponse {
+  types.ApiStatus             ApiStatus = 1;
+  repeated NatPortBlockStatus Response  = 2;
+}
+
+// NAT port block get request
+message NatPortBlockGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// NAT port block get response
+message NatPortBlockGetResponse {
+  types.ApiStatus       ApiStatus = 1;
+  repeated NatPortBlock Response  = 2;
+}
+
+// NAT port block delete request
+message NatPortBlockDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
+}
+
+// NAT port block delete response
+message NatPortBlockDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
 }

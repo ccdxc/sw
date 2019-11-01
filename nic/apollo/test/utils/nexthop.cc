@@ -60,7 +60,8 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     spec->type = this->type;
     if (this->type == PDS_NH_TYPE_UNDERLAY) {
         spec->l3_if.id = this->if_id;
-        printf(" NH id %u l3 if id %u mac 0x%x\n", spec->key.id, spec->l3_if.id, this->mac);
+        printf(" NH id %u l3 if id %u mac 0x%lx\n", spec->key.id,
+               spec->l3_if.id, this->mac);
         MAC_UINT64_TO_ADDR(spec->underlay_mac, this->mac);
     } else if (this->type == PDS_NH_TYPE_IP) {
         MAC_UINT64_TO_ADDR(spec->mac, this->mac);

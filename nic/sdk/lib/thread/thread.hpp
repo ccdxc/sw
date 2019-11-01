@@ -39,7 +39,7 @@ typedef void *(*thread_entry_func_t)(void *ctxt);
                     sdk::lib::thread::current_thread()->name());       \
 }
 
-#define SDK_THREAD_DFRD_TERM_INIT(ctxt)                                          \
+#define SDK_THREAD_DFRD_TERM_INIT(ctxt)                                \
 {                                                                      \
     sdk::lib::thread::set_current_thread((sdk::lib::thread *)ctxt);    \
     SDK_TRACE_DEBUG("Thread %s initializing ...",                      \
