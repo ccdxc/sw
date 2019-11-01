@@ -266,6 +266,7 @@ event_thread::run_(void) {
     if (this->init_func_) {
         this->init_func_(this->user_ctx_);
     }
+    this->set_ready(true);
 
     // IPC
     this->ipc_server_ = ipc::ipc_server::factory(this->thread_id());
@@ -471,7 +472,7 @@ event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
                           const void *cookie)
 {
     ipc::ipc_client *client;
-    
+
     assert(t_event_thread_ == this);
 
     client = this->ipc_clients_[recipient];

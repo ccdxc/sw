@@ -89,7 +89,6 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     sdk::event_thread::subscribe(EVENT_ID_XCVR, xcvr_event_handler_);
     sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
     sdk::event_thread::prepare_start(&g_ev_prepare);
-    curr_thread->set_ready(true);
 
     PDS_TRACE_INFO("Listening to events ...");
 }
