@@ -51,7 +51,7 @@ else
     export AGENT_TEST_HOOKS_LIB='libdolagenthooks.so'
     $NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
 fi
-$NICDIR/apollo/test/tools/start-$PIPELINE-model.sh &
+$NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
 
 export CONFIG_PATH=$NICDIR/conf
 

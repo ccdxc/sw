@@ -244,11 +244,11 @@ jobd/apollo/gtest_1: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > /dev/null
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > /dev/null
-	${NICDIR}/apollo/test/tools/run_gtests_apollo_1.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/apollo/run_gtests_apollo_1.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/apollo/gtest_2
 jobd/apollo/gtest_2: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/tools/run_gtests_apollo_2.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/apollo/run_gtests_apollo_2.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/apollo/doc
 jobd/apollo/doc: ${JOBD_PREREQS}
@@ -257,7 +257,7 @@ jobd/apollo/doc: ${JOBD_PREREQS}
 .PHONY: jobd/artemis/gtest
 jobd/artemis/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --artemis_gtest
-	${NICDIR}/apollo/test/tools/run_gtests_artemis.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/artemis/run_gtests_artemis.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/artemis/scale_test_sim
 jobd/artemis/scale_test_sim: ${JOBD_PREREQS}
@@ -427,11 +427,11 @@ jobd/iota/venice-sim:jobd/naples-sim jobd/venice-image
 
 .PHONY: jobd/apollo/gtests-valgrind
 jobd/apollo/gtests-valgrind: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/tools/run_gtests_valgrind_apollo.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/apollo/run_gtests_valgrind_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/artemis/gtests-valgrind
 jobd/artemis/gtests-valgrind: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/tools/run_gtests_valgrind_artemis.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/artemis/run_gtests_valgrind_artemis.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/apulu/pds_scale_test_mock
 jobd/apulu/pds_scale_test_mock: ${JOBD_PREREQS}

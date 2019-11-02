@@ -1,8 +1,7 @@
 #!/bin/bash -e
 
-TOOLS_DIR=`dirname $0`
-ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
-NIC_DIR=`readlink -f $ABS_TOOLS_DIR/../../../`
+TOP_DIR=`git rev-parse --show-toplevel`
+export NIC_DIR="$TOP_DIR/nic"
 export ZMQ_SOC_DIR=${NIC_DIR}
 ${NIC_DIR}/tools/merge_model_debug.py --pipeline apollo --p4 apollo --rxdma p4plus_rxdma --txdma p4plus_txdma
 $GDB $NIC_DIR/build/x86_64/apollo/bin/cap_model \
