@@ -22,25 +22,27 @@ typedef struct pds_mapping_spec_s {
     pds_nh_type_t nh_type;                // nexthop type information for
                                           // the mapping
     bool is_local;
-    // information specific to remote mappings
     union {
-        pds_tep_key_t tep;                // TEP address for this mapping
-                                          // 1. device IP for local vnic
-                                          // 2. remote TEP for remote vnic if
-                                          //    provider IP is not valid
-        pds_nexthop_group_key_t nh_group; // nexthop group mapping is behind
-        pds_nexthop_key_t nexthop;        // nexthop (used in case traffic is
-                                          // going out natively without encap)
-    };
+        // information specific to remote mappings
+        union {
+            pds_tep_key_t tep;                // TEP address for this mapping
+                                              // 1. device IP for local vnic
+                                              // 2. remote TEP for remote vnic if
+                                              //    provider IP is not valid
+            pds_nexthop_group_key_t nh_group; // nexthop group mapping is behind
+            pds_nexthop_key_t nexthop;        // nexthop (used in case traffic is
+                                              // going out natively without encap)
+        };
 
-    // information specific to local IP mappings
-    struct {
-        pds_vnic_key_t vnic;              // vnic for local IP
-        bool public_ip_valid;             // true if public IP is valid
-        ip_addr_t public_ip;              // public IP address
-        bool provider_ip_valid;           // true if provider IP is valid
-        ip_addr_t provider_ip;            // provider IP address
-        uint32_t svc_tag;                 // service tag
+        // information specific to local IP mappings
+        struct {
+            pds_vnic_key_t vnic;              // vnic for local IP
+            bool public_ip_valid;             // true if public IP is valid
+            ip_addr_t public_ip;              // public IP address
+            bool provider_ip_valid;           // true if provider IP is valid
+            ip_addr_t provider_ip;            // provider IP address
+            uint32_t svc_tag;                 // service tag
+        };
     };
 } __PACK__ pds_mapping_spec_t;
 
