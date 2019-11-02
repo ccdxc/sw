@@ -10,7 +10,7 @@ warmd:
   #  TODO This needs to be ported to IOTA
   target:
     commands: [ "sh", "-c", "go run ../upload/main.go /sw/bin/venice.tgz /import/src/github.com/pensando/sw/bin/venice.tgz  && go run e2e.go" ]
-    owners: ["email:suresh@pensando.io"]
+    owners: ["email:enrico@pensando.io"]
     area:
     sub-area:
     feature:

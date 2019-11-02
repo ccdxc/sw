@@ -12,7 +12,7 @@ e2e-targets:
  e2e-esx-bm-regression:
    commands: ["sh", "-c", "make esx-regression"] 
    #  commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:sw-managers@pensando.io"]
    area:
    sub-area:
    feature:

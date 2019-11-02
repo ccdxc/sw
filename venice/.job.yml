@@ -7,14 +7,6 @@ targets:
     area:
     sub-area:
     feature:
-  venice-image:
-    commands: [ "echo", "dummy target to trigger top level venice image build" ]
-    owners: ["email:venice-dev@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-      - build-venice-image
 
 image:
   bind_dir: "/go/src/github.com/pensando/sw"

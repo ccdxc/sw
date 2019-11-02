@@ -39,7 +39,7 @@ e2e-targets:
  e2e-linux-bm-regression-eth:
    commands: ["sh", "-c", "make regression-eth"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:sw-managers@pensando.io"]
    area:
    sub-area:
    feature:
@@ -93,7 +93,7 @@ e2e-targets:
  e2e-linux-bm-regression-infra:
    commands: ["sh", "-c", "make regression-infra"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:sw-managers@pensando.io"]
    area:
    sub-area:
    feature:
