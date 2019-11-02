@@ -34,6 +34,8 @@ public:
     bool got_pong_on_fd = false;
     bool t1_stopped = false;
     bool t2_stopped = false;
+    bool t1_t2_up_received = false;
+    bool t2_t1_up_received = false;
     uint32_t prepare_count = 0;
 
 protected:
@@ -90,6 +92,22 @@ io_callback (event::io_t *io, int fd, int events)
     }
 }
 
+void t1_t2_up_notification(uint32_t thread_id, void *ctx)
+{
+    event_thread_test *test = (event_thread_test *)ctx;
+    printf("T1 got notifcation that T2 went up!\n");
+    test->t1_t2_up_received = true;
+    ASSERT_TRUE(thread_id == THREAD_T2);
+}
+
+void t2_t1_up_notification(uint32_t thread_id, void *ctx)
+{
+    event_thread_test *test = (event_thread_test *)ctx;
+    printf("T2 got notifcation that T1 went up!\n");
+    test->t2_t1_up_received = true;
+    ASSERT_TRUE(thread_id == THREAD_T1);
+}
+
 void
 init1 (void *ctx)
 {
@@ -99,6 +117,13 @@ init1 (void *ctx)
     event::timer_start(&test->timer);
     event::prepare_init(&test->prepare, prepare_callback, test);
     event::prepare_start(&test->prepare);
+    event::updown_up_subscribe(THREAD_T2, t1_t2_up_notification, ctx);
+}
+
+void
+init2 (void *ctx)
+{
+    event::updown_up_subscribe(THREAD_T1, t2_t1_up_notification, ctx);
 }
 
 void
@@ -148,14 +173,16 @@ TEST_F (event_thread_test, basic_functionality) {
         "t1", THREAD_T1, THREAD_ROLE_CONTROL, 0x0, init1, exit1, msg1, 0,
         SCHED_OTHER, true);
     this->t2 = event::event_thread::factory(
-        "t2", THREAD_T2, THREAD_ROLE_CONTROL, 0x0, NULL, exit2, msg2, 0,
+        "t2", THREAD_T2, THREAD_ROLE_CONTROL, 0x0, init2, exit2, msg2, 0,
         SCHED_OTHER, true);
     this->t3 = event::event_thread::factory(
         "t3", THREAD_T3, THREAD_ROLE_CONTROL, 0x0, init3, NULL, NULL, 0,
         SCHED_OTHER, true);
     
     this->t1->start(this);
+    sleep(1); // make sure t1 is up
     this->t2->start(this);
+    sleep(1); // make sure t2 is up
     this->t3->start(this);
 
     sleep(2);
@@ -175,6 +202,9 @@ TEST_F (event_thread_test, basic_functionality) {
     ASSERT_TRUE(this->t1_stopped);
     ASSERT_TRUE(this->t2_stopped);
 
+    ASSERT_TRUE(this->t1_t2_up_received);
+    ASSERT_TRUE(this->t2_t1_up_received);
+    
     ASSERT_TRUE(this->prepare_count == 1);
 }
 

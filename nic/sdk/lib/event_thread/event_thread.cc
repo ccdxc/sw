@@ -22,6 +22,21 @@ typedef struct pubsub_meta_ {
     size_t   data_length;
 } pubsub_meta_t;
 
+typedef enum updown_status_ {
+    THREAD_DOWN = 0,
+    THREAD_UP,
+} updown_status_t;
+
+typedef struct updown_meta_ {
+    updown_status_t status;
+    uint32_t thread_id;
+} updown_meta_t;
+
+typedef union lfq_msg_meta_ {
+    pubsub_meta_t pubsub;
+    updown_meta_t updown;
+} lfq_msg_meta_t;
+
 class lfq_msg {
 public:
     static lfq_msg *factory(void);
@@ -29,9 +44,10 @@ public:
     enum lfq_msg_type {
         USER_MSG,
         PUBSUB_MSG,
+        UPDOWN_MSG, // thread-up notifications
     } type;
     void *payload;
-    pubsub_meta_t pubsub_meta;
+    lfq_msg_meta_t meta;
 private:
     lfq_msg();
     ~lfq_msg();
@@ -48,11 +64,26 @@ private:
 };
 typedef std::shared_ptr<pubsub_mgr> pubsub_msg_ptr;
 
+// Responsible for thread status notification
+// Thread going up and down
+class updown_mgr {
+public:
+    void subscribe(uint32_t subscriber, uint32_t target);
+    void up(uint32_t thread_id);
+private:
+    std::map<uint32_t, updown_status_t> status_;
+    std::map<uint32_t, std::set<uint32_t> > subscriptions_;
+    std::mutex mutex_;
+};
+typedef std::shared_ptr<updown_mgr> updown_mgr_ptr;
+
 static thread_local event_thread *t_event_thread_ = NULL;
 
 static event_thread *g_event_thread_table[MAX_THREAD_ID + 1];
 
 static pubsub_mgr g_pubsubs;
+
+static updown_mgr g_updown;
 
 // Converts ev values to event values.
 // e.g. EV_READ to EVENT_READ
@@ -133,6 +164,35 @@ pubsub_mgr::subscriptions(uint32_t msg_code) {
     this->mutex_.unlock();
     return res;
 };
+
+void
+updown_mgr::subscribe(uint32_t subscriber, uint32_t target) {
+    assert(subscriber != target);
+    assert(subscriber <= MAX_THREAD_ID);
+    assert(target <= MAX_THREAD_ID);
+    this->mutex_.lock();
+    if (this->status_[target] == THREAD_UP) {
+        // send notification
+        assert(g_event_thread_table[subscriber] != NULL);
+        g_event_thread_table[subscriber]->handle_thread_up(target);
+    }
+    this->subscriptions_[target].insert(subscriber);
+    this->mutex_.unlock();
+}
+
+void
+updown_mgr::up(uint32_t thread_id) {
+    assert(thread_id <= MAX_THREAD_ID);
+    this->mutex_.lock();
+    assert(this->status_[thread_id] != THREAD_UP);
+    this->status_[thread_id] = THREAD_UP;
+    for (auto subscriber: this->subscriptions_[thread_id]) {
+        // send notification
+        assert(g_event_thread_table[subscriber] != NULL);
+        g_event_thread_table[subscriber]->handle_thread_up(thread_id);
+    }
+    this->mutex_.unlock();
+}
 
 event_thread *
 event_thread::factory(const char *name, uint32_t thread_id,
@@ -236,6 +296,15 @@ event_thread::handle_async_(void) {
 }
 
 void
+event_thread::handle_thread_up(uint32_t thread_id) {
+    lfq_msg *msg = lfq_msg::factory();
+    msg->type = lfq_msg::UPDOWN_MSG;
+    msg->meta.updown.thread_id = thread_id;
+    msg->meta.updown.status = THREAD_UP;
+    this->message_send(msg);
+}
+
+void
 event_thread::process_lfq_(void) {
     lfq_msg *msg;
     while (true) {
@@ -247,14 +316,21 @@ event_thread::process_lfq_(void) {
             assert(this->message_cb_ != NULL);
             this->message_cb_(msg->payload, this->user_ctx_);
         } else if (msg->type == lfq_msg::PUBSUB_MSG) {
-            assert(this->sub_cbs_.count(msg->pubsub_meta.msg_code) > 0);
+            assert(this->sub_cbs_.count(msg->meta.pubsub.msg_code) > 0);
             SDK_TRACE_DEBUG("Subscribed message rx: sender: %u, recipient: %u, "
                             "msg_code: %u, ",
-                            msg->pubsub_meta.sender, msg->pubsub_meta.recipient,
-                            msg->pubsub_meta.msg_code);
-            this->sub_cbs_[msg->pubsub_meta.msg_code](
-                msg->payload, msg->pubsub_meta.data_length, this->user_ctx_);
+                            msg->meta.pubsub.sender, msg->meta.pubsub.recipient,
+                            msg->meta.pubsub.msg_code);
+            this->sub_cbs_[msg->meta.pubsub.msg_code](
+                msg->payload, msg->meta.pubsub.data_length, this->user_ctx_);
             free(msg->payload);
+        } else if (msg->type == lfq_msg::UPDOWN_MSG) {
+            assert(this->updown_up_cbs_.count(msg->meta.updown.thread_id) > 0);
+            this->updown_up_cbs_[msg->meta.updown.thread_id](
+                msg->meta.updown.thread_id,
+                this->updown_up_ctxs_[msg->meta.updown.thread_id]);
+        } else {
+            assert(false);
         }
         lfq_msg::destroy(msg);
     }
@@ -275,6 +351,8 @@ event_thread::run_(void) {
     this->ipc_watcher_.data = this;
 
     ev_io_start(this->loop_, &this->ipc_watcher_);
+
+    g_updown.up(this->thread_id());
 
     ev_run(this->loop_, 0);
 
@@ -307,6 +385,21 @@ event_thread::stop(void) {
     ev_async_send(this->loop_, &this->async_watcher_);
 
     return SDK_RET_OK;
+}
+
+void
+event_thread::updown_up_subscribe(uint32_t thread_id, updown_up_cb callback,
+                                  void *ctx)
+{
+    assert(t_event_thread_ == this);
+    assert(thread_id <= MAX_THREAD_ID);
+    assert(callback != NULL);
+    assert(this->updown_up_cbs_.count(thread_id) == 0);
+
+    this->updown_up_cbs_[thread_id] = callback;
+    this->updown_up_ctxs_[thread_id] = ctx;
+
+    g_updown.subscribe(this->thread_id(), thread_id);
 }
 
 static void
@@ -498,6 +591,13 @@ event_thread::ipc_client_callback_(struct ev_loop *loop, ev_io *watcher,
     ((event_thread *)watcher->data)->handle_ipc_client_(watcher);
 }
 
+void
+updown_up_subscribe (uint32_t thread_id, updown_up_cb cb, void *ctx)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->updown_up_subscribe(thread_id, cb, ctx);
+}
 
 void
 prepare_init (prepare_t *prepare, prepare_cb cb, void *ctx)
@@ -624,11 +724,11 @@ publish (uint32_t msg_code, void *data, size_t data_length)
         memcpy(data_copy, data, data_length);
         msg->type = lfq_msg::PUBSUB_MSG;
         msg->payload = data_copy;
-        msg->pubsub_meta.data_length = data_length;
-        msg->pubsub_meta.sender = sender_id;
-        msg->pubsub_meta.recipient = sub;
-        msg->pubsub_meta.msg_code = msg_code;
-        msg->pubsub_meta.serial = 0;
+        msg->meta.pubsub.data_length = data_length;
+        msg->meta.pubsub.sender = sender_id;
+        msg->meta.pubsub.recipient = sub;
+        msg->meta.pubsub.msg_code = msg_code;
+        msg->meta.pubsub.serial = 0;
         SDK_TRACE_DEBUG("Published message: sender: %u, recipient: %u, "
                         "msg_code: %u, ", sender_id, sub, msg_code);
         g_event_thread_table[sub]->message_send(msg);

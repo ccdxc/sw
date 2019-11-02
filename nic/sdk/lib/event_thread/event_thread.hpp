@@ -20,6 +20,11 @@ namespace event_thread {
 
 class event_thread;
 
+// UpDown Events
+typedef void(*updown_up_cb)(uint32_t thread_id, void *);
+
+void updown_up_subscribe(uint32_t thread_it, updown_up_cb cb, void *ctx);
+
 //
 // Prepare
 //
@@ -147,6 +152,8 @@ public:
                                  uint32_t prio, int sched_policy,
                                  bool can_yield);
 
+    void updown_up_subscribe(uint32_t thread_id, updown_up_cb cb, void *ctx);
+    
     void prepare_start(prepare_t *prepare);
     void prepare_stop(prepare_t *prepare);
 
@@ -172,6 +179,8 @@ public:
 
     void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
                      size_t data_length, const void *cookie);
+
+    void handle_thread_up(uint32_t thread_id);
 
     virtual sdk_ret_t start(void *ctx) override;
     virtual sdk_ret_t stop(void) override;
@@ -199,7 +208,9 @@ private:
     message_cb message_cb_;
     std::map<uint32_t, sub_cb> sub_cbs_;
     std::map<uint32_t, rpc_request_cb> rpc_req_cbs_;
-    std::map<uint32_t, rpc_response_cb > rpc_rsp_cbs_;
+    std::map<uint32_t, rpc_response_cb> rpc_rsp_cbs_;
+    std::map<uint32_t, updown_up_cb> updown_up_cbs_;
+    std::map<uint32_t, void*> updown_up_ctxs_;
     void *user_ctx_;
     void run_(void);
     void handle_async_(void);
