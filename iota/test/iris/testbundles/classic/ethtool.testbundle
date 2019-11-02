@@ -22,3 +22,10 @@ testcases:
         enable  : True
         args    :
             type         : remote_only
+
+    -   name    : transceiver_lif_reset
+        testcase: testcases.drivers.ethtool.transceiver_lif_reset
+        enable  : True
+        args    :
+            type         : remote_only
+
