@@ -6,11 +6,10 @@ import (
 	"testing"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8swatch "k8s.io/apimachinery/pkg/watch"
 	fakek8sclient "k8s.io/client-go/kubernetes/fake"
-	//v1 "k8s.io/client-go/pkg/api/v1"
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"

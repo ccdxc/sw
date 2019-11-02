@@ -17,8 +17,6 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 
 	clientTypes "k8s.io/api/extensions/v1beta1"
-	//clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	//rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 	rbac "k8s.io/api/rbac/v1beta1"
 
 	"github.com/pensando/sw/api"

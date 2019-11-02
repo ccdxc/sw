@@ -7,9 +7,8 @@ import (
 	"sync"
 	"time"
 
-	k8sclient "k8s.io/client-go/kubernetes"
-	//v1 "k8s.io/client-go/pkg/api/v1"
 	v1 "k8s.io/api/core/v1"
+	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
