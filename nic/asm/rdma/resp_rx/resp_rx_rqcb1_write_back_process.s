@@ -171,12 +171,13 @@ check_ack_nak:
     bcf         [!c3], invoke_stats
     nop // BD Slot
 
+// TODO: Temporarily change SET_PI to INC_PI for the ACK/NAK ring.
+// This is until we find space in rqcb1 to hold full ACK/NAK ring pindex.
 #if defined (HAPS) || defined (HW)
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_HW_DB_ONLY(DMA_CMD_BASE,
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
                                    K_GLOBAL_LIF,
                                    K_GLOBAL_QTYPE,
                                    K_GLOBAL_QID,
-                                   TIMESTAMP,
                                    DB_ADDR, DB_DATA)
 #else
      RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
