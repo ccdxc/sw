@@ -54,6 +54,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
 
+  naplesWithoutHosts: ClusterDistributedServiceCard[] = [];
+  notAdmittedCount: number = 0;
+
   cols: TableCol[] = [
     {field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 15},
     {field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: false , width: 25},
@@ -103,6 +106,16 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naples);
         this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
         this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
+
+        this.naplesEventUtility.processEvents(response);
+        this.naplesWithoutHosts = [];
+        for (const dsc of this.naples) {
+          if (!dsc.status.host) {
+            const newHost = new ClusterHost();
+            this.naplesWithoutHosts.push(dsc);
+          }
+        }
+        this.notAdmittedCount = this.naplesWithoutHosts.length;
       },
       this.controllerService.webSocketErrorHandler('Failed to get NAPLES info')
     );

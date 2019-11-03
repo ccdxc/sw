@@ -1,45 +1,97 @@
-<div fxFlex="auto" fxLayout="column">
+<div fxFlex="auto" style="padding: 0px 10px;" fxLayout="column">
   <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newhost-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
          fxLayoutAlign="start stretch" class="newhost-content">
-      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newhost-row">
-          <div fxFlex="nogrow" class="newhost-text">NAME:</div>
-          <input fxFlex="300px" formControlName="name" class="newhost-name" appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Unique Host Name...">
-        </div>
-        <div fxFlex="25px"></div>
-
-        <div formGroupName="spec">
-          <div formArrayName="dscs">
-            <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
-                 *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
-                 [formGroupName]="index">
-              <div fxFlex="nogrow" class="newhost-text">ADD DSC BY:</div>
-              <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
-              </ng-container>
-            </div>
-          </div>
-        </div>
-
-
+      <div *ngIf="isInline || notAdmittedCount==0">
+        <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
       </div>
-
-      <div *ngIf="isInline" class="newhost-buttoncontainer" fxFlex="nogrow"
-           fxLayout="row wrap" fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <button [disabled]="!isFormValid()" (click)="saveObject()"
-                  class="global-button-primary newhost-save">SAVE</button>
-        </div>
-        <div fxFlex="nogrow">
-          <button (click)="cancelObject()"
-                  class="global-button-neutral newhost-cancel">CANCEL</button>
-        </div>
+      <div *ngIf="isInline">
+        <ng-container *ngTemplateOutlet="editButtonContainer;">
+        </ng-container>
+      </div>
+      <div *ngIf="!isInline && notAdmittedCount!=0">
+        <ng-container *ngTemplateOutlet="multiAddMode;"></ng-container>
       </div>
     </div>
   </div>
 </div>
+
+<ng-template #singleMode>
+  <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+    <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newhost-row">
+      <div fxFlex="nogrow" class="newhost-text">NAME:</div>
+      <input fxFlex="300px" formControlName="name" class="newhost-name" appErrorTooltip
+             spellcheck="false" type="text" pInputText placeholder="Unique Host Name...">
+    </div>
+    <div fxFlex="25px"></div>
+
+    <div formGroupName="spec">
+      <div formArrayName="dscs">
+        <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
+             *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
+             [formGroupName]="index">
+          <div fxFlex="nogrow" class="newhost-text">ADD DSC BY:</div>
+          <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #multiAddMode>
+  <div fxFlex class="naples-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #DataTable>
+  <app-tableviewedit fxLayout="column" class="newhost-batchadd-table"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [virtualRowHeight]="48"
+                     [bodyTemplate]="bodyTemplate">
+  </app-tableviewedit>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.name'">
+      {{rowData["spec"]["id"]}}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.mac-address'">
+      {{rowData["status"]["primary-mac"]}}
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      <!-- [formGroup]="rowData[1].$formGroup" formGroupName="meta" formControlName="name" -->
+      <div fxFlex="none" fxLayoutAlign="start start">
+        <div [formGroup]="getFormGroup(rowData)">
+          <div formGroupName="meta">
+            <input fxFlex="300px" formControlName="name" appErrorTooltip
+                   class="newhost-name"
+                   matspellcheck="false" type="text" pInputText
+                   placeholder="Unique Host Name...">
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #editButtonContainer>
+  <div class="newhost-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
+       fxLayoutAlign="start start">
+    <div fxFlex="nogrow">
+      <button [disabled]="!isFormValid()" (click)="saveObject()"
+              class="global-button-primary newhost-save">SAVE</button>
+    </div>
+    <div fxFlex="nogrow">
+      <button (click)="cancelObject()"
+              class="global-button-neutral newhost-cancel">CANCEL</button>
+    </div>
+  </div>
+</ng-template>
 
 <ng-template #newHostCreation let-index="index">
 
@@ -86,6 +138,4 @@
       </ng-container>
     </div>
   </div>
-
-
 </ng-template>

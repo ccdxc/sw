@@ -26,6 +26,7 @@ import {DebugElement} from '@angular/core';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { StagingService } from '@app/services/generated/staging.service';
 
 
 
@@ -56,7 +57,8 @@ describe('NewhostComponent', () => {
        LogPublishersService,
        MatIconRegistry,
        ClusterService,
-       MessageService
+       MessageService,
+       StagingService
      ]
    });
   });

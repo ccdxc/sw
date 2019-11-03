@@ -42,9 +42,12 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newhost (formClose)="creationFormClose()"
-               fxFlex="none" [existingObjects]='dataObjects'>
-  </app-newhost>
+  <div fxFlex>
+    <app-newhost (formClose)="creationFormClose()"
+                 fxFlex="grow" [existingObjects]='dataObjects' [notAdmittedCount]="notAdmittedCount"
+                 [dataObjects]="naplesWithoutHosts">
+    </app-newhost>
+  </div>
 </ng-template>
 
 <!-- TABLE BODY -->

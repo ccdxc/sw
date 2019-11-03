@@ -11,7 +11,11 @@ $vertical-gutter: 5px;
   }
 }
 
-.newhost-name,
+.newhost-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 20px !important;
+}
+
 .newhost-NAPLES-name,
 .newhost-mac-address {
   margin: $vertical-gutter $horizontal-gutter;
@@ -20,6 +24,11 @@ $vertical-gutter: 5px;
 
 .newhost-input {
   width: 155px;
+}
+
+.lazyrender-container {
+  min-height: 450px;
+  max-height: 800px;
 }
 
 .newhost-content {
@@ -107,4 +116,8 @@ $vertical-gutter: 5px;
 
 .newhost-buttoncontainer {
   margin-top: 1.5 * $vertical-gutter;
+}
+
+.newhost-batchadd-table {
+  height: 100%
 }
