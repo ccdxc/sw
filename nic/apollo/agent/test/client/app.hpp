@@ -37,6 +37,7 @@ sdk_ret_t create_mirror_session_grpc(pds_mirror_session_spec_t *spec);
 sdk_ret_t create_meter_grpc(pds_meter_spec_t *spec);
 sdk_ret_t create_tag_grpc(pds_tag_spec_t *spec);
 sdk_ret_t create_nexthop_grpc(pds_nexthop_spec_t *spec);
+sdk_ret_t create_nexthop_group_grpc(pds_nexthop_group_spec_t *spec);
 sdk_ret_t create_svc_mapping_grpc(pds_svc_mapping_spec_t *spec);
 sdk_ret_t create_l3_intf_grpc(pds_if_spec_t *spec);
 

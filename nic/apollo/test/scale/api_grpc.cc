@@ -122,6 +122,12 @@ create_nexthop (pds_nexthop_spec_t *pds_nh)
 }
 
 sdk_ret_t
+create_nexthop_group (pds_nexthop_group_spec_t *pds_nhgroup)
+{
+    return create_nexthop_group_grpc(pds_nhgroup);
+}
+
+sdk_ret_t
 create_tunnel (uint32_t id, pds_tep_spec_t *pds_tep)
 {
     return create_tunnel_grpc(id, pds_tep);

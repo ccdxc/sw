@@ -1386,9 +1386,18 @@ create_underlay_nexthops (uint32_t num_nh)
 {
     sdk_ret_t rv;
     pds_nexthop_spec_t pds_nh;
+    pds_nexthop_group_spec_t pds_nhgroup;
     uint64_t peer_mac = 0x00BBBBBBB0ULL;
 
+    // create an underlay nexthop group object
+    memset(&pds_nhgroup, 0, sizeof(pds_nhgroup));
+    pds_nhgroup.key.id = 1;
+    pds_nhgroup.type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+    pds_nhgroup.num_nexthops =
+        (num_nh > PDS_MAX_ECMP_NEXTHOP) ? PDS_MAX_ECMP_NEXTHOP : num_nh;
+
     for (uint32_t i = 1; i <= num_nh; i++) {
+        memset(&pds_nh, 0, sizeof(pds_nh));
         pds_nh.key.id = i;
         pds_nh.type = PDS_NH_TYPE_UNDERLAY;
         pds_nh.l3_if.id = i;
@@ -1396,6 +1405,9 @@ create_underlay_nexthops (uint32_t num_nh)
         rv = create_nexthop(&pds_nh);
         if (rv != SDK_RET_OK) {
             return rv;
+        }
+        if ((i - 1) < PDS_MAX_ECMP_NEXTHOP) {
+            pds_nhgroup.nexthops[i-1] = pds_nh;
         }
     }
 
@@ -1405,6 +1417,21 @@ create_underlay_nexthops (uint32_t num_nh)
         SDK_ASSERT(0);
         return rv;
     }
+
+#if 0
+    // create the underlay nexthop group
+    rv = create_nexthop_group(&pds_nhgroup);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+    // push leftover objects
+    rv = create_nexthop_group(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
+
     return SDK_RET_OK;
 }
 

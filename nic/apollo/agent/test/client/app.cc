@@ -44,6 +44,8 @@ using pds::VPCGetResponse;
 using pds::VPCPeerResponse;
 using pds::NexthopResponse;
 using pds::NexthopSpec;
+using pds::NhGroupSpec;
+using pds::NhGroupResponse;
 using pds::BatchSpec;
 using pds::BatchStatus;
 using types::BatchCtxt;
@@ -78,6 +80,7 @@ pds::MirrorSessionRequest     g_mirror_session_req;
 pds::MeterRequest             g_meter_req;
 pds::TagRequest               g_tag_req;
 pds::NexthopRequest           g_nexthop_req;
+pds::NhGroupRequest           g_nexthop_group_req;
 pds::SvcMappingRequest        g_svc_mapping_req;
 pds::VPCDeleteRequest         g_vpc_req_del;
 pds::VPCGetRequest            g_vpc_req_get;
@@ -442,6 +445,30 @@ create_nexthop_grpc (pds_nexthop_spec_t *spec)
             return SDK_RET_ERR;
         }
         g_nexthop_req.clear_request();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_nexthop_group_grpc (pds_nexthop_group_spec_t *spec)
+{
+    ClientContext   context;
+    NhGroupResponse response;
+    Status          ret_status;
+
+    if (spec != NULL) {
+        NhGroupSpec *proto_spec = g_nexthop_group_req.add_request();
+        pds_nh_group_api_spec_to_proto(proto_spec, spec);
+    }
+    if ((g_nexthop_group_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+       ret_status = g_nexthop_stub_->NhGroupCreate(&context,
+                                         g_nexthop_group_req, &response);
+        if (!ret_status.ok() ||
+                        (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_nexthop_group_req.clear_request();
     }
     return SDK_RET_OK;
 }

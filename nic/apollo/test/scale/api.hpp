@@ -33,6 +33,7 @@ sdk_ret_t create_vpc_peer(pds_vpc_peer_spec_t *pds_vpc_peer);
 sdk_ret_t create_tag(pds_tag_spec_t *pds_tag);
 sdk_ret_t create_meter(pds_meter_spec_t *pds_meter);
 sdk_ret_t create_nexthop(pds_nexthop_spec_t *pds_nh);
+sdk_ret_t create_nexthop_group(pds_nexthop_group_spec_t *pds_nhgroup);
 sdk_ret_t create_tunnel(uint32_t id, pds_tep_spec_t *pds_tep);
 sdk_ret_t create_device(pds_device_spec_t *device);
 sdk_ret_t create_policy(pds_policy_spec_t *policy);

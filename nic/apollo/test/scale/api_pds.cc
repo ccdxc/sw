@@ -162,6 +162,16 @@ create_nexthop (pds_nexthop_spec_t *pds_nh)
 }
 
 sdk_ret_t
+create_nexthop_group (pds_nexthop_group_spec_t *pds_nhgroup)
+{
+    if (pds_nhgroup) {
+        return pds_nexthop_group_create(pds_nhgroup);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
 create_tunnel (uint32_t id, pds_tep_spec_t *pds_tep)
 {
     if (pds_tep) {
