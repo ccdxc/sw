@@ -224,6 +224,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
   nic/utils:
     - reference: iota/test/standalone/sanity/linux
+  nic/vpp:
+    - reference: nic/apollo
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:
