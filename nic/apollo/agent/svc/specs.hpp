@@ -1881,6 +1881,7 @@ pds_nh_group_api_spec_to_proto (pds::NhGroupSpec *proto_spec,
         pds_nh_api_spec_to_proto(proto_spec->add_members(),
                                  &api_spec->nexthops[i]);
     }
+    return SDK_RET_OK;
 }
 
 // populate proto buf status from nh group API status
