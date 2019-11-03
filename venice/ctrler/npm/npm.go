@@ -138,6 +138,30 @@ func (c *Netctrler) Stop() error {
 	return nil
 }
 
+// StopAppWatch stop app watch
+func (c *Netctrler) StopAppWatch() error {
+	c.StateMgr.StopAppWatch()
+	return nil
+}
+
+// StopNetworkSecurityPolicyWatch stop  security policy watch
+func (c *Netctrler) StopNetworkSecurityPolicyWatch() error {
+	c.StateMgr.StopNetworkSecurityPolicyWatch()
+	return nil
+}
+
+// StartAppWatch stop app watch
+func (c *Netctrler) StartAppWatch() error {
+	c.StateMgr.StartAppWatch()
+	return nil
+}
+
+// StartNetworkSecurityPolicyWatch stop  security policy watch
+func (c *Netctrler) StartNetworkSecurityPolicyWatch() error {
+	c.StateMgr.StartNetworkSecurityPolicyWatch()
+	return nil
+}
+
 // runDebugRESTServer starts REST server for debug purposes
 func (c *Netctrler) runDebugRESTServer(restURL string) error {
 	// start a debug http server

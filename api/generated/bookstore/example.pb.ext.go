@@ -1967,6 +1967,7 @@ func (m *BookSpec) References(tenant string, path string, resp map[string]apiint
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Publisher",
 			}
 		}
 
@@ -2255,6 +2256,7 @@ func (m *CustomerStatus) References(tenant string, path string, resp map[string]
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("SelectorRef"),
+				RefKind: "Book",
 			}
 		}
 
@@ -2381,6 +2383,7 @@ func (m *OrderItem) References(tenant string, path string, resp map[string]apiin
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("WeakRef"),
+				RefKind: "Book",
 			}
 		}
 

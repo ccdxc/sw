@@ -50,7 +50,7 @@ func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
 	app.HandlerCtx = aps
 
 	// store it in local DB
-	stateMgr.mbus.AddObject(convertApp(aps))
+	stateMgr.mbus.AddObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(app))
 
 	return aps, nil
 }
@@ -234,7 +234,8 @@ func (sm *Statemgr) OnAppDelete(app *ctkit.App) error {
 	log.Infof("Deleting app: %+v", fapp)
 
 	// delete the object
-	return sm.mbus.DeleteObject(convertApp(fapp))
+	return sm.mbus.DeleteObjectWithReferences(app.MakeKey("security"), convertApp(fapp),
+		references(app))
 }
 
 // FindApp finds a app

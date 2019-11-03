@@ -334,6 +334,12 @@ func (ct *ctrlerCtx) run{{.}}Watcher() {
 				// {{.}} object watcher
 				wt, werr := apicl.{{$srvname}}().{{.}}().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -402,6 +408,29 @@ func (ct *ctrlerCtx) Watch{{.}}(handler {{.}}Handler) error {
 	return nil
 }
 
+// StopWatch{{.}} stops watch on {{.}} object
+func (ct *ctrlerCtx) StopWatch{{.}}(handler {{.}}Handler) error {
+	kind := "{{.}}"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("{{.}} watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
 
 // {{.}}API returns
 type {{.}}API interface {
@@ -412,6 +441,7 @@ type {{.}}API interface {
 	Find(meta *api.ObjectMeta) (*{{.}}, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*{{.}}, error)
 	Watch(handler {{.}}Handler) error
+	StopWatch(handler {{.}}Handler) error
 }
 
 // dummy struct that implements {{.}}API
@@ -536,6 +566,14 @@ func (api *{{ToLower .}}API) List(ctx context.Context, opts *api.ListWatchOption
 func (api *{{ToLower .}}API) Watch(handler {{.}}Handler) error {
 	api.ct.startWorkerPool("{{.}}")
 	return api.ct.Watch{{.}}(handler)
+}
+
+// StopWatch stop watch for Tenant {{.}} object
+func (api *{{ToLower .}}API) StopWatch(handler {{.}}Handler) error {
+	api.ct.Lock()
+	api.ct.workPools["{{.}}"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatch{{.}}(handler)
 }
 
 // {{.}} returns {{.}}API

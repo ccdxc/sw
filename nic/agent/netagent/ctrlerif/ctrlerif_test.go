@@ -11,6 +11,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
+	ptypes "github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -804,9 +806,109 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	netproto.RegisterNetworkSecurityPolicyApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityProfileApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterAppApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterAggWatchApiServer(grpcServer.GrpcServer, &srv)
 	grpcServer.Start()
 
 	return &srv
+}
+
+func (srv *fakeRPCServer) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
+	//No need for implemebtation
+	return &netproto.AggObjectList{}, nil
+}
+
+func (srv *fakeRPCServer) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
+	return nil
+}
+
+func (srv *fakeRPCServer) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApi_WatchObjectsServer) error {
+	// walk local db and send stream resp
+	for _, app := range srv.appdb {
+		// watch event
+		watchEvt := netproto.AggObjectEvent{
+			EventType: api.EventType_CreateEvent,
+			AggObj:    netproto.AggObject{Kind: "App", Object: &api.Any{}},
+		}
+
+		watchEvts := netproto.AggObjectEventList{}
+
+		mobj, err := ptypes.MarshalAny(app)
+		if err != nil {
+			log.Errorf("Error  marshalling any object. Err: %v", err)
+			return err
+		}
+
+		watchEvt.AggObj.Object = &api.Any{Any: *mobj}
+
+		watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+		// send create event
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send update event
+		watchEvt.EventType = api.EventType_UpdateEvent
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send delete event
+		watchEvt.EventType = api.EventType_DeleteEvent
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+	}
+
+	// walk local db and send stream resp
+	for _, sgp := range srv.sgpdb {
+		// watch event
+		watchEvt := netproto.AggObjectEvent{
+			EventType: api.EventType_CreateEvent,
+			AggObj:    netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}},
+		}
+
+		watchEvts := netproto.AggObjectEventList{}
+
+		mobj, err := ptypes.MarshalAny(sgp)
+		if err != nil {
+			log.Errorf("Error  marshalling any object. Err: %v", err)
+			return err
+		}
+
+		watchEvt.AggObj.Object = &api.Any{Any: *mobj}
+
+		watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+
+		// send create event
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send update event
+		watchEvt.EventType = api.EventType_UpdateEvent
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send delete event
+		watchEvt.EventType = api.EventType_DeleteEvent
+		err = stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (srv *fakeRPCServer) GetNetwork(context.Context, *api.ObjectMeta) (*netproto.Network, error) {
@@ -1484,7 +1586,7 @@ func TestSecurityPolicyWatch(t *testing.T) {
 		return (ok && sgs.Name == sgp.Name), nil
 	}, "Security group policy add not found in agent")
 	AssertEventually(t, func() (bool, interface{}) {
-		sgs, ok := srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)]
+		sgs, ok := ag.sgpUpdated[objectKey(sgp.ObjectMeta)]
 		return (ok && sgs.Name == sgp.Name), nil
 	}, "Security group policy update not found in server")
 	AssertEventually(t, func() (bool, interface{}) {

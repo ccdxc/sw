@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 				// Module object watcher
 				wt, werr := apicl.DiagnosticsV1().Module().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchModule(handler ModuleHandler) error {
 	return nil
 }
 
+// StopWatchModule stops watch on Module object
+func (ct *ctrlerCtx) StopWatchModule(handler ModuleHandler) error {
+	kind := "Module"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Module watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // ModuleAPI returns
 type ModuleAPI interface {
 	Create(obj *diagnostics.Module) error
@@ -408,6 +438,7 @@ type ModuleAPI interface {
 	Find(meta *api.ObjectMeta) (*Module, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error)
 	Watch(handler ModuleHandler) error
+	StopWatch(handler ModuleHandler) error
 }
 
 // dummy struct that implements ModuleAPI
@@ -532,6 +563,14 @@ func (api *moduleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *moduleAPI) Watch(handler ModuleHandler) error {
 	api.ct.startWorkerPool("Module")
 	return api.ct.WatchModule(handler)
+}
+
+// StopWatch stop watch for Tenant Module object
+func (api *moduleAPI) StopWatch(handler ModuleHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Module"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchModule(handler)
 }
 
 // Module returns ModuleAPI

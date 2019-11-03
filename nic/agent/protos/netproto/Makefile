@@ -3,7 +3,7 @@ NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/nim
 RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restclient
 
 # all the sources for which .pb.go is generated
-SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto
+SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto agg_watch.proto
 NIMBUS_SRC := app.proto endpoint.proto namespace.proto  network.proto  security.proto sgpolicy.proto secprofile.proto tenant.proto interface.proto
 
 #these wont have _api.go generated
@@ -26,7 +26,7 @@ qos.pb.% copp.pb.% app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% n
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../vendor/github.com/gogo/protobuf/gogoproto \
 	-I ../../../delphi/proto/delphi \
-	--gofast_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. ${SRC}
+	--gogofast_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. ${SRC}
 	goimports -local "github.com/pensando/sw" -l -w *.go
 
 ${OutDir}/%_api.go ${OutDir}/%_api_test.go : %.proto
@@ -55,6 +55,12 @@ ${RestClientDir}/docs/swagger/%.swagger.json : %.proto
 nimbus: ${NIMBUS_DEST}
 
 ${NimbusDir}/%_mserver.go : %.proto
+	protoc -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
+	-I../../../../vendor/github.com/gogo/protobuf/gogoproto \
+	-I ../../../delphi/proto/delphi \
+	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/nimbus/pre_nimbus_gen.yml,log_dir=${NimbusDir}/tmp,logtostderr=false,v=7:${NimbusDir} $^
+
 	protoc -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../vendor/github.com/gogo/protobuf/gogoproto \

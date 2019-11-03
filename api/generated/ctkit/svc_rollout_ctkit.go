@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				// Rollout object watcher
 				wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchRollout(handler RolloutHandler) error {
 	return nil
 }
 
+// StopWatchRollout stops watch on Rollout object
+func (ct *ctrlerCtx) StopWatchRollout(handler RolloutHandler) error {
+	kind := "Rollout"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Rollout watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // RolloutAPI returns
 type RolloutAPI interface {
 	Create(obj *rollout.Rollout) error
@@ -408,6 +438,7 @@ type RolloutAPI interface {
 	Find(meta *api.ObjectMeta) (*Rollout, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(handler RolloutHandler) error
+	StopWatch(handler RolloutHandler) error
 }
 
 // dummy struct that implements RolloutAPI
@@ -532,6 +563,14 @@ func (api *rolloutAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 func (api *rolloutAPI) Watch(handler RolloutHandler) error {
 	api.ct.startWorkerPool("Rollout")
 	return api.ct.WatchRollout(handler)
+}
+
+// StopWatch stop watch for Tenant Rollout object
+func (api *rolloutAPI) StopWatch(handler RolloutHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Rollout"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRollout(handler)
 }
 
 // Rollout returns RolloutAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 				// RolloutAction object watcher
 				wt, werr := apicl.RolloutV1().RolloutAction().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchRolloutAction(handler RolloutActionHandler) error {
 	return nil
 }
 
+// StopWatchRolloutAction stops watch on RolloutAction object
+func (ct *ctrlerCtx) StopWatchRolloutAction(handler RolloutActionHandler) error {
+	kind := "RolloutAction"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("RolloutAction watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // RolloutActionAPI returns
 type RolloutActionAPI interface {
 	Create(obj *rollout.RolloutAction) error
@@ -923,6 +992,7 @@ type RolloutActionAPI interface {
 	Find(meta *api.ObjectMeta) (*RolloutAction, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RolloutAction, error)
 	Watch(handler RolloutActionHandler) error
+	StopWatch(handler RolloutActionHandler) error
 }
 
 // dummy struct that implements RolloutActionAPI
@@ -1047,6 +1117,14 @@ func (api *rolloutactionAPI) List(ctx context.Context, opts *api.ListWatchOption
 func (api *rolloutactionAPI) Watch(handler RolloutActionHandler) error {
 	api.ct.startWorkerPool("RolloutAction")
 	return api.ct.WatchRolloutAction(handler)
+}
+
+// StopWatch stop watch for Tenant RolloutAction object
+func (api *rolloutactionAPI) StopWatch(handler RolloutActionHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["RolloutAction"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRolloutAction(handler)
 }
 
 // RolloutAction returns RolloutActionAPI

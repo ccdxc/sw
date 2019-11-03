@@ -3,6 +3,7 @@
 package statemgr
 
 import (
+	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
@@ -41,6 +43,7 @@ type Topics struct {
 	SecurityGroupTopic         *nimbus.SecurityGroupTopic
 	NetworkSecurityPolicyTopic *nimbus.NetworkSecurityPolicyTopic
 	NetworkInterfaceTopic      *nimbus.InterfaceTopic
+	AggregateTopic             *nimbus.AggregateTopic
 }
 
 // Statemgr is the object state manager
@@ -133,6 +136,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching sg policy")
 	}
+
 	err = ctrler.SecurityGroup().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching security group")
@@ -141,6 +145,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching app")
 	}
+
 	err = ctrler.Network().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching network")
@@ -216,6 +221,12 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		return nil, err
 	}
 
+	statemgr.topics.AggregateTopic, err = nimbus.AddAggregateTopic(mserver, statemgr)
+	if err != nil {
+		log.Errorf("Error starting Aggregate RPC server")
+		return nil, err
+	}
+
 	return statemgr, nil
 }
 
@@ -267,6 +278,18 @@ func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
 		GenerationID:    vmeta.GenerationID,
 		ResourceVersion: vmeta.ResourceVersion,
 	}
+}
+
+type apiServerObject interface {
+	References(tenant string, path string, resp map[string]apiintf.ReferenceObj)
+	GetObjectMeta() *api.ObjectMeta // returns the object meta
+}
+
+//wrapper to get references
+func references(obj apiServerObject) map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	obj.References(obj.GetObjectMeta().Name, obj.GetObjectMeta().Namespace, resp)
+	return resp
 }
 
 // GetWatchFilter returns a filter function to filter Watch Events
@@ -413,7 +436,7 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 	eps, _ := sm.ListEndpoints()
 	pushStatus.KindObjects["Endpoint"] = len(eps)
 	policies, _ := sm.ListSgpolicies()
-	pushStatus.KindObjects["SgPolicy"] = len(policies)
+	pushStatus.KindObjects["NetworkSecurityPolicy"] = len(policies)
 	events := []api.EventType{api.EventType_CreateEvent, api.EventType_DeleteEvent, api.EventType_UpdateEvent}
 	for _, obj := range objs {
 		snic, err := DistributedServiceCardStateFromObj(obj)
@@ -427,10 +450,10 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 
 		nodeState.KindStatus["App"] = &evStatus{}
 		nodeState.KindStatus["Endpoint"] = &evStatus{}
-		nodeState.KindStatus["SgPolicy"] = &evStatus{}
+		nodeState.KindStatus["NetworkSecurityPolicy"] = &evStatus{}
 		nodeState.KindStatus["App"].Status = make(map[string]bool)
 		nodeState.KindStatus["Endpoint"].Status = make(map[string]bool)
-		nodeState.KindStatus["SgPolicy"].Status = make(map[string]bool)
+		nodeState.KindStatus["NetworkSecurityPolicy"].Status = make(map[string]bool)
 		for _, ev := range events {
 			if !sm.topics.AppTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
 				log.Infof("SmartNic %v, App not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
@@ -445,12 +468,47 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 				nodeState.KindStatus["Endpoint"].Status[ev.String()] = true
 			}
 			if !sm.topics.NetworkSecurityPolicyTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
-				nodeState.KindStatus["SgPolicy"].Status[ev.String()] = false
-				log.Infof("SmartNic %v, SgPolicy not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, NetworkSecurityPolicy not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
 			} else {
-				nodeState.KindStatus["SgPolicy"].Status[ev.String()] = true
+				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = true
+			}
+
+			if !sm.topics.AggregateTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, "App", ev) {
+				nodeState.KindStatus["App"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, App not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+			} else {
+				nodeState.KindStatus["App"].Status[ev.String()] = true
+			}
+
+			if !sm.topics.AggregateTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, "NetworkSecurityPolicy", ev) {
+				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, NetworkSecurityPolicy not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
+			} else {
+				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = true
 			}
 		}
 	}
 	return pushStatus
+}
+
+//StartAppWatch stops App watch, used of testing
+func (sm *Statemgr) StartAppWatch() {
+	fmt.Printf("Starting App watch\n")
+	sm.ctrler.App().Watch(sm)
+}
+
+//StartNetworkSecurityPolicyWatch stops App watch, used of testing
+func (sm *Statemgr) StartNetworkSecurityPolicyWatch() {
+	sm.ctrler.NetworkSecurityPolicy().Watch(sm)
+}
+
+//StopAppWatch stops App watch, used of testing
+func (sm *Statemgr) StopAppWatch() {
+	sm.ctrler.App().StopWatch(sm)
+}
+
+//StopNetworkSecurityPolicyWatch stops App watch, used of testing
+func (sm *Statemgr) StopNetworkSecurityPolicyWatch() {
+	sm.ctrler.NetworkSecurityPolicy().StopWatch(sm)
 }

@@ -5,6 +5,7 @@ package npminteg
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -215,6 +216,47 @@ func (it *integTestSuite) CreateSecurityGroup(tenant, namespace, sgname string, 
 	return err
 }
 
+// CreateApp injects a create sg app on the watcher
+func (it *integTestSuite) CreateApp(tenant, namespace, name, port string) error {
+	// build sg object
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				security.ProtoPort{
+					Ports:    port,
+					Protocol: "tcp",
+				},
+			},
+		},
+	}
+
+	_, err := it.apisrvClient.SecurityV1().App().Create(context.Background(), &app)
+
+	return err
+}
+
+// DeleteApp delete app and send to the  watcher
+func (it *integTestSuite) DeleteApp(tenant, appName string) error {
+	// build a sg object
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   appName,
+			Tenant: tenant,
+		},
+	}
+
+	_, err := it.apisrvClient.SecurityV1().App().Delete(context.Background(), &app.ObjectMeta)
+
+	return err
+}
+
 // DeleteSecurityGroup injects a delete sg event to the watcher
 func (it *integTestSuite) DeleteSecurityGroup(tenant, sgname string) error {
 	// build a sg object
@@ -250,6 +292,38 @@ func (it *integTestSuite) CreateSgpolicy(tenant, namespace, pname string, attach
 
 	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 
+	return err
+}
+
+// CreateSgpolicy injects a create sg policy event on the watcher
+func (it *integTestSuite) UpdateSgpolicy(tenant, namespace, pname string, attachTenant bool, attachGroups []string, rules []security.SGRule) error {
+	// build sg object
+	sgp := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      pname,
+		},
+	}
+
+	pol, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Get(context.Background(), &sgp.ObjectMeta)
+	if err != nil {
+		return err
+	}
+
+	// rule that uses the app
+	sgp.Spec = pol.Spec
+	for _, rule := range rules {
+		sgp.Spec.Rules = append(pol.Spec.Rules, rule)
+	}
+
+	curr, _ := strconv.Atoi(pol.ObjectMeta.GenerationID)
+	sgp.ObjectMeta.GenerationID = strconv.Itoa(curr + 1)
+
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
+
+	fmt.Printf("SG Policy updated %v\n", sgp)
 	return err
 }
 

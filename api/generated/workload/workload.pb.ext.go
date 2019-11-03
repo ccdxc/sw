@@ -250,6 +250,7 @@ func (m *Workload) References(tenant string, path string, resp map[string]apiint
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -407,6 +408,7 @@ func (m *WorkloadSpec) References(tenant string, path string, resp map[string]ap
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Host",
 			}
 		}
 

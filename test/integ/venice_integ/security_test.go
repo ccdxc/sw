@@ -663,7 +663,7 @@ func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 					return false, gsgp.Spec.Rules
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", sn.agent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", len(sn.agent.NetworkAgent.ListNetworkSecurityPolicy()[0].Spec.Rules)), "10ms", it.pollTimeout())
 		}
 
 		// verify sgpolicy status reflects propagation status

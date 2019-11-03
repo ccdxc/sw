@@ -381,7 +381,7 @@ func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.Network.ObjectMeta, ns.Network.Spec)
 
 	// store it in local DB
-	sm.mbus.AddObject(convertNetwork(ns))
+	sm.mbus.AddObjectWithReferences(nw.MakeKey("network"), convertNetwork(ns), references(nw))
 
 	return nil
 }
@@ -421,5 +421,6 @@ func (sm *Statemgr) OnNetworkDelete(nto *ctkit.Network) error {
 		return err
 	}
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertNetwork(ns))
+	return sm.mbus.DeleteObjectWithReferences(nto.MakeKey("network"),
+		convertNetwork(ns), references(nto))
 }

@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 				// Orchestrator object watcher
 				wt, werr := apicl.OrchestratorV1().Orchestrator().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchOrchestrator(handler OrchestratorHandler) error {
 	return nil
 }
 
+// StopWatchOrchestrator stops watch on Orchestrator object
+func (ct *ctrlerCtx) StopWatchOrchestrator(handler OrchestratorHandler) error {
+	kind := "Orchestrator"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Orchestrator watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // OrchestratorAPI returns
 type OrchestratorAPI interface {
 	Create(obj *orchestration.Orchestrator) error
@@ -408,6 +438,7 @@ type OrchestratorAPI interface {
 	Find(meta *api.ObjectMeta) (*Orchestrator, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Orchestrator, error)
 	Watch(handler OrchestratorHandler) error
+	StopWatch(handler OrchestratorHandler) error
 }
 
 // dummy struct that implements OrchestratorAPI
@@ -532,6 +563,14 @@ func (api *orchestratorAPI) List(ctx context.Context, opts *api.ListWatchOptions
 func (api *orchestratorAPI) Watch(handler OrchestratorHandler) error {
 	api.ct.startWorkerPool("Orchestrator")
 	return api.ct.WatchOrchestrator(handler)
+}
+
+// StopWatch stop watch for Tenant Orchestrator object
+func (api *orchestratorAPI) StopWatch(handler OrchestratorHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Orchestrator"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchOrchestrator(handler)
 }
 
 // Orchestrator returns OrchestratorAPI

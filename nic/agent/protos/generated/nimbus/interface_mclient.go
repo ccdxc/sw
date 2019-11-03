@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("Interface Watch channel closed. Exisint InterfaceWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting Interface list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("InterfaceWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffInterfaces(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("Interface Watch channel closed. Exisint InterfaceWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := interfaceRPCClient.ListInterfaces(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting Interface list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("InterfaceWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffInterfaces(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.InterfaceEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processInterfaceDynamic(evt api.EventType,
+	object *netproto.Interface, reactor InterfaceReactor) error {
+
+	interfaceEvt := netproto.InterfaceEvent{
+		EventType: evt,
+		Interface: *object,
+	}
+
+	// add venice label to the object
+	interfaceEvt.Interface.ObjectMeta.Labels = make(map[string]string)
+	interfaceEvt.Interface.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(interfaceEvt.Interface.GetObjectKind(), interfaceEvt.Interface.ObjectMeta)
+
+	client.processInterfaceEvent(interfaceEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

@@ -510,6 +510,7 @@ func (m *Alert) References(tenant string, path string, resp map[string]apiintf.R
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -602,6 +603,7 @@ func (m *AlertDestination) References(tenant string, path string, resp map[strin
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -767,6 +769,7 @@ func (m *AlertPolicy) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -843,6 +846,7 @@ func (m *AlertPolicySpec) References(tenant string, path string, resp map[string
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "AlertDestination",
 			}
 		}
 

@@ -1827,6 +1827,7 @@ func (m *Role) References(tenant string, path string, resp map[string]apiintf.Re
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -1915,6 +1916,7 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -1966,6 +1968,7 @@ func (m *RoleBindingSpec) References(tenant string, path string, resp map[string
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Role",
 			}
 		}
 
@@ -1987,6 +1990,7 @@ func (m *RoleBindingSpec) References(tenant string, path string, resp map[string
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "User",
 			}
 		}
 
@@ -2141,6 +2145,7 @@ func (m *User) References(tenant string, path string, resp map[string]apiintf.Re
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -2233,6 +2238,7 @@ func (m *UserPreference) References(tenant string, path string, resp map[string]
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

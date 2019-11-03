@@ -117,8 +117,8 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
+		// periodic resync (Disabling as we have aggregate watch support)
+		/*case <-time.After(resyncInterval):
             //Give priority to evt work
             //Wait for batch interval for inflight work
             time.Sleep(5 * DefaultWatchHoldInterval)
@@ -145,6 +145,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 				// perform a diff of the states
 				client.diff{{$crudObject}}s(objList, reactor, ostream)
 			}
+			*/
 		}
 	}
 }
@@ -266,6 +267,9 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.{{$crudObject}}Event{
@@ -297,6 +301,28 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 		time.Sleep(time.Second * time.Duration(2 * iter))
 	}
 }
+
+func (client *NimbusClient) process{{$crudObject}}Dynamic(evt api.EventType,
+	object *netproto.{{$crudObject}}, reactor {{$crudObject}}Reactor) error {
+
+	{{lower $crudObject}}Evt := netproto.{{$crudObject}}Event{
+		EventType: evt,
+		{{$crudObject}}:  *object,
+	}
+
+	// add venice label to the object
+	{{lower $crudObject}}Evt.{{$crudObject}}.ObjectMeta.Labels = make(map[string]string)
+	{{lower $crudObject}}Evt.{{$crudObject}}.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject({{lower $crudObject}}Evt.{{$crudObject}}.GetObjectKind(), {{lower $crudObject}}Evt.{{$crudObject}}.ObjectMeta)
+
+	client.process{{$crudObject}}Event({{lower $crudObject}}Evt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
+}
+
 
        {{end}}
     {{end}}

@@ -3,12 +3,21 @@
 package nimbus
 
 import (
+	"context"
 	"errors"
+	"io"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -48,11 +57,27 @@ func (ms *MbusServer) AddObject(obj memdb.Object) error {
 	return ms.memDB.AddObject(obj)
 }
 
+// AddObjectWithReferences adds object to mbus with refs
+func (ms *MbusServer) AddObjectWithReferences(key string, obj memdb.Object, refs map[string]apiintf.ReferenceObj) error {
+	ms.Stats(obj.GetObjectKind(), "AddEvent").Inc()
+	ms.Stats(obj.GetObjectKind(), "ObjectCount").Inc()
+
+	return ms.memDB.AddObjectWithReferences(key, obj, refs)
+}
+
 // UpdateObject updates an object in mbus
 func (ms *MbusServer) UpdateObject(obj memdb.Object) error {
 	ms.Stats(obj.GetObjectKind(), "UpdateEvent").Inc()
 
 	return ms.memDB.UpdateObject(obj)
+}
+
+// UpdateObjectWithReferences updates an object in mbus
+func (ms *MbusServer) UpdateObjectWithReferences(key string, obj memdb.Object,
+	refs map[string]apiintf.ReferenceObj) error {
+	ms.Stats(obj.GetObjectKind(), "UpdateEvent").Inc()
+
+	return ms.memDB.UpdateObjectWithReferences(key, obj, refs)
 }
 
 // FindObject finds the memdb object
@@ -66,6 +91,14 @@ func (ms *MbusServer) DeleteObject(obj memdb.Object) error {
 	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
 
 	return ms.memDB.DeleteObject(obj)
+}
+
+// DeleteObject deletes an object from mbus
+func (ms *MbusServer) DeleteObjectWithReferences(key string, obj memdb.Object,
+	refs map[string]apiintf.ReferenceObj) error {
+	ms.Stats(obj.GetObjectKind(), "DeleteEvent").Inc()
+	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
+	return ms.memDB.DeleteObjectWithReferences(key, obj, refs)
 }
 
 // AddNodeState adds node state to an object
@@ -108,4 +141,823 @@ func NewMbusServer(svcName string, grpcServer *rpckit.RPCServer) *MbusServer {
 		grpcServer: grpcServer,
 	}
 	return &mbusServer
+}
+
+//Does not implement, will dynamically validate when watch is called
+type AggStatusReactor interface {
+}
+
+//Each kind status
+type KindStatus struct {
+	kind          string
+	opSentStatus  map[api.EventType]*EventStatus
+	opAckedStatus map[api.EventType]*EventStatus
+}
+
+//Map of kind and its status
+type NodeKindStatus struct {
+	kindStatus map[string]*KindStatus
+	//same watcher for all
+	watcher *memdb.Watcher
+}
+
+//Map of node and its kind status
+type NodesStatus struct {
+	nodesStatus map[string]*NodeKindStatus
+}
+
+// AggregateTopic is the Aggregate topic on message bus
+type AggregateTopic struct {
+	sync.Mutex
+	grpcServer    *rpckit.RPCServer // gRPC server instance
+	server        *MbusServer
+	statusReactor AggStatusReactor // status event reactor
+	aggStatus     map[string]*NodesStatus
+}
+
+// AddAggregateTopic returns a network RPC server
+func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*AggregateTopic, error) {
+	// RPC handler instance
+	handler := AggregateTopic{
+		grpcServer:    server.grpcServer,
+		server:        server,
+		statusReactor: reactor,
+		aggStatus:     make(map[string]*NodesStatus),
+	}
+
+	// register the RPC handlers
+	if server.grpcServer != nil {
+		netproto.RegisterAggWatchApiServer(server.grpcServer.GrpcServer, &handler)
+	}
+
+	return &handler, nil
+}
+
+func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
+	//No need for implemebtation
+	return &netproto.AggObjectList{}, nil
+}
+
+func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	if eh.statusReactor == nil {
+		return nil
+	}
+
+	for {
+		oper, err := stream.Recv()
+		if err == io.EOF {
+			log.Errorf("%v AppOperUpdate stream ended. closing..", nodeID)
+			return stream.SendAndClose(&api.TypeMeta{})
+		} else if err != nil {
+			log.Errorf("Error receiving from %v AppOperUpdate stream. Err: %v", nodeID, err)
+			return err
+		}
+
+		object, err := GetObject(&oper.AggObj)
+		if err != nil {
+			log.Errorf("Invalid object for get %v", err)
+			return err
+		}
+
+		switch oper.EventType {
+		case api.EventType_CreateEvent:
+			fallthrough
+		case api.EventType_UpdateEvent:
+			switch oper.AggObj.Kind {
+
+			case "App":
+				if _, ok := eh.statusReactor.(AppStatusReactor); ok {
+					err = eh.statusReactor.(AppStatusReactor).OnAppOperUpdate(nodeID,
+						object.Message.(*netproto.App))
+					if err != nil {
+						log.Errorf("Error updating App oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "AppStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.App).GetObjectMeta())
+
+			case "Endpoint":
+				if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
+					err = eh.statusReactor.(EndpointStatusReactor).OnEndpointOperUpdate(nodeID,
+						object.Message.(*netproto.Endpoint))
+					if err != nil {
+						log.Errorf("Error updating Endpoint oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "EndpointStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
+
+			case "Interface":
+				if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
+					err = eh.statusReactor.(InterfaceStatusReactor).OnInterfaceOperUpdate(nodeID,
+						object.Message.(*netproto.Interface))
+					if err != nil {
+						log.Errorf("Error updating Interface oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "InterfaceStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
+
+			case "Namespace":
+				if _, ok := eh.statusReactor.(NamespaceStatusReactor); ok {
+					err = eh.statusReactor.(NamespaceStatusReactor).OnNamespaceOperUpdate(nodeID,
+						object.Message.(*netproto.Namespace))
+					if err != nil {
+						log.Errorf("Error updating Namespace oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "NamespaceStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Namespace).GetObjectMeta())
+
+			case "Network":
+				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
+					err = eh.statusReactor.(NetworkStatusReactor).OnNetworkOperUpdate(nodeID,
+						object.Message.(*netproto.Network))
+					if err != nil {
+						log.Errorf("Error updating Network oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "NetworkStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Network).GetObjectMeta())
+
+			case "NetworkSecurityPolicy":
+				if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
+					err = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).OnNetworkSecurityPolicyOperUpdate(nodeID,
+						object.Message.(*netproto.NetworkSecurityPolicy))
+					if err != nil {
+						log.Errorf("Error updating NetworkSecurityPolicy oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "NetworkSecurityPolicyStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
+
+			case "SecurityGroup":
+				if _, ok := eh.statusReactor.(SecurityGroupStatusReactor); ok {
+					err = eh.statusReactor.(SecurityGroupStatusReactor).OnSecurityGroupOperUpdate(nodeID,
+						object.Message.(*netproto.SecurityGroup))
+					if err != nil {
+						log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "SecurityGroupStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityGroup).GetObjectMeta())
+
+			case "SecurityProfile":
+				if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
+					err = eh.statusReactor.(SecurityProfileStatusReactor).OnSecurityProfileOperUpdate(nodeID,
+						object.Message.(*netproto.SecurityProfile))
+					if err != nil {
+						log.Errorf("Error updating SecurityProfile oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "SecurityProfileStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
+
+			case "Tenant":
+				if _, ok := eh.statusReactor.(TenantStatusReactor); ok {
+					err = eh.statusReactor.(TenantStatusReactor).OnTenantOperUpdate(nodeID,
+						object.Message.(*netproto.Tenant))
+					if err != nil {
+						log.Errorf("Error updating Tenant oper state. Err: %v", err)
+					}
+				} else {
+					log.Errorf("Object oper update not implemented for type %v", "TenantStatusReactor")
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Tenant).GetObjectMeta())
+
+			}
+		case api.EventType_DeleteEvent:
+			switch oper.AggObj.Kind {
+
+			case "App":
+				if _, ok := eh.statusReactor.(AppStatusReactor); ok {
+					err = eh.statusReactor.(AppStatusReactor).OnAppOperDelete(nodeID,
+						object.Message.(*netproto.App))
+					if err != nil {
+						log.Errorf("Error updating App oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.App).GetObjectMeta())
+
+			case "Endpoint":
+				if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
+					err = eh.statusReactor.(EndpointStatusReactor).OnEndpointOperDelete(nodeID,
+						object.Message.(*netproto.Endpoint))
+					if err != nil {
+						log.Errorf("Error updating Endpoint oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
+
+			case "Interface":
+				if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
+					err = eh.statusReactor.(InterfaceStatusReactor).OnInterfaceOperDelete(nodeID,
+						object.Message.(*netproto.Interface))
+					if err != nil {
+						log.Errorf("Error updating Interface oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
+
+			case "Namespace":
+				if _, ok := eh.statusReactor.(NamespaceStatusReactor); ok {
+					err = eh.statusReactor.(NamespaceStatusReactor).OnNamespaceOperDelete(nodeID,
+						object.Message.(*netproto.Namespace))
+					if err != nil {
+						log.Errorf("Error updating Namespace oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Namespace).GetObjectMeta())
+
+			case "Network":
+				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
+					err = eh.statusReactor.(NetworkStatusReactor).OnNetworkOperDelete(nodeID,
+						object.Message.(*netproto.Network))
+					if err != nil {
+						log.Errorf("Error updating Network oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Network).GetObjectMeta())
+
+			case "NetworkSecurityPolicy":
+				if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
+					err = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).OnNetworkSecurityPolicyOperDelete(nodeID,
+						object.Message.(*netproto.NetworkSecurityPolicy))
+					if err != nil {
+						log.Errorf("Error updating NetworkSecurityPolicy oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
+
+			case "SecurityGroup":
+				if _, ok := eh.statusReactor.(SecurityGroupStatusReactor); ok {
+					err = eh.statusReactor.(SecurityGroupStatusReactor).OnSecurityGroupOperDelete(nodeID,
+						object.Message.(*netproto.SecurityGroup))
+					if err != nil {
+						log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityGroup).GetObjectMeta())
+
+			case "SecurityProfile":
+				if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
+					err = eh.statusReactor.(SecurityProfileStatusReactor).OnSecurityProfileOperDelete(nodeID,
+						object.Message.(*netproto.SecurityProfile))
+					if err != nil {
+						log.Errorf("Error updating SecurityProfile oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
+
+			case "Tenant":
+				if _, ok := eh.statusReactor.(TenantStatusReactor); ok {
+					err = eh.statusReactor.(TenantStatusReactor).OnTenantOperDelete(nodeID,
+						object.Message.(*netproto.Tenant))
+					if err != nil {
+						log.Errorf("Error updating Tenant oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Tenant).GetObjectMeta())
+
+			}
+		}
+
+	}
+}
+
+func (eh *AggregateTopic) registerAggWatcher(aggkey, nodeID string, kinds []string, watcher *memdb.Watcher) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	eh.aggStatus[aggkey] = &NodesStatus{nodesStatus: make(map[string]*NodeKindStatus)}
+
+	eh.aggStatus[aggkey].nodesStatus[nodeID] = &NodeKindStatus{watcher: watcher,
+		kindStatus: make(map[string]*KindStatus)}
+	for _, kind := range kinds {
+		eh.aggStatus[aggkey].nodesStatus[nodeID].kindStatus[kind] =
+			&KindStatus{kind: kind, opAckedStatus: make(map[api.EventType]*EventStatus),
+				opSentStatus: make(map[api.EventType]*EventStatus)}
+	}
+}
+
+func (eh *AggregateTopic) unRegisterAggWatcher(aggKey, nodeID string) {
+	eh.Lock()
+	defer eh.Unlock()
+
+	if _, ok := eh.aggStatus[aggKey]; ok {
+		delete(eh.aggStatus[aggKey].nodesStatus, nodeID)
+	}
+
+	if len(eh.aggStatus) == 0 {
+		delete(eh.aggStatus, aggKey)
+	}
+}
+
+//update recv object status
+func (eh *AggregateTopic) updateSentObjStatus(aggKey, nodeID, kind string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	if _, ok := eh.aggStatus[aggKey]; !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	nodeStatus, ok := eh.aggStatus[aggKey].nodesStatus[nodeID]
+	if !ok {
+		//Watcher already unregistered.
+		return
+	}
+
+	kindStatus, ok := nodeStatus.kindStatus[kind]
+	if !ok {
+		nodeStatus.kindStatus[kind] = &KindStatus{}
+		kindStatus = nodeStatus.kindStatus[kind]
+	}
+
+	evStatus, ok = kindStatus.opSentStatus[event]
+	if !ok {
+		kindStatus.opSentStatus[event] = &EventStatus{}
+		evStatus = kindStatus.opSentStatus[event]
+	}
+
+	new, _ := strconv.Atoi(objMeta.ResourceVersion)
+	//for create/delete keep track of last one sent to, this may not be full proof
+	//  Create could be processed asynchoronusly by client and can come out of order.
+	//  For now should be ok as at least we make sure all messages are processed.
+	//For update keep track of only last one as nimbus client periodically pulls
+	if evStatus.LastObjectMeta != nil {
+		current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+		if current > new {
+			return
+		}
+	}
+	evStatus.LastObjectMeta = objMeta
+}
+
+//update recv object status
+func (eh *AggregateTopic) updateAckedObjStatus(nodeID, kind string, event api.EventType, objMeta *api.ObjectMeta) {
+
+	eh.Lock()
+	defer eh.Unlock()
+	var evStatus *EventStatus
+
+	for _, nodesStatus := range eh.aggStatus {
+		nodeStatus, ok := nodesStatus.nodesStatus[nodeID]
+		if !ok {
+			//Watcher already unregistered.
+			continue
+		}
+
+		kindStatus, ok := nodeStatus.kindStatus[kind]
+		if !ok {
+			//This watch not interested in this kind
+			continue
+		}
+
+		evStatus, ok = kindStatus.opAckedStatus[event]
+		if !ok {
+			kindStatus.opAckedStatus[event] = &EventStatus{}
+			evStatus = kindStatus.opAckedStatus[event]
+		}
+
+		new, _ := strconv.Atoi(objMeta.ResourceVersion)
+		//for create/delete keep track of last one sent to, this may not be full proof
+		//  Create could be processed asynchoronusly by client and can come out of order.
+		//  For now should be ok as at least we make sure all messages are processed.
+		//For update keep track of only last one as nimbus client periodically pulls
+		if evStatus.LastObjectMeta != nil {
+			current, _ := strconv.Atoi(evStatus.LastObjectMeta.ResourceVersion)
+			if current > new {
+				return
+			}
+		}
+		evStatus.LastObjectMeta = objMeta
+	}
+
+}
+
+//update recv object status
+func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event api.EventType) bool {
+
+	var ok bool
+	var evStatus *EventStatus
+	var evAckStatus *EventStatus
+
+	eh.Lock()
+	defer eh.Unlock()
+
+	var nodeStatus *NodeKindStatus
+	for _, nodesStatus := range eh.aggStatus {
+		nodeStatus, ok = nodesStatus.nodesStatus[nodeID]
+		if !ok {
+			return true
+		}
+		break
+	}
+
+	//This node already unregistered
+	if nodeStatus == nil {
+		return true
+	}
+
+	kindStatus, ok := nodeStatus.kindStatus[kind]
+	if !ok {
+		//nothing sent, so insync
+		return true
+	}
+
+	//In-flight object still exists
+	if len(nodeStatus.watcher.Channel) != 0 {
+		log.Infof("watcher %v still has objects in in-flight %v(%v)", nodeID, "App", event)
+		return false
+	}
+
+	evStatus, ok = kindStatus.opSentStatus[event]
+	if !ok {
+		return true
+	}
+
+	evAckStatus, ok = kindStatus.opAckedStatus[event]
+	if !ok {
+		//nothing received, failed.
+		return false
+	}
+
+	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
+			nodeID, kind, event, evStatus.LastObjectMeta.ResourceVersion,
+			evAckStatus.LastObjectMeta.ResourceVersion)
+		return false
+	}
+
+	return true
+}
+
+// WatchObjects watches aggregate  and sends streaming resp
+func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApi_WatchObjectsServer) error {
+
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	watcher := memdb.Watcher{}
+	watcher.Name = nodeID
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	defer close(watcher.Channel)
+
+	aggKey := strings.Join(kinds.Kinds, "-")
+	eh.registerAggWatcher(aggKey, nodeID, kinds.Kinds, &watcher)
+	defer eh.unRegisterAggWatcher(aggKey, nodeID)
+	for _, kind := range kinds.Kinds {
+
+		eh.server.memDB.WatchObjects(kind, &watcher)
+		defer eh.server.memDB.StopWatchObjects(kind, &watcher)
+
+		watchEvts := netproto.AggObjectEventList{}
+		addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta) {
+			watchEvt := netproto.AggObjectEvent{
+				EventType: api.EventType_CreateEvent,
+				AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
+			}
+
+			watchEvt.AggObj.Object.Any = *mobj
+			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+			eh.updateSentObjStatus(aggKey, nodeID, kind, watchEvt.EventType, meta)
+		}
+		switch kind {
+
+		case "App":
+			objlist, err := eh.server.ListApps(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Endpoint":
+			objlist, err := eh.server.ListEndpoints(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Interface":
+			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Namespace":
+			objlist, err := eh.server.ListNamespaces(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Network":
+			objlist, err := eh.server.ListNetworks(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "NetworkSecurityPolicy":
+			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "SecurityGroup":
+			objlist, err := eh.server.ListSecurityGroups(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "SecurityProfile":
+			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Tenant":
+			objlist, err := eh.server.ListTenants(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		}
+
+		// walk all objects and send it out
+
+		if len(watchEvts.AggObjectEvents) > 0 {
+			err := stream.Send(&watchEvts)
+			if err != nil {
+				log.Errorf("Error sending Aggregate to stream. Err: %v", err)
+				return err
+			}
+		}
+	}
+
+	timer := time.NewTimer(DefaultWatchHoldInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+
+	running := false
+	watchEvts := netproto.AggObjectEventList{}
+	sendToStream := func() error {
+		err := stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Agg to stream. Err: %v", err)
+			return err
+		}
+		watchEvts = netproto.AggObjectEventList{}
+		return nil
+	}
+
+	// loop forever on watch channel
+	for {
+		select {
+		// read from channel
+		case evt, ok := <-watcher.Channel:
+			if !ok {
+				log.Errorf("Error reading from channel. Closing watch")
+				return errors.New("Error reading from channel")
+			}
+
+			// convert the events
+			var etype api.EventType
+			switch evt.EventType {
+			case memdb.CreateEvent:
+				etype = api.EventType_CreateEvent
+			case memdb.UpdateEvent:
+				etype = api.EventType_UpdateEvent
+			case memdb.DeleteEvent:
+				etype = api.EventType_DeleteEvent
+			}
+
+			// get the object
+			kind := evt.Obj.GetObjectKind()
+			watchEvt := netproto.AggObjectEvent{
+				EventType: etype,
+				AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
+			}
+			var mobj *types.Any
+			switch kind {
+
+			case "App":
+				obj, err := AppFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Endpoint":
+				obj, err := EndpointFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Interface":
+				obj, err := InterfaceFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Namespace":
+				obj, err := NamespaceFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Network":
+				obj, err := NetworkFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "NetworkSecurityPolicy":
+				obj, err := NetworkSecurityPolicyFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "SecurityGroup":
+				obj, err := SecurityGroupFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "SecurityProfile":
+				obj, err := SecurityProfileFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Tenant":
+				obj, err := TenantFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			}
+			watchEvt.AggObj.Object.Any = *mobj
+			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+
+			// convert to netproto format
+			if !running {
+				running = true
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			if len(watchEvts.AggObjectEvents) >= DefaultWatchBatchSize {
+				if err := sendToStream(); err != nil {
+					return err
+				}
+				if !timer.Stop() {
+					<-timer.C
+				}
+				timer.Reset(DefaultWatchHoldInterval)
+			}
+			eh.updateSentObjStatus(aggKey, nodeID, kind, etype, evt.Obj.GetObjectMeta())
+		case <-timer.C:
+			running = false
+			if err := sendToStream(); err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }

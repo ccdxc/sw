@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 				// Network object watcher
 				wt, werr := apicl.NetworkV1().Network().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchNetwork(handler NetworkHandler) error {
 	return nil
 }
 
+// StopWatchNetwork stops watch on Network object
+func (ct *ctrlerCtx) StopWatchNetwork(handler NetworkHandler) error {
+	kind := "Network"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Network watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // NetworkAPI returns
 type NetworkAPI interface {
 	Create(obj *network.Network) error
@@ -408,6 +438,7 @@ type NetworkAPI interface {
 	Find(meta *api.ObjectMeta) (*Network, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Network, error)
 	Watch(handler NetworkHandler) error
+	StopWatch(handler NetworkHandler) error
 }
 
 // dummy struct that implements NetworkAPI
@@ -532,6 +563,14 @@ func (api *networkAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 func (api *networkAPI) Watch(handler NetworkHandler) error {
 	api.ct.startWorkerPool("Network")
 	return api.ct.WatchNetwork(handler)
+}
+
+// StopWatch stop watch for Tenant Network object
+func (api *networkAPI) StopWatch(handler NetworkHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Network"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchNetwork(handler)
 }
 
 // Network returns NetworkAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 				// Service object watcher
 				wt, werr := apicl.NetworkV1().Service().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchService(handler ServiceHandler) error {
 	return nil
 }
 
+// StopWatchService stops watch on Service object
+func (ct *ctrlerCtx) StopWatchService(handler ServiceHandler) error {
+	kind := "Service"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Service watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // ServiceAPI returns
 type ServiceAPI interface {
 	Create(obj *network.Service) error
@@ -923,6 +992,7 @@ type ServiceAPI interface {
 	Find(meta *api.ObjectMeta) (*Service, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Service, error)
 	Watch(handler ServiceHandler) error
+	StopWatch(handler ServiceHandler) error
 }
 
 // dummy struct that implements ServiceAPI
@@ -1047,6 +1117,14 @@ func (api *serviceAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 func (api *serviceAPI) Watch(handler ServiceHandler) error {
 	api.ct.startWorkerPool("Service")
 	return api.ct.WatchService(handler)
+}
+
+// StopWatch stop watch for Tenant Service object
+func (api *serviceAPI) StopWatch(handler ServiceHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Service"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchService(handler)
 }
 
 // Service returns ServiceAPI
@@ -1361,6 +1439,12 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 				// LbPolicy object watcher
 				wt, werr := apicl.NetworkV1().LbPolicy().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1429,6 +1513,30 @@ func (ct *ctrlerCtx) WatchLbPolicy(handler LbPolicyHandler) error {
 	return nil
 }
 
+// StopWatchLbPolicy stops watch on LbPolicy object
+func (ct *ctrlerCtx) StopWatchLbPolicy(handler LbPolicyHandler) error {
+	kind := "LbPolicy"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("LbPolicy watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // LbPolicyAPI returns
 type LbPolicyAPI interface {
 	Create(obj *network.LbPolicy) error
@@ -1438,6 +1546,7 @@ type LbPolicyAPI interface {
 	Find(meta *api.ObjectMeta) (*LbPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*LbPolicy, error)
 	Watch(handler LbPolicyHandler) error
+	StopWatch(handler LbPolicyHandler) error
 }
 
 // dummy struct that implements LbPolicyAPI
@@ -1562,6 +1671,14 @@ func (api *lbpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([
 func (api *lbpolicyAPI) Watch(handler LbPolicyHandler) error {
 	api.ct.startWorkerPool("LbPolicy")
 	return api.ct.WatchLbPolicy(handler)
+}
+
+// StopWatch stop watch for Tenant LbPolicy object
+func (api *lbpolicyAPI) StopWatch(handler LbPolicyHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["LbPolicy"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchLbPolicy(handler)
 }
 
 // LbPolicy returns LbPolicyAPI
@@ -1876,6 +1993,12 @@ func (ct *ctrlerCtx) runVirtualRouterWatcher() {
 				// VirtualRouter object watcher
 				wt, werr := apicl.NetworkV1().VirtualRouter().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1944,6 +2067,30 @@ func (ct *ctrlerCtx) WatchVirtualRouter(handler VirtualRouterHandler) error {
 	return nil
 }
 
+// StopWatchVirtualRouter stops watch on VirtualRouter object
+func (ct *ctrlerCtx) StopWatchVirtualRouter(handler VirtualRouterHandler) error {
+	kind := "VirtualRouter"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("VirtualRouter watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // VirtualRouterAPI returns
 type VirtualRouterAPI interface {
 	Create(obj *network.VirtualRouter) error
@@ -1953,6 +2100,7 @@ type VirtualRouterAPI interface {
 	Find(meta *api.ObjectMeta) (*VirtualRouter, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*VirtualRouter, error)
 	Watch(handler VirtualRouterHandler) error
+	StopWatch(handler VirtualRouterHandler) error
 }
 
 // dummy struct that implements VirtualRouterAPI
@@ -2077,6 +2225,14 @@ func (api *virtualrouterAPI) List(ctx context.Context, opts *api.ListWatchOption
 func (api *virtualrouterAPI) Watch(handler VirtualRouterHandler) error {
 	api.ct.startWorkerPool("VirtualRouter")
 	return api.ct.WatchVirtualRouter(handler)
+}
+
+// StopWatch stop watch for Tenant VirtualRouter object
+func (api *virtualrouterAPI) StopWatch(handler VirtualRouterHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["VirtualRouter"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchVirtualRouter(handler)
 }
 
 // VirtualRouter returns VirtualRouterAPI
@@ -2391,6 +2547,12 @@ func (ct *ctrlerCtx) runNetworkInterfaceWatcher() {
 				// NetworkInterface object watcher
 				wt, werr := apicl.NetworkV1().NetworkInterface().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2459,6 +2621,30 @@ func (ct *ctrlerCtx) WatchNetworkInterface(handler NetworkInterfaceHandler) erro
 	return nil
 }
 
+// StopWatchNetworkInterface stops watch on NetworkInterface object
+func (ct *ctrlerCtx) StopWatchNetworkInterface(handler NetworkInterfaceHandler) error {
+	kind := "NetworkInterface"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("NetworkInterface watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // NetworkInterfaceAPI returns
 type NetworkInterfaceAPI interface {
 	Create(obj *network.NetworkInterface) error
@@ -2468,6 +2654,7 @@ type NetworkInterfaceAPI interface {
 	Find(meta *api.ObjectMeta) (*NetworkInterface, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkInterface, error)
 	Watch(handler NetworkInterfaceHandler) error
+	StopWatch(handler NetworkInterfaceHandler) error
 }
 
 // dummy struct that implements NetworkInterfaceAPI
@@ -2592,6 +2779,14 @@ func (api *networkinterfaceAPI) List(ctx context.Context, opts *api.ListWatchOpt
 func (api *networkinterfaceAPI) Watch(handler NetworkInterfaceHandler) error {
 	api.ct.startWorkerPool("NetworkInterface")
 	return api.ct.WatchNetworkInterface(handler)
+}
+
+// StopWatch stop watch for Tenant NetworkInterface object
+func (api *networkinterfaceAPI) StopWatch(handler NetworkInterfaceHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["NetworkInterface"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchNetworkInterface(handler)
 }
 
 // NetworkInterface returns NetworkInterfaceAPI
@@ -2906,6 +3101,12 @@ func (ct *ctrlerCtx) runIPAMPolicyWatcher() {
 				// IPAMPolicy object watcher
 				wt, werr := apicl.NetworkV1().IPAMPolicy().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2974,6 +3175,30 @@ func (ct *ctrlerCtx) WatchIPAMPolicy(handler IPAMPolicyHandler) error {
 	return nil
 }
 
+// StopWatchIPAMPolicy stops watch on IPAMPolicy object
+func (ct *ctrlerCtx) StopWatchIPAMPolicy(handler IPAMPolicyHandler) error {
+	kind := "IPAMPolicy"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("IPAMPolicy watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // IPAMPolicyAPI returns
 type IPAMPolicyAPI interface {
 	Create(obj *network.IPAMPolicy) error
@@ -2983,6 +3208,7 @@ type IPAMPolicyAPI interface {
 	Find(meta *api.ObjectMeta) (*IPAMPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*IPAMPolicy, error)
 	Watch(handler IPAMPolicyHandler) error
+	StopWatch(handler IPAMPolicyHandler) error
 }
 
 // dummy struct that implements IPAMPolicyAPI
@@ -3107,6 +3333,14 @@ func (api *ipampolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions) 
 func (api *ipampolicyAPI) Watch(handler IPAMPolicyHandler) error {
 	api.ct.startWorkerPool("IPAMPolicy")
 	return api.ct.WatchIPAMPolicy(handler)
+}
+
+// StopWatch stop watch for Tenant IPAMPolicy object
+func (api *ipampolicyAPI) StopWatch(handler IPAMPolicyHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["IPAMPolicy"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchIPAMPolicy(handler)
 }
 
 // IPAMPolicy returns IPAMPolicyAPI

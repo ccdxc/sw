@@ -120,9 +120,8 @@ func (client *NpmClient) runWatchLoop(ctx context.Context) {
 		go nimbusClient.WatchNetworks(client.watchCtx, client.agent)
 		go nimbusClient.WatchEndpoints(client.watchCtx, client.agent)
 		go nimbusClient.WatchSecurityGroups(client.watchCtx, client.agent)
-		go nimbusClient.WatchNetworkSecurityPolicys(client.watchCtx, client.agent)
 		go nimbusClient.WatchSecurityProfiles(client.watchCtx, client.agent)
-		go nimbusClient.WatchApps(client.watchCtx, client.agent)
+		go nimbusClient.WatchAggregate(client.watchCtx, []string{"App", "NetworkSecurityPolicy"}, client.agent)
 
 		// spawn worker thread to update network interface status to npm and watch for updates
 		go client.netifWorker()

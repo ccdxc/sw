@@ -119,6 +119,9 @@ func (wp *WorkerPool) Running() bool {
 //Stop all the workers
 func (wp *WorkerPool) Stop() error {
 
+	if wp.state == notRunning {
+		return nil
+	}
 	wp.cancelFunc()
 	wp.DoneWg.Wait()
 	wp.state = notRunning

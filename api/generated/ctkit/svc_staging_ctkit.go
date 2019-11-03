@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 				// Buffer object watcher
 				wt, werr := apicl.StagingV1().Buffer().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchBuffer(handler BufferHandler) error {
 	return nil
 }
 
+// StopWatchBuffer stops watch on Buffer object
+func (ct *ctrlerCtx) StopWatchBuffer(handler BufferHandler) error {
+	kind := "Buffer"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Buffer watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // BufferAPI returns
 type BufferAPI interface {
 	Create(obj *staging.Buffer) error
@@ -408,6 +438,7 @@ type BufferAPI interface {
 	Find(meta *api.ObjectMeta) (*Buffer, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Buffer, error)
 	Watch(handler BufferHandler) error
+	StopWatch(handler BufferHandler) error
 }
 
 // dummy struct that implements BufferAPI
@@ -532,6 +563,14 @@ func (api *bufferAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *bufferAPI) Watch(handler BufferHandler) error {
 	api.ct.startWorkerPool("Buffer")
 	return api.ct.WatchBuffer(handler)
+}
+
+// StopWatch stop watch for Tenant Buffer object
+func (api *bufferAPI) StopWatch(handler BufferHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Buffer"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchBuffer(handler)
 }
 
 // Buffer returns BufferAPI

@@ -1,0 +1,11 @@
+
+App AppApi
+Endpoint EndpointApi
+Interface InterfaceApi
+Interface InterfaceApi
+Namespace NamespaceApi
+Network NetworkApi
+NetworkSecurityPolicy NetworkSecurityPolicyApi
+SecurityGroup SecurityGroupApi
+SecurityProfile SecurityProfileApi
+Tenant TenantApi

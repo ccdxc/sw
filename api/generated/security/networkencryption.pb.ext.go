@@ -188,6 +188,7 @@ func (m *TrafficEncryptionPolicy) References(tenant string, path string, resp ma
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

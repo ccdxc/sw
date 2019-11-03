@@ -191,6 +191,7 @@ func (m *Certificate) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

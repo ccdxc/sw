@@ -90,7 +90,8 @@ func (eps *EndpointState) AddSecurityGroup(sgs *SecurityGroupState) error {
 		return err
 	}
 
-	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(&eps.Endpoint.Endpoint))
+	return eps.stateMgr.mbus.UpdateObjectWithReferences(eps.Endpoint.MakeKey("cluster"),
+		convertEndpoint(&eps.Endpoint.Endpoint), references(eps.Endpoint))
 }
 
 // DelSecurityGroup removes a security group from an endpoint
@@ -111,7 +112,8 @@ func (eps *EndpointState) DelSecurityGroup(sgs *SecurityGroupState) error {
 	}
 	delete(eps.groups, sgs.SecurityGroup.Name)
 
-	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(&eps.Endpoint.Endpoint))
+	return eps.stateMgr.mbus.UpdateObjectWithReferences(eps.Endpoint.MakeKey("cluster"),
+		convertEndpoint(&eps.Endpoint.Endpoint), references(eps.Endpoint))
 }
 
 // attachSecurityGroups attach all security groups
@@ -303,7 +305,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 
 	// save the endpoint in the database
 	ns.AddEndpoint(eps)
-	sm.mbus.AddObject(convertEndpoint(&epinfo.Endpoint))
+	sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
 
 	return nil
 }
@@ -357,7 +359,8 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	if err != nil {
 		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
 	}
-	sm.mbus.DeleteObject(convertEndpoint(&eps.Endpoint.Endpoint))
+	sm.mbus.DeleteObjectWithReferences(epinfo.MakeKey("cluster"),
+		convertEndpoint(&epinfo.Endpoint), references(epinfo))
 
 	log.Infof("Deleted endpoint: %+v", eps)
 

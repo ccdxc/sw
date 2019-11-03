@@ -3,13 +3,20 @@
 package nimbus
 
 import (
-	"fmt"
+	fmt "fmt"
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 const maxOpretry = 10
@@ -48,6 +55,15 @@ func (client *NimbusClient) Wait() {
 	client.waitGrp.Wait()
 }
 
+//Does not implement, will dynamically validate when watch is called
+type AggReactor interface {
+}
+
+type AggWatchOStream struct {
+	sync.Mutex
+	stream netproto.AggWatchApi_ObjectOperUpdateClient
+}
+
 // lockObject locks an object
 func (client *NimbusClient) lockObject(kind string, ometa api.ObjectMeta) {
 	objkey := fmt.Sprintf("%s/%s", kind, ometa.GetKey())
@@ -71,4 +87,331 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 		objlock.Unlock()
 	}
 	client.Unlock()
+}
+
+// watchEndpointRecvLoop receives from stream and write it to a channel
+func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
+	defer close(recvch)
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// loop till the end
+	for {
+		// receive from stream
+		objList, err := stream.Recv()
+		if err != nil {
+			log.Errorf("Error receiving from watch channel. Exiting Endpoint watch. Err: %v", err)
+			return
+		}
+		for _, evt := range objList.AggObjectEvents {
+			recvch <- evt
+		}
+	}
+}
+
+// GetObject retrieves the runtime.Object from a svc watch event
+func GetObject(obj *netproto.AggObject) (*types.DynamicAny, error) {
+	robj := &types.DynamicAny{}
+	err := types.UnmarshalAny(&obj.Object.Any, robj)
+	if err != nil {
+		return nil, err
+	}
+	return robj, nil
+}
+
+// processAggObjectWatchEvent handle agg watch event
+func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEvent, reactor AggReactor, ostream *AggWatchOStream) {
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	object, err := GetObject(&evt.AggObj)
+	if err != nil {
+		log.Errorf("Invalid object for get %v", err)
+		return
+	}
+
+	switch evt.AggObj.Kind {
+
+	case "App":
+		err = client.processAppDynamic(evt.EventType, object.Message.(*netproto.App), reactor.(AppReactor))
+
+	case "Endpoint":
+		err = client.processEndpointDynamic(evt.EventType, object.Message.(*netproto.Endpoint), reactor.(EndpointReactor))
+
+	case "Interface":
+		err = client.processInterfaceDynamic(evt.EventType, object.Message.(*netproto.Interface), reactor.(InterfaceReactor))
+
+	case "Namespace":
+		err = client.processNamespaceDynamic(evt.EventType, object.Message.(*netproto.Namespace), reactor.(NamespaceReactor))
+
+	case "Network":
+		err = client.processNetworkDynamic(evt.EventType, object.Message.(*netproto.Network), reactor.(NetworkReactor))
+
+	case "NetworkSecurityPolicy":
+		err = client.processNetworkSecurityPolicyDynamic(evt.EventType, object.Message.(*netproto.NetworkSecurityPolicy), reactor.(NetworkSecurityPolicyReactor))
+
+	case "SecurityGroup":
+		err = client.processSecurityGroupDynamic(evt.EventType, object.Message.(*netproto.SecurityGroup), reactor.(SecurityGroupReactor))
+
+	case "SecurityProfile":
+		err = client.processSecurityProfileDynamic(evt.EventType, object.Message.(*netproto.SecurityProfile), reactor.(SecurityProfileReactor))
+
+	case "Tenant":
+		err = client.processTenantDynamic(evt.EventType, object.Message.(*netproto.Tenant), reactor.(TenantReactor))
+
+	}
+	if err == nil {
+		robj := netproto.AggObjectEvent{
+			EventType: evt.EventType,
+			AggObj:    evt.AggObj,
+		}
+		// send oper status
+		ostream.Lock()
+		err := ostream.stream.Send(&robj)
+		if err != nil {
+			log.Errorf("failed to send Agg oper Status, %s", err)
+			client.debugStats.AddInt("AggOperSendError", 1)
+		} else {
+			client.debugStats.AddInt("AggOperSent", 1)
+		}
+		ostream.Unlock()
+	}
+
+}
+
+// diffApp diffs local state with controller state
+// FIXME: this is not handling deletes today
+func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
+
+	type listObject struct {
+		kind    string
+		objects interface{}
+	}
+
+	//This will order be diffed
+	listOrderObjects := []*listObject{}
+
+	addToListOrder := func(kind string, obj *types.DynamicAny) {
+		var msg interface{}
+		for _, lobj := range listOrderObjects {
+			if lobj.kind == kind {
+				switch kind {
+				case "App":
+					msglist := lobj.objects.(*netproto.AppList)
+					msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
+					return
+				}
+			}
+		}
+		//This kind not added, create a new one
+		listObj := &listObject{kind: kind, objects: []interface{}{msg}}
+		switch kind {
+
+		case "App":
+			msglist := listObj.objects.(*netproto.AppList)
+			msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
+
+		case "Endpoint":
+			msglist := listObj.objects.(*netproto.EndpointList)
+			msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
+
+		case "Interface":
+			msglist := listObj.objects.(*netproto.InterfaceList)
+			msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
+
+		case "Namespace":
+			msglist := listObj.objects.(*netproto.NamespaceList)
+			msglist.Namespaces = append(msglist.Namespaces, obj.Message.(*netproto.Namespace))
+
+		case "Network":
+			msglist := listObj.objects.(*netproto.NetworkList)
+			msglist.Networks = append(msglist.Networks, obj.Message.(*netproto.Network))
+
+		case "NetworkSecurityPolicy":
+			msglist := listObj.objects.(*netproto.NetworkSecurityPolicyList)
+			msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
+
+		case "SecurityGroup":
+			msglist := listObj.objects.(*netproto.SecurityGroupList)
+			msglist.SecurityGroups = append(msglist.SecurityGroups, obj.Message.(*netproto.SecurityGroup))
+
+		case "SecurityProfile":
+			msglist := listObj.objects.(*netproto.SecurityProfileList)
+			msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
+
+		case "Tenant":
+			msglist := listObj.objects.(*netproto.TenantList)
+			msglist.Tenants = append(msglist.Tenants, obj.Message.(*netproto.Tenant))
+
+		}
+		listOrderObjects = append(listOrderObjects, listObj)
+	}
+
+	for _, obj := range objList.Objects {
+		object, err := GetObject(obj)
+		if err != nil {
+			log.Errorf("Invalid object for get %v", err)
+			return
+		}
+		addToListOrder(obj.Kind, object)
+	}
+
+	for _, lobj := range listOrderObjects {
+		switch lobj.kind {
+
+		case "App":
+			client.diffApps(lobj.objects.(*netproto.AppList), reactor.(AppReactor), nil)
+
+		case "Endpoint":
+			client.diffEndpoints(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), nil)
+
+		case "Interface":
+			client.diffInterfaces(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), nil)
+
+		case "Namespace":
+			client.diffNamespaces(lobj.objects.(*netproto.NamespaceList), reactor.(NamespaceReactor), nil)
+
+		case "Network":
+			client.diffNetworks(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), nil)
+
+		case "NetworkSecurityPolicy":
+			client.diffNetworkSecurityPolicys(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), nil)
+
+		case "SecurityGroup":
+			client.diffSecurityGroups(lobj.objects.(*netproto.SecurityGroupList), reactor.(SecurityGroupReactor), nil)
+
+		case "SecurityProfile":
+			client.diffSecurityProfiles(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), nil)
+
+		case "Tenant":
+			client.diffTenants(lobj.objects.(*netproto.TenantList), reactor.(TenantReactor), nil)
+
+		}
+	}
+
+}
+
+func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, reactor AggReactor) error {
+
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+	client.debugStats.AddInt("ActiveAggWatch", 1)
+
+	//Make sure all kinds are implemented by the reactor
+
+	// make sure rpc client is good
+	if client.rpcClient == nil || client.rpcClient.ClientConn == nil || client.rpcClient.ClientConn.GetState() != connectivity.Ready {
+		log.Errorf("RPC client is disconnected. Exiting watch")
+		return nil
+
+	}
+
+	//Make sure all kinds are implemented by the reactor to avoid later failures
+	for _, kind := range kinds {
+		switch kind {
+
+		case "App":
+			if _, ok := reactor.(AppReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "AppReactor")
+			}
+
+		case "Endpoint":
+			if _, ok := reactor.(EndpointReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "EndpointReactor")
+			}
+
+		case "Interface":
+			if _, ok := reactor.(InterfaceReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "InterfaceReactor")
+			}
+
+		case "Namespace":
+			if _, ok := reactor.(NamespaceReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "NamespaceReactor")
+			}
+
+		case "Network":
+			if _, ok := reactor.(NetworkReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "NetworkReactor")
+			}
+
+		case "NetworkSecurityPolicy":
+			if _, ok := reactor.(NetworkSecurityPolicyReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "NetworkSecurityPolicyReactor")
+			}
+
+		case "SecurityGroup":
+			if _, ok := reactor.(SecurityGroupReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "SecurityGroupReactor")
+			}
+
+		case "SecurityProfile":
+			if _, ok := reactor.(SecurityProfileReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "SecurityProfileReactor")
+			}
+
+		case "Tenant":
+			if _, ok := reactor.(TenantReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "TenantReactor")
+			}
+
+		}
+	}
+
+	// start the watch
+	aggRPCClient := netproto.NewAggWatchApiClient(client.rpcClient.ClientConn)
+	aggKinds := netproto.AggKinds{}
+	for _, kind := range kinds {
+		aggKinds.Kinds = append(aggKinds.Kinds, kind)
+	}
+	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
+	if err != nil {
+		log.Errorf("Error watching Aggregate watch for . Err: %v", err)
+		return nil
+	}
+
+	// start oper update stream
+	opStream, err := aggRPCClient.ObjectOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Aggregate oper updates. Err: %v", err)
+		return nil
+	}
+
+	ostream := &AggWatchOStream{stream: opStream}
+
+	// get a list of objects
+	objList, err := aggRPCClient.ListObjects(ctx, &aggKinds)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting Aggregate list. Err: %v", err)
+			return nil
+		}
+	} else {
+		// perform a diff of the states
+		client.diffAggWatchObjects(objList, reactor, ostream)
+
+	}
+
+	// start grpc stream recv
+	recvCh := make(chan *netproto.AggObjectEvent, evChanLength)
+	go client.watchAggWatchRecvLoop(stream, recvCh)
+
+	// loop till the end
+	for {
+		evtWork := func(evt *netproto.AggObjectEvent) {
+			client.debugStats.AddInt("AggWatchEvents", 1)
+			client.processAggObjectWatchEvent(*evt, reactor, ostream)
+		}
+		//Give priority to evnt work.
+		select {
+		case evt, ok := <-recvCh:
+			if !ok {
+				log.Warnf("Agg Watch channel closed. Exisint AggWatch")
+				return nil
+			}
+			evtWork(evt)
+		}
+	}
 }

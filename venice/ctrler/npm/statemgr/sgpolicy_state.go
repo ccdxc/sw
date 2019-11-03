@@ -201,24 +201,6 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 	return nil
 }
 
-// detachFromApps detaches the poliy from apps
-func (sgp *SgpolicyState) detachFromApps() error {
-	for _, rule := range sgp.NetworkSecurityPolicy.Spec.Rules {
-		if len(rule.Apps) != 0 {
-			for _, appName := range rule.Apps {
-				app, err := sgp.stateMgr.FindApp(sgp.NetworkSecurityPolicy.Tenant, appName)
-				if err != nil {
-					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.NetworkSecurityPolicy.Name, rule)
-				} else {
-					app.detachPolicy(sgp.NetworkSecurityPolicy.Name)
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
 // initNodeVersions initializes node versions for the policy
 func (sgp *SgpolicyState) initNodeVersions() error {
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
@@ -264,25 +246,6 @@ func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*Sg
 	sgp.HandlerCtx = &sgps
 
 	return &sgps, nil
-}
-
-// updateAttachedApps walks all referred apps and links them
-func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) error {
-	for _, rule := range sgp.Spec.Rules {
-		if len(rule.Apps) != 0 {
-			for _, appName := range rule.Apps {
-				app, err := sm.FindApp(sgp.Tenant, appName)
-				if err != nil {
-					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.Name, rule)
-					return kvstore.NewKeyNotFoundError(appName, 0)
-				}
-
-				app.attachPolicy(sgp.Name)
-			}
-		}
-	}
-
-	return nil
 }
 
 // OnNetworkSecurityPolicyCreateReq gets called when agent sends create request
@@ -356,15 +319,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 		}
 	}()
 
-	// find and update all attached apps
-	err = sm.updateAttachedApps(&sgp.NetworkSecurityPolicy)
-	if err != nil {
-		log.Errorf("Error updating attached apps. Err: %v", err)
-		return err
-	}
-
 	// store it in local DB
-	err = sm.mbus.AddObject(convertNetworkSecurityPolicy(sgps))
+	err = sm.mbus.AddObjectWithReferences(sgp.MakeKey("security"), convertNetworkSecurityPolicy(sgps), references(sgp))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -412,19 +368,13 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 		}
 	}()
 
-	// find and update all attached apps
-	err = sm.updateAttachedApps(nsgp)
-	if err != nil {
-		log.Errorf("Error updating attached apps. Err: %v", err)
-		return err
-	}
-
 	// update old state
 	sgp.ObjectMeta = nsgp.ObjectMeta
 	sgp.Spec = nsgp.Spec
 
 	// store it in local DB
-	err = sm.mbus.UpdateObject(convertNetworkSecurityPolicy(sgps))
+	err = sm.mbus.UpdateObjectWithReferences(sgps.NetworkSecurityPolicy.MakeKey("security"),
+		convertNetworkSecurityPolicy(sgps), references(sgps.NetworkSecurityPolicy))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -461,14 +411,9 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 		return err
 	}
 
-	// detach from policies
-	err = sgp.detachFromApps()
-	if err != nil {
-		return err
-	}
-
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertNetworkSecurityPolicy(sgp))
+	return sm.mbus.DeleteObjectWithReferences(sgpo.MakeKey("security"),
+		convertNetworkSecurityPolicy(sgp), references(sgpo))
 }
 
 // UpdateSgpolicyStatus updates the status of an sg policy

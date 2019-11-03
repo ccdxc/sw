@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("SecurityProfile Watch channel closed. Exisint SecurityProfileWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting SecurityProfile list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("SecurityProfileWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffSecurityProfiles(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("SecurityProfile Watch channel closed. Exisint SecurityProfileWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting SecurityProfile list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("SecurityProfileWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffSecurityProfiles(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.SecurityProfileEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processSecurityProfileDynamic(evt api.EventType,
+	object *netproto.SecurityProfile, reactor SecurityProfileReactor) error {
+
+	securityprofileEvt := netproto.SecurityProfileEvent{
+		EventType:       evt,
+		SecurityProfile: *object,
+	}
+
+	// add venice label to the object
+	securityprofileEvt.SecurityProfile.ObjectMeta.Labels = make(map[string]string)
+	securityprofileEvt.SecurityProfile.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(securityprofileEvt.SecurityProfile.GetObjectKind(), securityprofileEvt.SecurityProfile.ObjectMeta)
+
+	client.processSecurityProfileEvent(securityprofileEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

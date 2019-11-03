@@ -1,0 +1,47 @@
+// aggregate watch object proto
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ---------------------------- Aggregagte API ----------------------------
+// app controller api
+service AggWatchApi {
+    rpc WatchObjects (AggKinds) returns (stream AggObjectEventList) {};
+    rpc ObjectOperUpdate (stream AggObjectEvent) returns (api.TypeMeta) {};
+    rpc ListObjects (AggKinds) returns (AggObjectList) {};
+}
+
+message AggKinds {
+    repeated string kinds = 1 [(gogoproto.jsontag) = "kind,omitempty"];
+}
+
+// agg object
+message AggObject {
+    string          kind       = 1 [(gogoproto.jsontag) = "kind,omitempty"];
+    api.Any         Object     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "object,omitempty"];
+}
+
+// list of agg objects
+message AggObjectList {
+    repeated AggObject  objects = 1;
+}
+
+
+// app watch event
+message AggObjectEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    AggObject       AggObj      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "agg,omitempty"];
+}
+
+
+// agg watch events batched
+message AggObjectEventList {
+    repeated AggObjectEvent AggObjectEvents = 1;
+}

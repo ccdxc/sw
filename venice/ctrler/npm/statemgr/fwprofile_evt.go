@@ -204,7 +204,7 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 	}
 
 	// store it in local DB
-	sm.mbus.AddObject(convertFirewallProfile(fps))
+	sm.mbus.AddObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
 
 	return nil
 }
@@ -228,7 +228,7 @@ func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nf
 
 	// update the object in mbus
 	fps.FirewallProfile = fwProfile
-	sm.mbus.UpdateObject(convertFirewallProfile(fps))
+	sm.mbus.UpdateObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
 	log.Infof("Updated fwProfile: %+v", fwProfile)
 
 	return nil
@@ -246,7 +246,8 @@ func (sm *Statemgr) OnFirewallProfileDelete(fwProfile *ctkit.FirewallProfile) er
 	log.Infof("Deleting fwProfile: %+v", fwProfile)
 
 	// delete the object
-	return sm.mbus.DeleteObject(convertFirewallProfile(fps))
+	return sm.mbus.DeleteObjectWithReferences(fwProfile.MakeKey("security"),
+		convertFirewallProfile(fps), references(fwProfile))
 }
 
 // FindFirewallProfile finds a fwProfile

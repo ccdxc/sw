@@ -84,9 +84,9 @@ type veniceRawData struct {
 
 type veniceConfigStatus struct {
 	KindObjects struct {
-		App      int `json:"App"`
-		Endpoint int `json:"Endpoint"`
-		SgPolicy int `json:"SgPolicy"`
+		App                   int `json:"App"`
+		Endpoint              int `json:"Endpoint"`
+		NetworkSecurityPolicy int `json:"NetworkSecurityPolicy"`
 	} `json:"KindObjects"`
 	NodesStatus []struct {
 		NodeID     string `json:"NodeID"`
@@ -111,7 +111,7 @@ type veniceConfigStatus struct {
 					Update bool `json:"update-event"`
 					Delete bool `json:"delete-event"`
 				} `json:"Status"`
-			} `json:"SgPolicy"`
+			} `json:"NetworkSecurityPolicy"`
 		} `json:"KindStatus"`
 	} `json:"NodesStatus"`
 }
@@ -1237,7 +1237,7 @@ func (sm *SysModel) IsConfigPushComplete() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if configStatus.KindObjects.SgPolicy != len(policies) {
+	if configStatus.KindObjects.NetworkSecurityPolicy != len(policies) {
 		log.Infof("policies not synced with NPM yet.")
 		return false, nil
 	}

@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("App Watch channel closed. Exisint AppWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := appRPCClient.ListApps(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting App list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("AppWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffApps(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("App Watch channel closed. Exisint AppWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := appRPCClient.ListApps(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting App list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("AppWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffApps(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.AppEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processAppDynamic(evt api.EventType,
+	object *netproto.App, reactor AppReactor) error {
+
+	appEvt := netproto.AppEvent{
+		EventType: evt,
+		App:       *object,
+	}
+
+	// add venice label to the object
+	appEvt.App.ObjectMeta.Labels = make(map[string]string)
+	appEvt.App.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(appEvt.App.GetObjectKind(), appEvt.App.ObjectMeta)
+
+	client.processAppEvent(appEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

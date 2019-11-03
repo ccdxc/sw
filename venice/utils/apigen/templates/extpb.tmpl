@@ -164,6 +164,7 @@ func (m *{{$msgname}}) References(tenant string, path string, resp map[string]ap
 			if !ok {
 				uref = apiintf.ReferenceObj{
 					RefType: apiintf.ReferenceType("{{$fldv.RefType}}"),
+					RefKind: "{{$fldv.Kind}}",
 				}
 			}
         {{if $fldv.Repeated}}

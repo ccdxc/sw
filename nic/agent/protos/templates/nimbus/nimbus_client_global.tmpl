@@ -2,23 +2,22 @@
 
 package nimbus
 
+{{$manifest := (getNimbusManifest "../generated/nimbus/manifest")}}
 
 import (
 	"errors"
 	"sync"
 
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/pensando/sw/venice/utils/rpckit"
-    "github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/gogo/protobuf/types"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/venice/utils/balancer"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/status"
 )
 
 const maxOpretry = 10
@@ -58,6 +57,14 @@ func (client *NimbusClient) Wait() {
 	client.waitGrp.Wait()
 }
 
+//Does not implement, will dynamically validate when watch is called
+type AggReactor interface {
+}
+
+type AggWatchOStream struct {
+	sync.Mutex
+	stream netproto.AggWatchApi_ObjectOperUpdateClient
+}
 
 // lockObject locks an object
 func (client *NimbusClient) lockObject(kind string, ometa api.ObjectMeta) {
@@ -83,3 +90,213 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 	}
 	client.Unlock()
 }
+// watchEndpointRecvLoop receives from stream and write it to a channel
+func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
+	defer close(recvch)
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// loop till the end
+	for {
+		// receive from stream
+		objList, err := stream.Recv()
+		if err != nil {
+			log.Errorf("Error receiving from watch channel. Exiting Endpoint watch. Err: %v", err)
+			return
+		}
+		for _, evt := range objList.AggObjectEvents {
+			recvch <- evt
+		}
+	}
+}
+
+// GetObject retrieves the runtime.Object from a svc watch event
+func GetObject(obj *netproto.AggObject) (*types.DynamicAny, error) {
+	robj := &types.DynamicAny{}
+	err := types.UnmarshalAny(&obj.Object.Any, robj)
+	if err != nil {
+		return nil, err
+	}
+	return robj, nil
+}
+
+
+// processAggObjectWatchEvent handle agg watch event
+func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEvent, reactor AggReactor, ostream *AggWatchOStream) {
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	object, err := GetObject(&evt.AggObj)
+	if err != nil {
+		log.Errorf("Invalid object for get %v", err)
+		return
+	}
+
+	switch evt.AggObj.Kind {
+	{{range $key, $value := $manifest}}
+	case "{{$value.Object}}":
+		err = client.process{{$value.Object}}Dynamic(evt.EventType, object.Message.(*netproto.{{$value.Object}}), reactor.({{$value.Object}}Reactor))
+	{{end}}
+	}
+	if err == nil {
+		robj := netproto.AggObjectEvent{
+			EventType: evt.EventType,
+			AggObj:    evt.AggObj,
+		}
+		// send oper status
+		ostream.Lock()
+		err := ostream.stream.Send(&robj)
+		if err != nil {
+			log.Errorf("failed to send Agg oper Status, %s", err)
+			client.debugStats.AddInt("AggOperSendError", 1)
+		} else {
+			client.debugStats.AddInt("AggOperSent", 1)
+		}
+		ostream.Unlock()
+	}
+
+}
+
+// diffApp diffs local state with controller state
+// FIXME: this is not handling deletes today
+func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
+
+	type listObject struct {
+		kind    string
+		objects interface{}
+	}
+
+	//This will order be diffed
+	listOrderObjects := []*listObject{}
+
+	addToListOrder := func(kind string, obj *types.DynamicAny) {
+		var msg interface{}
+		for _, lobj := range listOrderObjects {
+			if lobj.kind == kind {
+				switch kind {
+				case "App":
+					msglist := lobj.objects.(*netproto.AppList)
+					msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
+					return
+				}
+			}
+		}
+		//This kind not added, create a new one
+		listObj := &listObject{kind: kind, objects: []interface{}{msg}}
+		switch kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			msglist := listObj.objects.(*netproto.{{$value.Object}}List)
+			msglist.{{$value.Object}}s = append(msglist.{{$value.Object}}s, obj.Message.(*netproto.{{$value.Object}}))
+		{{end}}
+
+		}
+		listOrderObjects = append(listOrderObjects, listObj)
+	}
+
+	for _, obj := range objList.Objects {
+		object, err := GetObject(obj)
+		if err != nil {
+			log.Errorf("Invalid object for get %v", err)
+			return
+		}
+		addToListOrder(obj.Kind, object)
+	}
+
+	for _, lobj := range listOrderObjects {
+		switch lobj.kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			client.diff{{$value.Object}}s(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), nil)
+		{{end}}
+		}
+	}
+
+}
+
+func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, reactor AggReactor) error {
+
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+	client.debugStats.AddInt("ActiveAggWatch", 1)
+
+	//Make sure all kinds are implemented by the reactor
+
+	// make sure rpc client is good
+	if client.rpcClient == nil || client.rpcClient.ClientConn == nil || client.rpcClient.ClientConn.GetState() != connectivity.Ready {
+		log.Errorf("RPC client is disconnected. Exiting watch")
+		return nil
+
+	}
+
+	//Make sure all kinds are implemented by the reactor to avoid later failures
+	for _, kind := range kinds {
+		switch kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			if _, ok := reactor.({{$value.Object}}Reactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "{{$value.Object}}Reactor")
+			}
+        {{end}}
+		}
+	}
+
+	// start the watch
+	aggRPCClient := netproto.NewAggWatchApiClient(client.rpcClient.ClientConn)
+	aggKinds := netproto.AggKinds{}
+	for _, kind := range kinds {
+		aggKinds.Kinds = append(aggKinds.Kinds, kind)
+	}
+	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
+	if err != nil {
+		log.Errorf("Error watching Aggregate watch for . Err: %v", err)
+		return nil
+	}
+
+	// start oper update stream
+	opStream, err := aggRPCClient.ObjectOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting Aggregate oper updates. Err: %v", err)
+		return nil
+	}
+
+	ostream := &AggWatchOStream{stream: opStream}
+
+	// get a list of objects
+	objList, err := aggRPCClient.ListObjects(ctx, &aggKinds)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting Aggregate list. Err: %v", err)
+			return nil
+		}
+	} else {
+		// perform a diff of the states
+		client.diffAggWatchObjects(objList, reactor, ostream)
+
+	}
+
+	// start grpc stream recv
+	recvCh := make(chan *netproto.AggObjectEvent, evChanLength)
+	go client.watchAggWatchRecvLoop(stream, recvCh)
+
+	// loop till the end
+	for {
+		evtWork := func(evt *netproto.AggObjectEvent) {
+			client.debugStats.AddInt("AggWatchEvents", 1)
+			client.processAggObjectWatchEvent(*evt, reactor, ostream)
+		}
+		//Give priority to evnt work.
+		select {
+		case evt, ok := <-recvCh:
+			if !ok {
+				log.Warnf("Agg Watch channel closed. Exisint AggWatch")
+				return nil
+			}
+			evtWork(evt)
+		}
+	}
+}
+
+

@@ -244,6 +244,7 @@ func (m *DHCPServer) References(tenant string, path string, resp map[string]apii
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "VirtualRouter",
 			}
 		}
 
@@ -303,6 +304,7 @@ func (m *IPAMPolicy) References(tenant string, path string, resp map[string]apii
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

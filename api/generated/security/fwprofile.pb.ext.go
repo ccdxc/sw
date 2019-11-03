@@ -142,6 +142,7 @@ func (m *FirewallProfile) References(tenant string, path string, resp map[string
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

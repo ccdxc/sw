@@ -299,6 +299,7 @@ func (m *Object) References(tenant string, path string, resp map[string]apiintf.
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

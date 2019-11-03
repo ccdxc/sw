@@ -54,7 +54,7 @@ func (sm *Statemgr) OnTenantCreate(tn *ctkit.Tenant) error {
 	log.Infof("Created Tenant state {Meta: %+v, Spec: %+v}", ts.Tenant.ObjectMeta, ts.Tenant.Spec)
 
 	// store it in local DB
-	sm.mbus.AddObject(convertTenant(ts))
+	err = sm.mbus.AddObjectWithReferences(tn.MakeKey("cluster"), convertTenant(ts), references(tn))
 
 	return nil
 }
@@ -88,7 +88,8 @@ func (sm *Statemgr) OnTenantDelete(tn *ctkit.Tenant) error {
 	}
 
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertTenant(ts))
+	return sm.mbus.DeleteObjectWithReferences(tn.MakeKey("cluster"),
+		convertTenant(ts), references(tn))
 }
 
 // FindTenant finds a tenant

@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 				// Bucket object watcher
 				wt, werr := apicl.ObjstoreV1().Bucket().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchBucket(handler BucketHandler) error {
 	return nil
 }
 
+// StopWatchBucket stops watch on Bucket object
+func (ct *ctrlerCtx) StopWatchBucket(handler BucketHandler) error {
+	kind := "Bucket"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Bucket watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // BucketAPI returns
 type BucketAPI interface {
 	Create(obj *objstore.Bucket) error
@@ -408,6 +438,7 @@ type BucketAPI interface {
 	Find(meta *api.ObjectMeta) (*Bucket, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bucket, error)
 	Watch(handler BucketHandler) error
+	StopWatch(handler BucketHandler) error
 }
 
 // dummy struct that implements BucketAPI
@@ -532,6 +563,14 @@ func (api *bucketAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *bucketAPI) Watch(handler BucketHandler) error {
 	api.ct.startWorkerPool("Bucket")
 	return api.ct.WatchBucket(handler)
+}
+
+// StopWatch stop watch for Tenant Bucket object
+func (api *bucketAPI) StopWatch(handler BucketHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Bucket"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchBucket(handler)
 }
 
 // Bucket returns BucketAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 				// Object object watcher
 				wt, werr := apicl.ObjstoreV1().Object().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchObject(handler ObjectHandler) error {
 	return nil
 }
 
+// StopWatchObject stops watch on Object object
+func (ct *ctrlerCtx) StopWatchObject(handler ObjectHandler) error {
+	kind := "Object"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Object watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // ObjectAPI returns
 type ObjectAPI interface {
 	Create(obj *objstore.Object) error
@@ -923,6 +992,7 @@ type ObjectAPI interface {
 	Find(meta *api.ObjectMeta) (*Object, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Object, error)
 	Watch(handler ObjectHandler) error
+	StopWatch(handler ObjectHandler) error
 }
 
 // dummy struct that implements ObjectAPI
@@ -1047,6 +1117,14 @@ func (api *objectAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *objectAPI) Watch(handler ObjectHandler) error {
 	api.ct.startWorkerPool("Object")
 	return api.ct.WatchObject(handler)
+}
+
+// StopWatch stop watch for Tenant Object object
+func (api *objectAPI) StopWatch(handler ObjectHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Object"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchObject(handler)
 }
 
 // Object returns ObjectAPI

@@ -927,6 +927,63 @@ func genManifest(desc *descriptor.File, path, pkg, file string) (map[string]mani
 	return manifest, nil
 }
 
+type nimbusManifestFile struct {
+	Object  string
+	Service string
+}
+
+func parseNimbusManifestFile(raw []byte) map[string]nimbusManifestFile {
+	manifest := make(map[string]nimbusManifestFile)
+	lines := bytes.Split(raw, []byte("\n"))
+	for _, line := range lines {
+		fields := bytes.Fields(line)
+		if len(fields) == 2 {
+			manifest[string(fields[0])] = nimbusManifestFile{
+				Object:  string(fields[0]),
+				Service: string(fields[1]),
+			}
+		}
+	}
+	return manifest
+}
+
+// genManifest generates the current manifest of protos being processed.
+func genNimbusManifest(path, object, service string) (map[string]nimbusManifestFile, error) {
+	var manifest map[string]nimbusManifestFile
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+		manifest = make(map[string]nimbusManifestFile)
+	} else {
+		raw, err := ioutil.ReadFile(path)
+		if err != nil {
+			glog.V(1).Infof("Reading Manifest failed (%s)", err)
+			return nil, err
+		}
+		manifest = parseNimbusManifestFile(raw)
+	}
+	manifest[service] = nimbusManifestFile{
+		Object:  object,
+		Service: service,
+	}
+	return manifest, nil
+}
+
+// getNimbusManifest gets nimbus manifest file
+func getNimbusManifest(path string) (map[string]nimbusManifestFile, error) {
+	var manifest map[string]nimbusManifestFile
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+		return nil, errors.New("Manifest not found")
+	}
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		glog.V(1).Infof("Reading Manifest failed (%s)", err)
+		return nil, err
+	}
+	manifest = parseNimbusManifestFile(raw)
+	return manifest, nil
+}
+
 type pkgManifest struct {
 	Files     []string
 	APIServer bool
@@ -3276,10 +3333,12 @@ func init() {
 	reg.RegisterFunc("getSwaggerFileName", getSwaggerFileName)
 	reg.RegisterFunc("createDir", createDir)
 	reg.RegisterFunc("genManifest", genManifest)
+	reg.RegisterFunc("genNimbusManifest", genNimbusManifest)
 	reg.RegisterFunc("genPkgManifest", genPkgManifest)
 	reg.RegisterFunc("genSvcManifest", genServiceManifest)
 	reg.RegisterFunc("genObjectURIs", genObjectURIs)
 	reg.RegisterFunc("getSvcManifest", getServiceManifest)
+	reg.RegisterFunc("getNimbusManifest", getNimbusManifest)
 	reg.RegisterFunc("genSwaggerIndex", genSwaggerIndex)
 	reg.RegisterFunc("getSwaggerMD", getSwaggerMD)
 	reg.RegisterFunc("getAPIRefMD", getAPIRefMD)

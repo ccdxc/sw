@@ -87,6 +87,7 @@ type FailedVerification struct {
 // ReferenceObj represents a Reference from an API object to another.
 type ReferenceObj struct {
 	RefType ReferenceType
+	RefKind string
 	Refs    []string
 }
 

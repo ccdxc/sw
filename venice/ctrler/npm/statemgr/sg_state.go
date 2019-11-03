@@ -73,7 +73,8 @@ func (sg *SecurityGroupState) AddEndpoint(ep *EndpointState) error {
 	sg.endpoints[ep.Endpoint.Name] = ep
 	sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads, ep.Endpoint.Name)
 	sg.SecurityGroup.Write()
-	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
+	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
+		convertSecurityGroup(sg), references(sg.SecurityGroup))
 }
 
 // DelEndpoint removes an endpoint from sg
@@ -86,7 +87,8 @@ func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 		}
 	}
 	sg.SecurityGroup.Write()
-	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
+	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
+		convertSecurityGroup(sg), references(sg.SecurityGroup))
 }
 
 // AddPolicy adds a policcy to sg
@@ -103,7 +105,8 @@ func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 
 	// trigger an update
 	sg.SecurityGroup.Write()
-	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
+	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
+		convertSecurityGroup(sg), references(sg.SecurityGroup))
 }
 
 // DeletePolicy deletes a policcy from sg
@@ -117,7 +120,8 @@ func (sg *SecurityGroupState) DeletePolicy(sgp *SgpolicyState) error {
 	}
 	// trigger an update
 	sg.SecurityGroup.Write()
-	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
+	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
+		convertSecurityGroup(sg), references(sg.SecurityGroup))
 }
 
 // SecurityGroupStateFromObj conerts from memdb object to network state
@@ -213,7 +217,7 @@ func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 	log.Infof("Created Security Group state {%+v}", sgs)
 
 	// store it in local DB
-	return sm.mbus.AddObject(convertSecurityGroup(sgs))
+	return sm.mbus.AddObjectWithReferences(sg.MakeKey("security"), convertSecurityGroup(sgs), references(sg))
 }
 
 // OnSecurityGroupUpdate handles sg updates
@@ -259,5 +263,6 @@ func (sm *Statemgr) OnSecurityGroupDelete(sgo *ctkit.SecurityGroup) error {
 		return err
 	}
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertSecurityGroup(sg))
+	return sm.mbus.DeleteObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
+		convertSecurityGroup(sg), references(sg.SecurityGroup))
 }

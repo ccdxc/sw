@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 				// Order object watcher
 				wt, werr := apicl.BookstoreV1().Order().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchOrder(handler OrderHandler) error {
 	return nil
 }
 
+// StopWatchOrder stops watch on Order object
+func (ct *ctrlerCtx) StopWatchOrder(handler OrderHandler) error {
+	kind := "Order"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Order watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // OrderAPI returns
 type OrderAPI interface {
 	Create(obj *bookstore.Order) error
@@ -408,6 +438,7 @@ type OrderAPI interface {
 	Find(meta *api.ObjectMeta) (*Order, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Order, error)
 	Watch(handler OrderHandler) error
+	StopWatch(handler OrderHandler) error
 }
 
 // dummy struct that implements OrderAPI
@@ -532,6 +563,14 @@ func (api *orderAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*O
 func (api *orderAPI) Watch(handler OrderHandler) error {
 	api.ct.startWorkerPool("Order")
 	return api.ct.WatchOrder(handler)
+}
+
+// StopWatch stop watch for Tenant Order object
+func (api *orderAPI) StopWatch(handler OrderHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Order"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchOrder(handler)
 }
 
 // Order returns OrderAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runBookWatcher() {
 				// Book object watcher
 				wt, werr := apicl.BookstoreV1().Book().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchBook(handler BookHandler) error {
 	return nil
 }
 
+// StopWatchBook stops watch on Book object
+func (ct *ctrlerCtx) StopWatchBook(handler BookHandler) error {
+	kind := "Book"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Book watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // BookAPI returns
 type BookAPI interface {
 	Create(obj *bookstore.Book) error
@@ -923,6 +992,7 @@ type BookAPI interface {
 	Find(meta *api.ObjectMeta) (*Book, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Book, error)
 	Watch(handler BookHandler) error
+	StopWatch(handler BookHandler) error
 }
 
 // dummy struct that implements BookAPI
@@ -1047,6 +1117,14 @@ func (api *bookAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bo
 func (api *bookAPI) Watch(handler BookHandler) error {
 	api.ct.startWorkerPool("Book")
 	return api.ct.WatchBook(handler)
+}
+
+// StopWatch stop watch for Tenant Book object
+func (api *bookAPI) StopWatch(handler BookHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Book"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchBook(handler)
 }
 
 // Book returns BookAPI
@@ -1361,6 +1439,12 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 				// Publisher object watcher
 				wt, werr := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1429,6 +1513,30 @@ func (ct *ctrlerCtx) WatchPublisher(handler PublisherHandler) error {
 	return nil
 }
 
+// StopWatchPublisher stops watch on Publisher object
+func (ct *ctrlerCtx) StopWatchPublisher(handler PublisherHandler) error {
+	kind := "Publisher"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Publisher watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // PublisherAPI returns
 type PublisherAPI interface {
 	Create(obj *bookstore.Publisher) error
@@ -1438,6 +1546,7 @@ type PublisherAPI interface {
 	Find(meta *api.ObjectMeta) (*Publisher, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Publisher, error)
 	Watch(handler PublisherHandler) error
+	StopWatch(handler PublisherHandler) error
 }
 
 // dummy struct that implements PublisherAPI
@@ -1562,6 +1671,14 @@ func (api *publisherAPI) List(ctx context.Context, opts *api.ListWatchOptions) (
 func (api *publisherAPI) Watch(handler PublisherHandler) error {
 	api.ct.startWorkerPool("Publisher")
 	return api.ct.WatchPublisher(handler)
+}
+
+// StopWatch stop watch for Tenant Publisher object
+func (api *publisherAPI) StopWatch(handler PublisherHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Publisher"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchPublisher(handler)
 }
 
 // Publisher returns PublisherAPI
@@ -1876,6 +1993,12 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 				// Store object watcher
 				wt, werr := apicl.BookstoreV1().Store().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1944,6 +2067,30 @@ func (ct *ctrlerCtx) WatchStore(handler StoreHandler) error {
 	return nil
 }
 
+// StopWatchStore stops watch on Store object
+func (ct *ctrlerCtx) StopWatchStore(handler StoreHandler) error {
+	kind := "Store"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Store watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // StoreAPI returns
 type StoreAPI interface {
 	Create(obj *bookstore.Store) error
@@ -1953,6 +2100,7 @@ type StoreAPI interface {
 	Find(meta *api.ObjectMeta) (*Store, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Store, error)
 	Watch(handler StoreHandler) error
+	StopWatch(handler StoreHandler) error
 }
 
 // dummy struct that implements StoreAPI
@@ -2077,6 +2225,14 @@ func (api *storeAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*S
 func (api *storeAPI) Watch(handler StoreHandler) error {
 	api.ct.startWorkerPool("Store")
 	return api.ct.WatchStore(handler)
+}
+
+// StopWatch stop watch for Tenant Store object
+func (api *storeAPI) StopWatch(handler StoreHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Store"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchStore(handler)
 }
 
 // Store returns StoreAPI
@@ -2391,6 +2547,12 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 				// Coupon object watcher
 				wt, werr := apicl.BookstoreV1().Coupon().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2459,6 +2621,30 @@ func (ct *ctrlerCtx) WatchCoupon(handler CouponHandler) error {
 	return nil
 }
 
+// StopWatchCoupon stops watch on Coupon object
+func (ct *ctrlerCtx) StopWatchCoupon(handler CouponHandler) error {
+	kind := "Coupon"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Coupon watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // CouponAPI returns
 type CouponAPI interface {
 	Create(obj *bookstore.Coupon) error
@@ -2468,6 +2654,7 @@ type CouponAPI interface {
 	Find(meta *api.ObjectMeta) (*Coupon, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Coupon, error)
 	Watch(handler CouponHandler) error
+	StopWatch(handler CouponHandler) error
 }
 
 // dummy struct that implements CouponAPI
@@ -2592,6 +2779,14 @@ func (api *couponAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *couponAPI) Watch(handler CouponHandler) error {
 	api.ct.startWorkerPool("Coupon")
 	return api.ct.WatchCoupon(handler)
+}
+
+// StopWatch stop watch for Tenant Coupon object
+func (api *couponAPI) StopWatch(handler CouponHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Coupon"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchCoupon(handler)
 }
 
 // Coupon returns CouponAPI
@@ -2906,6 +3101,12 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 				// Customer object watcher
 				wt, werr := apicl.BookstoreV1().Customer().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2974,6 +3175,30 @@ func (ct *ctrlerCtx) WatchCustomer(handler CustomerHandler) error {
 	return nil
 }
 
+// StopWatchCustomer stops watch on Customer object
+func (ct *ctrlerCtx) StopWatchCustomer(handler CustomerHandler) error {
+	kind := "Customer"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Customer watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // CustomerAPI returns
 type CustomerAPI interface {
 	Create(obj *bookstore.Customer) error
@@ -2983,6 +3208,7 @@ type CustomerAPI interface {
 	Find(meta *api.ObjectMeta) (*Customer, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Customer, error)
 	Watch(handler CustomerHandler) error
+	StopWatch(handler CustomerHandler) error
 }
 
 // dummy struct that implements CustomerAPI
@@ -3107,6 +3333,14 @@ func (api *customerAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([
 func (api *customerAPI) Watch(handler CustomerHandler) error {
 	api.ct.startWorkerPool("Customer")
 	return api.ct.WatchCustomer(handler)
+}
+
+// StopWatch stop watch for Tenant Customer object
+func (api *customerAPI) StopWatch(handler CustomerHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Customer"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchCustomer(handler)
 }
 
 // Customer returns CustomerAPI

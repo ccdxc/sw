@@ -215,26 +215,28 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		return true, nil
 	}, "Sg policy not found in agent or params didnt match", "100ms", it.pollTimeout())
 
-	// verify app has sgpolicy in status
-	AssertEventually(c, func() (bool, interface{}) {
-		gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
-		if gerr != nil {
-			return false, gerr
-		}
-		if len(gapp.Status.AttachedPolicies) == 0 {
-			return false, gapp
-		}
-		found := false
-		for _, tp := range gapp.Status.AttachedPolicies {
-			if tp == sgp.Name {
-				found = true
+	/*
+		// verify app has sgpolicy in status
+		AssertEventually(c, func() (bool, interface{}) {
+			gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
+			if gerr != nil {
+				return false, gerr
 			}
-		}
-		if !found {
-			return false, gapp
-		}
-		return true, nil
-	}, "App did not have sgpolicy in status", "100ms", it.pollTimeout())
+			if len(gapp.Status.AttachedPolicies) == 0 {
+				return false, gapp
+			}
+			found := false
+			for _, tp := range gapp.Status.AttachedPolicies {
+				if tp == sgp.Name {
+					found = true
+				}
+			}
+			if !found {
+				return false, gapp
+			}
+			return true, nil
+		}, "App did not have sgpolicy in status", "100ms", it.pollTimeout())
+	*/
 
 	// verify creating agpolicy with unknown app fails
 	sgpInv := security.NetworkSecurityPolicy{
@@ -275,18 +277,21 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	_, err = it.restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error creating sg policy")
 
-	// verify sgpolicy is removed from app
-	AssertEventually(c, func() (bool, interface{}) {
-		gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
-		if gerr != nil {
-			return false, gerr
-		}
-		if len(gapp.Status.AttachedPolicies) != 0 {
-			return false, gapp
-		}
+	/*
+		// verify sgpolicy is removed from app
+		AssertEventually(c, func() (bool, interface{}) {
+			gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
+			if gerr != nil {
+				return false, gerr
+			}
+			if len(gapp.Status.AttachedPolicies) != 0 {
+				return false, gapp
+			}
 
-		return true, nil
-	}, "App still has sgpolicy in status", "100ms", it.pollTimeout())
+			return true, nil
+		}, "App still has sgpolicy in status", "100ms", it.pollTimeout())
+
+	*/
 
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {

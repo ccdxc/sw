@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 				// Cluster object watcher
 				wt, werr := apicl.ClusterV1().Cluster().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchCluster(handler ClusterHandler) error {
 	return nil
 }
 
+// StopWatchCluster stops watch on Cluster object
+func (ct *ctrlerCtx) StopWatchCluster(handler ClusterHandler) error {
+	kind := "Cluster"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Cluster watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // ClusterAPI returns
 type ClusterAPI interface {
 	Create(obj *cluster.Cluster) error
@@ -408,6 +438,7 @@ type ClusterAPI interface {
 	Find(meta *api.ObjectMeta) (*Cluster, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Cluster, error)
 	Watch(handler ClusterHandler) error
+	StopWatch(handler ClusterHandler) error
 }
 
 // dummy struct that implements ClusterAPI
@@ -532,6 +563,14 @@ func (api *clusterAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 func (api *clusterAPI) Watch(handler ClusterHandler) error {
 	api.ct.startWorkerPool("Cluster")
 	return api.ct.WatchCluster(handler)
+}
+
+// StopWatch stop watch for Tenant Cluster object
+func (api *clusterAPI) StopWatch(handler ClusterHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Cluster"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchCluster(handler)
 }
 
 // Cluster returns ClusterAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 				// Node object watcher
 				wt, werr := apicl.ClusterV1().Node().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchNode(handler NodeHandler) error {
 	return nil
 }
 
+// StopWatchNode stops watch on Node object
+func (ct *ctrlerCtx) StopWatchNode(handler NodeHandler) error {
+	kind := "Node"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Node watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // NodeAPI returns
 type NodeAPI interface {
 	Create(obj *cluster.Node) error
@@ -923,6 +992,7 @@ type NodeAPI interface {
 	Find(meta *api.ObjectMeta) (*Node, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Node, error)
 	Watch(handler NodeHandler) error
+	StopWatch(handler NodeHandler) error
 }
 
 // dummy struct that implements NodeAPI
@@ -1047,6 +1117,14 @@ func (api *nodeAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*No
 func (api *nodeAPI) Watch(handler NodeHandler) error {
 	api.ct.startWorkerPool("Node")
 	return api.ct.WatchNode(handler)
+}
+
+// StopWatch stop watch for Tenant Node object
+func (api *nodeAPI) StopWatch(handler NodeHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Node"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchNode(handler)
 }
 
 // Node returns NodeAPI
@@ -1361,6 +1439,12 @@ func (ct *ctrlerCtx) runHostWatcher() {
 				// Host object watcher
 				wt, werr := apicl.ClusterV1().Host().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1429,6 +1513,30 @@ func (ct *ctrlerCtx) WatchHost(handler HostHandler) error {
 	return nil
 }
 
+// StopWatchHost stops watch on Host object
+func (ct *ctrlerCtx) StopWatchHost(handler HostHandler) error {
+	kind := "Host"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Host watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // HostAPI returns
 type HostAPI interface {
 	Create(obj *cluster.Host) error
@@ -1438,6 +1546,7 @@ type HostAPI interface {
 	Find(meta *api.ObjectMeta) (*Host, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Host, error)
 	Watch(handler HostHandler) error
+	StopWatch(handler HostHandler) error
 }
 
 // dummy struct that implements HostAPI
@@ -1562,6 +1671,14 @@ func (api *hostAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Ho
 func (api *hostAPI) Watch(handler HostHandler) error {
 	api.ct.startWorkerPool("Host")
 	return api.ct.WatchHost(handler)
+}
+
+// StopWatch stop watch for Tenant Host object
+func (api *hostAPI) StopWatch(handler HostHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Host"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchHost(handler)
 }
 
 // Host returns HostAPI
@@ -1876,6 +1993,12 @@ func (ct *ctrlerCtx) runDistributedServiceCardWatcher() {
 				// DistributedServiceCard object watcher
 				wt, werr := apicl.ClusterV1().DistributedServiceCard().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1944,6 +2067,30 @@ func (ct *ctrlerCtx) WatchDistributedServiceCard(handler DistributedServiceCardH
 	return nil
 }
 
+// StopWatchDistributedServiceCard stops watch on DistributedServiceCard object
+func (ct *ctrlerCtx) StopWatchDistributedServiceCard(handler DistributedServiceCardHandler) error {
+	kind := "DistributedServiceCard"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("DistributedServiceCard watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // DistributedServiceCardAPI returns
 type DistributedServiceCardAPI interface {
 	Create(obj *cluster.DistributedServiceCard) error
@@ -1953,6 +2100,7 @@ type DistributedServiceCardAPI interface {
 	Find(meta *api.ObjectMeta) (*DistributedServiceCard, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*DistributedServiceCard, error)
 	Watch(handler DistributedServiceCardHandler) error
+	StopWatch(handler DistributedServiceCardHandler) error
 }
 
 // dummy struct that implements DistributedServiceCardAPI
@@ -2077,6 +2225,14 @@ func (api *distributedservicecardAPI) List(ctx context.Context, opts *api.ListWa
 func (api *distributedservicecardAPI) Watch(handler DistributedServiceCardHandler) error {
 	api.ct.startWorkerPool("DistributedServiceCard")
 	return api.ct.WatchDistributedServiceCard(handler)
+}
+
+// StopWatch stop watch for Tenant DistributedServiceCard object
+func (api *distributedservicecardAPI) StopWatch(handler DistributedServiceCardHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["DistributedServiceCard"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchDistributedServiceCard(handler)
 }
 
 // DistributedServiceCard returns DistributedServiceCardAPI
@@ -2391,6 +2547,12 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 				// Tenant object watcher
 				wt, werr := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2459,6 +2621,30 @@ func (ct *ctrlerCtx) WatchTenant(handler TenantHandler) error {
 	return nil
 }
 
+// StopWatchTenant stops watch on Tenant object
+func (ct *ctrlerCtx) StopWatchTenant(handler TenantHandler) error {
+	kind := "Tenant"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Tenant watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // TenantAPI returns
 type TenantAPI interface {
 	Create(obj *cluster.Tenant) error
@@ -2468,6 +2654,7 @@ type TenantAPI interface {
 	Find(meta *api.ObjectMeta) (*Tenant, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Tenant, error)
 	Watch(handler TenantHandler) error
+	StopWatch(handler TenantHandler) error
 }
 
 // dummy struct that implements TenantAPI
@@ -2592,6 +2779,14 @@ func (api *tenantAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 func (api *tenantAPI) Watch(handler TenantHandler) error {
 	api.ct.startWorkerPool("Tenant")
 	return api.ct.WatchTenant(handler)
+}
+
+// StopWatch stop watch for Tenant Tenant object
+func (api *tenantAPI) StopWatch(handler TenantHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Tenant"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchTenant(handler)
 }
 
 // Tenant returns TenantAPI
@@ -2906,6 +3101,12 @@ func (ct *ctrlerCtx) runVersionWatcher() {
 				// Version object watcher
 				wt, werr := apicl.ClusterV1().Version().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2974,6 +3175,30 @@ func (ct *ctrlerCtx) WatchVersion(handler VersionHandler) error {
 	return nil
 }
 
+// StopWatchVersion stops watch on Version object
+func (ct *ctrlerCtx) StopWatchVersion(handler VersionHandler) error {
+	kind := "Version"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Version watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // VersionAPI returns
 type VersionAPI interface {
 	Create(obj *cluster.Version) error
@@ -2983,6 +3208,7 @@ type VersionAPI interface {
 	Find(meta *api.ObjectMeta) (*Version, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Version, error)
 	Watch(handler VersionHandler) error
+	StopWatch(handler VersionHandler) error
 }
 
 // dummy struct that implements VersionAPI
@@ -3107,6 +3333,14 @@ func (api *versionAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 func (api *versionAPI) Watch(handler VersionHandler) error {
 	api.ct.startWorkerPool("Version")
 	return api.ct.WatchVersion(handler)
+}
+
+// StopWatch stop watch for Tenant Version object
+func (api *versionAPI) StopWatch(handler VersionHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Version"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchVersion(handler)
 }
 
 // Version returns VersionAPI

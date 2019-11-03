@@ -360,6 +360,7 @@ func (m *FlowExportPolicy) References(tenant string, path string, resp map[strin
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -512,6 +513,7 @@ func (m *FwlogPolicy) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -668,6 +670,7 @@ func (m *StatsPolicy) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

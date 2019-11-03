@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting NetworkSecurityPolicy list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("NetworkSecurityPolicyWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffNetworkSecurityPolicys(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting NetworkSecurityPolicy list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("NetworkSecurityPolicyWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffNetworkSecurityPolicys(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.NetworkSecurityPolicyEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processNetworkSecurityPolicyDynamic(evt api.EventType,
+	object *netproto.NetworkSecurityPolicy, reactor NetworkSecurityPolicyReactor) error {
+
+	networksecuritypolicyEvt := netproto.NetworkSecurityPolicyEvent{
+		EventType:             evt,
+		NetworkSecurityPolicy: *object,
+	}
+
+	// add venice label to the object
+	networksecuritypolicyEvt.NetworkSecurityPolicy.ObjectMeta.Labels = make(map[string]string)
+	networksecuritypolicyEvt.NetworkSecurityPolicy.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(networksecuritypolicyEvt.NetworkSecurityPolicy.GetObjectKind(), networksecuritypolicyEvt.NetworkSecurityPolicy.ObjectMeta)
+
+	client.processNetworkSecurityPolicyEvent(networksecuritypolicyEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

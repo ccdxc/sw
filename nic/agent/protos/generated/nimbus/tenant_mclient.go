@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting Tenant list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("TenantWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffTenants(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting Tenant list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("TenantWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffTenants(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.TenantEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processTenantDynamic(evt api.EventType,
+	object *netproto.Tenant, reactor TenantReactor) error {
+
+	tenantEvt := netproto.TenantEvent{
+		EventType: evt,
+		Tenant:    *object,
+	}
+
+	// add venice label to the object
+	tenantEvt.Tenant.ObjectMeta.Labels = make(map[string]string)
+	tenantEvt.Tenant.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(tenantEvt.Tenant.GetObjectKind(), tenantEvt.Tenant.ObjectMeta)
+
+	client.processTenantEvent(tenantEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

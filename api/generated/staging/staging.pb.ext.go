@@ -428,6 +428,7 @@ func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -536,6 +537,7 @@ func (m *ClearAction) References(tenant string, path string, resp map[string]api
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -644,6 +646,7 @@ func (m *CommitAction) References(tenant string, path string, resp map[string]ap
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

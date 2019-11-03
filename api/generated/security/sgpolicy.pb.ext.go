@@ -255,6 +255,7 @@ func (m *NetworkSecurityPolicy) References(tenant string, path string, resp map[
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 
@@ -331,6 +332,7 @@ func (m *NetworkSecurityPolicySpec) References(tenant string, path string, resp 
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "SecurityGroup",
 			}
 		}
 
@@ -434,6 +436,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "App",
 			}
 		}
 
@@ -456,6 +459,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "SecurityGroup",
 			}
 		}
 
@@ -478,6 +482,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "SecurityGroup",
 			}
 		}
 

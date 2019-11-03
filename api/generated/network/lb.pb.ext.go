@@ -154,6 +154,7 @@ func (m *LbPolicy) References(tenant string, path string, resp map[string]apiint
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

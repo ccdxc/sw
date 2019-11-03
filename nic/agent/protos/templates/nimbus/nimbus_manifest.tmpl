@@ -1,0 +1,2 @@
+{{range .Services}}{{$svcname := .Name}}{{if (hasExtension "venice.naplesRestService" .)}}{{$params := (getRestSvcOptions .)}}{{range $params}}{{$x := (genNimbusManifest  "../generated/nimbus/manifest" .CrudObject $svcname)}}{{range $key, $value := $x}}
+{{$value.Object}} {{$value.Service}}{{end}}{{end}}{{end}}{{end}}

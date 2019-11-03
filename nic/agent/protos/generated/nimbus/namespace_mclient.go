@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting Namespace list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("NamespaceWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffNamespaces(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting Namespace list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("NamespaceWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffNamespaces(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, r
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.NamespaceEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processNamespaceEvent(evt netproto.NamespaceEvent, r
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processNamespaceDynamic(evt api.EventType,
+	object *netproto.Namespace, reactor NamespaceReactor) error {
+
+	namespaceEvt := netproto.NamespaceEvent{
+		EventType: evt,
+		Namespace: *object,
+	}
+
+	// add venice label to the object
+	namespaceEvt.Namespace.ObjectMeta.Labels = make(map[string]string)
+	namespaceEvt.Namespace.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(namespaceEvt.Namespace.GetObjectKind(), namespaceEvt.Namespace.ObjectMeta)
+
+	client.processNamespaceEvent(namespaceEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

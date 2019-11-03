@@ -461,6 +461,7 @@ func (m *TroubleshootingSession) References(tenant string, path string, resp map
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
 			}
 		}
 

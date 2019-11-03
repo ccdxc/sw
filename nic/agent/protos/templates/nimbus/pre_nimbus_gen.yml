@@ -1,0 +1,4 @@
+ basepath: "github.com/pensando/sw/nic/agent/protos/templates/nimbus"
+ templates:
+   - template: "nimbus_manifest.tmpl"
+     outputpath: "manifest"

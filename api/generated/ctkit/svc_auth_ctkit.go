@@ -331,6 +331,12 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				// User object watcher
 				wt, werr := apicl.AuthV1().User().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -399,6 +405,30 @@ func (ct *ctrlerCtx) WatchUser(handler UserHandler) error {
 	return nil
 }
 
+// StopWatchUser stops watch on User object
+func (ct *ctrlerCtx) StopWatchUser(handler UserHandler) error {
+	kind := "User"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("User watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // UserAPI returns
 type UserAPI interface {
 	Create(obj *auth.User) error
@@ -408,6 +438,7 @@ type UserAPI interface {
 	Find(meta *api.ObjectMeta) (*User, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error)
 	Watch(handler UserHandler) error
+	StopWatch(handler UserHandler) error
 }
 
 // dummy struct that implements UserAPI
@@ -532,6 +563,14 @@ func (api *userAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Us
 func (api *userAPI) Watch(handler UserHandler) error {
 	api.ct.startWorkerPool("User")
 	return api.ct.WatchUser(handler)
+}
+
+// StopWatch stop watch for Tenant User object
+func (api *userAPI) StopWatch(handler UserHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["User"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchUser(handler)
 }
 
 // User returns UserAPI
@@ -846,6 +885,12 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				// AuthenticationPolicy object watcher
 				wt, werr := apicl.AuthV1().AuthenticationPolicy().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -914,6 +959,30 @@ func (ct *ctrlerCtx) WatchAuthenticationPolicy(handler AuthenticationPolicyHandl
 	return nil
 }
 
+// StopWatchAuthenticationPolicy stops watch on AuthenticationPolicy object
+func (ct *ctrlerCtx) StopWatchAuthenticationPolicy(handler AuthenticationPolicyHandler) error {
+	kind := "AuthenticationPolicy"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("AuthenticationPolicy watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // AuthenticationPolicyAPI returns
 type AuthenticationPolicyAPI interface {
 	Create(obj *auth.AuthenticationPolicy) error
@@ -923,6 +992,7 @@ type AuthenticationPolicyAPI interface {
 	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(handler AuthenticationPolicyHandler) error
+	StopWatch(handler AuthenticationPolicyHandler) error
 }
 
 // dummy struct that implements AuthenticationPolicyAPI
@@ -1047,6 +1117,14 @@ func (api *authenticationpolicyAPI) List(ctx context.Context, opts *api.ListWatc
 func (api *authenticationpolicyAPI) Watch(handler AuthenticationPolicyHandler) error {
 	api.ct.startWorkerPool("AuthenticationPolicy")
 	return api.ct.WatchAuthenticationPolicy(handler)
+}
+
+// StopWatch stop watch for Tenant AuthenticationPolicy object
+func (api *authenticationpolicyAPI) StopWatch(handler AuthenticationPolicyHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["AuthenticationPolicy"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchAuthenticationPolicy(handler)
 }
 
 // AuthenticationPolicy returns AuthenticationPolicyAPI
@@ -1361,6 +1439,12 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				// Role object watcher
 				wt, werr := apicl.AuthV1().Role().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1429,6 +1513,30 @@ func (ct *ctrlerCtx) WatchRole(handler RoleHandler) error {
 	return nil
 }
 
+// StopWatchRole stops watch on Role object
+func (ct *ctrlerCtx) StopWatchRole(handler RoleHandler) error {
+	kind := "Role"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("Role watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // RoleAPI returns
 type RoleAPI interface {
 	Create(obj *auth.Role) error
@@ -1438,6 +1546,7 @@ type RoleAPI interface {
 	Find(meta *api.ObjectMeta) (*Role, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Role, error)
 	Watch(handler RoleHandler) error
+	StopWatch(handler RoleHandler) error
 }
 
 // dummy struct that implements RoleAPI
@@ -1562,6 +1671,14 @@ func (api *roleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Ro
 func (api *roleAPI) Watch(handler RoleHandler) error {
 	api.ct.startWorkerPool("Role")
 	return api.ct.WatchRole(handler)
+}
+
+// StopWatch stop watch for Tenant Role object
+func (api *roleAPI) StopWatch(handler RoleHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["Role"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRole(handler)
 }
 
 // Role returns RoleAPI
@@ -1876,6 +1993,12 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				// RoleBinding object watcher
 				wt, werr := apicl.AuthV1().RoleBinding().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -1944,6 +2067,30 @@ func (ct *ctrlerCtx) WatchRoleBinding(handler RoleBindingHandler) error {
 	return nil
 }
 
+// StopWatchRoleBinding stops watch on RoleBinding object
+func (ct *ctrlerCtx) StopWatchRoleBinding(handler RoleBindingHandler) error {
+	kind := "RoleBinding"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("RoleBinding watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // RoleBindingAPI returns
 type RoleBindingAPI interface {
 	Create(obj *auth.RoleBinding) error
@@ -1953,6 +2100,7 @@ type RoleBindingAPI interface {
 	Find(meta *api.ObjectMeta) (*RoleBinding, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoleBinding, error)
 	Watch(handler RoleBindingHandler) error
+	StopWatch(handler RoleBindingHandler) error
 }
 
 // dummy struct that implements RoleBindingAPI
@@ -2077,6 +2225,14 @@ func (api *rolebindingAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 func (api *rolebindingAPI) Watch(handler RoleBindingHandler) error {
 	api.ct.startWorkerPool("RoleBinding")
 	return api.ct.WatchRoleBinding(handler)
+}
+
+// StopWatch stop watch for Tenant RoleBinding object
+func (api *rolebindingAPI) StopWatch(handler RoleBindingHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["RoleBinding"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRoleBinding(handler)
 }
 
 // RoleBinding returns RoleBindingAPI
@@ -2391,6 +2547,12 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 				// UserPreference object watcher
 				wt, werr := apicl.AuthV1().UserPreference().Watch(ctx, &opts)
 				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
 					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 					// wait for a second and retry connecting to api server
 					apicl.Close()
@@ -2459,6 +2621,30 @@ func (ct *ctrlerCtx) WatchUserPreference(handler UserPreferenceHandler) error {
 	return nil
 }
 
+// StopWatchUserPreference stops watch on UserPreference object
+func (ct *ctrlerCtx) StopWatchUserPreference(handler UserPreferenceHandler) error {
+	kind := "UserPreference"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("UserPreference watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
 // UserPreferenceAPI returns
 type UserPreferenceAPI interface {
 	Create(obj *auth.UserPreference) error
@@ -2468,6 +2654,7 @@ type UserPreferenceAPI interface {
 	Find(meta *api.ObjectMeta) (*UserPreference, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*UserPreference, error)
 	Watch(handler UserPreferenceHandler) error
+	StopWatch(handler UserPreferenceHandler) error
 }
 
 // dummy struct that implements UserPreferenceAPI
@@ -2592,6 +2779,14 @@ func (api *userpreferenceAPI) List(ctx context.Context, opts *api.ListWatchOptio
 func (api *userpreferenceAPI) Watch(handler UserPreferenceHandler) error {
 	api.ct.startWorkerPool("UserPreference")
 	return api.ct.WatchUserPreference(handler)
+}
+
+// StopWatch stop watch for Tenant UserPreference object
+func (api *userpreferenceAPI) StopWatch(handler UserPreferenceHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["UserPreference"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchUserPreference(handler)
 }
 
 // UserPreference returns UserPreferenceAPI

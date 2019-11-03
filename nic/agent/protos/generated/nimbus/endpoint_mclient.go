@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("Endpoint Watch channel closed. Exisint EndpointWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting Endpoint list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("EndpointWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffEndpoints(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("Endpoint Watch channel closed. Exisint EndpointWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting Endpoint list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("EndpointWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffEndpoints(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.EndpointEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processEndpointDynamic(evt api.EventType,
+	object *netproto.Endpoint, reactor EndpointReactor) error {
+
+	endpointEvt := netproto.EndpointEvent{
+		EventType: evt,
+		Endpoint:  *object,
+	}
+
+	// add venice label to the object
+	endpointEvt.Endpoint.ObjectMeta.Labels = make(map[string]string)
+	endpointEvt.Endpoint.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(endpointEvt.Endpoint.GetObjectKind(), endpointEvt.Endpoint.ObjectMeta)
+
+	client.processEndpointEvent(endpointEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }

@@ -101,34 +101,35 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 				return
 			}
 			evtWork(evt)
-		// periodic resync
-		case <-time.After(resyncInterval):
-			//Give priority to evt work
-			//Wait for batch interval for inflight work
-			time.Sleep(5 * DefaultWatchHoldInterval)
-			select {
-			case evt, ok := <-recvCh:
-				if !ok {
-					log.Warnf("Network Watch channel closed. Exisint NetworkWatch")
-					return
-				}
-				evtWork(evt)
-				continue
-			default:
-			}
-			// get a list of objects
-			objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok || st.Code() == codes.Unavailable {
-					log.Errorf("Error getting Network list. Err: %v", err)
-					return
-				}
-			} else {
-				client.debugStats.AddInt("NetworkWatchResyncs", 1)
-				// perform a diff of the states
-				client.diffNetworks(objList, reactor, ostream)
-			}
+			// periodic resync (Disabling as we have aggregate watch support)
+			/*case <-time.After(resyncInterval):
+			            //Give priority to evt work
+			            //Wait for batch interval for inflight work
+			            time.Sleep(5 * DefaultWatchHoldInterval)
+			            select {
+			            case evt, ok := <-recvCh:
+			                if !ok {
+			                    log.Warnf("Network Watch channel closed. Exisint NetworkWatch")
+			                    return
+			                }
+			                evtWork(evt)
+							continue
+			            default:
+			            }
+						// get a list of objects
+						objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
+						if err != nil {
+							st, ok := status.FromError(err)
+							if !ok || st.Code() == codes.Unavailable {
+								log.Errorf("Error getting Network list. Err: %v", err)
+								return
+							}
+						} else {
+							client.debugStats.AddInt("NetworkWatchResyncs", 1)
+							// perform a diff of the states
+							client.diffNetworks(objList, reactor, ostream)
+						}
+			*/
 		}
 	}
 }
@@ -249,6 +250,9 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 			}
 		}
 
+		if ostream == nil {
+			return
+		}
 		// send oper status and return if there is no error
 		if err == nil {
 			robj := netproto.NetworkEvent{
@@ -279,4 +283,25 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+}
+
+func (client *NimbusClient) processNetworkDynamic(evt api.EventType,
+	object *netproto.Network, reactor NetworkReactor) error {
+
+	networkEvt := netproto.NetworkEvent{
+		EventType: evt,
+		Network:   *object,
+	}
+
+	// add venice label to the object
+	networkEvt.Network.ObjectMeta.Labels = make(map[string]string)
+	networkEvt.Network.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(networkEvt.Network.GetObjectKind(), networkEvt.Network.ObjectMeta)
+
+	client.processNetworkEvent(networkEvt, reactor, nil)
+	modificationTime, _ := types.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return nil
 }
