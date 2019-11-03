@@ -208,8 +208,9 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwrpair      p.common.p4_intr_recirc, 1, \
-                   p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
+    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
+                   p.common.rdma_recirc_recirc_spec_cindex, K_GLOBAL_SPEC_CINDEX
+    phvwr          p.common.p4_intr_recirc, 1
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0) 
 

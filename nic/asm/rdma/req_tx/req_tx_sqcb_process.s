@@ -51,7 +51,7 @@ struct req_tx_s0_t0_k k;
 
 .align
 req_tx_sqcb_process:
-    bcf             [c2 | c3 | c7], table_error
+    bcf             [c2 | c3], table_error
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
     seq            c7, d.state, QP_STATE_RTS // BD Slot
@@ -541,7 +541,7 @@ process_recirc:
     tblwr          d.ring_empty_sched_eval_done, 0
 
     // Revert spec_cindex to next sq_cindex recirc of the current one
-    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+    add            r1, r0, CAPRI_APP_DATA_RECIRC_SPEC_CINDEX // Branch Delay Slot
     mincr          r1, d.log_num_wqes, 1
     tblwr          SPEC_SQ_C_INDEX, r1
 

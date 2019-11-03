@@ -235,7 +235,8 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwr          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
+    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
+                   p.common.rdma_recirc_recirc_spec_cindex, K_GLOBAL_SPEC_CINDEX
     phvwr          p.common.p4_intr_recirc, 1
 
     phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, read_req_adjust), K_SPEC_MSG_PSN
@@ -269,7 +270,6 @@ table_error:
     // update stats
     phvwr.c2       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_error), 1
     phvwr.c3       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
-    phvwr.c7       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_resp_error), 1
     phvwr          p.common.p4_intr_global_drop, 1
 
     b              trigger_dcqcn

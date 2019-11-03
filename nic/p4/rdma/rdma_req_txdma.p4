@@ -955,6 +955,7 @@ action req_tx_stage0_recirc_action () {
 
     // recirc header bits
     modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
+    modify_field(rdma_recirc_scr.recirc_spec_cindex, rdma_recirc.recirc_spec_cindex);
 }
 
 

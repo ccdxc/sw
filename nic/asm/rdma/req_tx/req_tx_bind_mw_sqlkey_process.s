@@ -33,11 +33,12 @@ req_tx_bind_mw_sqlkey_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
+    phvwr.c1       p.common.rdma_recirc_recirc_spec_cindex, K_GLOBAL_SPEC_CINDEX // Branch Delay Slot
 
     // if memory region is not in valid state or doesn't allow memory window or
     // is zero based virtual address region, then do not allow memory window
     // binding to this region
-    sne            c1, d.state, KEY_STATE_VALID // Branch Delay Slot
+    sne            c1, d.state, KEY_STATE_VALID
     ARE_ALL_FLAGS_SET_B(c2, d.acc_ctrl, ACC_CTRL_MW_BIND)
     ARE_ALL_FLAGS_SET_B(c3, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
     bcf            [c3 | !c2 | c1], invalid_mr
