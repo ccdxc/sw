@@ -279,7 +279,7 @@ ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
                     ftlv4_dump_hw_entry_detail_iter_cb :
                     ftlv4_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
-    params.force_hwread = true;
+    params.force_hwread = false;
     ftlv4_entry_count = 0;
 
     if (!detail) {
@@ -300,6 +300,32 @@ ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
     fclose(logfp);
 
 end:
+    return retcode;
+}
+
+int
+ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
+                    uint8_t ip_proto, uint16_t sport,
+                    uint16_t dport, uint16_t lookup_id,
+                    char *buf, int max_len)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    int retcode = 0;
+    ftlv4_entry_t entry;
+
+    entry.clear();
+    ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
+    params.entry = &entry;
+
+    ret = obj->get(&params);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+        goto done;
+    }
+    entry.tostr(buf, max_len);
+
+done:
     return retcode;
 }
 
@@ -520,7 +546,7 @@ ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
                     ftlv6_dump_hw_entry_detail_iter_cb :
                     ftlv6_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
-    params.force_hwread = true;
+    params.force_hwread = false;
     ftlv6_entry_count = 0;
 
     ftlv6_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
@@ -537,6 +563,31 @@ ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
     fclose(logfp);
 
 end:
+    return retcode;
+}
+
+int
+ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
+                    uint8_t ip_proto, uint16_t sport,
+                    uint16_t dport, uint16_t lookup_id,
+                    char *buf, int max_len)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    int retcode = 0;
+    ftlv6_entry_t entry = {0};
+
+    ftlv6_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id, 0);
+    params.entry = &entry;
+
+    ret = obj->get(&params);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+        goto done;
+    }
+    entry.tostr(buf, max_len);
+
+done:
     return retcode;
 }
 

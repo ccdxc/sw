@@ -13,3 +13,4 @@ modules:
         spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=stateful
+              flow_verify_vpp : True

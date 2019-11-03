@@ -14,47 +14,13 @@ VLIB_PLUGIN_REGISTER () = {
 };
 // *INDENT-ON*
 
-#if 0
-extern u32 pds_fwd_flow_next;
-
-static clib_error_t *
-set_flow_packet_command_fn (vlib_main_t * vm,
-                            unformat_input_t * input,
-                            vlib_cli_command_t * cmd)
-{
-    u32 next;
-
-    while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
-        if (unformat(input, "transmit")) {
-            next = FWD_FLOW_NEXT_INTF_OUT;
-        } else if (unformat(input, "drop")) {
-            next = FWD_FLOW_NEXT_DROP;
-        } else {
-            vlib_cli_output(vm, "Invalid command");
-            goto end;
-        }
-    }
-    pds_fwd_flow_next = next;
-
-end:
-    return 0;
-}
-
-VLIB_CLI_COMMAND (set_flow_packet_command, static) =
-{
-    .path = "set flow packet",
-    .short_help = "set flow packet <transmit|drop>",
-    .function = set_flow_packet_command_fn,
-};
-
-#endif
+#define DISPLAY_BUF_SIZE (1*1024*1024)
 
 static clib_error_t *
 show_flow_stats_command_fn (vlib_main_t * vm,
                             unformat_input_t * input,
                             vlib_cli_command_t * cmd)
 {
-#define DISPLAY_BUF_SIZE (1*1024*1024)
     char *buf = NULL;
     pds_flow_main_t *fm = &pds_flow_main;
     int no_of_threads = fm->no_threads;
@@ -177,6 +143,115 @@ VLIB_CLI_COMMAND (show_flow_stats_command, static) =
     .path = "show flow statistics",
     .short_help = "show flow statistics [detail] [thread <thread-id>] [ip4 | ip6]",
     .function = show_flow_stats_command_fn,
+};
+
+static clib_error_t *
+dump_flow_entry_command_fn (vlib_main_t * vm,
+                            unformat_input_t * input,
+                            vlib_cli_command_t * cmd)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    int ret;
+    ip46_address_t src = ip46_address_initializer,
+                   dst = ip46_address_initializer;
+    u32 sport = 0, dport = 0, lkp_id = 0;
+    u8 ip_proto,
+       src_set = 0,
+       dst_set = 0,
+       src_port_set = 0,
+       dst_port_set = 0,
+       proto_set = 0,
+       lkp_id_set = 0,
+       ip4 = 0;
+    char *buf = NULL;
+
+    while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
+        if (unformat (input, "source-ip %U", unformat_ip46_address, &src)) {
+            src_set = 1;
+        } else if (unformat (input, "destination-ip %U",
+                             unformat_ip46_address, &dst)) {
+            dst_set = 1;
+        } else if (unformat(input, "ip-protocol %U",
+                            unformat_ip_protocol, &ip_proto)) {
+            proto_set = 1;
+        } else if (unformat (input, "source-port %u", &sport)) {
+            src_port_set = 1;
+        } else if (unformat (input, "destination-port %u", &dport)) {
+            dst_port_set = 1;
+        } else if (unformat (input, "lookup-id %u", &lkp_id)) {
+            lkp_id_set = 1;
+        } else {
+            vlib_cli_output(vm, "ERROR: Invalid command.\n");
+            goto done;
+        }
+    }
+
+    if (!src_set || !dst_set || !proto_set || !lkp_id_set) {
+        vlib_cli_output(vm, "ERROR: Invalid input.\n");
+        goto done;
+    }
+
+    if (((ip_proto == IP_PROTOCOL_TCP) || (ip_proto == IP_PROTOCOL_UDP)) &&
+        (!src_port_set || ! dst_port_set || (sport > 0xffff) || (dport > 0xffff))) { 
+        vlib_cli_output(vm, "ERROR: Invalid source/destination ports.\n");
+        goto done;
+    }
+
+    ip4 = ip46_address_is_ip4(&src);
+    if (ip4 != ip46_address_is_ip4(&dst)) {
+        vlib_cli_output(vm, "ERROR: Source and Destination IP address "
+                        "belong to different address-family.\n");
+        goto done;
+    }
+
+    buf = calloc(1, DISPLAY_BUF_SIZE);
+    if (!buf) {
+        vlib_cli_output(vm, "ERROR: Failed to allocate  display buffer!");
+        goto done;
+    }
+
+    vlib_worker_thread_barrier_sync(vm);
+    if (ip4) {
+        ret = ftlv4_dump_hw_entry(fm->table4[0],
+                                  clib_net_to_host_u32(src.ip4.as_u32),
+                                  clib_net_to_host_u32(dst.ip4.as_u32),
+                                  ip_proto,
+                                  (u16)sport,
+                                  (u16)dport,
+                                  (u16)lkp_id,
+                                  buf, DISPLAY_BUF_SIZE-1);
+    } else {
+        ret = ftlv6_dump_hw_entry(fm->table6[0],
+                                  src.ip6.as_u8,
+                                  dst.ip6.as_u8,
+                                  ip_proto,
+                                  (u16)sport,
+                                  (u16)dport,
+                                  (u16)lkp_id,
+                                  buf, DISPLAY_BUF_SIZE-1);
+    }
+    vlib_worker_thread_barrier_release(vm);
+    if (ret < 0) {
+        vlib_cli_output(vm, "Entry not found.\n");
+    } else {
+        vlib_cli_output(vm, "Entry found:\n%s", buf);
+    }
+
+done:
+    free(buf);
+    return 0;
+}
+
+VLIB_CLI_COMMAND (dump_flow_entry_command, static) =
+{
+    .path = "dump flow entry",
+    .short_help = "dump flow entry "
+                  "source-ip <ip-address> destination-ip <ip-address> "
+                  "ip-protocol <TCP|UDP|ICMP> "
+                  "[source-port <UDP/TCP port number>] "
+                  "[destination-port <UDP/TCP port number>] "
+                  "lookup-id <number>",
+    .function = dump_flow_entry_command_fn,
 };
 
 static clib_error_t *

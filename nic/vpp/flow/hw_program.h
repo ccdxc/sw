@@ -38,6 +38,11 @@ void ftlv4_delete(ftlv4 *obj);
 
 int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail);
 
+int ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
+                        uint8_t ip_proto, uint16_t sport,
+                        uint16_t dport, uint16_t lookup_id,
+                        char *buf, int max_len);
+
 void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len);
 
 int ftlv4_clear(ftlv4 *obj, bool clear_global_state,
@@ -73,6 +78,11 @@ int ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
 void ftlv6_delete(ftlv6 *obj);
 
 int ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail);
+
+int ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
+                        uint8_t ip_proto, uint16_t sport,
+                        uint16_t dport, uint16_t lookup_id,
+                        char *buf, int max_len);
 
 void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len);
 
