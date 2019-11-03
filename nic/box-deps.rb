@@ -10,8 +10,8 @@ env GOPATH: "/go",
 run "yum -y install https://centos7.iuscommunity.org/ius-release.rpm"
 run "yum -y install python36u python36u-pip"
 run "yum -y install softhsm libtool-ltdl-devel"
-run "ln -s /usr/bin/python3.6 /usr/bin/python3"
-run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
+run "ln -sf /usr/bin/python3.6 /usr/bin/python3"
+run "ln -sf /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
 run "yum install -y nfs-utils nfs-utils-lib"
 run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
@@ -102,6 +102,7 @@ PACKAGES = %w[
   telnet
   sshpass
   ipmitool
+  libxml2-devel
   devtoolset-7-make.x86_64
 ]
 
@@ -114,6 +115,8 @@ run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 run "curl -sSL https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
+run "yum install epel-release"
+run "rpm -Uvh https://mirror.webtatic.com/yum/el6/latest.rpm"
 # install docker. This is needed for e2e
 run "curl -sSL https://get.docker.com | CHANNEL=stable bash"
 copy "tools/test-build/daemon.json", "/etc/docker/daemon.json"
@@ -267,7 +270,7 @@ inside BASE_BUILD_DIR do
        && CFLAGS=\"$CFLAGS -fPIC\" ./configure && make && make install"
 end
 
-OPENAPP_VERSION = "10229"
+OPENAPP_VERSION = "11581"
 inside BASE_BUILD_DIR do
   run "wget https://www.snort.org/downloads/openappid/#{OPENAPP_VERSION} \
        && mv #{OPENAPP_VERSION} snort-openappid.tar.gz \
@@ -306,7 +309,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.35"
+tag "pensando/nic:1.37"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
