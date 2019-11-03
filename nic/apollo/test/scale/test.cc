@@ -1418,7 +1418,6 @@ create_underlay_nexthops (uint32_t num_nh)
         return rv;
     }
 
-#if 0
     // create the underlay nexthop group
     rv = create_nexthop_group(&pds_nhgroup);
     if (rv != SDK_RET_OK) {
@@ -1430,7 +1429,6 @@ create_underlay_nexthops (uint32_t num_nh)
         SDK_ASSERT(0);
         return rv;
     }
-#endif
 
     return SDK_RET_OK;
 }

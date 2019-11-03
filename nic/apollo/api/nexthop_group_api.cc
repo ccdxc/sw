@@ -28,7 +28,7 @@ pds_nexthop_group_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_NEXTHOP, op);
+    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_NEXTHOP_GROUP, op);
     if (likely(api_ctxt != NULL)) {
         if (op == api::API_OP_DELETE) {
             api_ctxt->api_params->nexthop_group_key = *key;

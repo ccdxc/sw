@@ -197,7 +197,8 @@ rte_indexer::alloc(uint32_t *index, uint32_t block_size) {
     rte_bitmap_clear(INDEXER, *index);
     this->curr_index_ = nextpos;
     this->set_curr_slab_(this->curr_index_);
-    SDK_TRACE_DEBUG("Allocated idx %u and slab %lx", *index, (long)this->curr_slab_);
+    SDK_TRACE_VERBOSE("Allocated idx %u and slab %lx",
+                      *index, (long)this->curr_slab_);
     usage_++;
 end:
     if (thread_safe_) {

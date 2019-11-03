@@ -63,8 +63,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_NEXTHOP:
         return nexthop::factory(&api_ctxt->api_params->nexthop_spec);
 
-    //case OBJ_ID_NEXTHOP_GROUP:
-        //return nexthop_group::factory(&api_ctxt->api_params->nexthop_group_spec);
+    case OBJ_ID_NEXTHOP_GROUP:
+        return nexthop_group::factory(&api_ctxt->api_params->nexthop_group_spec);
 
     default:
         break;

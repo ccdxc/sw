@@ -186,7 +186,7 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
                       "ECMP table", spec->key.id, hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-    return SDK_RET_ERR;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
