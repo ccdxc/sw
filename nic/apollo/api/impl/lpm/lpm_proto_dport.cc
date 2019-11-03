@@ -7,7 +7,7 @@
  */
 
 #include <math.h>
-#include "nic/apollo/api/impl/artemis/lpm/lpm_proto_dport.hpp"
+#include "lpm_proto_dport.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"

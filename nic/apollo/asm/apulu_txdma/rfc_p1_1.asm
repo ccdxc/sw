@@ -17,18 +17,18 @@ rfc_p1_1:
     /* Write the classid to phv */
     phvwr      p.txdma_control_rfc_p1_classid, r7
     /* Load sacl base addr to r1 */
-    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr
+    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr0
     /* Is this the first pass? */
     seq        c1, k.capri_p4_intr_recirc_count, 0
     /* If so, add SACL_P2_2_TABLE_OFFSET to sacl base address. */
     addi.c1    r1, r1, SACL_P2_2_TABLE_OFFSET
-    /* P2 table index = (proto_dport_classid | (sport_classid << 8)). */
-    add.c1     r2, k.rx_to_tx_hdr_dport_classid, k.rx_to_tx_hdr_sport_classid, \
+    /* P2 table index = (proto_dport_classid0 | (sport_classid0 << 8)). */
+    add.c1     r2, k.rx_to_tx_hdr_dport_classid0, k.rx_to_tx_hdr_sport_classid0, \
                                                  SACL_PROTO_DPORT_CLASSID_WIDTH
     /* Else, add SACL_P2_4_TABLE_OFFSET to sacl base address. */
     addi.!c1   r1, r1, SACL_P2_4_TABLE_OFFSET
-    /* P2 table index = (proto_dport_classid | (dtag_classid << 8)). */
-    add.!c1    r2, k.rx_to_tx_hdr_dport_classid, k.rx_to_tx_hdr_dtag_classid, \
+    /* P2 table index = (proto_dport_classid0 | (dtag_classid << 8)). */
+    add.!c1    r2, k.rx_to_tx_hdr_dport_classid0, k.rx_to_tx_hdr_dtag_classid, \
                                                  SACL_PROTO_DPORT_CLASSID_WIDTH
     /* Write P2 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2

@@ -10,12 +10,10 @@ struct rxlpm2_0_d          d;
 
 // Define Table Name and Action Names
 #define table_name         rxlpm2_0
-#define action_keys16b     match2_0_16b
 #define action_keys32b     match2_0_32b
 #define action_keys128b    match2_0_128b
 
 // Define table field names for the selected actions
-#define keys16b(a)         d.u.match2_0_16b_d.key ## a
 #define keys32b(a)         d.u.match2_0_32b_d.key ## a
 #define keys128bhi(a)      d.u.match2_0_128b_d.key ## a[127:64]
 #define keys128blo(a)      d.u.match2_0_128b_d.key ## a[63:0]

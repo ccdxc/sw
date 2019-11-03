@@ -11,7 +11,7 @@ struct phv_             p;
 
 pkt_enqueue:
     /* Is this the last pass? */
-    seq          c1, k.capri_p4_intr_recirc_count, 2
+    seq          c1, k.lpm_metadata_sacl_base_addr, r0
     nop.!c1.e
 
     // check q full
@@ -32,7 +32,7 @@ pkt_enqueue:
     // dma pkt desc
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pktdesc_phv2mem_dma_cmd, r3, \
                                 rx_to_tx_hdr_remote_ip, \
-                                rx_to_tx_hdr_pad0)
+                                rx_to_tx_hdr_pad8)
     phvwr       p.pktdesc_phv2mem_dma_cmd_round, 1
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma

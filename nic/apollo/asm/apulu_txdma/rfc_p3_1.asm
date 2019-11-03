@@ -30,11 +30,11 @@ rfc_p3_1:
     nop.!c1.e
 
     /* First Pass. Load sacl base addr to r1 */
-    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr
+    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr0
     /* Add SACL_P1_3_TABLE_OFFSET to sacl base address. */
     addi       r1, r1, SACL_P1_3_TABLE_OFFSET
-    /* P1 table index = (dtag_classid | (sip_classid << 7)). */
-    add        r2, k.rx_to_tx_hdr_dtag_classid, k.rx_to_tx_hdr_sip_classid, \
+    /* P1 table index = (dtag_classid | (sip_classid0 << 7)). */
+    add        r2, k.rx_to_tx_hdr_dtag_classid, k.rx_to_tx_hdr_sip_classid0, \
                                                 SACL_TAG_CLASSID_WIDTH
     /* Write P1 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2

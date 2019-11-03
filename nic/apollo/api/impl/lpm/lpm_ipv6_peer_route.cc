@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
-#include "nic/apollo/api/impl/artemis/lpm/lpm_ipv6_peer_route.hpp"
+#include "lpm_ipv6_peer_route.hpp"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"

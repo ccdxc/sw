@@ -40,7 +40,8 @@ header_type lpm_metadata_t {
         lpm2_base_addr  : 40;
         lpm2_next_addr  : 40;
 
-        meter_base_addr : 40;
+        sacl_base_addr  : 40;
+        recirc_count    : 8;
     }
 }
 

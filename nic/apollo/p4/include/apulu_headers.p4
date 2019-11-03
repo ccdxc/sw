@@ -9,7 +9,7 @@ header_type apulu_p4i_to_rxdma_header_t {
         pad0            : 6;
         rx_packet       : 1;
         iptype          : 1;
-        vnic_id         : 16;
+        vnic_info_key   : 16;
         vpc_id          : 16;
         tag_root        : 40;
 
@@ -55,20 +55,65 @@ header_type apulu_egress_recirc_header_t {
 header_type apulu_rx_to_tx_header_t {
     fields {
         remote_ip       : 128;// Bytes 0 to 15
-        sacl_base_addr  : 40; // Bytes 16 to 20
-        route_base_addr : 40; // Bytes 21 to 25
-        meter_result    : 10; // Bytes 26 and 27
-        sip_classid     : 10; // Bytes 27 and 28
-        dip_classid     : 10; // Bytes 28 and 29
-        stag_classid    : 10; // Bytes 29 and 30
-        dtag_classid    : 8;  // Bytes 31
-        sport_classid   : 8;  // Bytes 32
-        dport_classid   : 8;  // Bytes 33
-        vpc_id          : 16; // Bytes 34 and 35
-        vnic_id         : 16; // Bytes 36 and 37
-        payload_len     : 14; // Bytes 38 and 39
-        iptype          : 1;  // Bytes 39 7b
-        rx_packet       : 1;  // Bytes 39 8b
-        pad0            : 192; // Bytes 40 to 63
+        route_base_addr : 40; // Bytes 16 to 20
+
+        sacl_base_addr0 : 40; // Bytes 21 to 25
+        sip_classid0    : 10; // Bytes 26[0] to 27[1]
+        dip_classid0    : 10; // Bits 27[2] to 28[3]
+        pad0            : 4;  // Bits 28[4] to 28[7]
+        sport_classid0  : 8;  // Byte 29
+        dport_classid0  : 8;  // Byte 30
+
+        sacl_base_addr1 : 40; // Bytes 31 to 35
+        sip_classid1    : 10; // Bytes 36[0] to 37[1]
+        dip_classid1    : 10; // Bits 37[2] to 38[3]
+        pad1            : 4;  // Bits 38[4] to 38[7]
+        sport_classid1  : 8;  // Byte 39
+        dport_classid1  : 8;  // Byte 40
+
+        sacl_base_addr2 : 40; // Bytes 41 to 45
+        sip_classid2    : 10; // Bytes 46[0] to 47[1]
+        dip_classid2    : 10; // Bits 47[2] to 48[3]
+        pad2            : 4;  // Bits 48[4] to 48[7]
+        sport_classid2  : 8;  // Byte 49
+        dport_classid2  : 8;  // Byte 50
+
+        sacl_base_addr3 : 40; // Bytes 51 to 55
+        sip_classid3    : 10; // Bytes 56[0] to 57[1]
+        dip_classid3    : 10; // Bits 57[2] to 58[3]
+        pad3            : 4;  // Bits 58[4] to 58[7]
+        sport_classid3  : 8;  // Byte 59
+        dport_classid3  : 8;  // Byte 60
+
+        pad7            : 24; // Bytes 61 to 63
+
+        /*--------------512b ---------------*/
+
+        sacl_base_addr4 : 40; // Bytes 64 to 68
+        sip_classid4    : 10; // Bytes 69[0] to 70[1]
+        dip_classid4    : 10; // Bits 70[2] to 71[3]
+        pad4            : 4;  // Bits 71[4] to 71[7]
+        sport_classid4  : 8;  // Byte 72
+        dport_classid4  : 8;  // Byte 73
+
+        sacl_base_addr5 : 40; // Bytes 74 to 78
+        sip_classid5    : 10; // Bytes 79[0] to 80[1]
+        dip_classid5    : 10; // Bits 80[2] to 81[3]
+        pad5            : 4;  // Bits 81[4] to 81[7]
+        sport_classid5  : 8;  // Byte 82
+        dport_classid5  : 8;  // Byte 83
+
+        vpc_id          : 16; // Bytes 84 and 85
+        vnic_id         : 16; // Bytes 86 and 87
+
+        iptype          : 1;  // Bit 88[0]
+        rx_packet       : 1;  // Bit 88[1]
+        payload_len     : 14; // Bit 88[2] to 89[7]
+
+        dtag_classid    : 8;  // Byte 90
+        stag_classid    : 10; // Bits 91[0] to 92[1]
+        pad6            : 6;  // Bits 92[2] to 92[7]
+
+        pad8            : 280; // Bytes 93 to 127
     }
 }

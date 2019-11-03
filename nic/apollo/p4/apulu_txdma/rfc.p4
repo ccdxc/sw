@@ -72,14 +72,14 @@ action rfc_action_p1(pad,id50,
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_1_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dip_classid << 8)|
-                                                rx_to_tx_hdr.dport_classid);
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dip_classid0 << 8)|
+                                                rx_to_tx_hdr.dport_classid0);
     } else {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_3_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid << 8)|
-                                                rx_to_tx_hdr.dport_classid);
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid0 << 8)|
+                                                rx_to_tx_hdr.dport_classid0);
     }
 
     // Write P2 table index to PHV
@@ -87,7 +87,7 @@ action rfc_action_p1(pad,id50,
 
     // Write P2 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P2 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 }
@@ -173,7 +173,7 @@ action rfc_action_p2(pad,id50,
 
     // Write P3 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P3 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
 }
@@ -303,13 +303,13 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
         // P1 table index
         modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 10)|
-                                                rx_to_tx_hdr.dip_classid);
+                                                rx_to_tx_hdr.dip_classid0);
     } else {
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_4_TABLE_OFFSET);
         // P1 table index
         modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 7)|
-                                                rx_to_tx_hdr.sport_classid);
+                                                rx_to_tx_hdr.sport_classid0);
     }
 
     // Write P1 table index to PHV
@@ -317,7 +317,7 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
 
     // Write P1 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 }
@@ -394,14 +394,14 @@ action rfc_action_p1_1(pad, id50,
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_2_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid << 8)|
-                                                rx_to_tx_hdr.dport_classid);
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid0 << 8)|
+                                                rx_to_tx_hdr.dport_classid0);
     } else {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_4_TABLE_OFFSET);
         // P2 table index
         modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dtag_classid << 8)|
-                                                rx_to_tx_hdr.dport_classid);
+                                                rx_to_tx_hdr.dport_classid0);
     }
 
     // Write P2 table index to PHV
@@ -409,7 +409,7 @@ action rfc_action_p1_1(pad, id50,
 
     // Write P2 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P2 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
 }
@@ -495,7 +495,7 @@ action rfc_action_p2_1(pad, id50,
 
     // Write P3 table lookup address to PHV
     modify_field(txdma_control.rfc_table_addr,              // P3 Lookup Addr =
-                 rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                 rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
 }
@@ -620,14 +620,14 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
 
     if (capri_p4_intr.recirc_count == 0) {
         // P1 table index for the next recirc
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid << 7)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
                                                 rx_to_tx_hdr.dtag_classid);
         // Write P1 table index to PHV
         modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
         // Write P1 table lookup address to PHV
         modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
-                     rx_to_tx_hdr.sacl_base_addr +              // Region Base +
+                     rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                      SACL_P1_3_TABLE_OFFSET +                   // Table Base +
                      (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
     }

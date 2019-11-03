@@ -28,7 +28,11 @@ read_qstate_info:
     phvwr       p.txdma_predicate_cps_path_en, TRUE
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
-    phvwr       p.txdma_control_pktdesc_addr, r3
+    phvwr       p.txdma_control_pktdesc_addr1, r3
+
+    addi        r3, r3, 64
+    phvwr       p.txdma_control_pktdesc_addr2, r3
+
     add.e       r2, r2, d.{read_qstate_info_d.ring0_base}.dx
     phvwr.f     p.txdma_control_payload_addr, r2
 

@@ -1055,17 +1055,16 @@ control ingress {
     if (txdma_predicate.cps_path_en == 1) {
         if (txdma_predicate.pass_two == 0) {
             read_qstate();
-        } else {
-            if (txdma_predicate.lpm1_enable == TRUE) {
-                vnic_info_txdma();
-            }
         }
 
         if (txdma_predicate.lpm1_enable == TRUE) {
             route_lookup();
         }
 
-        rfc();
+        if (txdma_predicate.rfc_enable == TRUE) {
+            rfc();
+        }
+
         pkt_dma();
     } else {
         if (app_header.table0_valid == 1) {

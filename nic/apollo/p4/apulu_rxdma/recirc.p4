@@ -2,120 +2,296 @@
 
 action rxlpm1_res_handler()
 {
-    if (capri_p4_intr.recirc_count == 1) {
-        // Write the derived SIP class id to PHV
-        modify_field(rx_to_tx_hdr.sip_classid,
-                     scratch_metadata.field10);
-    } else  {
-        if (capri_p4_intr.recirc_count == 2)
-        {
-            // Write the derived TAG class id to PHV
-            if (p4_to_rxdma.rx_packet == 0) {
-                modify_field(rx_to_tx_hdr.dtag_classid,
-                             scratch_metadata.field10);
+    if (lpm_metadata.recirc_count == 0) {
+        // SPORT class id for sacl0
+        modify_field(rx_to_tx_hdr.sport_classid0,
+                     scratch_metadata.field8);
+    } else {
+        if (lpm_metadata.recirc_count == 1) {
+            // SIP class id for sacl0
+            modify_field(rx_to_tx_hdr.sip_classid0,
+                         scratch_metadata.field10);
+        } else {
+            if (lpm_metadata.recirc_count == 2) {
+                // SPORT class id for sacl1
+                modify_field(rx_to_tx_hdr.sport_classid1,
+                             scratch_metadata.field8);
+
             } else {
-                modify_field(rx_to_tx_hdr.stag_classid,
+                if (lpm_metadata.recirc_count == 3) {
+                    // SIP class id for sacl1
+                    modify_field(rx_to_tx_hdr.sip_classid1,
+                                 scratch_metadata.field10);
+                } else {
+                    if (lpm_metadata.recirc_count == 4) {
+                        // SPORT class id for sacl2
+                        modify_field(rx_to_tx_hdr.sport_classid2,
+                                     scratch_metadata.field8);
+                    } else {
+                        if (lpm_metadata.recirc_count == 5) {
+                            // SIP class id for sacl2
+                            modify_field(rx_to_tx_hdr.sip_classid2,
+                                         scratch_metadata.field10);
+                        } else {
+                            if (lpm_metadata.recirc_count == 6) {
+                                // SPORT class id for sacl3
+                                modify_field(rx_to_tx_hdr.sport_classid3,
+                                             scratch_metadata.field8);
+                            } else {
+                                if (lpm_metadata.recirc_count == 7) {
+                                    // SIP class id for sacl3
+                                    modify_field(rx_to_tx_hdr.sip_classid3,
+                                                 scratch_metadata.field10);
+                                } else {
+                                    if (lpm_metadata.recirc_count == 8) {
+                                        // SPORT class id for sacl4
+                                        modify_field(rx_to_tx_hdr.sport_classid4,
+                                                     scratch_metadata.field8);
+                                    } else {
+                                        if (lpm_metadata.recirc_count == 9) {
+                                            // SIP class id for sacl4
+                                            modify_field(rx_to_tx_hdr.sip_classid4,
+                                                         scratch_metadata.field10);
+                                        } else {
+                                            if (lpm_metadata.recirc_count == 10) {
+                                                // SPORT class id for sacl5
+                                                modify_field(rx_to_tx_hdr.sport_classid5,
+                                                             scratch_metadata.field8);
+                                            } else {
+                                                // SIP class id for sacl5
+                                                modify_field(rx_to_tx_hdr.sip_classid5,
+                                                             scratch_metadata.field10);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Disable further lookups for this LPM
+    modify_field(p4_to_rxdma.lpm1_enable, FALSE);
+}
+
+action rxlpm2_res_handler()
+{
+    if (lpm_metadata.recirc_count == 0) {
+        // DPORT class id for sacl0
+        modify_field(rx_to_tx_hdr.dport_classid0,
+                     scratch_metadata.field10);
+    } else {
+        if (lpm_metadata.recirc_count == 1) {
+            // DIP class id for sacl0
+            modify_field(rx_to_tx_hdr.dip_classid0,
+                         scratch_metadata.field10);
+        } else {
+            if (lpm_metadata.recirc_count == 2) {
+                // DPORT class id for sacl1
+                modify_field(rx_to_tx_hdr.dport_classid1,
                              scratch_metadata.field10);
+
+            } else {
+                if (lpm_metadata.recirc_count == 3) {
+                    // DIP class id for sacl1
+                    modify_field(rx_to_tx_hdr.dip_classid1,
+                                 scratch_metadata.field10);
+                } else {
+                    if (lpm_metadata.recirc_count == 4) {
+                        // DPORT class id for sacl2
+                        modify_field(rx_to_tx_hdr.dport_classid2,
+                                     scratch_metadata.field10);
+                    } else {
+                        if (lpm_metadata.recirc_count == 5) {
+                            // DIP class id for sacl2
+                            modify_field(rx_to_tx_hdr.dip_classid2,
+                                         scratch_metadata.field10);
+                        } else {
+                            if (lpm_metadata.recirc_count == 6) {
+                                // DPORT class id for sacl3
+                                modify_field(rx_to_tx_hdr.dport_classid3,
+                                             scratch_metadata.field10);
+                            } else {
+                                if (lpm_metadata.recirc_count == 7) {
+                                    // DIP class id for sacl3
+                                    modify_field(rx_to_tx_hdr.dip_classid3,
+                                                 scratch_metadata.field10);
+                                } else {
+                                    if (lpm_metadata.recirc_count == 8) {
+                                        // DPORT class id for sacl4
+                                        modify_field(rx_to_tx_hdr.dport_classid4,
+                                                     scratch_metadata.field10);
+                                    } else {
+                                        if (lpm_metadata.recirc_count == 9) {
+                                            // DIP class id for sacl4
+                                            modify_field(rx_to_tx_hdr.dip_classid4,
+                                                         scratch_metadata.field10);
+                                        } else {
+                                            if (lpm_metadata.recirc_count == 10) {
+                                                // DPORT class id for sacl5
+                                                modify_field(rx_to_tx_hdr.dport_classid5,
+                                                             scratch_metadata.field10);
+                                            } else {
+                                                // DIP class id for sacl5
+                                                modify_field(rx_to_tx_hdr.dip_classid5,
+                                                             scratch_metadata.field10);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Disable further lookups for this LPM
+    modify_field(p4_to_rxdma.lpm2_enable, FALSE);
+}
+
+action setup_lpm_dport_sport()
+{
+    if (lpm_metadata.sacl_base_addr != 0) {
+        // Setup LPM1 for SPORT lookup
+        modify_field(lpm_metadata.lpm1_base_addr, lpm_metadata.sacl_base_addr +
+                     SACL_SPORT_TABLE_OFFSET);
+        modify_field(lpm_metadata.lpm1_key, p4_to_rxdma.flow_sport);
+
+        // Setup LPM2 for DPORT lookup
+        modify_field(lpm_metadata.lpm2_base_addr, lpm_metadata.sacl_base_addr +
+                     SACL_PROTO_DPORT_TABLE_OFFSET);
+        modify_field(lpm_metadata.lpm2_key, (p4_to_rxdma.flow_dport |
+                                            (p4_to_rxdma.flow_proto << 16)));
+
+        // Enable LPMs
+        modify_field(p4_to_rxdma.lpm1_enable, TRUE);
+        modify_field(p4_to_rxdma.lpm2_enable, TRUE);
+
+        // Setup the packet for recirc
+        modify_field(capri_p4_intr.recirc, TRUE);
+    } else {
+        // No more recirc
+        modify_field(capri_p4_intr.recirc, FALSE);
+    }
+}
+
+action setup_lpm_dip_sip()
+{
+    if (lpm_metadata.sacl_base_addr != 0) {
+        // Setup LPM1 for SIP lookup
+        if (p4_to_rxdma.iptype == IPTYPE_IPV4) {
+            modify_field(lpm_metadata.lpm1_base_addr, lpm_metadata.sacl_base_addr +
+                         SACL_IPV4_SIP_TABLE_OFFSET);
+        } else {
+            modify_field(lpm_metadata.lpm1_base_addr, lpm_metadata.sacl_base_addr +
+                         SACL_IPV6_SIP_TABLE_OFFSET);
+        }
+
+        modify_field(lpm_metadata.lpm1_key, p4_to_rxdma.flow_src);
+
+        // Setup LPM2 for DIP lookup
+        modify_field(lpm_metadata.lpm2_base_addr, lpm_metadata.sacl_base_addr +
+                     SACL_DIP_TABLE_OFFSET);
+        modify_field(lpm_metadata.lpm2_key, p4_to_rxdma.flow_dst);
+
+        // Enable LPMs
+        modify_field(p4_to_rxdma.lpm1_enable, TRUE);
+        modify_field(p4_to_rxdma.lpm2_enable, TRUE);
+
+        // Setup the packet for recirc
+        modify_field(capri_p4_intr.recirc, TRUE);
+    } else {
+        // No more recirc
+        modify_field(capri_p4_intr.recirc, FALSE);
+    }
+}
+
+action setup_recirc1()
+{
+    if (lpm_metadata.recirc_count == 1) {
+        setup_lpm_dport_sport();
+    } else {
+        if (lpm_metadata.recirc_count == 3) {
+            setup_lpm_dport_sport();
+        } else {
+            if (lpm_metadata.recirc_count == 5) {
+                setup_lpm_dport_sport();
+            } else {
+                if (lpm_metadata.recirc_count == 7) {
+                    setup_lpm_dport_sport();
+                } else {
+                    if (lpm_metadata.recirc_count == 9) {
+                        setup_lpm_dport_sport();
+                    } else {
+                        if (lpm_metadata.recirc_count == 11) {
+                            // No more recirc
+                            modify_field(capri_p4_intr.recirc, FALSE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Clear the hw controlled ttl
+    modify_field(capri_p4_intr.recirc_count, 0);
+    // Increment the TTL
+    modify_field(lpm_metadata.recirc_count, lpm_metadata.recirc_count + 1);
+}
+
+@pragma stage 7
+table setup_recirc1 {
+    actions {
+        setup_recirc1;
+    }
+}
+
+action setup_recirc2()
+{
+    if (lpm_metadata.recirc_count == 0) {
+        setup_lpm_dip_sip();
+        modify_field(lpm_metadata.sacl_base_addr, rx_to_tx_hdr.sacl_base_addr1);
+    } else {
+        if (lpm_metadata.recirc_count == 2) {
+            setup_lpm_dip_sip();
+            modify_field(lpm_metadata.sacl_base_addr, rx_to_tx_hdr.sacl_base_addr2);
+        } else {
+            if (lpm_metadata.recirc_count == 4) {
+                setup_lpm_dip_sip();
+                modify_field(lpm_metadata.sacl_base_addr, rx_to_tx_hdr.sacl_base_addr3);
+            } else {
+                if (lpm_metadata.recirc_count == 6) {
+                    setup_lpm_dip_sip();
+                    modify_field(lpm_metadata.sacl_base_addr, rx_to_tx_hdr.sacl_base_addr4);
+                } else {
+                    if (lpm_metadata.recirc_count == 8) {
+                        setup_lpm_dip_sip();
+                        modify_field(lpm_metadata.sacl_base_addr, rx_to_tx_hdr.sacl_base_addr5);
+                    } else {
+                        if (lpm_metadata.recirc_count == 10) {
+                            setup_lpm_dip_sip();
+                            modify_field(lpm_metadata.sacl_base_addr, 0);
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-action rxlpm2_res_handler()
-{
-    if (capri_p4_intr.recirc_count == 0) {
-        // Write the derived DPORT class id to PHV
-        modify_field(rx_to_tx_hdr.dport_classid,
-                     scratch_metadata.field10);
-
-        // Setup key for SPORT lookup on LPM2
-        modify_field(lpm_metadata.lpm2_key,
-                     p4_to_rxdma.flow_sport);
-
-        // Setup root address of SPORT lookup on LPM2
-        modify_field(lpm_metadata.lpm2_base_addr,
-                     rx_to_tx_hdr.sacl_base_addr +
-                     SACL_SPORT_TABLE_OFFSET);
-        // Set next address same as the root address
-        modify_field(lpm_metadata.lpm2_next_addr,
-                     rx_to_tx_hdr.sacl_base_addr +
-                     SACL_SPORT_TABLE_OFFSET);
-    } else {
-        if (capri_p4_intr.recirc_count == 1) {
-            // Write the derived DIP result to PHV
-            modify_field(rx_to_tx_hdr.dip_classid,
-                         scratch_metadata.field10);
-        } else {
-            // Write the derived METER result to PHV
-            modify_field(rx_to_tx_hdr.meter_result,
-                         scratch_metadata.field10);
-        }
-    }
-}
-
-action sport_res_handler()
-{
-    // Write the derived SPORT result to PHV
-    modify_field(rx_to_tx_hdr.sport_classid,
-                 scratch_metadata.field10);
-}
-
-action nop_res_handler()
-{
-}
-
-action setup_recirc()
-{
-    if (capri_p4_intr.recirc_count == 0) {
-        // Setup key for SIP lookup on LPM1
-        modify_field(lpm_metadata.lpm1_key, p4_to_rxdma.flow_src);
-
-        // Setup root address for SIP lookup on LPM1
-        if (p4_to_rxdma.iptype == IPTYPE_IPV4) {
-            modify_field(lpm_metadata.lpm1_base_addr,
-                         rx_to_tx_hdr.sacl_base_addr +
-                         SACL_IPV4_SIP_TABLE_OFFSET);
-        } else {
-            modify_field(lpm_metadata.lpm1_base_addr,
-                         rx_to_tx_hdr.sacl_base_addr +
-                         SACL_IPV6_SIP_TABLE_OFFSET);
-        }
-
-        // Setup key for DIP lookup on LPM2
-        modify_field(lpm_metadata.lpm2_key, p4_to_rxdma.flow_dst);
-        // Setup root address of DIP lookup on LPM2
-        modify_field(lpm_metadata.lpm2_base_addr,
-                     rx_to_tx_hdr.sacl_base_addr +
-                     SACL_DIP_TABLE_OFFSET);
-
-        // Enable LPM1
-        modify_field(p4_to_rxdma.lpm1_enable, TRUE);
-
-        // Recirc the packet
-        modify_field(capri_p4_intr.recirc, 1);
-    } else {
-        // Setup key for TAG Lookup on LPM1
-        modify_field(lpm_metadata.lpm1_key, rx_to_tx_hdr.remote_ip);
-        // Setup root address of TAG lookup on LPM1
-        modify_field(lpm_metadata.lpm1_base_addr, p4_to_rxdma.tag_root);
-
-        // Setup key for METER Lookup on LPM2
-        modify_field(lpm_metadata.lpm2_key, rx_to_tx_hdr.remote_ip);
-        // Setup root address of METER lookup on LPM2
-        modify_field(lpm_metadata.lpm2_base_addr, lpm_metadata.meter_base_addr);
-
-        // Recirc the packet
-        modify_field(capri_p4_intr.recirc, 1);
-    }
-}
-
 @pragma stage 7
-table setup_recirc {
+table setup_recirc2 {
     actions {
-        setup_recirc;
+        setup_recirc2;
     }
 }
 
 control recirc {
-    apply(setup_recirc);
+    apply(setup_recirc1);
+    apply(setup_recirc2);
 }

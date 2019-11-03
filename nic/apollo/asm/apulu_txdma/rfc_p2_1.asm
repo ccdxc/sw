@@ -15,7 +15,7 @@ rfc_p2_1:
     /* Access the classid at the index */
     tblrdp     r7, r7, 0, SACL_P2_CLASSID_WIDTH
     /* Load sacl base addr to r1 */
-    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr
+    add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr0
     /* Is this the first pass? */
     seq        c1, k.capri_p4_intr_recirc_count, 0
     /* If so, add SACL_P3_2_TABLE_OFFSET to sacl base address. */

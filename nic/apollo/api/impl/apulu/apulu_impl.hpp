@@ -20,9 +20,6 @@
 // system wide blackhole nexthop
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
 
-// nexthop types
-#define PDS_IMPL_NH_TYPE_PEER_VPC_MASK               ROUTE_RESULT_TYPE_PEER_VPC_MASK
-
 // reserved VNIC h/w id
 #define PDS_IMPL_RSVD_VNIC_HW_ID               0
 

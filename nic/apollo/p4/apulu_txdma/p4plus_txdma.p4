@@ -7,7 +7,6 @@
 #include "route.p4"
 #include "rfc.p4"
 #include "dma.p4"
-#include "vnic_info_txdma.p4"
 
 #include "common_txdma_dummy_actions.p4"
 #include "common_txdma.p4"

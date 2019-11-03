@@ -123,9 +123,9 @@ export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
 export NIC_phoebus_P4PD_SOLIBS := p4pd_phoebus
 export NIC_gft16_P4PD_SOLIBS := p4pd_gft16
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
-export NIC_apollo_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
-export NIC_artemis_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
-export NIC_apulu_PDSAPI_IMPL_SOLIBS := pdslpm lpmitree_apulu rfc_apulu sensor trace memhash pdsapi_capri_impl rte_indexer
+export NIC_apollo_PDSAPI_IMPL_SOLIBS := lpmitree_apollo rfc_apollo sensor trace memhash pdsapi_capri_impl
+export NIC_artemis_PDSAPI_IMPL_SOLIBS := lpmitree_artemis rfc_artemis sensor trace memhash pdsapi_capri_impl
+export NIC_apulu_PDSAPI_IMPL_SOLIBS := lpmitree_apulu rfc_apulu sensor trace memhash pdsapi_capri_impl rte_indexer
 
 # ==========================================================================
 #                           Third-party Libs

@@ -49,6 +49,7 @@
 #define NEXTHOP_TYPE_ECMP               1
 #define NEXTHOP_TYPE_TUNNEL             2
 #define NEXTHOP_TYPE_NEXTHOP            3
+#define NEXTHOP_TYPE_NAT                4
 
 /*****************************************************************************/
 /* flow role                                                                 */
@@ -156,13 +157,27 @@
 /*****************************************************************************/
 /* route result type and bit position                                        */
 /*****************************************************************************/
-#define ROUTE_RESULT_TYPE_NEXTHOP                0
-#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_BIT_POS 21
-#define ROUTE_RESULT_TYPE_SVC_TUNNEL_BIT_POS     22
-#define ROUTE_RESULT_TYPE_PEER_VPC_BIT_POS       23
-#define ROUTE_RESULT_TYPE_REM_SVC_TUNNEL_MASK    0x200000
-#define ROUTE_RESULT_TYPE_SVC_TUNNEL_MASK        0x400000
-#define ROUTE_RESULT_TYPE_PEER_VPC_MASK          0x800000
+#define ROUTE_RESULT_NEXTHOP_SIZE            13
+#define ROUTE_RESULT_NHTYPE_SIZE             3
+#define ROUTE_RESULT_METERID_SIZE            16
+#define ROUTE_RESULT_NEXTHOP_MASK            0x1FFF
+#define ROUTE_RESULT_NHTYPE_MASK             0xE000
+#define ROUTE_RESULT_METERID_MASK            0xFFFF0000
+
+#define ROUTE_RESULT_NEXTHOP_START_BIT       0
+#define ROUTE_RESULT_NEXTHOP_SHIFT           ROUTE_RESULT_NEXTHOP_START_BIT
+#define ROUTE_RESULT_NEXTHOP_END_BIT         (ROUTE_RESULT_NEXTHOP_START_BIT +\
+                                              ROUTE_RESULT_NEXTHOP_SIZE - 1)
+
+#define ROUTE_RESULT_NHTYPE_START_BIT        (ROUTE_RESULT_NEXTHOP_END_BIT + 1)
+#define ROUTE_RESULT_NHTYPE_SHIFT            ROUTE_RESULT_NHTYPE_START_BIT
+#define ROUTE_RESULT_NHTYPE_END_BIT          (ROUTE_RESULT_NHTYPE_START_BIT +\
+                                              ROUTE_RESULT_NHTYPE_SIZE - 1)
+
+#define ROUTE_RESULT_METERID_START_BIT       (ROUTE_RESULT_NHTYPE_END_BIT + 1)
+#define ROUTE_RESULT_METERID_SHIFT           ROUTE_RESULT_METERID_START_BIT
+#define ROUTE_RESULT_METERID_END_BIT         (ROUTE_RESULT_METERID_START_BIT +\
+                                              ROUTE_RESULT_METERID_SIZE - 1)
 
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */
@@ -211,6 +226,6 @@
 /*****************************************************************************/
 /* Apulu Pkt memory                                                        */
 /*****************************************************************************/
-#define APULU_PKT_DESC_SHIFT              0
+#define APULU_PKT_DESC_SHIFT              7
 #define APULU_PKT_DESC_SIZE              (1 << APULU_PKT_DESC_SHIFT)
 

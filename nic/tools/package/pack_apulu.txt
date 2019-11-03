@@ -82,7 +82,6 @@ nic/build/$ARCH/$PIPELINE/lib/libpdscore.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsframework.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdspciemgr.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdslpm.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblpmitree_$PIPELINE.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsrfc.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librfc_$PIPELINE.so                 /nic/lib/
