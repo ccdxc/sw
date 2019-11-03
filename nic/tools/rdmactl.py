@@ -333,7 +333,7 @@ class RdmaSQCB0state(Packet):
 
         BitField("spec_enable", 0, 1),
         BitField("skip_pt", 0, 1),
-        BitField("bktrack_marker_in_progress", 0, 1)
+        BitField("bktrack_marker_in_progress", 0, 1),
         BitField("congestion_mgmt_type",0, 2),
         BitField("sqcb0_rsvd2", 0, 3),
     ]
