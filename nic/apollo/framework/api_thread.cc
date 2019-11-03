@@ -21,8 +21,6 @@ namespace api {
 void
 api_thread_init_fn (void *ctxt)
 {
-    sdk::lib::thread *this_thread = (sdk::lib::thread *)ctxt;
-
     api_engine_init();
     sdk::event_thread::rpc_reg_request_handler(API_MSG_ID_BATCH,
                                                api_thread_ipc_batch_cb);

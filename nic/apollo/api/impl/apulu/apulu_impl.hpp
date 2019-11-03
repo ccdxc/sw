@@ -56,6 +56,7 @@ namespace impl {
 {                                                                            \
     memset(data, 0, sizeof(*(data)));                                        \
     (data)->vnic_id = (vnic_hw_id);                                          \
+    (data)->xlate_id = (xlate_idx);                                          \
 }
 
 #define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \
