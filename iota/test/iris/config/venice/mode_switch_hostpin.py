@@ -4,6 +4,7 @@ import time
 import datetime
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
+import iota.test.iris.utils.hal_show as hal_show_utils
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
@@ -60,7 +61,11 @@ def Main(step):
             except:
                 api.Logger.error("Penctl output not in Json format {}".format(cmd.stdout))
                 return api.types.status.FAILURE
-            if out["status"]["transition-phase"] == "VENICE_UNREACHABLE":
+            if not hal_show_utils.IsNaplesForwardingModeClassic(n):
+                api.Logger.info("Dataplane already in HOSTPIN mode. Skipping node [{}] for reboot.".format(n))
+                reboot_nodes.append(n)
+                nodes.remove(n)
+            elif out["status"]["transition-phase"] == "VENICE_UNREACHABLE":
                 api.Logger.info("Reboot pending on node : %s" % n)
                 reboot_nodes.append(n)
                 nodes.remove(n)

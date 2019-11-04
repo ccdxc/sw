@@ -101,3 +101,13 @@ def GetIntfName2LifId_mapping(naples_node):
             intfName2lifId_dict.update({intfName: lifid})
 
     return intfName2lifId_dict
+
+def IsNaplesForwardingModeClassic(naples_node):
+    resp, result = GetHALShowOutput(naples_node, "system forwarding-mode")
+    if not result:
+        api.Logger.critical("unknown response from Naples")
+        return True 
+    cmd = resp.commands[0]
+
+    api.Logger.info("Got Naples forwarding as {}".format(cmd.stdout))
+    return cmd.stdout.find("CLASSIC") >= 0

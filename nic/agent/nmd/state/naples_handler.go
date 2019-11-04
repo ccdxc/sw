@@ -317,6 +317,7 @@ func (n *NMD) handleNetworkModeTransition() error {
 				}
 			}
 			n.config.Status.AdmissionPhase = ""
+			n.config.Status.TransitionPhase = ""
 			n.config.Status.IPConfig = &cmd.IPConfig{}
 			return fmt.Errorf("dynamic mode transition event failed. Err: %v", err)
 		}
