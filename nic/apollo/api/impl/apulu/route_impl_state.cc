@@ -43,15 +43,11 @@ route_table_impl_state::~route_table_impl_state() {
 
 sdk_ret_t
 route_table_impl_state::table_transaction_begin(void) {
-    //v4_idxr_->txn_start();
-    //v6_idxr_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 route_table_impl_state::table_transaction_end(void) {
-    //v4_idxr_->txn_end();
-    //v6_idxr_->txn_end();
     return SDK_RET_OK;
 }
 

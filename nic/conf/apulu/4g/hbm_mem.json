@@ -118,7 +118,7 @@
             "_comment": "(32+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "564K",
             "block_size": "17472B",
-            "max_elements": "32",
+            "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
         {

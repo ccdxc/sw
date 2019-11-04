@@ -32,6 +32,7 @@ typedef enum pds_nh_type_e {
     PDS_NH_TYPE_PEER_VPC        = 6,    ///< VPC id of the peer VPC
     PDS_NH_TYPE_VNIC            = 7,    ///< vnic nexthop
     PDS_NH_TYPE_IP              = 8,    ///< native IP route
+    PDS_NH_TYPE_NAT             = 9,
 } pds_nh_type_t;
 
 /// \brief nexthop specification

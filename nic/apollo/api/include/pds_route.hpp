@@ -27,17 +27,21 @@
 
 /// \brief route
 typedef struct pds_route_s {
-    ip_prefix_t              prefix;     ///< prefix
-    pds_nh_type_t            nh_type;    ///< nexthop type
+    ip_prefix_t              prefix;      ///< prefix
+    pds_nh_type_t            nh_type;     ///< nexthop type
     union {
         // PDS_NH_TYPE_OVERLAY specific data
-        pds_tep_key_t        tep;         ///< nexthop TEP
+        pds_tep_key_t           tep;      ///< nexthop TEP
+        // PDS_NH_TYPE_PDS_NH_TYPE_OVERLAY_ECMP specific data
+        pds_nexthop_group_key_t nh_group; ///< ECMP group
         // PDS_NH_TYPE_PEER_VPC specific data
-        pds_vpc_key_t        vpc;        ///< peer vpc id, in case of vpc peering
+        pds_vpc_key_t           vpc;      ///< peer vpc id
         // one of the possible nexthop types
-        pds_nexthop_key_t    nh;         ///< nexthop key
+        pds_nexthop_key_t       nh;       ///< nexthop key
         // PDS_NH_TYPE_VNIC specific data
-        pds_vnic_key_t       vnic;       ///< vnic nexthop
+        pds_vnic_key_t          vnic;     ///< vnic nexthop
+        // PDS_NH_TYPE_NAT specific data
+        pds_nat_action_t        nat;      ///< NAT action
     };
 } __PACK__ pds_route_t;
 

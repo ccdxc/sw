@@ -13,11 +13,19 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/nexthop_group.hpp"
+#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl.hpp"
-#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
+
+#define PDS_IMPL_ROUTE_NH_ID(type_, val_)                        \
+            (((type_) << ROUTE_RESULT_NHTYPE_SHIFT) | (val_))
+
+#define PDS_IMPL_SRC_NAT_TYPE_SHIFT        4
 
 namespace api {
 namespace impl {
@@ -105,9 +113,10 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_route_table_spec_t    *spec;
     pds_vpc_key_t             vpc_key;
     route_table_t             *rtable;
-    pds_tep_key_t             tep_key;
+    nexthop_group             *nh_group;
     tep_entry                 *tep;
     vpc_entry                 *vpc;
+    vnic_entry                *vnic;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     // allocate memory for the library to build route table
@@ -138,25 +147,42 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
             break;
+
         case PDS_NH_TYPE_OVERLAY:
-#if 0
             // non vpc peering case
-            tep_key.ip_addr = spec->routes[i].nh_ip;
-            tep = tep_db()->find(&tep_key);
+            tep = tep_db()->find(&spec->routes[i].tep);
             if (tep == NULL) {
-                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
-                              "route table %u", ipaddr2str(&tep_key.ip_addr),
+                PDS_TRACE_ERR("TEP %u not found while processing route %s in "
+                              "route table %u", spec->routes[i].tep.id,
                               ippfx2str(&spec->routes[i].prefix), spec->key.id);
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, "
-                            "TEP %s", spec->key.id,
+            rtable->routes[i].nhid =
+                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_TUNNEL,
+                                     ((tep_impl *)(tep->impl()))->hw_id());
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> TEP %s, "
+                            "nh id 0x%x", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].nhid, tep->key2str().c_str());
-#endif
+                            tep->key2str().c_str(), rtable->routes[i].nhid);
             break;
+
+        case PDS_NH_TYPE_OVERLAY_ECMP:
+            nh_group = nexthop_group_db()->find(&spec->routes[i].nh_group);
+            if (nh_group == NULL) {
+                PDS_TRACE_ERR("nexthop group %u not found while processing "
+                              "route %s in route table %u",
+                              spec->routes[i].nh_group.id,
+                              ippfx2str(&rtable->routes[i].prefix),
+                              spec->key.id);
+                ret = SDK_RET_INVALID_ARG;
+                goto cleanup;
+            }
+            rtable->routes[i].nhid =
+                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_ECMP,
+                    ((nexthop_group_impl *)nh_group->impl())->hw_id());
+            break;
+
         case PDS_NH_TYPE_PEER_VPC:
             vpc = vpc_db()->find(&spec->routes[i].vpc);
             if (vpc == NULL) {
@@ -167,13 +193,39 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid =
-                   ((NEXTHOP_TYPE_VPC << ROUTE_RESULT_NHTYPE_SHIFT) | vpc->hw_id());
+            rtable->routes[i].nhid = PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_VPC,
+                                                          vpc->hw_id());
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
-                            "id %u, ", spec->key.id,
+                            "id 0x%x, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
             break;
+
+        case PDS_NH_TYPE_NAT:
+            rtable->routes[i].nhid =
+                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_NAT,
+                    ((spec->routes[i].nat.src_nat << PDS_IMPL_SRC_NAT_TYPE_SHIFT) |
+                     spec->routes[i].nat.dst_nat));
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> NAT, "
+                            "id 0x%x, ", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].nhid);
+            break;
+
+        case PDS_NH_TYPE_VNIC:
+            vnic = vnic_db()->find(&spec->routes[i].vnic);
+            if (vnic == NULL) {
+                 PDS_TRACE_ERR("vnic %u not found while processing route %s in "
+                               "route table %u", spec->routes[i].vnic.id,
+                               ippfx2str(&spec->routes[i].prefix),
+                               spec->key.id);
+                 break;
+            }
+            rtable->routes[i].nhid =
+                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_NEXTHOP,
+                                     ((vnic_impl *)vnic->impl())->nh_idx());
+            break;
+
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
                           "route table %u", spec->routes[i].nh_type,

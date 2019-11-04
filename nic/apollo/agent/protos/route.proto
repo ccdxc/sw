@@ -33,6 +33,9 @@ message Route {
       uint32          VPCId          = 5;
       // Tunnel this prefix is pointing to
       uint32          TunnelId       = 6;
+      // vnic this prefix is pointing to
+      uint32          VnicId         = 7;
+      // TODO: NAT
   }
 }
 

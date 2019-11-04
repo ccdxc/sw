@@ -86,7 +86,7 @@ typedef struct pds_encap_s {
 } pds_encap_t;
 
 static inline char *
-encap2str (const pds_encap_t *encap) 
+encap2str (const pds_encap_t *encap)
 {
     static thread_local char       encap_str[4][20];
     static thread_local uint8_t    encap_str_next = 0;
@@ -112,6 +112,20 @@ encap2str (const pds_encap_t *encap)
     }
     return buf;
 }
+
+/// \brief NAT type
+typedef enum pds_nat_type_e {
+    NAT_TYPE_NONE         = 0,
+    NAT_TYPE_STATIC       = 1,
+    NAT_TYPE_DYNAMIC_ADDR = 2,
+    NAT_TYPE_DYNAMIC_NAPT = 3,
+} pds_nat_type_t;
+
+/// \brief NAT action
+typedef struct pds_nat_action_s {
+    pds_nat_type_t src_nat;
+    pds_nat_type_t dst_nat;
+} pds_nat_action_t;
 
 /// \brief    VPC key
 typedef struct pds_vpc_key_s {

@@ -102,6 +102,8 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
         tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
         tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
     } else {
+        PDS_TRACE_ERR("Unsupported nh type %u in TEP %u spec",
+                      spec->nh_type, spec->key.id);
         SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
     }
     if (spec->remote_ip.af == IP_AF_IPV4) {

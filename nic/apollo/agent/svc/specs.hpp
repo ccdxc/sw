@@ -1950,16 +1950,25 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         switch (proto_route.nh_case()) {
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
-            api_spec->routes[i].tep.id = proto_route.tunnelid();
             api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
+            api_spec->routes[i].tep.id = proto_route.tunnelid();
             break;
-        case pds::Route::kNexthopId:
-            api_spec->routes[i].nh.id= proto_route.nexthopid();
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
+        case pds::Route::kNexthopGroupId:
+            // NOTE: UNDERLAY_ECMP is not done in the datapath
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+            api_spec->routes[i].nh_group.id = proto_route.nexthopgroupid();
             break;
         case pds::Route::kVPCId:
             api_spec->routes[i].vpc.id = proto_route.vpcid();
             api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
+            break;
+        case pds::Route::kVnicId:
+            api_spec->routes[i].vnic.id = proto_route.vnicid();
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_VNIC;
+            break;
+        case pds::Route::kNexthopId:
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
+            api_spec->routes[i].nh.id = proto_route.nexthopid();
             break;
         default:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
@@ -1990,15 +1999,28 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         pds::Route *route = proto_spec->add_routes();
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
                                      &api_spec->routes[i].prefix);
-        if (api_spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
-            route->set_vpcid(api_spec->routes[i].vpc.id);
-        } else if (api_spec->routes[i].nh_type == PDS_NH_TYPE_OVERLAY) {
+        switch (api_spec->routes[i].nh_type) {
+        case PDS_NH_TYPE_OVERLAY:
             route->set_tunnelid(api_spec->routes[i].tep.id);
-        } else if (api_spec->routes[i].nh_type == PDS_NH_TYPE_IP) {
+            break;
+        case PDS_NH_TYPE_OVERLAY_ECMP:
+            route->set_nexthopgroupid(api_spec->routes[i].nh_group.id);
+            break;
+        case PDS_NH_TYPE_PEER_VPC:
+            route->set_vpcid(api_spec->routes[i].vpc.id);
+            break;
+        case PDS_NH_TYPE_VNIC:
+            route->set_vnicid(api_spec->routes[i].vnic.id);
+            break;
+        case PDS_NH_TYPE_IP:
             route->set_nexthopid(api_spec->routes[i].nh.id);
+            break;
+        case PDS_NH_TYPE_BLACKHOLE:
+        default:
+            // blackhole nexthop
+            break;
         }
     }
-
     return;
 }
 
