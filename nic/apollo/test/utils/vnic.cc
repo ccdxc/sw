@@ -131,11 +131,11 @@ bool
 vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     mac_addr_t mac = {0};
 
-    if (!api::pdsencap_isequal(&vnic_encap, &spec->vnic_encap))
+    if (!pdsencap_isequal(&vnic_encap, &spec->vnic_encap))
         return false;
 
     if (apollo()) {
-        if (!api::pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
+        if (!pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
             return false;
 
         if (rsc_pool_id != spec->rsc_pool_id)

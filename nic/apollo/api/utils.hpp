@@ -34,50 +34,6 @@ pick_older_epoch_idx (uint32_t epoch1, uint32_t epoch2)
     return 0;
 }
 
-/// \brief check if given two encaps are same
-///
-/// \param[in] encap1    encap1 to compare
-/// \param[in] encap2    encap2 to compare
-/// \returns TRUE if value of encap1 & encap2 are equal, else FALSE
-static inline bool
-pdsencap_isequal (const pds_encap_t *encap1, const pds_encap_t *encap2)
-{
-    // compare encap type
-    if (encap1->type != encap2->type) {
-        return FALSE;
-    }
-    // compare encap value
-    switch (encap1->type) {
-    case PDS_ENCAP_TYPE_DOT1Q:
-        if (encap1->val.vlan_tag != encap2->val.vlan_tag) {
-            return FALSE;
-        }
-        break;
-    case PDS_ENCAP_TYPE_QINQ:
-        if ((encap1->val.qinq_tag.c_tag != encap2->val.qinq_tag.c_tag) ||
-            (encap1->val.qinq_tag.s_tag != encap2->val.qinq_tag.s_tag)) {
-            return FALSE;
-        }
-        break;
-    case PDS_ENCAP_TYPE_MPLSoUDP:
-        if (encap1->val.mpls_tag != encap2->val.mpls_tag) {
-            return FALSE;
-        }
-        break;
-    case PDS_ENCAP_TYPE_VXLAN:
-        if (encap1->val.vnid != encap2->val.vnid) {
-            return FALSE;
-        }
-        break;
-    default:
-        if (encap1->val.value != encap2->val.value) {
-            return FALSE;
-        }
-        break;
-    }
-    return TRUE;
-}
-
 }    // namespace api
 
 #endif    /** __UTILS_HPP__ */

@@ -14,7 +14,6 @@
 #include <iostream>
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/api/encap_utils.hpp"
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
@@ -29,7 +28,7 @@ operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
         << " v6_in_pol: " << spec->ing_v6_policy.id
         << " v4_eg_pol: " << spec->egr_v4_policy.id
         << " v6_eg_pol: " << spec->egr_v6_policy.id
-        << " fabric encap: " << pds_encap2str(spec->fabric_encap);
+        << " fabric encap: " << pds_encap2str(&spec->fabric_encap);
     return os;
 }
 

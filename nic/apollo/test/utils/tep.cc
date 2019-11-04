@@ -123,7 +123,7 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
     if (this->spec.type != spec->type)
         return false;
 
-    if (!api::pdsencap_isequal(&tep_encap, &spec_encap))
+    if (!pdsencap_isequal(&tep_encap, &spec_encap))
         return false;
 
     if (this->spec.nat != spec->nat)
@@ -132,7 +132,7 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
     if (this->spec.remote_svc != spec->remote_svc)
         return false;
 
-    if (!api::pdsencap_isequal(&tep_remote_svc_encap, &spec_remote_svc_encap))
+    if (!pdsencap_isequal(&tep_remote_svc_encap, &spec_remote_svc_encap))
         return false;
 
     if (!IPADDR_EQ(&remote_svc_public_ip, &spec_remote_svc_public_ip))
@@ -179,7 +179,7 @@ void sample_tep_validate(uint32_t tep_id, std::string ip_str,
     many_read(k_tep_feeder);
 }
 
-void sample_tep_teardown(pds_batch_ctxt_t bctxt, uint32_t tep_id, 
+void sample_tep_teardown(pds_batch_ctxt_t bctxt, uint32_t tep_id,
                          std::string ip_str, uint32_t num_tep) {
     k_tep_feeder.init(tep_id, ip_str, num_tep);
     many_delete(bctxt, k_tep_feeder);

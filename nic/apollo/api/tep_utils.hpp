@@ -14,7 +14,6 @@
 #include <iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/api/encap_utils.hpp"
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_key_t *key) {
@@ -31,9 +30,9 @@ operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
        << " DIPi: " << spec->ip_addr
        << " dmac: " << macaddr2str(spec->mac)
        << " nat: " << spec->nat
-       << " encap: " << pds_encap2str(spec->encap)
+       << " encap: " << pds_encap2str(&spec->encap)
        << " remote svc: " << spec->remote_svc
-       << " remote svc encap: " << pds_encap2str(spec->remote_svc_encap)
+       << " remote svc encap: " << pds_encap2str(&spec->remote_svc_encap)
        << " remote svc public ip: " << spec->remote_svc_public_ip
        << " nh type: " << spec->nh_type;
     switch (spec->nh_type) {

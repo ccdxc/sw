@@ -86,7 +86,7 @@ typedef struct pds_encap_s {
 } pds_encap_t;
 
 static inline char *
-encap2str (const pds_encap_t *encap)
+pds_encap2str (const pds_encap_t *encap)
 {
     static thread_local char       encap_str[4][20];
     static thread_local uint8_t    encap_str_next = 0;

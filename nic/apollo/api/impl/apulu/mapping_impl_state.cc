@@ -180,12 +180,12 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
         encap.type = PDS_ENCAP_TYPE_NONE;
     }
     nexthop_type_to_string(nexthop_type, mapping_data.nexthop_type);
-    
+
     dprintf(fd, "%-7u%-7u%-8s%-7u%-40s%-40s%-16s%-18s\n",
             vpc_id, data->vnic_id, nexthop_type.c_str(),
             mapping_data.nexthop_id,
             ipaddr2str(&private_ip), ipaddr2str(&public_ip),
-            encap2str(&encap), macaddr2str(overlay_mac));
+            pds_encap2str(&encap), macaddr2str(overlay_mac));
 }
 
 /// \brief     callback function to dump remote mapping entries
@@ -233,12 +233,12 @@ remote_mapping_dump_cb (sdk_table_api_params_t *params)
         encap.type = PDS_ENCAP_TYPE_NONE;
     }
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
-    
+
     dprintf(fd, "%-7u%-7s%-8s%-7u%-40s%-40s%-16s%-18s\n",
             vpc_id, "-", nexthop_type.c_str(),
             mapping_data->nexthop_id,
             ipaddr2str(&private_ip), "-",
-            encap2str(&encap), macaddr2str(overlay_mac));
+            pds_encap2str(&encap), macaddr2str(overlay_mac));
 }
 
 sdk_ret_t
@@ -298,7 +298,7 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             mapping_swkey_t       mapping_key = { 0 };
             mapping_appdata_t     mapping_data = { 0 };
             sdk_ret_t                   ret;
-            
+
             PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
                                            mapping_args->key.vpc.id,
                                            &mapping_args->key.ip_addr);

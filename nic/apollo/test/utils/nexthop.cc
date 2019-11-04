@@ -3,7 +3,6 @@
 //
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/utils.hpp"

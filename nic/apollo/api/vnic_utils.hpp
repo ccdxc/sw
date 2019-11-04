@@ -13,7 +13,6 @@
 
 #include <iostream>
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/api/encap_utils.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 
 inline std::ostream&
@@ -22,13 +21,13 @@ operator<<(std::ostream& os, const pds_vnic_key_t *key) {
     return os;
 }
 
-inline std::ostream& 
+inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
     os << &spec->key
        << " vpc id: " << spec->vpc.id
        << " subnet id: " << spec->subnet.id
-       << " vnic encap: " << pds_encap2str(spec->vnic_encap)
-       << " fabric encap: " << pds_encap2str(spec->fabric_encap)
+       << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
+       << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
        << " resource pool id: " << spec->rsc_pool_id
        << " src dst check: " << spec->src_dst_check
@@ -46,7 +45,7 @@ operator<<(std::ostream& os, const pds_vnic_status_t *status) {
     return os;
 }
 
-inline std::ostream& 
+inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_stats_t *stats) {
     os << " rx pkts: " << stats->rx_pkts
        << " rx bytes: " << stats->rx_bytes

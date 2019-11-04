@@ -65,7 +65,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         v6rtnum = 0;
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
-            if (apollo()) {
+            if (apollo() || apulu()) {
                 // In apollo, use TEPs as nexthop
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 120);
@@ -122,7 +122,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         route_table.key.id = i;
         for (uint32_t j = 0; j < num_routes; j++) {
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
-            if (apollo()) {
+            if (apollo() || apulu()) {
                 route_table.routes[j].prefix.len = 24;
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
@@ -161,7 +161,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                                 route_table.key.id, rv);
     }
 
-    if (g_test_params.dual_stack) {
+    if (g_test_params.dual_stack && !apulu()) {
         rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets, num_routes,
                                     tep_pfx, route_pfx, v6_route_pfx, num_nh);
     }
@@ -1534,20 +1534,22 @@ create_objects (void)
         }
     }
 
-    if (!apulu()) {
-        // create route tables
-        ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
-                                  g_test_params.num_subnets,
-                                  g_test_params.num_routes,
-                                  &g_test_params.tep_pfx, &g_test_params.route_pfx,
-                                  &g_test_params.v6_route_pfx,
-                                  g_test_params.num_nh,
-                                  TESTAPP_MAX_SERVICE_TEP,
-                                  TESTAPP_MAX_REMOTE_SERVICE_TEP);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create route tables
+    ret = create_route_tables(g_test_params.num_teps,
+                              g_test_params.num_vpcs,
+                              g_test_params.num_subnets,
+                              g_test_params.num_routes,
+                              &g_test_params.tep_pfx,
+                              &g_test_params.route_pfx,
+                              &g_test_params.v6_route_pfx,
+                              g_test_params.num_nh,
+                              TESTAPP_MAX_SERVICE_TEP,
+                              TESTAPP_MAX_REMOTE_SERVICE_TEP);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
+    if (!apulu()) {
         // create security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
