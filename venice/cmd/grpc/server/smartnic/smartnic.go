@@ -280,11 +280,13 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*clu
 				recorder.Event(evtType, msg, updObj)
 				log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
 			}
+		}
 
-			// Ignore the time-stamp provided by NMD and replace it with our own.
-			// This will help mitigating issues due to clock misalignments between Venice and NAPLES
-			// As long as it gets periodic updates, CMD is happy.
-			// If it happens to process an old message by mistake, the next one will correct it.
+		// Ignore the time-stamp provided by NMD and replace it with our own.
+		// This will help mitigating issues due to clock misalignments between Venice and NAPLES
+		// As long as it gets periodic updates, CMD is happy.
+		// If it happens to process an old message by mistake, the next one will correct it.
+		if updHealthCond != nil {
 			updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 		}
 
