@@ -34,6 +34,7 @@ func NewVCHStore(ctx context.Context, stateMgr *statemgr.Statemgr, inbox <-chan 
 
 // Run starts a go func that processes updates sent on the input channel
 func (v *VCHStore) Run() {
+	v.Log.Infof("Running store")
 	go v.run()
 }
 

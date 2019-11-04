@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 func main() {
@@ -97,6 +99,7 @@ func main() {
 	defer evtsRecorder.Close()
 
 	r := resolver.New(&resolver.Config{Name: globals.OrchHub, Servers: strings.Split(*resolverURLs, ",")})
+	tsdb.Init(context.Background(), &tsdb.Opts{})
 
 	opts := orchhub.Opts{
 		VcList:    *vcList,

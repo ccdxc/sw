@@ -13,9 +13,12 @@ import (
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+const configWatcherQueueLen = 32
 
 // Opts specifies the config for OrchHub
 type Opts struct {
@@ -45,7 +48,6 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 		opts.Logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
 		opts.Logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
 	}
-
 	watcherOption := rpcserver.WithModuleWatcher(module.GetWatcher(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.OrchHub), globals.APIServer, opts.Resolver, opts.Logger, moduleChangeCb))
 
 	// add diagnostics service
@@ -54,14 +56,18 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 	// Start grpc server
 	server, err := rpcserver.NewOrchServer(opts.ListenURL, diagOption, watcherOption)
 	if err != nil {
-		log.Errorf("OrchServer start failed %v", err)
+		opts.Logger.Errorf("OrchServer start failed %v", err)
 		return nil, err
 	}
 
-	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, opts.Resolver, opts.Logger)
+	instanceMgrCh := make(chan *kvstore.WatchEvent, configWatcherQueueLen)
+	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, opts.Resolver, opts.Logger, instanceMgrCh)
+	if err != nil {
+		opts.Logger.Errorf("Failed to create state manager. Err: %v", err)
+		return nil, err
+	}
 
-	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger)
-
+	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh)
 	if instance == nil || err != nil {
 		opts.Logger.Errorf("Failed to create instance manager. Err : %v", err)
 	}

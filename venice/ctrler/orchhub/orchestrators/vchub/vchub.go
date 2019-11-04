@@ -1,9 +1,8 @@
 package vchub
 
 import (
-	"fmt"
+	"net/url"
 
-	"github.com/vmware/govmomi/vim25/soap"
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
@@ -12,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/store"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,21 +23,23 @@ const (
 type VCHub struct {
 	// Needed so that VCHub can update its Orchestrator
 	// object status (connection status, etc..)
-	configMeta *api.ObjectMeta
-	store      *store.VCHStore
-	probe      *vcprobe.VCProbe
+	configMeta   *api.ObjectMeta
+	store        *store.VCHStore
+	probe        *vcprobe.VCProbe
+	vcOpsChannel chan *kvstore.WatchEvent
 }
 
 // LaunchVCHub starts VCHub
 func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger) *VCHub {
 	logger.Infof("VCHub instance for %s is starting...", config.GetName())
 
-	vc := fmt.Sprintf("https://%s:%s@%s/sdk", config.Spec.Credentials.UserName, config.Spec.Credentials.Password, config.Spec.URI)
-	vcURL, err := soap.ParseURL(vc)
-	if err != nil {
-		logger.Errorf("Failed to parse VCenter URL [%v]. Err : %v", vc, err)
-		vcURL = nil
+	vcURL := &url.URL{
+		Scheme: "https",
+		Host:   config.Spec.URI,
+		Path:   "/sdk",
 	}
+
+	vcURL.User = url.UserPassword(config.Spec.Credentials.UserName, config.Spec.Credentials.Password)
 
 	vcReadCh := make(chan defs.Probe2StoreMsg, storeQSize)
 	vcWriteCh := make(chan defs.Store2ProbeMsg, storeQSize)
@@ -46,6 +48,11 @@ func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator
 
 	// Pass in statemgr so it can update config connection status status
 	vcp := vcprobe.NewVCProbe(config.GetName(), vcURL, vcReadCh, vcWriteCh, stateMgr, logger)
+	err := vcp.Start()
+	if err != nil {
+		log.Errorf("Failed to start vcprobe. Err : %v", err)
+		return nil
+	}
 	return &VCHub{
 		configMeta: &config.ObjectMeta,
 		store:      vchStore,

@@ -58,6 +58,7 @@ func (v *VCProbe) Start() error {
 	if v.cancel != nil {
 		return errors.New("Already started")
 	}
+
 	v.ctx, v.cancel = context.WithCancel(context.Background())
 	// Connect and log in to vCenter
 	c, err := govmomi.NewClient(v.ctx, v.vcURL, true)

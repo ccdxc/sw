@@ -480,7 +480,6 @@ testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + nu
 createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip, args.nettype)
 if not args.skipnode0:
     testMgmtNode.startNode()
-    #vcNode.startNode()
     if args.deployvc:
         runCommand("""docker run --dns-search my.dummy -td -p 8989:8989 -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} pen-vcsim:latest /bin/sh """.format(args.vc_ip, "vc", "vc"))
     copyK8sAccessCredentials()

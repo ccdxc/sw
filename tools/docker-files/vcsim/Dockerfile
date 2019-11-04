@@ -5,5 +5,5 @@ RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/community >> /etc/a
 RUN apk update
 RUN apk add curl bash git make linux-headers gcc openssh
 RUN go get -u github.com/vmware/govmomi/govc
-RUN go get -u github.com/vmware/govmomi/vcsim 
-ENTRYPOINT ["/go/bin/vcsim"]
+RUN go get -u github.com/vmware/govmomi/vcsim
+ENTRYPOINT ["/go/bin/vcsim","-l",":8989", "-trace=true"]

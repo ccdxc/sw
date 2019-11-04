@@ -4,35 +4,40 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
-	mockapi "github.com/pensando/sw/api/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	mocks "github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/store/mocks"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 var (
-	logger = log.SetConfig(log.GetDefaultConfig("spyglass_integ_test"))
+	logger = log.SetConfig(log.GetDefaultConfig("vcstore_integ_test"))
 )
+
+func newStateManager() (*statemgr.Statemgr, error) {
+	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return stateMgr, nil
+}
 
 func TestStoreRun(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
 	testCases := []struct {
-		name      string
-		events    []defs.Probe2StoreMsg
-		setupMock func(*mocks.MockAPIClient)
+		name   string
+		events []defs.Probe2StoreMsg
+		verify func(*statemgr.Statemgr)
 	}{
 		{
 			name: "basic workload create",
@@ -43,7 +48,7 @@ func TestStoreRun(t *testing.T) {
 					Originator: "127.0.0.1:8990",
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -56,11 +61,10 @@ func TestStoreRun(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get workload. Err: %v", err)
+				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -102,7 +106,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -135,11 +139,11 @@ func TestStoreRun(t *testing.T) {
 						},
 					},
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				wT := w.Workload
+				Assert(t, err == nil, "Failed to get workload")
+				Assert(t, wT.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -147,7 +151,7 @@ func TestStoreRun(t *testing.T) {
 			events: []defs.Probe2StoreMsg{
 				{
 					VcObject:   defs.VirtualMachine,
-					Key:        "virtualmachine-41",
+					Key:        "virtualmachine-40",
 					Originator: "127.0.0.1:8990",
 					Changes: []types.PropertyChange{
 						types.PropertyChange{
@@ -160,9 +164,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-virtualmachine-40",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -172,7 +176,7 @@ func TestStoreRun(t *testing.T) {
 						APIVersion: "v1",
 					},
 					ObjectMeta: api.ObjectMeta{
-						Name: "127.0.0.1:8990-virtualmachine-41",
+						Name: "127.0.0.1:8990-virtualmachine-40",
 						Labels: map[string]string{
 							"vm-name": "test-vm",
 						},
@@ -181,11 +185,13 @@ func TestStoreRun(t *testing.T) {
 					},
 					Spec: workload.WorkloadSpec{},
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				wT := w.Workload
+				Assert(t, err == nil, "Failed to get workload")
+				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
+				Assert(t, wT.ObjectMeta.Labels["vm-name"] == expWorkload.ObjectMeta.Labels["vm-name"], "workloads are not same. Expected [%v]. Got [%v]", expWorkload, wT)
 			},
 		},
 		{
@@ -209,7 +215,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -225,11 +231,11 @@ func TestStoreRun(t *testing.T) {
 						HostName: "hostsystem-21",
 					},
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-				mWorkload.EXPECT().Create(gomock.Any(), expWorkload).Return(nil, nil)
+
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get workload")
+				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -253,7 +259,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -277,10 +283,12 @@ func TestStoreRun(t *testing.T) {
 						HostName: "hostsystem-21",
 					},
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
-				mWorkload.EXPECT().Update(gomock.Any(), expWorkload).Return(nil, nil)
+
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get workload")
+				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
+				Assert(t, w.ObjectMeta.Name == existingWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -304,7 +312,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -320,9 +328,11 @@ func TestStoreRun(t *testing.T) {
 						HostName: "hostsystem-21",
 					},
 				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
+
+				workloadAPI := s.Controller().Workload()
+				w, err := workloadAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get workload")
+				Assert(t, w.ObjectMeta.Name == existingWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -340,26 +350,15 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-				existingWorkload := &workload.Workload{
-					TypeMeta: api.TypeMeta{
-						Kind:       "Workload",
-						APIVersion: "v1",
-					},
-					ObjectMeta: *expMeta,
-					Spec: workload.WorkloadSpec{
-						HostName: "hostsystem-21",
-					},
-				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				mWorkload.EXPECT().Get(gomock.Any(), expMeta).Return(existingWorkload, nil)
-				mWorkload.EXPECT().Delete(gomock.Any(), expMeta).Return(nil, nil)
+				workloadAPI := s.Controller().Workload()
+				_, err := workloadAPI.Find(expMeta)
+				Assert(t, err != nil, "Failed to get workload")
 			},
 		},
 		{
@@ -386,7 +385,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-hostsystem-41",
 					Tenant:    globals.DefaultTenant,
@@ -406,11 +405,11 @@ func TestStoreRun(t *testing.T) {
 						},
 					},
 				}
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-				mHost.EXPECT().Create(gomock.Any(), expHost).Return(nil, nil)
+
+				hostAPI := s.Controller().Host()
+				h, err := hostAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get host")
+				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
 			},
 		},
 		{
@@ -437,7 +436,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-hostsystem-41",
 					Tenant:    globals.DefaultTenant,
@@ -471,10 +470,12 @@ func TestStoreRun(t *testing.T) {
 						},
 					},
 				}
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
-				mHost.EXPECT().Update(gomock.Any(), expHost).Return(nil, nil)
+
+				hostAPI := s.Controller().Host()
+				h, err := hostAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get host")
+				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
+				Assert(t, existingHost.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
 			},
 		},
 		{
@@ -501,7 +502,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-hostsystem-41",
 					Tenant:    globals.DefaultTenant,
@@ -521,9 +522,11 @@ func TestStoreRun(t *testing.T) {
 						},
 					},
 				}
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
+
+				hostAPI := s.Controller().Host()
+				h, err := hostAPI.Find(expMeta)
+				Assert(t, err == nil, "Failed to get host")
+				Assert(t, h.ObjectMeta.Name == existingHost.ObjectMeta.Name, "hosts are not same")
 			},
 		},
 		{
@@ -541,30 +544,16 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-hostsystem-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-				existingHost := &cluster.Host{
-					TypeMeta: api.TypeMeta{
-						Kind:       "Host",
-						APIVersion: "v1",
-					},
-					ObjectMeta: *expMeta,
-					Spec: cluster.HostSpec{
-						DSCs: []cluster.DistributedServiceCardID{
-							cluster.DistributedServiceCardID{
-								MACAddress: "aaaa:bbbb:cccc",
-							},
-						},
-					},
-				}
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(existingHost, nil)
-				mHost.EXPECT().Delete(gomock.Any(), expMeta).Return(nil, nil)
+
+				hostAPI := s.Controller().Host()
+				_, err := hostAPI.Find(expMeta)
+				Assert(t, err != nil, "Failed to get host")
 			},
 		},
 		{
@@ -582,68 +571,33 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
+			verify: func(s *statemgr.Statemgr) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-hostsystem-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.NotFound), "", nil)
-				mHost.EXPECT().Get(gomock.Any(), expMeta).Return(nil, err)
-			},
-		},
-		// Negative cases
-		{
-			name: "5XX error",
-			events: []defs.Probe2StoreMsg{
-				{
-					VcObject:   defs.VirtualMachine,
-					Key:        "virtualmachine-41",
-					Originator: "127.0.0.1:8990",
-				},
-				{
-					VcObject:   defs.HostSystem,
-					Key:        "hostsystem-41",
-					Originator: "127.0.0.1:8990",
-					Changes: []types.PropertyChange{
-						types.PropertyChange{
-							Op:   types.PropertyChangeOpAdd,
-							Name: "config",
-						},
-					},
-				},
-			},
-			setupMock: func(mockApicl *mocks.MockAPIClient) {
-				expWorkloadMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
-				}
-				expHostMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
-				}
-				workloadGroup := mockApicl.WorkloadV1().(*mocks.MockWorkloadV1)
-				mWorkload := workloadGroup.MWorkload.(*mockapi.MockWorkloadV1WorkloadInterface)
-				err := apierrors.ToGrpcError("missing object", []string{"Object not found"}, int32(codes.Unavailable), "", nil)
-				mWorkload.EXPECT().Get(gomock.Any(), expWorkloadMeta).Return(nil, err)
 
-				clusterGroup := mockApicl.ClusterV1().(*mocks.MockClusterV1)
-				mHost := clusterGroup.MHost.(*mockapi.MockClusterV1HostInterface)
-				mHost.EXPECT().Get(gomock.Any(), expHostMeta).Return(nil, err)
+				hostAPI := s.Controller().Host()
+				_, err := hostAPI.Find(expMeta)
+				Assert(t, err != nil, "Failed to get host")
 			},
 		},
 	}
 
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+
 	ctx, cancelFn := context.WithCancel(context.Background())
+	sm, err := newStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
 
 	store := &VCHStore{
 		ctx:      ctx,
 		Log:      logger,
-		stateMgr: &statemgr.Statemgr{},
+		stateMgr: sm,
 	}
 
 	for _, tc := range testCases {
@@ -651,24 +605,9 @@ func TestStoreRun(t *testing.T) {
 			continue
 		}
 		t.Logf("running %s", tc.name)
-		ctrl := gomock.NewController(t)
-
-		mWorkload := mockapi.NewMockWorkloadV1WorkloadInterface(ctrl)
-		mWorkloadGroup := &mocks.MockWorkloadV1{
-			MWorkload: mWorkload,
-		}
-		mHost := mockapi.NewMockClusterV1HostInterface(ctrl)
-		mClusterGroup := &mocks.MockClusterV1{
-			MHost: mHost,
-		}
-		mockApicl := &mocks.MockAPIClient{
-			AWorkloadV1: mWorkloadGroup,
-			AClusterV1:  mClusterGroup,
-		}
-		store.stateMgr.SetAPIClient(mockApicl)
+		store.stateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
 		store.inbox = inbox
-		tc.setupMock(mockApicl)
 		store.Run()
 		// Push events
 		for _, e := range tc.events {
@@ -676,7 +615,7 @@ func TestStoreRun(t *testing.T) {
 		}
 		// Time for events to process
 		time.Sleep(10 * time.Millisecond)
-		ctrl.Finish()
+		tc.verify(store.stateMgr)
 	}
 
 	// Terminating store instance

@@ -1,14 +1,12 @@
 package store
 
 import (
-	"net/http"
 	"reflect"
 	"strconv"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/globals"
@@ -16,26 +14,23 @@ import (
 )
 
 func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
+	v.Log.Infof("Got handle workload event")
 	meta := &api.ObjectMeta{
 		Name: createGlobalKey(m.Originator, m.Key),
 		// TODO: Don't use default tenant
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
 	}
-	var workloadObj *workload.Workload
-	existingWorkload, err := v.stateMgr.GetWorkload(meta)
+	var workloadObj, existingWorkload *workload.Workload
+	ctkitWorkload, err := v.stateMgr.Controller().Workload().Find(meta)
 	if err != nil {
-		// 404 object not found error is ok
-		apiStatus := apierrors.FromError(err)
-		if apiStatus.GetCode() != http.StatusNotFound {
-			v.Log.Errorf("Call to get workload failed: %v", apiStatus)
-			// TODO: Add retry, maybe push back on to inbox channel
-			return
-		}
 		existingWorkload = nil
+	} else {
+		existingWorkload = &ctkitWorkload.Workload
 	}
 
 	if existingWorkload == nil {
+		v.Log.Infof("Existing workload is nil")
 		workloadObj = &workload.Workload{
 			TypeMeta: api.TypeMeta{
 				Kind:       "Workload",
@@ -75,7 +70,7 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 			return
 		}
 		// Delete from apiserver
-		v.stateMgr.DeleteWorkload(&workloadObj.ObjectMeta)
+		v.stateMgr.Controller().Workload().Delete(workloadObj)
 		return
 	}
 	// If different, write to apiserver
@@ -88,9 +83,11 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 	// the event for creating the host in APIserver,
 	// or apiserver is temporarily down
 	if existingWorkload == nil {
-		v.stateMgr.CreateWorkload(workloadObj)
+		v.Log.Infof("existing workload is nil")
+		v.stateMgr.Controller().Workload().Create(workloadObj)
 	} else {
-		v.stateMgr.UpdateWorkload(workloadObj)
+		v.Log.Infof("existing workload is not nil. calling update")
+		v.stateMgr.Controller().Workload().Update(workloadObj)
 	}
 }
 

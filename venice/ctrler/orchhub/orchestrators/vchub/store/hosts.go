@@ -1,14 +1,12 @@
 package store
 
 import (
-	"net/http"
 	"reflect"
 	"sort"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/globals"
@@ -23,18 +21,14 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
 	}
-	var hostObj *cluster.Host
-	existingHost, err := v.stateMgr.GetHost(meta)
+	var existingHost, hostObj *cluster.Host
+	ctkitHost, err := v.stateMgr.Controller().Host().Find(meta)
 	if err != nil {
-		// 404 object not found error is ok
-		apiStatus := apierrors.FromError(err)
-		if apiStatus.GetCode() != http.StatusNotFound {
-			v.Log.Errorf("Call to get workload failed: %v", apiStatus)
-			// TODO: Add retry, maybe push back on to inbox channel
-			return
-		}
 		existingHost = nil
+	} else {
+		existingHost = &ctkitHost.Host
 	}
+
 	if existingHost == nil {
 		hostObj = &cluster.Host{
 			TypeMeta: api.TypeMeta{
@@ -89,7 +83,7 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 			return
 		}
 		// Delete from apiserver
-		v.stateMgr.DeleteHost(&hostObj.ObjectMeta)
+		v.stateMgr.Controller().Host().Delete(hostObj)
 		return
 	}
 	// If different, write to apiserver
@@ -98,9 +92,9 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 		return
 	}
 	if existingHost == nil {
-		v.stateMgr.CreateHost(hostObj)
+		v.stateMgr.Controller().Host().Create(hostObj)
 	} else {
-		v.stateMgr.UpdateHost(hostObj)
+		v.stateMgr.Controller().Host().Update(hostObj)
 	}
 
 }

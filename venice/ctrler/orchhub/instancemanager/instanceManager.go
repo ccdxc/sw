@@ -11,8 +11,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const watcherQueueLen = 1000
-
 // Orchestrator is the interface all orchestrator components
 // must implement in order to be managed by instance manager
 type Orchestrator interface {
@@ -28,15 +26,15 @@ type syncFlag struct {
 
 // InstanceManager is the struct which watches for update to vc config objects
 type InstanceManager struct {
-	waitGrp               sync.WaitGroup
-	watchCtx              context.Context
-	watchCancel           context.CancelFunc
-	stopFlag              syncFlag
-	orchestrationConfigCh chan *kvstore.WatchEvent
-	logger                log.Logger
-	orchestratorMap       map[string]Orchestrator
-	stateMgr              *statemgr.Statemgr
-	vcenterList           string
+	waitGrp           sync.WaitGroup
+	watchCtx          context.Context
+	watchCancel       context.CancelFunc
+	stopFlag          syncFlag
+	instanceManagerCh chan *kvstore.WatchEvent
+	logger            log.Logger
+	orchestratorMap   map[string]Orchestrator
+	stateMgr          *statemgr.Statemgr
+	vcenterList       string
 }
 
 // Stop stops the watcher
@@ -60,7 +58,7 @@ func (w *InstanceManager) stop() {
 }
 
 // NewInstanceManager creates a new watcher
-func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger) (*InstanceManager, error) {
+func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent) (*InstanceManager, error) {
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	instance := &InstanceManager{
@@ -69,10 +67,11 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 		stopFlag: syncFlag{
 			flag: false,
 		},
-		vcenterList:     vcenterList,
-		logger:          logger.WithContext("submodule", "Inst Mgr"),
-		orchestratorMap: make(map[string]Orchestrator),
-		stateMgr:        stateMgr,
+		vcenterList:       vcenterList,
+		logger:            logger.WithContext("submodule", "Inst Mgr"),
+		orchestratorMap:   make(map[string]Orchestrator),
+		stateMgr:          stateMgr,
+		instanceManagerCh: instanceManagerCh,
 	}
 
 	return instance, nil
@@ -84,13 +83,12 @@ func (w *InstanceManager) Start() {
 }
 
 func (w *InstanceManager) watchOrchestratorConfig() {
-	w.stateMgr.WatchOrchestrator(w.orchestrationConfigCh)
 	for {
 		select {
 		case <-w.watchCtx.Done():
 			log.Info("Exiting watch for orchestration configuration")
 			return
-		case evt, ok := <-w.orchestrationConfigCh:
+		case evt, ok := <-w.instanceManagerCh:
 			if ok {
 				orchConfig := evt.Object.(*orchestration.Orchestrator)
 				w.handleConfigEvent(evt.Type, orchConfig)
@@ -126,5 +124,6 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 			return
 		}
 		orchInst.Destroy()
+		delete(w.orchestratorMap, config.GetKey())
 	}
 }
