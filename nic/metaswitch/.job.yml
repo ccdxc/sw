@@ -1,14 +1,14 @@
 ---
 version: 2.0
 targets:
-  apollo/dol/mirror:
-    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mirror"]
-    owners: ["email:vgunta@pensando.io"]
+  metaswitch/build:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_1"]
+    owners: ["email:vijasrin@pensando.io"]
     area:
     sub-area:
     feature:
     build-dependencies:
-    - build-apollo-x86
+    - build-apulu-x86
 
 cache:
   name: "sw"
