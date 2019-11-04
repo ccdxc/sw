@@ -336,7 +336,7 @@ typedef struct rome_sender_cb_s{
     uint32_t totalBytesAcked:32;  // total bytes acknowledged by receiver on this flow modulo 2^32
     uint32_t window:32;           // window size, max tx bytes allowed before ack
     uint32_t currentRate:27;      // current pkt transmission rate in Kbps
-    uint8_t  log_sq_size:5;
+    uint32_t  log_sq_size:5;
     uint32_t numCnpPktsRx:32;     // number of CNP pkts received on this flow
 
     uint64_t last_sched_timestamp: 48;
