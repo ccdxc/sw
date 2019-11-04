@@ -1,0 +1,70 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+ esx-6.7:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-10
+       count: 2
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ ubuntu-18.04:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ freebsd-11.2:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-12
+       count: 2
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
