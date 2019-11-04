@@ -208,6 +208,12 @@ typedef struct port_event_info_s {
 
 typedef void (*port_event_notify_t)(port_event_info_t *port_event_info);
 
+typedef enum lif_state {
+    LIF_STATE_NONE = 0,
+    LIF_STATE_UP,
+    LIF_STATE_DOWN,
+} lif_state_t;
+
 }    // namespace types
 }    // namespace sdk
 
@@ -232,6 +238,7 @@ using sdk::types::port_loopback_mode_t;
 using sdk::types::xcvr_type_t;
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
+using sdk::types::lif_state_t;
 
 #endif    // __SDK_TYPES_HPP__
 

@@ -39,7 +39,7 @@ public:
     virtual sdk_ret_t lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) = 0;
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) = 0;
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) = 0;
-    virtual sdk_ret_t lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state) = 0;
+    virtual sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state) = 0;
     virtual sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) = 0;
 
     // qos APIs

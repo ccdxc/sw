@@ -338,10 +338,10 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::lif_get_max_filters(uint32_t *ucast_filters, 
+devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters)
 {
-    return devapi_lif::get_max_filters(ucast_filters, 
+    return devapi_lif::get_max_filters(ucast_filters,
                                        mcast_filters);
 }
 
@@ -710,7 +710,7 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state)
+devapi_iris::lif_upd_state(uint32_t lif_id, lif_state_t state)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_lif *lif = NULL;
@@ -783,8 +783,8 @@ devapi_iris::swm_set_port(uint32_t port_num)
     return devapi_swm::swm()->upd_uplink(port_num);
 }
 
-sdk_ret_t 
-devapi_iris::swm_add_mac(mac_t mac) 
+sdk_ret_t
+devapi_iris::swm_add_mac(mac_t mac)
 {
     return devapi_swm::swm()->add_mac(mac);
 }
@@ -795,8 +795,8 @@ devapi_iris::swm_del_mac(mac_t mac)
     return devapi_swm::swm()->del_mac(mac);
 }
 
-sdk_ret_t 
-devapi_iris::swm_add_vlan(vlan_t vlan) 
+sdk_ret_t
+devapi_iris::swm_add_vlan(vlan_t vlan)
 {
     return devapi_swm::swm()->add_vlan(vlan);
 }
@@ -807,19 +807,19 @@ devapi_iris::swm_del_vlan(vlan_t vlan)
     return devapi_swm::swm()->del_vlan(vlan);
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_iris::swm_upd_rx_bmode(bool broadcast)
 {
     return devapi_swm::swm()->upd_rx_bmode(broadcast);
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_iris::swm_upd_rx_mmode(bool all_multicast)
 {
     return devapi_swm::swm()->upd_rx_mmode(all_multicast);
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_iris::swm_upd_rx_pmode(bool promiscuous)
 {
     return devapi_swm::swm()->upd_rx_pmode(promiscuous);

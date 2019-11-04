@@ -85,8 +85,8 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     PDS_TRACE_INFO("Creating mnets ...");
     devmgr->HalEventHandler(true);
 
-    sdk::event_thread::subscribe(EVENT_ID_PORT, port_event_handler_);
-    sdk::event_thread::subscribe(EVENT_ID_XCVR, xcvr_event_handler_);
+    sdk::event_thread::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_);
+    sdk::event_thread::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_);
     sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
     sdk::event_thread::prepare_start(&g_ev_prepare);
 

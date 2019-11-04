@@ -84,7 +84,7 @@ public:
     sdk_ret_t upd_name(std::string name);
     sdk_ret_t reset(void);
     static sdk_ret_t get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters);
-    sdk_ret_t upd_state(sdk::platform::lif_state_t state);
+    sdk_ret_t upd_state(lif_state_t state);
     sdk_ret_t upd_rdma_sniff(bool rdma_sniff);
 
     void remove_macfilters(void);

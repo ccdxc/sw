@@ -149,7 +149,7 @@ EthLif::EthLif(Eth *dev,
     memset(&hal_lif_info_, 0, sizeof(lif_info_t));
     strncpy0(hal_lif_info_.name, name, sizeof(hal_lif_info_.name));
     hal_lif_info_.lif_id = res->lif_id;
-    hal_lif_info_.type = (sdk::platform::lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
+    hal_lif_info_.type = (lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
     // For debugging: by default enables rdma sniffer on all host ifs
@@ -362,7 +362,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         state = LIF_STATE_INITING;
 
-        hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state); 
+        hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state);
         rs = dev_api->lif_create(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
@@ -2775,7 +2775,7 @@ EthLif::LinkEventHandler(port_status_t *evd)
     state = next_state;
     // Notify HAL
     dev_api->lif_upd_state(hal_lif_info_.lif_id,
-                           (sdk::platform::lif_state_t)ConvertEthLifStateToLifState(state));
+                           (lif_state_t)ConvertEthLifStateToLifState(state));
 
     if (notify_enabled == 0) {
         return;
@@ -3000,11 +3000,11 @@ EthLif::GenerateQstateInfoJson(pt::ptree &lifs)
     return 0;
 }
 
-sdk::platform::lif_state_t
+lif_state_t
 EthLif::ConvertEthLifStateToLifState(enum eth_lif_state lif_state)
 {
     switch (lif_state) {
-        case LIF_STATE_UP: return sdk::platform::LIF_STATE_UP;
-        default: return sdk::platform::LIF_STATE_DOWN;
+        case LIF_STATE_UP: return sdk::types::LIF_STATE_UP;
+        default: return sdk::types::LIF_STATE_DOWN;
     }
 }

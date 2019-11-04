@@ -35,12 +35,12 @@ port_event_cb (port_event_info_t *port_event_info)
     sdk::linkmgr::port_set_leds(logical_port, port_event);
 
     memset(&event, 0, sizeof(event));
-    event.event_id = EVENT_ID_PORT;
+    event.event_id = EVENT_ID_PORT_STATUS;
     event.port.ifindex =
         sdk::lib::catalog::logical_port_to_ifindex(logical_port);
     event.port.event = port_event;
     event.port.speed = port_speed;
-    sdk::event_thread::publish(EVENT_ID_PORT, &event, sizeof(event));
+    sdk::event_thread::publish(EVENT_ID_PORT_STATUS, &event, sizeof(event));
 }
 
 bool
@@ -68,7 +68,7 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
     event.xcvr.pid = xcvr_event_info->pid;
     event.xcvr.cable_type = xcvr_event_info->cable_type;
     memcpy(event.xcvr.sprom, xcvr_event_info->xcvr_sprom, XCVR_SPROM_SIZE);
-    sdk::event_thread::publish(EVENT_ID_XCVR, &event, sizeof(event));
+    sdk::event_thread::publish(EVENT_ID_XCVR_STATUS, &event, sizeof(event));
     return false;
 }
 

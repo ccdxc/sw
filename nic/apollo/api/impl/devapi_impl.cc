@@ -135,19 +135,19 @@ devapi_impl::lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::lif_upd_rx_bmode(uint32_t lif_id, bool broadcast) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::lif_upd_rx_mmode(uint32_t lif_id, bool all_multicast) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
@@ -155,13 +155,23 @@ devapi_impl::lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) {
 
 sdk_ret_t
 devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
-    PDS_TRACE_WARN("Not implemented");
+    lif_impl *lif;
+    pds_lif_key_t key;
+
+    key = lif_id;
+    lif = lif_impl_db()->find(&key);
+    lif->set_name(name.c_str());
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state) {
-    PDS_TRACE_WARN("Not implemented");
+devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
+    lif_impl *lif;
+    pds_lif_key_t key;
+
+    key = lif_id;
+    lif = lif_impl_db()->find(&key);
+    lif->set_state(state);
     return SDK_RET_OK;
 }
 
@@ -303,70 +313,70 @@ devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_enable()
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_disable()
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_set_port(uint32_t port_num)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_add_mac(mac_t mac)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_del_mac(mac_t mac)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_add_vlan(vlan_t vlan)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_del_vlan(vlan_t vlan)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_upd_rx_bmode(bool broadcast)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_upd_rx_mmode(bool all_multicast)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_upd_rx_pmode(bool promiscuous)
 {
     PDS_TRACE_WARN("Not implemented");

@@ -36,9 +36,9 @@ public:
     sdk_ret_t lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous);
 
     sdk_ret_t lif_upd_name(uint32_t lif_id, std::string name);
-    sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, 
+    sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters,
                                   uint32_t *mcast_filters);
-    sdk_ret_t lif_upd_state(uint32_t lif_id, sdk::platform::lif_state_t state);
+    sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state);
     sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff);
 
     // Qos APIs

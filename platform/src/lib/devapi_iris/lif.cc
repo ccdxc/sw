@@ -271,7 +271,7 @@ devapi_lif::destroy(devapi_lif *lif)
             }
         } else {
             /*
-             * SWM check is for l2seg for OOB to not get deleted when OOB lif 
+             * SWM check is for l2seg for OOB to not get deleted when OOB lif
              * is being removed.
              * It will be deleted from swm.cc
              */
@@ -868,7 +868,7 @@ devapi_lif::upd_name(std::string name)
 }
 
 sdk_ret_t
-devapi_lif::upd_state(sdk::platform::lif_state_t state)
+devapi_lif::upd_state(lif_state_t state)
 {
     NIC_LOG_DEBUG("devapi_lif: {} state: {} -> {}", info_.lif_id, info_.lif_state, state);
     info_.lif_state = state;
@@ -1040,7 +1040,7 @@ devapi_lif::remove_vlanfilters(bool skip_native_vlan)
         vlan = *it;
 #if 0
         if (skip_native_vlan && (vlan == NATIVE_VLAN_ID &&
-                                 info_.type != sdk::platform::LIF_TYPE_SWM)) 
+                                 info_.type != sdk::platform::LIF_TYPE_SWM))
 #endif
         if (skip_native_vlan && (vlan == NATIVE_VLAN_ID)) {
             it++;

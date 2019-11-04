@@ -19,35 +19,52 @@
 
 // event identifiers
 typedef enum event_id_e {
-    EVENT_ID_NONE = 0,
-    EVENT_ID_PORT = 1,
-    EVENT_ID_XCVR = 2,
+    EVENT_ID_NONE          = 0,
+    EVENT_ID_PORT_STATUS   = 1,
+    EVENT_ID_XCVR_STATUS   = 2,
+    EVENT_ID_UPLINK_STATUS = 3,
+    EVENT_ID_LIF_STATUS    = 4,
 } event_id_t;
 
 namespace core {
 
 // port event specific information
 typedef struct port_event_info_s {
-    pds_ifindex_t   ifindex;
-    port_event_t    event;
-    port_speed_t    speed;
+    pds_ifindex_t    ifindex;
+    port_event_t     event;
+    port_speed_t     speed;
 } port_event_info_t;
 
 // xcvr event specific information
 typedef struct xcvr_event_info_s {
-    pds_ifindex_t   ifindex;
-    xcvr_state_t    state;
-    xcvr_pid_t      pid;
-    cable_type_t    cable_type;
-    uint8_t         sprom[XCVR_SPROM_SIZE];
+    pds_ifindex_t    ifindex;
+    xcvr_state_t     state;
+    xcvr_pid_t       pid;
+    cable_type_t     cable_type;
+    uint8_t          sprom[XCVR_SPROM_SIZE];
 } xcvr_event_info_t;
+
+// uplink interface event specific information {
+typedef struct uplink_event_info_s {
+    pds_ifindex_t     ifindex;
+    pds_if_state_t    state;
+} uplink_event_info_t;
+
+// lif event specific information
+typedef struct lif_event_info_s {
+    pds_ifindex_t    ifindex;
+    char             name[SDK_MAX_NAME_LEN];
+    lif_state_t      state;
+} lif_event_info_t;
 
 // event structure that gets passed around for every event
 typedef struct event_s {
-    event_id_t               event_id;
+    event_id_t              event_id;
     union {
-        port_event_info_t    port;
-        xcvr_event_info_t    xcvr;
+        port_event_info_t   port;
+        xcvr_event_info_t   xcvr;
+        uplink_event_info_t uplink;
+        lif_event_info_t    lif;
     };
 } event_t;
 

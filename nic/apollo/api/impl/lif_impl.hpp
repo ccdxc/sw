@@ -17,6 +17,8 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
 
+#define PDS_MAX_LIF_NAME_LEN        16
+
 namespace api {
 namespace impl {
 
@@ -86,6 +88,16 @@ public:
     /// \return    vnic hw id
     uint16_t vnic_hw_id(void) const { return vnic_hw_id_; }
 
+    /// \brief     set/update the name of the lif
+    void set_name(const char *name) {
+        memcpy(name_, name, PDS_MAX_LIF_NAME_LEN);
+    }
+
+    /// \brief     set/update the state of the lif
+    void set_state(lif_state_t state) {
+        state_ = state;
+    }
+
 private:
     ///< constructor
     ///< \param[in] spec    lif configuration parameters
@@ -120,6 +132,7 @@ private:
     sdk_ret_t create_host_lif_(pds_lif_spec_t *spec);
 
 private:
+    ///< name of the lif
     pds_lif_key_t    key_;            ///< (s/w & h/w) lif id
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
@@ -129,6 +142,10 @@ private:
     //       dir and this should be a base class !!
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
+
+    /// operational state
+    char             name_[PDS_MAX_LIF_NAME_LEN];    ///< lif name
+    lif_state_t      state_;                         ///< operational state
     friend class lif_impl_state;      ///< lif_impl_state is friend of lif_impl
 } __PACK__;
 
