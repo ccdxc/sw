@@ -22,6 +22,10 @@ regression-rdma: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
 	           --regression --testbundle mtu,rdma_reg
 
+regression-rdma-stress: extract-artifacts
+	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
+	           --regression --testbundle mtu,rdma_stress
+
 regression-storage: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
 	           --regression --testbundle storage 

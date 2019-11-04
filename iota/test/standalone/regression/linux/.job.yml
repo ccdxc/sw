@@ -28,6 +28,8 @@ e2e-targets:
          server-type: server-a
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
+       constraints:
+          same-switch: true
    provision:
        username: vm
        password: vm
@@ -36,6 +38,34 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+ e2e-linux-bm-regression-rdma-stress:
+   commands: ["sh", "-c", "make regression-rdma-stress"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:rdma-dpath@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 12h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+       constraints:
+          same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
  e2e-linux-bm-regression-eth:
    commands: ["sh", "-c", "make regression-eth"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
