@@ -179,7 +179,7 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
     }
 
     // program the ECMP table now
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_ECMP, hw_id_,
                                        NULL, NULL, &ecmp_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program nexthop group %u at idx %u in "
@@ -253,7 +253,7 @@ nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
     p4pd_error_t p4pd_ret;
     ecmp_actiondata_t ecmp_data;
 
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_ECMP, hw_id_,
                                       NULL, NULL, &ecmp_data);
     if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
         PDS_TRACE_ERR("Failed to read nexthop group table at index %u ret %u",
