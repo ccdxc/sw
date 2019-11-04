@@ -28,7 +28,7 @@ LocalMappingIdAllocator = iter(irange(1,33*1024))
 VnicVlanIdAllocator = iter(irange(1,1024))
 VnicMplsSlotIdAllocator = iter(irange(10000,11024))
 VnicIdAllocator = iter(irange(1,1024))
-InterfaceIdAllocator = iter(irange(1, 8))
+InterfaceIdAllocator = iter(irange(1, 66))
 V4RouteTableIdAllocator = iter(irange(1,1024))
 V6RouteTableIdAllocator = iter(irange(10001,11024))
 V4SecurityPolicyIdAllocator = iter(irange(1,2048))
@@ -95,6 +95,7 @@ RemoteSvcTunIPv4Addr = ipaddress.IPv4Network('30.0.0.0/24').hosts()
 
 #Apulu specific configs
 UnderlayNHAllocator = None
+DeviceMacAllocator = objects.TemplateFieldObject("macstep/0002.0100.0000/0000.0000.0001")
 
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1

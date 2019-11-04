@@ -9,6 +9,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
+from apollo.config.objects.interface import client as InterfaceClient
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.policy as policy
@@ -45,6 +46,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         self.Vnid = next(resmgr.VxlanIdAllocator)
+        self.HostIf = InterfaceClient.GetHostInterface()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
         self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
@@ -74,6 +76,8 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
                     (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
+        if self.HostIf:
+            logger.info("- HostInterface:", self.HostIf.Ifname)
         return
 
     def __fill_default_rules_in_policy(self):
@@ -150,6 +154,8 @@ class SubnetObject(base.ConfigObjectBase):
         spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
         spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
         utils.GetRpcEncap(0, self.Vnid, spec.FabricEncap)
+        if self.HostIf:
+            spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
 
 

@@ -166,6 +166,8 @@ class ApolloAgentClient:
                                                      self.__channel, 'Batch')
         self.__stubs[ObjectTypes.SWITCH] = ClientStub(device_pb2_grpc.DeviceSvcStub,
                                                       self.__channel, 'Device')
+        self.__stubs[ObjectTypes.INTERFACE] = ClientStub(interface_pb2_grpc.IfSvcStub,
+                                                      self.__channel, 'Interface')
         self.__stubs[ObjectTypes.VPC] = ClientStub(vpc_pb2_grpc.VPCSvcStub,
                                                    self.__channel, 'VPC')
         self.__stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,

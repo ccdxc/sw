@@ -10,6 +10,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
+from apollo.config.objects.interface import client as InterfaceClient
 import apollo.config.objects.tunnel as tunnel
 
 import nh_pb2 as nh_pb2
@@ -33,7 +34,7 @@ class NexthopObject(base.ConfigObjectBase):
             self.MACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'underlay':
             self.__type = utils.NhType.UNDERLAY
-            self.L3InterfaceId = 1 # TODO move to l3if iterator
+            self.L3Interface = InterfaceClient.GetL3UplinkInterface()
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
             self.__type = utils.NhType.OVERLAY
@@ -48,7 +49,7 @@ class NexthopObject(base.ConfigObjectBase):
                      self.MACAddr, self.VlanId)
         elif self.__type == utils.NhType.UNDERLAY:
             nh_str = "L3IfID:%d|UnderlayMac:%s" %\
-                     (self.L3InterfaceId, self.underlayMACAddr)
+                     (self.L3Interface.InterfaceId, self.underlayMACAddr)
         elif self.__type == utils.NhType.OVERLAY:
             nh_str = "TunnelId:%d" % (self.TunnelId)
         return "NexthopID:%d|Type:%s|%s" %\
@@ -76,7 +77,7 @@ class NexthopObject(base.ConfigObjectBase):
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         elif self.__type == utils.NhType.UNDERLAY:
-            spec.UnderlayNhInfo.L3InterfaceId = self.L3InterfaceId
+            spec.UnderlayNhInfo.L3InterfaceId = self.L3Interface.InterfaceId
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == utils.NhType.OVERLAY:
             spec.TunnelId = self.TunnelId

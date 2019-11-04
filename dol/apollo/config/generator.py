@@ -65,17 +65,17 @@ def __validate():
     return
 
 def __generate(topospec):
-    # Generate Port Configuration
-    port.client.GenerateObjects(topospec)
-
-    # Generate Interface Configuration
-    interface.client.GenerateObjects(topospec)
-
     # Generate Batch Object
     batch.client.GenerateObjects(topospec)
 
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
+
+    # Generate Port Configuration
+    port.client.GenerateObjects(topospec)
+
+    # Generate Interface Configuration
+    interface.client.GenerateObjects(topospec)
 
     if not utils.IsPipelineApulu():
         #TODO: enable mirror
@@ -96,6 +96,9 @@ def __create():
 
     # Create Device Object
     device.client.CreateObjects()
+
+    # Create Interface Objects
+    interface.client.CreateObjects()
 
     # Create VPC Objects
     vpc.client.CreateObjects()

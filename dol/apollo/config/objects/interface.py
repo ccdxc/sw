@@ -11,6 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 import apollo.config.objects.host.lif as lif
+from apollo.config.objects.port import client as PortClient
 
 import interface_pb2 as interface_pb2
 
@@ -18,34 +19,31 @@ class InterfaceSpec_:
     pass
 
 class InterfaceInfoObject(base.ConfigObjectBase):
-    def __init__(self, iftype, ifinfo):
+    def __init__(self, iftype, spec):
         super().__init__()
         self.__type = iftype
         if (iftype == utils.InterfaceTypes.UPLINK):
-            self.port_num = ifinfo
+            self.port_num = getattr(spec, 'port', None)
         elif (iftype == utils.InterfaceTypes.UPLINKPC):
-            self.port_bmap = ifinfo
+            self.port_bmap = getattr(spec, 'portbmp', None)
         elif (iftype == utils.InterfaceTypes.L3):
-            self.VPC = ifinfo.VPC
-            self.ip_prefix = ifinfo.ip_prefix
-            self.port_num = ifinfo.port_num
-            self.encap = ifinfo.encap
-            self.macaddr = ifinfo.macaddr
-
-    def __repr__(self):
-        return "Interface InfoType:%d" % (self.__type)
+            self.VPC = getattr(spec, 'vpc', 0)
+            self.ip_prefix = getattr(spec, 'ippfx', None)
+            self.port_num = getattr(spec, 'port', -1)
+            self.encap = getattr(spec, 'encap', None)
+            self.macaddr = getattr(spec, 'MACAddr', None)
 
     def Show(self):
-        res = ""
-        logger.info("- %s" % repr(self))
         if (self.__type == utils.InterfaceTypes.UPLINK):
             res = str("port num : %d" % int(self.port_num))
         elif (self.__type == utils.InterfaceTypes.UPLINKPC):
             res = str("port_bmap: %s" % self.port_bmap)
-        elif (self.__type == utils.InterfaceTypes.L3INTERFACE):
-            res = str("VPC:%d|ip:%s|port_num:%d|encap:%d|mac:%s"% \
+        elif (self.__type == utils.InterfaceTypes.L3):
+            res = str("VPC:%d|ip:%s|port_num:%d|encap:%s|mac:%s"% \
                     (self.VPC, self.ip_prefix, self.port_num, self.encap, \
                     self.macaddr))
+        else:
+            return
         logger.info("- %s" % res)
 
 class InterfaceObject(base.ConfigObjectBase):
@@ -62,9 +60,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if utils.IsHostLifSupported() and self.lifns:
             self.obj_helper_lif = lif.LifObjectHelper()
             self.__create_lifs(spec)
-        port = getattr(spec, 'port', None)
-        if port:
-            info = InterfaceInfoObject(self.Type, port)
+        info = InterfaceInfoObject(self.Type, spec)
         # TODO: Add support for UPLINKPC and L3_INTERFACE
         self.IfInfo = info
         self.GID("Interface ID:%s"%self.InterfaceId)
@@ -73,18 +69,32 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "InterfaceId:%d|Type:%d|AdminState:%s" % \
-                (self.InterfaceId, self.Type, self.AdminState)
+        return "InterfaceId:%d|Ifname:%s|Type:%d|AdminState:%s" % \
+                (self.InterfaceId, self.Ifname, self.Type, self.AdminState)
 
     def Show(self):
         logger.info("InterfaceObject:")
         logger.info("- %s" % repr(self))
         if self.IfInfo:
-            logger.info("- %s" % self.IfInfo.Show())
+            self.IfInfo.Show()
         return
 
     def SetBaseClassAttr(self):
         self.ObjType = api.ObjectTypes.INTERFACE
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.InterfaceId)
+        return
+
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.InterfaceId
+        spec.AdminStatus = interface_pb2.IF_STATUS_UP
+        if self.Type == utils.InterfaceTypes.L3:
+            spec.Type = interface_pb2.IF_TYPE_L3
+            spec.L3IfSpec.PortId = self.IfInfo.port_num
+            spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
         return
 
     def __create_lifs(self, spec):
@@ -98,6 +108,8 @@ class InterfaceObject(base.ConfigObjectBase):
 class InterfaceObjectClient:
     def __init__(self):
         self.__objs = dict()
+        self.__uplinkl3ifs = dict()
+        self.__uplinkl3ifs_iter = None
         self.__hostifs = dict()
         self.__hostifs_iter = None
         return
@@ -108,6 +120,11 @@ class InterfaceObjectClient:
     def GetHostInterface(self):
         if self.__hostifs:
             return self.__hostifs_iter.rrnext()
+        return None
+
+    def GetL3UplinkInterface(self):
+        if self.__uplinkl3ifs:
+            return self.__uplinkl3ifs_iter.rrnext()
         return None
 
     def __generate_host_interfaces(self, ifspec):
@@ -132,6 +149,25 @@ class InterfaceObjectClient:
             self.__hostifs_iter = utils.rrobiniter(self.__hostifs.values())
         return
 
+    def __generate_l3_uplink_interfaces(self):
+        uplink_ports = PortClient.Objects()
+        if not uplink_ports:
+            return
+        for port in uplink_ports:
+            spec = InterfaceSpec_()
+            spec.mode = 'l3'
+            spec.port = port.Port - 1
+            spec.id = 'Uplink%d' % spec.port
+            spec.status = port.AdminState
+            spec.MACAddr = resmgr.DeviceMacAllocator.get()
+            ifobj = InterfaceObject(spec)
+            self.__objs.update({ifobj.InterfaceId: ifobj})
+            self.__uplinkl3ifs.update({ifobj.InterfaceId: ifobj})
+
+        if self.__uplinkl3ifs:
+            self.__uplinkl3ifs_iter = utils.rrobiniter(self.__uplinkl3ifs.values())
+        return
+
     def GenerateObjects(self, topospec):
         if utils.IsInterfaceSupported() is False:
             return
@@ -139,6 +175,9 @@ class InterfaceObjectClient:
         if iflist:
             hostifspec = getattr(iflist, 'host', None)
             self.__generate_host_interfaces(hostifspec)
+        if utils.IsL3InterfaceSupported():
+            # generate l3 if for uplink interface
+            self.__generate_l3_uplink_interfaces()
         return
 
     def GetGrpcReadAllMessage(self):
@@ -148,8 +187,11 @@ class InterfaceObjectClient:
     def CreateObjects(self):
         if utils.IsInterfaceSupported() is False:
             return
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.INTERFACE, msgs)
+        cookie = utils.GetBatchCookie()
+        if utils.IsL3InterfaceSupported():
+            # create l3 if for uplink interface
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs.values()))
+            api.client.Create(api.ObjectTypes.INTERFACE, msgs)
         return
 
     def ReadObjects(self):

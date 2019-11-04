@@ -67,7 +67,7 @@ class PortTypes(enum.IntEnum):
 """
 INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH }
 MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH, 'switch': InterfaceTypes.UPLINK,
-        'uplink': InterfaceTypes.UPLINK }
+        'uplink': InterfaceTypes.UPLINK, 'l3': InterfaceTypes.L3 }
 
 
 IF_TYPE_SHIFT = 28
@@ -413,6 +413,11 @@ def IsInterfaceSupported():
     if IsPipelineArtemis():
         return False
     return True
+
+def IsL3InterfaceSupported():
+    if IsPipelineApulu():
+        return True
+    return False
 
 def IsIGWTunnelSupported():
     if IsPipelineApulu():

@@ -28,7 +28,7 @@ class DeviceObject(base.ConfigObjectBase):
         #TODO: based on stack, get ip & gw addr
         self.IPAddr = next(resmgr.TepIpAddressAllocator)
         self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
-        self.MACAddr = spec.macaddress
+        self.MACAddr = resmgr.DeviceMacAllocator.get()
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
 

@@ -9,7 +9,6 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
-import apollo.config.objects.interface as interface
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.meter as meter
@@ -38,7 +37,7 @@ class VnicObject(base.ConfigObjectBase):
         self.TxMirror = txmirror
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
-        self.HostIf = interface.client.GetHostInterface()
+        self.HostIf = parent.HostIf
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self._derive_oper_info()

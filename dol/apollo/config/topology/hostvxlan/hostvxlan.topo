@@ -26,7 +26,6 @@ device:
     learning    : false # false (default), true
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
-    macaddress  : macaddr/0002.0100.0001
     encap       : vxlan # vxlan or mplsodup
     tunnel      :
         - count : 16
@@ -72,7 +71,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 4
+        - count     : 1
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -123,19 +122,15 @@ vpc:
       count : 2
       type  : tenant
       subnet:
-        - count     : 2
+        - count     : 1
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
               ipcount : 4             # Local IP mapping per vnic
-              srcguard : true         # true or false (default false)
-              public  : true
-              tagged  : false         # true or false (default true)
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
               srcguard : false        # true or false (default false)
               public  : true
+              tagged  : false         # true or false (default true)
           rmap:                       # Remote IP mappings per subnet
             - count : 4
         - count     : 2
