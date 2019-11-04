@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -114,14 +115,23 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         }
         batched_internally = true;
     }
-    rsp = sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH,
-                                 &api_msg, sizeof(api_msg));
-    ret = *(sdk_ret_t *)rsp->data();
-    PDS_TRACE_DEBUG("Rcvd response from API thread, status %u", ret);
 
-    if (batched_internally) {
-        // destroy the batch we created
-        api_batch_destroy((pds_batch_ctxt_t)api_msg);
+    // time to ship the API msg to the API thread
+    if (api_msg->batch.async) {
+        // caller is an event_thread and should have registered
+        // for async response using rpc_reg_response_handler() API
+        sdk::event_thread::rpc_request(core::THREAD_ID_API, API_MSG_ID_BATCH,
+                                       &api_msg, sizeof(api_msg),
+                                       (void *)api_msg->batch.cookie);
+    } else {
+        rsp = sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH,
+                                &api_msg, sizeof(api_msg));
+        ret = *(sdk_ret_t *)rsp->data();
+        PDS_TRACE_DEBUG("Rcvd response from API thread, status %u", ret);
+        if (batched_internally) {
+            // destroy the batch we created
+            api_batch_destroy((pds_batch_ctxt_t)api_msg);
+        }
     }
     return ret;
 }

@@ -240,7 +240,7 @@ create_objects_init (test_params_t *test_params)
 }
 
 sdk_ret_t
-create_objects_end ()
+create_objects_end (void)
 {
     sdk_ret_t ret;
 
