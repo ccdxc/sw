@@ -4,6 +4,8 @@ import pdb
 import json
 import sys
 import re
+import subprocess
+import traceback
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -49,6 +51,17 @@ def GetNodeType(role):
     return "bm"
 
 class Node(object):
+
+    class PciInfo:
+        def __init__(self, nic, bus, device, function):
+            self.__nic = nic
+            self.__bus = bus
+            self.__device = device
+            self.__function = function
+
+        def GetInfo(self):
+            return {'nic':self.__nic, 'bus':self.__bus, 'device':self.__device, 'function':self.__function}
+
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
@@ -67,7 +80,11 @@ class Node(object):
         self.__console_hdl = None
         self.__read_mgmt_ip_from_console()
 
-
+        self.__nic_pci_info = {}
+        self.__vmUser = getattr(self.__inst, "Username", "vm")
+        self.__vmPassword = getattr(self.__inst, "Password", "vm")
+        self.ssh_host = "%s@%s" % (self.__vmUser, self.__ip_address) 
+        self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.__vmPassword
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
         self.__control_intf = "eth1"
 
@@ -135,6 +152,37 @@ class Node(object):
                         self.__nic_mgmt_ip = x[0]
         else:
             Logger.info("Skipping management IP read as no console info %s" % self.__name)
+
+    def GetNicPciInfo(self,nic):
+        if nic not in self.__nic_pci_info:
+            raise Exception('nic {0} not found on node {1}'.format(nic, self.__name))
+        return self.__nic_pci_info[nic].GetInfo()
+
+    def DetermineNicPciInfo(self,nic):
+        bus = 'na'
+        device = 'na'
+        function = 'na'
+        cmd = ''
+        reText = ''
+        if self.__os == 'linux':
+            cmd = "ethtool -i " + nic + " | awk -F ' ' '/bus-info/ { print $2}'"
+            reText = '([\d]+):([\d]+):([\d]+\.([\d]+))'
+        elif self.__os == 'freebsd':
+            cmd = ''
+            reText = ''
+        if not cmd == '':
+            try:
+                Logger.debug('sending cmd to get pci info: {0}'.format(cmd))
+                output = self.RunSshCmd(cmd)
+                Logger.debug('cmd returned: {0}'.format(output))
+                found = re.search(reText, output)
+                if found:
+                    domain,bus,device,function = found.groups()
+            except:
+                Logger.debug('failed to run determine pci info. error was: {0}'.format(traceback.format_exc()))
+        Logger.debug('pci info for node {0}: nic={1}, bus={2}, device={3}, function={4}'.format(self.__name, nic, bus, device, function))
+        self.__nic_pci_info[nic] = Node.PciInfo(nic=nic, bus=bus, device=device, function=function)
+        return self.__nic_pci_info[nic]
 
     def GetNicType(self):
         if getattr(self.__inst, "Resource", None):
@@ -284,6 +332,10 @@ class Node(object):
                     msg.image = os.path.basename(testsuite.GetImages().naples)
                 for data_intf in self.__data_intfs:
                     msg.naples_config.data_intfs.append(data_intf)
+                    try:
+                        self.DetermineNicPciInfo(data_intf)
+                    except:
+                        Logger.debug('failed to get pci info for node {0} nic {1}. error was: {2}'.format(self.__name, data_intf, traceback.format_exc()))
                 for n in topology.Nodes():
                     if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                     msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
@@ -360,6 +412,11 @@ class Node(object):
         console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
         output = console_hdl.RunCmdGetOp(cmd)
         return re.split(cmd,output.decode("utf-8"),1)[1]
+
+    def RunSshCmd(self, cmd):
+        cmd = "%s %s \"%s\"" % (self.ssh_pfx, self.ssh_host, cmd)
+        output = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
+        return output.decode("utf-8")
 
 
 class Topology(object):
