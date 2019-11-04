@@ -72,17 +72,17 @@ image:
 queue_name: builder
 jobs:
   api:
-    labels: ["2xhourly"]
+    labels: ["precommit", "2xhourly"]
   asset-build:
-    labels: ["hourly"]
+    labels: ["2xhourly"]
   docs:
     labels: ["hourly"]
   dol:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   iota:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   iota/test/venice:
-    labels: ["2xhourly"]
+    labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/freebsd:
     labels: ["precommit", "hourly"]
   iota/test/standalone/sanity/esx:
@@ -98,35 +98,33 @@ jobs:
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   nic:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   nic/agent:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   nic/apollo:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   nic/sdk:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   nic/utils/ftlite:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   penctl:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   platform:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   platform/drivers/linux:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   platform/src/app/pciemgrd:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   storage/offload:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   storage/offload/linux-build-test:
-    labels: ["hourly"]
-  test:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   test/ci_targets/e2e:
-    labels: ["2xhourly"]
+    labels: ["precommit", "2xhourly"]
   venice:
-    labels: ["hourly"]
+    labels: ["precommit", "hourly"]
   venice/ui:
     labels: ["hourly"]
 
