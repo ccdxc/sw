@@ -50,13 +50,19 @@ MODULE_DEVICE_TABLE(pci, ionic_id_table);
 int
 ionic_get_msix_irq(struct ionic *ionic, unsigned int num)
 {
-	return ionic->pdev->dev.msix + num;
+
+#if __FreeBSD_version >= 1200000
+	return (ionic->pdev->dev.irq_start + num);
+#else
+	return (ionic->pdev->dev.msix + num);
+#endif
 }
 
 const char *
 ionic_bus_info(struct ionic *ionic)
 {
-	return pci_name(ionic->pdev);
+
+	return (pci_name(ionic->pdev));
 }
 
 int
@@ -69,7 +75,7 @@ ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
 
 	if (avail < nintrs) {
 		IONIC_DEV_ERROR(ionic->dev, "Device need %d interrupts, available MSI/X vectors %u\n", nintrs, avail);
-		return -EINVAL;
+		return (-EINVAL);
 	}
 	avail = nintrs;
 
@@ -77,21 +83,30 @@ ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
 
 	if (ret) {
 		IONIC_DEV_ERROR(ionic->dev, "try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
-		return ret;
+		return (ret);
 	}
 
 	rle = linux_pci_get_rle(ionic->pdev, SYS_RES_IRQ, 1);
+#if __FreeBSD_version >= 1200000
+	ionic->pdev->dev.irq_start = rle->start;
+	ionic->pdev->dev.irq_end = rle->start + avail;
+#else
 	ionic->pdev->dev.msix = rle->start;
 	ionic->pdev->dev.msix_max = rle->start + avail;
-
-	return avail;
+#endif
+	return (avail);
 }
 
 void
 ionic_free_msix_vector(struct ionic *ionic)
 {
+
+#if __FreeBSD_version >= 1200000
+	if (ionic->pdev->dev.irq_start)
+#else
 	if (ionic->pdev->dev.msix)
-		pci_release_msi(ionic->pdev->dev.bsddev);
+#endif
+	pci_release_msi(ionic->pdev->dev.bsddev);
 }
 
 static int
@@ -113,7 +128,7 @@ ionic_map_bars(struct ionic *ionic)
 			bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
 			if (!bars[j].vaddr) {
 				dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
-				return ENODEV;
+				return (ENODEV);
 			}
 		}
 
@@ -124,10 +139,10 @@ ionic_map_bars(struct ionic *ionic)
 	/* First two BARs are required. */
 	if (j < 2) {
 		IONIC_DEV_ERROR(dev, "Cannot memory-map BAR%u\n", j);
-		return ENODEV;
+		return (ENODEV);
 	}
 
-	return 0;
+	return (0);
 }
 
 static void
@@ -147,7 +162,7 @@ ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 	phys_addr_t addr = ionic->bars[IONIC_PCI_BAR_DBELL].bus_addr;
 	phys_addr_t offset = (phys_addr_t)page_num << PAGE_SHIFT;
 
-	return addr + offset;
+	return (addr + offset);
 }
 
 void __iomem *
@@ -155,12 +170,13 @@ ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 {
 	phys_addr_t addr = ionic_bus_phys_dbpage(ionic, page_num);
 
-	return ioremap(addr, PAGE_SIZE);
+	return (ioremap(addr, PAGE_SIZE));
 }
 
 void
 ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
 {
+
 	iounmap(page);
 }
 
@@ -220,7 +236,7 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	ionic = malloc(sizeof(*ionic), M_IONIC, M_WAITOK | M_ZERO);
 	if (!ionic)
-		return -ENOMEM;
+		return (-ENOMEM);
 
 	ionic->pdev = pdev;
 	ionic->dev = dev;
@@ -318,7 +334,7 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	pci_save_state(pdev->dev.bsddev);
 
-	return 0;
+	return (0);
 
 err_out_deinit_lifs:
 	ionic_lifs_deinit(ionic);
@@ -333,7 +349,7 @@ err_out_unmap_bars:
 	free(ionic->idev.cmb_inuse, M_IONIC);
 	free(ionic, M_IONIC);
 
-	return err;
+	return (err);
 }
 
 static void
@@ -366,22 +382,23 @@ ionic_shutdown(struct pci_dev *pdev)
 
 static struct pci_driver ionic_driver = {
 	/* XXX: used for interrupt description, limited in space. */
-	.name = "ion", //DRV_NAME,
+	.name = "ion",
 	.id_table = ionic_id_table,
 	.probe = ionic_probe,
 	.remove = ionic_remove,
-	.shutdown	= ionic_shutdown,
+	.shutdown = ionic_shutdown,
 };
 
 int
 ionic_bus_register_driver(void)
 {
 
-	return pci_register_driver(&ionic_driver);
+	return (pci_register_driver(&ionic_driver));
 }
 
 void
 ionic_bus_unregister_driver(void)
 {
+
 	pci_unregister_driver(&ionic_driver);
 }

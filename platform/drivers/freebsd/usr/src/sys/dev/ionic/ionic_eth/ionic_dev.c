@@ -40,12 +40,12 @@ ionic_init_devinfo(struct ionic_dev *idev)
 	idev->dev_info.asic_rev = ioread8(&idev->dev_info_regs->asic_rev);
 
 	memcpy_fromio(idev->dev_info.fw_version,
-		      idev->dev_info_regs->fw_version,
-		      IONIC_DEVINFO_FWVERS_BUFLEN);
+	    idev->dev_info_regs->fw_version,
+	    IONIC_DEVINFO_FWVERS_BUFLEN);
 
 	memcpy_fromio(idev->dev_info.serial_num,
-		      idev->dev_info_regs->serial_num,
-		      IONIC_DEVINFO_SERIAL_BUFLEN);
+	    idev->dev_info_regs->serial_num,
+	    IONIC_DEVINFO_SERIAL_BUFLEN);
 
 	idev->dev_info.fw_version[IONIC_DEVINFO_FWVERS_BUFLEN] = 0;
 	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
@@ -77,13 +77,13 @@ ionic_dev_setup(struct ionic *ionic)
 
 	if (num_bars < 1) {
 		dev_info(dev, "No bars found, aborting\n");
-		return -EFAULT;
+		return (-EFAULT);
 	}
 
 	if (bar->len < BAR0_SIZE) {
 		dev_info(dev, "Resource bar size %lu too small, aborting\n",
-			 bar->len);
-		return -EFAULT;
+		    bar->len);
+		return (-EFAULT);
 	}
 
 	idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
@@ -93,17 +93,17 @@ ionic_dev_setup(struct ionic *ionic)
 
 	sig = ioread32(&idev->dev_info_regs->signature);
 	if (sig != IONIC_DEV_INFO_SIGNATURE) {
-		dev_err(dev, "Incompatible firmware signature %x", sig);
-		return -EFAULT;
+		IONIC_DEV_ERROR(dev, "Incompatible firmware signature %x != 0x%x",
+		    sig, IONIC_DEV_INFO_SIGNATURE);
+		return (-EFAULT);
 	}
 
 	ionic_init_devinfo(idev);
 
-	dev_info(dev, "ASIC: %s rev: 0x%X serial num: %s fw_ver: %s\n",
-		 ionic_dev_asic_name(idev->dev_info.asic_type),
-		 idev->dev_info.asic_rev,
-		 idev->dev_info.serial_num,
-		 idev->dev_info.fw_version);
+	dev_info(dev, "ASIC: %s h/w-rev: 0x%X serial-num: %s fw-ver: %s\n",
+	    ionic_dev_asic_name(idev->dev_info.asic_type),
+	    idev->dev_info.asic_rev, idev->dev_info.serial_num,
+	    idev->dev_info.fw_version);
 
 	/*
 	 * BAR1 resources
@@ -124,19 +124,19 @@ ionic_dev_setup(struct ionic *ionic)
 		idev->phy_cmb_pages = 0;
 		idev->cmb_npages = 0;
 		idev->cmb_inuse = NULL;
-		return 0;
+		return (0);
 	}
 
 	idev->phy_cmb_pages = bar->bus_addr;
 	idev->cmb_npages = bar->len / PAGE_SIZE;
 	idev->cmb_inuse = malloc(BITS_TO_LONGS(idev->cmb_npages) * sizeof(long),
-				  M_IONIC, M_WAITOK | M_ZERO);
+	     M_IONIC, M_WAITOK | M_ZERO);
 	if (!idev->cmb_inuse) {
 		idev->phy_cmb_pages = 0;
 		idev->cmb_npages = 0;
 	}
 
-	return 0;
+	return (0);
 }
 
 /* Devcmd Interface */
@@ -144,14 +144,14 @@ static uint8_t
 ionic_dev_cmd_status(struct ionic_dev *idev)
 {
 
-	return ioread8(&idev->dev_cmd_regs->comp.status);
+	return (ioread8(&idev->dev_cmd_regs->comp.status));
 }
 
 static bool
 ionic_dev_cmd_done(struct ionic_dev *idev)
 {
 
-	return ioread32(&idev->dev_cmd_regs->done) & DEV_CMD_DONE;
+	return (ioread32(&idev->dev_cmd_regs->done) & DEV_CMD_DONE);
 }
 
 static void
@@ -161,9 +161,10 @@ ionic_dev_cmd_disable(struct ionic_dev *idev)
 
 	KASSERT(IONIC_DEV_LOCK_OWNED(ionic), ("device not locked"));
 
+	/*
+	 * Don't disable dev cmd if user requested so.
+	 */
 	if (!ionic_dev_cmd_auto_disable) {
-		IONIC_DEV_WARN(ionic->dev,
-			       "dev_cmd disable skipped due to flag\n");
 		return;
 	}
 
@@ -187,7 +188,7 @@ static bool
 ionic_dev_cmd_disabled(struct ionic_dev *idev)
 {
 
-	return idev->dev_cmd_disabled;
+	return (idev->dev_cmd_disabled);
 }
 
 void
@@ -207,7 +208,7 @@ ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 
 	/* Bail out if the interface was disabled in response to an error */
 	if (unlikely(cmd->lif_init.opcode != CMD_OPCODE_LIF_RESET &&
-		     ionic_dev_cmd_disabled(idev)))
+	    ionic_dev_cmd_disabled(idev)))
 		return;
 
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
@@ -486,7 +487,7 @@ int
 ionic_db_page_num(struct ionic *ionic, int lif_id, int pid)
 {
 
-	return lif_id * ionic->ident.dev.ndbpgs_per_lif + pid;
+	return (lif_id * ionic->ident.dev.ndbpgs_per_lif + pid);
 }
 
 int
@@ -497,7 +498,7 @@ ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 	ionic_intr_clean(idev->intr_ctrl, index);
 	intr->index = index;
 
-	return 0;
+	return (0);
 }
 
 int
@@ -510,7 +511,7 @@ ionic_desc_avail(int ndescs, int head, int tail)
 	else
 		avail -= head + 1;
 
-	return avail;
+	return (avail);
 }
 
 static int
@@ -521,26 +522,25 @@ ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	status = ionic_dev_cmd_status(idev);
 	if (status) {
 		IONIC_ERROR("DEVCMD(%d) failed, status: %s\n",
-			    idev->dev_cmd_regs->cmd.cmd.opcode,
-			    ionic_error_to_str(status));
+		    idev->dev_cmd_regs->cmd.cmd.opcode,
+		    ionic_error_to_str(status));
 		return (EIO);
 	}
 
-	return 0;
+	return (0);
 }
 
 #define IONIC_DEV_CMD_WARN_DELAY_MS 3000
 static int
-ionic_dev_cmd_wait(struct ionic_dev *idev,
-		   unsigned long max_wait,
-		   bool sleepable_ctx)
+ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait,
+    bool sleepable_ctx)
 {
 	unsigned long cmd_start, cmd_timo, msecs;
 	int done, waits = 0;
 
 	/* Bail out if the interface was disabled in response to an error */
 	if (unlikely(ionic_dev_cmd_disabled(idev)))
-		return ENXIO;
+		return (ENXIO);
 
 	cmd_start = ticks;
 	cmd_timo = cmd_start + max_wait;
@@ -550,12 +550,12 @@ ionic_dev_cmd_wait(struct ionic_dev *idev,
 			msecs = (ticks - cmd_start) * 1000 / HZ;
 			if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
 				IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
-					    msecs, waits);
+				    msecs, waits);
 			} else {
 				IONIC_INFO("DEVCMD took %lums (%d waits)\n",
-					   msecs, waits);
+				    msecs, waits);
 			}
-			return 0;
+			return (0);
 		}
 
 		/* Either sleep for 100ms or spin for 1ms */
@@ -574,17 +574,17 @@ ionic_dev_cmd_wait(struct ionic_dev *idev,
 	if (done) {
 		if (msecs > IONIC_DEV_CMD_WARN_DELAY_MS) {
 			IONIC_ERROR("DEVCMD took %lums (%d waits)\n",
-				    msecs, waits);
+			    msecs, waits);
 		} else {
 			IONIC_INFO("DEVCMD took %lums (%d waits)\n",
-				   msecs, waits);
+			    msecs, waits);
 		}
-		return 0;
+		return (0);
 	}
 
 	IONIC_ERROR("DEVCMD timeout after %lums (%d waits)\n", msecs, waits);
 
-	return ETIMEDOUT;
+	return (ETIMEDOUT);
 }
 
 int
@@ -598,7 +598,8 @@ ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 		err = ionic_dev_cmd_check_error(idev);
 	if (err == ETIMEDOUT)
 		ionic_dev_cmd_disable(idev);
-	return err;
+
+	return (err);
 }
 
 int
@@ -611,7 +612,8 @@ ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait)
 		err = ionic_dev_cmd_check_error(idev);
 	if (err == ETIMEDOUT)
 		ionic_dev_cmd_disable(idev);
-	return err;
+
+	return (err);
 }
 
 static void
@@ -648,7 +650,7 @@ ionic_cmd_hb_work(struct work_struct *work)
 	IONIC_WDOG_LOCK(idev);
 	if (idev->cmd_hb_resched)
 		queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
-				   idev->cmd_hb_interval);
+		    idev->cmd_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 }
 
@@ -673,7 +675,7 @@ ionic_cmd_hb_resched(struct ionic_dev *idev)
 	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
-			   idev->cmd_hb_interval);
+	    idev->cmd_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 }
 
@@ -704,20 +706,20 @@ ionic_fw_hb_work(struct work_struct *work)
 		if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWHB0) {
 			/* NB: Set with a hint */
 			IONIC_DEV_WARN(ionic->dev,
-				       "injecting fw_heartbeat 0\n");
+			    "injecting fw_heartbeat 0\n");
 			fw_heartbeat = 0;
 			ionic_wdog_error_trigger = 0;
 		} else if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWHB1) {
 			/* Persistent, don't reset trigger to 0 */
 			IONIC_DEV_WARN(ionic->dev,
-				       "injecting fw_heartbeat 1\n");
+			    "injecting fw_heartbeat 1\n");
 			fw_heartbeat = 1;
 		}
 		if (idev->fw_hb_state == IONIC_FW_HB_INIT) {
 			if (fw_heartbeat == 0) {
 				/* Unsupported firmware */
 				IONIC_DEV_WARN(ionic->dev,
-					       "fw heartbeat not supported\n");
+				    "fw heartbeat not supported\n");
 				idev->fw_hb_state = IONIC_FW_HB_UNSUPPORTED;
 				idev->fw_hb_interval = 0;
 				return;
@@ -731,8 +733,7 @@ ionic_fw_hb_work(struct work_struct *work)
 				idev->fw_hb_state = IONIC_FW_HB_STALE;
 			} else if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
 				IONIC_DEV_ERROR(ionic->dev,
-						"fw heartbeat stuck (%u)\n",
-						fw_heartbeat);
+				    "fw heartbeat stuck (%u)\n", fw_heartbeat);
 				IONIC_DEV_LOCK(ionic);
 				ionic_dev_cmd_disable(idev);
 				IONIC_DEV_UNLOCK(ionic);
@@ -754,7 +755,7 @@ ionic_fw_hb_work(struct work_struct *work)
 	IONIC_WDOG_LOCK(idev);
 	if (idev->fw_hb_resched)
 		queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
-				   idev->fw_hb_interval);
+		    idev->fw_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 }
 
@@ -779,7 +780,7 @@ ionic_fw_hb_resched(struct ionic_dev *idev)
 	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
-			   idev->fw_hb_interval);
+	    idev->fw_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 }
 
@@ -790,7 +791,7 @@ ionic_wdog_init(struct ionic *ionic)
 	char name[16];
 
 	snprintf(name, sizeof(name), "devwdwq%d",
-		 le32_to_cpu(idev->port_info->status.id));
+	    le32_to_cpu(idev->port_info->status.id));
 	idev->wdog_wq = create_singlethread_workqueue(name);
 	INIT_DELAYED_WORK(&idev->cmd_hb_work, ionic_cmd_hb_work);
 	INIT_DELAYED_WORK(&idev->fw_hb_work, ionic_fw_hb_work);
@@ -800,46 +801,43 @@ ionic_wdog_init(struct ionic *ionic)
 	if (ionic_cmd_hb_interval > 0 &&
 	    ionic_cmd_hb_interval < IONIC_WDOG_MIN_MS) {
 		IONIC_DEV_WARN(ionic->dev,
-			       "limiting cmd_hb_interval to %ums\n",
-			       IONIC_WDOG_MIN_MS);
+		    "limiting cmd_hb_interval to %ums\n", IONIC_WDOG_MIN_MS);
 		ionic_cmd_hb_interval = IONIC_WDOG_MIN_MS;
 	}
 	idev->cmd_hb_interval =
-		(unsigned long)ionic_cmd_hb_interval * HZ / 1000;
+	     (unsigned long)ionic_cmd_hb_interval * HZ / 1000;
 
 	IONIC_WDOG_LOCK(idev);
 	idev->cmd_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->cmd_hb_work,
-			   idev->cmd_hb_interval);
+	    idev->cmd_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 
 	/* Firmware heartbeat */
 	if (ionic_fw_hb_interval > 0 &&
 	    ionic_fw_hb_interval < IONIC_WDOG_MIN_MS) {
 		IONIC_DEV_WARN(ionic->dev,
-			       "limiting fw_hb_interval to %ums\n",
-			       IONIC_WDOG_MIN_MS);
+		    "limiting fw_hb_interval to %ums\n", IONIC_WDOG_MIN_MS);
 		ionic_fw_hb_interval = IONIC_WDOG_MIN_MS;
 	}
 	if (ionic_fw_hb_interval > 0 &&
 	    ionic_fw_hb_interval < IONIC_WDOG_FW_WARN_MS) {
 		IONIC_DEV_WARN(ionic->dev,
-			       "setting fw_hb_interval below %ums will "
-			       "cause spurious timeouts\n",
-			       IONIC_WDOG_FW_WARN_MS);
+		    "setting fw_hb_interval below %ums will "
+		    "cause spurious timeouts\n", IONIC_WDOG_FW_WARN_MS);
 	}
 	idev->fw_hb_interval =
-		(unsigned long)ionic_fw_hb_interval * HZ / 1000;
+	     (unsigned long)ionic_fw_hb_interval * HZ / 1000;
 	idev->fw_hb_state = ionic_fw_hb_interval ?
-		IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
+	     IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
 
 	IONIC_WDOG_LOCK(idev);
 	idev->fw_hb_resched = true;
 	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
-	                   idev->fw_hb_interval);
+	    idev->fw_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
 
-	return 0;
+	return (0);
 }
 
 void

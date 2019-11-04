@@ -280,9 +280,8 @@ ionic_adminq_flush(struct ionic_lif *lif)
 		cmd_index = adminq->tail_index;
 		cmd = &adminq->cmd_ring[cmd_index];
 		IONIC_QUE_WARN(adminq, "flushing tail: %d cmd %s(%d)\n",
-			       adminq->tail_index,
-			       ionic_opcode_to_str(cmd->opcode),
-			       cmd->opcode);
+		    adminq->tail_index, ionic_opcode_to_str(cmd->opcode),
+		    cmd->opcode);
 		ctx = adminq->ctx_ring[cmd_index];
 		memset(cmd, 0, sizeof(*cmd));
 		adminq->ctx_ring[cmd_index] = NULL;
@@ -291,9 +290,7 @@ ionic_adminq_flush(struct ionic_lif *lif)
 	IONIC_ADMIN_UNLOCK(adminq);
 
 	IONIC_QUE_INFO(adminq, "head: %d tail: %d comp index: %d\n",
-		       adminq->head_index,
-		       adminq->tail_index,
-		       adminq->comp_index);
+	    adminq->head_index, adminq->tail_index, adminq->comp_index);
 }
 
 static int
@@ -309,10 +306,8 @@ ionic_adminq_check_err(struct ionic_lif *lif, struct ionic_admin_ctx *ctx,
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
 		status = ionic_error_to_str(ctx->comp.comp.status);
 		IONIC_NETDEV_ERROR(netdev, "%s (%d) failed: %s (%d)\n",
-			name,
-			ctx->cmd.cmd.opcode,
-			timeout ? "TIMEOUT": status,
-			timeout ? -1 : ctx->comp.comp.status);
+		    name, ctx->cmd.cmd.opcode, timeout ? "TIMEOUT": status,
+		    timeout ? -1 : ctx->comp.comp.status);
 
 		err = timeout ? ETIMEDOUT : ctx->comp.comp.status;
 		if (timeout)
@@ -320,7 +315,7 @@ ionic_adminq_check_err(struct ionic_lif *lif, struct ionic_admin_ctx *ctx,
 
 	}
 
-	return err;
+	return (err);
 }
 
 static void
@@ -340,7 +335,7 @@ ionic_adminq_avail(struct ionic_adminq *adminq, int want)
 	int avail;
 
 	avail = ionic_desc_avail(adminq->num_descs,
-				 adminq->head_index, adminq->tail_index);
+	    adminq->head_index, adminq->tail_index);
 	return (avail > want);
 }
 
@@ -361,7 +356,7 @@ ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 
 	if (!ionic_adminq_avail(adminq, 1)) {
 		IONIC_QUE_ERROR(adminq, "adminq is hung, head: %d tail: %d\n",
-				adminq->head_index, adminq->tail_index);
+		    adminq->head_index, adminq->tail_index);
 		IONIC_ADMIN_UNLOCK(adminq);
 		return (-ENOSPC);
 	}
@@ -371,17 +366,17 @@ ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
 
 	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
-		       cmd->opcode, adminq->head_index);
+	    cmd->opcode, adminq->head_index);
 	if (__IONIC_DEBUG)
 		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-				     &ctx->cmd, sizeof(ctx->cmd), true);
+		    &ctx->cmd, sizeof(ctx->cmd), true);
 
 	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
 	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
 
 	IONIC_ADMIN_UNLOCK(adminq);
 
-	return 0;
+	return (0);
 }
 
 int
@@ -399,12 +394,12 @@ ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 	if (err == -ESHUTDOWN) {
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
 		IONIC_NETDEV_ERROR(ifp, "%s (%d) failed: adminq stopped\n",
-				   name, ctx->cmd.cmd.opcode);
-		return err;
+		    name, ctx->cmd.cmd.opcode);
+		return (err);
 	}
 	if (err) {
 		IONIC_NETDEV_ERROR(ifp, "adminq_post failed, err: %d\n", err);
-		return err;
+		return (err);
 	}
 
 	remaining = wait_for_completion_timeout(&ctx->work,
@@ -415,7 +410,7 @@ ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 		processed = ionic_adminq_clean(adminq, adminq->num_descs);
 		if (processed) {
 			ionic_intr_credits(idev->intr_ctrl, adminq->intr.index,
-					   processed, IONIC_INTR_CRED_REARM);
+			    processed, IONIC_INTR_CRED_REARM);
 			remaining = 1;
 			IONIC_NETDEV_INFO(ifp, "adminq timeout avoided\n");
 		} else {
@@ -423,7 +418,7 @@ ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 		}
 		IONIC_ADMIN_UNLOCK(adminq);
 	}
-	return ionic_adminq_check_err(lif, ctx, remaining == 0);
+	return (ionic_adminq_check_err(lif, ctx, remaining == 0));
 }
 
 int
@@ -435,18 +430,19 @@ ionic_set_dma_mask(struct ionic *ionic)
 	/* Set DMA addressing limitations. */
 	err = dma_set_mask(dev, DMA_BIT_MASK(IONIC_ADDR_BITS));
 	if (err) {
-		dev_err(dev, "No usable %d-bit DMA configuration, aborting\n", IONIC_ADDR_BITS);
-		return err;
+		IONIC_DEV_ERROR(dev, "No usable %d-bit DMA configuration, aborting\n",
+		    IONIC_ADDR_BITS);
+		return (err);
 	}
 
 	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(IONIC_ADDR_BITS));
 	if (err)
-		dev_err(dev, "Unable to obtain %d-bit DMA "
-			"for consistent allocations, aborting\n", IONIC_ADDR_BITS);
+		IONIC_DEV_ERROR(dev, "Unable to obtain %d-bit DMA "
+		    "for consistent allocations, aborting\n", IONIC_ADDR_BITS);
 
 	dma_set_max_seg_size(dev, 2u * 1024 * 1024 * 1024);
 
-	return err;
+	return (err);
 }
 
 int
@@ -459,12 +455,12 @@ ionic_identify(struct ionic *ionic)
 	ident->drv.os_type = IONIC_OS_TYPE_FREEBSD;
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, "FreeBSD",
-		sizeof(ident->drv.os_dist_str) - 1);
+	    sizeof(ident->drv.os_dist_str) - 1);
 	ident->drv.kernel_ver = __FreeBSD_version;
-	snprintf(ident->drv.kernel_ver_str, sizeof(ident->drv.kernel_ver_str) - 1,
-		"%d", __FreeBSD_version);
+	snprintf(ident->drv.kernel_ver_str,
+	    sizeof(ident->drv.kernel_ver_str) - 1, "%d", __FreeBSD_version);
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
-		sizeof(ident->drv.driver_ver_str) - 1);
+	    sizeof(ident->drv.driver_ver_str) - 1);
 
 	nwords = min(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	IONIC_DEV_LOCK(ionic);
@@ -485,10 +481,10 @@ ionic_identify(struct ionic *ionic)
 		ident->dev.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 
 	IONIC_DEV_UNLOCK(ionic);
-	return 0;
+	return (0);
 
 err_out_unmap:
-	return err;
+	return (err);
 }
 
 int
@@ -502,7 +498,7 @@ ionic_init(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -516,7 +512,7 @@ ionic_reset(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -530,14 +526,13 @@ ionic_port_identify(struct ionic *ionic)
 	ionic_dev_cmd_port_identify(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (!err) {
-		nwords = min(ARRAY_SIZE(ident->port.words),
-						ARRAY_SIZE(idev->dev_cmd_regs->data));
+		nwords = min(ARRAY_SIZE(ident->port.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
 			ident->port.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	}
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -549,25 +544,25 @@ ionic_port_init(struct ionic *ionic)
 	int i, err, nwords;
 
 	if (idev->port_info)
-		return 0;
+		return (0);
 
 	idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
 
-	if ((err = ionic_dma_alloc(ionic, idev->port_info_sz, &ionic->port_dma, 0))) {
-		dev_err(ionic->dev, "failed to allocate memory for port, err: %d\n", err);
-		return -ENOMEM;
+	err = ionic_dma_alloc(ionic, idev->port_info_sz, &ionic->port_dma, 0);
+	if (err) {
+		IONIC_DEV_ERROR(ionic->dev, "failed to allocate memory for port, err: %d\n", err);
+		return (-ENOMEM);
 	}
 
 	idev->port_info = (struct port_info *)ionic->port_dma.dma_vaddr;
 	if (!idev->port_info) {
-		dev_err(ionic->dev, "Failed to allocate port info, aborting\n");
-		return -ENOMEM;
+		IONIC_DEV_ERROR(ionic->dev, "Failed to allocate port info, aborting\n");
+		return (-ENOMEM);
 	}
 
 	IONIC_DEV_LOCK(ionic);
 	idev->port_info_pa = ionic->port_dma.dma_paddr;
-	nwords = min(ARRAY_SIZE(ident->port.config.words),
-					ARRAY_SIZE(idev->dev_cmd_regs->data));
+	nwords = min(ARRAY_SIZE(ident->port.config.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	config = &ident->port.config;
 
 	if (!ionic->is_mgmt_nic)
@@ -579,7 +574,7 @@ ionic_port_init(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -589,15 +584,15 @@ ionic_port_reset(struct ionic *ionic)
 	int err;
 
 	if (!idev->port_info)
-		return 0;
+		return (0);
 
 	IONIC_DEV_LOCK(ionic);
 	ionic_dev_cmd_port_reset(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 	if (err) {
-		dev_err(ionic->dev, "Failed to reset port\n");
-		return err;
+		IONIC_DEV_ERROR(ionic->dev, "Failed to reset port\n");
+		return (err);
 	}
 
 	ionic_dma_free(ionic, &ionic->port_dma);
@@ -605,7 +600,7 @@ ionic_port_reset(struct ionic *ionic)
 	idev->port_info = NULL;
 	idev->port_info_pa = 0;
 
-	return 0;
+	return (0);
 }
 
 void
@@ -625,8 +620,8 @@ ionic_set_port_state(struct ionic *ionic, uint8_t state)
 	IONIC_DEV_UNLOCK(ionic);
 
 	if (err)
-		dev_err(ionic->dev, "Failed to set port state %s, err: %d\n",
-			ionic_port_admin_state_str(state), err);
+		IONIC_DEV_ERROR(ionic->dev, "Failed to set port state %s, err: %d\n",
+		    ionic_port_admin_state_str(state), err);
 }
 
 int
@@ -640,14 +635,13 @@ ionic_qos_class_identify(struct ionic *ionic)
 	ionic_dev_cmd_qos_class_identify(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (!err) {
-		nwords = min(ARRAY_SIZE(ident->qos.words),
-						ARRAY_SIZE(idev->dev_cmd_regs->data));
+		nwords = min(ARRAY_SIZE(ident->qos.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
 			ident->qos.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	}
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -656,8 +650,7 @@ ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *confi
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
 
-	nwords = min(ARRAY_SIZE(config->words),
-					ARRAY_SIZE(idev->dev_cmd_regs->data));
+	nwords = min(ARRAY_SIZE(config->words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	IONIC_DEV_LOCK(ionic);
 	for (i = 0; i < nwords; i++)
 		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
@@ -666,7 +659,7 @@ ionic_qos_class_init(struct ionic *ionic, uint8_t group, union qos_config *confi
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 int
@@ -680,7 +673,7 @@ ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	IONIC_DEV_UNLOCK(ionic);
 
-	return err;
+	return (err);
 }
 
 /*
@@ -722,7 +715,7 @@ ionic_init_module(void)
 	ionic_validate_params();
 	pr_info("%s, ver: %s\n", DRV_DESCRIPTION, DRV_VERSION);
 
-	return ionic_bus_register_driver();
+	return (ionic_bus_register_driver());
 }
 
 static void __exit

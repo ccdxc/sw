@@ -61,7 +61,7 @@ ionic_rx_filters_init(struct ionic_lif *lif)
 	}
 
 	lif->rx_filters.init = true;
-	return 0;
+	return (0);
 }
 
 void
@@ -85,15 +85,15 @@ ionic_rx_filters_deinit(struct ionic_lif *lif)
 }
 
 int
-ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id, uint16_t rxq_index,
-			 uint32_t hash, struct ionic_admin_ctx *ctx)
+ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id,
+    uint16_t rxq_index, uint32_t hash, struct ionic_admin_ctx *ctx)
 {
 	struct rx_filter *f = malloc(sizeof(*f), M_IONIC, M_NOWAIT | M_ZERO);
 	struct hlist_head *head;
 	unsigned int key;
 
 	if (!f)
-		return ENOMEM;
+		return (ENOMEM);
 
 	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	f->flow_id = flow_id;
@@ -118,7 +118,7 @@ ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id, uint16_t rxq_index
 	default:
 		free(f, M_IONIC);
 		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
-		return ENOTSUPP;
+		return (ENOTSUPP);
 	}
 
 	head = &lif->rx_filters.by_hash[key];
@@ -129,11 +129,12 @@ ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id, uint16_t rxq_index
 	hlist_add_head(&f->by_id, head);
 	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
-	return 0;
+	return (0);
 }
 
 struct rx_filter *
-ionic_rx_filter_by_vlan_addr(struct ionic_lif *lif, uint16_t vid, const uint8_t *addr)
+ionic_rx_filter_by_vlan_addr(struct ionic_lif *lif, uint16_t vid,
+    const uint8_t *addr)
 {
 	unsigned int key = vid & RX_FILTER_HLISTS_MASK;
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
@@ -146,10 +147,10 @@ ionic_rx_filter_by_vlan_addr(struct ionic_lif *lif, uint16_t vid, const uint8_t 
 			continue;
 		if (memcmp(addr, f->cmd.mac_vlan.addr, ETH_ALEN))
 			continue;
-		return f;
+		return (f);
 	}
 
-	return NULL;
+	return (NULL);
 }
 
 struct rx_filter *
@@ -164,10 +165,10 @@ ionic_rx_filter_by_vlan(struct ionic_lif *lif, uint16_t vid)
 			continue;
 		if (f->cmd.vlan.vlan != vid)
 			continue;
-		return f;
+		return (f);
 	}
 
-	return NULL;
+	return (NULL);
 }
 
 struct rx_filter *
@@ -182,8 +183,8 @@ ionic_rx_filter_by_addr(struct ionic_lif *lif, const uint8_t *addr)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN))
 			continue;
-		return f;
+		return (f);
 	}
 
-	return NULL;
+	return (NULL);
 }

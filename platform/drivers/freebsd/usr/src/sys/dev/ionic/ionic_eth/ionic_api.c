@@ -50,14 +50,14 @@ get_netdev_ionic_lif(struct net_device *netdev, const char *api_version,
 	struct ionic_lif *lif;
 
 	if (strcmp(api_version, IONIC_API_VERSION))
-		return NULL;
+		return (NULL);
 
 	lif = ionic_netdev_lif(netdev);
 
 	if (!lif || lif->ionic->is_mgmt_nic || prsn != IONIC_PRSN_RDMA)
-		return NULL;
+		return (NULL);
 
-	return (struct lif *)lif;
+	return ((struct lif *)lif);
 }
 EXPORT_SYMBOL_GPL(get_netdev_ionic_lif);
 
@@ -65,7 +65,7 @@ struct device *
 ionic_api_get_device(struct lif *lif)
 {
 
-	return lif->ionic_lif.ionic->dev;
+	return (lif->ionic_lif.ionic->dev);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_device);
 
@@ -73,7 +73,7 @@ bool
 ionic_api_stay_registered(struct lif *lif)
 {
 
-	return lif->ionic_lif.stay_registered;
+	return (lif->ionic_lif.stay_registered);
 }
 EXPORT_SYMBOL_GPL(ionic_api_stay_registered);
 
@@ -81,7 +81,7 @@ struct sysctl_oid *
 ionic_api_get_debugfs(struct lif *lif)
 {
 
-	return lif->ionic_lif.sysctl_ifnet;
+	return (lif->ionic_lif.sysctl_ifnet);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
 
@@ -98,9 +98,9 @@ ionic_api_get_private(struct lif *lif, enum ionic_api_prsn prsn)
 {
 
 	if (prsn != IONIC_PRSN_RDMA)
-		return NULL;
+		return (NULL);
 
-	return lif->ionic_lif.api_private;
+	return (lif->ionic_lif.api_private);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_private);
 
@@ -109,15 +109,15 @@ ionic_api_set_private(struct lif *lif, void *priv,
     void (*reset_cb)(void *priv), enum ionic_api_prsn prsn)
 {
 	if (prsn != IONIC_PRSN_RDMA)
-		return -EINVAL;
+		return (-EINVAL);
 
 	if (lif->ionic_lif.api_private && priv)
-		return -EBUSY;
+		return (-EBUSY);
 
 	lif->ionic_lif.api_private = priv;
 	lif->ionic_lif.api_reset_cb = reset_cb;
 
-	return 0;
+	return (0);
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
@@ -125,7 +125,7 @@ const struct ionic_devinfo *
 ionic_api_get_devinfo(struct lif *lif)
 {
 
-	return &lif->ionic_lif.ionic->idev.dev_info;
+	return (&lif->ionic_lif.ionic->idev.dev_info);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_devinfo);
 
@@ -134,7 +134,7 @@ ionic_api_get_identity(struct lif *lif, int *lif_id)
 {
 	*lif_id = lif->ionic_lif.index;
 
-	return &lif->ionic_lif.ionic->ident.lif;
+	return (&lif->ionic_lif.ionic->ident.lif);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 
@@ -147,22 +147,22 @@ ionic_api_get_intr(struct lif *lif, int *irq)
 	int err;
 
 	if (!lif->ionic_lif.neqs)
-		return -ENOSPC;
+		return (-ENOSPC);
 
 	err = ionic_dev_intr_reserve(&lif->ionic_lif, &intr_obj);
 	if (err)
-		return -err;
+		return (-err);
 
 	err = ionic_get_msix_irq(lif->ionic_lif.ionic, intr_obj.index);
 	if (err < 0) {
 		ionic_dev_intr_unreserve(&lif->ionic_lif, &intr_obj);
-		return err;
+		return (err);
 	}
 
 	--lif->ionic_lif.neqs;
 
 	*irq = err;
-	return intr_obj.index;
+	return (intr_obj.index);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_intr);
 
@@ -190,12 +190,12 @@ ionic_api_get_cmb(struct lif *lif, uint32_t *pgid, phys_addr_t *pgaddr, int orde
 	mutex_unlock(&idev->cmb_inuse_lock);
 
 	if (ret < 0)
-		return ret;
+		return (ret);
 
 	*pgid = (uint32_t)ret;
 	*pgaddr = idev->phy_cmb_pages + ret * PAGE_SIZE;
 
-	return 0;
+	return (0);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_cmb);
 
@@ -232,7 +232,7 @@ ionic_api_get_dbid(struct lif *lif, uint32_t *dbid, phys_addr_t *addr)
 
 	if (id == lif->ionic_lif.dbid_count) {
 		mutex_unlock(&lif->ionic_lif.dbid_inuse_lock);
-		return -ENOMEM;
+		return (-ENOMEM);
 	}
 
 	set_bit(id, lif->ionic_lif.dbid_inuse);
@@ -244,7 +244,7 @@ ionic_api_get_dbid(struct lif *lif, uint32_t *dbid, phys_addr_t *addr)
 	*dbid = id;
 	*addr = ionic_bus_phys_dbpage(lif->ionic_lif.ionic, dbpage_num);
 
-	return 0;
+	return (0);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbid);
 
@@ -270,7 +270,7 @@ ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 	if (__IONIC_DEBUG) {
 		IONIC_DEV_INFO(ionic->dev, "post external dev command:\n");
 		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-				     &ctx->cmd, sizeof(ctx->cmd), true);
+		    &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
 	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
@@ -284,7 +284,7 @@ ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 	if (__IONIC_DEBUG) {
 		IONIC_DEV_INFO(ionic->dev, "comp external dev command:\n");
 		print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-				     &ctx->comp, sizeof(ctx->comp), true);
+		    &ctx->comp, sizeof(ctx->comp), true);
 	}
 
 err_out:
@@ -294,6 +294,6 @@ err_out:
 		complete_all(&ctx->work);
 	}
 
-	return err;
+	return (err);
 }
 EXPORT_SYMBOL_GPL(ionic_api_adminq_post);

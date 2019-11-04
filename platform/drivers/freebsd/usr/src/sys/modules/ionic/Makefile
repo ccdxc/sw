@@ -19,7 +19,7 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 # Import host system's kernel configuration (INVARIANTS etc.)
 # Remember to do `make cleandepend` if changing KERNCONF!
 KERNCONF?=    GENERIC
-KERNCONFDIR=  /usr/src/sys/${MACHINE_ARCH}/conf
+KERNCONFDIR=  ${SYSDIR}/${MACHINE_ARCH}/conf
 SRCS+=        .kconf/opt_global.h
 CFLAGS+=      -include .kconf/opt_global.h
 
