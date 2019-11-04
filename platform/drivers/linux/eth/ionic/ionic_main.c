@@ -410,6 +410,9 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	int err;
 
 	/* Query system for DMA addressing limitation for the device. */
+#ifdef CONFIG_PPC64
+	ionic->pdev->no_64bit_msi = 1;
+#endif
 	err = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(IONIC_ADDR_LEN));
 	if (err)
 		dev_err(dev, "Unable to obtain 64-bit DMA for consistent allocations, aborting.  err=%d\n",
