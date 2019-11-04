@@ -667,6 +667,10 @@ class HostManagement(EntityManagement):
             nodeinit_args = "--cleanup"
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
+        if GlobalOptions.skip_driver_install:
+            print('user requested to skip driver install')
+            return
+
         if driver_pkg:
             nodeinit_args = ""
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
@@ -850,6 +854,9 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_DRIVER_INSTALL_FAILED, "ESX Driver install failed")
     def __install_drivers(self, pkg):
+        if GlobalOptions.skip_driver_install:
+            print('user requested to skip driver install')
+            return
         # Install IONIC driver package.
         #ESX removes folder after reboot, add it again
         self.RunSshCmd("rm -rf %s" % HOST_NAPLES_DIR)

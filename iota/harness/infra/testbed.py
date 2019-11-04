@@ -266,6 +266,8 @@ class _Testbed:
                 cmd.extend(["--gold-drivers-latest-pkg", latest_gold_driver])
                 cmd.extend(["--gold-firmware-old-version", _get_driver_version(old_gold_driver)])
                 cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
+                if GlobalOptions.skip_driver_install: 
+                    cmd.extend(["--skip-driver-install"]) 
                 if GlobalOptions.use_gold_firmware: 
                     cmd.extend(["--use-gold-firmware"]) 
                 if GlobalOptions.fast_upgrade: 

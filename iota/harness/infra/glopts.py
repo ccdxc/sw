@@ -43,6 +43,8 @@ parser.add_argument('--pipeline', dest='pipeline', default="iris",
                     help='Filter tests by Pipeline')
 parser.add_argument('--rerun', dest='rerun',
                     action='store_true', help='Re-run mode, Skips copy and few init steps.')
+parser.add_argument('--skip-driver-install', dest='skip_driver_install',
+                    action='store_true', help='Skips driver install.')
 parser.add_argument('--skip-firmware-upgrade', dest='skip_firmware_upgrade',
                     action='store_true', help='Skip Firmware Upgrade and Start Tests.')
 parser.add_argument('--only-firmware-upgrade', dest='only_firmware_upgrade',
