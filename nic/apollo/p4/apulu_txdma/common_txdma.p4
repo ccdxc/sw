@@ -1095,6 +1095,6 @@ control ingress {
             apply(tx_table_s6_t2);
             apply(tx_table_s7_t2);
         }
+        apply(tx_table_s5_t4_lif_rate_limiter_table);
     }
-    apply(tx_table_s5_t4_lif_rate_limiter_table);
 }

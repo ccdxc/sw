@@ -46,7 +46,7 @@ table ecmp {
 /******************************************************************************
  * Tunnel
  *****************************************************************************/
-action tunnel_info(nexthop_base, num_nexthops, ip_type, dipo, dmaci) {
+action tunnel_info(nexthop_base, num_nexthops, vni, ip_type, dipo, dmaci) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
     if (num_nexthops == 0) {
         modify_field(scratch_metadata.nexthop_id, nexthop_base);
@@ -63,6 +63,7 @@ action tunnel_info(nexthop_base, num_nexthops, ip_type, dipo, dmaci) {
         modify_field(ipv6_0.dstAddr, dipo);
     }
     modify_field(rewrite_metadata.tunnel_dmaci, dmaci);
+    modify_field(rewrite_metadata.tunnel_vni, vni);
 }
 
 @pragma stage 3
@@ -127,7 +128,11 @@ action ipv4_vxlan_encap(dmac, smac) {
     subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
 
     modify_field(vxlan_0.flags, 0x8);
-    modify_field(vxlan_0.vni, rewrite_metadata.vni);
+    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL)) {
+        modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
+    } else {
+        modify_field(vxlan_0.vni, rewrite_metadata.vni);
+    }
     modify_field(vxlan_0.reserved, 0);
     modify_field(vxlan_0.reserved2, 0);
 
@@ -168,7 +173,11 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(udp_0.len, scratch_metadata.ip_totallen);
 
     modify_field(vxlan_0.flags, 0x8);
-    modify_field(vxlan_0.vni, rewrite_metadata.vni);
+    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL)) {
+        modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
+    } else {
+        modify_field(vxlan_0.vni, rewrite_metadata.vni);
+    }
     modify_field(vxlan_0.reserved, 0);
     modify_field(vxlan_0.reserved2, 0);
 

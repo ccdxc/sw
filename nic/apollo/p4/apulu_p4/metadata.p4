@@ -79,6 +79,7 @@ header_type rewrite_metadata_t {
         vni                 : 24;
         ip_type             : 1;
         tunnel_dmaci        : 48;
+        tunnel_vni          : 24;
     }
 }
 

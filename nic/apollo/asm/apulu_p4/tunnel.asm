@@ -19,6 +19,7 @@ tunnel_info:
     seq             c1, d.tunnel_info_d.ip_type, IPTYPE_IPV4
     phvwr.c1        p.ipv4_0_dstAddr, d.tunnel_info_d.dipo
     phvwr.!c1       p.ipv6_0_dstAddr, d.tunnel_info_d.dipo
+    phvwr           p.rewrite_metadata_tunnel_vni, d.tunnel_info_d.vni
     phvwr.e         p.rewrite_metadata_ip_type, d.tunnel_info_d.ip_type
     phvwr.f         p.rewrite_metadata_tunnel_dmaci, d.tunnel_info_d.dmaci
 

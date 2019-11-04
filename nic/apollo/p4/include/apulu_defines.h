@@ -105,6 +105,12 @@
 #define TX_REWRITE_ENCAP_VXLAN                  2
 #define TX_REWRITE_ENCAP_BITS                   8:7
 
+#define TX_REWRITE_VNI_START                    9
+#define TX_REWRITE_VNI_MASK                     1
+#define TX_REWRITE_VNI_DEFAULT                  0
+#define TX_REWRITE_VNI_FROM_TUNNEL              1
+#define TX_REWRITE_VNI_BITS                     9:9
+
 #define RX_REWRITE_DMAC_START                   0
 #define RX_REWRITE_DMAC_MASK                    2
 #define RX_REWRITE_DMAC_NONE                    0
