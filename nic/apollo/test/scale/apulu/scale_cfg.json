@@ -6,7 +6,8 @@
             "gw-ip-addr": "1.0.0.1",
             "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "dual-stack": "true"
+            "dual-stack": "true",
+            "encap": "vxlan"
         },
         {
             "kind" : "tep",
