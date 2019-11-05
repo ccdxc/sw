@@ -186,14 +186,20 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
                       spec->key.id, ret);
+        return ret;
     }
 
     // if the subnet is enabled on host interface, update the lif table with
     // subnet and vpc ids appropriately
-    if ((spec->host_ifindex != IFINDEX_INVALID) &&
-        (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW)) {
+    if (spec->host_ifindex != IFINDEX_INVALID) {
         lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         lif = lif_impl_db()->find(&lif_key);
+        if (lif == NULL) {
+            // TODO: temporary for scale test
+            PDS_TRACE_WARN("Skipping lif 0x%x update on subnet %u create",
+                           spec->host_ifindex, spec->key.id);
+            return ret;
+        }
         ret = program_lif_table(lif_key, vpc->hw_id(), subnet->hw_id(),
                                 lif->vnic_hw_id());
         if (ret != SDK_RET_OK) {
