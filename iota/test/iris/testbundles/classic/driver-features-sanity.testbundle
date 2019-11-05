@@ -221,6 +221,10 @@ testcases:
             type: host
             #capture_pcap : true
 
+    -   name    : FLR_simple
+        testcase: testcases.drivers.flr
+        enable : true
+
     -   name    : DriverReloadStress
         testcase: testcases.drivers.driverreload
         disable : False
