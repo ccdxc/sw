@@ -35,7 +35,6 @@ action ingress_to_rxdma() {
     add_header(p4i_to_arm);
 
     modify_field(p4i_to_arm.packet_len, capri_p4_intrinsic.packet_len);
-    modify_field(p4i_to_arm.local_vnic_tag, vnic_metadata.bd_id);
     modify_field(p4i_to_arm.flow_hash, p4i_i2e.entropy_hash);
     modify_field(offset_metadata.l2_1, offset_metadata.l2_1);
     modify_field(offset_metadata.l2_2, offset_metadata.l2_2);
@@ -44,6 +43,9 @@ action ingress_to_rxdma() {
     modify_field(offset_metadata.l4_1, offset_metadata.l4_1);
     modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
     modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
+    modify_field(p4i_to_arm.lif, capri_intrinsic.lif);
+    modify_field(p4i_to_arm.service_xlate_id, 0);
+    modify_field(p4i_to_arm.mapping_xlate_id, p4i_i2e.xlate_id);
 
     modify_field(p4i_to_rxdma.apulu_p4plus, TRUE);
     if (key_metadata.ktype == KEY_TYPE_IPV4) {
@@ -121,6 +123,7 @@ action egress_to_rxdma() {
 
     if (p4e_to_arm.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
+        modify_field(p4e_to_arm.egress_bd_id, vnic_metadata.egress_bd_id);
     }
 
     modify_field(p4e_to_p4plus_classic_nic.packet_len,

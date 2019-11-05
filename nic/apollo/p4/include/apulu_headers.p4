@@ -34,6 +34,33 @@ header_type apulu_txdma_to_p4e_header_t {
     }
 }
 
+header_type apulu_p4_to_arm_header_t {
+    fields {
+        packet_len          : 16;
+        flags               : 16;
+        ingress_bd_id       : 16;
+        flow_hash           : 32;
+
+        l2_1_offset         : 8;
+        l3_1_offset         : 8;
+        l4_1_offset         : 8;
+        l2_2_offset         : 8;
+        l3_2_offset         : 8;
+        l4_2_offset         : 8;
+        payload_offset      : 8;
+
+        lif                 : 16;
+        egress_bd_id        : 16;
+        service_xlate_id    : 16;
+        mapping_xlate_id    : 16;
+        tx_meter_id         : 16;
+        nexthop_id          : 16;
+        pad                 : 5;
+        nexthop_type        : 2;
+        drop                : 1;
+    }
+}
+
 header_type apulu_ingress_recirc_header_t {
     fields {
         flow_ohash          : 32;

@@ -32,10 +32,10 @@ nexthop_tx_rewrite:
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_TUNNEL
-    phvwrpair.c1    p.ethernet_1_dstAddr[47:8], \
-                        k.rewrite_metadata_tunnel_dmaci_s0_e39, \
-                        p.ethernet_1_dstAddr[7:0], \
-                        k.rewrite_metadata_tunnel_dmaci_s40_e47
+    phvwrpair.c1    p.ethernet_1_dstAddr[47:40], \
+                        k.rewrite_metadata_tunnel_dmaci_s0_e7, \
+                        p.ethernet_1_dstAddr[39:0], \
+                        k.rewrite_metadata_tunnel_dmaci_s8_e47
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SMAC_BITS], \
                         TX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
@@ -86,7 +86,8 @@ ipv4_vxlan_encap:
     add             r1, r1, 36
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
     phvwr           p.ipv4_0_srcAddr, k.rewrite_metadata_device_ipv4_addr
-    phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_UDP
+    phvwr           p.ipv4_0_ttl, 64
+    phvwr           p.ipv4_0_protocol, IP_PROTO_UDP
     phvwr           p.ipv4_0_totalLen, r1
     sub             r1, r1, 20
     or              r7, k.p4e_i2e_entropy_hash, 0xC000

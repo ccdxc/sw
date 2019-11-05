@@ -49,7 +49,8 @@ erspan:
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
     phvwr           p.{ipv4_0_srcAddr,ipv4_0_dstAddr}, \
                         d.{u.erspan_d.sip,u.erspan_d.dip}
-    phvwr           p.{ipv4_0_ttl,ipv4_0_protocol}, (64 << 8) | IP_PROTO_GRE
+    phvwr           p.ipv4_0_ttl, 64
+    phvwr           p.ipv4_0_protocol, IP_PROTO_GRE
     add             r1, r5, 36
     phvwr           p.ipv4_0_totalLen, r1
     phvwr           p.capri_deparser_len_ipv4_0_hdr_len, 20
