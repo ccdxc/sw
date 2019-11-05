@@ -2213,6 +2213,7 @@ func TestGetEumVMaps(t *testing.T) {
 		if name != exp {
 			t.Fatalf("got [%v] expecting [%v]", name, exp)
 		}
+		t.Logf("got %s ", name)
 	}
 }
 
@@ -4024,6 +4025,15 @@ func TestGetMetricsJSON(t *testing.T) {
 					number: 8
 					options:<[venice.metricsField]: {DisplayName: "Field8stringEnum" Description:"Field8 is a string Enum"}>
 				>
+				field <
+					name: 'field9'
+					label: LABEL_OPTIONAL
+					type:  TYPE_MESSAGE
+					type_name: '.delphi.Counter'
+					number: 9
+					options:<[venice.metricsField]: {DisplayName: "Field9Bitmap" Description:"Field9 is a Bitmap" Units: Bitmap AllowedVal: "msg_1.Enum1"}>
+					>
+
 				enum_type <
 					name: "Enum1"
 					value <name: "value1", number: 0>
@@ -4157,6 +4167,17 @@ func TestGetMetricsJSON(t *testing.T) {
 						AllowedValues: []string{
 							"0",
 							"1",
+						},
+					},
+					{
+						Name:        "Field9",
+						DisplayName: "Field9Bitmap",
+						Description: "Field9 is a Bitmap",
+						Units:       "Bitmap",
+						BaseType:    "Bitmap",
+						AllowedValues: []string{
+							"value1",
+							"value2",
 						},
 					},
 				},

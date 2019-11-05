@@ -4,6 +4,36 @@ package flowstats;
 import "delphi.proto";
 import "metrics_annotations.proto";
 
+enum DropReasons {
+	MALFORMED_PKT_DROP                    = 0;
+	PARSER_ICRC_ERR_DROP                  = 1;
+	PARSER_LEN_ERR_DROP                   = 2;
+	HARDWARE_ERR_DROP                     = 3;
+	INPUT_MAPPING_DROP                    = 4;
+	INPUT_MAPPING_DEJAVU_DROP             = 5;
+	MULTI_DEST_NOT_PINNED_UPLINK_DROP     = 6;
+	FLOW_HIT_DROP                         = 7;
+	FLOW_MISS_DROP                        = 8;
+	NACL_DROP                             = 9;
+	IPSG_DROP                             = 10;
+	IP_NORMALIZATION_DROP                 = 11;
+	TCP_NORMALIZATION_ERR_DROP            = 12;
+	TCP_RST_WITH_INVALID_ACK_NUM_DROP     = 13;
+	TCP_NON_SYN_FIRST_PKT_DROP            = 14;
+	ICMP_NORMALIZATION_DROP               = 15;
+	INPUT_PROPERTIES_MISS_DROP            = 16;
+	TCP_OUT_OF_WINDOW_DROP                = 17;
+	TCP_SPLIT_HANDSHAKE_DROP              = 18;
+	TCP_WIN_ZERO_ERR_DROP                 = 19;
+	TCP_DATA_AFTER_FIN_DROP               = 20;
+	TCP_NON_RST_PKT_AFTER_RST_DROP        = 21;
+	TCP_INVALID_RESPONDER_FIRST_PKT_DROP  = 22;
+	TCP_UNEXPECTED_PKT_DROP               = 23;
+	SRC_LIF_MISMATCH_DROP                 = 24;
+	VF_IP_LABEL_MISMATCH_DROP             = 25;
+	VF_BAD_RR_DST_IP_DROP                 = 26;
+}
+
 // Key for L2 flows (i.e, non-IP flows)
 message L2FlowKey {
     uint32 svrf       = 1; // Source VRF
@@ -102,7 +132,7 @@ message L2FlowDropMetrics {
     delphi.Counter drop_bytes           = 4 [(venice.metricsField) = {DisplayName: "Drop Bytes" Description: "Number of bytes dropped in this Flow-Context"}];
     delphi.Gauge   drop_first_timestamp = 5 [(venice.metricsField) = {DisplayName: "Drop First-Timestamp" Description: "First-time when drops occurred in this Flow-Context"}];
     delphi.Gauge   drop_last_timestamp  = 6 [(venice.metricsField) = {DisplayName: "Drop Last-Timestamp" Description: "Last-time when drops occurred in this Flow-Context"}];
-    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
+    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Units: Bitmap AllowedVal: "DropReasons" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
 }
 
 message IPv4FlowDropMetrics {
@@ -121,7 +151,7 @@ message IPv4FlowDropMetrics {
     delphi.Counter drop_bytes           = 4 [(venice.metricsField) = {DisplayName: "Drop Bytes" Description: "Number of bytes dropped in this Flow-Context"}];
     delphi.Gauge   drop_first_timestamp = 5 [(venice.metricsField) = {DisplayName: "Drop First-Timestamp" Description: "First-time when drops occurred in this Flow-Context"}];
     delphi.Gauge   drop_last_timestamp  = 6 [(venice.metricsField) = {DisplayName: "Drop Last-Timestamp" Description: "Last-time when drops occurred in this Flow-Context"}];
-    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
+    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Units: Bitmap AllowedVal: "DropReasons" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
 }
 
 message IPv6FlowDropMetrics {
@@ -140,7 +170,7 @@ message IPv6FlowDropMetrics {
     delphi.Counter drop_bytes           = 4 [(venice.metricsField) = {DisplayName: "Drop Bytes" Description: "Number of bytes dropped in this Flow-Context"}];
     delphi.Gauge   drop_first_timestamp = 5 [(venice.metricsField) = {DisplayName: "Drop First-Timestamp" Description: "First-time when drops occurred in this Flow-Context"}];
     delphi.Gauge   drop_last_timestamp  = 6 [(venice.metricsField) = {DisplayName: "Drop Last-Timestamp" Description: "Last-time when drops occurred in this Flow-Context"}];
-    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
+    delphi.Counter drop_reason          = 7 [(venice.metricsField) = {DisplayName: "Drop Reason" Units: Bitmap AllowedVal: "DropReasons" Description: "Drop-Reason Bitmap for packets dropped in this Flow-Context"}];
 }
 
 message L2FlowPerformanceMetrics {

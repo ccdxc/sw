@@ -10,6 +10,7 @@ enum MetricUnitType {
     Bytes       = 2;
     ID          = 3;
     Gauge       = 4;
+    Bitmap      = 5;
 }
 
 // defines as a hint of type of metric
@@ -53,7 +54,8 @@ message MetricFieldInfo {
     MetricUnitType Units        = 3;
     int32 ScaleMin              = 4;
     int32 ScaleMax              = 5;
-    repeated MetricTags Tags    = 6;
+    string AllowedVal           = 6;
+    repeated MetricTags Tags    = 7;
 }
 
 extend google.protobuf.MessageOptions {

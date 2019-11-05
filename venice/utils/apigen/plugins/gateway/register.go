@@ -557,7 +557,34 @@ func getFieldMetricOptions(f *descriptor.Field) (fieldMetricOptions, bool) {
 		} else {
 			switch f.GetTypeName() {
 			case ".delphi.Counter":
-				ret.BaseType = "Counter"
+				if o.Units.String() == "Bitmap" {
+					ret.BaseType = "Bitmap"
+					eName := ""
+					if strings.HasPrefix(o.AllowedVal, ".") {
+						eName = o.AllowedVal
+					} else {
+						eName = "." + f.Message.File.GoPkg.Name + "." + o.AllowedVal
+					}
+					glog.V(1).Infof("Enum is %s", eName)
+
+					enum, err := f.Message.File.Reg.LookupEnum("", eName)
+					if err != nil {
+						glog.V(1).Infof("Enum not found")
+						return ret, false
+					}
+					glog.V(1).Infof("Enum is %s", enum.String())
+					var allowedMap = make(map[string]int32)
+					for _, v := range enum.Value {
+						n := common.GetVName(v)
+						idx := v.GetNumber()
+						allowedMap[n] = idx
+						ret.AllowedValues = append(ret.AllowedValues, n)
+					}
+
+					glog.V(1).Infof("Allowed values %s", ret.AllowedValues)
+				} else {
+					ret.BaseType = "Counter"
+				}
 			case ".delphi.Gauge":
 				ret.BaseType = "Gauge"
 			default:
