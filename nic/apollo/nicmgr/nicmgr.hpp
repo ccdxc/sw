@@ -49,6 +49,12 @@ private:
     /// \brief    destructor
     ~nicmgrapi() {}
 
+    /// \brief    HAL UP event handler
+    /// \param[in]    event pointer to the event
+    /// \param[in]    event_len length of the event data
+    /// \param[in]    ctxt callback context
+    static void hal_up_event_handler_(void *data, size_t data_len, void *ctxt);
+
     /// \brief    port handler callback
     /// \param[in]    event pointer to the event
     /// \param[in]    event_len length of the event data

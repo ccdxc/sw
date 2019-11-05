@@ -323,7 +323,9 @@ event_thread::process_lfq_(void) {
                             msg->meta.pubsub.msg_code);
             this->sub_cbs_[msg->meta.pubsub.msg_code](
                 msg->payload, msg->meta.pubsub.data_length, this->user_ctx_);
-            free(msg->payload);
+            if (msg->payload) {
+                free(msg->payload);
+            }
         } else if (msg->type == lfq_msg::UPDOWN_MSG) {
             assert(this->updown_up_cbs_.count(msg->meta.updown.thread_id) > 0);
             this->updown_up_cbs_[msg->meta.updown.thread_id](
@@ -709,6 +711,7 @@ subscribe (uint32_t msg_code, sub_cb callback)
 void
 publish (uint32_t msg_code, void *data, size_t data_length)
 {
+    void *data_copy;
     std::set<uint32_t> subs;
     uint32_t sender_id = MAX_THREAD_ID + 1;
 
@@ -720,8 +723,12 @@ publish (uint32_t msg_code, void *data, size_t data_length)
 
     for (auto sub: subs) {
         lfq_msg *msg = lfq_msg::factory();
-        void *data_copy = malloc(data_length);
-        memcpy(data_copy, data, data_length);
+        if (data_length) {
+            data_copy = malloc(data_length);
+            memcpy(data_copy, data, data_length);
+        } else {
+            data_copy = NULL;
+        }
         msg->type = lfq_msg::PUBSUB_MSG;
         msg->payload = data_copy;
         msg->meta.pubsub.data_length = data_length;

@@ -11,7 +11,9 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/lib/device/device.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_thread.hpp"
@@ -265,16 +267,13 @@ pds_init (pds_init_params_t *params)
     // spawn api thread
     core::spawn_api_thread(&api::g_pds_state);
 
-    // spawn nicmgr thread. have to be after linkmgr init
+    // spawn nicmgr thread
     core::spawn_nicmgr_thread(&api::g_pds_state);
 
     // spawn periodic thread, have to be before linkmgr init
     core::spawn_periodic_thread(&api::g_pds_state);
 
-    // trigger linkmgr initialization
-    while (!core::is_nicmgr_ready()) {
-        pthread_yield();
-    }
+    // create ports
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 
@@ -291,6 +290,14 @@ pds_init (pds_init_params_t *params)
 
     // initialize and start system monitoring
     api::sysmon_init();
+
+    // don't interfere with nicmgr
+    while (!core::is_nicmgr_ready()) {
+         pthread_yield();
+    }
+
+    // raise HAL_UP event
+    sdk::event_thread::publish(EVENT_ID_PDS_HAL_UP, NULL, 0);
 
     return SDK_RET_OK;
 }

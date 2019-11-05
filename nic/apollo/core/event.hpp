@@ -20,10 +20,11 @@
 // event identifiers
 typedef enum event_id_e {
     EVENT_ID_NONE          = 0,
-    EVENT_ID_PORT_STATUS   = 1,
-    EVENT_ID_XCVR_STATUS   = 2,
-    EVENT_ID_UPLINK_STATUS = 3,
-    EVENT_ID_LIF_STATUS    = 4,
+    EVENT_ID_PDS_HAL_UP    = 1,
+    EVENT_ID_PORT_STATUS   = 2,
+    EVENT_ID_XCVR_STATUS   = 3,
+    EVENT_ID_UPLINK_STATUS = 4,
+    EVENT_ID_LIF_STATUS    = 5,
 } event_id_t;
 
 namespace core {
