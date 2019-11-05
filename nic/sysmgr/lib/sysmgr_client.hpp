@@ -8,7 +8,6 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/sysmgr.delphi.hpp"
 
-
 namespace sysmgr
 {
     class ServiceStatusReactor {

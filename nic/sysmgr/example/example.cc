@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     }
 
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    logger = penlog::logger_init(sdk, vm["name"].as<string>());
+    logger = penlog::logger_init(vm["name"].as<string>());
     
     shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk,
         vm["name"].as<string>(), vm.count("no-heartbeat") > 0,

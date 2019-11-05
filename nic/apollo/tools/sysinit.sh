@@ -2,6 +2,18 @@
 
 export NIC_DIR='/nic'
 export LD_LIBRARY_PATH=$NIC_DIR/lib
+SYSCONFIG=/sysconfig/config0
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export NIC_DIR=`dirname $ABS_TOOLS_DIR`
+export CONFIG_PATH=$NIC_DIR/conf/
+export HAL_CONFIG_PATH=$NIC_DIR/conf/
+export LOG_DIR=/var/log/pensando/
+export LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
+export HAL_PBC_INIT_CONFIG="2x100_hbm"
+export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
+
+
 ulimit -c unlimited
 cd /
 ifconfig lo up
@@ -22,13 +34,16 @@ CORE_MIN_DISK=512
 mkdir -p /data/core
 echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
 
-# start agent
+# start memtun
+/nic/bin/memtun &
 
-if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then
-    echo "Launching agent ..."
-    $NIC_DIR/tools/start-agent.sh
-    [[ $? -ne 0 ]] && echo "Aborting sysinit, failed to start agent!" && exit 1
-fi
+# start sysmgr
+PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr &
+
+# bring up oob
+sleep 2
+echo "Bringing up OOB/Inband/Internal-Management IFs ..."
+$NIC_DIR/tools/bringup_mgmt_ifs.sh &> /var/log/pensando/mgmt_if.log
 
 # start cronjobs
 nice crond -c /nic/conf/apollo/crontabs
@@ -38,12 +53,6 @@ nice crond -c /nic/conf/apollo/crontabs
 # provides a record of how things looked when we booted (seen with fwupdate -L)
 if [[ ! -r /var/run/fwupdate.cache ]]; then
     /nic/tools/fwupdate -C
-fi
-
-if [[ -f $NIC_DIR/tools/start-nmd.sh ]]; then
-    echo "Launching nmd..."
-    $NIC_DIR/tools/start-nmd.sh
-    [[ $? -ne 0 ]] && echo "Failed to start nmd!"
 fi
 
 echo "System initialization done ..."

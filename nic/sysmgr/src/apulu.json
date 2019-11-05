@@ -1,0 +1,16 @@
+[
+    {
+        "name": "agent",
+        "command": "/nic/tools/start-agent.sh",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0
+    },
+    {
+        "name": "vpp",
+        "command": "/nic/tools/start-vpp.sh",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0
+    }
+]

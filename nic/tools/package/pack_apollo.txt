@@ -152,6 +152,8 @@ nic/tools/fwupdate                                                /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
 
 # platform modules
+nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_apollo                  /nic/bin/eth_dbgtool
@@ -187,8 +189,10 @@ nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
 
 nic/build/$ARCH/$PIPELINE/bin/nmd                                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/penctl                              /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
+
+# platform config files
+nic/sysmgr/src/$PIPELINE.json                                     /nic/conf/sysmgr.json
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/

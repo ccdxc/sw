@@ -12,16 +12,15 @@ using namespace penlog;
 std::shared_ptr<MainLogger> g_logger;
 std::map<std::string, LoggerPtr> g_libloggers;
 
-LoggerPtr penlog::logger_init(delphi::SdkPtr delphi, const std::string &name)
+LoggerPtr penlog::logger_init(const std::string &name)
 {
     if (g_logger == nullptr)
     {
-        g_logger = std::make_shared<MainLogger>(delphi, name);
+        g_logger = std::make_shared<MainLogger>(name);
         for (auto p: g_libloggers)
         {
             g_logger->register_lib_logger(p.second);
         }
-        g_logger->delphi_init();
     }
 
     return g_logger;

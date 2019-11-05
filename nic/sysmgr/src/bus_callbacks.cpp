@@ -1,7 +1,7 @@
 #include <memory>
 #include <string>
 
-#include "bus_api/bus_api.hpp"
+#include "bus_api.hpp"
 #include "log.hpp"
 #include "service_factory.hpp"
 #include "service_watcher.hpp"

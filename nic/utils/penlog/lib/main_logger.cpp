@@ -4,17 +4,12 @@
 
 #include <spdlog/spdlog.h>
 
-#include "gen/proto/client.delphi.hpp"
-#include "gen/proto/penlog.delphi.hpp"
-#include "gen/proto/penlog.pb.h"
-#include "nic/delphi/sdk/delphi_sdk.hpp"
-
 #include "main_logger.hpp"
 #include "penlog.hpp"
 
 using namespace penlog;
 
-MainLogger::MainLogger(delphi::SdkPtr delphi, const std::string &name) : Logger(name)
+MainLogger::MainLogger(const std::string &name) : Logger(name)
 {
     const char *env_location = getenv("PENLOG_LOCATION");
     std::string location;
@@ -32,17 +27,6 @@ MainLogger::MainLogger(delphi::SdkPtr delphi, const std::string &name) : Logger(
         PENLOG_ROTATE_COUNT);
 
     this->spd_init(this->sink, this->level);
-
-    this->delphi = delphi;
-}
-
-void MainLogger::delphi_init()
-{
-    auto keyobj = std::make_shared<delphi::objects::PenlogReq>();
-    keyobj->set_key(this->name);
-    delphi::objects::PenlogReq::MountKey(this->delphi, keyobj, delphi::ReadMode);
-    delphi::objects::PenlogReq::Watch(this->delphi, shared_from_this());
-    this->delphi->WatchMountComplete(shared_from_this());
 }
 
 void MainLogger::update_level(Level level)
@@ -79,40 +63,9 @@ void MainLogger::update_level(Level level)
     }    
 }
 
-void MainLogger::OnMountComplete()
-{
-    for (auto obj: delphi::objects::PenlogReq::List(this->delphi))
-    {
-        if (obj->key() == this->name)
-        {
-            this->trace("level {}", obj->level());
-            this->update_level(obj->level());
-        }
-    }
-}
-
-delphi::error MainLogger::OnPenlogReqCreate(delphi::objects::PenlogReqPtr obj)
-{
-    this->trace("level {}", obj->level());
-    this->update_level(obj->level());
-    return delphi::error::OK();
-}
-
-delphi::error MainLogger::OnPenlogReqUpdate(delphi::objects::PenlogReqPtr obj)
-{
-    this->trace("level {}", obj->level());
-    this->update_level(obj->level());
-    return delphi::error::OK();
-}
-
 void MainLogger::register_lib_logger(LoggerPtr liblogger)
 {
     liblogger->spd_init(this->sink, this->level);
     this->libloggers.insert(std::pair<std::string, LoggerPtr>(
             liblogger->name, liblogger));
-}
-
-std::string MainLogger::Name()
-{
-    return "penlog-logger";
 }

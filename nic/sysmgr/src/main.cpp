@@ -5,9 +5,9 @@
 
 #include <ev++.h>
 #include <stdlib.h>
-#include "bus_api/bus_api.hpp"
+#include "bus_api.hpp"
 #include "bus_callbacks.hpp"
-#include "events_api/events_api.hpp"
+#include "events_api.hpp"
 #include "log.hpp"
 #include "service_factory.hpp"
 #include "utils.hpp"

@@ -543,12 +543,6 @@ targets:
     area:
     sub-area:
     feature:
-  penlog:
-    commands: ["sh", "-c", "cd /sw/nic/utils/penlog/test && ./run_test.sh"]
-    owners: ["email:stavros@pensando.io"]
-    area:
-    sub-area:
-    feature:
   goldfw:
     commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw/nic && ./tools/build_goldfw.sh" ]
     owners: ["email:dpshah@pensando.io"]

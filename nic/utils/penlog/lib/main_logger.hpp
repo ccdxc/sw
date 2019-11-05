@@ -4,33 +4,19 @@
 #include <memory>
 #include <map>
 
-#include "gen/proto/penlog.delphi.hpp"
-#include "gen/proto/penlog.pb.h"
-#include "nic/delphi/sdk/delphi_sdk.hpp"
-
 #include "penlog.hpp"
 
 namespace penlog {
     class MainLogger: public Logger,
-                      public delphi::Service,
-                      public std::enable_shared_from_this<MainLogger>,
-                      public delphi::objects::PenlogReqReactor {
+                      public std::enable_shared_from_this<MainLogger> {
     private:
         sinkptr sink;
         std::map<std::string, LoggerPtr> libloggers;
-        delphi::SdkPtr delphi;
     private:
         void update_level(Level level);
     public:
-        MainLogger(delphi::SdkPtr delphi, const std::string &name);
-        virtual void OnMountComplete();
-        void delphi_init();
+        MainLogger(const std::string &name);
         void register_lib_logger(LoggerPtr liblogger);
-        virtual delphi::error OnPenlogReqCreate(
-            delphi::objects::PenlogReqPtr obj);
-        virtual delphi::error OnPenlogReqUpdate(
-            delphi::objects::PenlogReqPtr obj);
-	virtual std::string Name();
     };
 };
 

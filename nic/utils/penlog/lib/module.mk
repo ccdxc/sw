@@ -3,9 +3,9 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpenlog.so
 MODULE_PIPELINE = iris gft
-MODULE_SOLIBS   = delphisdk
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread
-MODULE_ARLIBS   = delphiproto penlogproto
+MODULE_SOLIBS   = 
+MODULE_LDLIBS   = rt ev pthread
+MODULE_ARLIBS   = 
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))

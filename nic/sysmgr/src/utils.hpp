@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "bus_api/bus_api.hpp"
-#include "events_api/events_api.hpp"
+#include "bus_api.hpp"
+#include "events_api.hpp"
 #include "pipedio.hpp"
 
 #include "nic/utils/penlog/lib/penlog.hpp"
@@ -14,7 +14,6 @@
 
 extern const pid_t       mypid;
 extern std::string       log_location;
-extern delphi::SdkPtr    delphi_sdk;
 
 typedef struct process_ {
     pid_t pid;

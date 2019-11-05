@@ -45,8 +45,6 @@ nic/build/aarch64/iris/bin/net_fwding_test_hw                       /nic/bin/
 #diag binaries
 nic/build/aarch64/iris/bin/diag_test                                /nic/bin/
 
-nic/build/aarch64/iris/lib/libsysmgrbus.so                          /nic/lib/
-nic/build/aarch64/iris/lib/libsysmgrevents.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libproto.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgrproto.so                        /nic/lib/

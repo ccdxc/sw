@@ -19,23 +19,5 @@ rm -f $LOG_DIR/pen-agent.log*
 ulimit -c unlimited
 
 export LD_LIBRARY_PATH=$LIBRARY_PATH
-$NIC_DIR/bin/pdsagent -c hal_hw.json -f apulu $* &
-if [[ $? -ne 0 ]]; then
-    echo "Failed to start pdsagent!"
-    exit 1
-fi
+exec $NIC_DIR/bin/pdsagent -c hal_hw.json -f apulu $*
 
-# start memtun
-/nic/bin/memtun &
-
-# bring up oob
-echo "Bringing up OOB/Inband/Internal-Management IFs ..."
-$NIC_DIR/tools/bringup_mgmt_ifs.sh &> /var/log/pensando/mgmt_if.log
-
-# start vpp
-echo "Bringing up vpp ..."
-if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
-    echo "Launching VPP ..."
-    $NIC_DIR/tools/start-vpp.sh &
-    [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
-fi

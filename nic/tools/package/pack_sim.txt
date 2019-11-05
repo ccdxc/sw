@@ -9,8 +9,6 @@ nic/build/x86_64/iris/bin/penctl                                    /nic/bin/
 nic/build/x86_64/iris/bin/fwloggen                                  /nic/bin/
 nic/build/x86_64/iris/bin/gen_events                                /nic/bin/
 
-nic/build/x86_64/iris/lib/libsysmgrbus.so                           /nic/lib/
-nic/build/x86_64/iris/lib/libsysmgrevents.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libipc.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libagent_api.so                           /nic/lib/

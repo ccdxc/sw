@@ -11,6 +11,7 @@ export HAL_CONFIG_PATH=$NIC_DIR/conf/
 
 ulimit -c unlimited
 
-exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp_3_workers.conf &
-[[ $? -ne 0 ]] && echo "Failed to start VPP!" && exit 1
-exit 0
+# FIX ME AND REMOVE ME
+sleep 5
+
+exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp_3_workers.conf

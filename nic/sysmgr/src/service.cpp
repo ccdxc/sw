@@ -2,9 +2,7 @@
 
 #include <memory>
 
-#include "gen/proto/eventtypes.pb.h"
-
-#include "events_api/events_api.hpp"
+#include "events_api.hpp"
 #include "fault_watcher.hpp"
 #include "pipedio.hpp"
 #include "log.hpp"
