@@ -84,19 +84,19 @@ jobs:
   iota/test/venice:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/freebsd:
-    labels: ["precommit", "hourly"]
+    labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/esx:
-    labels: ["precommit", "hourly"]
+    labels: ["precommit", "2xhourly"]
+  iota/test/standalone/sanity/linux:
+    labels: ["precommit", "2xhourly"]
+  iota/test/standalone/sanity/apulu-linux:
+    labels: ["precommit", "2xhourly"]
   iota/test/standalone/regression/esx:
     labels: ["daily"]
   iota/test/standalone/regression/freebsd:
     labels: ["daily"]
   iota/test/standalone/regression/linux:
     labels: ["daily"]
-  iota/test/standalone/sanity/linux:
-    labels: ["precommit", "hourly"]
-  iota/test/standalone/sanity/apulu-linux:
-    labels: ["precommit", "hourly"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
