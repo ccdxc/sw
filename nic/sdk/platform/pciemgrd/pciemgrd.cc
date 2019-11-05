@@ -40,7 +40,7 @@ pciemgrenv_get(void)
 static void
 reboot_the_system(void)
 {
-    int r = system("/platform/tools/pcie_hostdn.sh");
+    int r = system("/nic/tools/pcie_hostdn.sh");
     if (r) pciesys_logerror("failed to reboot %d\n", r);
 }
 

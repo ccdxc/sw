@@ -4,6 +4,7 @@ set -e
 while [[ "$#" > 0 ]]; do
     case $1 in
         -c|--cleanup) cleanup=1;;
+        --no-mgmt) no_mgmt=1;;
         *) echo "Unknown parameter passed: $1"; exit 1;;
     esac; shift;
 done
@@ -64,6 +65,10 @@ else
     intmgmt=`ls /sys/bus/pci/devices/0000:$bdf/net/`
     dhcp_disable
     ifconfig $intmgmt 169.254.0.2/24
+    if [ -n "$no_mgmt" ]; then
+        echo "Skip ping test of internal mgmt interface on host"
+        exit 0
+    fi
     if ! (ping -c 5 169.254.0.1); then
         ./print-cores.sh
         exit 1

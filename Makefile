@@ -575,9 +575,14 @@ naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
+NAPLES_FW_TAR=naples_fw_all.tgz
+
 naples-firmware-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL builds hourly ${RELEASE} sw || cd sw; fi
-	tar -zcf naples_fw_all.tgz nic/naples_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+	tar -zcf $(NAPLES_FW_TAR) nic/naples_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+
+naples-firmware-tarball-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
+naples-firmware-tarball-apulu: naples-firmware-tarball
 
 e2e-iota: e2e-naples
 	$(MAKE) venice-image

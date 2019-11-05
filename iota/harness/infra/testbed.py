@@ -240,8 +240,16 @@ class _Testbed:
                     else:
                         cmd.extend(["--naples-only-setup"])
 
-                    mem_size = getattr(instance, "NicMemorySize", "8g")
-                    cmd.extend(["--naples-mem-size", mem_size])
+                    mem_size = None
+                    if GlobalOptions.pipeline in [ "iris", "apollo", "artemis" ]:
+                        mem_size = "8g"
+                    mem_size = getattr(instance, "NicMemorySize", mem_size)
+                    if mem_size is not None:
+                        cmd.extend(["--naples-mem-size", mem_size])
+
+                # XXX workaround: remove when host mgmt interface works for apulu
+                if GlobalOptions.pipeline in [ "apulu" ]:
+                    cmd.extend(["--no-mgmt"])
 
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])

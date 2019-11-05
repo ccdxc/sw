@@ -61,7 +61,7 @@ platform/tools/start-nicmgr-haps.sh                                             
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
 platform/src/app/cpld/bin/*.bin                                                 /platform/etc/cpld/
-platform/src/app/pciemgrd/scripts/pcie_hostdn.sh                                /platform/tools/
+nic/tools/pcie_hostdn.sh                                                        /nic/tools/
 platform/src/app/cpld/cpldapp.sh                                                /platform/tools/
 platform/src/app/cpld/reboot.sh                                                 /platform/tools/
 

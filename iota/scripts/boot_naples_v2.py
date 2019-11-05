@@ -82,6 +82,8 @@ parser.add_argument('--only-mode-change', dest='only_mode_change',
                     action='store_true', help='Only change mode and reboot.')
 parser.add_argument('--only-init', dest='only_init',
                     action='store_true', help='Only Initialize the nodes and start tests')
+parser.add_argument('--no-mgmt', dest='no_mgmt',
+                    action='store_true', help='Do not ping test mgmt interface on host')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
                     default="169.254.0.1", help='Mnic IP.')
 parser.add_argument('--oob-ip', dest='oob_ip',
@@ -673,6 +675,8 @@ class HostManagement(EntityManagement):
 
         if driver_pkg:
             nodeinit_args = ""
+            if GlobalOptions.no_mgmt:
+                nodeinit_args += " --no-mgmt"
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
@@ -698,12 +702,12 @@ class HostManagement(EntityManagement):
         self.RunSshCmd("sync")
         self.RunSshCmd("ls -l /tmp/")
         self.RunSshCmd("uptime")
+        print("Rebooting Host : %s" % GlobalOptions.host_ip)
         if dryrun == False:
             self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
             print("sleeping 60 after shutdown -r in Reboot")
             time.sleep(60)
             self.WaitForSsh()    
-        print("Rebooting Host : %s" % GlobalOptions.host_ip)
         self.RunSshCmd("uptime")
         return
 

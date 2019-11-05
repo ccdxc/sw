@@ -1,0 +1,14 @@
+meta:
+    name    : mnicclassic
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 2
+
+testcases:
+
+    -   name    : ping_oob_mnic0_intf
+        testcase: testcases.mnic.ping_oob
+        ignore  : False
+        args    :
+            mtu: 1500
+        verifs:

@@ -144,6 +144,7 @@ nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
+nic/tools/pcie_hostdn.sh                                          /nic/tools/
 
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/

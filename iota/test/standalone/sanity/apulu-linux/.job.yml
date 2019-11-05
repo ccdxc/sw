@@ -1,0 +1,39 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+rebase: true
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+ e2e-linux-bm:
+   commands: ["sh", "-c", "make apulu-linux"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-apulu-arm
+     - build-iota
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
