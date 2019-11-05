@@ -11,7 +11,9 @@ import (
 
 // VCHStore maintains information about a store instance
 type VCHStore struct {
+	sync.Mutex
 	ctx      context.Context
+	cancel   context.CancelFunc
 	wg       sync.WaitGroup
 	Log      log.Logger
 	stateMgr *statemgr.Statemgr
@@ -20,11 +22,10 @@ type VCHStore struct {
 }
 
 // NewVCHStore returns an instance of VCHStore
-func NewVCHStore(ctx context.Context, stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger) *VCHStore {
+func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger) *VCHStore {
 	logger := l.WithContext("submodule", "VCStore")
 
 	return &VCHStore{
-		ctx:      ctx,
 		Log:      logger,
 		stateMgr: stateMgr,
 		inbox:    inbox,
@@ -32,19 +33,32 @@ func NewVCHStore(ctx context.Context, stateMgr *statemgr.Statemgr, inbox <-chan 
 	}
 }
 
-// Run starts a go func that processes updates sent on the input channel
-func (v *VCHStore) Run() {
-	v.Log.Infof("Running store")
+// Start starts the worker pool
+func (v *VCHStore) Start() {
+	v.Lock()
+	defer v.Unlock()
+	if v.cancel != nil {
+		v.Log.Errorf("Store already started")
+		return
+	}
+	v.ctx, v.cancel = context.WithCancel(context.Background())
 	go v.run()
 }
 
-// WaitForExit waits for the store thread to exit
-func (v *VCHStore) WaitForExit() {
-	v.wg.Wait()
+// Stop stops the sessions
+func (v *VCHStore) Stop() {
+	v.Lock()
+	defer v.Unlock()
+	if v.cancel != nil {
+		v.cancel()
+		v.cancel = nil
+		v.wg.Wait()
+	}
 }
 
 // run processes updates sent on the input channel
 func (v *VCHStore) run() {
+	v.Log.Infof("Running store")
 
 	v.wg.Add(1)
 	defer v.wg.Done()

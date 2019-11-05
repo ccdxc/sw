@@ -608,7 +608,7 @@ func TestStoreRun(t *testing.T) {
 		store.stateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
 		store.inbox = inbox
-		store.Run()
+		store.Start()
 		// Push events
 		for _, e := range tc.events {
 			inbox <- e
@@ -616,19 +616,19 @@ func TestStoreRun(t *testing.T) {
 		// Time for events to process
 		time.Sleep(10 * time.Millisecond)
 		tc.verify(store.stateMgr)
-	}
 
-	// Terminating store instance
-	cancelFn()
-	doneCh := make(chan bool)
-	go func() {
-		store.WaitForExit()
-		doneCh <- true
-	}()
-	select {
-	case <-doneCh:
-	case <-time.After(1 * time.Second):
-		t.Fatalf("Store failed to shutdown within timeout")
+		// Terminating store instance
+		cancelFn()
+		doneCh := make(chan bool)
+		go func() {
+			store.Stop()
+			doneCh <- true
+		}()
+		select {
+		case <-doneCh:
+		case <-time.After(1 * time.Second):
+			t.Fatalf("Store failed to shutdown within timeout")
+		}
 	}
 
 	Assert(t, len(forceTestName) == 0, "focus test flag should not be checked in")

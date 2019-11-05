@@ -3,11 +3,11 @@ package vcprobe
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
@@ -22,32 +22,45 @@ const (
 	retryDelay = time.Second
 )
 
+var (
+	connEstablished  = make(chan bool)
+	connCheckRunning bool
+	connCheckLock    sync.Mutex
+)
+
+// Shared fields with the tags client
+type vcInst struct {
+	vcURL  *url.URL
+	VcID   string
+	cancel context.CancelFunc
+	ctx    context.Context
+	Log    log.Logger
+	wg     *sync.WaitGroup
+}
+
 // VCProbe represents an instance of a vCenter Interface
 // This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
-	vcURL    *url.URL
-	VcID     string
+	vcInst
 	client   *govmomi.Client
-	viewMgr  *view.Manager
-	cancel   context.CancelFunc
-	ctx      context.Context
 	outbox   chan<- defs.Probe2StoreMsg
 	inbox    <-chan defs.Store2ProbeMsg
-	wg       sync.WaitGroup
+	viewMgr  *view.Manager
 	tp       *tagsProbe
-	Log      log.Logger
 	stateMgr *statemgr.Statemgr
 }
 
 // NewVCProbe returns a new instance of VCProbe
 func NewVCProbe(vcID string, vcURL *url.URL, hOutbox chan<- defs.Probe2StoreMsg, inbox <-chan defs.Store2ProbeMsg, stateMgr *statemgr.Statemgr, l log.Logger) *VCProbe {
 	return &VCProbe{
-		VcID:     vcID,
-		vcURL:    vcURL,
+		vcInst: vcInst{
+			VcID:  vcID,
+			vcURL: vcURL,
+			Log:   l.WithContext("submodule", fmt.Sprintf("VCProbe-%s", vcID)),
+			wg:    &sync.WaitGroup{},
+		},
 		outbox:   hOutbox,
 		inbox:    inbox,
-		tp:       newTagsProbe(vcURL, hOutbox),
-		Log:      l.WithContext("submodule", "VCProbe"),
 		stateMgr: stateMgr,
 	}
 	// Check we have correct permissions when we connect.
@@ -60,18 +73,8 @@ func (v *VCProbe) Start() error {
 	}
 
 	v.ctx, v.cancel = context.WithCancel(context.Background())
-	// Connect and log in to vCenter
-	c, err := govmomi.NewClient(v.ctx, v.vcURL, true)
-	if err != nil {
-		v.Log.Errorf("Log in failed: %v", err)
-		return err
-	}
-
-	v.client = c
-	v.viewMgr = view.NewManager(v.client.Client)
-
-	err = v.tp.Start(v.ctx)
-	return err
+	go v.run()
+	return nil
 }
 
 // Stop stops the sessions
@@ -84,51 +87,145 @@ func (v *VCProbe) Stop() {
 }
 
 // Run runs the probe
-func (v *VCProbe) Run() {
+func (v *VCProbe) run() {
+	// Connect and log in to vCenter
+	var c *govmomi.Client
+	var err error
+
+	// Forever try to login until it succeeds
+	for {
+		c, err = govmomi.NewClient(v.ctx, v.vcURL, true)
+		if err != nil {
+			v.Log.Errorf("Login failed: %v", err)
+			select {
+			case <-v.ctx.Done():
+				return
+			case <-time.After(5 * retryDelay):
+			}
+		} else {
+			break
+		}
+	}
+
+	v.client = c
+	v.viewMgr = view.NewManager(v.client.Client)
+	v.newTagsProbe(v.ctx)
+
 	tryForever := func(fn func()) {
 		for v.ctx.Err() == nil {
 			fn()
 			time.Sleep(retryDelay)
 		}
 	}
-	go tryForever(v.probeHosts)
-	go tryForever(v.probeWorkloads)
 	go tryForever(func() {
-		v.tp.PollTags(&v.wg)
+		v.startWatch(defs.HostSystem, []string{"config"}, v.sendToStore)
+	})
+	go tryForever(func() {
+		vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
+		v.startWatch(defs.VirtualMachine, vmProps, v.sendToStore)
+	})
+	go tryForever(func() {
+		err = v.tp.tc.Login(v.tp.ctx, v.vcURL.User)
+		if err != nil {
+			return
+		}
+		v.tp.Start()
 	})
 }
 
-// probeHosts probes the vCenter for hosts and smartnics
-func (v *VCProbe) probeHosts() {
+// caller will be blocked until the connection is re-established
+func (v *VCProbe) checkConnectionBlock() {
+	// if a connection check routine is not running, we will start one
+	// all callers will be blocked till the connection check routine
+	// is able to re-establish a connection
+	periodicCheck := func() {
+		v.Log.Infof("connection check starting...")
+		defer v.wg.Done()
+		count := 0
+		active := false
+		for !active {
+			select {
+			case <-v.ctx.Done():
+				return
+			case <-time.After(retryDelay):
+				var err error
+				active, err = v.client.SessionManager.SessionIsActive(v.ctx)
+				if err != nil {
+					v.Log.Errorf("Received err %v while testing connection", err)
+				} else if active {
+					continue
+				}
+
+				if count == 5 {
+					// Failed to reconnect for 5 seconds, set status
+					// TODO: set connection status in apiserver
+				}
+				count++
+			}
+		}
+		// connection has been re-established
+		// TODO: Update connection status in apiserver
+		v.Log.Infof("connection has been re-established")
+
+		connCheckLock.Lock()
+		// Notify watchers
+		close(connEstablished)
+		connCheckRunning = false
+		// Reset channel for future watchers
+		connEstablished = make(chan bool)
+		connCheckLock.Unlock()
+	}
+
+	connCheckLock.Lock()
+	if !connCheckRunning {
+		connCheckRunning = true
+		v.wg.Add(1)
+		go periodicCheck()
+	}
+	// Save a reference to it, as periodicCheck will reset it
+	// once it reconnects
+	ch := connEstablished
+	connCheckLock.Unlock()
+	// wait until the connection has been established again
+	select {
+	case <-v.ctx.Done():
+		return
+	case <-ch:
+		return
+	}
+}
+
+func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(key string, obj defs.VCObject, pc []types.PropertyChange)) {
+	kind := string(vcKind)
+
 	var err error
 	v.wg.Add(1)
 	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
-	kinds := []string{"HostSystem"}
-	// Which host objects to watch (all)
-	hostView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
+	kinds := []string{}
+
+	cView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
 	if err != nil {
 		v.Log.Fatalf("CreateContainerView returned %v", err)
 		return
 	}
 
 	// Fields to watch for change
-	hostProps := []string{"config"}
-	hostRef := types.ManagedObjectReference{Type: "HostSystem"}
-	filter := new(property.WaitFilter).Add(hostView.Reference(), hostRef.Type, hostProps, hostView.TraversalSpec())
-
+	objRef := types.ManagedObjectReference{Type: kind}
+	filter := new(property.WaitFilter).Add(cView.Reference(), objRef.Type, props, cView.TraversalSpec())
 	updFunc := func(updates []types.ObjectUpdate) bool {
 		for _, update := range updates {
-			if update.Obj.Type != "HostSystem" {
-				v.Log.Errorf("Expected HostSystem, got %+v", update.Obj)
+			if update.Obj.Type != kind {
+				v.Log.Errorf("Expected %s, got %+v", kind, update.Obj)
 				continue
 			}
-			hostKey := update.Obj.Value
-			v.updateHost(hostKey, update.ChangeSet)
+			key := update.Obj.Value
+			updateFn(key, vcKind, update.ChangeSet)
 		}
 		// Must return false, returning true will cause waitForUpdates to exit.
 		return false
 	}
+
 	for {
 		err = property.WaitForUpdates(v.ctx, property.DefaultCollector(v.client.Client), filter, updFunc)
 
@@ -139,90 +236,23 @@ func (v *VCProbe) probeHosts() {
 		if v.ctx.Err() != nil {
 			return
 		}
-
-		v.Log.Infof("probeHosts property.WaitForView exited, retrying...")
-		time.Sleep(retryDelay)
+		v.Log.Infof("%s property.WaitForView exited, checking connection", kind)
+		v.checkConnectionBlock()
+		v.Log.Infof("%s property.WaitForView, retrying...", kind)
 	}
-
 }
 
-// updateHost is the callback that sends a host event to the VCStore
-func (v *VCProbe) updateHost(hostKey string, pc []types.PropertyChange) {
-	v.Log.Infof("<== updateHost vcID: %s hostKey: %s ==>", v.VcID, hostKey)
-	if len(pc) != 1 {
-		v.Log.Errorf("Only a single property expected at this time.")
-		spew.Dump(pc)
-		return
-	}
+func (v *VCProbe) sendToStore(key string, obj defs.VCObject, pc []types.PropertyChange) {
 	m := defs.Probe2StoreMsg{
-		VcObject:   defs.HostSystem,
-		Key:        hostKey,
+		VcObject:   obj,
+		Key:        key,
 		Changes:    pc,
 		Originator: v.VcID,
 	}
+	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, obj, pc)
 	v.outbox <- m
 }
 
-// probeWorkloads probes the vCenter for VNICs
-func (v *VCProbe) probeWorkloads() {
-	var err error
-	v.wg.Add(1)
-	defer v.wg.Done()
-	root := v.client.ServiceContent.RootFolder
-	kinds := []string{"VirtualMachine"}
-	vmView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
-	if err != nil {
-		v.Log.Fatalf("CreateContainerView returned %v", err)
-		return
-	}
-
-	vmRef := types.ManagedObjectReference{Type: "VirtualMachine"}
-	// TODO: See which props we can get from summary alone
-	// From vCenter docs, they optimize for watchers on the summary property.
-	vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
-	filter := new(property.WaitFilter).Add(vmView.Reference(), vmRef.Type, vmProps, vmView.TraversalSpec())
-
-	updFunc := func(updates []types.ObjectUpdate) bool {
-		for _, update := range updates {
-			if update.Obj.Type != "VirtualMachine" {
-				v.Log.Errorf("Expected VirtualMachine, got %+v", update.Obj)
-				continue
-			}
-			vmKey := update.Obj.Value
-			v.updateWorkload(vmKey, update.ChangeSet)
-		}
-		// Must return false, returning true will cause waitForUpdates to exit.
-		return false
-	}
-
-	for {
-		err = property.WaitForUpdates(v.ctx, property.DefaultCollector(v.client.Client), filter, updFunc)
-
-		if err != nil {
-			v.Log.Errorf("property.WaitForView returned %v", err)
-		}
-
-		if v.ctx.Err() != nil {
-			return
-		}
-
-		v.Log.Infof("probeWorkloads property.WaitForView exited, retrying...")
-		time.Sleep(retryDelay)
-	}
-
-}
-
-// updateWorkload is the callback that injects a message to the store
-func (v *VCProbe) updateWorkload(vmKey string, pc []types.PropertyChange) {
-	var m defs.Probe2StoreMsg
-	m = defs.Probe2StoreMsg{
-		VcObject: defs.VirtualMachine,
-		// Op:         getStoreOp(prop.Op),
-		// Property:   defs.VMPropRT,
-		Key:        vmKey,
-		Changes:    pc,
-		Originator: v.VcID,
-	}
-	v.Log.Infof("<== updateWorkload vcID: %s vmKey: %s ==>", v.VcID, vmKey)
-	v.outbox <- m
+// Sync triggers the probe to sync its inventory
+func (v *VCProbe) Sync() {
 }

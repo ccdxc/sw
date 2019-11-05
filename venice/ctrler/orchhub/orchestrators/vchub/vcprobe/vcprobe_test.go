@@ -1,6 +1,7 @@
 package vcprobe
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,59 +13,55 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-const (
-	testNic1Mac = "6a00.02e7.a840"
-)
-
-func TestSOAP(t *testing.T) {
-	vcID := "127.0.0.1:8990"
+func TestMessages(t *testing.T) {
+	vcID := "user:pass@127.0.0.1:8990/sdk"
 	expectedMsgs := map[defs.VCObject][]defs.Probe2StoreMsg{
 		// The changes property is not checked currently
 		defs.VirtualMachine: []defs.Probe2StoreMsg{
 			defs.Probe2StoreMsg{
 				VcObject:   defs.VirtualMachine,
-				Key:        "virtualmachine-41",
+				Key:        "vm-19",
 				Originator: vcID,
 			},
 			defs.Probe2StoreMsg{
 				VcObject:   defs.VirtualMachine,
-				Key:        "virtualmachine-45",
+				Key:        "vm-21",
 				Originator: vcID,
 			},
 		},
 		defs.HostSystem: []defs.Probe2StoreMsg{
 			defs.Probe2StoreMsg{
 				VcObject:   defs.HostSystem,
-				Key:        "hostsystem-21",
+				Key:        "host-14",
 				Originator: vcID,
 			},
 		},
 	}
-	hosts := []string{testNic1Mac} // A default cluster host will be created in addition to this list
-	vms := 2                       // VMs to be created per resource pool
+	config := log.GetDefaultConfig("vcprobe_test")
+	config.LogToStdout = true
+	logger := log.SetConfig(config)
 
-	logger := log.SetConfig(log.GetDefaultConfig("vcprobe_test"))
-	s := sim.New()
+	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
+	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 
-	vc1, err := s.Run("127.0.0.1:8990", hosts, vms)
-	if err != nil {
-		t.Fatalf("Error %v simulating vCenter", err)
-	}
+	dc, err := s.AddDC("test-dc-1")
+	AssertOk(t, err, "Failed to create DC")
+	_, err = dc.AddHost("host1")
+	AssertOk(t, err, "failed to create host")
+	_, err = dc.AddVM("vm1", "host1")
+	AssertOk(t, err, "failed to create vm")
+	_, err = dc.AddVM("vm2", "host1")
+	AssertOk(t, err, "failed to create vm")
 
-	u, err := soap.ParseURL(vc1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	u := s.GetURL()
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
-	time.Sleep(100 * time.Millisecond) // let simulator start
 
 	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
 	vcp.Start()
 	defer vcp.Stop()
-	vcp.Run()
 
 	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
 	doneCh := make(chan bool)
@@ -87,7 +84,6 @@ func TestSOAP(t *testing.T) {
 	select {
 	case <-doneCh:
 	case <-time.After(3 * time.Second):
-		sim.PrintInventory()
 		doneCh <- false
 		t.Logf("Failed to receive all messages. ")
 		t.Logf("Expected: ")
@@ -109,5 +105,147 @@ func TestSOAP(t *testing.T) {
 			}
 			Assert(t, foundMatch, "could not find matching event for %v", expE)
 		}
+	}
+}
+
+func TestReconnect(t *testing.T) {
+	vcID := "user:pass@127.0.0.1:8990"
+	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+	dc, err := s.AddDC("test-dc-1")
+	AssertOk(t, err, "failed dc create")
+	dc.AddHost("host1")
+	dc.AddVM("vm1", "host1")
+
+	fmt.Printf("starting on %s\n", s.GetURL())
+
+	u := s.GetURL()
+	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	probeCh := make(chan defs.Store2ProbeMsg, 24)
+
+	config := log.GetDefaultConfig("vcprobe_test")
+	config.LogToStdout = true
+	logger := log.SetConfig(config)
+
+	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
+	err = vcp.Start()
+	AssertOk(t, err, "Failed to start probe")
+	defer vcp.Stop()
+
+	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
+	doneCh := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-doneCh:
+				return
+			case m := <-storeCh:
+				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+
+				if len(eventMap[defs.HostSystem]) >= 1 &&
+					len(eventMap[defs.VirtualMachine]) >= 1 {
+					doneCh <- true
+				}
+			}
+		}
+	}()
+	select {
+	case <-doneCh:
+	case <-time.After(3 * time.Second):
+		doneCh <- false
+		t.Logf("Failed to receive all messages.")
+		t.FailNow()
+	}
+
+	// Reset values and break connection
+	eventMap = make(map[defs.VCObject][]defs.Probe2StoreMsg)
+
+	go func() {
+		for {
+			select {
+			case <-doneCh:
+				return
+			case m := <-storeCh:
+				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+
+				if len(eventMap[defs.HostSystem]) >= 1 &&
+					len(eventMap[defs.VirtualMachine]) >= 1 {
+					doneCh <- true
+				}
+			}
+		}
+	}()
+
+	s.Server.CloseClientConnections()
+
+	select {
+	case <-doneCh:
+	case <-time.After(10 * time.Second):
+		doneCh <- false
+		t.Logf("Failed to receive all messages.")
+		t.FailNow()
+	}
+}
+
+func TestLoginRetry(t *testing.T) {
+	t.Skip("Watch currently does not process events for objects that have been created after the watch has started")
+
+	// If the probe is started before the vcenter instance is up, it should
+	// keep retrying to create the client
+
+	vcID := "user:pass@127.0.0.1:8990"
+
+	u, err := soap.ParseURL(vcID)
+	AssertOk(t, err, "Failed to parse url")
+	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	probeCh := make(chan defs.Store2ProbeMsg, 24)
+	config := log.GetDefaultConfig("vcprobe_test")
+	config.LogToStdout = true
+	logger := log.SetConfig(config)
+
+	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
+	err = vcp.Start()
+	AssertOk(t, err, "Failed to start probe")
+	defer vcp.Stop()
+
+	time.Sleep(time.Second)
+
+	fmt.Printf("starting sim %s\n", u)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	dc, err := s.AddDC("test-dc-1")
+	AssertOk(t, err, "failed dc create")
+	dc.AddHost("host1")
+	dc.AddVM("vm1", "host1")
+
+	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
+	doneCh := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-doneCh:
+				return
+			case m := <-storeCh:
+				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+
+				if len(eventMap[defs.HostSystem]) >= 1 &&
+					len(eventMap[defs.VirtualMachine]) >= 1 {
+					doneCh <- true
+				}
+			}
+		}
+	}()
+	select {
+	case <-doneCh:
+	case <-time.After(3 * time.Second):
+		doneCh <- false
+		t.Logf("Failed to receive all messages.")
+		t.FailNow()
 	}
 }

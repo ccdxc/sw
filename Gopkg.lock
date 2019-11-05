@@ -1872,18 +1872,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:07ac9135b7af2494c8178f8ba2b29aa6c9d53fb7ea343718d458cbcfec79bf73"
-  name = "github.com/pensando/vic"
-  packages = [
-    "pkg/vsphere/simulator",
-    "pkg/vsphere/simulator/esx",
-    "pkg/vsphere/simulator/vc",
-  ]
-  pruneopts = "NUT"
-  revision = "0cac268e71f72c9e9e80d89d23b3c0c51fdff8cc"
-
-[[projects]]
-  branch = "master"
   digest = "1:3bf17a6e6eaa6ad24152148a631d18662f7212e21637c2699bff3369b7f00fa2"
   name = "github.com/petar/GoLLRB"
   packages = ["llrb"]
@@ -2213,7 +2201,7 @@
   revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
 
 [[projects]]
-  digest = "1:3cfc76af5e533fccf992ef024a220d2b56fe78aa2465a5227f49fee7e0f26266"
+  digest = "1:f4e40ea36d1ec3dc0a4143edfbebce22ac7d4a072bf14433e6aa0b31c5f544a9"
   name = "github.com/vmware/govmomi"
   packages = [
     ".",
@@ -2224,7 +2212,17 @@
     "ovf",
     "property",
     "session",
+    "simulator",
+    "simulator/esx",
+    "simulator/internal",
+    "simulator/vpx",
     "task",
+    "vapi/internal",
+    "vapi/library",
+    "vapi/rest",
+    "vapi/simulator",
+    "vapi/tags",
+    "vapi/vcenter",
     "view",
     "vim25",
     "vim25/debug",
@@ -3017,8 +3015,6 @@
     "github.com/pensando/grpc-gateway/utilities",
     "github.com/pensando/test-infra-tracker/types",
     "github.com/pensando/test-infra/public",
-    "github.com/pensando/vic/pkg/vsphere/simulator",
-    "github.com/pensando/vic/pkg/vsphere/simulator/esx",
     "github.com/pkg/errors",
     "github.com/pkg/sftp",
     "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc",
@@ -3041,7 +3037,13 @@
     "github.com/vmware/govmomi/object",
     "github.com/vmware/govmomi/ovf",
     "github.com/vmware/govmomi/property",
+    "github.com/vmware/govmomi/simulator",
+    "github.com/vmware/govmomi/simulator/vpx",
+    "github.com/vmware/govmomi/vapi/rest",
+    "github.com/vmware/govmomi/vapi/simulator",
+    "github.com/vmware/govmomi/vapi/tags",
     "github.com/vmware/govmomi/view",
+    "github.com/vmware/govmomi/vim25",
     "github.com/vmware/govmomi/vim25/mo",
     "github.com/vmware/govmomi/vim25/soap",
     "github.com/vmware/govmomi/vim25/types",

@@ -2,13 +2,13 @@ package vcprobe
 
 import (
 	"context"
-	"net/url"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
+
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
@@ -20,47 +20,49 @@ const (
 // in sync using the REST interface. It assumes single
 // thread
 type tagsProbe struct {
-	vcID     string // unique identifier for the VC
-	ctx      context.Context
-	outBox   chan<- defs.Probe2StoreMsg // goes to store
-	tc       *TagClient
+	vcInst
+	tc       *tags.Manager
+	outbox   chan<- defs.Probe2StoreMsg
 	vmsOnTag map[string]*DeltaStrSet // vms that have this tagID
 	vmInfo   map[string]*DeltaStrSet // tags on a VM
 	tagName  map[string]string       // tagID to name
 }
 
-// newTagsProbe returns a new instance of tagsProbe
-func newTagsProbe(vcURL *url.URL, hOutBox chan<- defs.Probe2StoreMsg) *tagsProbe {
-	return &tagsProbe{
-		tc:       NewTagClient(vcURL),
-		vcID:     vcURL.Hostname() + ":" + vcURL.Port(),
-		outBox:   hOutBox,
+// newTagsProbe creates a new instance of tagsProbe
+func (v *VCProbe) newTagsProbe(ctx context.Context) {
+	restCl := rest.NewClient(v.client.Client)
+	tagCl := tags.NewManager(restCl)
+	v.tp = &tagsProbe{
+		vcInst:   v.vcInst,
+		outbox:   v.outbox,
+		tc:       tagCl,
 		vmsOnTag: make(map[string]*DeltaStrSet),
 		vmInfo:   make(map[string]*DeltaStrSet),
 		tagName:  make(map[string]string),
 	}
 }
 
-// Start initializes client
-func (t *tagsProbe) Start(ctx context.Context) error {
-	// set up a cis session
-	t.ctx = ctx
-	err := t.tc.CreateSession(ctx)
-	return err
+// Start starts the client
+func (t *tagsProbe) Start() {
+	err := t.tc.Login(t.ctx, t.vcURL.User)
+	if err != nil {
+		t.Log.Errorf("Tags client failed to login, %s", err.Error())
+		return
+	}
+	t.pollTags()
 }
 
-// PollTags polls the cis rest server for tag information
-func (t *tagsProbe) PollTags(wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer wg.Done()
+// pollTags polls the cis rest server for tag information
+func (t *tagsProbe) pollTags() {
+	t.wg.Add(1)
+	defer t.wg.Done()
 
 	for {
 		select {
 		case <-t.ctx.Done():
 			// delete session using another ctx
 			doneCtx, cancel := context.WithTimeout(context.Background(), deleteDelay)
-			t.tc.SetContext(doneCtx)
-			t.tc.DeleteSession()
+			t.tc.Logout(doneCtx)
 			cancel()
 			return
 		case <-time.After(tagsPollDelay):
@@ -70,11 +72,13 @@ func (t *tagsProbe) PollTags(wg *sync.WaitGroup) {
 }
 
 func (t *tagsProbe) fetchTags() error {
-	tagList, err := t.tc.ListTags()
+	tagList, err := t.tc.ListTags(t.ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "code: 401") { // auth error
-
-			t.tc.CreateSession(t.ctx)
+			loginErr := t.tc.Login(t.ctx, t.vcURL.User)
+			if loginErr != nil {
+				t.Log.Errorf("Tags client attempted to re-login but failed, %s", loginErr.Error())
+			}
 		}
 		return err
 	}
@@ -90,23 +94,28 @@ func (t *tagsProbe) fetchTags() error {
 }
 
 func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
-	vmList, err := t.tc.ListVMs(tagID)
+	objs, err := t.tc.GetAttachedObjectsOnTags(t.ctx, []string{tagID})
 	if err != nil {
-		log.Errorf("tag: %s error: %v", tagID, err)
+		t.Log.Errorf("tag: %s error: %v", tagID, err)
 		return
+	}
+
+	var vmList []string
+	if len(objs) == 0 {
+		t.Log.Debugf("No objects on tag %s", tagID)
+		return
+	}
+	tagName := objs[0].Tag.Name
+	for _, obj := range objs[0].ObjectIDs {
+		if obj.Reference().Type == "VirtualMachine" {
+			vmList = append(vmList, obj.Reference().Value)
+		}
 	}
 
 	vmSet := t.vmsOnTag[tagID]
 	if vmSet == nil && len(vmList) == 0 {
 		// this tag can be ignored
-		log.Debugf("No vms on tag %s", tagID)
-		return
-	}
-
-	// get the tagname
-	tagName, _, err := t.tc.GetTag(tagID)
-	if err != nil {
-		log.Errorf("Error %v getting tagname %s", err, tagID)
+		t.Log.Debugf("No vms on tag %s", tagID)
 		return
 	}
 
