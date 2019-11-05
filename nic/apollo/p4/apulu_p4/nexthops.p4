@@ -4,28 +4,27 @@
 action ecmp_info(nexthop_type, num_nexthops, tunnel_id4, tunnel_id3,
                  tunnel_id2, tunnel_id1, nexthop_base) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
-    if (num_nexthops == 0) {
-        modify_field(scratch_metadata.nexthop_id, nexthop_base);
-    } else {
-        modify_field(scratch_metadata.nexthop_id,
-                     (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
-        if (nexthop_type == NEXTHOP_TYPE_TUNNEL) {
-            if (scratch_metadata.nexthop_id == 0) {
-                modify_field(scratch_metadata.nexthop_id, tunnel_id1);
-            }
-            if (scratch_metadata.nexthop_id == 1) {
-                modify_field(scratch_metadata.nexthop_id, tunnel_id2);
-            }
-            if (scratch_metadata.nexthop_id == 2) {
-                modify_field(scratch_metadata.nexthop_id, tunnel_id3);
-            }
-            if (scratch_metadata.nexthop_id == 3) {
-                modify_field(scratch_metadata.nexthop_id, tunnel_id4);
-            }
-        } else {
-            modify_field(scratch_metadata.nexthop_id,
-                         nexthop_base + scratch_metadata.nexthop_id);
+    if (scratch_metadata.num_nexthops == 0) {
+        egress_drop(P4E_DROP_NEXTHOP_INVALID);
+        // return;
+    }
+
+    if (nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+        if (scratch_metadata.nexthop_id == 1) {
+            modify_field(scratch_metadata.nexthop_id, tunnel_id1);
         }
+        if (scratch_metadata.nexthop_id == 2) {
+            modify_field(scratch_metadata.nexthop_id, tunnel_id2);
+        }
+        if (scratch_metadata.nexthop_id == 3) {
+            modify_field(scratch_metadata.nexthop_id, tunnel_id3);
+        }
+        if (scratch_metadata.nexthop_id == 4) {
+            modify_field(scratch_metadata.nexthop_id, tunnel_id4);
+        }
+    } else {
+        modify_field(scratch_metadata.nexthop_id, nexthop_base +
+                     (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     }
     modify_field(rewrite_metadata.nexthop_type, nexthop_type);
     modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
@@ -48,12 +47,13 @@ table ecmp {
  *****************************************************************************/
 action tunnel_info(nexthop_base, num_nexthops, vni, ip_type, dipo, dmaci) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
-    if (num_nexthops == 0) {
-        modify_field(scratch_metadata.nexthop_id, nexthop_base);
-    } else {
-        modify_field(scratch_metadata.nexthop_id, nexthop_base +
-                     (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
+    if (scratch_metadata.num_nexthops == 0) {
+        egress_drop(P4E_DROP_NEXTHOP_INVALID);
+        // return;
     }
+
+    modify_field(scratch_metadata.nexthop_id, nexthop_base +
+                 (p4e_i2e.entropy_hash % scratch_metadata.num_nexthops));
     modify_field(p4e_i2e.nexthop_id, scratch_metadata.nexthop_id);
 
     modify_field(rewrite_metadata.ip_type, ip_type);

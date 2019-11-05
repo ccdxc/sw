@@ -675,7 +675,7 @@ tunnels_init (void)
     memcpy(tunnel_info->dipo, &g_dipo1, 4);
     tunnel_info->ip_type = IPTYPE_IPV4;
     tunnel_info->nexthop_base = g_nexthop_id1;
-    tunnel_info->num_nexthops = 0;
+    tunnel_info->num_nexthops = 1;
     entry_write(tbl_id, g_tunnel_id1, 0, 0, &data, false, 0);
 }
 
