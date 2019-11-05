@@ -1999,7 +1999,9 @@ Eth::SetFwStatus(uint8_t fw_status)
 {
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr +  offsetof(union dev_regs, info) +
+              offsetof(union dev_info_regs, fw_status),
+              (uint8_t *)&regs->info.fw_status, sizeof(regs->info.fw_status), 0);
 #endif
 }
 
@@ -2008,7 +2010,9 @@ Eth::HeartbeatEventHandler()
 {
     regs->info.fw_heartbeat = regs->info.fw_heartbeat + 1;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr +  offsetof(union dev_regs, info) +
+              offsetof(union dev_info_regs, fw_heartbeat),
+              (uint8_t *)&regs->info.fw_heartbeat, sizeof(regs->info.fw_heartbeat), 0);
 #endif
 }
 
