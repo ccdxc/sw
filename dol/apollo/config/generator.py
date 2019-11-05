@@ -134,37 +134,11 @@ def __read():
     # rmapping.client.ReadObjects()
     return
 
-def __is_nicmgr_up():
-    nicmgrlog = os.path.join(os.environ['WS_TOP'], "nic/nicmgr.log")
-    pattern = ' oob_mnic0: LIF_STATE_CREATED \+ LINK_UP => LIF_STATE_CREATED$'
-    count = 20
-    while count > 0:
-        with open(nicmgrlog, 'r') as f:
-            for line in f:
-                match = re.search(pattern, line)
-                if match:
-                    return True
-        count = count - 1
-        time.sleep(5)
-    return False
-
-def __wait_on_nicmgr():
-    if GlobalOptions.dryrun or not utils.IsInterfaceSupported():
-        return
-    logger.info("Wait until nicmgr is UP")
-    if not __is_nicmgr_up():
-        logger.error("Nicmgr did not come up - Aborting!!!")
-        sys.exit(1)
-    logger.info("nicmgr is UP")
-    resmgr.InitNicMgrObjects()
-    return
-
 def Main():
     timeprofiler.ConfigTimeProfiler.Start()
     agentapi.Init()
 
     resmgr.Init()
-    __wait_on_nicmgr()
 
     logger.info("Initializing object info")
     __initialize_object_info()

@@ -307,3 +307,9 @@ def __initialize_hostifs():
 
 def Init():
     __initialize_hostifs()
+    if utils.IsDryRun():
+        return
+    if utils.IsInterfaceSupported():
+        InitNicMgrObjects()
+    return
+
