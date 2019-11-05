@@ -494,11 +494,9 @@ intr_reset_mode(const int intrb, const int intrc)
  */
 
 void
-intr_reset(const int intrb, const int intrc, const int dmask)
+intr_reset_pci(const int intrb, const int intrc, const int dmask)
 {
-    intr_reset_drvcfg(intrb, intrc, dmask);
     intr_reset_msixcfg(intrb, intrc);
-    intr_reset_pba(intrb, intrc);
     intr_reset_mode(intrb, intrc);
 }
 

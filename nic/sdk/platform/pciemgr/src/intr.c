@@ -77,7 +77,7 @@ pciehw_intr_init(pciehwdev_t *phwdev)
     }
 
     /* return intr resources to default reset state */
-    intr_reset(intrb, intrc, phwdev->intrdmask);
+    intr_reset_pci(intrb, intrc, phwdev->intrdmask);
 }
 
 void

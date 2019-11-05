@@ -126,12 +126,12 @@ int intr_coal_get_params(int *mul, int *div);
  *     so the interrupts reset to "unmasked" and can be fired when
  *     the local fw is ready to send.
  *
- * intr_reset()     - reset all register groups to default values,
- *                    use for resource initialization at device creation.
+ * intr_reset_pci() - reset the pcie managed register groups to default values,
+ *                    use for pcie block resets (FLR, bus reset).
  * intr_reset_dev() - device requested interrupt reset, reset all driver
  *                    owned registers.
  */
-void intr_reset(const int intrb, const int intrc, const int dmask);
+void intr_reset_pci(const int intrb, const int intrc, const int dmask);
 void intr_reset_dev(const int intrb, const int intrc, const int dmask);
 
 void intr_reset_pba(const int intrb, const int intrc);

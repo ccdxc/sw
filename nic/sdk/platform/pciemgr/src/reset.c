@@ -55,7 +55,7 @@ pciehw_reset_device(pciehwdev_t *phwdev, const pciehdev_rsttype_t rsttype)
     if (rsttype != PCIEHDEV_RSTTYPE_NONE) {
         pciehw_reset_event(phwdev, rsttype);
     }
-    intr_reset(intrb, intrc, dmask);
+    intr_reset_pci(intrb, intrc, dmask);
     pciehw_cfg_reset(phwdev, rsttype);
 }
 
