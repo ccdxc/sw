@@ -9,6 +9,7 @@ package pds;
 
 import "meta/meta.proto";
 import "types.proto";
+import "mapping.proto";
 
 service MirrorSvc {
   rpc MirrorSessionCreate (MirrorSessionRequest) returns (MirrorSessionResponse) {}
@@ -30,10 +31,10 @@ message ERSpanSpec {
   // VPC id
   uint32          VPCId  = 1;
   oneof erspandst {
-      // Tunnel ID of the ERSPAN destination
+      // tunnel (aka. TEP) as the ERSPAN destination
       uint32    TunnelId = 2;
-      // Mapping key of the ERSPAN destination
-      uint32    Id       = 3;
+      // local/remote mapping as the ERSPAN destination
+      MappingKey Mapping = 3;
   }
   // Source IP address to be used for ERSPAN
   // NOTE: only IPv6 is supported
