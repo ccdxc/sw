@@ -6,10 +6,14 @@
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
+
+#define HOST_LIF_ID_MIN 71
+#define HOST_LIF_ID_MAX 78
 
 namespace api_test {
 
-const uint64_t k_feeder_mac = 0xa010101000000000;
+const uint64_t k_feeder_mac = 0x101000000000;
 // artemis - one is reserved, hence max is MAX_VNIC - 1
 const uint32_t k_max_vnic = ::apollo() ? 64 : PDS_MAX_VNIC - 1;
 
@@ -76,7 +80,7 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
     this->vpc_id = 1;
     this->subnet_id = 1;
     this->rsc_pool_id = 0;
-    this->mac_u64 = mac;
+    this->mac_u64 = mac | (id << 24);
     vnic_feeder_encap_init(id, vnic_encap_type, &vnic_encap);
     vnic_feeder_encap_init(id, fabric_encap_type, &fabric_encap);
     this->src_dst_check = src_dst_check;
@@ -106,6 +110,8 @@ vnic_feeder::key_build(pds_vnic_key_t *key) const {
 
 void
 vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
+    static uint32_t lif_id = HOST_LIF_ID_MIN;    
+
     memset(spec, 0, sizeof(pds_vnic_spec_t));
     this->key_build(&spec->key);
 
@@ -118,6 +124,10 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     spec->src_dst_check = src_dst_check;
     spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
     spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
+    spec->host_ifindex = LIF_IFINDEX(lif_id++);
+    if (lif_id > HOST_LIF_ID_MAX) {
+        lif_id = HOST_LIF_ID_MIN;
+    }
 }
 
 bool

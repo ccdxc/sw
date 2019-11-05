@@ -55,8 +55,6 @@ device_feeder::spec_build(pds_device_spec_t *spec) const {
     } else {
         spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
     }
-    // todo: delete this once vnic impl is fixed
-    spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
 }
 
 bool

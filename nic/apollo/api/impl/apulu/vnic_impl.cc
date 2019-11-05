@@ -168,7 +168,9 @@ vnic_impl::release_resources(api_base *api_obj) {
     }
 
     // if the vnic_hw_id_ is not inherited from the lif, release it
-    if ((vnic->host_ifindex() == IFINDEX_INVALID) && (hw_id_ != 0xFFFF)) {
+    if (((vnic->host_ifindex() == IFINDEX_INVALID) ||
+        (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM))
+        && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
 
@@ -223,7 +225,9 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     }
 
     // free the vnic hw id, if its not inherited from lif
-    if ((vnic->host_ifindex() == IFINDEX_INVALID) && (hw_id_ != 0xFFFF)) {
+    if (((vnic->host_ifindex() == IFINDEX_INVALID) ||
+        (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM))
+        && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
