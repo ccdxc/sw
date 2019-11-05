@@ -60,7 +60,13 @@ ingress_to_rxdma:
     phvwr           p.p4i_to_arm_payload_offset, k.offset_metadata_payload_offset
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
-    phvwr           p.p4i_to_rxdma_vnic_info_en, TRUE
+    or              r1, k.vnic_metadata_vnic_id, \
+                        k.control_metadata_rx_packet, 10
+    seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
+    or.c1           r1, 1, r1, 11
+    phvwr           p.p4i_to_rxdma_vnic_info_key, r1
+    seq.!c1         c1, k.key_metadata_ktype, KEY_TYPE_IPV4
+    phvwr.c1        p.p4i_to_rxdma_vnic_info_en, TRUE
 
     add             r1, k.capri_p4_intrinsic_packet_len, \
                         (APULU_I2E_HDR_SZ + APULU_P4_TO_ARM_HDR_SZ)

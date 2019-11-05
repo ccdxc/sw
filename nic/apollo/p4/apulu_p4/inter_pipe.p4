@@ -46,7 +46,17 @@ action ingress_to_rxdma() {
     modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
 
     modify_field(p4i_to_rxdma.apulu_p4plus, TRUE);
-    modify_field(p4i_to_rxdma.vnic_info_en, TRUE);
+    if (key_metadata.ktype == KEY_TYPE_IPV4) {
+        modify_field(scratch_metadata.flag, 0);
+        modify_field(p4i_to_rxdma.vnic_info_en, TRUE);
+    }
+    if (key_metadata.ktype == KEY_TYPE_IPV6) {
+        modify_field(scratch_metadata.flag, 1);
+        modify_field(p4i_to_rxdma.vnic_info_en, TRUE);
+    }
+    modify_field(p4i_to_rxdma.vnic_info_key,
+                 ((control_metadata.rx_packet << 10) |
+                  (vnic_metadata.vnic_id << 1) | scratch_metadata.flag));
 
     add_to_field(capri_p4_intrinsic.packet_len,
                  (APULU_P4_TO_ARM_HDR_SZ + APULU_I2E_HDR_SZ));

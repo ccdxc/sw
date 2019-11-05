@@ -28,7 +28,6 @@ header mirror_blob_t mirror_blob;
 @pragma pa_field_union ingress p4i_to_rxdma.flow_proto              key_metadata.proto
 @pragma pa_field_union ingress p4i_to_rxdma.flow_sport              key_metadata.sport
 @pragma pa_field_union ingress p4i_to_rxdma.flow_dport              key_metadata.dport
-@pragma pa_field_union ingress p4i_to_rxdma.vnic_id                 vnic_metadata.vnic_id
 @pragma pa_field_union ingress p4i_to_rxdma.vpc_id                  vnic_metadata.vpc_id
 header apulu_p4i_to_rxdma_header_t p4i_to_rxdma;
 
