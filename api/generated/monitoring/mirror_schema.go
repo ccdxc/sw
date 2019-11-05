@@ -126,7 +126,7 @@ var typesMapMirror = map[string]*api.Struct{
 
 			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{ID: "packet-filters", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"InterfaceSelector": api.Field{Name: "InterfaceSelector", CLITag: api.CLIInfo{ID: "interface-selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interface-selector", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
+			"InterfaceSelector": api.Field{Name: "InterfaceSelector", CLITag: api.CLIInfo{ID: "interface-selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interface-selector", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{

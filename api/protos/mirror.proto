@@ -44,7 +44,7 @@ message MirrorSessionSpec {
     repeated string PacketFilters           = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 
     // If specified, will pick up interface matching the selector
-    repeated labels.Selector InterfaceSelector   = 7 [(gogoproto.jsontag) = "interface-selector,omitempty"];
+    labels.Selector InterfaceSelector   = 7 [(gogoproto.jsontag) = "interface-selector,omitempty"];
 }
 
 // MirrorStartConditions - Conditions to start mirroring

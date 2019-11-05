@@ -19,7 +19,7 @@ export interface IMonitoringMirrorSessionSpec {
     'collectors'?: Array<IMonitoringMirrorCollector>;
     'match-rules'?: Array<IMonitoringMatchRule>;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
-    'interface-selector'?: Array<ILabelsSelector>;
+    'interface-selector'?: ILabelsSelector;
 }
 
 
@@ -29,7 +29,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'collectors': Array<MonitoringMirrorCollector> = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
-    'interface-selector': Array<LabelsSelector> = null;
+    'interface-selector': LabelsSelector = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
             required: false,
@@ -85,7 +85,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         this['collectors'] = new Array<MonitoringMirrorCollector>();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['packet-filters'] = new Array<MonitoringMirrorSessionSpec_packet_filters>();
-        this['interface-selector'] = new Array<LabelsSelector>();
+        this['interface-selector'] = new LabelsSelector();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -125,9 +125,9 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this['packet-filters'] = [];
         }
         if (values) {
-            this.fillModelArray<LabelsSelector>(this, 'interface-selector', values['interface-selector'], LabelsSelector);
+            this['interface-selector'].setValues(values['interface-selector'], fillDefaults);
         } else {
-            this['interface-selector'] = [];
+            this['interface-selector'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -141,14 +141,12 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),
                 'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters']),
-                'interface-selector': new FormArray([]),
+                'interface-selector': CustomFormGroup(this['interface-selector'].$formGroup, MonitoringMirrorSessionSpec.propInfo['interface-selector'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMirrorCollector>('collectors', this['collectors'], MonitoringMirrorCollector);
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
-            // generate FormArray control elements
-            this.fillFormArray<LabelsSelector>('interface-selector', this['interface-selector'], LabelsSelector);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('start-condition') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('start-condition').get(field);
@@ -184,7 +182,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', this['collectors'], MonitoringMirrorCollector);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
             this._formGroup.controls['packet-filters'].setValue(this['packet-filters']);
-            this.fillModelArray<LabelsSelector>(this, 'interface-selector', this['interface-selector'], LabelsSelector);
+            this['interface-selector'].setFormGroupValuesToBeModelValues();
         }
     }
 }

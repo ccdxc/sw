@@ -14520,10 +14520,7 @@
           }
         },
         "interface-selector": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/labelsSelector"
-          },
+          "$ref": "#/definitions/labelsSelector",
           "title": "If specified, will pick up interface matching the selector"
         }
       },
