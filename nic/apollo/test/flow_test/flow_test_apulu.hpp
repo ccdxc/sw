@@ -580,28 +580,49 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flow(uint32_t vpc, uint32_t src_bd_id,
-                          ipv4_addr_t v4_addr_sip, mac_addr_t smac,
-                          uint32_t dst_bd_id, ipv4_addr_t v4_addr_dip,
-                          mac_addr_t dmac, uint8_t proto, uint16_t sport,
-                          uint16_t dport, uint32_t nh_idx) {
+    sdk_ret_t create_session(uint32_t iflow_vpc, uint32_t iflow_bd_id,
+                             mac_addr_t iflow_smac, mac_addr_t iflow_dmac,
+                             ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
+                             uint16_t iflow_sport, uint16_t iflow_dport,
+                             uint32_t rflow_vpc, uint32_t rflow_bd_id,
+                             mac_addr_t rflow_smac, mac_addr_t rflow_dmac,
+                             ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
+                             uint16_t rflow_sport, uint16_t rflow_dport,
+                             uint8_t proto) {
+        // install iflow
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = src_bd_id - 1;
-        v4entry.sport = sport;
-        v4entry.dport = dport;
+        v4entry.bd_id = iflow_bd_id - 1;
+        v4entry.sport = iflow_sport;
+        v4entry.dport = iflow_dport;
         v4entry.proto = proto;
-        v4entry.src = v4_addr_sip;
-        v4entry.dst = v4_addr_dip;
-        v4entry.session_id = session_id++;
-        //v4entry.set_nexthop_index(nh_idx);
-        //v4entry.nexthop_valid = 1;
-        //v4entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+        v4entry.src = iflow_sip;
+        v4entry.dst = iflow_dip;
+        v4entry.session_id = session_id;
+        v4entry.flow_role = TCP_FLOW_INITIATOR;
         auto ret = insert_(&v4entry);
         if (ret != SDK_RET_OK) {
             return ret;
         }
         // print entry info
-        dump_flow_entry(&v4entry, v4_addr_sip, smac, v4_addr_dip, dmac);
+        dump_flow_entry(&v4entry, iflow_sip, iflow_smac, iflow_dip, iflow_dmac);
+
+        // install rflow
+        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+        v4entry.bd_id = rflow_bd_id - 1;
+        v4entry.sport = rflow_sport;
+        v4entry.dport = rflow_dport;
+        v4entry.proto = proto;
+        v4entry.src = rflow_sip;
+        v4entry.dst = rflow_dip;
+        v4entry.session_id = session_id;
+        ret = insert_(&v4entry);
+        v4entry.flow_role = TCP_FLOW_RESPONDER;
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        session_id++;
+        // print entry info
+        dump_flow_entry(&v4entry, rflow_sip, rflow_smac, rflow_dip, rflow_dmac);
         return SDK_RET_OK;
     }
 
@@ -650,15 +671,19 @@ public:
                                 return ret;
                             }
                         } else {
-                            auto ret = create_flow(vpc,
-                                                   ep_pairs[i].lbd_id,
-                                                   ep_pairs[i].lip,
-                                                   ep_pairs[i].lmac,
-                                                   ep_pairs[i].rbd_id,
-                                                   ep_pairs[i].rip,
-                                                   ep_pairs[i].rmac,
-                                                   proto, fwd_sport, fwd_dport,
-                                                   v4_nh_idx);
+                            auto ret = create_session(vpc, ep_pairs[i].lbd_id,
+                                                      ep_pairs[i].lmac,
+                                                      ep_pairs[i].rmac,
+                                                      ep_pairs[i].lip,
+                                                      ep_pairs[i].rip,
+                                                      fwd_sport, fwd_dport,
+                                                      vpc, ep_pairs[i].rbd_id,
+                                                      ep_pairs[i].rmac,
+                                                      ep_pairs[i].lmac,
+                                                      ep_pairs[i].rip,
+                                                      ep_pairs[i].lip,
+                                                      fwd_dport, fwd_sport,
+                                                      proto);
                             if (ret != SDK_RET_OK) {
                                 return ret;
                             }
