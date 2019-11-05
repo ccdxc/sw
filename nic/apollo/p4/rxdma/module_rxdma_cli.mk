@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = _apollo_libapollo_rxdma_p4pdcli.so
+MODULE_TARGET       = _apollo_libp4plus_rxdma_p4pdcli.so
 MODULE_PIPELINE	    = apollo
 MODULE_PREREQS      = apollo_commonrxdma_p4pd.swigcli
 MODULE_SRC_DIR      = ${BLD_P4GEN_DIR}/p4plus_rxdma

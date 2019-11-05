@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = _artemis_libartemis_rxdma_p4pdcli.so
+MODULE_TARGET       = _artemis_libp4plus_rxdma_p4pdcli.so
 MODULE_PIPELINE	    = artemis
 MODULE_PREREQS      = artemis_commonrxdma_p4pd.swigcli
 MODULE_SRC_DIR      = ${BLD_P4GEN_DIR}/p4plus_rxdma
