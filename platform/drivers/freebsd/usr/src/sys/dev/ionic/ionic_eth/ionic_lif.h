@@ -461,6 +461,7 @@ int ionic_set_multi(struct ionic_lif* lif);
 int ionic_set_mac(struct ifnet *ifp);
 int ionic_lif_quiesce(struct ionic_lif *lif);
 int ionic_lif_reinit(struct ionic_lif *lif, bool wdog_reset_path);
+void ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode);
 
 void ionic_adminq_hb_resched(struct ionic_lif *lif);
 void ionic_txq_wdog_resched(struct ionic_lif *lif);

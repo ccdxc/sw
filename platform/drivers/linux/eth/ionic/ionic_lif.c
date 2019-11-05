@@ -1112,6 +1112,8 @@ static int ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
 	if (rx_mode & RX_MODE_F_ALLMULTI)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
+	if (rx_mode & RX_MODE_F_RDMA_SNIFFER)
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_RDMA_SNIFFER");
 	netdev_dbg(lif->netdev, "lif%d %s\n", lif->index, buf);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -1146,7 +1148,7 @@ static int _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 	return err;
 }
 
-static void ionic_set_rx_mode(struct net_device *netdev)
+void ionic_set_rx_mode(struct net_device *netdev)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct identity *ident = &lif->ionic->ident;
@@ -1158,6 +1160,9 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	rx_mode |= (netdev->flags & IFF_BROADCAST) ? RX_MODE_F_BROADCAST : 0;
 	rx_mode |= (netdev->flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (netdev->flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
+
+	if (test_bit(IONIC_LIF_F_RDMA_SNIFFER, lif->state))
+		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
 
 	/* sync unicast addresses
 	 * next check to see if we're in an overflow state

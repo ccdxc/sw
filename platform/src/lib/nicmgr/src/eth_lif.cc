@@ -2194,20 +2194,23 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
     // rx_mode_set_comp *comp = (rx_mode_set_comp *)resp;
     sdk_ret_t ret = SDK_RET_OK;
 
-    NIC_LOG_DEBUG("{}: {}: rx_mode {} {}{}{}{}{}",
+    NIC_LOG_DEBUG("{}: {}: rx_mode {} {}{}{}{}{}{}",
             hal_lif_info_.name,
             opcode_to_str((cmd_opcode_t)cmd->opcode),
             cmd->rx_mode,
-            cmd->rx_mode & RX_MODE_F_UNICAST   ? 'u' : '-',
-            cmd->rx_mode & RX_MODE_F_MULTICAST ? 'm' : '-',
-            cmd->rx_mode & RX_MODE_F_BROADCAST ? 'b' : '-',
-            cmd->rx_mode & RX_MODE_F_PROMISC   ? 'p' : '-',
-            cmd->rx_mode & RX_MODE_F_ALLMULTI  ? 'a' : '-');
+            cmd->rx_mode & RX_MODE_F_UNICAST        ? 'u' : '-',
+            cmd->rx_mode & RX_MODE_F_MULTICAST      ? 'm' : '-',
+            cmd->rx_mode & RX_MODE_F_BROADCAST      ? 'b' : '-',
+            cmd->rx_mode & RX_MODE_F_PROMISC        ? 'p' : '-',
+            cmd->rx_mode & RX_MODE_F_ALLMULTI       ? 'a' : '-',
+            cmd->rx_mode & RX_MODE_F_RDMA_SNIFFER   ? 'r' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
+
+    // TODO: Check for unsupported flags
 
     DEVAPI_CHECK
 
@@ -2218,7 +2221,14 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
     ret = dev_api->lif_upd_rx_mode(hal_lif_info_.lif_id,
                                    broadcast, all_multicast, promiscuous);
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to update rx mode",
+        NIC_LOG_ERR("{}: Failed to update rx mode", hal_lif_info_.name);
+        return (IONIC_RC_ERROR);
+    }
+
+    bool rdma_sniffer_en = cmd->rx_mode & RX_MODE_F_RDMA_SNIFFER;
+    ret = dev_api->lif_upd_rdma_sniff(hal_lif_info_.lif_id, rdma_sniffer_en);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to update rdma sniffer mode",
             hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }

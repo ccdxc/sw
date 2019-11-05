@@ -1567,11 +1567,12 @@ struct lif_getattr_comp {
 };
 
 enum rx_mode {
-	RX_MODE_F_UNICAST	= BIT(0),
-	RX_MODE_F_MULTICAST	= BIT(1),
-	RX_MODE_F_BROADCAST	= BIT(2),
-	RX_MODE_F_PROMISC	= BIT(3),
-	RX_MODE_F_ALLMULTI	= BIT(4),
+	RX_MODE_F_UNICAST		= BIT(0),
+	RX_MODE_F_MULTICAST		= BIT(1),
+	RX_MODE_F_BROADCAST		= BIT(2),
+	RX_MODE_F_PROMISC		= BIT(3),
+	RX_MODE_F_ALLMULTI		= BIT(4),
+	RX_MODE_F_RDMA_SNIFFER	= BIT(5),
 };
 
 /**
@@ -1584,6 +1585,7 @@ enum rx_mode {
  *                  RX_MODE_F_BROADCAST: Accept broadcast packets.
  *                  RX_MODE_F_PROMISC: Accept any packets.
  *                  RX_MODE_F_ALLMULTI: Accept any multicast packets.
+ *                  RX_MODE_F_RDMA_SNIFFER: Sniff rdma packets
  */
 struct rx_mode_set_cmd {
 	u8     opcode;

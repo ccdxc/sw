@@ -943,6 +943,8 @@ _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
         if (rx_mode & RX_MODE_F_ALLMULTI)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
+        if (rx_mode & RX_MODE_F_RDMA_SNIFFER)
+                i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_RDMA_SNIFFER");
         if (rx_mode == 0)
                 i += snprintf(&buf[i], REMAIN(i), " cleared");
         IONIC_NETDEV_INFO(lif->netdev, "%s\n", buf);
@@ -970,7 +972,7 @@ ionic_lif_rx_mode_work(struct work_struct *work)
 /*
  * Schedule Rx mode work.
  */
-static void
+void
 ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 {
 	struct rx_mode_work *work;
@@ -1004,6 +1006,7 @@ ionic_set_rx_mode(struct ifnet *ifp)
 	rx_mode |= (ifp->if_flags & IFF_BROADCAST) ? RX_MODE_F_BROADCAST : 0;
 	rx_mode |= (ifp->if_flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (ifp->if_flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
+	rx_mode |= (lif->rx_mode & RX_MODE_F_RDMA_SNIFFER) ? RX_MODE_F_RDMA_SNIFFER : 0;
 
 	IONIC_NETDEV_INFO(ifp, "Setting rx mode: %d\n", rx_mode);
 	ionic_lif_rx_mode(lif, rx_mode);

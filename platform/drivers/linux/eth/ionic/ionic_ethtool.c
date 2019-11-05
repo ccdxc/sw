@@ -13,6 +13,8 @@
 static const char ionic_priv_flags_strings[][ETH_GSTRING_LEN] = {
 #define IONIC_PRIV_F_SW_DBG_STATS	BIT(0)
 	"sw-dbg-stats",
+#define IONIC_PRIV_F_RDMA_SNIFFER	BIT(1)
+	"rdma-sniffer",
 };
 #define IONIC_PRIV_FLAGS_COUNT ARRAY_SIZE(ionic_priv_flags_strings)
 
@@ -632,20 +634,29 @@ static u32 ionic_get_priv_flags(struct net_device *netdev)
 	if (test_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state))
 		priv_flags |= IONIC_PRIV_F_SW_DBG_STATS;
 
+	if (test_bit(IONIC_LIF_F_RDMA_SNIFFER, lif->state))
+		priv_flags |= IONIC_PRIV_F_RDMA_SNIFFER;
+
 	return priv_flags;
 }
 
 static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	u32 flags = lif->flags;
 
 	clear_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state);
 	if (priv_flags & IONIC_PRIV_F_SW_DBG_STATS)
 		set_bit(IONIC_LIF_SW_DEBUG_STATS, lif->state);
 
-	if (flags != lif->flags)
-		lif->flags = flags;
+	clear_bit(IONIC_LIF_F_RDMA_SNIFFER, lif->state);
+	if (priv_flags & IONIC_PRIV_F_RDMA_SNIFFER)
+		set_bit(IONIC_LIF_F_RDMA_SNIFFER, lif->state);
+
+	if ((lif->flags ^ priv_flags) & IONIC_PRIV_F_RDMA_SNIFFER)
+		ionic_set_rx_mode(netdev);
+
+	if (lif->flags != priv_flags)
+		lif->flags = priv_flags;
 
 	return 0;
 }

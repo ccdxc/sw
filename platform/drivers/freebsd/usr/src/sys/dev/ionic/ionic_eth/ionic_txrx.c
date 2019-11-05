@@ -1844,6 +1844,29 @@ ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
 }
 
 static int
+ionic_rdma_sniffer_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	unsigned int rx_mode = lif->rx_mode;
+	int value, err;
+
+	err = sysctl_handle_int(oidp, &value, 0, req);
+	if ((err) || (req->newptr == NULL))
+		return (err);
+
+	rx_mode &= ~RX_MODE_F_RDMA_SNIFFER;
+	if (value)
+		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
+
+	if ((rx_mode ^ lif->rx_mode) & RX_MODE_F_RDMA_SNIFFER) {
+		ionic_lif_rx_mode(lif, rx_mode);
+		lif->rx_mode = rx_mode;
+	}
+
+	return (err);
+}
+
+static int
 ionic_reset_stats_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
@@ -3016,6 +3039,10 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_reset_stats_sysctl, "I",
 			"Reset driver, firmware and port statistics");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "rdma_sniffer",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_rdma_sniffer_sysctl, "I",
+			"Enable/Disable RDMA sniffer mode");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");

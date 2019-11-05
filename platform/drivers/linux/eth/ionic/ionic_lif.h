@@ -127,6 +127,7 @@ enum ionic_lif_state_flags {
 	IONIC_LIF_LINK_CHECK_REQUESTED,
 	IONIC_LIF_QUEUE_RESET,
 	IONIC_LIF_F_FW_READY,
+	IONIC_LIF_F_RDMA_SNIFFER,
 
 	/* leave this as last */
 	IONIC_LIF_STATE_SIZE
@@ -242,6 +243,7 @@ int ionic_intr_alloc(struct ionic *ionic, struct ionic_intr_info *intr);
 void ionic_intr_free(struct ionic *ionic, int index);
 int ionic_open(struct net_device *netdev);
 int ionic_stop(struct net_device *netdev);
+void ionic_set_rx_mode(struct net_device *netdev);
 int ionic_reset_queues(struct ionic_lif *lif);
 
 struct ionic_lif *ionic_netdev_lif(struct net_device *netdev);
