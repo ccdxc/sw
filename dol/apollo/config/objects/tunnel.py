@@ -167,6 +167,7 @@ class TunnelObjectClient:
         return True, ""
 
     def AssociateObjects(self):
+        logger.info("Associating Tunnel Objects")
         for tun in self.Objects():
             if tun.IsUnderlay():
                 tun.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()

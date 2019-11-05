@@ -59,7 +59,7 @@ class BatchObjectClient:
         self.__obj = None
         # Temporary fix for artemis to generate flows and sessions for the
         # created mappings
-        if utils.IsPipelineArtemis():
+        if utils.IsFlowInstallationNeeded():
             self.__commit_for_flows = True
         else:
             self.__commit_for_flows = False

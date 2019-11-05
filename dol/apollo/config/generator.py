@@ -1,8 +1,5 @@
 #! /usr/bin/python3
 import pdb
-import os
-import json
-import re
 import sys
 import time
 
@@ -77,10 +74,8 @@ def __generate(topospec):
     # Generate Interface Configuration
     interface.client.GenerateObjects(topospec)
 
-    if not utils.IsPipelineApulu():
-        #TODO: enable mirror
-        # Generate Mirror session configuration before vnic
-        mirror.client.GenerateObjects(topospec)
+    # Generate Mirror session configuration before vnic
+    mirror.client.GenerateObjects(topospec)
 
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
@@ -150,10 +145,10 @@ def Main():
 
     logger.info("Creating objects in Agent")
     __create()
-    if not utils.IsPipelineApulu():
-        #TODO: fix as & when impl gets added
-        logger.info("Reading objects via Agent")
-        __read()
+
+    logger.info("Reading objects via Agent")
+    __read()
+
     timeprofiler.ConfigTimeProfiler.Stop()
 
     ModelConnector.ConfigDone()

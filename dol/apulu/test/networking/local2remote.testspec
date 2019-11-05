@@ -36,8 +36,8 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
-                src     : ref://testcase/config/devicecfg/MACAddr
-                dst     : 00:02:0b:0a:0d:0e
+                src     : callback://networking/packets/GetOuterSrcMac
+                dst     : callback://networking/packets/GetOuterDstMac
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
                 dst     : ref://testcase/config/remotemapping/TunIP
@@ -45,7 +45,7 @@ packets:
                 tos     : 0
                 id      : 0
             vxlan:
-                vni     : ref://testcase/config/remotemapping/Vnid
+                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
 
 buffers:
     - buffer:
@@ -86,11 +86,10 @@ session:
 
             delay    :    1
 
-            # TODO: create new topo & Fix uplink ports
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=TO_SWITCH_PKT
-                    port    : ref://testcase/config/switchport
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
 
             descriptors:
                 - descriptor:

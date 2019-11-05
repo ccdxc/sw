@@ -252,3 +252,28 @@ def GetIPFromLocalMapping(testcase, packet, args=None):
         tunnel = None
     return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)
 
+def __get_expected_nexthop(robj):
+    tunnel = robj.TUNNEL
+    nh = None
+    if tunnel.IsUnderlay():
+        nh = tunnel.NEXTHOP
+    return nh
+
+def GetExpectedEgressUplinkPort(testcase, args=None):
+    nh = __get_expected_nexthop(testcase.config.remotemapping)
+    if nh is None:
+        return None
+    l3if = nh.L3Interface
+    port = l3if.IfInfo.port_num + 1
+    return port
+
+def GetOuterSrcMac(testcase, args=None):
+    nh = __get_expected_nexthop(testcase.config.remotemapping)
+    l3if = nh.L3Interface
+    mac = l3if.IfInfo.macaddr.get()
+    return mac
+
+def GetOuterDstMac(testcase, args=None):
+    nh = __get_expected_nexthop(testcase.config.remotemapping)
+    mac = nh.underlayMACAddr.get()
+    return mac

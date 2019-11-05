@@ -71,7 +71,7 @@ class SubnetObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("SUBNET object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- Prefix %s" % self.IPPrefix)
+        logger.info("- Prefix %s VNI %d" % (self.IPPrefix, self.Vnid))
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\

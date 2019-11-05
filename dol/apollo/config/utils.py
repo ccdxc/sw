@@ -128,7 +128,7 @@ class CachedObjs:
 
 CachedObjs = CachedObjs()
 
-def GetFilteredObjects(objs, maxlimits, random=True):
+def GetFilteredObjects(objs, maxlimits, random=False):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         num = len(objs)
     else:
@@ -443,6 +443,11 @@ def IsRouteTableSupported():
     if IsPipelineApulu():
         return False
     return True
+
+def IsFlowInstallationNeeded():
+    if IsPipelineArtemis():
+        return True
+    return False
 
 def IsV4Stack(stack):
     return True if ((stack == "dual") or (stack == 'ipv4')) else False

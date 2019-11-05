@@ -212,7 +212,7 @@ class VpcObjectClient:
                 if obj.IsSubstrateVPC():
                     Store.SetSubstrateVPC(obj)
         # Write the flow and nexthop config to agent hook file
-        if utils.IsPipelineArtemis():
+        if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)
         if utils.IsPipelineApulu():
             # Associate Nexthop objects
