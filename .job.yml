@@ -151,13 +151,16 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["test/venice", "test/apollo"]
+    - reference: iota/test/standalone/sanity/apulu-linux
+      exclude_dirs: ["test/venice", "test/iris"]
   metrics:
     - reference: venice/ui
-  #nic/apollo:
+  nic/apollo:
   #  - reference: iota/test/venice
   #  - reference: iota/test/standalone/sanity/esx
   #  - reference: iota/test/standalone/sanity/freebsd
   #  - reference: iota/test/standalone/sanity/linux
+     - reference: iota/test/standalone/sanity/apulu-linux
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -173,6 +176,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/apulu-linux
   nic/conf:
     - reference: iota/test/standalone/sanity/linux
   nic/debug_cli:
@@ -186,11 +190,13 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/apulu-linux
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/apulu-linux
   nic/linkmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -246,6 +252,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["linux","esx"]
     - reference: iota/test/standalone/sanity/linux
+      exclude_dirs: ["freebsd","esx"]
+    - reference: iota/test/standalone/sanity/apulu-linux
       exclude_dirs: ["freebsd","esx"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
