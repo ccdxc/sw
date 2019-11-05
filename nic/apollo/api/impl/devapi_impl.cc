@@ -11,14 +11,17 @@
 #include <cmath>
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/utils/port_utils.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/apollo/api/impl/devapi_impl.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
 // TODO: replace this with asic pd
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/event.hpp"
+#include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
 
@@ -169,10 +172,19 @@ sdk_ret_t
 devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
     lif_impl *lif;
     pds_lif_key_t key;
+    ::core::event_t event;
 
+    // lookup lif and update the state
     key = lif_id;
     lif = lif_impl_db()->find(&key);
     lif->set_state(state);
+
+    // notify rest of the system
+    memset(&event, 0, sizeof(event));
+    event.lif.ifindex = LIF_IFINDEX(lif_id);
+    event.lif.state = state;
+    memcpy(event.lif.name, lif->name(), sizeof(event.lif.name));
+    sdk::event_thread::publish(EVENT_ID_LIF_STATUS, &event, sizeof(event));
     return SDK_RET_OK;
 }
 

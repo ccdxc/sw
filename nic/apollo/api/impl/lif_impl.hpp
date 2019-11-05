@@ -93,6 +93,10 @@ public:
         memcpy(name_, name, SDK_MAX_NAME_LEN);
     }
 
+    /// \brief     return the name of the lif
+    /// \return    return lif name
+    const char *name(void) const { return name_; }
+
     /// \brief     set/update the state of the lif
     void set_state(lif_state_t state) {
         state_ = state;
