@@ -35,9 +35,6 @@ templates:
   - template: "apigwservices.tmpl"
     outputpath: "../exports/apigw/services.go"
     once: true
-  - template: "genobjrelations.tmpl"
-    outputpath: "../relations.json"
-    once: true
   - template: "crudinterface.tmpl"
     outputpath: "{FILE}_crudinterface.go"
   - template: "apiclient.tmpl"

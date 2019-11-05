@@ -1938,15 +1938,14 @@ func addRelations(f *descriptor.Field) error {
 	}
 	return nil
 }
-
-func genRelMap(path string) (string, error) {
+func getRelMap(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		glog.V(1).Infof("relationRef [%s] not found", path)
 	} else {
 		raw, err := ioutil.ReadFile(path)
 		if err != nil {
 			glog.V(1).Infof("Reading Relation failed (%s)", err)
-			return "", err
+			return err
 		}
 		rmap := make(map[string][]relationRef)
 		err = json.Unmarshal(raw, &rmap)
@@ -1962,6 +1961,11 @@ func genRelMap(path string) (string, error) {
 			}
 		}
 	}
+	return nil
+}
+
+func genRelMap(path string) (string, error) {
+	getRelMap(path)
 	if len(relMap) > 0 {
 		ret, err := json.MarshalIndent(relMap, "", "  ")
 		if err != nil {
@@ -1973,6 +1977,26 @@ func genRelMap(path string) (string, error) {
 		return str, nil
 	}
 	return "{}", nil
+}
+
+type relationsMap struct {
+	Keys []string
+	Map  map[string][]relationRef
+}
+
+func genRelMapGo(path string) (relationsMap, error) {
+	ret := relationsMap{}
+	keys := []string{}
+	if err := getRelMap(path); err != nil {
+		return ret, err
+	}
+	for k := range relMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	ret.Keys = keys
+	ret.Map = relMap
+	return ret, nil
 }
 
 // Atlease 2 character long.
@@ -3371,6 +3395,7 @@ func init() {
 	reg.RegisterFunc("getAPIRefMD", getAPIRefMD)
 	reg.RegisterFunc("addRelations", addRelations)
 	reg.RegisterFunc("genRelMap", genRelMap)
+	reg.RegisterFunc("genRelMapGo", genRelMapGo)
 	reg.RegisterFunc("title", strings.Title)
 	reg.RegisterFunc("detitle", detitle)
 	reg.RegisterFunc("getInputType", getInputType)

@@ -30,6 +30,13 @@ const (
 	SelectorReference ReferenceType = "SelectorRef"
 )
 
+// ObjRelation defines a relation between objects
+type ObjRelation struct {
+	Type  ReferenceType
+	To    string
+	Field string
+}
+
 // ReferenceType defines types of object references
 type ReferenceType string
 

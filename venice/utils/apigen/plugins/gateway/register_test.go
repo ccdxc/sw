@@ -329,6 +329,22 @@ func TestGenRelMap(t *testing.T) {
 	if item, ok := tmap["example.ToObjMsg"]; ok && len(item) != 1 {
 		t.Fatalf("expected [1] relations, found [%d]", len(item))
 	}
+	// reset the in memory relMap
+	relMap = make(map[string][]relationRef)
+	rmap, err := genRelMapGo(path)
+	if err != nil {
+		t.Fatalf("failed to generate go relations map (%s)", err)
+	}
+	t.Logf("Relmap is [%+v]", rmap)
+	if len(rmap.Map) != 2 {
+		t.Fatalf("expected [2] messages, found [%d] [%+v]", len(tmap), tmap)
+	}
+	if item, ok := rmap.Map["example.RelationObj"]; ok && len(item) != 1 {
+		t.Fatalf("expected [1] relations, found [%d]", len(item))
+	}
+	if item, ok := rmap.Map["example.ToObjMsg"]; ok && len(item) != 1 {
+		t.Fatalf("expected [1] relations, found [%d]", len(item))
+	}
 }
 
 func TestGenSwaggerIndex(t *testing.T) {

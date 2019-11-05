@@ -45,5 +45,36 @@
       "To": "network/VirtualRouter",
       "Field": "VirtualRouter"
     }
+  ],
+  "security.NetworkSecurityPolicySpec": [
+    {
+      "Type": "NamedRef",
+      "To": "security/SecurityGroup",
+      "Field": "AttachGroups"
+    }
+  ],
+  "security.SGRule": [
+    {
+      "Type": "NamedRef",
+      "To": "security/App",
+      "Field": "Apps"
+    },
+    {
+      "Type": "NamedRef",
+      "To": "security/SecurityGroup",
+      "Field": "FromSecurityGroups"
+    },
+    {
+      "Type": "NamedRef",
+      "To": "security/SecurityGroup",
+      "Field": "ToSecurityGroups"
+    }
+  ],
+  "workload.WorkloadSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "cluster/Host",
+      "Field": "HostName"
+    }
   ]
 }

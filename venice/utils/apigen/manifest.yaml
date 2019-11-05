@@ -16,3 +16,7 @@ templates:
     outputpath: "objuris.md"
   - template: "commonswagger.tmpl"
     outputpath: "swagger/common.go"
+  - template: "genobjrelations.tmpl"
+    outputpath: "relations/schema.json"
+  - template: "genobjrelationsGo.tmpl"
+    outputpath: "relations/schema.go"

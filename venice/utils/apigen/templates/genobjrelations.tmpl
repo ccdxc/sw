@@ -1,1 +1,1 @@
-{{range .Messages}}{{range .Fields}}{{$ignore := addRelations .}}{{end}}{{end}}{{$out := (genRelMap "../generated/relations.json")}}{{$out}}
+{{range .Messages}}{{range .Fields}}{{$ignore := addRelations .}}{{end}}{{end}}{{$out := (genRelMap "../generated/relations/schema.json")}}{{$out}}

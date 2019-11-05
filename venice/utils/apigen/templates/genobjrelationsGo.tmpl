@@ -1,0 +1,16 @@
+{{range .Messages}}{{range .Fields}}{{$ignore := addRelations .}}{{end}}{{end}}{{$out := (genRelMapGo "../generated/relations/schema.json")}}
+package relations
+
+import apiintf "github.com/pensando/sw/api/interfaces"
+
+type ObjRelation struct {
+    Type  string
+    To    string
+    Field string
+}
+
+var ObjRelations = map[string][]apiintf.ObjRelation { {{range $out.Keys}}{{$k := . }}{{with (index $out.Map $k)}}
+        "{{$k}}" : []apiintf.ObjRelation{ {{range .}}
+            {Type: "{{.Type}}", To: "{{.To}}", Field: "{{.Field}}" }, {{end}}
+        }, {{end}}{{end}}
+}
