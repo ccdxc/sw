@@ -92,6 +92,7 @@ message InterfaceSpec {
 
 // operational status of an interface, if any
 message InterfaceStatus {
+  IfStatus OperStatus = 1;
 }
 
 // stats for an interface, if any
@@ -151,8 +152,12 @@ message LifSpec {
 }
 
 message LifStatus {
-  // encoded ifindex of this Lif
-  uint32 IfIndex = 1;
+  // encoded ifindex of this lif
+  uint32   IfIndex    = 1;
+  // name of this lif (as seen on the host)
+  string   Name       = 2;
+  // operational status of this lif
+  IfStatus OperStatus = 3;
 }
 
 message LifStats {

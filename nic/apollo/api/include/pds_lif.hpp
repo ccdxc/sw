@@ -9,6 +9,7 @@
 
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 
 typedef struct pds_lif_spec_s {
@@ -21,6 +22,16 @@ typedef struct pds_lif_spec_s {
     ///< vlan_strip_en is set to true if vlan needs to be stripped in datapath
     bool vlan_strip_en;
 } pds_lif_spec_t;
+
+/// \brief lif status
+typedef struct pds_lif_status_s {
+    ///< encoded interface index of this lif
+    pds_ifindex_t  ifindex;
+    ///< name of the lif (as seen on host)
+    char           name[SDK_MAX_NAME_LEN];
+    ///< operational status of the lif
+    pds_if_state_t state;
+} __PACK__ pds_lif_status_t;
 
 /// \brief Read LIF information
 ///

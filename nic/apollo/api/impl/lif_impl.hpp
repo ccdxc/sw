@@ -17,7 +17,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
 
-#define PDS_MAX_LIF_NAME_LEN        16
+#define SDK_MAX_NAME_LEN            16
 
 namespace api {
 namespace impl {
@@ -90,7 +90,7 @@ public:
 
     /// \brief     set/update the name of the lif
     void set_name(const char *name) {
-        memcpy(name_, name, PDS_MAX_LIF_NAME_LEN);
+        memcpy(name_, name, SDK_MAX_NAME_LEN);
     }
 
     /// \brief     set/update the state of the lif
@@ -144,9 +144,10 @@ private:
     uint16_t         vnic_hw_id_;     ///< vnic hw id
 
     /// operational state
-    char             name_[PDS_MAX_LIF_NAME_LEN];    ///< lif name
-    lif_state_t      state_;                         ///< operational state
-    friend class lif_impl_state;      ///< lif_impl_state is friend of lif_impl
+    char             name_[SDK_MAX_NAME_LEN];    ///< lif name
+    lif_state_t      state_;                     ///< operational state
+    ///< lif_impl_state is friend of lif_impl
+    friend class lif_impl_state;
 } __PACK__;
 
 /// \@}
