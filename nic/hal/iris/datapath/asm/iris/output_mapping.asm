@@ -31,9 +31,14 @@ set_tm_oport:
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
 
   // mod instruction stalls; instructions below execute till r7 is ready
-  seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
-  seq.c1      c1, k.control_metadata_span_copy, FALSE
-  phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
+  add         r1, r0, r0
+  seq         c1, k.control_metadata_span_copy, FALSE
+  seq.c1      c2, d.u.set_tm_oport_d.egress_mirror_en, TRUE
+  or.c2       r1, r0, k.control_metadata_egress_mirror_session_id
+  seq.c1      c3, d.u.set_tm_oport_d.mirror_en, TRUE
+  or.c3       r1, r1, d.u.set_tm_oport_d.mirror_session_id
+  phvwr       p.capri_intrinsic_tm_span_session, r1
+
   phvwrpair   p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif, \
                 p.capri_intrinsic_tm_oq, k.control_metadata_dest_tm_oq[4:0]
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled

@@ -1754,6 +1754,9 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
             om_tmoport.nports              = 1;
             om_tmoport.egress_mirror_en    = 1;
+            // Just for debugging
+            // om_tmoport.mirror_en           = 1;
+            // om_tmoport.mirror_session_id   = 0x1 << 5;
             om_tmoport.egress_port1        = tm_oport;
             om_tmoport.p4plus_app_id       = p4plus_app_id;
             om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;

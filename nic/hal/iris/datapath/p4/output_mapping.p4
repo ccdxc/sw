@@ -10,7 +10,6 @@ action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oq) {
         modify_field(capri_intrinsic.tm_span_session,
                      control_metadata.egress_mirror_session_id);
     }
-
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.flag, egress_mirror_en);
 }
@@ -44,6 +43,7 @@ action redirect_to_cpu(dst_lif, egress_mirror_en,
 // of the traffic will be dropped like if two Mgmt NICs try to talk
 // between them.
 action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
+                    mirror_en, mirror_session_id,
                     p4plus_app_id, rdma_enabled, dst_lif,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
@@ -57,11 +57,12 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
     }
 
     set_tm_oport(vlan_strip, nports, egress_mirror_en,
-                    p4plus_app_id, rdma_enabled, dst_lif,
-                    encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
-                    egress_port1, egress_port2, egress_port3, egress_port4,
-                    egress_port5, egress_port6, egress_port7, egress_port8,
-                    mnic_enforce_src_lport);
+                 mirror_en, mirror_session_id,
+                 p4plus_app_id, rdma_enabled, dst_lif,
+                 encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
+                 egress_port1, egress_port2, egress_port3, egress_port4,
+                 egress_port5, egress_port6, egress_port7, egress_port8,
+                 mnic_enforce_src_lport);
 }
 
 // When ever a new parameter is added to this set_tm_oport add to the
@@ -71,6 +72,7 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
 // When using the set_tm_oport action, we should always set the
 // mnic_enforce_src_lport to zero.
 action set_tm_oport(vlan_strip, nports, egress_mirror_en,
+                    mirror_en, mirror_session_id,
                     p4plus_app_id, rdma_enabled, dst_lif,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
@@ -88,11 +90,18 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     // set the output queue to use
     modify_field(capri_intrinsic.tm_oq, control_metadata.dest_tm_oq);
 
-    if ((egress_mirror_en == TRUE) and
-        (control_metadata.span_copy == FALSE)) {
-        modify_field(capri_intrinsic.tm_span_session,
-                     control_metadata.egress_mirror_session_id);
+    if (control_metadata.span_copy == FALSE) {
+        if (egress_mirror_en == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session,
+                         control_metadata.egress_mirror_session_id);
+        }
+        if (mirror_en == TRUE)  {
+            bit_or(capri_intrinsic.tm_span_session, capri_intrinsic.tm_span_session,
+                   mirror_session_id);
+        }
     }
+
+
 
     modify_field(capri_intrinsic.lif, dst_lif);
     if (encap_vlan_id_valid == TRUE) {
@@ -121,6 +130,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(scratch_metadata.egress_port, egress_port8);
     modify_field(scratch_metadata.egress_port, nports);
     modify_field(scratch_metadata.flag, egress_mirror_en);
+    modify_field(scratch_metadata.flag, mirror_en);
     modify_field(scratch_metadata.flag, encap_vlan_id_valid);
     modify_field(scratch_metadata.vlan_id, access_vlan_id);
     modify_field(control_metadata.src_lport, mnic_enforce_src_lport);
