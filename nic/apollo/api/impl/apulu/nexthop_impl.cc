@@ -153,6 +153,21 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
 
 sdk_ret_t
 nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
+    pds_nexthop_key_t key;
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data = { 0 };
+
+    key = nh->key();
+    if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
+        return SDK_RET_OK;
+    }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program nexthop %u at idx %u",
+                      key.id, hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
     return SDK_RET_OK;
 }
 

@@ -117,8 +117,6 @@ typedef enum pds_nexthop_group_type_e {
 
 #define PDS_MAX_OVERLAY_ECMP_TEP       4       ///< maximum number of TEPs in
                                                ///< overlay nexthop group
-#define PDS_MAX_ECMP_NEXTHOP           8       ///< maximum nexthops per
-                                               ///< nexthop group
 ///< maximum number of nexthops in ECMP group
 ///< NOTE: this must be maximum of all individual ECMP type max. members
 #define PDS_MAX_ECMP_NEXTHOP           8

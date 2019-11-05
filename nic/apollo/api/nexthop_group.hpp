@@ -158,7 +158,7 @@ public:
 
     /// \brief     return the number of nexthops in this group
     /// \return    number of nexthops of this group
-    uint32_t num_nexthops(void) const { return num_nexthops_; }
+    uint8_t num_nexthops(void) const { return num_nexthops_; }
 
     /// \brief     return impl instance of this nexthop group object
     /// \return    impl instance of the nexthop group object
@@ -179,7 +179,7 @@ private:
 private:
     pds_nexthop_group_key_t key_;        ///< nexthop group key
     pds_nexthop_group_type_t type_;      ///< nexthop group type
-    uint32_t num_nexthops_;              ///< number of nexthops in this group
+    uint8_t num_nexthops_;              ///< number of nexthops in this group
     ht_ctxt_t ht_ctxt_;                  ///< hash table context
     impl_base *impl_;                    ///< impl object instance
     friend class nexthop_group_state;    ///< a friend of nexthop_group
