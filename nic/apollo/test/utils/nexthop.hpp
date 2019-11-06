@@ -17,19 +17,15 @@ extern const pds_nh_type_t k_nh_type;
 // NH test feeder class
 class nexthop_feeder : public feeder {
 public:
-    pds_nexthop_id_t id;
-    pds_nh_type_t type;
-    ip_addr_t ip;
-    uint64_t mac;
-    uint16_t vlan;
-    pds_vpc_id_t vpc_id;
-    pds_if_id_t if_id;
+    pds_nexthop_spec_t spec;
 
     // Constructor
     nexthop_feeder() { };
     nexthop_feeder(const nexthop_feeder& feeder) {
-        init(ipaddr2str(&feeder.ip), feeder.mac, feeder.num_obj,
-             feeder.id, feeder.type, feeder.vlan, feeder.vpc_id, feeder.if_id);
+        init(ipaddr2str(&feeder.spec.ip), MAC_TO_UINT64(feeder.spec.mac),
+             feeder.num_obj, feeder.spec.key.id, feeder.spec.type,
+             feeder.spec.vlan, feeder.spec.vpc.id, feeder.spec.l3_if.id,
+             feeder.spec.tep.id);
     }
 
     // Initialize feeder with the base set of values
@@ -39,7 +35,8 @@ public:
               pds_nexthop_id_t id=1,
               pds_nh_type_t type=k_nh_type,
               uint16_t vlan=1, pds_vpc_id_t vpc_id=1,
-              pds_if_id_t if_id = 1);
+              pds_if_id_t if_id = 1,
+              pds_tep_id_t tep_id = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -57,13 +54,19 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const nexthop_feeder& obj) {
     os << "NH feeder =>"
-       << " id: " << obj.id
-       << " type: " << obj.type
-       << " ip: " << obj.ip
-       << " mac: " << mac2str(obj.mac)
-       << " vlan: " << obj.vlan
-       << " vpc: " << obj.vpc_id
-       << " if: " << obj.if_id;
+        << " id: " << obj.spec.key.id
+        << " type: " << obj.spec.type;
+    if (obj.spec.type == PDS_NH_TYPE_IP) {
+        os << " ip: " << obj.spec.ip
+            << " mac: " << macaddr2str(obj.spec.mac)
+            << " vlan: " << obj.spec.vlan
+            << " vpc: " << obj.spec.vpc.id;
+    } else if (obj.spec.type == PDS_NH_TYPE_UNDERLAY) {
+        os << " underlay mac: " << macaddr2str(obj.spec.underlay_mac)
+            << " if: " << obj.spec.l3_if.id;
+    } else if (obj.spec.type == PDS_NH_TYPE_OVERLAY) {
+        os << " tep: " << obj.spec.tep.id;
+    }
     return os;
 }
 

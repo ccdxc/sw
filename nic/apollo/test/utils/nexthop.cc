@@ -18,37 +18,44 @@ const pds_nh_type_t k_nh_type = apulu() ? PDS_NH_TYPE_UNDERLAY : PDS_NH_TYPE_IP;
 void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
                      pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
-                     pds_vpc_id_t vpc_id, pds_if_id_t if_id) {
-    this->id = id;
-    this->type = type;
+                     pds_vpc_id_t vpc_id, pds_if_id_t if_id,
+                     pds_tep_id_t tep_id) {
+    this->spec.key.id = id;
+    this->spec.type = type;
     this->num_obj = num_obj;
-    this->mac = mac;
     if (type == PDS_NH_TYPE_IP) {
-        extract_ip_addr(ip_str.c_str(), &this->ip);
-        this->vlan = vlan;
-        this->vpc_id = vpc_id;
+        extract_ip_addr(ip_str.c_str(), &this->spec.ip);
+        this->spec.vlan = vlan;
+        this->spec.vpc.id = vpc_id;
+        MAC_UINT64_TO_ADDR(this->spec.mac, mac);
     } else if (type == PDS_NH_TYPE_UNDERLAY) {
-        this->if_id = if_id;
+        this->spec.l3_if.id = if_id;
+        MAC_UINT64_TO_ADDR(this->spec.underlay_mac, mac);
+    } else if (type == PDS_NH_TYPE_OVERLAY) {
+        this->spec.tep.id = tep_id;
     }
 }
 
 void
 nexthop_feeder::iter_next(int width) {
-    id += width;
-    mac += width;
+    spec.key.id += width;
     cur_iter_pos++;
-    if (type == PDS_NH_TYPE_UNDERLAY) {
-        // if_id += width;
-    } else if (type == PDS_NH_TYPE_IP) {
-        ip.addr.v4_addr += width;
-        vlan += width;
+    if (spec.type == PDS_NH_TYPE_IP) {
+        spec.ip.addr.v4_addr += width;
+        spec.vlan += width;
+        increment_mac_addr(spec.mac, width);
+    } else if (spec.type == PDS_NH_TYPE_UNDERLAY) {
+        // spec.l3_if.id += width;
+        increment_mac_addr(spec.underlay_mac, width);
+    } else if (spec.type == PDS_NH_TYPE_OVERLAY) {
+        spec.tep.id += width;
     }
 }
 
 void
 nexthop_feeder::key_build(pds_nexthop_key_t *key) const {
     memset(key, 0, sizeof(pds_nexthop_key_t));
-    key->id = this->id;
+    key->id = this->spec.key.id;
 }
 
 void
@@ -56,53 +63,64 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_nexthop_spec_t));
     this->key_build(&spec->key);
 
-    spec->type = this->type;
-    if (this->type == PDS_NH_TYPE_UNDERLAY) {
-        spec->l3_if.id = this->if_id;
-        printf(" NH id %u l3 if id %u mac 0x%lx\n", spec->key.id,
-               spec->l3_if.id, this->mac);
-        MAC_UINT64_TO_ADDR(spec->underlay_mac, this->mac);
-    } else if (this->type == PDS_NH_TYPE_IP) {
-        MAC_UINT64_TO_ADDR(spec->mac, this->mac);
-        spec->ip = this->ip;
-        spec->vpc.id = this->vpc_id;
-        spec->vlan = this->vlan;
+    spec->type = this->spec.type;
+    if (this->spec.type == PDS_NH_TYPE_IP) {
+        spec->ip = this->spec.ip;
+        spec->vpc.id = this->spec.vpc.id;
+        spec->vlan = this->spec.vlan;
+        MAC_UINT64_TO_ADDR(spec->mac, MAC_TO_UINT64(this->spec.mac));
+    } else if (this->spec.type == PDS_NH_TYPE_UNDERLAY) {
+        spec->l3_if.id = this->spec.l3_if.id;
+        MAC_UINT64_TO_ADDR(spec->underlay_mac,
+                           MAC_TO_UINT64(this->spec.underlay_mac));
+    } else if (this->spec.type == PDS_NH_TYPE_OVERLAY) {
+        spec->tep.id = this->spec.tep.id;
     }
 }
 
 bool
 nexthop_feeder::key_compare(const pds_nexthop_key_t *key) const {
-    return (this->id == key->id);
+    return (this->spec.key.id == key->id);
 }
 
 bool
 nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
-    ip_addr_t nh_ip = this->ip, spec_nh_ip = spec->ip;
-
-    // validate NH type
-    if (this->type != spec->type)
-        return sdk::SDK_RET_ERR;
 
     // nothing much to check for blackhole nh
-    if (this->type == PDS_NH_TYPE_BLACKHOLE)
-        return sdk::SDK_RET_OK;
+    if (this->spec.type == PDS_NH_TYPE_BLACKHOLE)
+        return true;
 
-    // validate NH vlan
-    if (this->vlan != spec->vlan)
-        return sdk::SDK_RET_ERR;
+    // validate NH type
+    if (this->spec.type != spec->type)
+        return false;
 
-    // validate NH MAC
-    if (this->mac != MAC_TO_UINT64(spec->mac))
-        return sdk::SDK_RET_ERR;
-
-    if (this->type != PDS_NH_TYPE_IP) {
+    if (this->spec.type == PDS_NH_TYPE_IP) {
+        // validate NH vlan
+        if (this->spec.vlan != spec->vlan)
+            return false;
+        // validate NH MAC
+        if (MAC_TO_UINT64(this->spec.mac) != MAC_TO_UINT64(spec->mac))
+            return false;
         // validate NH vpc
-        if (this->vpc_id != spec->vpc.id)
-            return sdk::SDK_RET_ERR;
-
+        if (this->spec.vpc.id != spec->vpc.id)
+            return false;
         // validate NH ip
-        if (!IPADDR_EQ(&nh_ip, &spec_nh_ip))
-            return sdk::SDK_RET_ERR;
+        if (!IPADDR_EQ(&this->spec.ip, &spec->ip))
+            return false;
+
+    } else if (this->spec.type == PDS_NH_TYPE_UNDERLAY) {
+
+        if (MAC_TO_UINT64(this->spec.underlay_mac) !=
+                          MAC_TO_UINT64(spec->underlay_mac))
+            return false;
+        if (this->spec.l3_if.id != spec->l3_if.id)
+            ; // TODO return false;
+
+    } else if (this->spec.type == PDS_NH_TYPE_OVERLAY) {
+
+        if (this->spec.tep.id != spec->tep.id)
+            return false;
+
     }
 
     return true;
