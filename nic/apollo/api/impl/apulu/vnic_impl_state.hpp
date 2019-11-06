@@ -54,6 +54,12 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
 private:
     rte_indexer *vnic_idxr(void) { return vnic_idxr_; }
     slab *vnic_impl_slab(void) { return vnic_impl_slab_; }

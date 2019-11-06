@@ -49,6 +49,12 @@ vnic_impl_state::table_transaction_end(void) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+vnic_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(vnic_impl_slab_, ctxt);
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl

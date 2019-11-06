@@ -233,6 +233,14 @@ public:
         return SDK_RET_ERR;
     }
 
+    /// \brief      API to walk impl state slab
+    /// \param[in]  walk_cb     callback to be called on slab
+    /// \param[in]  ctxt        opaque context to be passed to callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t impl_state_slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+        return SDK_RET_ERR;
+    }
+
 private:
     pipeline_cfg_t pipeline_cfg_;
 };

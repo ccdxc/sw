@@ -315,6 +315,11 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+mapping_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(mapping_impl_slab_, ctxt);
+    return SDK_RET_OK;
+}
 
 /// \@}
 

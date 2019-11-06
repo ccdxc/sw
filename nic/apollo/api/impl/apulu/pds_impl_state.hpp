@@ -66,6 +66,7 @@ public:
     ~pds_impl_state();
     sdk_ret_t init(pds_state *state);
     static void destroy(pds_impl_state *impl_state);
+    sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt);
     apulu_impl_state *apulu_impl_db(void) const {
         return (apulu_impl_state *)impl_state_[PDS_IMPL_STATE_APULU];
     }

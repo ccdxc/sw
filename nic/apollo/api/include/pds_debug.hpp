@@ -130,6 +130,7 @@ sdk_ret_t pds_fte_api_stats_get(void);
 sdk_ret_t pds_fte_api_stats_clear(void);
 sdk_ret_t pds_fte_table_stats_get(void);
 sdk_ret_t pds_fte_table_stats_clear(void);
+sdk_ret_t pds_slab_get(api::state_walk_cb_t cb, void *ctxt);
 
 /**
  * @brief    start aacs server
@@ -143,7 +144,6 @@ sdk_ret_t start_aacs_server(uint32_t aacs_server_port);
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t stop_aacs_server(void);
-
 
 }    // namespace debug
 

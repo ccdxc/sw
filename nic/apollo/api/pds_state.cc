@@ -69,6 +69,14 @@ pds_state::destroy(pds_state *ps) {
     }
 }
 
+sdk_ret_t
+pds_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    for (uint32_t i = PDS_STATE_MIN; i < PDS_STATE_MAX; i ++) {
+        state_[i]->slab_walk(walk_cb, ctxt); 
+    }
+    return SDK_RET_OK;
+}
+
 /** * @} */    // end of PDS_STATE
 
 }    // namespace api

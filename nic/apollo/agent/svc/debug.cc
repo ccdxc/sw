@@ -160,7 +160,7 @@ DebugSvcImpl::LlcSetup(ServerContext *context, const pds::LlcSetupRequest *proto
     if (proto_req->type()) {
         llc_args.mask = (1 << (proto_req->type() - 1)); // Req Type starts at 1 so we need to subtract 1
     } else {
-        llc_args.mask = 0xffffffff;                     // Clear LLC 
+        llc_args.mask = 0xffffffff;                     // Clear LLC
     }
 
     ret = debug::pds_llc_setup(&llc_args);
@@ -339,5 +339,15 @@ DebugSvcImpl::StopAacsServer(ServerContext *context,
                              Empty *proto_rsp) {
     PDS_TRACE_VERBOSE("Received AACS Server Stop");
     debug::stop_aacs_server();
+    return Status::OK;
+}
+
+Status
+DebugSvcImpl::SlabGet(ServerContext *context,
+                      const Empty *proto_req,
+                      pds::SlabGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+    ret = debug::pds_slab_get(pds_slab_to_proto, proto_rsp);
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

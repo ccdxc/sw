@@ -54,6 +54,12 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t free_hw_id(uint16_t hw_id);
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
 private:
     friend class mirror_impl;    ///< friend of mirror_impl_state
 

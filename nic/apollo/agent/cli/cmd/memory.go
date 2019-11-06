@@ -46,7 +46,6 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	todo := true
-
 	slab := false
 	mtrack := false
 	heap := false
@@ -70,38 +69,24 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if slab == true {
-		var req *pds.SlabGetRequest
-
-		if cmd.Flags().Changed("slab-id") {
-			req = &pds.SlabGetRequest{
-				Id: slabID,
-			}
+		fmt.Printf("Slab Memory Stats:\n")
+		// PDS call
+		var empty *pds.Empty
+		resp, err := client.SlabGet(context.Background(), empty)
+		if err != nil {
+			fmt.Printf("Getting slab failed. %v\n", err)
 		} else {
-			// Get all Slabs
-			req = &pds.SlabGetRequest{
-				Id: 4294967295,
-			}
-		}
+			// Print header
+			slabShowHeader()
 
-		if todo == false {
-			fmt.Printf("Slab Memory Stats:\n")
-			// PDS call
-			resp, err := client.SlabGet(context.Background(), req)
-			if err != nil {
-				fmt.Printf("Getting slab failed. %v\n", err)
+			// Print slab
+			if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Get slab operation failed with %v error\n", resp.ApiStatus)
 			} else {
-				// Print header
-				slabShowHeader()
-
-				// Print slab
-				if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-					fmt.Printf("Get slab operation failed with %v error\n", resp.ApiStatus)
-				} else {
-					slabShowResp(resp)
-				}
+				slabShowResp(resp)
 			}
-			fmt.Printf("\n")
 		}
+		fmt.Printf("\n")
 	}
 
 	if mtrack == true {
@@ -155,28 +140,45 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func slabShowHeader() {
-	hdrLine := strings.Repeat("-", 175)
+	hdrLine := strings.Repeat("-", 150)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-22s%-5s%-9s%-12s%-12s%-14s%-12s%-14s%-8s%-8s%-8s%-12s%-10s%-10s\n",
-		"Name", "Id", "ElemSize", "#Elem/Block", "ThreadSafe",
-		"GrowDemand", "DelayDel", "ZeroAlloc", "#Elems", "#Alloc",
+	fmt.Printf("%-22s%-5s%-9s%-12s%-31s%-14s%-8s%-8s%-8s%-12s%-10s%-10s\n",
+		"Name", "Id", "ElemSize", "#Elem/Block", "ThreadSafe/GrowDemand/DelayDel",
+		"ZeroAlloc", "#Elems", "#Alloc",
 		"#Frees", "#AllocErr", "#Blocks", "RawBlockSz")
 	fmt.Println(hdrLine)
 }
 
 func slabShowResp(resp *pds.SlabGetResponse) {
-	spec := resp.GetSpec()
-	stats := resp.GetStats()
-
-	fmt.Printf("%-22s%-5d%-9d%-12d%-12t%-14t%-12t%-14t%-8d%-8d%-8d%-12d%-10d%-10d\n",
-		spec.GetName(),
-		spec.GetId(), spec.GetElementSize(),
-		spec.GetElementsPerBlock(), spec.GetThreadSafe(),
-		spec.GetGrowOnDemand(), spec.GetDelayDelete(),
-		spec.GetZeroOnAllocation(), stats.GetNumElementsInUse(),
-		stats.GetNumAllocs(), stats.GetNumFrees(),
-		stats.GetNumAllocErrors(), stats.GetNumBlocks(),
-		spec.GetRawBlockSize())
+	for _, slab := range resp.GetSlab() {
+		spec := slab.GetSpec()
+		stats := slab.GetStats()
+		boolString := ""
+		if spec.GetThreadSafe() {
+			boolString += "T"
+		} else {
+			boolString += "F"
+		}
+		boolString += "/"
+		if spec.GetGrowOnDemand() {
+			boolString += "T"
+		} else {
+			boolString += "F"
+		}
+		boolString += "/"
+		if spec.GetDelayDelete() {
+			boolString += "T"
+		} else {
+			boolString += "F"
+		}
+		fmt.Printf("%-22s%-5d%-9d%-12d%-31s%-14t%-8d%-8d%-8d%-12d%-10d%-10d\n",
+			spec.GetName(), spec.GetId(), spec.GetElementSize(),
+			spec.GetElementsPerBlock(), boolString,
+			spec.GetZeroOnAllocation(), stats.GetNumElementsInUse(),
+			stats.GetNumAllocs(), stats.GetNumFrees(),
+			stats.GetNumAllocErrors(), stats.GetNumBlocks(),
+			spec.GetRawBlockSize())
+	}
 }
 
 func heapShowResp(resp *pds.HeapGetResponse) {

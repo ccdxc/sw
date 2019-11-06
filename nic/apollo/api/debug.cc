@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/api/debug.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace debug {
 
@@ -192,6 +193,21 @@ sdk_ret_t
 stop_aacs_server (void)
 {
     sdk::linkmgr::stop_aacs_server();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    get slab information
+ * @param[in]   cb   callback function to be called
+ * @paraam[in]  ctxt context for callback function
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_slab_get (api::state_walk_cb_t cb, void *ctxt)
+{
+    api::g_pds_state.slab_walk(cb, ctxt);
+    // TODO: Revisit logic to access pds_impl_state through pds_state
+    impl_base::pipeline_impl()->impl_state_slab_walk(cb, ctxt);
     return SDK_RET_OK;
 }
 

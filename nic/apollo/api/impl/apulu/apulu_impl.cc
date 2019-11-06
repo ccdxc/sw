@@ -616,6 +616,11 @@ apulu_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
 }
 
 sdk_ret_t
+apulu_impl::impl_state_slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return g_pds_impl_state.slab_walk(walk_cb, ctxt);
+}
+
+sdk_ret_t
 apulu_impl::session_clear(uint32_t idx) {
     return SDK_RET_OK;
 }

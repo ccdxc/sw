@@ -10,6 +10,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
 #include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
@@ -508,6 +509,34 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
     ippfx_proto_spec_to_api_spec(&api_spec->l3_if_info.ip_prefix,
                                  proto_spec.l3ifspec().prefix());
     return SDK_RET_OK;
+}
+
+static inline bool
+pds_slab_to_proto (void *entry, void *ctxt)
+{
+    pds::SlabGetResponse *rsp = (pds::SlabGetResponse *)ctxt;
+    slab *s = (slab *)entry;
+
+    auto rsp_entry = rsp->add_slab();
+    auto spec = rsp_entry->mutable_spec();
+    auto stats = rsp_entry->mutable_stats();
+
+    spec->set_name(s->name());
+    spec->set_id(s->slab_id());
+    spec->set_elementsize(s->elem_sz());
+    spec->set_elementsperblock(s->elems_per_block());
+    spec->set_threadsafe(s->thread_safe());
+    spec->set_growondemand(s->grow_on_demand());
+    //spec->set_delaydelete(s->delay_delete());
+    spec->set_zeroonallocation(s->zero_on_alloc());
+    spec->set_rawblocksize(s->raw_block_sz());
+    stats->set_numelementsinuse(s->num_in_use());
+    stats->set_numallocs(s->num_allocs());
+    stats->set_numfrees(s->num_frees());
+    stats->set_numallocerrors(s->num_alloc_fails());
+    stats->set_numblocks(s->num_blocks());
+    
+    return false;
 }
 
 static inline cli_cmd_t

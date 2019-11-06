@@ -70,6 +70,12 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t mapping_dump(int fd, cmd_args_t *args);
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }

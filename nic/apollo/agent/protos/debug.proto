@@ -23,7 +23,7 @@ service DebugSvc {
   rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}
   rpc PbStatsGet (types.Empty) returns (PbStatsGetResponse) {}
   rpc MemTrackGet(MemTrackGetRequest) returns (MemTrackGetResponse) {}
-  rpc SlabGet(SlabGetRequest) returns (SlabGetResponse) {}
+  rpc SlabGet(types.Empty) returns (SlabGetResponse) {}
   rpc HeapGet(types.Empty) returns (HeapGetResponse) {}
   rpc MeterStatsGet (MeterStatsGetRequest) returns (MeterStatsGetResponse) {}
   rpc SessionStatsGet (SessionStatsGetRequest) returns (SessionStatsGetResponse) {}
@@ -306,45 +306,6 @@ message MemTrackGetResponse {
   MemTrackStats   Stats     = 4; // statistics
 }
 
-// SlabSpec identifies a slab
-message SlabSpec {
-  string Name             = 1; // name of the slab
-  uint32 Id               = 2; // slab identifier
-  uint32 ElementSize      = 3; // size of each element
-  uint32 ElementsPerBlock = 4; // # of elements per block
-  bool   ThreadSafe       = 5; // thread safe allocation/free, if TRUE
-  bool   GrowOnDemand     = 6; // grow the slab on demand, if TRUE
-  bool   DelayDelete      = 7; // delay delete each element, if TRUE, instead of freeing immediately
-  bool   ZeroOnAllocation = 8; // zero allocated mem. if TRUE
-  uint32 RawBlockSize     = 9; // raw block size
-}
-
-// operational status of slab, if any
-message SlabStatus {
-}
-
-// per slab statistics
-message SlabStats {
-  uint32 NumElementsInUse = 1; // number of elements in use
-  uint32 NumAllocs        = 2; // number of alloc operations
-  uint32 NumFrees         = 3; // number of free operations
-  uint32 NumAllocErrors   = 4; // number of alloc errors
-  uint32 NumBlocks        = 5; // number of blocks allocated
-}
-
-// SlabGetRequest is GET request per slab
-message SlabGetRequest {
-  uint32 Id = 1; // slab identifier
-}
-
-// SlabGetResponse captures all information about a slab
-message SlabGetResponse {
-  types.ApiStatus ApiStatus = 1;
-  SlabSpec        Spec      = 2; // slab attributes
-  SlabStatus      Status    = 3; // operational status of the slab
-  SlabStats       Stats     = 4; // stats of the slab
-}
-
 message HeapStats {
   uint32 NumArenaBytesAlloc   = 1;
   uint32 NumFreeBlocks        = 2;
@@ -463,4 +424,38 @@ message CommandResponse {
 
 message AacsRequest {
   uint32 AacsServerPort = 1;
+}
+
+message SlabSpec {
+  string Name             = 1; // name of the slab
+  uint32 Id               = 2; // slab identifier
+  uint32 ElementSize      = 3; // size of each element
+  uint32 ElementsPerBlock = 4; // # of elements per block
+  bool   ThreadSafe       = 5; // thread safe allocation/free, if TRUE
+  bool   GrowOnDemand     = 6; // grow the slab on demand, if TRUE
+  bool   DelayDelete      = 7; // delay delete each element, if TRUE, instead of freeing immediately
+  bool   ZeroOnAllocation = 8; // zero allocated mem. if TRUE
+  uint32 RawBlockSize     = 9; // raw block size
+}
+
+message SlabStatus {
+}
+
+message SlabStats {
+  uint32 NumElementsInUse = 1; // number of elements in use
+  uint32 NumAllocs        = 2; // number of alloc operations
+  uint32 NumFrees         = 3; // number of free operations
+  uint32 NumAllocErrors   = 4; // number of alloc errors
+  uint32 NumBlocks        = 5; // number of blocks allocated
+}
+
+message Slab {
+  SlabSpec   Spec   = 1;
+  SlabStatus Status = 2;
+  SlabStats  Stats  = 3;
+}
+
+message SlabGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Slab   Slab      = 2;
 }

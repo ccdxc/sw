@@ -54,6 +54,14 @@ pds_impl_state::destroy(pds_impl_state *impl_state) {
     }
 }
 
+sdk_ret_t
+pds_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    for (uint32_t i = PDS_IMPL_STATE_MIN; i < PDS_IMPL_STATE_MAX; i ++) {
+        impl_state_[i]->slab_walk(walk_cb, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl
