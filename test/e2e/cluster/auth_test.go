@@ -206,9 +206,6 @@ var _ = Describe("auth tests", func() {
 			}, 30, 1).Should(BeNil())
 		})
 		It("successful radius auth", func() {
-			// TODO: Enable this test once we can get ACS to accept connection from IP subnet of API Gw in CI. Currently ACS accepts 192.168.0.0/16, 10.3.0.0/16 but it doesn't seem to work for connections
-			// coming from API Gw in CI. This test works on laptop.
-			Skip("Skipping radius e2e")
 			radiusCtx, err := authntestutils.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.Radius.User, Password: ts.tu.Radius.Password})
 			Expect(err).ShouldNot(HaveOccurred())
 			var user *auth.User

@@ -75,7 +75,7 @@ var defaultTestBedConfig = TestBedConfig{
 	Password:       "Pensando0$",
 	AuthMethod:     auth.Authenticators_LOCAL.String(),
 	Radius: testutils.RadiusConfig{
-		URL:        "10.11.100.101:1812",
+		URL:        "10.11.100.102:1812",
 		NasID:      "Venice",
 		NasSecret:  "testing123",
 		User:       "radiususer",
