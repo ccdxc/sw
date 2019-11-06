@@ -39,6 +39,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
     spec->set_name(lif->name);
+    spec->set_type(lif->type);
     spec->set_admin_status(lif->admin_status);
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);
