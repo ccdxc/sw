@@ -15,46 +15,7 @@
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/p4pd_cfg.hpp"
-
-
-/*
- * SDK Logger for CLI:
- * - Only Warnings and Errors are shown on console.
- */
-sdk_trace_level_e g_cli_trace_level = sdk::lib::SDK_TRACE_LEVEL_WARN;
-static int
-cli_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    if ((int)g_cli_trace_level >= (int)tracel_level)  {
-        va_start(args, format);
-        vsnprintf(logbuf, sizeof(logbuf), format, args);
-        switch (tracel_level) {
-        case sdk::lib::SDK_TRACE_LEVEL_ERR:
-            printf("%s\n", logbuf);
-            break;
-        case sdk::lib::SDK_TRACE_LEVEL_WARN:
-            printf("%s\n", logbuf);
-            break;
-        case sdk::lib::SDK_TRACE_LEVEL_INFO:
-            printf("%s\n", logbuf);
-            break;
-        case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-            printf("%s\n", logbuf);
-            break;
-        case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-            printf("%s\n", logbuf);
-            break;
-        default:
-            break;
-        }
-        va_end(args);
-    }
-
-    return 0;
-}
+#include "nic/debug_cli/include/cli.hpp"
 
 static bool pd_inited = 0;
 int
@@ -68,7 +29,7 @@ cli_init (char *ptr)
     printf("Initing: Please wait for the prompt ...\n");
 
     // initialize logger
-    sdk::lib::logger::init(cli_sdk_logger);
+    cli_logger_init();
 
     // populate cfg
     pipeline_cfg_init(&p4pd_cfg, &p4pd_rxdma_cfg, &p4pd_txdma_cfg);

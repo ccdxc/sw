@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/impl/apulu/impl_utils.hpp"
+#include "nic/debug_cli/include/cli.hpp"
 
 int
 cli_init (char *ptr)
@@ -24,6 +25,8 @@ cli_init (char *ptr)
     // initialize PAL
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
+
+    cli_logger_init();
 
     memset(&capri_cfg, 0, sizeof(capri_cfg_t));
     capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
