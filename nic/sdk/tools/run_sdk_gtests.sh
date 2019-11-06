@@ -36,15 +36,15 @@ echo "Running sltcam test"
 ${SDKDIR}/lib/table/sltcam/test/run.sh
 
 echo "Running rte_indexer test"
-$GDB rte_indexer_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/rte_indexer_test.xml" > ${SDKDIR}/rte_indexer_test.log.txt
+$GDB ${BUILD_DIR}/bin/rte_indexer_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/rte_indexer_test.xml" > ${SDKDIR}/rte_indexer_test.log.txt
 [[ $? -ne 0 ]] && echo "rte_indexer_test failed!" && exit 1
 
 echo "Running indexer test"
-$GDB indexer_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/indexer_test.xml" > ${SDKDIR}/indexer_test.log.txt
+$GDB ${BUILD_DIR}/bin/indexer_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/indexer_test.xml" > ${SDKDIR}/indexer_test.log.txt
 [[ $? -ne 0 ]] && echo "indexer_test failed!" && exit 1
 
 echo "Running sldirectmap test"
-$GDB sldirectmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/sldirectmap_test.xml" > ${SDKDIR}/sldirectmap_test.log.txt
+$GDB ${BUILD_DIR}/bin/sldirectmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/sldirectmap_test.xml" > ${SDKDIR}/sldirectmap_test.log.txt
 [[ $? -ne 0 ]] && echo "sldirectmap_test failed!" && exit 1
 
 echo "Success"

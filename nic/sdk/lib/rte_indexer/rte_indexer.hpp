@@ -21,8 +21,10 @@ public:
     static rte_indexer *factory(uint32_t size, bool thread_safe = true,
                                 bool skip_zero = false);
     static void destroy(rte_indexer *idxr);
-    sdk_ret_t alloc(uint32_t *index, uint32_t block_size = 1);
-    sdk_ret_t alloc(uint32_t index, uint32_t block_size = 1);
+    sdk_ret_t alloc(uint32_t *index);
+    sdk_ret_t alloc(uint32_t index);
+    sdk_ret_t alloc_block(uint32_t *index, uint32_t size = 1,
+                          bool wrap_around = false);
     sdk_ret_t free(uint32_t index, uint32_t block_size = 1);
     bool is_index_allocated(uint32_t index);
     uint32_t size(void) const { return size_; }

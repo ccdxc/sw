@@ -552,7 +552,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     // allocate vnic h/w ids for these lifs
-    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx, 2)) != SDK_RET_OK) {
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc_block(&idx, 2)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
                       key_, ret);
         return ret;

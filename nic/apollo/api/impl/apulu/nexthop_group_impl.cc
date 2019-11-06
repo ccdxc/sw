@@ -65,7 +65,7 @@ nexthop_group_impl::reserve_resources(api_base *orig_obj,
     hw_id_ = idx;
     if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
         if (spec->num_nexthops) {
-            ret = nexthop_impl_db()->nh_idxr()->alloc(&idx, spec->num_nexthops);
+            ret = nexthop_impl_db()->nh_idxr()->alloc_block(&idx, spec->num_nexthops);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reserve %u entries in "
                               "NEXTHOP table for nexthop group %u, "

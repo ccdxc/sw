@@ -55,7 +55,7 @@ TEST_F(rte_indexer_test, test1) {
     rte_indexer::destroy(ind);
 }
 
-TEST_F(rte_indexer_test, scale_test1M_thread_unsafe) {
+TEST_F(rte_indexer_test, alloc_test1M_thread_unsafe) {
     uint32_t i;
 
     // Instantiate the indexer
@@ -69,7 +69,7 @@ TEST_F(rte_indexer_test, scale_test1M_thread_unsafe) {
     rte_indexer::destroy(ind);
 }
 
-TEST_F(rte_indexer_test, scale_test1M_thread_safe) {
+TEST_F(rte_indexer_test, alloc_test1M_thread_safe) {
     uint32_t i;
 
     // Instantiate the indexer
@@ -398,7 +398,6 @@ TEST_F(rte_indexer_test, test12) {
 
     // Instantiate the indexer
     rte_indexer  *ind = rte_indexer::factory(4096);
-
     for (auto c = 0; c < 4096; c++) {
         // Allocate index
         rs  = ind->alloc(&i);
@@ -413,6 +412,313 @@ TEST_F(rte_indexer_test, test12) {
     rs = ind->alloc(&j);
     ASSERT_TRUE(rs == SDK_RET_OK);
     ASSERT_TRUE(j == (i + 1) % 4096);
+    rte_indexer::destroy(ind);
+
+    ind = rte_indexer::factory(4096);
+    rs = ind->alloc_block(&i, 4096);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+    rs = ind->free(0, 500);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rs = ind->free(3595, 500);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    j = ind->usage();
+    ASSERT_TRUE(j == 3096);
+    rs = ind->alloc_block(&i, 1000);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+    rs = ind->alloc_block(&i, 500);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 13:
+//
+// Summary:
+// --------
+//  - Testcase of combinations of block free
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test13) {
+    uint32_t i;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer *ind = rte_indexer::factory(2048);
+
+    for (auto c = 0; c < 1024; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->free(0, 1024);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    for (auto c = 0; c < 2048; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->free(512, 1536);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->free(0, 512);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rte_indexer::destroy(ind);
+
+    ind = rte_indexer::factory(100000);
+    for (auto c = 0; c < 100000; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    i = 0;
+    for (auto c = 0; c < 100000; c = c + 5000) {
+        rs = ind->free(i, 5000);
+        i = i + 5000;
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->alloc_block(&i, 100000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rs = ind->free(i, 100000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 14:
+//
+// Summary:
+// --------
+//  - Testcase of combinations of block allocation using alloc_block
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test14) {
+    uint32_t i, j;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer *ind = rte_indexer::factory(2048);
+
+    for (auto c = 0; c < 1024; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+    j = i;
+    rs = ind->alloc_block(&i, 1024);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == j + 1);
+
+    rs = ind->free(0, 2048);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc_block(&i, 2049);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    rs = ind->alloc_block(&i, 300);
+    ASSERT_TRUE(i == 0);
+    j = i + 300;
+    for (auto c = 300; c < 900; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(i == j);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        j++;
+    }
+    j = i;
+
+    rs = ind->alloc_block(&i, 1000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == j + 1);
+    j = i + 1000;
+
+    rs = ind->alloc_block(&i, 200);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    rs = ind->alloc_block(&i, 148);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == j);
+
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 15:
+//
+// Summary:
+// --------
+//  - Testcase of max block allocation using alloc_block
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, alloc_bloc_1M_threadsafe) {
+    uint32_t i;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer *ind = rte_indexer::factory(1024*1024);
+
+    for (auto c = 0; c < 1024*1024; c++) {
+        rs = ind->alloc_block(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+    rs = ind->alloc_block(&i);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 15:
+//
+// Summary:
+// --------
+//  - Testcase of block allocation/free using alloc_block and free
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test15) {
+    uint32_t i, size, j;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer *ind = rte_indexer::factory(1024*1024);
+    rs = ind->alloc_block(&i, 1024*1024);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rs = ind->free(i, 1024*1024);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rte_indexer::destroy(ind);
+
+    ind = rte_indexer::factory(64);
+    rs = ind->alloc_block(&i, 2);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 0);
+    rs = ind->alloc(1);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+
+    for (auto c = 2; c < 64; c = c + 2) {
+        rs = ind->alloc(c);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->alloc_block(&i, 2);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    j = 3;
+    size = 64 - (ind->usage());
+    for (auto c = 0; c < size; c++) {
+        rs = ind->alloc_block(&i);
+        ASSERT_TRUE(i == j);
+        j = j + 2;
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 16:
+//
+// Summary:
+// --------
+//  - Testcase of combinations of alloc and alloc_block
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test16) {
+    uint32_t i;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer *ind = rte_indexer::factory(1000);
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(i == 0);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc_block(&i, 998);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 1);
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(i == 999);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    for (auto c = 0; c < 1000; c++) {
+        rs = ind->alloc(c);
+        ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+    }
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    rs = ind->free(900, 10);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    for (auto c = 900; c < 910; c++) {
+        i = ind->is_index_allocated(c);
+        ASSERT_TRUE(i == 0);
+    }
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 900);
+
+    rs = ind->free(3, 10);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    for (auto c = 901; c < 910; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        ASSERT_TRUE(i == c);
+    }
+
+    for (auto c = 3; c < 13; c++) {
+        rs = ind->alloc(&i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        ASSERT_TRUE(i == c);
+    }
+
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 17:
+//
+// Summary:
+// --------
+//  - Testcase of combinations of alloc and alloc_block
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test17) {
+    uint32_t i, j, usage, size;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    size = 1048560;
+    rte_indexer *ind = rte_indexer::factory(size);
+
+    usage = 0;
+    while (usage < size) {
+        rs = ind->alloc_block(&i, 100);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        rs = ind->alloc(&j);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        ASSERT_TRUE(j == (i + 100));
+        rs = ind->alloc(j + 1);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        usage = ind->usage();
+    }
+
+    for (auto c = 0; c < size; c++) {
+        rs = ind->alloc(c);
+        ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+    }
+
+    usage = size;
+    i = 0;
+    while (usage > 0) {
+        rs = ind->free(i, 100);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        j = i + 100;
+        rs = ind->free(j);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        rs = ind->free(j + 1);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        usage = ind->usage();
+        i = j + 2;
+    }
 
     rte_indexer::destroy(ind);
 }
