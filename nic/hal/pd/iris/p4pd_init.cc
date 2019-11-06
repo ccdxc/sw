@@ -21,6 +21,8 @@
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 
 #define PAGE_SZ 4096
 
@@ -380,15 +382,19 @@ p4pd_flow_info_init (void)
 {
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
-    directmap               *dm;
-    flow_info_actiondata_t    data = { 0 };
+    sldirectmap            *dm;
+    flow_info_actiondata_t  data = { 0 };
+    sdk::table::sdk_table_api_params_t  params;
 
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    dm = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(dm != NULL);
 
     // "catch-all" flow miss entry
     data.action_id = FLOW_INFO_FLOW_MISS_ID;
-    sdk_ret = dm->insert_withid(&data, FLOW_INFO_MISS_ENTRY);
+    bzero(&params, sizeof(sdk::table::sdk_table_api_params_t));
+    params.handle.pindex(FLOW_INFO_MISS_ENTRY);
+    params.actiondata = &data;
+    sdk_ret = dm->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     if (ret != HAL_RET_OK) {
@@ -400,7 +406,9 @@ p4pd_flow_info_init (void)
     // common flow hit & drop entry
     data.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
     data.action_u.flow_info_flow_hit_drop.start_timestamp = 0;
-    sdk_ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
+    params.handle.pindex(FLOW_INFO_DROP_ENTRY);
+    params.actiondata = &data;
+    sdk_ret = dm->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow info table write failure for drop entry, err : {}",
@@ -421,15 +429,19 @@ p4pd_session_state_init (void)
     uint32_t                    idx = SESSION_STATE_NOP_ENTRY;
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
-    directmap                   *dm;
+    sldirectmap                   *dm;
     session_state_actiondata_t    data = { 0 };
+    sdk::table::sdk_table_api_params_t  params;
 
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+    dm = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.action_id = SESSION_STATE_NOP_ID;
-    sdk_ret = dm->insert_withid(&data, idx);
+    bzero(&params, sizeof(sdk::table::sdk_table_api_params_t));
+    params.handle.pindex(idx);
+    params.actiondata = &data;
+    sdk_ret = dm->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session state table write failure, idx : {}, err : {}",
@@ -450,15 +462,19 @@ p4pd_flow_stats_init (void)
 {
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
-    directmap               *dm;
+    sldirectmap            *dm;
     flow_stats_actiondata_t   data = { 0 };
+    sdk::table::sdk_table_api_params_t  params;
 
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    dm = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.action_id = FLOW_STATS_FLOW_STATS_ID;
-    sdk_ret = dm->insert_withid(&data, FLOW_STATS_NOP_ENTRY);
+    bzero(&params, sizeof(sdk::table::sdk_table_api_params_t));
+    params.handle.pindex(FLOW_STATS_NOP_ENTRY);
+    params.actiondata = &data;
+    sdk_ret = dm->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
@@ -467,7 +483,9 @@ p4pd_flow_stats_init (void)
     }
 
     // claim one more entry to be in sync with flow info table
-    sdk_ret = dm->insert_withid(&data, FLOW_STATS_RSVD_ENTRY);
+    params.handle.pindex(FLOW_STATS_RSVD_ENTRY);
+    params.actiondata = &data;
+    sdk_ret = dm->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",

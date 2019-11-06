@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <time.h>
+#include <string.h>
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
@@ -21,7 +22,10 @@
 #include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include <string.h>
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
+
+using sdk::table::sdk_table_api_params_t;
 
 #define	FLOW_RATE_COMPUTE_TIME_1SEC	1
 #define	FLOW_RATE_COMPUTE_TIME_2SEC	2
@@ -50,11 +54,12 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
 {
     hal_ret_t ret;
     sdk_ret_t sdk_ret;
-    directmap *stats_table;
+    sldirectmap *stats_table = NULL;
     flow_stats_actiondata_t d = { 0 };
+    sdk_table_api_params_t params;
 
     SDK_ASSERT(assoc_hw_idx != NULL);
-    stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(stats_table != NULL);
 
     d.action_id = FLOW_STATS_FLOW_STATS_ID;
@@ -64,13 +69,18 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
                       d.action_u.flow_stats_flow_stats.last_seen_timestamp,
                       clock);
 
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.actiondata = &d;
     // insert the entry
-    sdk_ret = stats_table->insert(&d, assoc_hw_idx);
+    sdk_ret = stats_table->insert(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
         return ret;
     }
+ 
+    SDK_ASSERT(params.handle.pvalid());
+    *assoc_hw_idx = params.handle.pindex();
 
     return HAL_RET_OK;
 }
@@ -81,17 +91,20 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
 hal_ret_t
 p4pd_del_flow_stats_table_entry (uint32_t assoc_hw_idx)
 {
-    directmap *stats_table;
+    sldirectmap *stats_table = NULL;
+    sdk_table_api_params_t params;
 
     // 0th entry is reserved
     if (!assoc_hw_idx) {
         return HAL_RET_INVALID_ARG;
     }
 
-    stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(stats_table != NULL);
 
-    return hal_sdk_ret_to_hal_ret(stats_table->remove(assoc_hw_idx));
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(assoc_hw_idx);
+    return hal_sdk_ret_to_hal_ret(stats_table->remove(&params));
 }
 
 //------------------------------------------------------------------------------
@@ -171,17 +184,18 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
-    directmap                *session_state_table;
+    sldirectmap             *session_state_table;
     flow_t                   *iflow, *rflow;
     session_state_actiondata_t d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
+    sdk_table_api_params_t   params;
 
     SDK_ASSERT(session_pd != NULL);
     iflow = session->iflow;
     rflow = session->rflow;
     SDK_ASSERT((iflow != NULL) && (rflow != NULL));
 
-    session_state_table = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+    session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     SDK_ASSERT(session_state_table != NULL);
 
     // populate the action information
@@ -240,14 +254,19 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     d.action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.actiondata = &d;
+
     // insert the entry
-    sdk_ret = session_state_table->insert(&d, &session_pd->session_state_idx);
+    sdk_ret = session_state_table->insert(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session state table write failure, err : {}", ret);
         return ret;
     }
 
+    SDK_ASSERT(params.handle.pvalid());
+    session_pd->session_state_idx = params.handle.pindex();
     return HAL_RET_OK;
 }
 
@@ -257,17 +276,21 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
 hal_ret_t
 p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 {
-    directmap *session_state_table;
+    sldirectmap *session_state_table = NULL;
+    sdk_table_api_params_t params;
 
     // 0th entry is reserved
     if (!session_state_idx) {
         return HAL_RET_INVALID_ARG;
     }
 
-    session_state_table = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+    session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     SDK_ASSERT(session_state_table != NULL);
 
-    return hal_sdk_ret_to_hal_ret(session_state_table->remove(session_state_idx));
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(session_state_idx);
+
+    return hal_sdk_ret_to_hal_ret(session_state_table->remove(&params));
 }
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
@@ -283,19 +306,23 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
 {
     hal_ret_t ret;
     sdk_ret_t sdk_ret;
-    directmap *info_table;
+    sldirectmap *info_table = NULL;
     flow_info_actiondata_t d = { 0};
     flow_pgm_attrs_t *flow_attrs = NULL;
     flow_cfg_t *flow_cfg = NULL;
     pd_session_t *sess_pd = NULL;
     bool entry_exists = false;
+    sdk_table_api_params_t params;
 
     sess_pd = session->pd;
 
-    info_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    info_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(info_table != NULL);
 
-    sdk_ret = info_table->retrieve(flow_pd->assoc_hw_id, &d);
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(flow_pd->assoc_hw_id);
+    params.actiondata = &d;
+    sdk_ret = info_table->get(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         entry_exists = true;
@@ -422,12 +449,18 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
         d.action_u.flow_info_flow_info.session_state_index =
         d.action_u.flow_info_flow_info.flow_conn_track ?
                  sess_pd->session_state_idx : 0;
-        d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
+   
+        // Dont update the start timestamp during update
+        // we dont want to mess up aging logic    
+        if (!entry_exists) 
+            d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
     } // End updateion flow allow action
 
     if (entry_exists) {
+       params.handle.pindex(flow_pd->assoc_hw_id);
+       params.actiondata = &d;
        // Update the entry
-       sdk_ret = info_table->update(flow_pd->assoc_hw_id, &d);
+       sdk_ret = info_table->update(&params);
        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
@@ -435,8 +468,10 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
            return ret;
        }
     } else {
+       params.handle.pindex(flow_pd->assoc_hw_id);
+       params.actiondata = &d;
        // insert the entry
-       sdk_ret = info_table->insert_withid(&d, flow_pd->assoc_hw_id);
+       sdk_ret = info_table->insert_withid(&params);
        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
        if (ret != HAL_RET_OK) {
            HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
@@ -454,17 +489,20 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
 hal_ret_t
 p4pd_del_flow_info_table_entry (uint32_t index)
 {
-    directmap *info_table;
+    sldirectmap *info_table = NULL;
+    sdk_table_api_params_t params;
 
     // 0th entry is reserved
     if (!index) {
         return HAL_RET_INVALID_ARG;
     }
 
-    info_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    info_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(info_table != NULL);
 
-    return hal_sdk_ret_to_hal_ret(info_table->remove(index));
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(index);
+    return hal_sdk_ret_to_hal_ret(info_table->remove(&params));
 }
 
 //------------------------------------------------------------------------------
@@ -1135,11 +1173,12 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_func_args_t pd_func_args1 = {0};
     sdk_ret_t sdk_ret;
     session_state_actiondata_t d = {0};
-    directmap *session_state_table = NULL;
+    sldirectmap *session_state_table = NULL;
     session_state_t *ss = args->session_state;
     pd_flow_get_args_t flow_get_args;
     pd_session_t *pd_session;
     session_state_tcp_session_state_info_t info;
+    sdk_table_api_params_t   params;
 
     if (args->session == NULL || args->session->pd == NULL) {
         return HAL_RET_INVALID_ARG;
@@ -1147,10 +1186,13 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_session = args->session->pd;
 
     if (args->session->conn_track_en) {
-        session_state_table = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+        session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
         SDK_ASSERT(session_state_table != NULL);
 
-        sdk_ret = session_state_table->retrieve(pd_session->session_state_idx, &d);
+        bzero(&params, sizeof(sdk_table_api_params_t));
+        params.handle.pindex(pd_session->session_state_idx);
+        params.actiondata = &d;
+        sdk_ret = session_state_table->get(&params);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
             info = d.action_u.session_state_tcp_session_state_info;
@@ -1257,10 +1299,11 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     sdk_ret_t sdk_ret;
     flow_stats_actiondata_t d = {0};
     flow_info_actiondata_t f = {0};
-    directmap *info_table = NULL;
-    directmap *stats_table = NULL;
+    sldirectmap *info_table = NULL;
+    sldirectmap *stats_table = NULL;
     pd_flow_t pd_flow;
     session_t *session = NULL;
+    sdk_table_api_params_t params;
 
     if (args->pd_session == NULL ||
         ((pd_session_t *)args->pd_session)->session == NULL) {
@@ -1268,7 +1311,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     }
 
     session = (session_t *)((pd_session_t *)args->pd_session)->session;
-    stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(stats_table != NULL);
 
     if (args->aug == false) {
@@ -1285,8 +1328,11 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         }
     }
 
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(pd_flow.assoc_hw_id);
+    params.actiondata = &d;
     // read the d-vector
-    sdk_ret = stats_table->retrieve(pd_flow.assoc_hw_id, &d);
+    sdk_ret = stats_table->get(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error reading stats action entry flow {} hw-id {} ret {}",
@@ -1305,10 +1351,13 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
     pd_conv_hw_clock_to_sw_clock(pd_func_args);
 
-    info_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    info_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(info_table != NULL);
 
-    sdk_ret = info_table->retrieve(pd_flow.assoc_hw_id, &f);
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(pd_flow.assoc_hw_id);
+    params.actiondata = &f;
+    sdk_ret = info_table->get(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         if (f.action_id == FLOW_INFO_FLOW_HIT_DROP_ID) {
@@ -1336,7 +1385,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     pd_conv_hw_clock_to_sw_clock_args_t  clock_args;
     pd_flow_get_args_t                  *args;
     flow_stats_actiondata_t              d;
-    directmap                           *stats_table;
+    sldirectmap                         *stats_table;
     pd_flow_t                            pd_flow;
     flow_telemetry_state_t              *flow_telemetry_state_p;
     sdk_ret_t                            sdk_ret;
@@ -1346,6 +1395,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     uint64_t                             pps = 0, bw = 0;
     uint64_t                             flow_table_packets, flow_table_bytes;
     uint32_t                             delta_packets, delta_bytes;
+    sdk_table_api_params_t               params;
 
     args = pd_func_args->pd_flow_get;
     if (args->pd_session == NULL ||
@@ -1360,10 +1410,13 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     }
 
     // read the d-vector
-    stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(stats_table != NULL);
 
-    sdk_ret = stats_table->retrieve(pd_flow.assoc_hw_id, &d);
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(pd_flow.assoc_hw_id);
+    params.actiondata = &d;
+    sdk_ret = stats_table->get(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         session_t *session;
@@ -1594,9 +1647,10 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
     pd_flow_get_args_t                      flow_get_args;
     pd_func_args_t                          pd_func_args1;
     session_state_actiondata_t              d;
-    directmap                              *session_state_table;
+    sldirectmap                            *session_state_table;
     session_state_t                        *ss;
     session_state_tcp_session_state_info_t  info;
+    sdk_table_api_params_t                 params;
 
     args = pd_func_args->pd_session_get;
     if (args->session == NULL || args->session->pd == NULL) {
@@ -1606,11 +1660,13 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
 
     ss = args->session_state;
     if (args->session->conn_track_en) {
-        session_state_table = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+        session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
         SDK_ASSERT(session_state_table != NULL);
 
-        sdk_ret = session_state_table->retrieve(pd_session->session_state_idx, 
-                                                &d);
+        bzero(&params, sizeof(sdk_table_api_params_t));
+        params.handle.pindex(pd_session->session_state_idx);
+        params.actiondata = &d;
+        sdk_ret = session_state_table->get(&params);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
             info = d.action_u.session_state_tcp_session_state_info;
@@ -1659,11 +1715,12 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
     timespec_t                           ts;
     pd_conv_sw_clock_to_hw_clock_args_t  clock_args;
     pd_func_args_t                       pd_clock_fn_args = {0};
-    flow_info_actiondata_t                 d = { 0};
+    flow_info_actiondata_t               d = { 0};
     hal_ret_t                            ret = HAL_RET_OK;
     sdk_ret_t                            sdk_ret;
-    directmap                           *info_table;
+    sldirectmap                         *info_table = NULL;
     uint64_t                             sw_ns = 0, clock = 0;
+    sdk_table_api_params_t               params;
 
     // Get the hw clock
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -1678,13 +1735,16 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
         return ret;
     }
 
-    info_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    info_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(info_table != NULL);
 
     d.action_id = FLOW_INFO_FLOW_INFO_FROM_CPU_ID;
 
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(*flow_info_hwid);
+    params.actiondata = &d;
     // insert the entry
-    sdk_ret = info_table->insert_withid(&d, *flow_info_hwid);
+    sdk_ret = info_table->insert_withid(&params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",

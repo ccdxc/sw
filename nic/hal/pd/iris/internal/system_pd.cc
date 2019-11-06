@@ -11,6 +11,7 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 
 namespace hal {
 namespace pd {
@@ -455,23 +456,40 @@ pd_system_populate_index_table_stats (sys::TableStatsEntry *stats_entry,
                                       p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    directmap               *dm;
 
-    dm = g_hal_state_pd->dm_table(id);
-    if (!dm) {
-        return ret;
+    if (id == P4TBL_ID_SESSION_STATE || id == P4TBL_ID_FLOW_INFO ||
+        id == P4TBL_ID_FLOW_STATS) {
+        sldirectmap               *dm;
+
+        dm = (sldirectmap *)g_hal_state_pd->dm_table(id);
+        if (!dm) {
+           return ret;
+        }
+
+        stats_entry->set_table_type(sys::TABLE_TYPE_INDEX);
+        stats_entry->set_table_name(dm->name());
+        stats_entry->set_table_size(dm->capacity());
+        stats_entry->set_overflow_table_size(0);
+        stats_entry->set_entries_in_use(dm->inuse());
+        stats_entry->set_overflow_entries_in_use(0);
+    } else {
+        directmap               *dm;
+        dm = g_hal_state_pd->dm_table(id);
+        if (!dm) {
+           return ret;
+        }
+
+        stats_entry->set_table_type(sys::TABLE_TYPE_INDEX);
+        stats_entry->set_table_name(dm->name());
+        stats_entry->set_table_size(dm->capacity());
+        stats_entry->set_overflow_table_size(0);
+        stats_entry->set_entries_in_use(dm->num_entries_in_use());
+        stats_entry->set_overflow_entries_in_use(0);
+        stats_entry->set_num_inserts(dm->num_inserts());
+        stats_entry->set_num_insert_errors(dm->num_insert_errors());
+        stats_entry->set_num_deletes(dm->num_deletes());
+        stats_entry->set_num_delete_errors(dm->num_delete_errors());
     }
-
-    stats_entry->set_table_type(sys::TABLE_TYPE_INDEX);
-    stats_entry->set_table_name(dm->name());
-    stats_entry->set_table_size(dm->capacity());
-    stats_entry->set_overflow_table_size(0);
-    stats_entry->set_entries_in_use(dm->num_entries_in_use());
-    stats_entry->set_overflow_entries_in_use(0);
-    stats_entry->set_num_inserts(dm->num_inserts());
-    stats_entry->set_num_insert_errors(dm->num_insert_errors());
-    stats_entry->set_num_deletes(dm->num_deletes());
-    stats_entry->set_num_delete_errors(dm->num_delete_errors());
 
     return ret;
 }

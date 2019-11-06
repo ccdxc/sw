@@ -60,6 +60,7 @@
 #include "nic/hal/pd/iris/debug/debug_pd.hpp"
 #include "nic/hal/pd/iris/debug/snake_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_cfg.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 
 namespace hal {
 namespace pd {
@@ -995,14 +996,21 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                        ENTRY_TRACE_EN, table_health_monitor);
             } else {
                 bool trace_en = true;
-                if (tid == P4TBL_ID_FLOW_STATS || tid == P4TBL_ID_SESSION_STATE 
-                    || tid == P4TBL_ID_FLOW_INFO || tid == P4TBL_ID_FLOW_HASH) {
-                    trace_en = false;
+                if (tid == P4TBL_ID_SESSION_STATE || tid == P4TBL_ID_FLOW_INFO ||
+                    tid == P4TBL_ID_FLOW_STATS) {
+                    sdk_table_factory_params_t params;
+
+                    bzero(&params, sizeof(sdk_table_factory_params_t));
+                    params.entry_trace_en = false;
+                    params.table_id = tid;
+                    dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
+                        (directmap*)sldirectmap::factory(&params);
+                } else {
+                    dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
+                        directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                           tinfo.actiondata_struct_size, false,
+                                           trace_en, table_health_monitor);
                 }
-                dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                       tinfo.actiondata_struct_size, false,
-                                       trace_en, table_health_monitor);
             }
             SDK_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;

@@ -171,7 +171,8 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
             this->set_curr_slab_(indx);
         }
     }
-
+    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %x", 
+                      (void *)INDEXER, this->curr_slab_, this->curr_index_);
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), false);
     }
@@ -223,8 +224,9 @@ rte_indexer::alloc(uint32_t *index) {
     rte_bitmap_clear(INDEXER, *index);
     this->curr_index_ = nextpos;
     this->set_curr_slab_(this->curr_index_);
-    SDK_TRACE_VERBOSE("Allocated idx %u and slab %lx",
-                      *index, (long)this->curr_slab_);
+
+    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr slab %d curr index %x", 
+              (void*)INDEXER, *index, (long)this->curr_slab_, curr_slab, this->curr_index_);
     usage_++;
 end:
     if (thread_safe_) {
