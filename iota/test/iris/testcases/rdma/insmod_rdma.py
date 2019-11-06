@@ -16,7 +16,7 @@ def Setup(tc):
         if tc.os == host.OS_TYPE_LINUX:
             tc.insmod_opts += " spec=" + tc.args.spec
         else:
-            tc.insmod_opts += " compat.linuxkpi.ionic_rdma_spec=" + tc.args.spec
+            tc.insmod_opts += " hw.ionic_rdma.spec=" + tc.args.spec
     api.SetTestsuiteAttr("insmod_opts", tc.insmod_opts)
 
     return api.types.status.SUCCESS

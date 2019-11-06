@@ -49,7 +49,7 @@ def Trigger(tc):
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload ionic_rdma")
             #Reset kenv options that may have been configured (ignore errors here)
-            api.Trigger_AddHostCommand(req, n, "kenv -u compat.linuxkpi.ionic_rdma_spec; true")
+            api.Trigger_AddHostCommand(req, n, "kenv -u hw.ionic_rdma.spec; true")
 
     tc.resp = api.Trigger(req)
 

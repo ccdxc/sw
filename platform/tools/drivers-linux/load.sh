@@ -20,7 +20,7 @@ PKG_TOP=$(readlink -f "$(dirname "$0")")
 
 modprobe ib_uverbs
 modprobe rdma_ucm
-insmod "$PKG_TOP/krping/rdma_krping.ko"
+insmod "$PKG_TOP/krping/rdma_krping.ko" "$@"
 
 insmod "$PKG_TOP/drivers/eth/ionic/ionic.ko" $XXX_ETH "$@"
 insmod "$PKG_TOP/drivers/rdma/drv/ionic/ionic_rdma.ko" $XXX_RDMA "$@"

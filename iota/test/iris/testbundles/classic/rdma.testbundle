@@ -287,7 +287,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
 
@@ -298,7 +297,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             size    : [32, 4096, 65536]
@@ -310,7 +308,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             txdepth : [256, 1021]
@@ -323,10 +320,46 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['no']
             fr      : ['yes']
             txdepth : [512]
             count   : [1000]
+
+    -   name    : KRping_Bw
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            bw      : ['yes']
+            duplex  : ['yes']
+            size    : [4096]
+            txdepth : [512]
+            count   : [100000]
+
+    -   name    : KRping_Wlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            wlat    : ['yes']
+            size    : [1024]
+            txdepth : [512]
+            count   : [10000]
+
+    -   name    : KRping_Rlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            rlat    : ['yes']
+            size    : [1024]
+            txdepth : [512]
+            count   : [10000]
 
     #=======================================
     # Teardown

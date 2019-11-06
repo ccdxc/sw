@@ -40,17 +40,7 @@ def Setup(tc):
             api.Logger.info("IGNORED: mlx side will hit local prot err")
             return api.types.status.IGNORED
 
-    if getattr(tc.iterators, 'compat', None) == 'yes':
-        for n in tc.nodes:
-            if tc.os == host.OS_TYPE_LINUX:
-                api.Logger.info("IGNORED: compat is FreeBSD only")
-                return api.types.status.IGNORED
-        if getattr(tc.iterators, 'fr', None) == 'yes':
-            api.Logger.info("IGNORED: compat with fr is not supported")
-            return api.types.status.IGNORED
-        if getattr(tc.iterators, 'server_inv', None) == 'yes':
-            api.Logger.info("IGNORED: compat with server_inv is not supported")
-            return api.types.status.IGNORED
+    tc.stats_results = []
 
     return api.types.status.SUCCESS
 
@@ -76,26 +66,18 @@ def Trigger(tc):
     for n in tc.nodes:
        api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
 
-    # load krping or krping_compat on both nodes
-    if getattr(tc.iterators, 'compat', None) == 'yes':
-        for n in tc.nodes:
-            assert(tc.os != host.OS_TYPE_LINUX)
+    # load krping on both nodes
+    for n in tc.nodes:
+        if tc.os == host.OS_TYPE_LINUX:
             api.Trigger_AddHostCommand(req, n,
-                    "(kldstat | grep -w krping_compat >/dev/null) || " +
-                    "kldload {path}/krping_compat/krping_compat.ko"
+                    "(lsmod | grep -w rdma_krping >/dev/null) || " +
+                    "insmod {path}/krping/rdma_krping.ko"
                     .format(path=tc.iota_path))
-    else:
-        for n in tc.nodes:
-            if tc.os == host.OS_TYPE_LINUX:
-                api.Trigger_AddHostCommand(req, n,
-                        "(lsmod | grep -w rdma_krping >/dev/null) || " +
-                        "insmod {path}/krping/rdma_krping.ko"
-                        .format(path=tc.iota_path))
-            else:
-                api.Trigger_AddHostCommand(req, n,
-                        "(kldstat | grep -w krping >/dev/null) || " +
-                        "kldload {path}/krping/krping.ko"
-                        .format(path=tc.iota_path))
+        else:
+            api.Trigger_AddHostCommand(req, n,
+                    "(kldstat | grep -w krping >/dev/null) || " +
+                    "kldload {path}/krping/krping.ko"
+                    .format(path=tc.iota_path))
 
     # cmd for server
     if api.GetNodeOs(w1.node_name) == host.OS_TYPE_LINUX:
@@ -104,7 +86,8 @@ def Trigger(tc):
         krpfile = "/dev/krping"
 
     # parse different options
-    options = "verbose,validate,"
+    tc.ping = True
+    options = "port=9999,verbose,validate,"
     if getattr(tc.iterators, 'server_inv', None) == 'yes':
         options = options + "server_inv,"
 
@@ -114,29 +97,45 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'txdepth'):
         options = options + "txdepth={txd},".format(txd = tc.iterators.txdepth)
 
-    if hasattr(tc.iterators, 'count'):
-        options = options + "count={count},".format(count = tc.iterators.count)
-        count = tc.iterators.count
-    else:
-        # When test does not give count, default limit is 100
-        count = 100
-        options = options + "count={count},".format(count = count)
-
     if hasattr(tc.iterators, 'size'):
         options = options + "size={size},".format(size = tc.iterators.size)
         size = tc.iterators.size
     else:
         size = 64 #default size
 
-    # 'fr' is only issued on client
-    client_options = options
-    if hasattr(tc.iterators, 'fr') and (tc.iterators.fr == 'yes'):
-        client_options = client_options + "fr,"
-        fr_test = True
-    else:
-        fr_test = False
+    if getattr(tc.iterators, 'bw', None) == 'yes':
+        options = options + "mem_mode=dma,bw,"
+        tc.ping = False
+        if getattr(tc.iterators, 'duplex', None) == 'yes':
+            options = options + "duplex,"
 
-    cmd = "sudo echo -n 'server,port=9999,addr={addr},{opstr}' > {kfile}".format(
+    if getattr(tc.iterators, 'wlat', None) == 'yes':
+        options = options + "mem_mode=dma,wlat,"
+        tc.ping = False
+
+    if getattr(tc.iterators, 'rlat', None) == 'yes':
+        options = options + "mem_mode=dma,rlat,"
+        tc.ping = False
+        if getattr(tc.iterators, 'poll', None) == 'yes':
+            options = options + "poll,"
+
+    if hasattr(tc.iterators, 'count'):
+        count = tc.iterators.count
+    else:
+        # When test does not give count, default limit is 100
+        count = 100
+
+    if hasattr(tc.iterators, 'fr') and (tc.iterators.fr == 'yes'):
+        # 'fr' is only issued on client
+        client_options = options + "fr,count={},".format(count)
+        # server uses count=0 in 'fr' test
+        options = options + "count=0,"
+        tc.ping = False
+    else:
+        options = options + "count={},".format(count)
+        client_options = options
+
+    cmd = "sudo echo -n 'server,addr={addr},{opstr}' > {kfile}".format(
               addr = w1.ip_address,
               opstr = options,
               kfile = krpfile)
@@ -155,7 +154,7 @@ def Trigger(tc):
     wait_secs = 150
 
     # cmd for client
-    cmd = "sudo echo -n 'client,port=9999,addr={addr},{opstr}' > {kfile}".format(
+    cmd = "sudo echo -n 'client,addr={addr},{opstr}' > {kfile}".format(
               addr = w1.ip_address,
               opstr = client_options,
               kfile = krpfile)
@@ -166,23 +165,25 @@ def Trigger(tc):
     for n in tc.nodes:
        api.Trigger_AddHostCommand(req, n, "dmesg")
 
-    # check that the test completed ok, except in FR test
-    if not fr_test:
+    # check that ping tests completed ok by looking for the logged data
+    if tc.ping:
         cmd = "dmesg | tail -20 | grep rdma-ping-{}:".format(count - 1)
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
         api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, cmd)
 
-    # unload krping or krping_compat on both nodes
-    if getattr(tc.iterators, 'compat', None) == 'yes':
-        for n in tc.nodes:
-            assert(tc.os != host.OS_TYPE_LINUX)
-            api.Trigger_AddHostCommand(req, n, "kldunload krping_compat")
-    else:
-        for n in tc.nodes:
-            if tc.os == host.OS_TYPE_LINUX:
-                api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
-            else:
-                api.Trigger_AddHostCommand(req, n, "kldunload krping")
+    # check that all tests completed ok by looking for the return code
+    cmd = "dmesg | grep krping | grep stats_out"
+    cmd_ref = api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
+    tc.stats_results.append(cmd_ref)
+    cmd_ref = api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, cmd)
+    tc.stats_results.append(cmd_ref)
+
+    # unload krping on both nodes
+    for n in tc.nodes:
+        if tc.os == host.OS_TYPE_LINUX:
+            api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
+        else:
+            api.Trigger_AddHostCommand(req, n, "kldunload krping")
 
     # trigger the request
     trig_resp = api.Trigger(req)
@@ -202,6 +203,15 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
+
+    for cmd in tc.stats_results:
+        statline = cmd.stdout.splitlines()[-1]
+        # krping: stats_out 820 ionic_0 0 Sn 64000 4000 Rc 64000 4000 W 128000 2000 R 128000 2000
+        (pfx,tag,idx,dev,rc,stats) = statline.split(' ', 5)
+        if int(rc) != 0:
+            api.Logger.info("test failed: '%s'" % (statline))
+            result = api.types.status.FAILURE
+
     return result
 
 def Teardown(tc):

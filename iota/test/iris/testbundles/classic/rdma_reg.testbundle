@@ -285,7 +285,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             size: [64,128,256,512,700,801,1024,2048,4096,8192,16384,32768,65536,131072]
@@ -297,12 +296,50 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat: ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
             size: [4096]
             txdepth: [256, 512, 1021]
             count: [5,100,1500]
+
+    -   name    : KRping_Bw
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            bw      : ['yes']
+            duplex  : ['yes']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            txdepth : [128,256,512]
+            count   : [10000000]
+
+    -   name    : KRping_Wlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            wlat    : ['yes']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            txdepth : [128]
+            count   : [100000]
+
+    -   name    : KRping_Rlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            rlat    : ['yes']
+            poll:   : ['yes', 'no']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            size    : [32,1024,2048,32768]
+            txdepth : [128]
+            count   : [100000]
 
     #=======================================
     # Teardown

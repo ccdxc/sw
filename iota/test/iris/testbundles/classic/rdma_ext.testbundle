@@ -518,7 +518,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
 
@@ -529,7 +528,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             size    : [4096, 65536]
@@ -541,7 +539,6 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['yes', 'no']
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes']
             txdepth : [256, 1021]
@@ -554,10 +551,47 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            compat  : ['no']
             fr      : ['yes']
-            txdepth : [512]
+            txdepth : [128,256,512]
             count   : [1000]
+
+    -   name    : KRping_Bw
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            bw      : ['yes']
+            duplex  : ['yes']
+            size    : [1024,4096,65535]
+            txdepth : [128,256,512]
+            count   : [100000]
+
+    -   name    : KRping_Wlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            wlat    : ['yes']
+            size    : [32,1024,2048,32768]
+            txdepth : [128]
+            count   : [10000]
+
+    -   name    : KRping_Rlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            rlat    : ['yes']
+            poll    : ['yes', 'no']
+            size    : [32,1024,2048,32768]
+            txdepth : [128]
+            count   : [10000]
 
     #=======================================
     # Teardown
