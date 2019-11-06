@@ -6,35 +6,6 @@
 
 package cmd
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
-
-var lifmetricsShowCmd = &cobra.Command{
-
-	Use:   "lif",
-	Short: "Show LifMetrics from Distributed Service Card",
-	Long:  "\n---------------------------------\n Show LifMetrics From Distributed Service Card \n---------------------------------\n",
-	RunE:  lifmetricsShowCmdHandler,
-}
-
-func lifmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = true
-	bodyBytes, err := restGet("telemetry/v1/metrics/lifmetrics/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if bodyBytes == nil {
-		fmt.Println("No lif object(s) found")
-	}
-	return nil
-}
-
 func init() {
-
-	metricsShowCmd.AddCommand(lifmetricsShowCmd)
 
 }

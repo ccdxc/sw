@@ -6,58 +6,6 @@
 
 package cmd
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
-
-var macmetricsShowCmd = &cobra.Command{
-
-	Use:   "mac",
-	Short: "Show MacMetrics from Distributed Service Card",
-	Long:  "\n---------------------------------\n Show MacMetrics From Distributed Service Card \n---------------------------------\n",
-	RunE:  macmetricsShowCmdHandler,
-}
-
-func macmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = true
-	bodyBytes, err := restGet("telemetry/v1/metrics/macmetrics/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if bodyBytes == nil {
-		fmt.Println("No mac object(s) found")
-	}
-	return nil
-}
-
-var mgmtmacmetricsShowCmd = &cobra.Command{
-
-	Use:   "mgmtmac",
-	Short: "Show MgmtMacMetrics from Distributed Service Card",
-	Long:  "\n---------------------------------\n Show MgmtMacMetrics From Distributed Service Card \n---------------------------------\n",
-	RunE:  mgmtmacmetricsShowCmdHandler,
-}
-
-func mgmtmacmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = true
-	bodyBytes, err := restGet("telemetry/v1/metrics/mgmtmacmetrics/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if bodyBytes == nil {
-		fmt.Println("No mgmtmac object(s) found")
-	}
-	return nil
-}
-
 func init() {
-
-	metricsShowCmd.AddCommand(macmetricsShowCmd)
-
-	metricsShowCmd.AddCommand(mgmtmacmetricsShowCmd)
 
 }

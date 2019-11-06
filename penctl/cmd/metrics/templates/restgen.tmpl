@@ -63,27 +63,6 @@ import (
                 }
                 return nil
         }
-      {{else}}
-	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
-		{{$cli := TrimSuffix .GetName "Metrics"}}
-		Use:   "{{ToLower $cli}}",
-		Short: "Show {{.GetName}} from Distributed Service Card",
-		Long:  "\n---------------------------------\n Show {{.GetName}} From Distributed Service Card \n---------------------------------\n",
-		RunE:  {{ToLower .GetName}}ShowCmdHandler,
-	}
-
-	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
-		jsonFormat = true
-		bodyBytes, err := restGet("telemetry/v1/metrics/{{ToLower .GetName}}/")
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		if bodyBytes == nil {
-			fmt.Println("No {{ToLower $cli}} object(s) found")
-		}
-		return nil
-	}
       {{end}}
     {{end}}
  {{end}}
@@ -117,8 +96,6 @@ import (
         {{$longHelpStr:= $param.HelpStr}}
         {{$shortHelpStr:= $param.ShortHelpStr}}
         {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}{{$rootCmd}}ShowCmd)
-       {{else}}
-                metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
        {{end}}
     {{end}}
  {{end}}

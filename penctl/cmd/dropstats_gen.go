@@ -6,58 +6,6 @@
 
 package cmd
 
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
-
-var dropmetricsShowCmd = &cobra.Command{
-
-	Use:   "drop",
-	Short: "Show DropMetrics from Distributed Service Card",
-	Long:  "\n---------------------------------\n Show DropMetrics From Distributed Service Card \n---------------------------------\n",
-	RunE:  dropmetricsShowCmdHandler,
-}
-
-func dropmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = true
-	bodyBytes, err := restGet("telemetry/v1/metrics/dropmetrics/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if bodyBytes == nil {
-		fmt.Println("No drop object(s) found")
-	}
-	return nil
-}
-
-var egressdropmetricsShowCmd = &cobra.Command{
-
-	Use:   "egressdrop",
-	Short: "Show EgressDropMetrics from Distributed Service Card",
-	Long:  "\n---------------------------------\n Show EgressDropMetrics From Distributed Service Card \n---------------------------------\n",
-	RunE:  egressdropmetricsShowCmdHandler,
-}
-
-func egressdropmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	jsonFormat = true
-	bodyBytes, err := restGet("telemetry/v1/metrics/egressdropmetrics/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if bodyBytes == nil {
-		fmt.Println("No egressdrop object(s) found")
-	}
-	return nil
-}
-
 func init() {
-
-	metricsShowCmd.AddCommand(dropmetricsShowCmd)
-
-	metricsShowCmd.AddCommand(egressdropmetricsShowCmd)
 
 }

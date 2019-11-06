@@ -21,9 +21,17 @@
 syntax = "proto3";
 package pds;
 
+import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
 
+// The bgp service definition
+service BGP {
+  rpc BGPGlobalSpecCreate (BGPRequest) returns (BGPResponse) {}
+  rpc BGPGlobalSpecUpdate (BGPRequest) returns (BGPResponse) {}
+  rpc BGPGlobalSpecDelete (BGPRequest) returns (BGPResponse) {}
+  rpc BGPGlobalSpecGet (BGPRequest) returns (BGPResponse) {}
+}
 
 // Global configuration for BGP
 message BGPGlobalSpec {
@@ -33,6 +41,24 @@ message BGPGlobalSpec {
   uint32  VRFId    = 2 [(gogoproto.moretags) = "mandatory"];
   // Router ID for this bgp instance
   fixed32 RouterId = 3;
+}
+
+// BGPGlobalSpec create and update request
+message BGPRequest {
+  // requests
+  BGPGlobalSpec Request  = 1;
+}
+
+// operational status of BGP, if any
+message BGPStatus {
+}
+
+// BGPGlobalSpec create and update response
+message BGPResponse {
+  // API status code
+  types.ApiStatus    ApiStatus = 1;
+  // response
+  BGPStatus Response  = 2;
 }
 
 // BGP Peer configurations
