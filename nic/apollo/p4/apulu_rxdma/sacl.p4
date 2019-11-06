@@ -211,7 +211,7 @@ action setup_lpm_dip_sip()
     }
 }
 
-action setup_recirc1()
+action setup_lpm1()
 {
     if (lpm_metadata.recirc_count == 1) {
         setup_lpm_dport_sport();
@@ -245,13 +245,13 @@ action setup_recirc1()
 }
 
 @pragma stage 7
-table setup_recirc1 {
+table setup_lpm1 {
     actions {
-        setup_recirc1;
+        setup_lpm1;
     }
 }
 
-action setup_recirc2()
+action setup_lpm2()
 {
     if (lpm_metadata.recirc_count == 0) {
         setup_lpm_dip_sip();
@@ -285,13 +285,13 @@ action setup_recirc2()
 }
 
 @pragma stage 7
-table setup_recirc2 {
+table setup_lpm2 {
     actions {
-        setup_recirc2;
+        setup_lpm2;
     }
 }
 
-control recirc {
-    apply(setup_recirc1);
-    apply(setup_recirc2);
+control sacl {
+    apply(setup_lpm1);
+    apply(setup_lpm2);
 }

@@ -1200,7 +1200,8 @@ control ingress {
         if (p4_to_rxdma.lpm2_enable == TRUE) {
             rxlpm2();
         }
-        recirc();
+
+        sacl();
         pkt_enqueue();
     } else {
         common_p4plus_stage0();

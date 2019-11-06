@@ -6,7 +6,8 @@
             "gw-ip-addr": "1.0.0.1",
             "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "dual-stack": "true"
+            "dual-stack": "true",
+            "encap" : "vxlan"
         },
         {
             "kind" : "tep",
@@ -61,7 +62,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "524288",
+            "num_udp": "0",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "100",

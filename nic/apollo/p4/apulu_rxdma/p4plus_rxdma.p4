@@ -6,7 +6,7 @@
 
 #include "rxlpm1.p4"
 #include "rxlpm2.p4"
-#include "recirc.p4"
+#include "sacl.p4"
 #include "vnic_info_rxdma.p4"
 #include "packet_queue.p4"
 

@@ -307,7 +307,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // if subnet has ingress IPv4 policy, that should be evaluated first in the
     // Rx direction
-    i = 0;
+    i = 1; // Policy roots start at index 1
     policy_key = subnet->ing_v4_policy();
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
@@ -340,7 +340,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // if subnet has ingress IPv6 policy, that should be evaluated first in the
     // Rx direction
-    i = 0;
+    i = 1; // Policy roots start at index 1
     policy_key = subnet->ing_v6_policy();
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
@@ -372,7 +372,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv4 route table root address in Tx direction entry
-    i = 0;
+    i = 0; // Route root is at index 0
     route_table_key = subnet->v4_route_table();
     if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
@@ -388,6 +388,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         }
     }
 
+    i = 1; // Policy roots start at index 1
     // populate egress IPv4 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v4_policy; j++, i++) {
         sec_policy = policy_db()->find(&spec->egr_v4_policy[j]);
@@ -420,7 +421,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv6 route table root address in Tx direction entry
-    i = 0;
+    i = 0; // Route root is at index 0
     route_table_key = subnet->v6_route_table();
     if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
@@ -435,6 +436,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         }
     }
 
+    i = 1; // Policy roots start at index 1
     // populate egress IPv6 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v6_policy; j++, i++) {
         sec_policy = policy_db()->find(&spec->egr_v6_policy[j]);

@@ -11,7 +11,7 @@ struct phv_              p;
 
 read_pktdesc1:
     /* Initialize rx_to_tx_hdr */
-    phvwr.f       p.{rx_to_tx_hdr_remote_ip, \
+    phvwr         p.{rx_to_tx_hdr_remote_ip, \
                      rx_to_tx_hdr_route_base_addr, \
                      rx_to_tx_hdr_sacl_base_addr0, \
                      rx_to_tx_hdr_sip_classid0, \
@@ -52,7 +52,7 @@ read_pktdesc1:
     /* Load sacl base addr to r1 */
     add        r1, r0, d.read_pktdesc1_d.sacl_base_addr0
 
-    /* Stop if sacl base addr == NULL */
+    /* Stop if sacl base addr0 == NULL */
     seq        c1, r1, r0
     nop.c1.e
 

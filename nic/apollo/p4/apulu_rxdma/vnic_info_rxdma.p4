@@ -11,18 +11,17 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
     // Unused for now.
     modify_field(scratch_metadata.field40, lpm_base8);
 
-    // Copy the data that need to go to txdma
-    modify_field(rx_to_tx_hdr.rx_packet, p4_to_rxdma.rx_packet);
-    modify_field(rx_to_tx_hdr.payload_len, capri_p4_intr.packet_len);
-    modify_field(rx_to_tx_hdr.vpc_id, p4_to_rxdma.vpc_id);
-    modify_field(rx_to_tx_hdr.vnic_id, p4_to_rxdma.vnic_info_key&0x3FF);
-    modify_field(rx_to_tx_hdr.iptype, p4_to_rxdma.iptype);
-    modify_field(rx_to_tx_hdr.route_base_addr, lpm_base1);
+    // If route root != NULL
+    if (lpm_base1 != 0) {
+        // Copy route root to PHV
+        modify_field(rx_to_tx_hdr.route_base_addr, lpm_base1);
 
-    if (p4_to_rxdma.rx_packet == 0) {
-        modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_dst);
-    } else {
-        modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_src);
+        // Fill the remote_ip based on the direction
+        if (p4_to_rxdma.rx_packet == 0) {
+            modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_dst);
+        } else {
+            modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_src);
+        }
     }
 
     if (lpm_base2 != 0) {

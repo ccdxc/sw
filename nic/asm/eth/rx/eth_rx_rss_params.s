@@ -94,6 +94,8 @@ eth_rx_rss_ipv6_l4:
 eth_rx_rss_ipv6:
 #if defined(ARTEMIS)
   phvwr               p.toeplitz_input0_data[127:32], k.p4_to_p4plus_ip_sa
+#elif defined(APULU)
+  phvwr               p.toeplitz_input0_data[127:32], k.p4_to_p4plus_ip_sa_s0_e111[111:16]
 #else
   phvwr               p.toeplitz_input0_data[127:32], k.p4_to_p4plus_ip_sa_s0_e95
 #endif

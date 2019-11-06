@@ -11,7 +11,7 @@ struct phv_              p;
 
 read_pktdesc2:
     /* Initialize rx_to_tx_hdr */
-    phvwr.e.f       p.{rx_to_tx_hdr_sacl_base_addr4, \
+    phvwr.e         p.{rx_to_tx_hdr_sacl_base_addr4, \
                        rx_to_tx_hdr_sip_classid4, \
                        rx_to_tx_hdr_dip_classid4, \
                        rx_to_tx_hdr_pad4, \

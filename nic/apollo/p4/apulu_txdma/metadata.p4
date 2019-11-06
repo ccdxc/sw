@@ -27,6 +27,8 @@ header_type txdma_control_metadata_t {
         svc_id              : 10;
         rule_priority       : 11;
         st_enable           : 1;
+
+        recirc_count        : 8;
     }
 }
 

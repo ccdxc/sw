@@ -3,14 +3,14 @@
 #include "nic/apollo/asm/include/apulu.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_setup_recirc1_k.h"
+#include "INGRESS_setup_lpm1_k.h"
 
-struct phv_                p;
-struct setup_recirc1_k_    k;
+struct phv_             p;
+struct setup_lpm1_k_    k;
 
 %%
 
-setup_recirc1:
+setup_lpm1:
     // Load the correct sacl_base_address into r1 based on recirc count
     seq              c1, k.lpm_metadata_recirc_count, 1
     bcf              [c1], setup_lpm_dport_sport
@@ -66,6 +66,6 @@ setup_lpm_dport_sport:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-setup_recirc1_error:
+setup_lpm1_error:
     phvwr.e         p.capri_intr_drop, 1
     nop

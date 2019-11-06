@@ -197,6 +197,17 @@ uint8_t g_rcv_pkt5[] = {
     0x00, 0x00, 0x00, 0x00
 };
 
+uint8_t g_snd_vnic_tx_untagged[] = {
+    0x00, 0x00, 0x00, 0x40, 0x08, 0x02, 0x00, 0x00,
+    0x00, 0x40, 0x08, 0x01, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0x76, 0xb2, 0x02, 0x00, 0x00, 0x01, 0x02, 0x00,
+    0x00, 0x09, 0x00, 0x64, 0x00, 0x64, 0x00, 0x1e,
+    0x8c, 0x67, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+    0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+    0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15
+};
+
 #ifdef SIM
 void
 send_packet (void)
@@ -340,6 +351,30 @@ send_packet (void)
             }
         }
     }
+
+    // VxLAN
+    tcid++;
+    if (vxlan_encap) {
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            ipkt.resize(sizeof(g_snd_vnic_tx_untagged));
+            memcpy(ipkt.data(), g_snd_vnic_tx_untagged,
+                    sizeof(g_snd_vnic_tx_untagged));
+            epkt.resize(sizeof(g_rcv_pkt5));
+            memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
+            std::cout << "Testing Switch to Host" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                testcase_begin(tcid, i + 1);
+                step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                    EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+                }
+                testcase_end(tcid, i + 1);
+            }
+        }
+    }
+
     exit_simulation();
 }
 #endif

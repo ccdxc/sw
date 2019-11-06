@@ -8,6 +8,14 @@ action pkt_enqueue(PKTQ_QSTATE) {
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
     if (lpm_metadata.sacl_base_addr == 0) {
+
+        // Copy the data that needs to go to TXDMA
+        modify_field(rx_to_tx_hdr.rx_packet, p4_to_rxdma.rx_packet);
+        modify_field(rx_to_tx_hdr.payload_len, capri_p4_intr.packet_len);
+        modify_field(rx_to_tx_hdr.vpc_id, p4_to_rxdma.vpc_id);
+        modify_field(rx_to_tx_hdr.vnic_id, (p4_to_rxdma.vnic_info_key&0x7FE)>>1);
+        modify_field(rx_to_tx_hdr.iptype, p4_to_rxdma.iptype);
+
         // d-vector
         PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_info);
 

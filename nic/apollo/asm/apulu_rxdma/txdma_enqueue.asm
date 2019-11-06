@@ -14,6 +14,13 @@ pkt_enqueue:
     seq          c1, k.lpm_metadata_sacl_base_addr, r0
     nop.!c1.e
 
+    // Yes. Copy the data that need to go to txdma
+    phvwr        p.rx_to_tx_hdr_rx_packet, k.p4_to_rxdma_rx_packet
+    phvwr        p.rx_to_tx_hdr_payload_len, k.capri_p4_intr_packet_len
+    phvwr        p.rx_to_tx_hdr_vpc_id, k.p4_to_rxdma_vpc_id
+    phvwr        p.rx_to_tx_hdr_vnic_id, k.p4_to_rxdma_vnic_info_key[10:1]
+    phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
+
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0
     mincr       r1, d.{pkt_enqueue_d.ring_size}.hx, 1
