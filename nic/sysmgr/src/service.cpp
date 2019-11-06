@@ -47,8 +47,9 @@ void Service::launch()
         get_logname_for_process(this->spec->name, this->pid, "out"));
     this->stderr_pipe = PipedIO::create(new_process.stderr,
         get_logname_for_process(this->spec->name, this->pid, "err"));
-    glog->info("Launched {}({}) using {} with affinity {}", this->spec->name, this->pid,
-        this->spec->command, this->spec->cpu_affinity);
+    glog->info("Launched {}({}) using {} with affinity 0x{:x}",
+               this->spec->name, this->pid, this->spec->command,
+               this->spec->cpu_affinity);
     
 
     if (this->child_watcher != nullptr)

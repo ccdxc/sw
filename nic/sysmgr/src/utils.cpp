@@ -23,7 +23,7 @@
 #define CHUNK_SIZE (64 * 1024)
 
 const pid_t mypid = getpid();
-std::string log_location = "/var/log/sysmgr";
+std::string log_location = "/var/log/pensando/sysmgr";
 
 namespace pt = boost::property_tree;
 
