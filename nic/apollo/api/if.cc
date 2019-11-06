@@ -135,7 +135,10 @@ if_entry::reprogram_config(api_op_t api_op) {
 
 sdk_ret_t
 if_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->cleanup_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -174,6 +177,15 @@ sdk_ret_t
 if_entry::delay_delete(void) {
     PDS_TRACE_VERBOSE("Delay delete interface 0x%x", key_);
     return delay_delete_to_slab(PDS_SLAB_ID_IF, this);
+}
+
+sdk_ret_t
+if_entry::read(pds_if_key_t *key, pds_if_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                              (impl::obj_info_t *)info);
+    }
+    return SDK_RET_OK;
 }
 
 }    // namespace api

@@ -116,6 +116,10 @@ pds_if_read (pds_if_key_t *key, pds_if_info_t *info)
     }
     info->spec.key = *key;
 
+    if ((rv = entry->read(key, info)) != SDK_RET_OK) {
+        return rv;
+    }
+
     if ((rv = pds_if_status_fill(&info->status, entry)) != SDK_RET_OK) {
         return rv;
     }

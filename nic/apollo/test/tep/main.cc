@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/apollo/test/utils/if.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
@@ -39,9 +40,8 @@ protected:
             pds_test_base::SetUpTestCase(g_tc_params);
         pds_batch_ctxt_t bctxt = batch_start();
         if (apulu()) {
-            // TODO: enable once if, nh & nh_group issues are fixed
-            // sample_if_setup(bctxt);
-            // sample_nexthop_setup(bctxt);
+            sample_if_setup(bctxt);
+            sample_nexthop_setup(bctxt);
             // sample_nexthop_group_setup(bctxt);
         }
         batch_commit(bctxt);
@@ -49,8 +49,8 @@ protected:
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
         if (apulu()) {
-            // sample_if_teardown(bctxt);
-            // sample_nexthop_teardown(bctxt);
+            sample_nexthop_teardown(bctxt);
+            sample_if_teardown(bctxt);
             // sample_nexthop_group_teardown(bctxt);
         }
         batch_commit(bctxt);
@@ -65,16 +65,6 @@ protected:
 
 /// \defgroup TEP TEP Tests
 /// @{
-
-TEST_F(tep_test, apulu_tep_workflow_setup) {
-    pds_batch_ctxt_t bctxt = batch_start();
-
-    if (!apulu()) return;
-    // TODO: temporary until if, nh & nh_group issues are fixed
-    sample_if_setup(bctxt);
-    sample_nexthop_setup(bctxt);
-    batch_commit(bctxt);
-}
 
 /// \brief TEP WF_1
 /// \ref WF_1

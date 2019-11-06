@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/apollo/test/utils/if.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {

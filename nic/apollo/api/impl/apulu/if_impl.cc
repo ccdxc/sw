@@ -103,7 +103,8 @@ if_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 if_impl::nuke_resources(api_base *api_obj) {
     sdk_table_api_params_t tparams = { 0 };
-    return SDK_RET_INVALID_OP;
+
+    return this->release_resources(api_obj);
 }
 
 #define lif_action         action_u.lif_lif_info
@@ -172,7 +173,38 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 if_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    p4pd_error_t p4pd_ret;
+    p4i_device_info_actiondata_t p4i_device_info_data;
+    if_entry *interface = (if_entry *)api_obj;
+
+    if (interface->type() == PDS_IF_TYPE_L3) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                          NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        // TODO: cleanup capri dependency
+        if (interface->port() == TM_PORT_UPLINK_0) {
+            memset(p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                   0, ETH_ADDR_LEN);
+        } else if (interface->port() == TM_PORT_UPLINK_1) {
+            memset(p4i_device_info_data.p4i_device_info.device_mac_addr2,
+                   0, ETH_ADDR_LEN);
+        }
+        // program the P4I_DEVICE_INFO table
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+    } else {
+        PDS_TRACE_ERR("Delete unsupported for interface type %u",
+                      interface->type());
+        return sdk::SDK_RET_INVALID_OP;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -196,7 +228,7 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
 
 sdk_ret_t
 if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -232,7 +264,30 @@ if_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    pds_if_spec_t *spec;
+    p4pd_error_t p4pd_ret;
+    p4i_device_info_actiondata_t p4i_device_info_data;
+    pds_if_info_t *if_info = (pds_if_info_t *)info;
+
+    spec = &if_info->spec;
+    if (spec->type == PDS_IF_TYPE_L3) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                          NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        if (spec->l3_if_info.port_num == TM_PORT_UPLINK_0) {
+            sdk::lib::memrev(spec->l3_if_info.mac_addr,
+                             p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                             ETH_ADDR_LEN);
+        } else if (spec->l3_if_info.port_num == TM_PORT_UPLINK_1) {
+            sdk::lib::memrev(spec->l3_if_info.mac_addr,
+                             p4i_device_info_data.p4i_device_info.device_mac_addr2,
+                             ETH_ADDR_LEN);
+        }
+    }
+    return sdk::SDK_RET_OK;
 }
 
 /// \@}    // end of IF_IMPL_IMPL

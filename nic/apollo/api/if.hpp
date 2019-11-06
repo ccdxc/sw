@@ -122,6 +122,12 @@ public:
     /// \brief          initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
 
+    /// \brief          read config
+    /// \param[in]      key pointer to the key object
+    /// \param[out]     info pointer to the info object
+    /// \return         SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_if_key_t *key, pds_if_info_t *info);
+
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
         return "if-" + std::to_string(key_.id);
