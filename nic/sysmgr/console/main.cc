@@ -48,7 +48,29 @@ static int nic_mode()
     return CLASSIC_MODE;
 }
 
-int main(int argc, char *argv[])
+void
+wait_enter (void)
+{
+    char c;
+    while (1) {
+        if (read(STDIN_FILENO, &c, 1) < 1) {
+            exit(0);
+        }
+        if (c == '\n') {
+            return;
+        }
+    }
+}
+
+void
+print_string (const char *str)
+{
+    fputs(str, stdout);
+    fflush(NULL);
+}
+
+int
+main (int argc, char *argv[])
 {
     const char *auth[] = {"/bin/login", NULL};
     const char *no_auth[] = {"/bin/login", "-f", "root", NULL};
@@ -61,11 +83,16 @@ int main(int argc, char *argv[])
     else if (nic_mode() == HOSTPIN_MODE)
     {
         // In network managed mode. Disable console
-        pause();
+        while (1) {
+            print_string("Console disabled\n");
+            wait_enter();
+        }
     }
     else
     {
         // Not in network managed mode, prompt for username/password
+        print_string("Press enter to activate console\n");
+        wait_enter();
         execvp(auth[0], (char* const*)auth);
     }   
 }
