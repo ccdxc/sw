@@ -669,6 +669,12 @@ program_lif_table (uint16_t lif_hw_id, uint16_t vpc_hw_id, uint16_t bd_hw_id,
         PDS_TRACE_ERR("Failed to program LIF table for lif %u", lif_hw_id);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF2, lif_hw_id,
+                                       NULL, NULL, &lif_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program LIF2 table for lif %u", lif_hw_id);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
     return SDK_RET_OK;
 }
 

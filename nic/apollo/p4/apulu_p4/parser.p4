@@ -32,14 +32,6 @@ header mirror_blob_t mirror_blob;
 header apulu_p4i_to_rxdma_header_t p4i_to_rxdma;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4i_to_p4plus_classic_nic.l4_sport   key_metadata.sport
-@pragma pa_field_union ingress p4i_to_p4plus_classic_nic.l4_dport   key_metadata.dport
-header p4_to_p4plus_classic_nic_header_t p4i_to_p4plus_classic_nic;
-@pragma synthetic_header
-@pragma pa_field_union ingress p4i_to_p4plus_classic_nic_ip.ip_sa   key_metadata.src
-@pragma pa_field_union ingress p4i_to_p4plus_classic_nic_ip.ip_da   key_metadata.dst
-header p4_to_p4plus_ip_addr_t p4i_to_p4plus_classic_nic_ip;
-@pragma synthetic_header
 @pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_sport    key_metadata.sport
 @pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_dport    key_metadata.dport
 header p4_to_p4plus_classic_nic_header_t p4e_to_p4plus_classic_nic;
@@ -62,6 +54,7 @@ header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 @pragma pa_field_union ingress p4i_to_arm.l4_2_offset               offset_metadata.l4_2
 header apulu_p4_to_arm_header_t p4i_to_arm;
 header apulu_p4_to_arm_header_t p4e_to_arm;
+header apulu_arm_to_p4_header_t arm_to_p4i;
 
 // layer 0
 header ethernet_t ethernet_0;
@@ -162,10 +155,7 @@ parser parse_egress_to_ingress {
 @pragma xgress ingress
 parser parse_txdma_to_ingress {
     extract(capri_txdma_intrinsic);
-    return select(capri_intrinsic.lif) {
-        APULU_SERVICE_LIF : parse_txdma_app;
-        default : parse_txdma_app;
-    }
+    return parse_txdma_app;
 }
 
 @pragma xgress ingress
@@ -180,6 +170,7 @@ parser parse_txdma_app {
 
 @pragma xgress ingress
 parser parse_cpu_packet {
+    extract(arm_to_p4i);
     return parse_ingress_packet;
 }
 

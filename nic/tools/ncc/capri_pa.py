@@ -1322,16 +1322,17 @@ class capri_gress_pa:
         # group, any of then can be marked as storage location
         for h,v in self.hdr_unions.items():
             union_storage = None
-            for uh in v[1]:
+            sorted_uhs = sorted(v[1], key=lambda k: k.name)
+            for uh in sorted_uhs:
                 if is_synthetic_header(uh):
                     continue # don't make this a storage - special case
                 else:
                     union_storage = uh
                     break
             ncc_assert(union_storage != None)
-            for uh in v[1]:
+            for uh in sorted_uhs:
                 # fix all header entries in this union
-                self.hdr_unions[uh] = (v[0], v[1], union_storage)
+                self.hdr_unions[uh] = (v[0], sorted_uhs, union_storage)
                 for f in uh.fields:
                     uf = self.get_field(get_hfname(f))
                     if uh == union_storage:

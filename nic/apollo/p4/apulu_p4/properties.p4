@@ -24,6 +24,17 @@ table lif {
     size : LIF_TABLE_SIZE;
 }
 
+@pragma stage 0
+table lif2 {
+    reads {
+        arm_to_p4i.lif  : exact;
+    }
+    actions {
+        lif_info;
+    }
+    size : LIF_TABLE_SIZE;
+}
+
 /******************************************************************************/
 /* VLAN info                                                                  */
 /******************************************************************************/
@@ -161,7 +172,11 @@ table vni_otcam {
 }
 
 control input_properties {
-    apply(lif);
+    if (arm_to_p4i.valid == TRUE) {
+        apply(lif2);
+    } else {
+        apply(lif);
+    }
     if ((control_metadata.rx_packet == TRUE) and
         (control_metadata.to_device_ip == TRUE) and
         (vxlan_1.valid == TRUE)) {
