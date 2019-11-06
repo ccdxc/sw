@@ -586,10 +586,6 @@ pd_lif_handle_promiscous_filter_change (lif_t *lif,
     if_t                        *hal_if = NULL;
     dllist_ctxt_t               *lnode = NULL;
 
-    // only one enic per lif in classic mode. Prom. mode change happens only
-    // in classic nic.
-    SDK_ASSERT(dllist_count(&lif->if_list_head) == 1);
-
     dllist_for_each(lnode, &lif->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
@@ -1673,7 +1669,6 @@ hal_ret_t
 pd_lif_uninstall_rdma_sniffer (pd_lif_t *pd_lif)
 {
     hal_ret_t ret = HAL_RET_OK;
-    lif_t *lif = (lif_t *)pd_lif->pi_lif;
 
     HAL_TRACE_DEBUG("Un-Installing RDMA Sniffer");
 

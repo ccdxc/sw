@@ -1649,6 +1649,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
+#if 0
     // Promiscuous flag is supposed to be used only in classic mode.
     // Used to update number of prom lifs on l2segs.
     // In non-classic mode, prom flag is not being used.
@@ -1664,6 +1665,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         // Silently suppressing prom mode change
         app_ctxt.pkt_filter_prom_changed = false;
     }
+#endif
 
     if (!(app_ctxt.vlan_strip_en_changed ||
           app_ctxt.vlan_insert_en_changed ||
