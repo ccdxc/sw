@@ -37,6 +37,11 @@ func (it *integTestSuite) pollTimeout() string {
 	return fmt.Sprintf("%ds", 10+(it.numAgents))
 }
 
+// endpointPollTimeout returns the endpoint poll timeout value based on number of agents
+func (it *integTestSuite) endpointPollTimeout() string {
+	return fmt.Sprintf("%ds", 3*(10+(it.numAgents)))
+}
+
 // CreateAgent creates an instance of agent
 func CreateAgent(kind datapath.Kind, srvURL, nodeUUID string, resolver resolver.Interface) (*Dpagent, error) {
 	// create new network agent

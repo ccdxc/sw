@@ -533,7 +533,7 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
 			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), len(ag.nagent.NetworkAgent.ListEndpoint())
-		}, "Endpoint count incorrect in agent after restart", "100ms", it.pollTimeout())
+		}, "Endpoint count incorrect in agent after restart", "100ms", it.endpointPollTimeout())
 	}
 
 	// create one more workload on each host
@@ -591,7 +591,7 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
 			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), ag.nagent.NetworkAgent.ListEndpoint()
-		}, "Deleted endpoint still found in agent", "100ms", it.pollTimeout())
+		}, "Deleted endpoint still found in agent", "100ms", it.endpointPollTimeout())
 	}
 
 	// delete workloads
