@@ -29,8 +29,8 @@ enum {
 class state_t {
 public:
     static void create(void) { 
-        SDK_ASSERT (g_state == nullptr);
         g_state = new state_t;
+        SDK_ASSERT (g_state != nullptr);
     }
     static void destroy(void) {delete(g_state); g_state = nullptr;}
     static state_t* state(void) {return g_state;}

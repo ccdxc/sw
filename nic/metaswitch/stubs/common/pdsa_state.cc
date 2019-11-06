@@ -17,30 +17,24 @@ state_t* state_t::g_state = nullptr;
 
 state_t::state_t(void)
 {     
-#if 0 // TODO: Requires SDK library linkage
     slabs_[PDSA_TEP_SLAB_ID].reset(sdk::lib::slab::factory("TEP", PDSA_TEP_SLAB_ID, 
                                    sizeof(tep_obj_t), 1000, true, true, true));
-#endif
     if (!slabs_[PDSA_TEP_SLAB_ID]) {
         throw Error("SLAB creation failed for TEP");
     }
     tep_obj_t::set_slab(slabs_[PDSA_TEP_SLAB_ID].get());
 
-#if 0 // TODO: Requires SDK library linkage
     slabs_[PDSA_IF_SLAB_ID].reset(sdk::lib::slab::factory("IF", PDSA_IF_SLAB_ID, 
                                   sizeof(if_obj_t), 1000, true, true, true));
-#endif
     if (!slabs_[PDSA_IF_SLAB_ID]) {
-        throw Error("SLAB creation failed for TEP");
+        throw Error("SLAB creation failed for IF");
     }
     if_obj_t::set_slab(slabs_[PDSA_IF_SLAB_ID].get());
 
-#if 0 // TODO: Requires SDK library linkage
     slabs_[PDSA_BD_SLAB_ID].reset(sdk::lib::slab::factory("BD", PDSA_BD_SLAB_ID, 
                                   sizeof(bd_obj_t), 1000, true, true, true));
-#endif
     if (!slabs_ [PDSA_BD_SLAB_ID]) {
-        throw Error("SLAB creation failed for TEP");
+        throw Error("SLAB creation failed for BD");
     }
     bd_obj_t::set_slab(slabs_[PDSA_BD_SLAB_ID].get());
 }

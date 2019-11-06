@@ -128,11 +128,22 @@ p4pd_global_table_properties_get (uint32_t table_id, p4pd_table_properties_t *pr
 namespace sdk {
 namespace platform {
 namespace capri {
+
 int capri_hbm_table_entry_cache_invalidate(bool ingress,
                                            uint64_t entry_addr,
                                            mem_addr_t base_mem_pa) {
     return 0;
 }
+
+
+int capri_hbm_table_entry_cache_invalidate(p4pd_table_cache_t cache,
+                                           uint64_t entry_addr,
+                                           uint16_t entry_width,
+                                           mem_addr_t base_mem_pa) {
+    return 0;
+}
+
+
 }
 }
 }
