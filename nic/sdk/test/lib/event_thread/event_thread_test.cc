@@ -219,11 +219,17 @@ ipc_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
 }
 
 void
+msg_cleanup (void *data)
+{
+    printf("Message cleanup called with: %s\n", (char *)data);
+}
+
+void
 timer2_callback (event::timer_t *timer)
 {
-    const char message[] = "echo from event";
+    static const char message[] = "echo from event";
     event::rpc_request(THREAD_T4, 0, (void *)message, sizeof(message),
-                      (const void *)0x1234);
+                       (const void *)0x1234, msg_cleanup);
 }
 
 void

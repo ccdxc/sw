@@ -109,6 +109,9 @@ void publish(uint32_t msg_code, void *data, size_t data_length);
 // RPC request callback
 typedef void (*rpc_request_cb)(ipc::ipc_msg_ptr ipc_msg, void *ctx);
 
+// Message cleanup callback
+typedef void (*msg_cleanup_cb)(void *data);
+
 // Register an request handler
 void rpc_reg_request_handler(uint32_t msg_code,
                              rpc_request_cb callback);
@@ -127,7 +130,8 @@ void rpc_reg_response_handler(uint32_t msg_code,
 
 // Send a message to an RPC server. The response will come on the callback above
 void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
-                 size_t data_length, const void *cookie);
+                 size_t data_length, const void *cookie,
+                 const msg_cleanup_cb cleanup_cb);
 
 // Use this function to set the initial watchers
 typedef void (*loop_init_func_t)(void *ctx);
@@ -178,7 +182,8 @@ public:
                                   rpc_response_cb callback);
 
     void rpc_request(uint32_t recipient, uint32_t msg_code, const void *data,
-                     size_t data_length, const void *cookie);
+                     size_t data_length, const void *cookie,
+                     const msg_cleanup_cb cleanup_cb);
 
     void handle_thread_up(uint32_t thread_id);
 
@@ -211,6 +216,7 @@ private:
     std::map<uint32_t, rpc_response_cb> rpc_rsp_cbs_;
     std::map<uint32_t, updown_up_cb> updown_up_cbs_;
     std::map<uint32_t, void*> updown_up_ctxs_;
+    std::map<uint32_t, msg_cleanup_cb> msg_cleanup_cbs_;
     void *user_ctx_;
     void run_(void);
     void handle_async_(void);

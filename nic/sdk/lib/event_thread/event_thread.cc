@@ -77,6 +77,12 @@ private:
 };
 typedef std::shared_ptr<updown_mgr> updown_mgr_ptr;
 
+typedef struct cookie_wrapper_ {
+    const void *user_data;
+    const void *user_cookie;
+    msg_cleanup_cb cleanup_cb;
+} cookie_wrapper_t;
+
 static thread_local event_thread *t_event_thread_ = NULL;
 
 static event_thread *g_event_thread_table[MAX_THREAD_ID + 1];
@@ -521,14 +527,21 @@ event_thread::handle_ipc_client_(ev_io *watcher) {
     }
     assert(sender < IPC_MAX_ID + 1);
     while (1) {
-        const void *cookie;
-        ipc::ipc_msg_ptr msg = this->ipc_clients_[sender]->recv(&cookie);
+        cookie_wrapper_t *wrap;
+        ipc::ipc_msg_ptr msg = this->ipc_clients_[sender]->recv(
+            (const void **)&wrap);
         if (msg == nullptr) {
             return;
         }
         // We received an IPC reply but don't have a handler
         assert(this->rpc_rsp_cbs_.count(msg->code()) > 0);
-        this->rpc_rsp_cbs_[msg->code()](sender, msg, this->user_ctx_, cookie);
+        this->rpc_rsp_cbs_[msg->code()](sender, msg, this->user_ctx_,
+                                        wrap->user_cookie);
+        if (wrap->cleanup_cb) {
+            wrap->cleanup_cb((void *)wrap->user_data);
+        }
+        // This gets allocated in rpc_request
+        free(wrap);
     }
 }
 
@@ -561,10 +574,11 @@ event_thread::rpc_reg_response_handler(uint32_t msg_code,
     this->rpc_rsp_cbs_[msg_code] = callback;
 }
 
+
 void
 event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
                           const void *data, size_t data_length,
-                          const void *cookie)
+                          const void *cookie, const msg_cleanup_cb cleanup_cb)
 {
     ipc::ipc_client *client;
 
@@ -584,7 +598,14 @@ event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
         // It doesn't play ver well with libevent
         client->recv(NULL);
     }
-    client->send(msg_code, data, data_length, cookie);
+
+    // This gets freed in handle_ipc_client_
+    cookie_wrapper_t *wrap = (cookie_wrapper_t *)malloc(sizeof(*wrap));
+    wrap->user_data = data;
+    wrap->user_cookie = cookie;
+    wrap->cleanup_cb = cleanup_cb;
+    
+    client->send(msg_code, data, data_length, wrap);
 }
 
 void
@@ -770,11 +791,12 @@ rpc_reg_response_handler (uint32_t msg_code,
 
 void
 rpc_request (uint32_t recipient, uint32_t msg_code,
-                   const void *data, size_t data_length, const void *cookie)
+             const void *data, size_t data_length, const void *cookie,
+             const msg_cleanup_cb cleanup_cb)
 {
     assert(t_event_thread_ != NULL);
     t_event_thread_->rpc_request(recipient, msg_code, data, data_length,
-                                 cookie);
+                                 cookie, cleanup_cb);
 }
 
 } // namespace event_thread

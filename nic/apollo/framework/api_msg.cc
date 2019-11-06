@@ -122,7 +122,7 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         // for async response using rpc_reg_response_handler() API
         sdk::event_thread::rpc_request(core::THREAD_ID_API, API_MSG_ID_BATCH,
                                        &api_msg, sizeof(api_msg),
-                                       (void *)api_msg->batch.cookie);
+                                       (void *)api_msg->batch.cookie, NULL);
     } else {
         rsp = sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH,
                                 &api_msg, sizeof(api_msg));
