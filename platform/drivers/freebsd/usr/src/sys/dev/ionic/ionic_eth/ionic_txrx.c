@@ -1854,14 +1854,12 @@ ionic_rdma_sniffer_sysctl(SYSCTL_HANDLER_ARGS)
 	if ((err) || (req->newptr == NULL))
 		return (err);
 
-	rx_mode &= ~RX_MODE_F_RDMA_SNIFFER;
+	rx_mode = lif->rx_mode;
 	if (value)
 		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
-
-	if ((rx_mode ^ lif->rx_mode) & RX_MODE_F_RDMA_SNIFFER) {
-		ionic_lif_rx_mode(lif, rx_mode);
-		lif->rx_mode = rx_mode;
-	}
+	else
+		rx_mode ^= RX_MODE_F_RDMA_SNIFFER;
+	ionic_lif_rx_mode(lif, rx_mode);
 
 	return (err);
 }
@@ -2997,6 +2995,8 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,
 			&lif->rx_mbuf_size, 0, "Size of receive buffers");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mode", CTLFLAG_RD,
+			&lif->rx_mode, 0, "Current receive mode");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "curr_coal_us", CTLFLAG_RD,
 			&lif->intr_coalesce_us, 0, "Get current interrupt coalescing value(us)");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "coal_max_us", CTLFLAG_RD,

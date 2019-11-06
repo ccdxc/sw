@@ -947,7 +947,7 @@ _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_RDMA_SNIFFER");
         if (rx_mode == 0)
                 i += snprintf(&buf[i], REMAIN(i), " cleared");
-        IONIC_NETDEV_INFO(lif->netdev, "%s\n", buf);
+        IONIC_NETDEV_PRINT(lif->netdev, "%s\n", buf);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
@@ -962,8 +962,10 @@ ionic_lif_rx_mode_work(struct work_struct *work)
 	struct rx_mode_work *w = container_of(work, struct rx_mode_work, work);
 
 	IONIC_LIF_LOCK(w->lif);
-	if (w->rx_mode != w->lif->rx_mode)
+	if (w->rx_mode != w->lif->rx_mode) {
+		w->lif->rx_mode = w->rx_mode;
 		_ionic_lif_rx_mode(w->lif, w->rx_mode);
+	}
 	IONIC_LIF_UNLOCK(w->lif);
 
 	free(w, M_IONIC);
