@@ -52,7 +52,7 @@ using sys::QInfo;
 
 using namespace sdk::lib;
 
-#define	HAL_FLOW_TELEMETRY_MAX_STATS_STATE	65536
+#define	HAL_FLOW_TELEMETRY_MAX_STATS_STATE	65535
 #define	FLOW_TELEMETRY_STATS_SHIFT		7
 
 #define TCP_IPV4_DOT1Q_PKT_SZ (sizeof(ether_header_t)+sizeof(vlan_header_t)+\
@@ -270,9 +270,17 @@ hal_ret_t
 session_cleanup (session_t *session)
 {
     if (session->iflow) {
+        // Handle Delphi-object referenced states in HBM in a delayed fashion
+        // to make sure that last-updated data has been streamed out
+        enqueue_flow_telemetry_state_to_age_list(session->iflow);
+
         hal::delay_delete_to_slab(HAL_SLAB_FLOW, session->iflow);
     }
     if (session->rflow) {
+        // Handle Delphi-object referenced states in HBM in a delayed fashion
+        // to make sure that last-updated data has been streamed out
+        enqueue_flow_telemetry_state_to_age_list(session->rflow);
+
         hal::delay_delete_to_slab(HAL_SLAB_FLOW, session->rflow);
     }
     hal::delay_delete_to_slab(HAL_SLAB_SESSION, session);
@@ -1299,7 +1307,6 @@ flow_create_fte (const flow_cfg_t *cfg,
     }
 
     *flow = {};
-    SDK_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_SHARED);
     flow->flow_key_ht_ctxt.reset();
 
     // Enable FlowTelemetryDrop by default
@@ -1322,7 +1329,6 @@ flow_create_fte (const flow_cfg_t *cfg,
             return NULL;
         }
         *assoc_flow = {};
-        SDK_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_SHARED);
         assoc_flow->flow_key_ht_ctxt.reset();
         assoc_flow->config = *cfg_assoc;
         if (attrs_assoc) {
@@ -1714,9 +1720,6 @@ allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p,
     // Allocate Flow-Proto-State in HBM, if we run out of HBM resources
     // exit gracefully
     //
-    pal_addr = get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
-    SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
-
     rs = g_flow_proto_state_indexer->alloc(&idx);
     if (rs != sdk::lib::indexer::SUCCESS)
         return;
@@ -1724,7 +1727,8 @@ allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p,
     //
     // Convert Physical-Flow-Proto-State-ptr to Virtual-address
     //
-    pal_addr += idx * (1 << FLOW_TELEMETRY_STATS_SHIFT);
+    pal_addr = g_flow_telemetry_hbm_start + 
+               idx * (1 << FLOW_TELEMETRY_STATS_SHIFT);
     sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(
                                         pal_addr, &vaddr);
     SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
@@ -1974,7 +1978,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
 void
 create_flow_proto_state (flow_t *flow_p)
 {
-    sdk::types::mem_addr_t  stats_addr[FLOW_TELEMETRY_MAX], pal_addr;
+    sdk::types::mem_addr_t  stats_addr[FLOW_TELEMETRY_TYPES_MAX], pal_addr;
     flow_telemetry_state_t *flow_telemetry_state_p;
     flow_telemetry_state_t *flow_telemetry_hbm_addr;
     uint8_t                 flow_type;
@@ -2447,11 +2451,6 @@ session_delete(const session_args_t *args, session_t *session)
 
 
     SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
-
-    // Handle Delphi-object referenced states in HBM in a delayed fashion
-    // to make sure that last-updated data has been streamed out
-    enqueue_flow_telemetry_state_to_age_list(session->iflow);
-    enqueue_flow_telemetry_state_to_age_list(session->rflow);
 
     del_session_from_db(args->sep_handle, args->dep_handle, session);
 

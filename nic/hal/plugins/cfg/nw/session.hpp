@@ -140,13 +140,13 @@ enum nat_type_t {
 };
 
 // FlowTelemetry enums
+#define	FLOW_TELEMETRY_TYPES_MAX 5
 enum {
     FLOW_TELEMETRY_RAW         = 0,
     FLOW_TELEMETRY_DROP        = 1,
     FLOW_TELEMETRY_PERFORMANCE = 2,
     FLOW_TELEMETRY_LATENCY     = 3,
     FLOW_TELEMETRY_BEHAVIORAL  = 4,
-    FLOW_TELEMETRY_MAX         = 4,
 };
 #define	FLOW_TELEMETRY_DEFAULT	((1 << FLOW_TELEMETRY_RAW) | \
                                  (1 << FLOW_TELEMETRY_PERFORMANCE) | \
@@ -603,6 +603,7 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
+void enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p);
 
 }    // namespace hal
 

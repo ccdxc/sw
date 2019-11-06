@@ -536,11 +536,6 @@
             "reset": true
         },
         {
-            "name": "qos-dscp-cos-map",
-            "size": "64B",
-            "reset": true
-        },
-        {
             "name": "tcp_proxy_per_flow_stats",
             "size": "8192K",
             "reset": true
@@ -576,6 +571,11 @@
         {
             "name": "port_stats",
             "size": "3K",
+            "reset": true
+        },
+        {
+            "name": "qos-dscp-cos-map",
+            "size": "64B",
             "reset": true
         }
     ]

@@ -441,10 +441,10 @@ ht::walk_bucket_safe(uint64_t bucket, ht_walk_cb_t walk_cb, void *ctxt)
     if (bucket >= num_buckets_) {
         return SDK_RET_INVALID_ARG;
     }
-    curr = ht_buckets_[bucket].ht_ctxt;
     if (thread_safe_) {
         SDK_SPINLOCK_LOCK(&ht_buckets_[bucket].slock_);
     }
+    curr = ht_buckets_[bucket].ht_ctxt;
     while (curr) {
         // cache the next entry so it is delete-safe
         next = curr->next;
