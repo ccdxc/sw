@@ -124,7 +124,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth 
         spec    : decrypt_ipsec_to_eth.testspec 
-        ignore  : False 
+        ignore  : True 
         rtl     : True
         iterate :
             - flow: filter://type=IPV4
@@ -144,7 +144,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth_rekey
         spec    : decrypt_ipsec_to_eth_rekey.testspec 
-        ignore  : False 
+        ignore  : True 
         rtl     : True
         iterate :
             - flow: filter://type=IPV4
@@ -154,7 +154,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_rekey_simultaneous
         spec    : decrypt_ipsec_rekey_simultaneous.testspec 
-        ignore  : False 
+        ignore  : True 
         rtl     : False 
         iterate :
             - flow: filter://type=IPV4
@@ -164,7 +164,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth_lt63
         spec    : decrypt_ipsec_to_eth_seq_lt_63.testspec 
-        ignore  : False 
+        ignore  : True
         rtl     : True
         iterate :
             - flow: filter://type=IPV4
@@ -174,7 +174,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth_gt63 
         spec    : decrypt_ipsec_to_eth_seq_gt_63.testspec 
-        ignore  : False 
+        ignore  : True
         rtl     : True
         iterate :
             - flow: filter://type=IPV4

@@ -701,6 +701,7 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
 {
     proxy_flow_info_t   *pfi = NULL;
     proxy_t*            proxy = NULL;
+    flow_key_t          key = flow_key;
 
     proxy = find_proxy_by_type(proxy_type);
     if(proxy == NULL) {
@@ -710,7 +711,8 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
         return HAL_RET_PROXY_NOT_FOUND;
     }
 
-    pfi = find_proxy_flow_info(proxy, &flow_key);
+    key.lkpvrf=0;
+    pfi = find_proxy_flow_info(proxy, &key);
     if(!pfi) {
         HAL_TRACE_DEBUG("Failed to find the proxy flow info for the  flow");
         if(rsp)
@@ -757,6 +759,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
     proxy_flow_info_t   *pfi = NULL;
     proxy_t*            proxy = NULL;
     indexer::status     rs;
+    flow_key_t          key = flow_key;
 
     HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", flow_key);
 
@@ -768,7 +771,8 @@ proxy_flow_enable(types::ProxyType proxy_type,
         return HAL_RET_PROXY_NOT_FOUND;
     }
 
-    pfi = find_proxy_flow_info(proxy, &flow_key);
+    key.lkpvrf = 0;
+    pfi = find_proxy_flow_info(proxy, &key);
     if(pfi) {
         HAL_TRACE_DEBUG("Proxy already enabled for the flow");
         if(rsp)
@@ -911,11 +915,11 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
 
 proxy_flow_info_t*
 proxy_get_flow_info(types::ProxyType proxy_type,
-                    const flow_key_t* flow_key)
+                    flow_key_t flow_key)
 {
     proxy_t*            proxy = NULL;
 
-    if(proxy_type == types::PROXY_TYPE_NONE || !flow_key) {
+    if(proxy_type == types::PROXY_TYPE_NONE) {
         return NULL;
     }
 
@@ -925,7 +929,8 @@ proxy_get_flow_info(types::ProxyType proxy_type,
         return NULL;
     }
 
-    return find_proxy_flow_info(proxy, flow_key);
+    flow_key.lkpvrf = 0;
+    return find_proxy_flow_info(proxy, &flow_key);
 }
 
 hal_ret_t
@@ -947,7 +952,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
     tid = req.spec().vrf_key_handle().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 
-    pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);
+    pfi = proxy_get_flow_info(req.spec().proxy_type(), flow_key);
     if(!pfi) {
         HAL_TRACE_ERR("flow info not found for the flow {}", flow_key);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
@@ -969,9 +974,9 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
 
 bool
 is_proxy_enabled_for_flow(types::ProxyType proxy_type,
-                          const flow_key_t &flow_key)
+                          flow_key_t flow_key)
 {
-    return (NULL != proxy_get_flow_info(proxy_type, &flow_key));
+    return (NULL != proxy_get_flow_info(proxy_type, flow_key));
 }
 
 /*

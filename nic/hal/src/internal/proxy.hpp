@@ -180,13 +180,13 @@ proxy_flow_handle_tls_config(types::ProxyType proxy_type,
                              proxy::ProxyResponse *rsp);
 
 proxy_flow_info_t* proxy_get_flow_info(types::ProxyType proxy_type,
-                                       const flow_key_t* flow_key);
+                                       flow_key_t flow_key);
 
 hal_ret_t proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
                               proxy::ProxyGetFlowInfoResponse* rsp);
 
 bool is_proxy_enabled_for_flow(types::ProxyType proxy_type,
-                               const flow_key_t &flow_key);
+                               flow_key_t flow_key);
 
 hal_ret_t proxy_globalcfg_set(proxy::ProxyGlobalCfgRequest& req,
 			      proxy::ProxyGlobalCfgResponseMsg *rsp);

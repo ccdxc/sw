@@ -629,12 +629,12 @@ tcp_proxy_get_flow_info(const flow_key_t& flow_key)
 {
     proxy_flow_info_t*      pfi;
 
-    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, flow_key);
     if (!pfi) {
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, &flow_key);
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, flow_key);
     }
     if (!pfi) {
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN, &flow_key);
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN, flow_key);
     }
 
     return pfi;

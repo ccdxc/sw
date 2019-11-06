@@ -67,6 +67,7 @@ ctx_t::extract_flow_key()
         return HAL_RET_L2SEG_NOT_FOUND;
     }
 
+    key_.lkpvrf = flow_lkupid_;
     if (obj_id == hal::HAL_OBJ_ID_L2SEG) {
         sl2seg_ = (hal::l2seg_t *)obj;
         svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
@@ -165,6 +166,8 @@ hal_ret_t
 ctx_t::lookup_flow_objs()
 {
     ether_header_t *ethhdr = NULL;
+    hal::pd::pd_func_args_t  pd_func_args = {0};
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
 
     if (svrf_ == NULL && dvrf_ == NULL) {
         HAL_TRACE_DEBUG("Looking up vrf for id: {}", key_.svrf_id);
@@ -258,6 +261,31 @@ ctx_t::lookup_flow_objs()
              }
         }
     }
+
+    if (protobuf_request() || hal::is_platform_type_sim()) {
+        HAL_TRACE_VERBOSE("Looking up flow lookup vrf sl2seg_: {:p}", (void *)sl2seg_);
+        if (sl2seg_) {
+            args.l2seg = sl2seg_;
+            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
+            key_.lkpvrf = args.hwid;
+        } else {
+            hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+            vrf_args.vrf = svrf_;
+            pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+            key_.lkpvrf = vrf_args.lkup_id;
+        }
+        HAL_TRACE_VERBOSE("Lookup vrf {}", key_.lkpvrf);
+    }
+    rkey_.lkpvrf = key_.lkpvrf;
+    if ((sl2seg_ != dl2seg_) && (dl2seg_ != NULL)) {
+        args.l2seg = dl2seg_;
+        pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
+        rkey_.lkpvrf = args.hwid;
+    }
+    HAL_TRACE_DEBUG("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
 
     return HAL_RET_OK;
 }
@@ -548,9 +576,7 @@ ctx_t::update_flow_table()
     hal_ret_t       ret = HAL_RET_OK;
     hal_handle_t    session_handle = (session())?session()->hal_handle:HAL_HANDLE_INVALID;
     hal::session_t *session = NULL;
-    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
-    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
     std::string      update_type = "create";
     hal::app_redir::app_redir_ctx_t* app_ctx = hal::app_redir::app_redir_ctx(*this, false);
@@ -589,25 +615,6 @@ ctx_t::update_flow_table()
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
         update_flow_qos_class_id(iflow, &iflow_attrs);
-
-        iflow_attrs.vrf_hwid = (flow_lkupid_)?flow_lkupid_:iflow_attrs.vrf_hwid;
-        if (!iflow_attrs.vrf_hwid) {
-            if (protobuf_request()) {
-                if (sl2seg_) {
-                    args.l2seg = sl2seg_;
-                    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-                    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-                    iflow_attrs.vrf_hwid = args.hwid;
-                } else {
-                    vrf_args.vrf = svrf_;
-                    pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
-                    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
-                   iflow_attrs.vrf_hwid = vrf_args.lkup_id;
-                }
-            } else if (flow_miss()) {
-                iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
-            }
-        }
 
         iflow_attrs.use_vrf = (use_vrf_)?1:0;
 
@@ -667,7 +674,7 @@ ctx_t::update_flow_table()
                         "export_id2={} export_id3={} export_id4={} conn_track_en={} "
                         "session_idle_timeout={} smac={} dmac={} l2seg_id={}, skip_sfw_reval={} "
                         "sfw_rule_id={}, sfw_action={}",
-                        stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
+                        stage, iflow_cfg.key, iflow_attrs.lkp_inst, key_.lkpvrf,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
                         iflow_attrs.lport, iflow_attrs.qid_en, iflow_attrs.qtype, iflow_attrs.qid,
@@ -711,18 +718,6 @@ ctx_t::update_flow_table()
             rflow_attrs.lkp_inst = 1;
         }
 
-        if (rflow_attrs.vrf_hwid == 0) {
-            if (dl2seg_ == NULL) {
-                HAL_TRACE_DEBUG("fte: dest l2seg not known");
-                return HAL_RET_L2SEG_NOT_FOUND;
-            }
-
-	    args.l2seg = dl2seg_;
-            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
-            rflow_attrs.vrf_hwid = args.hwid;
-            // rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
-        }
         // TODO(goli) fix tnnl w_idx lookup
         if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
             rflow_attrs.tnnl_rw_idx = 0;
@@ -749,6 +744,16 @@ ctx_t::update_flow_table()
             session_args.update_rflow = false;
         }
 
+        if (dl2seg_ != sl2seg_ && dl2seg_ != NULL) {
+            hal::pd::pd_func_args_t  pd_func_args = {0};
+            hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+
+            args.l2seg = dl2seg_;    
+            pd_func_args.pd_l2seg_get_flow_lkupid = &args;    
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);    
+            rflow_cfg.key.lkpvrf = rkey_.lkpvrf = args.hwid;    
+        }
+
         HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} "
                         "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
@@ -758,7 +763,7 @@ ctx_t::update_flow_table()
                         "qos_class_en={} qos_class_id={} export_en={} export_id1={} "
                         "export_id2={} export_id3={} export_id4={} smac={} dmac={} l2_segid={}",
                         stage, rflow_cfg.key, rflow_attrs.lkp_inst,
-                        rflow_attrs.vrf_hwid, rflow_cfg.action,
+                        rkey_.lkpvrf, rflow_cfg.action,
                         rflow_attrs.mac_sa_rewrite,
                         rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
                         rflow_attrs.lport, rflow_attrs.qid_en, rflow_attrs.qtype, rflow_attrs.qid,

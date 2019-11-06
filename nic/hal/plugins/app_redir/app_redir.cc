@@ -820,19 +820,19 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
 
     pfi = redir_ctx.proxy_flow_info() ?
           redir_ctx.proxy_flow_info() :
-          proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, &flow_key);
+          proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR, flow_key);
 
     if (!pfi) {
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_SPAN,
-                                  &flow_key);
+                                  flow_key);
     }
     if (!pfi) {
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP,
-                                  &flow_key);
+                                  flow_key);
     }
     if (!pfi) {
         pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN,
-                                  &flow_key);
+                                  flow_key);
     }
 
     if (!pfi && (flow_type_include == PROXY_FLOW_TYPE_INCLUDE_TCP)) {
@@ -840,7 +840,7 @@ app_redir_proxy_flow_info_find(fte::ctx_t& ctx,
         /*
          * See if flow was configured as TCP/TLS proxy flow
          */
-        pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, flow_key);
     }
 
     if (pfi) {
@@ -923,7 +923,7 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
             goto done;
         }
 
-        pfi = proxy_get_flow_info(type, &flow_key);
+        pfi = proxy_get_flow_info(type, flow_key);
         assert(pfi);
         if (rpfi) {
             pfi->qid1 = rpfi->qid1;

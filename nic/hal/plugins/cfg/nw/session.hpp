@@ -164,6 +164,7 @@ typedef struct flow_key_s {
     uint8_t              dir:1;
     vrf_id_t             svrf_id;    // src vrf id
     vrf_id_t             dvrf_id;    // dst vrf id
+    uint32_t             lkpvrf;     // Flow lookup vrf
 
     union {
         // L2 flow key information
@@ -250,7 +251,6 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  use_vrf:1;              // Flow lookup object is vrf
     uint64_t                  export_en:4;            // Export enable: 4 exporters
 
-    uint32_t                  vrf_hwid;            // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action

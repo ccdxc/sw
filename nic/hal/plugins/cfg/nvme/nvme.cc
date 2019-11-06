@@ -417,7 +417,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
                     spec.vrf_key_handle().vrf_id(),
                     tid, flow_key);
 
-    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
+    pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, flow_key);
     if(!pfi) {
         HAL_TRACE_ERR("flow info not found for the flow {}", flow_key);
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);

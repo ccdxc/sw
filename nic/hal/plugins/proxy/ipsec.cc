@@ -71,10 +71,16 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         //    ctx.set_feature_status(ret);
         //    return fte::PIPELINE_END;
         //}
+        fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_KEY};
         vrf_args.vrf = vrf;
         pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
         ctx.set_flow_lkupid(vrf_args.lkup_id);
+        flow_key.lkpvrf = vrf_args.lkup_id;
+        ctx.set_key(flow_key);
+        flowupd.key = flow_key;
+        ctx.update_flow(flowupd);
+        HAL_TRACE_VERBOSE("IPsec flow_key {}", ctx.get_key());
         HAL_TRACE_VERBOSE("IPsec set_flow_lkup_id {}", vrf_args.lkup_id);
         HAL_TRACE_VERBOSE("IPsec set_use_vrf {}", vrf->vrf_id);
         ctx.set_use_vrf(vrf);
@@ -112,10 +118,16 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         ctx.set_feature_status(ret);
         return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
     } else {
+        fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_KEY};
         vrf_args.vrf = vrf;
         pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
         ctx.set_flow_lkupid(vrf_args.lkup_id);
+        flow_key.lkpvrf = vrf_args.lkup_id;
+        ctx.set_key(flow_key);
+        flowupd.key = flow_key;
+        ctx.update_flow(flowupd);
+        HAL_TRACE_VERBOSE("IPsec flow_key {}", ctx.get_key()); 
         HAL_TRACE_VERBOSE("IPsec set_flow_lkup_id {}", vrf_args.lkup_id);
         HAL_TRACE_VERBOSE("IPsec set_use_vrf {}", vrf->vrf_id);
         ctx.set_use_vrf(vrf);
@@ -371,9 +383,10 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
     hal::proxy::ipsec_info_t *ipsec_info = NULL;
-    fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_INFO};
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     pd::pd_func_args_t                pd_func_args = {0};
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_LKP_KEY};
+    flow_key_t              flow_key = ctx.get_key();
 
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
     ipsec_info->vrf = ctx.get_key().dvrf_id;
@@ -385,6 +398,9 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
     flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
     update_flow_qos(&flowupd);
     HAL_TRACE_VERBOSE("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
+    flow_key.lkpvrf = vrf_args.lkup_id;
+    ctx.set_key(flow_key);
+    flowupd.key = flow_key;
     ctx.set_l3_tunnel_flow(TRUE);
     ret = ctx.update_flow(flowupd);
     ctx.set_feature_status(ret);
@@ -543,7 +559,7 @@ ipsec_exec(fte::ctx_t& ctx)
 
     // get the flow info for the tcp proxy service
     pfi = proxy_get_flow_info(types::PROXY_TYPE_IPSEC,
-                              &flow_key);
+                              flow_key);
 
     if(pfi) {
         if(flow_key.proto == IPPROTO_ESP) {
@@ -553,7 +569,7 @@ ipsec_exec(fte::ctx_t& ctx)
             HAL_TRACE_VERBOSE("ipsec HOST flow");
             // Get Tunnel PFI
             tpfi = proxy_get_flow_info(types::PROXY_TYPE_IPSEC,
-                                       &(pfi->u.ipsec.u.host_flow.esp_flow_key));
+                                       (pfi->u.ipsec.u.host_flow.esp_flow_key));
             if(!tpfi) {
                 //HAL_TRACE_ERR("Failed to get tunnel info for host flow: {}", flow_key);
                 //ctx.set_feature_status(HAL_RET_FLOW_NOT_FOUND);

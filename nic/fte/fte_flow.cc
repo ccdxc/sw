@@ -547,10 +547,6 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         attrs.export_id4 = export_info_.export_id4;
     }
 
-    if (valid_.lkp_info) {
-        attrs.vrf_hwid = lkp_info_.vrf_hwid;
-    }
-
     // header manipulations
     for (int i = 0; i < num_header_updates_; i++) {
         const header_update_t *entry = &header_updates_[i];
@@ -670,11 +666,6 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
         fwding_.qtype = attrs.qtype;
         fwding_.qid = attrs.qid;
         valid_.fwding = true;
-    }
-
-    if (attrs.vrf_hwid) {
-        lkp_info_.vrf_hwid = attrs.vrf_hwid;
-        valid_.lkp_info = true;
     }
 
     if (flow_cfg.is_ing_proxy_mirror)

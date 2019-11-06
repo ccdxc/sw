@@ -184,6 +184,7 @@ flowkey2str (const flow_key_t& key)
         out.write("svrf={}, dvrf={} ", key.svrf_id, key.dvrf_id);
     }
 
+    out.write("lkpvrf={}, ", key.lkpvrf);
     switch (key.flow_type) {
     case FLOW_TYPE_L2:
         out.write("l2seg={}, smac={}, dmac={} etype={}",
