@@ -13,6 +13,8 @@ import argparse
 import subprocess
 
 def curl_send(**data):
+    # Note that code 503 is Server Unavailable
+    code = 503 
     c = pycurl.Curl()
     hdr = StringIO()
     buf = StringIO()
@@ -42,6 +44,7 @@ def curl_send(**data):
             break
         try: 
             c.perform()
+            code = c.getinfo(pycurl.HTTP_CODE)
             break
         except Exception, e:
             write_log("* error: " + str(e), 1) 
@@ -50,7 +53,16 @@ def curl_send(**data):
     header = hdr.getvalue()
     body = buf.getvalue()
     write_log("* receiving: " + header + body, 1)
-    return ( header, body )
+    return code
+
+def is_apigw_running():
+    cmd = "docker ps | grep apigw | wc -l"
+    output = subprocess.check_output(cmd, shell=True)
+    if int(output) > 0:
+        write_log("* venice apigw is already running")
+        return True
+    else:
+        return False
 
 def check_reachability():
     for ip in opts.VENICE_IP:
@@ -87,12 +99,12 @@ def create_cluster():
             "quorum-nodes": opts.VENICE_IP
         }
     })
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
 
 def create_tenant():
     ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/tenants" }
     ctx["postdata"] = json.dumps({"kind": "Tenant", "meta": {"name": "default"}})
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
 
 def create_auth_policy():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/authn-policy" }
@@ -116,7 +128,7 @@ def create_auth_policy():
         }, 
         "APIVersion": "v1"
     })
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
     
 def create_admin_user():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/tenant/default/users" }
@@ -133,7 +145,7 @@ def create_admin_user():
             "email": "admin@" + opts.domain
         }
     })
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
 
 def create_admin_role_binding():
     ctx = { "method": "PUT", "url": "https://localhost/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding" }
@@ -151,29 +163,35 @@ def create_admin_role_binding():
             ]
         }
     })
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
 
 def complete_auth_bootstrap():
     ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/cluster/AuthBootstrapComplete" }
     ctx["postdata"] = json.dumps({})
-    ( header, body ) = curl_send(**ctx)
+    return curl_send(**ctx)
 
 def bootstrap_venice():
-    write_log("* creating venice cluster")
-    create_cluster()
     write_log("* creating default tenant")
-    create_tenant()
+    if create_tenant() not in ( 200, 409 ):
+        return False
+
     write_log("* creating default authentication policy")
-    create_auth_policy()
+    if create_auth_policy() not in ( 200, 409 ):
+        return False
+
     write_log("* creating default admin user")
-    create_admin_user()
+    if create_admin_user() not in ( 200, 409 ):
+        return False
+
     write_log("* assigning super admin role to default admin user")
-    create_admin_role_binding()
+    if create_admin_role_binding() not in ( 200, 409 ):
+        return False
+
     write_log("* complete venice bootstraping process")
-    complete_auth_bootstrap()
-    write_log("* venice cluster created successfully")
-    print "\n"
-    write_log("* you may access venice at https://" + opts.VENICE_IP[0])
+    if complete_auth_bootstrap() not in ( 200, 409 ):
+        return False
+
+    return True
 
 def write_log(msg, verbose=0):
     if ( opts.verbose < verbose ):
@@ -191,13 +209,14 @@ parser.add_argument("-timeout", help="Total time to retry a transaction in secon
 parser.add_argument("-waittime", help="Total time to wait between each retry in seconds (default=30)", default=30, type=int)
 parser.add_argument("-autoadmit", help="Auto admit DSC once it registers with Venice - 'True' or 'False' (default=True)", default="True", choices=["True", "False"], type=str)
 parser.add_argument("-verbose", "-v", help="Verbose logging", action="count")
+parser.add_argument("-skip_create_cluster", "-s", help="Skip cluster creation step", action="store_true")
 opts = parser.parse_args()
+
 # Reformat the data to what each function expects
 opts.ntpservers = [i.strip() for i in opts.ntpservers.split(',')]
 opts.autoadmit = bool(opts.autoadmit)
 if ( opts.verbose is None ):
     opts.verbose = 0
-# print opts.__dict__
 print "\n"
 write_log("* start venice bootstrapping process")
 write_log("* - list of venice ips: " + str(opts.VENICE_IP))
@@ -205,9 +224,26 @@ write_log("* - list of ntp servers: " + str(opts.ntpservers))
 write_log("* - using domain name: " + str(opts.domain))
 write_log("* - auto-admit dsc: " + str(opts.autoadmit))
 write_log("* checking for reachability")
+
 if not check_reachability():
+    print "\n"
     write_log("* aborting....")
     sys.exit()
-bootstrap_venice()
 
+if not opts.skip_create_cluster and not is_apigw_running():
+    write_log("* creating venice cluster")
+    if create_cluster() not in ( 200, 409 ):
+        print "\n"
+        write_log("* error creating cluster")
+        write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
+        sys.exit()
+if bootstrap_venice():
+    print "\n"
+    write_log("* venice bootstrap completed successfully")
+    write_log("* you may access venice at https://" + opts.VENICE_IP[0])
+else:
+    print "\n"
+    write_log("* venice bootstrap failed")
+    write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
 
+sys.exit()
