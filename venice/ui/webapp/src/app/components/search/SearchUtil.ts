@@ -1160,7 +1160,7 @@ export class SearchUtil {
   // orderValue = {
   // requirements: [{
   //   keyFormControl: "key",
-  //   keytextFormName "env"   -- when we have label selector, keyFormControl is always "text", keytextFormName contains the user input
+  //   keytextFormName "env"   -- when we have text-input label selector, keyFormControl is always "text", keytextFormName contains the user input
   //   operatorFormControl: "in",
   //   valueFormControl: ["1"]}]
   // }
@@ -1175,8 +1175,10 @@ export class SearchUtil {
     });
     // make sure the value field is an array
     retData = retData.map((item) => {
+      const tag = !!(item.keytextFormName) ? item.keytextFormName : item.keyFormControl;
+      const keyValue = ((addMetatag) ? 'meta.labels.' : '')  + tag;
       const searchExpression: SearchExpression = {
-        key: ((addMetatag) ? 'meta.labels.' : '')  +  (item.keytextFormName) ? item.keytextFormName : item.keyFormControl,
+        key:  keyValue,
         operator: item.operatorFormControl,
         values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
       };
