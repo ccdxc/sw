@@ -51,17 +51,6 @@
             }
         },
         {
-            "name" : "int_mnic0",
-            "dev_uuid" : 14,
-            "type": "internal_mgmt",
-            "lif_count" : 1,
-            "rxq_count" : 1,
-            "txq_count" : 1,
-            "eq_count" : 1,
-            "adminq_count" : 1,
-            "intr_count" : 4
-        },
-        {
             "name" : "cpu_mnic0",
             "dev_uuid" : 15,
             "type": "cpu",
@@ -74,21 +63,6 @@
         }
     ],
     "eth_dev" : [
-        {
-            "name" : "eth_mgmt0",
-            "dev_uuid" : 17,
-            "type": "host_mgmt",
-            "lif_count" : 1,
-            "rxq_count" : 1,
-            "txq_count" : 1,
-            "eq_count" : 1,
-            "adminq_count" : 1,
-            "intr_count" : 4,
-            "pcie" : {
-                "port" : 0,
-                "num_vfs" : 0
-            }
-        },
         {
             "name" : "eth0",
             "dev_uuid" : 1,

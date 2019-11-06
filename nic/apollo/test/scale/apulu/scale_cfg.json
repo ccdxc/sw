@@ -31,7 +31,7 @@
         {
             "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
-            "count" : "32",
+            "count" : "8",
             "prefix" : "2.0.0.0/8",
             "v6-prefix" : "2019::/96",
             "subnets" : "1"
@@ -62,7 +62,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "262144",
+            "num_udp": "500000",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "101",
