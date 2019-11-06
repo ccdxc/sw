@@ -33,7 +33,7 @@ enum IPAF {
 }
 
 // BGP address families
-enum BGPAF {
+enum BGPAf {
   BGP_AF_NONE            = 0;
   BGP_AF_IPV4_UNICAST    = 1;
   BGP_AF_IPV6_UNICAST    = 2;

@@ -1,0 +1,91 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for DHCP features
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service DHCPSvc {
+  rpc DHCPRelayAgentCreate (DHCPRelayAgentRequest) returns (DHCPRelayAgentResponse) {}
+  rpc DHCPRelayAgentUpdate (DHCPRelayAgentRequest) returns (DHCPRelayAgentResponse) {}
+  rpc DHCPRelayAgentGet (DHCPRelayAgentGetRequest) returns (DHCPRelayAgentGetResponse) {}
+  rpc DHCPRelayAgentDelete (DHCPRelayAgentDeleteRequest) returns (DHCPRelayAgentDeleteResponse) {}
+}
+
+// DHCPRelayAgentSpec captures DHCP relay agent configuration
+message DHCPRelayAgentSpec {
+  // unique key/identifier of DHCP relay agent
+  uint32          Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // VPC where DHCP server is present in
+  uint32          VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP address of the DHCP server, agent is relaying requests to
+  types.IPAddress ServerIP = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP address of the relay agent, if no IP address is specified local TEP IP
+  // (MyTEP IP from device object configuration) will be used
+  types.IPAddress AgentIP  = 4;
+}
+
+// operational status of a DHCP relay agent, if any
+message DHCPRelayAgentStatus {
+}
+
+// stats for a DHCP relay agent, if any
+message DHCPRelayAgentStats {
+}
+
+// DHCP relay agent object
+message DHCPRelayAgent {
+  meta.TypeMeta        TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta         ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  DHCPRelayAgentSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  DHCPRelayAgentStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  DHCPRelayAgentStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// DHCP relay agent create and update request
+message DHCPRelayAgentRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt             BatchCtxt = 1;
+  // batched requests
+  repeated DHCPRelayAgentSpec Request   = 2;
+}
+
+// DHCP relay agent create and update response
+message DHCPRelayAgentResponse {
+  types.ApiStatus               ApiStatus = 1;
+  // batched response
+  repeated DHCPRelayAgentStatus Response  = 2;
+}
+
+// DHCP relay agent get request
+message DHCPRelayAgentGetRequest {
+  // id of the DHCP relay agent policy being queried
+  repeated uint32 Id = 1;
+}
+
+// DHCP relay agent get response
+message DHCPRelayAgentGetResponse {
+  // API status code
+  types.ApiStatus         ApiStatus = 1;
+  repeated DHCPRelayAgent Response  = 2;
+}
+
+// DHCP relay agent delete request
+message DHCPRelayAgentDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // id of the DHCP relay agent policy being deleted
+  repeated uint32 Id        = 2;
+}
+
+// DHCP relay agent delete response
+message DHCPRelayAgentDeleteResponse {
+  // API status code
+  repeated types.ApiStatus ApiStatus = 1;
+}
