@@ -703,12 +703,22 @@ define _ionic_cq_dump_kernel
 	set $_cq = $arg0
 	set $_max = $_cq->q.mask + 1
 	set $_cq_qp = 0
+	set $_i = 0
+	set $_aq = 0
 
 	_ib_to_ionic_dev $_cq->ibcq.device $_cq_ibd
-	if ($_cq_ibd->admincq == $_cq)
-		# This is the admin CQ
+
+	while ($_i < $_cq_ibd->aq_count)
+		if ($_cq_ibd->aq_vec[$_i].cq == $_cq)
+			set $_aq = $_cq_ibd->aq_vec[$_i]
+			break
+		end
+		set $_i = $_i + 1
+	end
+	if ($_aq)
+		# This is an admin CQ
 		printf "  link:  aq%-4d  (struct ionic_aq *)%p\n",	\
-			$_cq_ibd->adminq.aqid, $_cq_ibd->adminq
+			$_aq->aqid, $_aq
 	else
 		# Search for the matching QP
 		_ionic_qp_first $_cq_ibd $_cq_qp_tmp

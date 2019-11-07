@@ -107,6 +107,13 @@ struct ionic_ibdev {
 	struct xarray		qp_tbl;
 	struct xarray		cq_tbl;
 
+	/* These lists are used for debugging only.
+	 * They are protected by the dev_lock.
+	 */
+	struct list_head	qp_list;
+	struct list_head	cq_list;
+	spinlock_t		dev_lock;
+
 	struct mutex		inuse_lock; /* for id reservation */
 	spinlock_t		inuse_splock; /* for ahid reservation */
 
@@ -247,6 +254,7 @@ struct ionic_cq {
 	bool			flush;
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
+	struct list_head	cq_list_ent;
 
 	struct ionic_queue	q;
 	bool			color;
@@ -295,6 +303,8 @@ struct ionic_qp {
 	bool			is_srq;
 
 	bool			sig_all;
+
+	struct list_head	qp_list_ent;
 
 	struct list_head	cq_poll_sq;
 	struct list_head	cq_flush_sq;

@@ -14,7 +14,7 @@ bool ionic_dbgfs_enable = true;
 module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
 
-int ionic_sqcmb_order = 5; /* 32 pages */
+int ionic_sqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
 module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
 MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
 
@@ -22,7 +22,7 @@ bool ionic_sqcmb_inline = false;
 module_param_named(sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
 MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
 
-int ionic_rqcmb_order = 5; /* 32 pages */
+int ionic_rqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
 module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
 MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
 
