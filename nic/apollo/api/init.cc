@@ -236,7 +236,8 @@ pds_init (pds_init_params_t *params)
         return SDK_RET_INVALID_ARG;
     }
     api::g_pds_state.set_scale_profile(params->scale_profile);
-    PDS_TRACE_INFO("Initializing PDS with profile %u", params->scale_profile);
+    PDS_TRACE_INFO("Initializing PDS with %s, profile %u",
+                   mem_json.c_str(), params->scale_profile);
 
     // check if the memory carving configuration file exists
     if (access(mem_json.c_str(), R_OK) < 0) {

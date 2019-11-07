@@ -779,6 +779,7 @@ public:
             auto ret = create_flows_one_proto_(cfg_params.num_udp,
                                                IP_PROTO_UDP, ipv6);
             if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("UDP flow creation failure, err %u", ret);
                 return ret;
             }
         }
@@ -822,17 +823,22 @@ public:
         }
 
         // Create V4 Flows
+        SDK_TRACE_DEBUG("Creating v4 flows");
         auto ret = create_flows_all_protos_(false);
         if (ret != SDK_RET_OK) {
+            SDK_TRACE_DEBUG("v4 flow creation failure, err %u", ret);
             return ret;
         }
 
+#if 0
         if (cfg_params.dual_stack) {
+            SDK_TRACE_DEBUG("Creating v6 flows");
             ret = create_flows_all_protos_(true);
             if (ret != SDK_RET_OK) {
                 return ret;
             }
         }
+#endif
         dump_flow_stats();
         return SDK_RET_OK;
     }

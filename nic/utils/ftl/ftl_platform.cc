@@ -32,12 +32,14 @@ memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
                                  : ctx->props->ptable_base_mem_va;
         auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)baseva;
         FTL_MAKE_AFTYPE(memcpy)(baseentry + ctx->table_index, &ctx->entry);
+        //FTL_TRACE_ERR("Wrote to :0x%llx", baseentry + ctx->table_index);
     } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
         auto basepa = ctx->level ? ctx->props->stable_base_mem_pa
                                  : ctx->props->ptable_base_mem_pa;
         auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)basepa;
         pal_mem_write((uint64_t)(baseentry + ctx->table_index),
                       (uint8_t*)&ctx->entry, sizeof(FTL_MAKE_AFTYPE(entry_t)));
+        //FTL_TRACE_ERR("Wrote to :0x%llx", baseentry + ctx->table_index);
     }
 
 #ifndef SIM

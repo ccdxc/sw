@@ -1162,7 +1162,13 @@ create_device_cfg (ip_addr_t *ipaddr, uint64_t macaddr, ip_addr_t *gwip)
     g_device.device_ip_addr = *ipaddr;
     MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
     g_device.gateway_ip_addr = *gwip;
-
+    if (apulu()) {
+        //g_device.bridging_en = true;
+        //g_device.learning_en = true;
+        g_device.dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
+    } else {
+        g_device.dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
+    }
     rv = create_device(&g_device);
 
     return rv;
@@ -1534,22 +1540,22 @@ create_objects (void)
         }
     }
 
-    // create route tables
-    ret = create_route_tables(g_test_params.num_teps,
-                              g_test_params.num_vpcs,
-                              g_test_params.num_subnets,
-                              g_test_params.num_routes,
-                              &g_test_params.tep_pfx,
-                              &g_test_params.route_pfx,
-                              &g_test_params.v6_route_pfx,
-                              g_test_params.num_nh,
-                              TESTAPP_MAX_SERVICE_TEP,
-                              TESTAPP_MAX_REMOTE_SERVICE_TEP);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
     if (!apulu()) {
+        // create route tables
+        ret = create_route_tables(g_test_params.num_teps,
+                                  g_test_params.num_vpcs,
+                                  g_test_params.num_subnets,
+                                  g_test_params.num_routes,
+                                  &g_test_params.tep_pfx,
+                                  &g_test_params.route_pfx,
+                                  &g_test_params.v6_route_pfx,
+                                  g_test_params.num_nh,
+                                  TESTAPP_MAX_SERVICE_TEP,
+                                  TESTAPP_MAX_REMOTE_SERVICE_TEP);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
         // create security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,

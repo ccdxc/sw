@@ -530,6 +530,12 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.nexthop_info.lif = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         nh_data.nexthop_info.port = TM_PORT_DMA;
     }
+    // TODO: remove later
+    PDS_TRACE_DEBUG("Operating mode %u", device->oper_mode());
+    PDS_TRACE_DEBUG("Programming nh %u for vnic %u, port %u, vlan %u, lif %u",
+                    nh_idx_, spec->key.id, nh_data.nexthop_info.port,
+                    nh_data.nexthop_info.vlan, nh_data.nexthop_info.lif);
+
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {

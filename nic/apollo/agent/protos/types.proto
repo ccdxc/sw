@@ -16,13 +16,16 @@ message Empty {}
 
 // API return codes (more descriptive than protobuf enums)
 enum ApiStatus {
-  API_STATUS_OK              = 0;     // success
-  API_STATUS_ERR             = 1;     // catch-all error
-  API_STATUS_INVALID_ARG     = 2;     // invalid argument
-  API_STATUS_EXISTS_ALREADY  = 3;     // object already exists
-  API_STATUS_OUT_OF_MEM      = 4;     // out of memory
-  API_STATUS_NOT_FOUND       = 5;     // object not found
-  API_STATUS_OUT_OF_RESOURCE = 6;     // out of resource
+  API_STATUS_OK                    = 0; // success
+  API_STATUS_ERR                   = 1; // catch-all error
+  API_STATUS_INVALID_ARG           = 2; // invalid argument
+  API_STATUS_EXISTS_ALREADY        = 3; // object already exists
+  API_STATUS_OUT_OF_MEM            = 4; // out of memory
+  API_STATUS_NOT_FOUND             = 5; // object not found
+  API_STATUS_OUT_OF_RESOURCE       = 6; // out of resource
+  API_STATUS_RETRY                 = 7; // if operation can be retried
+  API_STATUS_OPERATION_NOT_ALLOWED = 8; // if operation is not allowed on
+                                        // specific type of object
 }
 
 // IP address families
