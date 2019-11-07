@@ -56,15 +56,12 @@ std::string get_random_alert_str()
 // records a single event with the given params, adds a retry mechanism.
 int record_event(events_recorder* recorder, eventtypes::EventTypes type, const char* message)
 {
-    eventattrs::Key key;
-    key.set_name("dummy");
-
-    int ret_val = recorder->event(type, "Dummy", key, message);
+    int ret_val = recorder->event(type, message);
     int retries = 60;
     while (ret_val == -1 && retries > 0) {
         logger->error("failed to record event {}:{}, retrying", type, message);
         usleep(10000); // 10ms
-        ret_val = recorder->event(type, "Dummy", key, message);
+        ret_val = recorder->event(type, message);
         retries--;
     }
 
