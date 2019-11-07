@@ -296,6 +296,12 @@ EthLif::EthLif(Eth *dev,
 
     NIC_LOG_INFO("{}: edma_buf_addr {:#x}", hal_lif_info_.name, edma_buf_addr);
 
+    edma_buf = (uint8_t *)MEM_MAP(edma_buf_addr, 4096, 0);
+    if (edma_buf == NULL) {
+        NIC_LOG_ERR("{}: Failed to map edma buffer", hal_lif_info_.name);
+        throw;
+    }
+
     edmaq = new EdmaQ(
         hal_lif_info_.name,
         pd,
@@ -2394,7 +2400,8 @@ status_code_t
 EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
-    //struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;
+    //struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;z
+    bool posted;
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
@@ -2405,7 +2412,7 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
     memcpy(rss_key, cmd->rss.key, IONIC_RSS_HASH_KEY_SIZE);
 
     // Get indirection table from host
-    edmaq->Post(
+    posted = edmaq->Post(
         spec->host_dev ? EDMA_OPCODE_HOST_TO_LOCAL : EDMA_OPCODE_LOCAL_TO_LOCAL,
         cmd->rss.addr,
         edma_buf_addr,
@@ -2413,8 +2420,16 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
         NULL
     );
 
-    READ_MEM(edma_buf_addr, rss_indir, RSS_IND_TBL_SIZE, 0);
+    if (!posted) {
+        NIC_LOG_ERR("{}: EDMA queue busy", hal_lif_info_.name);
+        return (IONIC_RC_EAGAIN);
+    }
 
+#ifndef __aarch64__
+    READ_MEM(edma_buf_addr, rss_indir, RSS_IND_TBL_SIZE, 0);
+#else
+    memcpy(rss_indir, edma_buf, RSS_IND_TBL_SIZE);
+#endif
     auto to_hexstr = [](const uint8_t *ba, const int len, char *str){
         int i = 0;
         for (i = 0; i < len; i++) {

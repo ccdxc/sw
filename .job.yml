@@ -271,6 +271,14 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+  platform/src/lib/nicmgr:
+    - reference: nic/apollo
+    - reference: iota/test/venice
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/sanity/linux
+  platform/src/lib/devapi_iris:
+    - reference: iota/test/standalone/sanity/linux
   platform/src/app/pciemgrd:
     - reference: iota/test/standalone/sanity/linux
     - reference: nic/apollo

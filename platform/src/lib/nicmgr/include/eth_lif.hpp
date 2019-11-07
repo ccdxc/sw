@@ -168,6 +168,7 @@ private:
     uint8_t notify_enabled;
     // EdmaQ
     uint64_t edma_buf_addr;
+    uint8_t *edma_buf;
     // Firmware
     uint64_t fw_buf_addr;
     uint32_t fw_buf_size;
