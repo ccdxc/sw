@@ -1549,23 +1549,23 @@ create_objects (void)
         return ret;
     }
 
-    // create security policies
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules,
-                                 IP_AF_IPV4, false);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    ret = create_security_policy(g_test_params.num_vpcs,
-                                 g_test_params.num_subnets,
-                                 g_test_params.num_ipv4_rules,
-                                 IP_AF_IPV4, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
     if (!apulu()) {
+        // create security policies
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules,
+                                     IP_AF_IPV4, false);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        ret = create_security_policy(g_test_params.num_vpcs,
+                                     g_test_params.num_subnets,
+                                     g_test_params.num_ipv4_rules,
+                                     IP_AF_IPV4, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
                                      g_test_params.num_ipv6_rules,
