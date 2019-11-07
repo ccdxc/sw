@@ -192,11 +192,29 @@
 #define P4_MAPPING_NUM_HINTS_PER_ENTRY                    9
 
 /*****************************************************************************/
+/* cpu flags and bit positions                                               */
+/*****************************************************************************/
+#define APULU_CPU_FLAGS_VLAN_VALID_BIT_POS     1
+#define APULU_CPU_FLAGS_IPV4_1_VALID_BIT_POS   2
+#define APULU_CPU_FLAGS_IPV6_1_VALID_BIT_POS   3
+#define APULU_CPU_FLAGS_ETH_2_VALID_BIT_POS    4
+#define APULU_CPU_FLAGS_IPV4_2_VALID_BIT_POS   5
+#define APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS   6
+
+#define APULU_CPU_FLAGS_VLAN_VALID     (1 << APULU_CPU_FLAGS_VLAN_VALID_BIT_POS)
+#define APULU_CPU_FLAGS_IPV4_1_VALID   (1 << APULU_CPU_FLAGS_IPV4_1_VALID_BIT_POS)
+#define APULU_CPU_FLAGS_IPV6_1_VALID   (1 << APULU_CPU_FLAGS_IPV6_1_VALID_BIT_POS)
+#define APULU_CPU_FLAGS_ETH_2_VALID    (1 << APULU_CPU_FLAGS_ETH_2_VALID_BIT_POS)
+#define APULU_CPU_FLAGS_IPV4_2_VALID   (1 << APULU_CPU_FLAGS_IPV4_2_VALID_BIT_POS)
+#define APULU_CPU_FLAGS_IPV6_2_VALID   (1 << APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS)
+
+/*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APULU_P4I_TO_RXDMA_HDR_SZ       52
 #define APULU_I2E_HDR_SZ                38
 #define APULU_P4_TO_ARM_HDR_SZ          30
+#define APULU_ARM_TO_P4_HDR_SZ          2
 
 #define APULU_INGRESS_MIRROR_BLOB_SZ    (CAPRI_P4_INTRINSIC_HDR_SZ + \
                                          APULU_I2E_HDR_SZ)

@@ -611,6 +611,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                       protocol, sport, dport, lkp_id);
         ftlv4_set_key(remote_entry, dst_ip, src_ip,
                       protocol, dport, sport, lkp_id);
+        pds_flow_extract_nexthop_info((void *)local_entry,
+                                      (void *)remote_entry, p0, 1);
     } else {
         ip6_header_t *ip60;
         ftlv6_entry_t *local_entry = &local_params0->entry6;
@@ -646,6 +648,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                       protocol, sport, dport, lkp_id, 0);
         ftlv6_set_key(remote_entry, dst_ip, src_ip,
                       protocol, dport, sport, lkp_id, 0);
+        pds_flow_extract_nexthop_info((void *)local_entry,
+                                      (void *)remote_entry, p0, 0);
     }
     local_params0->hash = vnet_buffer (p0)->pds_data.flow_hash;
     remote_params0->hash = 0;

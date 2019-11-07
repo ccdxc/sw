@@ -133,5 +133,14 @@ pds_flow_appdata2str (void *appdata)
     return str;
 }
 
+always_inline void
+pds_flow_extract_nexthop_info(void * local_entry,
+                              void * remote_entry,
+                              vlib_buffer_t *p0,
+                              u8 is_ip4)
+{
+    return;
+}
+
 #endif    // __VPP_FLOW_ARTEMIS_IMPL_H__
 

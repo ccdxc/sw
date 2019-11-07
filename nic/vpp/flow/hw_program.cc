@@ -11,6 +11,7 @@
 #include <nic/utils/ftl/ftlv6.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
+#include <nic/sdk/lib/p4/p4_utils.hpp>
 #include <pd_utils.h>
 #include "hw_program.h"
 
@@ -38,6 +39,19 @@ initialize_flow(void)
     return 0;
 }
 
+int
+session_program(uint32_t ses_id, void *action)
+{
+    p4pd_error_t p4pd_ret0;
+    uint32_t tableid = P4TBL_ID_SESSION;
+
+    p4pd_ret0 = p4pd_global_entry_write(tableid, ses_id,
+                                        NULL, NULL, action);
+    if (p4pd_ret0 != P4PD_SUCCESS) {
+        return -1;
+    }
+    return 0;
+}
 void
 session_insert(uint32_t ses_id, void *ses_info)
 {
