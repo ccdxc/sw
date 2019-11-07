@@ -53,6 +53,10 @@ eth_tx_commit_cq:
   seq             c7, d.comp_index, 0
   tblmincri.c7    d.color, 1, 1
 
+  // If eq is not enabled then fire the interrupt if interrupts are enabled
+  seq             _c_eq, d.eq_enable, 1
+  phvwr.!_c_eq    p.eth_tx_global_do_intr, d.intr_enable
+
   // Post an event if armed and posting a completion.
   bbeq            d.armed, 1, eth_tx_commit_eq
   // BD Slot: either way completion will disarm

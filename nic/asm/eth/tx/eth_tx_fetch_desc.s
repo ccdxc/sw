@@ -55,7 +55,6 @@ eth_tx_fetch_desc:
 
   // Save data for next stages
   phvwr           p.{eth_tx_global_host_queue...eth_tx_global_cpu_queue}, d.{host_queue...cpu_queue}
-  phvwr.!_c_eq    p.eth_tx_global_do_intr, d.intr_enable
   phvwr           p.eth_tx_global_lif, k.p4_intr_global_lif
   phvwr           p.eth_tx_to_s1_qstate_addr[33:0], k.p4_txdma_intr_qstate_addr
   phvwr           p.eth_tx_to_s2_my_ci, _r_ci
