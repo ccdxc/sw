@@ -33,12 +33,17 @@ typedef struct pds_lif_status_s {
     pds_if_state_t state;
 } __PACK__ pds_lif_status_t;
 
+typedef struct pds_lif_info_s {
+    pds_lif_spec_t spec;
+    pds_lif_status_t status;
+} __PACK__ pds_lif_info_t;
+
 /// \brief Read LIF information
 ///
 /// \param[in]  key     key
-/// \param[out] spec    lif spec
+/// \param[out] info    lif info
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_lif_read(pds_lif_key_t *key, pds_lif_spec_t *spec);
+sdk_ret_t pds_lif_read(pds_lif_key_t *key, pds_lif_info_t *info);
 
 typedef void (*lif_read_cb_t)(void *spec, void *ctxt);
 

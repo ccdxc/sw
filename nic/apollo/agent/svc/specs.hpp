@@ -604,15 +604,20 @@ pds_queue_credits_to_proto (uint32_t port_num,
 
 // populate proto buf from lif api spec
 static inline void
-pds_lif_api_spec_to_proto (void *entry, void *ctxt)
+pds_lif_api_info_to_proto (void *entry, void *ctxt)
 {
-    auto proto_spec =
-        ((pds::LifGetResponse *)ctxt)->add_response()->mutable_spec();
-    pds_lif_spec_t *api_spec = (pds_lif_spec_t *)entry;
+    auto rsp = ((pds::LifGetResponse *)ctxt)->add_response();
+    auto proto_spec = rsp->mutable_spec();
+    auto proto_status = rsp->mutable_status();
+    pds_lif_info_t *api_info = (pds_lif_info_t *)entry;
 
-    proto_spec->set_lifid(api_spec->key);
-    proto_spec->set_pinnedinterfaceid(api_spec->pinned_ifidx);
-    proto_spec->set_type(types::LifType(api_spec->type));
+    proto_spec->set_lifid(api_info->spec.key);
+    proto_spec->set_pinnedinterfaceid(api_info->spec.pinned_ifidx);
+    proto_spec->set_type(types::LifType(api_info->spec.type));
+
+    proto_status->set_name(api_info->status.name);
+    proto_status->set_ifindex(api_info->status.ifindex);
+    proto_status->set_operstatus(pds_admin_state_to_proto_admin_state(api_info->status.state));
 }
 
 static inline void

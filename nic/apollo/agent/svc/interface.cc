@@ -230,14 +230,14 @@ IfSvcImpl::LifGet(ServerContext *context,
     PDS_TRACE_VERBOSE("Received Lif Get");
     if (proto_req) {
         for (int i = 0; i < proto_req->lifid_size(); i ++) {
-            pds_lif_spec_t spec = {0};
+            pds_lif_info_t info = {0};
             pds_lif_key_t key = proto_req->lifid(i);
-            ret = pds_lif_read(&key, &spec);
+            ret = pds_lif_read(&key, &info);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            pds_lif_api_spec_to_proto(&spec, proto_rsp);
+            pds_lif_api_info_to_proto(&info, proto_rsp);
         }
         if (proto_req->lifid_size() == 0) {
-            ret = pds_lif_read_all(pds_lif_api_spec_to_proto, proto_rsp);
+            ret = pds_lif_read_all(pds_lif_api_info_to_proto, proto_rsp);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
     }

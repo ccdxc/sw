@@ -102,6 +102,8 @@ public:
         state_ = state;
     }
 
+    lif_state_t state(void) const { return state_; }
+
 private:
     ///< constructor
     ///< \param[in] spec    lif configuration parameters
