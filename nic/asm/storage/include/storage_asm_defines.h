@@ -1093,7 +1093,7 @@ struct capri_dma_cmd_mem2mem_t {
 #define SEQ_COMP_NEXT_DB_CANCEL(_dma_cmd_X)                             \
    add      r_src_qaddr, SEQ_KIVEC5_SRC_QADDR      ,                    \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
-   DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
+   DMA_PHV2MEM_SETUP_ADDR64(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
    SEQ_METRICS_CLR(next_db_rung)                                        \
 
@@ -1103,7 +1103,7 @@ struct capri_dma_cmd_mem2mem_t {
 #define SEQ_XTS_NEXT_DB_CANCEL(_dma_cmd_X)                              \
    add      r_src_qaddr, SEQ_KIVEC5XTS_SRC_QADDR,                       \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
-   DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
+   DMA_PHV2MEM_SETUP_ADDR64(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
    SEQ_METRICS_CLR(next_db_rung)                                        \
 
