@@ -266,7 +266,7 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
                     api.PrintCommandResults(cmd)
                     return api.types.status.FAILURE
                 else:
-                    api.Logger.info("Driver was NOT loaded. Unload is expected to fail")
+                    api.Logger.info("Driver was NOT loaded. %s is expected to fail" % command)
 
     return api.types.status.SUCCESS
 

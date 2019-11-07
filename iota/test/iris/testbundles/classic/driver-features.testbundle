@@ -189,3 +189,11 @@ testcases:
         disable : False
         iterators :
         args      :
+
+    -   name    : DriverFlowCtrl
+        testcase: testcases.drivers.driverflowctrl
+        disable : False
+        iterators :
+
+    -   name    : DriverLifReset
+        testcase: testcases.drivers.driverlifreset
