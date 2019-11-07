@@ -38,7 +38,7 @@ protected:
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
-        // TODO sample_if_teardown(bctxt);
+        sample_if_teardown(bctxt);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();

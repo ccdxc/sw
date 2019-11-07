@@ -112,6 +112,7 @@ class NexthopObjectClient:
         return self.__objs.values()
 
     def GetNexthopObject(self, nexthopid):
+        self.__objs.get(nexthopid, None).Show()
         return self.__objs.get(nexthopid, None)
 
     def GetV4Nexthop(self, vpcid):
@@ -176,8 +177,6 @@ class NexthopObjectClient:
         return
 
     def CreateObjects(self):
-        if not self.__supported:
-            return
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
@@ -188,8 +187,6 @@ class NexthopObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
-        if not self.__supported:
-            return
         msg = self.GetGrpcReadAllMessage()
         api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
         return

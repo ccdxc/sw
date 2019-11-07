@@ -12,6 +12,7 @@ import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 from apollo.config.objects.nexthop import client as NhClient
+import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
@@ -71,6 +72,9 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate NextHop configuration
         NhClient.GenerateObjects(self, spec)
+
+        # Generate NextHop configuration
+        nexthop_group.client.GenerateObjects(self, spec)
 
         # Generate Tag configuration.
         if getattr(spec, 'tagtbl', None) != None:

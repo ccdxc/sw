@@ -63,11 +63,12 @@ class ObjectTypes(enum.IntEnum):
     POLICY = 9
     MIRROR = 10
     NEXTHOP = 11
-    SVCMAPPING = 12
-    METER = 13
-    TAG = 14
-    INTERFACE = 15
-    MAX = 16
+    NEXTHOPGROUP = 12
+    SVCMAPPING = 13
+    METER = 14
+    TAG = 15
+    INTERFACE = 16
+    MAX = 17
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -186,6 +187,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'MirrorSession')
         self.__stubs[ObjectTypes.NEXTHOP] = ClientStub(nh_pb2_grpc.NhSvcStub,
                                                       self.__channel, 'Nexthop')
+        self.__stubs[ObjectTypes.NEXTHOPGROUP] = ClientStub(nh_pb2_grpc.NhSvcStub,
+                                                      self.__channel, 'NhGroup')
         self.__stubs[ObjectTypes.SVCMAPPING] = ClientStub(service_pb2_grpc.SvcStub,
                                                       self.__channel, 'SvcMapping')
         self.__stubs[ObjectTypes.TAG] = ClientStub(tags_pb2_grpc.TagSvcStub,
@@ -201,6 +204,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')
         self.__msgreqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
         self.__msgreqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')
+        self.__msgreqs[ObjectTypes.NEXTHOPGROUP] = ClientModule(nh_pb2, 'NhGroup')
         self.__msgreqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
         self.__msgreqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
         self.__msgreqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')

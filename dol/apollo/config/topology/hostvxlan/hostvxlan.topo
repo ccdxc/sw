@@ -84,6 +84,12 @@ vpc:
       nexthop:
         - type : underlay
           count : 2
+        - count : 10
+      nexthop-group:
+        - type : underlay
+          count : 2
+        #- type : overlay
+        #  count : 1
       routetbl:
         - type: specific
           routetype: only_default
@@ -141,6 +147,11 @@ vpc:
       nexthop:
         - type : underlay
           count : 2
+      nexthop-group:
+        - type : underlay
+          count : 2
+        #- type : overlay
+        #  count : 1
       routetbl:
              - type: base
                routetype: adjacent
