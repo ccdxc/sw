@@ -6,21 +6,30 @@ uplink:
     - entry:
         id      : uplink0
         port    : 1
-        mode    : host
+        mode    : auto # host, switch, auto (default, depending on device mode)
         status  : UP
 
     - entry:
         id      : uplink1
         port    : 2
-        mode    : switch
+        mode    : auto
         status  : UP
 
+interface:
+    host:
+        lif         : ref://store/specs/id=LIF_ETH
+
 device:
-    ipaddress   : None
-    gateway     : None
-    macaddress  : macaddr/0002.0100.0001
-    encap       : vxlan
+    mode        : auto # auto (default, based on pipeline), host, bitw
+    stack       : ipv4 # ipv4 (default), ipv6
+    bridging    : false # false (default), true
+    learning    : false # false (default), true
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    encap       : vxlan # vxlan or mplsodup
     tunnel      :
+        - count : 16
+          type  : underlay
         - count : 16
           type  : internet-gateway
           nat   : true
@@ -79,9 +88,11 @@ vpc:
                    - '0.0.0.0\0'
                v6routes:
                    - '0::\0'
-      nexthop: # only ARTEMIS
-             - type: base
+      nexthop:
+             - type: base # only ARTEMIS
                count : 48
+             - type : underlay
+               count : 2
       tagtbl: # only ARTEMIS
             - type : specific
               count : 1

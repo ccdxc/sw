@@ -237,7 +237,7 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
-        obj.tunnel = obj.route.TUNNEL
+        obj.tunnel = obj.route.TUNNEL if obj.route else None
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
@@ -250,6 +250,8 @@ class PolicyObject(base.ConfigObjectBase):
 
 class PolicyObjectClient:
     def __init__(self):
+        def __isObjSupported():
+            return True
         self.__objs = dict()
         self.__v4ingressobjs = {}
         self.__v6ingressobjs = {}
@@ -259,6 +261,7 @@ class PolicyObjectClient:
         self.__v6ipolicyiter = {}
         self.__v4epolicyiter = {}
         self.__v6epolicyiter = {}
+        self.__supported = __isObjSupported()
         return
 
     def Objects(self):
@@ -347,6 +350,9 @@ class PolicyObjectClient:
         return self.__v6epolicyiter[vpcid].rrnext().PolicyId
 
     def GenerateObjects(self, parent, vpc_spec_obj):
+        if not self.__supported:
+            return
+
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
@@ -441,15 +447,21 @@ class PolicyObjectClient:
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
+            def __is_proto_supported(proto):
+                if utils.IsICMPProtocol(proto):
+                    if utils.IsPipelineApollo():
+                        # Apollo does NOT support icmp proto
+                        return False
+                return True
             proto = __get_l3_proto_from_rule(af, rulespec)
+            if not __is_proto_supported(proto):
+                return None
             srctype, dsttype = __get_l3_match_type_from_rule(rulespec)
-            if not utils.IsPipelineArtemis():
+            if not utils.IsTagSupported():
+                # TODO: if unsupported, convert to pfx and test?
                 # Apollo does NOT support other match types like range/tag
                 if srctype is not utils.L3MatchType.PFX or\
                    dsttype is not utils.L3MatchType.PFX:
-                    return None
-                # Apollo does NOT support icmp proto
-                if utils.IsICMPProtocol(proto):
                     return None
 
             srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
@@ -664,9 +676,6 @@ class PolicyObjectClient:
         return
 
     def CreateObjects(self):
-        if utils.IsPipelineApulu():
-            logger.error("Policy object not supported yet - Skip creating!!!")
-            return
         #Show before create as policy gets modified after GenerateObjects()
         self.ShowObjects()
         logger.info("Creating Policy Objects in agent")

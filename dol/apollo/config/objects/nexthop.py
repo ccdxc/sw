@@ -39,6 +39,8 @@ class NexthopObject(base.ConfigObjectBase):
         elif nh_type == 'overlay':
             self.__type = utils.NhType.OVERLAY
             self.TunnelId = 1 # TODO use iterator from tunnel
+        else:
+            self.__type = utils.NhType.NONE
         self.Show()
         return
 
@@ -52,6 +54,8 @@ class NexthopObject(base.ConfigObjectBase):
                      (self.L3Interface.InterfaceId, self.underlayMACAddr)
         elif self.__type == utils.NhType.OVERLAY:
             nh_str = "TunnelId:%d" % (self.TunnelId)
+        else:
+            nh_str = ""
         return "NexthopID:%d|Type:%s|%s" %\
                (self.NexthopId, self.__type, nh_str)
 
@@ -136,6 +140,11 @@ class NexthopObjectClient:
         if not self.__supported:
             return
 
+        def __isNhFeatureSupported(nh_type):
+            if nh_type == 'underlay':# or nh_type == 'underlay-ecmp':
+                return utils.IsPipelineApulu()
+            return not utils.IsPipelineApulu()
+
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
@@ -149,6 +158,9 @@ class NexthopObjectClient:
             return
 
         for nh_spec_obj in vpc_spec_obj.nexthop:
+            nh_type = getattr(nh_spec_obj, 'type', 'ip')
+            if not __isNhFeatureSupported(nh_type):
+                continue
             for c in range(nh_spec_obj.count):
                 obj = NexthopObject(parent, nh_spec_obj)
                 self.__objs.update({obj.NexthopId: obj})

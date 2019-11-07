@@ -444,10 +444,20 @@ def IsRouteTableSupported():
         return False
     return True
 
+def IsTagSupported():
+    if IsPipelineArtemis():
+        return True
+    return False
+
 def IsFlowInstallationNeeded():
     if IsPipelineArtemis():
         return True
     return False
+
+def GetDefaultDeviceMode():
+    if IsPipelineApulu():
+        return 'host'
+    return 'bitw'
 
 def IsV4Stack(stack):
     return True if ((stack == "dual") or (stack == 'ipv4')) else False

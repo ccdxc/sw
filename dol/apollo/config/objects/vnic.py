@@ -38,6 +38,10 @@ class VnicObject(base.ConfigObjectBase):
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
         self.HostIf = parent.HostIf
+        self.IngV4SecurityPolicyIds = {}
+        self.IngV6SecurityPolicyIds = {}
+        self.EgV4SecurityPolicyIds = {}
+        self.EgV6SecurityPolicyIds = {}
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self._derive_oper_info()
@@ -75,6 +79,7 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
+        # TODO: show policy objects if any
         return
 
     def SetBaseClassAttr(self):
@@ -105,6 +110,14 @@ class VnicObject(base.ConfigObjectBase):
             spec.TxMirrorSessionId.append(int(txmirror))
         spec.V4MeterId = self.V4MeterId
         spec.V6MeterId = self.V6MeterId
+        for policyid in self.IngV4SecurityPolicyIds:
+            spec.IngV4SecurityPolicyId.append(policyid)
+        for policyid in self.IngV6SecurityPolicyIds:
+            spec.IngV6SecurityPolicyId.append(policyid)
+        for policyid in self.EgV4SecurityPolicyIds:
+            spec.EgV4SecurityPolicyId.append(policyid)
+        for policyid in self.EgV6SecurityPolicyIds:
+            spec.EgV6SecurityPolicyId.append(policyid)
         if self.HostIf:
             spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return

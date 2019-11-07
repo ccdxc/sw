@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import enum
 
 from infra.common.logging import logger
 
@@ -10,16 +11,20 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
+class UplinkPorts(enum.IntEnum):
+    # In DOL, it starts with 1
+    UplinkPort0 = 1
+    UplinkPort1 = 2
 
 class PortObject(base.ConfigObjectBase):
-    def __init__(self, spec):
+    def __init__(self, port, mode, state='UP'):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF PORT OBJECT #####################
         self.PortId = next(resmgr.PortIdAllocator)
-        self.Port = spec.port
-        self.AdminState = spec.status
-        self.Mode = spec.mode
         self.GID("Port ID:%s"%self.PortId)
+        self.Port = port
+        self.Mode = mode
+        self.AdminState = state
         ################# PRIVATE ATTRIBUTES OF PORT OBJECT #####################
         self.Show()
         return
@@ -33,6 +38,12 @@ class PortObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
+    def IsHostPort(self):
+        return self.Mode == utils.PortTypes.HOST
+
+    def IsSwitchPort(self):
+        return self.Mode == utils.PortTypes.SWITCH
+
 class PortObjectClient:
     def __init__(self):
         self.__objs = dict()
@@ -42,15 +53,32 @@ class PortObjectClient:
         return self.__objs.values()
 
     def GenerateObjects(self, topospec):
+        def __get_port_mode(port, mode='auto'):
+            if mode == 'switch':
+                return utils.PortTypes.SWITCH
+            elif mode == 'host':
+                return utils.PortTypes.HOST
+            if Store.IsHostMode():
+                return utils.PortTypes.SWITCH
+            elif Store.IsBitwMode():
+                if port == UplinkPorts.UplinkPort0:
+                    return utils.PortTypes.HOST
+                elif port == UplinkPorts.UplinkPort1:
+                    return utils.PortTypes.SWITCH
+            return utils.PortTypes.NONE
+
         portlist = getattr(topospec, 'uplink', None)
         if portlist is None:
             return
         for spec in portlist:
-            obj = PortObject(spec.entry)
+            entryspec = spec.entry
+            port = getattr(entryspec, 'port')
+            mode = __get_port_mode(port, getattr(entryspec, 'mode', 'auto'))
+            obj = PortObject(port, mode)
             self.__objs.update({obj.PortId: obj})
-            if obj.Mode == 'host':
+            if obj.IsHostPort():
                 Store.SetHostPort(obj.Port)
-            elif obj.Mode == 'switch':
+            elif obj.IsSwitchPort():
                 Store.SetSwitchPort(obj.Port)
         return
 

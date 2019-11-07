@@ -11,7 +11,7 @@ import apollo.config.objects.base as base
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
-import apollo.config.objects.nexthop as nexthop
+from apollo.config.objects.nexthop import client as NhClient
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
@@ -70,7 +70,7 @@ class VpcObject(base.ConfigObjectBase):
             return
 
         # Generate NextHop configuration
-        nexthop.client.GenerateObjects(self, spec)
+        NhClient.GenerateObjects(self, spec)
 
         # Generate Tag configuration.
         if getattr(spec, 'tagtbl', None) != None:
@@ -192,7 +192,7 @@ class VpcObjectClient:
         return self.__objs.get(vpcid, None)
 
     def __write_cfg(self, vpc_count):
-        nh = nexthop.client.GetNumNextHopPerVPC()
+        nh = NhClient.GetNumNextHopPerVPC()
         mtr = meter.client.GetNumMeterPerVPC()
         cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
         cfgjson.CfgJsonHelper.SetNumMeterPerVPC(mtr[0], mtr[1])
@@ -216,7 +216,7 @@ class VpcObjectClient:
             self.__write_cfg(vpc_count)
         if utils.IsPipelineApulu():
             # Associate Nexthop objects
-            nexthop.client.AssociateObjects()
+            NhClient.AssociateObjects()
         return
 
     def CreateObjects(self):
@@ -225,7 +225,7 @@ class VpcObjectClient:
         api.client.Create(api.ObjectTypes.VPC, msgs)
 
         # Create Nexthop object
-        nexthop.client.CreateObjects()
+        NhClient.CreateObjects()
 
         # Create Tag object.
         tag.client.CreateObjects()

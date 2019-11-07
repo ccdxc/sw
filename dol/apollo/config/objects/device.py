@@ -22,7 +22,9 @@ class DeviceObject(base.ConfigObjectBase):
 
         self.stack = getattr(spec, 'stack', 'ipv4')
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
-        self.Mode = getattr(spec, 'mode', 'bitw')
+        self.Mode = getattr(spec, 'mode', 'auto')
+        if self.Mode == 'auto':
+            self.Mode = utils.GetDefaultDeviceMode()
         self.BridgingEnabled = getattr(spec, 'bridging', False)
         self.LearningEnabled = getattr(spec, 'learning', False)
         #TODO: based on stack, get ip & gw addr
