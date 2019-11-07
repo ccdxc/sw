@@ -15,11 +15,12 @@
 //typedef unsigned long long uint64_t;
 
 #ifndef USEC_PER_SEC
-#define USEC_PER_SEC    1000000L
+#define USEC_PER_SEC            1000000L
 #endif
 
-#define BUF_SIZE_MAX    32768
-#define RAND_LEN_MIN    3
+#define BUF_SIZE_MAX            32768
+#define RAND_LEN_MIN            3
+#define DIFF_DUMP_LINE_BYTES    16
 
 typedef int (*lzrw1a_non_smooth_t)(uint32_t action,
                                    uint8_t *hash,
@@ -51,13 +52,8 @@ static uint8_t  kb_line[128];
 
 static uint32_t rand_len_randomize(uint32_t max_size)
 {
-    uint32_t rand_len;
-
-    do {
-        rand_len = rand() % max_size;
-    } while (!rand_len);
-
-    return rand_len;
+    uint32_t rand_len = rand() % (max_size + 1);
+    return rand_len ? rand_len : 1;
 }
 
 static void input_randomize(uint32_t buf_size, uint32_t rand_len)
@@ -208,6 +204,37 @@ void dump(const uint8_t *buf, uint32_t size)
     for (uint32_t i = 0; i < size; i++) {
         printf("%02x", buf[i]);
     }
+}
+
+void diff_line_dump(const uint8_t *line0, const uint8_t *line1,
+                    uint32_t line_size, uint32_t offset)
+{
+    if (memcmp(line0, line1, line_size)) {
+        printf("@%4u ", offset);
+        for (uint32_t j = 0; j < line_size; j++) {
+            printf("%02x ", line0[j]);
+        }
+        printf("\n@%4d ", offset);
+        for (uint32_t j = 0; j < line_size; j++) {
+            printf("%02x ", line1[j]);
+        }
+        printf("\n\n");
+    }
+}
+
+void diff_dump(const uint8_t *buf0, const uint8_t *buf1, uint32_t size)
+{
+    printf("size %u\n", size);
+    uint32_t n = size / DIFF_DUMP_LINE_BYTES;
+    uint32_t offset = 0;
+
+    for (uint32_t i = 0; i < n; i++) {
+        diff_line_dump(buf0, buf1, DIFF_DUMP_LINE_BYTES, offset);
+        buf0 += DIFF_DUMP_LINE_BYTES;
+        buf1 += DIFF_DUMP_LINE_BYTES;
+        offset += DIFF_DUMP_LINE_BYTES;
+    }
+    diff_line_dump(buf0, buf1, size % DIFF_DUMP_LINE_BYTES, offset);
 }
 
 void usage_help(void)
@@ -442,6 +469,7 @@ int main(int argc, char **argv)
                     } else if (memcmp(input_buf, dc_buf, buf_size)) {
                         printf("cp_ret %d dc_ret %d buf_size %u cp_size %u dc_size %u cp_adler32 %u dc_adler32 %u\n",
                                cp_ret, dc_ret, buf_size, cp_size, dc_size, cp_adler32, dc_adler32);
+                        diff_dump(input_buf, dc_buf, buf_size);
                         printf("ERROR dc data mismatched\n");
                         num_data_miscompares++;
                         failure |= 1;

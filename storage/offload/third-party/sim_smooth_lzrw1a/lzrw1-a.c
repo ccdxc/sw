@@ -410,6 +410,33 @@ int orig_lzrw1a_compress_adler32(uint32_t action, uint8_t *hash, uint8_t *data, 
 	}
 }
 
+#define PRECOMPRESSED_00_HASH_IDX		0
+#define PRECOMPRESSED_FF_HASH_IDX		1401
+
+#define PRECOMPRESSED_POS			((SMOOTH_BUF_SIZE) - 3)
+#define PRECOMPRESSED_POS_BITS			((PRECOMPRESSED_POS) - 1)
+
+/*
+ * Precompressed 00's and ff's for up to 253 bytes
+ * (facilitating smooth transition from the last 3 bytes into
+ * user data that may also start with 00 or ff.)
+ */
+const static uint8_t precompressed_00[] =
+{
+	0xfe, 0x7f, 0x00, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01
+};
+
+const static uint8_t precompressed_ff[] =
+{
+	0xfe, 0x7f, 0xff, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f,
+	0x01, 0x0f, 0x01, 0x0f, 0x01, 0x0f, 0x01
+};
+
 int lzrw1a_compress(uint32_t action, uint8_t *hash, uint8_t *data, uint32_t size, uint8_t *result, uint32_t* p_dst_len, uint32_t thresh, uint32_t *p_adler32_chksum)
 {
         // Best optimization for <= 4KB case
@@ -433,19 +460,37 @@ int lzrw1a_compress(uint32_t action, uint8_t *hash, uint8_t *data, uint32_t size
 	INCR_GEN_ADLER32_START(p_adler32_chksum, &adler32_a, &adler32_b);
 	if (action == COMPRESS_ACTION_COMPRESS)
 	{
-		int cf = FALSE; int pos = 0; int rescnt = 0;
-		p_data = data[SMOOTH_THRESHOLD - SMOOTH_BUF_SIZE] ? cp_smooth_buf0 : cp_smooth_buf1;
+		int cf = FALSE; int rescnt = 0;
+		if (thresh < sizeof(precompressed_00))
+		{
+			cf = TRUE;
+			goto finish;
+		}
+		if (data[SMOOTH_THRESHOLD - SMOOTH_BUF_SIZE])
+		{
+			p_data = cp_smooth_buf0;
+			memcpy(result, precompressed_00, sizeof(precompressed_00));
+			hashTable[PRECOMPRESSED_00_HASH_IDX] = PRECOMPRESSED_POS_BITS;
+		}
+		else
+		{
+			p_data = cp_smooth_buf1;
+			memcpy(result, precompressed_ff, sizeof(precompressed_ff));
+			hashTable[PRECOMPRESSED_FF_HASH_IDX] = PRECOMPRESSED_POS_BITS;
+		}
 		buf_size = size + SMOOTH_BUF_SIZE;
 		INCR_GEN_ADLER32_CONT(p_adler32_chksum, &adler32_a, &adler32_b, p_data, SMOOTH_BUF_SIZE);
+		INCR_GEN_ADLER32_CONT(p_adler32_chksum, &adler32_a, &adler32_b, data, size);
+		INCR_GEN_ADLER32_END(p_adler32_chksum, adler32_a, adler32_b);
 
-                INCR_GEN_ADLER32_CONT(p_adler32_chksum, &adler32_a, &adler32_b, data, size);
-                INCR_GEN_ADLER32_END(p_adler32_chksum, adler32_a, adler32_b);
-
+		rescnt = sizeof(precompressed_00);
+		int pos = PRECOMPRESSED_POS;
+		int item_start = 15;
+		int groupPtr = 0;
+		int needHeader = FALSE;
 		while (pos < buf_size)
 		{
-			int groupPtr = rescnt;
-			int needHeader = TRUE; // Header output postponed for thresholding
-			for (int item = 0; item < 16; ++item)
+			for (int item = item_start; item < 16; ++item)
 			{
 				if (pos >= buf_size)
 					break; // No more items
@@ -504,6 +549,9 @@ int lzrw1a_compress(uint32_t action, uint8_t *hash, uint8_t *data, uint32_t size
 					result[rescnt++] = cp_input_byte(p_data, data, pos++, size);
 				}
 			}
+			item_start = 0;
+			groupPtr = rescnt;
+			needHeader = TRUE; // Header output postponed for thresholding
 		}
 	finish:
 		*p_dst_len = rescnt;
