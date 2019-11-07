@@ -8,6 +8,7 @@ MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \
                       ${TOPDIR}/nic/delphi/proto/delphi \
+                      ${TOPDIR}/venice/utils/apigen/annotations \
                       /usr/local/include
 MODULE_LDLIBS       = pthread
 MODULE_POSTGEN_MK   = module_protolib.mk
