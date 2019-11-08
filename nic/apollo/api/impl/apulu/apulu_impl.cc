@@ -251,7 +251,20 @@ apulu_impl::nacl_init_(void) {
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
+    sdk_table_api_params_t tparams = { 0 };
 
+    key.key_metadata_ktype = KEY_TYPE_IPV6;
+    mask.key_metadata_ktype_mask = ~0;
+    data.action_id = NACL_NACL_DROP_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_DROP_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for ipv6 drop, err %u",
+                      ret);
+        return ret;
+    }
     return SDK_RET_OK;
 }
 
