@@ -203,7 +203,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		}
 
 		pthread_mutex_init(&ctx->mut, NULL);
-		tbl_init(&ctx->qp_tbl);
+		ionic_tbl_init(&ctx->qp_tbl);
 
 		verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 	}
@@ -253,7 +253,7 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	int rc;
 
-	rc = tbl_destroy(&ctx->qp_tbl);
+	rc = ionic_tbl_destroy(&ctx->qp_tbl);
 	if (rc)
 		ionic_err("context freed before destroying resources");
 

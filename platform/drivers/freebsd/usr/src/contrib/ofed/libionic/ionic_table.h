@@ -30,8 +30,8 @@
  * SOFTWARE.
  */
 
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef IONIC_TABLE_H
+#define IONIC_TABLE_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -52,23 +52,23 @@
 #define TBL_NODE_CAPACITY       (1u << TBL_NODE_SHIFT)
 #define TBL_ROOT_CAPACITY       (1u << (TBL_KEY_SHIFT - TBL_NODE_SHIFT))
 
-struct tbl_node {
+struct ionic_tbl_node {
 	void			*val[TBL_NODE_CAPACITY];
 };
 
-struct tbl_root {
+struct ionic_tbl_root {
 	/* for lookup in table */
-	struct tbl_node		*node[TBL_ROOT_CAPACITY];
+	struct ionic_tbl_node	*node[TBL_ROOT_CAPACITY];
 
 	/* for insertion and deletion in table */
 	int			refcount[TBL_ROOT_CAPACITY];
-	struct tbl_node		*free_node;
+	struct ionic_tbl_node	*free_node;
 };
 
-/** tbl_init - Initialize a table.
+/** ionic_tbl_init - Initialize a table.
  * @tbl:	Table root.
  */
-static inline void tbl_init(struct tbl_root *tbl)
+static inline void ionic_tbl_init(struct ionic_tbl_root *tbl)
 {
 	uint32_t node_i;
 
@@ -80,10 +80,10 @@ static inline void tbl_init(struct tbl_root *tbl)
 	}
 }
 
-/** tbl_init - Destroy the table, which should be empty.
+/** ionic_tbl_init - Destroy the table, which should be empty.
  * @tbl:	Table root.
  */
-static inline int tbl_destroy(struct tbl_root *tbl)
+static inline int ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 {
 	uint32_t node_i;
 	int rc = 0;
@@ -117,21 +117,21 @@ static inline int tbl_destroy(struct tbl_root *tbl)
 	return rc;
 }
 
-/** tbl_lookup - Lookup value for key in the table.
+/** ionic_tbl_lookup - Lookup value for key in the table.
  * @tbl:	Table root.
  * @key:	Key for lookup.
  *
  * Synopsis:
  *
  * pthread_spin_lock(&my_table_lock);
- * val = tbl_lookup(&my_table, key);
+ * val = ionic_tbl_lookup(&my_table, key);
  * if (val)
  *     my_val_routine(val);
  * pthread_spin_unlock(&my_table_lock);
  *
  * Return: Value for key.
  */
-static inline void *tbl_lookup(struct tbl_root *tbl, uint32_t key)
+static inline void *ionic_tbl_lookup(struct ionic_tbl_root *tbl, uint32_t key)
 {
 	uint32_t node_i = key >> TBL_NODE_SHIFT;
 
@@ -144,33 +144,33 @@ static inline void *tbl_lookup(struct tbl_root *tbl, uint32_t key)
 	return tbl->node[node_i]->val[key & TBL_NODE_MASK];
 }
 
-/** tbl_alloc_node - Allocate the free node prior to insertion.
+/** ionic_tbl_alloc_node - Allocate the free node prior to insertion.
  * @tbl:	Table root.
  *
  * This should be called before inserting.
  *
- * Synopsis: see tbl_insert().
+ * Synopsis: see ionic_tbl_insert().
  */
-static inline void tbl_alloc_node(struct tbl_root *tbl)
+static inline void ionic_tbl_alloc_node(struct ionic_tbl_root *tbl)
 {
 	if (!tbl->free_node)
 		tbl->free_node = calloc(1, sizeof(*tbl->free_node));
 }
 
-/** tbl_free_node - Free the free node prior to deletion.
+/** ionic_tbl_free_node - Free the free node prior to deletion.
  * @tbl:	Table root.
  *
  * This should be called before deleting.
  *
- * Synopsis: see tbl_delete().
+ * Synopsis: see ionic_tbl_delete().
  */
-static inline void tbl_free_node(struct tbl_root *tbl)
+static inline void ionic_tbl_free_node(struct ionic_tbl_root *tbl)
 {
 	free(tbl->free_node);
 	tbl->free_node = NULL;
 }
 
-/** tbl_insert - Insert a value for key in the table.
+/** ionic_tbl_insert - Insert a value for key in the table.
  * @tbl:	Table root.
  * @val:	Value to insert.
  * @key:	Key to insert.
@@ -180,16 +180,17 @@ static inline void tbl_free_node(struct tbl_root *tbl)
  * Synopsis:
  *
  * pthread_mutex_lock(&my_table_mut);
- * tbl_alloc_node(&my_table);
- * tbl_insert(&my_table, val, key);
+ * ionic_tbl_alloc_node(&my_table);
+ * ionic_tbl_insert(&my_table, val, key);
  * pthread_mutex_unlock(&my_table_mut);
  *
  * pthread_spin_lock(&my_table_lock);
  * pthread_spin_unlock(&my_table_lock);
  */
-static inline void tbl_insert(struct tbl_root *tbl, void *val, uint32_t key)
+static inline void ionic_tbl_insert(struct ionic_tbl_root *tbl,
+				    void *val, uint32_t key)
 {
-	struct tbl_node	*node;
+	struct ionic_tbl_node	*node;
 	uint32_t node_i = key >> TBL_NODE_SHIFT;
 
 	if (unlikely(key >> TBL_KEY_SHIFT)) {
@@ -219,7 +220,7 @@ static inline void tbl_insert(struct tbl_root *tbl, void *val, uint32_t key)
 	++tbl->refcount[node_i];
 }
 
-/** tbl_delete - Delete the value for key in the table.
+/** ionic_tbl_delete - Delete the value for key in the table.
  * @tbl:	Table root.
  * @val:	Value to insert.
  * @key:	Key to insert.
@@ -229,17 +230,17 @@ static inline void tbl_insert(struct tbl_root *tbl, void *val, uint32_t key)
  * Synopsis:
  *
  * pthread_mutex_lock(&my_table_mut);
- * tbl_free_node(&my_table);
- * tbl_delete(&my_table, key);
+ * ionic_tbl_free_node(&my_table);
+ * ionic_tbl_delete(&my_table, key);
  * pthread_mutex_unlock(&my_table_mut);
  *
  * pthread_spin_lock(&my_table_lock);
  * pthread_spin_unlock(&my_table_lock);
  * free(old_val_at_key);
  */
-static inline void tbl_delete(struct tbl_root *tbl, uint32_t key)
+static inline void ionic_tbl_delete(struct ionic_tbl_root *tbl, uint32_t key)
 {
-	struct tbl_node	*node;
+	struct ionic_tbl_node	*node;
 	uint32_t node_i = key >> TBL_NODE_SHIFT;
 
 	if (unlikely(key >> TBL_KEY_SHIFT)) {
@@ -270,4 +271,4 @@ static inline void tbl_delete(struct tbl_root *tbl, uint32_t key)
 	}
 }
 
-#endif /* TABLE_H */
+#endif /* IONIC_TABLE_H */

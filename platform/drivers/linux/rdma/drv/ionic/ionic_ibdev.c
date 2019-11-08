@@ -73,7 +73,7 @@ static struct workqueue_struct *ionic_evt_workq;
 static LIST_HEAD(ionic_ibdev_list);
 
 static int ionic_qid_skip = 512;
-static void ionic_resid_skip(struct resid_bits *bits)
+static void ionic_resid_skip(struct ionic_resid_bits *bits)
 {
 	int i = ionic_qid_skip - 1;
 
@@ -212,7 +212,7 @@ static int ionic_get_pdid(struct ionic_ibdev *dev, u32 *pdid)
 	int rc;
 
 	mutex_lock(&dev->inuse_lock);
-	rc = resid_get(&dev->inuse_pdid);
+	rc = ionic_resid_get(&dev->inuse_pdid);
 	mutex_unlock(&dev->inuse_lock);
 
 	if (rc >= 0) {
@@ -229,7 +229,7 @@ static int ionic_get_ahid(struct ionic_ibdev *dev, u32 *ahid)
 	int rc;
 
 	spin_lock_irqsave(&dev->inuse_splock, irqflags);
-	rc = resid_get(&dev->inuse_ahid);
+	rc = ionic_resid_get(&dev->inuse_ahid);
 	spin_unlock_irqrestore(&dev->inuse_splock, irqflags);
 
 	if (rc >= 0) {
@@ -246,7 +246,7 @@ static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *mrid)
 
 	mutex_lock(&dev->inuse_lock);
 	/* wrap to 1, skip reserved lkey */
-	rc = resid_get_wrap(&dev->inuse_mrid, 1);
+	rc = ionic_resid_get_wrap(&dev->inuse_mrid, 1);
 	if (rc >= 0) {
 		*mrid = ionic_mrid(rc, dev->next_mrkey++);
 		rc = 0;
@@ -261,7 +261,7 @@ static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
 	int rc;
 
 	mutex_lock(&dev->inuse_lock);
-	rc = resid_get(&dev->inuse_cqid);
+	rc = ionic_resid_get(&dev->inuse_cqid);
 	mutex_unlock(&dev->inuse_lock);
 
 	if (rc >= 0) {
@@ -293,9 +293,9 @@ static int ionic_get_qpid(struct ionic_ibdev *dev, u32 *qpid)
 	int rc = 0;
 
 	mutex_lock(&dev->inuse_lock);
-	rc = resid_get_shared(&dev->inuse_qpid, 2,
-			      dev->inuse_qpid.next_id,
-			      dev->size_qpid);
+	rc = ionic_resid_get_shared(&dev->inuse_qpid, 2,
+				    dev->inuse_qpid.next_id,
+				    dev->size_qpid);
 	if (rc >= 0) {
 		dev->inuse_qpid.next_id = rc + 1;
 		*qpid = rc;
@@ -312,18 +312,18 @@ static int ionic_get_srqid(struct ionic_ibdev *dev, u32 *qpid)
 	int rc = 0;
 
 	mutex_lock(&dev->inuse_lock);
-	rc = resid_get_shared(&dev->inuse_qpid,
-			      dev->size_qpid,
-			      dev->next_srqid,
-			      dev->size_srqid);
+	rc = ionic_resid_get_shared(&dev->inuse_qpid,
+				    dev->size_qpid,
+				    dev->next_srqid,
+				    dev->size_srqid);
 	if (rc >= 0) {
 		dev->next_srqid = rc + 1;
 		*qpid = rc;
 		rc = 0;
 	} else {
-		rc = resid_get_shared(&dev->inuse_qpid, 2,
-				      dev->inuse_qpid.next_id,
-				      dev->size_qpid);
+		rc = ionic_resid_get_shared(&dev->inuse_qpid, 2,
+					    dev->inuse_qpid.next_id,
+					    dev->size_qpid);
 		if (rc >= 0) {
 			dev->inuse_qpid.next_id = rc + 1;
 			*qpid = rc;
@@ -338,33 +338,33 @@ static int ionic_get_srqid(struct ionic_ibdev *dev, u32 *qpid)
 
 static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
 {
-	resid_put(&dev->inuse_pdid, pdid);
+	ionic_resid_put(&dev->inuse_pdid, pdid);
 }
 
 static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
 {
-	resid_put(&dev->inuse_ahid, ahid);
+	ionic_resid_put(&dev->inuse_ahid, ahid);
 }
 
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 {
-	resid_put(&dev->inuse_mrid, ionic_mrid_index(mrid));
+	ionic_resid_put(&dev->inuse_mrid, ionic_mrid_index(mrid));
 }
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
 {
-	resid_put(&dev->inuse_cqid, cqid - dev->cq_base);
+	ionic_resid_put(&dev->inuse_cqid, cqid - dev->cq_base);
 }
 
 static void ionic_put_qpid(struct ionic_ibdev *dev, u32 qpid)
 {
-	resid_put(&dev->inuse_qpid, qpid);
+	ionic_resid_put(&dev->inuse_qpid, qpid);
 }
 
 #ifdef IONIC_SRQ_XRC
 static void ionic_put_srqid(struct ionic_ibdev *dev, u32 qpid)
 {
-	resid_put(&dev->inuse_qpid, qpid);
+	ionic_resid_put(&dev->inuse_qpid, qpid);
 }
 #endif /* IONIC_SRQ_XRC */
 
@@ -385,7 +385,7 @@ static int ionic_get_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 	int rc = 0;
 
 	mutex_lock(&dev->inuse_lock);
-	rc = buddy_get(&dev->inuse_restbl, res->tbl_order);
+	rc = ionic_buddy_get(&dev->inuse_restbl, res->tbl_order);
 	mutex_unlock(&dev->inuse_lock);
 
 	if (rc < 0) {
@@ -407,7 +407,7 @@ static bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 	res->tbl_pos >>= dev->cl_stride - dev->pte_stride;
 
 	mutex_lock(&dev->inuse_lock);
-	buddy_put(&dev->inuse_restbl, res->tbl_pos, res->tbl_order);
+	ionic_buddy_put(&dev->inuse_restbl, res->tbl_pos, res->tbl_order);
 	mutex_unlock(&dev->inuse_lock);
 
 	res->tbl_order = IONIC_RES_INVALID;
@@ -7023,12 +7023,12 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_dbgfs_rm_dev(dev);
 
-	resid_destroy(&dev->inuse_qpid);
-	resid_destroy(&dev->inuse_cqid);
-	resid_destroy(&dev->inuse_mrid);
-	resid_destroy(&dev->inuse_ahid);
-	resid_destroy(&dev->inuse_pdid);
-	buddy_destroy(&dev->inuse_restbl);
+	ionic_resid_destroy(&dev->inuse_qpid);
+	ionic_resid_destroy(&dev->inuse_cqid);
+	ionic_resid_destroy(&dev->inuse_mrid);
+	ionic_resid_destroy(&dev->inuse_ahid);
+	ionic_resid_destroy(&dev->inuse_pdid);
+	ionic_buddy_destroy(&dev->inuse_restbl);
 	xa_destroy(&dev->qp_tbl);
 	xa_destroy(&dev->cq_tbl);
 
@@ -7124,7 +7124,7 @@ static const struct ib_device_ops ionic_dev_ops = {
 #endif
 };
 
-static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
+static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 					      struct net_device *ndev)
 {
 	struct ib_device *ibdev;
@@ -7295,23 +7295,23 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	mutex_init(&dev->inuse_lock);
 	spin_lock_init(&dev->inuse_splock);
 
-	rc = buddy_init(&dev->inuse_restbl,
-			le32_to_cpu(ident->rdma.npts_per_lif) >>
-			(dev->cl_stride - dev->pte_stride));
+	rc = ionic_buddy_init(&dev->inuse_restbl,
+			      le32_to_cpu(ident->rdma.npts_per_lif) >>
+			      (dev->cl_stride - dev->pte_stride));
 	if (rc)
 		goto err_restbl;
 
-	rc = resid_init(&dev->inuse_pdid, ionic_max_pd);
+	rc = ionic_resid_init(&dev->inuse_pdid, ionic_max_pd);
 	if (rc)
 		goto err_pdid;
 
-	rc = resid_init(&dev->inuse_ahid,
-			le32_to_cpu(ident->rdma.nahs_per_lif));
+	rc = ionic_resid_init(&dev->inuse_ahid,
+			      le32_to_cpu(ident->rdma.nahs_per_lif));
 	if (rc)
 		goto err_ahid;
 
-	rc = resid_init(&dev->inuse_mrid,
-			le32_to_cpu(ident->rdma.nmrs_per_lif));
+	rc = ionic_resid_init(&dev->inuse_mrid,
+			      le32_to_cpu(ident->rdma.nmrs_per_lif));
 	if (rc)
 		goto err_mrid;
 
@@ -7319,8 +7319,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->inuse_mrid.next_id = 1;
 	dev->next_mrkey = 1;
 
-	rc = resid_init(&dev->inuse_cqid,
-			le32_to_cpu(ident->rdma.cq_qtype.qid_count));
+	rc = ionic_resid_init(&dev->inuse_cqid,
+			      le32_to_cpu(ident->rdma.cq_qtype.qid_count));
 	if (rc)
 		goto err_cqid;
 
@@ -7329,8 +7329,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->size_srqid = le32_to_cpu(ident->rdma.rq_qtype.qid_count);
 	dev->next_srqid = dev->size_qpid;
 
-	rc = resid_init(&dev->inuse_qpid, max(dev->size_qpid,
-					      dev->size_srqid));
+	rc = ionic_resid_init(&dev->inuse_qpid, max(dev->size_qpid,
+						    dev->size_srqid));
 	if (rc)
 		goto err_qpid;
 
@@ -7480,17 +7480,17 @@ err_register:
 	kfree(dev->stats_hdrs);
 err_reset:
 	ionic_dbgfs_rm_dev(dev);
-	resid_destroy(&dev->inuse_qpid);
+	ionic_resid_destroy(&dev->inuse_qpid);
 err_qpid:
-	resid_destroy(&dev->inuse_cqid);
+	ionic_resid_destroy(&dev->inuse_cqid);
 err_cqid:
-	resid_destroy(&dev->inuse_mrid);
+	ionic_resid_destroy(&dev->inuse_mrid);
 err_mrid:
-	resid_destroy(&dev->inuse_ahid);
+	ionic_resid_destroy(&dev->inuse_ahid);
 err_ahid:
-	resid_destroy(&dev->inuse_pdid);
+	ionic_resid_destroy(&dev->inuse_pdid);
 err_pdid:
-	buddy_destroy(&dev->inuse_restbl);
+	ionic_buddy_destroy(&dev->inuse_restbl);
 err_restbl:
 	xa_destroy(&dev->qp_tbl);
 	xa_destroy(&dev->cq_tbl);
@@ -7504,7 +7504,7 @@ struct ionic_netdev_work {
 	struct work_struct ws;
 	unsigned long event;
 	struct net_device *ndev;
-	struct lif *lif;
+	struct ionic_lif *lif;
 };
 
 static void ionic_netdev_work(struct work_struct *ws)
@@ -7603,7 +7603,7 @@ static int ionic_netdev_event_post(struct net_device *ndev,
 				   unsigned long event)
 {
 	struct ionic_netdev_work *work;
-	struct lif *lif;
+	struct ionic_lif *lif;
 
 	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION, IONIC_PRSN_RDMA);
 	if (!lif) {

@@ -527,7 +527,7 @@ int main(int argc, char **argv) {
             g_fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
         }
     }
-    printf("\n------------------ Execting tests in mode: %s ---------------------\n",
+    printf("\n------------------ Executing tests in mode: %s ---------------------\n",
            (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) ? "CLASSIC" : "SMART");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

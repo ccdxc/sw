@@ -198,7 +198,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		}
 
 		pthread_mutex_init(&ctx->mut, NULL);
-		tbl_init(&ctx->qp_tbl);
+		ionic_tbl_init(&ctx->qp_tbl);
 
 		ionic_set_ops(ibctx);
 	}
@@ -244,7 +244,7 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	int rc;
 
-	rc = tbl_destroy(&ctx->qp_tbl);
+	rc = ionic_tbl_destroy(&ctx->qp_tbl);
 	if (rc)
 		ionic_err("context freed before destroying resources");
 

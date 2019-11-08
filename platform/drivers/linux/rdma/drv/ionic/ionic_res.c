@@ -1,41 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
- *
- * This software is available to you under a choice of one of two
- * licenses.  You may choose to be licensed under the terms of the GNU
- * General Public License (GPL) Version 2, available from the file
- * COPYING in the main directory of this source tree, or the
- * OpenIB.org BSD license below:
- *
- *     Redistribution and use in source and binary forms, with or
- *     without modification, are permitted provided that the following
- *     conditions are met:
- *
- *      - Redistributions of source code must retain the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer.
- *
- *      - Redistributions in binary form must reproduce the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #include <linux/bitmap.h>
-#include <linux/kernel.h>
 #include <linux/slab.h>
 
-#include "res.h"
+#include "ionic_res.h"
 
 #ifndef ORDER_PER_LONG
 /* Order of bits per long for 64 bit (2^6 is 64).
@@ -46,7 +17,7 @@
 #define ORDER_PER_LONG 6
 #endif
 
-int resid_init(struct resid_bits *resid, int size)
+int ionic_resid_init(struct ionic_resid_bits *resid, int size)
 {
 	int size_bytes = sizeof(long) * BITS_TO_LONGS(size);
 
@@ -60,8 +31,8 @@ int resid_init(struct resid_bits *resid, int size)
 	return 0;
 }
 
-int resid_get_shared(struct resid_bits *resid, int wrap_id,
-		     int next_id, int size)
+int ionic_resid_get_shared(struct ionic_resid_bits *resid, int wrap_id,
+			   int next_id, int size)
 {
 	int id;
 
@@ -80,7 +51,7 @@ int resid_get_shared(struct resid_bits *resid, int wrap_id,
 	return -ENOMEM;
 }
 
-int buddy_init(struct buddy_bits *buddy, int size)
+int ionic_buddy_init(struct ionic_buddy_bits *buddy, int size)
 {
 	buddy->inuse_size = size;
 	buddy->inuse_longs = BITS_TO_LONGS(size);
@@ -103,7 +74,7 @@ err_inuse:
 	return -ENOMEM;
 }
 
-int buddy_get(struct buddy_bits *buddy, int order)
+int ionic_buddy_get(struct ionic_buddy_bits *buddy, int order)
 {
 	int rc, i, pos, first_long, next_long, align_longs;
 
@@ -166,7 +137,7 @@ int buddy_get(struct buddy_bits *buddy, int order)
 	return rc;
 }
 
-void buddy_put(struct buddy_bits *buddy, int pos, int order)
+void ionic_buddy_put(struct ionic_buddy_bits *buddy, int pos, int order)
 {
 	int i, first_long, mask_longs;
 

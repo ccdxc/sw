@@ -19,7 +19,7 @@
 #include "ionic_kcompat.h"
 #include "ionic_fw.h"
 #include "ionic_queue.h"
-#include "res.h"
+#include "ionic_res.h"
 
 #ifdef HAVE_XARRAY
 #include <linux/xarray.h>
@@ -74,7 +74,7 @@ struct ionic_ibdev {
 	const struct ionic_devinfo	*info;
 	const union lif_identity	*ident;
 
-	struct lif		*lif;
+	struct ionic_lif	*lif;
 	int			lif_id;
 
 	u32			dbid;
@@ -117,13 +117,13 @@ struct ionic_ibdev {
 	struct mutex		inuse_lock; /* for id reservation */
 	spinlock_t		inuse_splock; /* for ahid reservation */
 
-	struct buddy_bits	inuse_restbl;
-	struct resid_bits	inuse_pdid;
-	struct resid_bits	inuse_ahid;
-	struct resid_bits	inuse_mrid;
+	struct ionic_buddy_bits	inuse_restbl;
+	struct ionic_resid_bits	inuse_pdid;
+	struct ionic_resid_bits	inuse_ahid;
+	struct ionic_resid_bits	inuse_mrid;
 	u8			next_mrkey;
-	struct resid_bits	inuse_cqid;
-	struct resid_bits	inuse_qpid;
+	struct ionic_resid_bits	inuse_cqid;
+	struct ionic_resid_bits	inuse_qpid;
 	int			size_qpid;
 	int			size_srqid;
 	int			next_srqid;

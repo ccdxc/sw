@@ -49,7 +49,7 @@
 #include "ionic_memory.h"
 #include "ionic_queue.h"
 #include "ionic_stats.h"
-#include "table.h"
+#include "ionic_table.h"
 #include "list.h"
 
 #define IONIC_MIN_RDMA_VERSION	1
@@ -81,7 +81,7 @@ struct ionic_ctx {
 	uint64_t		*dbpage;
 
 	pthread_mutex_t		mut;
-	struct tbl_root		qp_tbl;
+	struct ionic_tbl_root	qp_tbl;
 
 	FILE			*dbg_file;
 	struct ionic_stats	*stats;
