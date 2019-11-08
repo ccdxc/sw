@@ -62,8 +62,6 @@ metadata flow_key_t             scratch_flow_key;
 metadata apulu_p4i_to_rxdma_header_t p4_to_rxdma;
 
 @pragma dont_trim
-metadata doorbell_addr_t        doorbell_addr;
-@pragma dont_trim
 @pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t        doorbell_data;
 

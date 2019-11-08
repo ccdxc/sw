@@ -110,8 +110,8 @@
         },
         {
             "name": "rxdma_to_txdma_desc",
-            "size": "64K",
-            "_comment": "1K descriptors of size 64B"
+            "size": "128K",
+            "_comment": "1K descriptors of size 128B"
         },
         {
             "name": "lpm_v4",

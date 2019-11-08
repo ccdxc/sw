@@ -69,7 +69,8 @@ ingress_to_rxdma:
     or              r1, k.vnic_metadata_vnic_id, \
                         k.control_metadata_rx_packet, 10
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
-    or.c1           r1, 1, r1, 11
+    or.c1           r1, 1, r1, 1
+    or.!c1          r1, 0, r1, 1
     phvwr           p.p4i_to_rxdma_vnic_info_key, r1
     seq.!c1         c1, k.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr.c1        p.p4i_to_rxdma_vnic_info_en, TRUE

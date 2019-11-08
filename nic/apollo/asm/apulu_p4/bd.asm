@@ -9,7 +9,7 @@ struct phv_     p;
 
 %%
 
-bc_info:
+bd_info:
     seq             c1, k.vnic_metadata_egress_bd_id, r0
     nop.c1.e
     phvwr.!c1.e     p.rewrite_metadata_vni, d.bd_info_d.vni
