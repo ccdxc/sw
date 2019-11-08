@@ -28,5 +28,6 @@ PCIEPORT_STATS_DEF(markerpollmax)
 PCIEPORT_STATS_DEF(axipendpolllast)
 PCIEPORT_STATS_DEF(axipendpollmax)
 PCIEPORT_STATS_DEF(faults)
+PCIEPORT_STATS_DEF(powerdown)
 
 #undef PCIEPORT_STATS_DEF

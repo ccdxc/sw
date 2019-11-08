@@ -747,6 +747,31 @@ cmd_poll(int argc, char *argv[])
 }
 
 static void
+cmd_powerdown(int argc, char *argv[])
+{
+    int opt, port;
+
+    port = 0;
+    getopt_reset(1, 1);
+    while ((opt = getopt(argc, argv, "p")) != -1) {
+        switch (opt) {
+        case 'p':
+            port = strtoul(optarg, NULL, 0);
+            break;
+        default:
+            fprintf(stderr, "bad argument: %c\n", opt);
+            break;
+        }
+    }
+
+    int r = pcieport_powerdown(port);
+    if (r < 0) {
+        fprintf(stderr, "powerdown failed %d\n", r);
+        return;
+    }
+}
+
+static void
 cmd_run(int argc, char *argv[])
 {
     int opt;
@@ -807,6 +832,7 @@ static cmd_t cmdtab[] = {
     CMDENT(show, "show device info", ""),
     CMDENT(cfg, "show cfg info for device", "[-m] <vdev> ..."),
     CMDENT(poll, "poll for intrs", ""),
+    CMDENT(powerdown, "power down port", ""),
     CMDENT(run, "run and wait for intrs", ""),
     CMDENT(dbg, "invoke debug interface", ""),
     CMDENT(exit, "exit program", ""),

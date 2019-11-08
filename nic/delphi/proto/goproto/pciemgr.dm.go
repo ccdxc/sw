@@ -55,6 +55,8 @@ type PciePortMetrics struct {
 
 	Faults metrics.Counter
 
+	Powerdown metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -108,6 +110,8 @@ func (mtr *PciePortMetrics) Size() int {
 	sz += mtr.Axipendpollmax.Size()
 
 	sz += mtr.Faults.Size()
+
+	sz += mtr.Powerdown.Size()
 
 	return sz
 }
@@ -180,6 +184,9 @@ func (mtr *PciePortMetrics) Unmarshal() error {
 
 	mtr.Faults = mtr.metrics.GetCounter(offset)
 	offset += mtr.Faults.Size()
+
+	mtr.Powerdown = mtr.metrics.GetCounter(offset)
+	offset += mtr.Powerdown.Size()
 
 	return nil
 }
@@ -292,6 +299,11 @@ func (mtr *PciePortMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.Faults.Size()
+
+	if fldName == "Powerdown" {
+		return offset
+	}
+	offset += mtr.Powerdown.Size()
 
 	return offset
 }
@@ -419,6 +431,12 @@ func (mtr *PciePortMetrics) SetAxipendpollmax(val metrics.Counter) error {
 // SetFaults sets cunter in shared memory
 func (mtr *PciePortMetrics) SetFaults(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Faults"))
+	return nil
+}
+
+// SetPowerdown sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPowerdown(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Powerdown"))
 	return nil
 }
 

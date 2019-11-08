@@ -94,6 +94,7 @@ message PciePortMetrics {
     delphi.Counter axipendpolllast = 24;	// axipend poll count (last)
     delphi.Counter axipendpollmax = 25;		// axipend poll count (max)
     delphi.Counter faults = 26;			// link faults
+    delphi.Counter powerdown = 27;		// powerdown count
 }
 
 message PcieMgrMetrics {

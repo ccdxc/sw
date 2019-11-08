@@ -364,6 +364,17 @@ pcieport_crs_off(const int port)
     return 0;
 }
 
+int
+pcieport_powerdown(const int port)
+{
+    pcieport_t *p = pcieport_get(port);
+
+    if (p == NULL)  return -EBADF;
+    if (!p->config) return -EIO;
+
+    pcieport_fsm(p, PCIEPORTEV_POWERDN);
+    return 0;
+}
 
 /*
  * We don't get with pcieport_get(port) here.

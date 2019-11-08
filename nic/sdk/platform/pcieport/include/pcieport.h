@@ -35,6 +35,7 @@ typedef enum pcieportev_e {
     PCIEPORTEV_LINKDN,
     PCIEPORTEV_LINKUP,
     PCIEPORTEV_BUSCHG,
+    PCIEPORTEV_POWERDN,
 
     PCIEPORTEV_MAX
 } pcieportev_t;
@@ -100,6 +101,7 @@ typedef struct pciemgr_params_s pciemgr_params_t;
 int pcieport_hostconfig(const int port, const pciemgr_params_t *params);
 int pcieport_crs_off(const int port);
 int pcieport_is_accessible(const int port);
+int pcieport_powerdown(const int port);
 
 int pcieport_poll(const int port);
 void pcieport_dbg(int argc, char *argv[]);

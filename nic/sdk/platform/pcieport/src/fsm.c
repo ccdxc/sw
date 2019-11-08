@@ -52,6 +52,7 @@ pcieport_evname(const pcieportev_t ev)
         PCIEPORTEV_NAME(LINKDN),
         PCIEPORTEV_NAME(LINKUP),
         PCIEPORTEV_NAME(BUSCHG),
+        PCIEPORTEV_NAME(POWERDN),
     };
     if (ev >= PCIEPORTEV_MAX) return "UNKNOWN_EV";
     return evnames[ev];
@@ -245,6 +246,13 @@ pcieport_macdn(pcieport_t *p)
 }
 
 static void
+pcieport_powerdn(pcieport_t *p)
+{
+    pcieport_clear_fault(p);
+    pcieport_config_powerdown(p);
+}
+
+static void
 fsm_nop(pcieport_t *p)
 {
     /* nothing to do here, move along... */
@@ -325,6 +333,40 @@ fsm_buschg(pcieport_t *p)
     pcieport_buschg(p);
 }
 
+static void
+fsm_powerdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_OFF;
+    pcieport_powerdn(p);
+}
+
+static void
+fsm_macup_powerdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_OFF;
+    pcieport_macdn(p);
+    pcieport_powerdn(p);
+}
+
+static void
+fsm_linkup_powerdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_OFF;
+    pcieport_linkdn(p);
+    pcieport_macdn(p);
+    pcieport_powerdn(p);
+}
+
+static void
+fsm_up_powerdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_OFF;
+    pcieport_hostdn(p);
+    pcieport_linkdn(p);
+    pcieport_macdn(p);
+    pcieport_powerdn(p);
+}
+
 #define NOP fsm_nop
 #define INV fsm_inv
 #define MCU fsm_macup
@@ -336,6 +378,10 @@ fsm_buschg(pcieport_t *p)
 #define ULD fsm_up_linkdn
 #define UP_ fsm_up
 #define BUS fsm_buschg
+#define OFF fsm_powerdn
+#define MUO fsm_macup_powerdn
+#define LUO fsm_linkup_powerdn
+#define UPO fsm_up_powerdn
 
 typedef void (*fsm_func_t)(pcieport_t *p);
 static fsm_func_t
@@ -347,13 +393,14 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                      |    |    LINKDN
      *                      |    |    |    LINKUP
      *                      |    |    |    |    BUSCHG
-     *                      |    |    |    |    |   */
-    [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP },
-    [PCIEPORTST_DOWN]   = { NOP, MCU, NOP, INV, NOP },
-    [PCIEPORTST_MACUP]  = { MCD, INV, NOP, LKU, NOP },
-    [PCIEPORTST_LINKUP] = { LMD, INV, LKD, NOP, UP_ },
-    [PCIEPORTST_UP]     = { UMD, INV, ULD, INV, BUS },
-    [PCIEPORTST_FAULT]  = { MCD, NOP, NOP, NOP, NOP },
+     *                      |    |    |    |    |    OFF
+     *                      |    |    |    |    |    |   */
+    [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP, NOP },
+    [PCIEPORTST_DOWN]   = { NOP, MCU, NOP, INV, NOP, OFF },
+    [PCIEPORTST_MACUP]  = { MCD, INV, NOP, LKU, NOP, MUO },
+    [PCIEPORTST_LINKUP] = { LMD, INV, LKD, NOP, UP_, LUO },
+    [PCIEPORTST_UP]     = { UMD, INV, ULD, INV, BUS, UPO },
+    [PCIEPORTST_FAULT]  = { MCD, NOP, NOP, NOP, NOP, OFF },
 
     /*
      * NOTES:
