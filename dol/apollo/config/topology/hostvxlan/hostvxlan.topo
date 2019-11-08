@@ -128,18 +128,18 @@ vpc:
       count : 2
       type  : tenant
       subnet:
-        - count     : 1
+        - count     : 2
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
               ipcount : 4             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
+              srcguard: false         # true or false (default false)
               public  : true
               tagged  : false         # true or false (default true)
           rmap:                       # Remote IP mappings per subnet
             - count : 4
-        - count     : 2
+        - count     : 1
           v4prefixlen : 28
           v6prefixlen : 96
           rmap:

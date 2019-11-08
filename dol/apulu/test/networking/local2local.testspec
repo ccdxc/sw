@@ -1,0 +1,120 @@
+# Test Spec for local2local scenarios from host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+
+buffers:
+    - buffer:
+        id      : BUF1    # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields  :
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+    - buffer:
+        id       : BUF2  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
+    - buffer:
+        id          : BUF3  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields      :
+            bind    : True
+            size    : 1518
+            data    : None
+
+descriptors:
+    - descriptor:
+        id          : DESC1
+        template    : ref://factory/templates/id=DESCR_ETH_TX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF1
+            addr    : ref://testcase/buffers/id=BUF1/addr
+            len     : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id          : DESC2 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields      :
+            status  : 0x0
+
+    - descriptor:
+        id          : DESC3 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF3
+            addr    : ref://testcase/buffers/id=BUF3/addr
+            len     : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor:
+        id          : DESC4 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF2
+            len     : ref://testcase/buffers/id=BUF2/size
+
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                - descriptor    :
+                    object      : ref://testcase/descriptors/id=DESC3
+                    ring        : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX
+
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                - descriptor    :
+                    object      : ref://testcase/descriptors/id=DESC4
+                    ring        : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX
