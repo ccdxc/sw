@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
 
@@ -90,7 +91,10 @@ public:
 
     /// \brief     set/update the name of the lif
     void set_name(const char *name) {
-        memcpy(name_, name, SDK_MAX_NAME_LEN);
+        if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
+            (type_ == sdk::platform::LIF_TYPE_HOST)) {
+            memcpy(name_, name, SDK_MAX_NAME_LEN);
+        }
     }
 
     /// \brief     return the name of the lif
