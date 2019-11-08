@@ -53,10 +53,12 @@ func NewSynchAuditor(elasticServer string, rslver resolver.Interface, logger log
 }
 
 func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(6*time.Second))
+	defer cancel()
 	// index single audit event; it is costly to perform bulk operation for a single event (doc)
 	if len(events) == 1 {
 		event := events[0]
-		if err := a.elasticClient.Index(context.Background(),
+		if err := a.elasticClient.Index(ctx,
 			elastic.GetIndex(globals.AuditLogs, event.GetTenant()),
 			elastic.GetDocType(globals.AuditLogs), event.GetUUID(), event); err != nil {
 			a.logger.Errorf("error logging audit event to elastic, err: %v", err)
@@ -74,7 +76,7 @@ func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
 				Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
 			}
 		}
-		if bulkResp, err := a.elasticClient.Bulk(context.Background(), requests); err != nil {
+		if bulkResp, err := a.elasticClient.Bulk(ctx, requests); err != nil {
 			a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
 			return err
 		} else if len(bulkResp.Failed()) > 0 {

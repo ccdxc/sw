@@ -619,12 +619,12 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	i = in
 	nctx := ctx
 
-	auditLevel := auditapi.Level_RequestResponse
+	auditLevel := auditapi.Level_Request
 	auditLevelStr, ok := prof.GetAuditLevel()
 	if ok {
 		if auditLevel, err = audit.GetAuditLevelFromString(auditLevelStr); err != nil {
 			a.logger.ErrorLog("msg", "unknown audit level in profile", "err", err, "level", auditLevelStr)
-			auditLevel = auditapi.Level_RequestResponse
+			auditLevel = auditapi.Level_Request
 		}
 	}
 
@@ -697,8 +697,6 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	auditTime := time.Now()
 	// audit before making the call
 	if err := a.audit(auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(eventtypes.AUDITING_FAILED,
-			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), user)
 		return nil, apierrors.ToGrpcError("Auditing failed, call aborted", []string{err.Error()}, int32(codes.Unavailable), "", nil)
 	}
 	hdr.Record("apigw.PreCallAudit", time.Since(auditTime))
@@ -750,8 +748,6 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	hdr.Record("apigw.CallTime", time.Since(callTime))
 	auditTime = time.Now()
 	if err := a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(eventtypes.AUDITING_FAILED,
-			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		return out, apierrors.ToGrpcError("Auditing failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 	}
 	hdr.Record("apigw.PostCallAudit", time.Since(auditTime))
@@ -870,7 +866,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 		},
 	}
 	// policy checker checks whether to log audit event and populates it based on policy
-	ok, err := audit.NewPolicyChecker().PopulateEvent(event,
+	ok, failOp, err := audit.NewPolicyChecker().PopulateEvent(event,
 		audit.NewRequestObjectPopulator(reqObj, true),
 		audit.NewResponseObjectPopulator(resObj, true),
 		audit.NewErrorPopulator(apierr))
@@ -881,7 +877,11 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 	if ok {
 		if err := a.auditor.ProcessEvents(event); err != nil {
 			a.logger.Errorf("error generating audit event for user (%s|%s) and operations (%s): %v", user.Tenant, user.Name, authz.PrintOperations(ops), err)
-			return err
+			recorder.Event(eventtypes.AUDITING_FAILED,
+				fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", eventID, user.Tenant, user.Name, authz.PrintOperations(ops)), nil)
+			if failOp {
+				return err
+			}
 		}
 	}
 	return nil
@@ -1028,8 +1028,6 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// audit before making the call
 	if err := p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(eventtypes.AUDITING_FAILED,
-			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed, call aborted", int(codes.Unavailable))
 		return
 	}
@@ -1074,8 +1072,6 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if err := p.apiGw.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(eventtypes.AUDITING_FAILED,
-			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed", int(codes.Aborted))
 		return
 	}

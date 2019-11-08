@@ -21,7 +21,8 @@ type Auditor interface {
 // PolicyChecker checks audit policy to determine if audit event needs to be logged.
 type PolicyChecker interface {
 	// PopulateEvent modifies audit information from audit event based on policy and returns a copy. Returns true if audit event needs to be logged.
-	PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, error)
+	// Second bool return value indicates if operation should be failed if auditing fails
+	PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, bool, error)
 }
 
 // EventPopulator is an abstraction to populate audit event with information from request, response etc.

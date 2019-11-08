@@ -178,10 +178,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		}
 		// remove user password
 		user.Spec.Password = ""
-		if err := s.audit(user, getClientIPs(req), req.RequestURI); err != nil {
-			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		s.audit(user, getClientIPs(req), req.RequestURI)
 		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
 		// set cookie
 		http.SetCookie(w, createCookie(sessionToken, exp))
@@ -318,7 +315,8 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	return user, nil
 }
 
-func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI string) error {
+func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI string) {
+	var err error
 	apiGateway := apigwpkg.MustGetAPIGateway()
 	auditor := apiGateway.GetAuditor()
 	eventID := uuid.NewV4().String()
@@ -357,19 +355,24 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			Data:        make(map[string]string),
 		},
 	}
+	defer func() {
+		if err != nil {
+			recorder.Event(eventtypes.AUDITING_FAILED, fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) login operation", eventID, user.Tenant, user.Name), user)
+		}
+	}()
 	// policy checker checks whether to log audit event and populates it based on policy
-	ok, err := audit.NewPolicyChecker().PopulateEvent(event, audit.NewResponseObjectPopulator(user, true))
+	ok, _, err := audit.NewPolicyChecker().PopulateEvent(event, audit.NewResponseObjectPopulator(user, true))
 	if err != nil {
 		s.logger.ErrorLog("method", "audit", "msg", "error populating audit event for user login", "user", user.Name, "tenant", user.Tenant, "error", err)
-		return err
+		return
 	}
 	if ok {
-		if err := auditor.ProcessEvents(event); err != nil {
+		if err = auditor.ProcessEvents(event); err != nil {
 			s.logger.ErrorLog("method", "audit", "msg", "error generating audit event for user login", "user", user.Name, "tenant", user.Tenant, "error", err)
-			return err
+			return
 		}
 	}
-	return nil
+	return
 }
 
 // HTTPOtherErrorHandler converts error to api.Status before writing to response

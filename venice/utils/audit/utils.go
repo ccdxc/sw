@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/monitoring"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -120,28 +121,32 @@ func NewErrorPopulator(apierr error) EventPopulator {
 
 type policyChecker struct{}
 
-func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, error) {
+func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, bool, error) {
+	failOp := true
 	switch event.Resource.Kind {
 	// do not log search, events, audit, metrics queries, fwlogs queries
 	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
-		return false, nil
+		return false, false, nil
 	case auth.Permission_TokenAuth.String():
 		event.ServiceName = globals.Cmd
+	case string(monitoring.KindTechSupportRequest):
+		failOp = false
+		fallthrough
 	default:
 		switch event.Action {
 		// do not log reads
 		case strings.Title(string(apiintf.GetOper)), strings.Title(string(apiintf.ListOper)), strings.Title(string(apiintf.WatchOper)), auth.Permission_Read.String(), "get":
-			return false, nil
+			return false, false, nil
 		}
 		event.ServiceName = globals.APIServer
 	}
 	for _, populator := range populators {
 		err := populator(event)
 		if err != nil {
-			return false, err
+			return false, failOp, err
 		}
 	}
-	return true, nil
+	return true, failOp, nil
 }
 
 // NewPolicyChecker creates PolicyChecker to populate information in audit event based on audit policy

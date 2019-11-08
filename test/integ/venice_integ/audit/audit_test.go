@@ -20,6 +20,7 @@ import (
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -614,7 +615,8 @@ func TestSecretsInAuditLogs(t *testing.T) {
 			(events[0].Object.Resource.Kind == string(auth.KindAuthenticationPolicy)) &&
 			(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
 			(events[0].Object.Stage == stage) &&
-			(strings.Contains(events[0].Object.RequestObject, "DC=Pensando") || strings.Contains(events[0].Object.ResponseObject, "DC=Pensando")), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+			((strings.Contains(events[0].Object.RequestObject, "DC=Pensando") && events[0].Object.Stage == auditapi.Stage_RequestAuthorization.String()) ||
+				(strings.Contains(events[0].Object.ResponseObject, "") && events[0].Object.Stage == auditapi.Stage_RequestProcessing.String())), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
 		Assert(t, (!strings.Contains(events[0].Object.RequestObject, testPassword)) &&
 			(!strings.Contains(events[0].Object.ResponseObject, testPassword)), fmt.Sprintf("audit event contains password: %#v", events[0].Object))
 
@@ -679,6 +681,54 @@ func TestSecretsInAuditLogs(t *testing.T) {
 	}
 }
 
+func TestAuditingWithElasticNotAvailable(t *testing.T) {
+	ti := tInfo{}
+	err := ti.setupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	err = ti.startSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.fdr.Stop()
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	defer ti.apiServer.Stop()
+	err = ti.startAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.apiGw.Stop()
+
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+		t.Fatalf("auth setupElastic failed")
+	}
+	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+
+	// stop elastic
+	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
+	// login should work if elastic is down
+	ctx, err := login.NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	AssertOk(t, err, "super admin should be able to log in when elastic is down")
+	// get operations should work
+	policy, err := ti.restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+	AssertOk(t, err, "unable to fetch auth policy")
+	// update operations should fail
+	nctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	_, err = ti.restcl.AuthV1().AuthenticationPolicy().Update(nctx, policy)
+	defer cancel()
+	Assert(t, err != nil, "update of auth policy should fail")
+	// should be able to create techsupport request
+	tsr := &monitoring.TechSupportRequest{}
+	tsr.Defaults("all")
+	tsr.Name = "t1"
+	tsr, err = ti.restcl.MonitoringV1().TechSupportRequest().Create(ctx, tsr)
+	AssertOk(t, err, "unable to create techsupport request")
+	_, err = ti.restcl.MonitoringV1().TechSupportRequest().Delete(ctx, &tsr.ObjectMeta)
+	AssertOk(t, err, "unable to delete techsupport request")
+}
+
 // BenchmarkProcessEvents1Rule/auditor.ProcessEvents()-8         	     500	   6800263 ns/op
 func BenchmarkProcessEvents1Rule(b *testing.B) {
 	benchmarkProcessEvents(1, b)
@@ -730,7 +780,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 		},
 	}
 	b.ResetTimer()
-	_, err = audit.NewPolicyChecker().PopulateEvent(event,
+	_, _, err = audit.NewPolicyChecker().PopulateEvent(event,
 		audit.NewRequestObjectPopulator(sgPolicy, true),
 		audit.NewResponseObjectPopulator(sgPolicy, true))
 	if err != nil {
