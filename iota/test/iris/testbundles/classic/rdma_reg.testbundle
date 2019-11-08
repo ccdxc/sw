@@ -335,7 +335,7 @@ testcases:
         iterators :
             type    : nested
             rlat    : ['yes']
-            poll:   : ['yes', 'no']
+            poll   : ['yes', 'no']
             size    : [64,128,256,1024,4096,16384,65535,131072]
             size    : [32,1024,2048,32768]
             txdepth : [128]
