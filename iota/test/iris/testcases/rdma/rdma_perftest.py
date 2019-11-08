@@ -35,6 +35,7 @@ def Setup(tc):
     tc.devices = []
     tc.gid = []
     tc.ib_prefix = []
+
     for i in range(2):
         tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
         tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
@@ -51,6 +52,49 @@ def Trigger(tc):
     # trigger the commands
     #==============================================================
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    # Populate bw lookup table - manual entry to speed up development
+    bw_dict = {}
+    bw_dict[(2,4000)] = 10
+    bw_dict[(2,4096)] = 10
+    bw_dict[(2,8192)] = 10
+    bw_dict[(2,16384)] = 10
+    bw_dict[(2,32768)] = 30
+    bw_dict[(2,65536)] = 50
+    bw_dict[(2,8000)] = 10
+    bw_dict[(2,16000)] = 10
+    bw_dict[(2,32000)] = 30
+    bw_dict[(2,64000)] = 50
+    bw_dict[(3,4095)] = 5
+    bw_dict[(3,3072)] = 5
+    bw_dict[(3,3000)] = 5
+    bw_dict[(3,12288)] = 10
+    bw_dict[(3,24576)] = 20
+    bw_dict[(3,12000)] = 10
+    bw_dict[(3,24000)] = 20
+    bw_dict[(4,4000)] = 5
+    bw_dict[(4,4096)] = 5
+    bw_dict[(4,8192)] = 10
+    bw_dict[(4,16384)] = 10
+    bw_dict[(4,32768)] = 30
+    bw_dict[(4,65536)] = 50
+    bw_dict[(4,16000)] = 10
+    bw_dict[(4,32000)] = 30
+    bw_dict[(4,64000)] = 50
+    bw_dict[(5,20480)] = 20
+    bw_dict[(5,20000)] = 10
+    bw_dict[(5,10000)] = 5
+    bw_dict[(6,12288)] = 10
+    bw_dict[(6,24576)] = 20
+    bw_dict[(6,24000)] = 20
+    bw_dict[(7,28672)] = 20
+    bw_dict[(7,28000)] = 30
+    bw_dict[(7,7700)] = 4
+    bw_dict[(8,16384)] = 5
+    bw_dict[(8,32768)] = 10
+    bw_dict[(8,65536)] = 10
+    bw_dict[(8,32000)] = 10
+    bw_dict[(8,64000)] = 10
 
     #==============================================================
     # init cmd options
@@ -75,6 +119,7 @@ def Trigger(tc):
     bkg_timeout   = 130
     sq_drain_opt  = ''
     async_event_stats_opt = ''
+    bw_opt        = ''
 
     #==============================================================
     # update non-default cmd options
@@ -92,15 +137,18 @@ def Trigger(tc):
         transport_opt = ' -c UD '
 
     if hasattr(tc.iterators, 'size'):
+        msg_size = int(tc.iterators.size)
         size_opt  =  ' -s {size} '.format(size = tc.iterators.size)
 
     if hasattr(tc.iterators, 'mtu'):
         mtu_opt = ' -m {mtu} '.format(mtu = tc.iterators.mtu)
 
     if hasattr(tc.iterators, 'numsges'):
+        numsges = int(tc.iterators.numsges)
         numsges_opt  =  ' -W {numsges} '.format(numsges = tc.iterators.numsges)
 
     if hasattr(tc.iterators, 'num_qp'):
+        num_qp = tc.iterators.num_qp
         qp_opt = ' -q {numqp} '.format(numqp = str(tc.iterators.num_qp))
 
     if hasattr(tc.iterators, 'threads') and \
@@ -135,6 +183,10 @@ def Trigger(tc):
        tc.iterators.async_event_stats == 'yes':
        async_event_stats_opt = ' --report-async-ev-stats '
 
+    if hasattr(tc.iterators, 'check_bw') and \
+       tc.iterators.check_bw == 'yes' and num_qp == 1:
+        bw_opt = ' -w {bw} '.format(bw = str(bw_dict[numsges, msg_size]))
+    
     #==============================================================
     # run the cmds
     #==============================================================
@@ -158,7 +210,7 @@ def Trigger(tc):
         cmd       = tc.iterators.command
         cmd       += dev_opt + iter_opt + gid_opt 
         cmd       += size_opt + mtu_opt + qp_opt
-        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt
+        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt + bw_opt
         # add numsges_opt only for Naples
         if w1.IsNaples():
             cmd   += numsges_opt

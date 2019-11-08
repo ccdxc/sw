@@ -45,6 +45,7 @@ testcases:
             duration : [20]
             numsges  : [2]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_3Sge
         testcase: testcases.rdma.rdma_perftest
@@ -58,6 +59,7 @@ testcases:
             duration : [20]
             numsges  : [3]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_4Sge
         testcase: testcases.rdma.rdma_perftest
@@ -71,6 +73,7 @@ testcases:
             duration : [20]
             numsges  : [4]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_5Sge
         testcase: testcases.rdma.rdma_perftest
@@ -84,6 +87,7 @@ testcases:
             duration : [20]
             numsges  : [5]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_6Sge
         testcase: testcases.rdma.rdma_perftest
@@ -97,6 +101,7 @@ testcases:
             duration : [20]
             numsges  : [6]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_7Sge
         testcase: testcases.rdma.rdma_perftest
@@ -110,6 +115,7 @@ testcases:
             duration : [20]
             numsges  : [7]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Fml_8Sge
         testcase: testcases.rdma.rdma_perftest
@@ -124,6 +130,7 @@ testcases:
             duration : [20]
             numsges  : [8]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Only_2Sge_4Sge
         testcase: testcases.rdma.rdma_perftest
@@ -137,6 +144,7 @@ testcases:
             duration : [20]
             numsges  : [2, 4]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     -   name    : Rc_Only_3Sge
         testcase: testcases.rdma.rdma_perftest
@@ -150,6 +158,7 @@ testcases:
             duration : [20]
             numsges  : [3]
             command  : ['ib_send_bw']
+            check_bw : [ 'yes' ]
 
     #=======================================
     # Teardown
