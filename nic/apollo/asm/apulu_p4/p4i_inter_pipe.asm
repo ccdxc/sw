@@ -56,6 +56,19 @@ ingress_to_rxdma:
                         p4plus_to_p4_valid, \
                         capri_txdma_intrinsic_valid}, 0x3B0
 
+    or              r1, r0, k.ctag_1_valid, \
+                        APULU_CPU_FLAGS_VLAN_VALID_BIT_POS
+    or              r1, r0, k.ipv4_1_valid, \
+                        APULU_CPU_FLAGS_IPV4_1_VALID_BIT_POS
+    or              r1, r1, k.ipv6_1_valid, \
+                        APULU_CPU_FLAGS_IPV6_1_VALID_BIT_POS
+    or              r1, r1, k.ethernet_2_valid, \
+                        APULU_CPU_FLAGS_ETH_2_VALID_BIT_POS
+    or              r1, r1, k.ipv4_2_valid, \
+                        APULU_CPU_FLAGS_IPV4_2_VALID_BIT_POS
+    or              r1, r1, k.ipv6_2_valid, \
+                        APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS
+    phvwr           p.p4i_to_arm_flags, r1
     phvwr           p.p4i_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
     phvwr           p.p4i_to_arm_flow_hash, k.p4i_i2e_entropy_hash
     phvwr           p.p4i_to_arm_payload_offset, k.offset_metadata_payload_offset

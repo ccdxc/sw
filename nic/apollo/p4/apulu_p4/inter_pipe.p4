@@ -47,6 +47,35 @@ action ingress_to_rxdma() {
     modify_field(p4i_to_arm.service_xlate_id, 0);
     modify_field(p4i_to_arm.mapping_xlate_id, p4i_i2e.xlate_id);
 
+    modify_field(scratch_metadata.cpu_flags, 0);
+    if (ctag_1.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APULU_CPU_FLAGS_VLAN_VALID);
+    }
+    if (ipv4_1.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APULU_CPU_FLAGS_IPV4_1_VALID);
+    } else {
+        if (ipv6_1.valid == TRUE) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   APULU_CPU_FLAGS_IPV6_1_VALID);
+        }
+    }
+    if (ethernet_2.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APULU_CPU_FLAGS_ETH_2_VALID);
+    }
+    if (ipv4_2.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APULU_CPU_FLAGS_IPV4_2_VALID);
+    } else {
+        if (ipv6_2.valid == TRUE) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   APULU_CPU_FLAGS_IPV6_2_VALID);
+        }
+    }
+    modify_field(p4i_to_arm.flags, scratch_metadata.cpu_flags);
+
     modify_field(p4i_to_rxdma.apulu_p4plus, TRUE);
     if (key_metadata.ktype == KEY_TYPE_IPV4) {
         modify_field(scratch_metadata.flag, 0);
