@@ -779,7 +779,7 @@ ionic_legacy_isr(int irq, void *data)
 	struct ionic_txque *txq;
 	struct ionic_rxque *rxq;
 	uint64_t status;
-	int work_done, i;
+	int work_done, i, tx_work;
 
 	ifp = lif->netdev;
 	adminq = lif->adminq;
@@ -795,7 +795,7 @@ ionic_legacy_isr(int irq, void *data)
 		return (IRQ_NONE);
 	}
 
-	if (status & (1 << adminq->intr.index)) {
+	if (status & BIT_ULL(adminq->intr.index)) {
 		IONIC_ADMIN_LOCK(adminq);
 		ionic_intr_mask(idev->intr_ctrl, adminq->intr.index,
 		    IONIC_INTR_MASK_SET);
@@ -805,7 +805,7 @@ ionic_legacy_isr(int irq, void *data)
 		IONIC_ADMIN_UNLOCK(adminq);
 	}
 
-	if (status & (1 << notifyq->intr.index)) {
+	if (status & BIT_ULL(notifyq->intr.index)) {
 		ionic_intr_mask(idev->intr_ctrl, notifyq->intr.index,
 		    IONIC_INTR_MASK_SET);
 		work_done = ionic_notifyq_clean(notifyq);
@@ -822,17 +822,19 @@ ionic_legacy_isr(int irq, void *data)
 		IONIC_QUE_INFO(rxq, "Interrupt source index: %d\n",
 		    rxq->intr.index);
 
-		if ((status & (1 << rxq->intr.index)) == 0)
+		if ((status & BIT_ULL(rxq->intr.index)) == 0)
 			continue;
 
 		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
 		    IONIC_INTR_MASK_SET);
 		work_done = ionic_rx_clean(rxq, rxq->num_descs);
+		tcp_lro_flush_all(&rxq->lro);
+		ionic_rx_fill(rxq);
 
-		work_done += ionic_tx_clean(txq, txq->num_descs);
+		tx_work = ionic_tx_clean(txq, txq->num_descs);
 
 		ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
-		    work_done, IONIC_INTR_CRED_REARM);
+		    (work_done + tx_work), IONIC_INTR_CRED_REARM);
 	}
 
 	return (IRQ_HANDLED);
@@ -2989,6 +2991,8 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			&lif->num_dev_cmds, "Number of dev commands used");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "lif_resets", CTLFLAG_RD,
 			&lif->num_resets, "Number of resets attempted on this LIF");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "legacy_spurious_isr", CTLFLAG_RD,
+			&lif->spurious, "Legacy spurious interrupts");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "wdog_error_trigger", CTLFLAG_RW,
 			&lif->wdog_error_trigger, 0, "Inject watchdog error");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "mac_filter_count", CTLFLAG_RD,

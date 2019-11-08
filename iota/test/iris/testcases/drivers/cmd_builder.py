@@ -34,6 +34,9 @@ def ethtool_rx_ring_size(node, intf,size):
 def ethtool_rx_sg_size(node, intf,size):
     return "echo rx SGL not suported in Linux"
 
+def ethtool_legacy_intr_mode(node, intf, op):
+    return "echo Legacy interrupt mode not supported in Linux"
+
 def ethtool_queue_size(node, intf,size):
     return " ".join(["ethtool", "-L",  intf, "combined", str(size)])
 
@@ -164,6 +167,18 @@ def bsd_ethtool_rx_sg_size_cmd(node, intf, size):
         return cmds
     return " "
 
+def bsd_legacy_intr_mode_cmd(node, intf, op):
+    args = { }
+    if op == "on":
+        args['hw.ionic.enable_msix'] = 0
+    else:
+        args['hw.ionic.enable_msix'] = 1
+    if api.IsNaplesNode(node):
+        host.UnloadDriver(host.OS_TYPE_BSD, node)
+        cmds = naples.InsertIonicDriverCommands(os_type = host.OS_TYPE_BSD, **args)
+        return cmds
+    return " "
+
 def bsd_ip_link_pkt_filter_cmd(node, intf,pkt_filter, on_off):
     return " ".join(["ip", "link", "set", "dev", intf,pkt_filter, on_off])
 
@@ -190,6 +205,9 @@ def bsd_ethtool_rx_queue_size(node, intf,size):
 
 def bsd_ethtool_rx_sg_size(node, intf,size):
     return bsd_ethtool_rx_sg_size_cmd(node, intf, size)
+
+def bsd_legacy_intr_mode(node, intf, op):
+    return bsd_legacy_intr_mode_cmd(node, intf, op)
 
 def bsd_ethtool_tx_checksum(node, intf,op):
     return " ".join(["ifconfig", intf,"txcsum" if op == "on" else "-txcsum"])

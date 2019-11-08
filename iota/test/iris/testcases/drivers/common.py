@@ -109,6 +109,11 @@ feature_cmd_map = {
             "linux"    : { "cmd" : cmd_builder.ethtool_intr_coal },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_intr_coal }
         },
+    "legacy"      :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_legacy_intr_mode },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_legacy_intr_mode, 	 "reloadCmd" : True },
+        },
 }
 
 def setup_features(tc):

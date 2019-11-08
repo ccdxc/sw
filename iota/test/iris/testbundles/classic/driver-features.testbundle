@@ -24,6 +24,19 @@ testcases:
             max_coales_interval  : 192
             type           : remote_only
             #capture_pcap  : True
+    -   name    : UplinkIntf_LEGACY_INTR
+        testcase: testcases.drivers.features
+        enable  : True
+        iterators :
+            type               : nested
+           # Preserve the order of legacy value since last value is what will be used
+           # for rest of runs.
+            legacy             : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
 
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features

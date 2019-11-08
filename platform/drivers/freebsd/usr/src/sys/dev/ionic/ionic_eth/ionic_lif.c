@@ -1537,13 +1537,13 @@ ionic_adminq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 	    adminq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
 
+	error = ionic_setup_intr(lif, &adminq->intr);
+	if (error) {
+		IONIC_QUE_ERROR(adminq,
+		    "no available interrupt, error: %d\n", error);
+		goto error_out;
+	}
 	if (ionic_enable_msix) {
-		error = ionic_setup_intr(lif, &adminq->intr);
-		if (error) {
-			IONIC_QUE_ERROR(adminq,
-			    "no available interrupt, error: %d\n", error);
-			goto error_out;
-		}
 		error = request_irq(adminq->intr.vector, ionic_adminq_isr, 0,
 		    adminq->intr.name, adminq);
 		if (error) {
@@ -1642,14 +1642,14 @@ ionic_notifyq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	taskqueue_start_threads(&notifyq->taskq, 1, PI_NET, "%s (que %s)",
 	    device_get_nameunit(lif->ionic->dev), notifyq->name);
 
+	error = ionic_setup_intr(lif, &notifyq->intr);
+	if (error) {
+		IONIC_QUE_ERROR(notifyq,
+		    "no available interrupt, error: %d\n", error);
+		goto error_out;
+	}
 	/* Legacy interrupt allocation is done once. */
 	if (ionic_enable_msix) {
-		error = ionic_setup_intr(lif, &notifyq->intr);
-		if (error) {
-			IONIC_QUE_ERROR(notifyq,
-			    "no available interrupt, error: %d\n", error);
-			goto error_out;
-		}
 		error = request_irq(notifyq->intr.vector, ionic_notifyq_isr, 0,
 		    notifyq->intr.name, notifyq);
 		if (error) {
