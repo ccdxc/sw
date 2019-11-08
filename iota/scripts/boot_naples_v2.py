@@ -665,6 +665,9 @@ class HostManagement(EntityManagement):
         os.system("date")
 
         nodeinit_args = ""
+        if GlobalOptions.skip_driver_install:
+            nodeinit_args += " --skip-install"
+
         if cleanup:
             nodeinit_args = "--cleanup"
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
