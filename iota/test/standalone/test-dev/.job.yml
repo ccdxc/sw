@@ -28,6 +28,41 @@ e2e-targets:
           BmOs: esx
           EsxUsername: root
           EsxPassword: Pen0trl!
+ rhel-8.0:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-13
+       count: 2
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ rhel-7.6:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ 
  ubuntu-18.04:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:sw-team@pensando.io"]
