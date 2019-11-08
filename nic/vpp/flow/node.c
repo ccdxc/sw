@@ -13,6 +13,8 @@ vlib_node_registration_t pds_fwd_flow_node,
                          pds_tun_ip6_flow_prog_node,
                          pds_p4cpu_hdr_lookup_node;
 
+u8 g_dis_reinject = 0;
+
 static u8 *
 format_pds_fwd_flow_trace (u8 * s, va_list * args)
 {
@@ -104,7 +106,14 @@ pds_fwd_flow (vlib_main_t * vm,
 
     while (n_left_from > 0) {
 
-        while (n_left_from >= 4) {
+       if (PREDICT_FALSE(g_dis_reinject)) {
+           vlib_node_t *node = vlib_get_node_by_name(vm, (u8 *) "error-drop");
+           to_frame = vlib_get_frame_to_node (vm, node->index);
+           to_frame->n_vectors = n_left_from;
+           vlib_put_frame_to_node (vm, node->index, to_frame);
+           break;
+       }
+       while (n_left_from >= 4) {
             vlib_buffer_t *p0, *p1;
             u32 pi0, pi1;
 
@@ -220,13 +229,12 @@ pds_fwd_flow (vlib_main_t * vm,
             n_left_from -= 1;
         }
         vlib_put_frame_to_node (vm, hw->tx_node_index, to_frame);
-    }
-
-    vlib_increment_combined_counter(im->combined_sw_if_counters
+        vlib_increment_combined_counter(im->combined_sw_if_counters
                                     + VNET_INTERFACE_COUNTER_TX,
                                     thread_index,
                                     sw_if_index,
                                     pkt_count, pkt_bytes);
+    }
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
         pds_fwd_flow_trace_add (vm, node, from_frame);

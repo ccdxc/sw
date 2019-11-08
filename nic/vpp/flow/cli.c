@@ -14,7 +14,54 @@ VLIB_PLUGIN_REGISTER () = {
 };
 // *INDENT-ON*
 
+extern u8 g_dis_reinject;
+
 #define DISPLAY_BUF_SIZE (1*1024*1024)
+
+static clib_error_t *
+set_flow_test_command_fn (vlib_main_t * vm,
+                          unformat_input_t * input,
+                          vlib_cli_command_t * cmd)
+{
+    int skip_flow_prog = 0, skip_ses_prog = 0,
+        dis_reinject = 0, reset = 0;
+
+    while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
+        if (unformat(input, "skip-flow-program")) {
+            skip_flow_prog = 1;
+        } else if (unformat(input, "skip-session-program")) {
+            skip_ses_prog = 1;
+        } else if (unformat(input, "disable-reinject")) {
+            dis_reinject = 1;
+        } else if (unformat(input, "reset")) {
+            reset = 1;
+        } else {
+            vlib_cli_output(vm, "ERROR: Invalid command");
+            goto done;
+        }
+    }
+
+    if (reset) {
+        set_skip_ftl_program(0);
+        set_skip_session_program(0);
+        g_dis_reinject = 0;
+        goto done;
+    }
+    set_skip_ftl_program(skip_flow_prog);
+    set_skip_session_program(skip_ses_prog);
+    g_dis_reinject = dis_reinject;
+
+done:
+    return 0;
+}
+
+VLIB_CLI_COMMAND (set_flow_test_command, static) =
+{
+    .path = "set flow test",
+    .short_help = "set flow test [skip-flow-program] [skip-session-program] "
+                  "[disable-reinject] [reset]",
+    .function = set_flow_test_command_fn,
+};
 
 static clib_error_t *
 show_flow_stats_command_fn (vlib_main_t * vm,

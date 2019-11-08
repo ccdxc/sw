@@ -21,6 +21,10 @@ typedef struct ftlv6_entry_t ftlv6_entry_t;
 
 int initialize_flow(void);
 
+void set_skip_ftl_program(int val);
+
+void set_skip_session_program(int val);
+
 int session_program(uint32_t ses_id, void *action);
 
 void session_insert(uint32_t ses_id, void *ses_info);

@@ -24,7 +24,34 @@ typedef char* (*appdata2str_t)(void *data);
 
 extern "C" {
 
+int skip_ftl_program = 0;
+int skip_session_program = 0;
+
 #define FTL_ENTRY_STR_MAX   2048
+
+void
+set_skip_ftl_program(int val)
+{
+    skip_ftl_program = val;
+}
+
+void
+set_skip_session_program(int val)
+{
+    skip_session_program = val;
+}
+
+static int
+get_skip_ftl_program(void) 
+{
+    return skip_ftl_program;
+}
+
+static int
+get_skip_session_program(void) 
+{
+    return skip_session_program;
+}
 
 p4pd_table_properties_t g_session_tbl_ctx;
 
@@ -45,6 +72,10 @@ session_program(uint32_t ses_id, void *action)
     p4pd_error_t p4pd_ret0;
     uint32_t tableid = P4TBL_ID_SESSION;
 
+    if (get_skip_session_program()) {
+        return 0;
+    }
+
     p4pd_ret0 = p4pd_global_entry_write(tableid, ses_id,
                                         NULL, NULL, action);
     if (p4pd_ret0 != P4PD_SUCCESS) {
@@ -57,6 +88,10 @@ session_insert(uint32_t ses_id, void *ses_info)
 {
     uint64_t entry_addr = (ses_id * g_session_tbl_ctx.hbm_layout.entry_width);
     uint64_t *src_addr = (uint64_t *)ses_info;
+
+    if (get_skip_session_program()) {
+        return;
+    }
 
     if (likely(g_session_tbl_ctx.base_mem_va)) {
         uint64_t *dst_addr = (uint64_t *)
@@ -190,6 +225,10 @@ ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
     if (hash) {
         params.hash_32b = hash;
         params.hash_valid = 1;
@@ -205,6 +244,10 @@ int
 ftlv4_remove(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
 
     if (hash) {
         params.hash_32b = hash;
@@ -457,6 +500,10 @@ ftlv6_insert(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
     if (hash) {
         params.hash_32b = hash;
         params.hash_valid = 1;
@@ -472,6 +519,10 @@ int
 ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
 
     if (hash) {
         params.hash_32b = hash;
