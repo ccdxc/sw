@@ -103,8 +103,15 @@ increment_ip_addr (ip_addr_t *ipaddr, int width = 1)
             ipaddr->addr.v4_addr += width;
             break;
         case IP_AF_IPV6:
-            // TODO: handle overflow ?
-            ipaddr->addr.v6_addr.addr64[1] += width;
+            if (likely(!((ipaddr->addr.v6_addr.addr64[0] == ((uint64_t)-1)) &&
+                         (ipaddr->addr.v6_addr.addr64[1] == ((uint64_t)-1))))) {
+                for (uint8_t i = IP6_ADDR8_LEN - 1; i >= 0 ; i--) {
+                    // keep adding one until there is no rollover
+                    if ((++(ipaddr->addr.v6_addr.addr8[i]))) {
+                        break;
+                    }
+                }
+            }
             break;
         default:
             SDK_ASSERT(0);

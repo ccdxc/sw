@@ -15,22 +15,16 @@ namespace api_test {
 class policy_feeder : public feeder {
 public:
     /// Test params
-    pds_policy_key_t key;
-    uint16_t num_rules;
+    pds_policy_spec_t spec;
     uint16_t stateful_rules;
-    rule_t *rules;
-    rule_dir_t direction;
-    policy_type_t type;
-    uint8_t af;
     std::string cidr_str;
-    ip_prefix_t pfx;
-    uint32_t num_policy;
 
     /// \brief constructor
     policy_feeder() { };
     policy_feeder(policy_feeder& feeder) {
-        init(feeder.key, feeder.stateful_rules, feeder.direction,
-             feeder.type, feeder.af, feeder.cidr_str, feeder.num_obj);
+        init(feeder.spec.key, feeder.stateful_rules,
+             feeder.spec.direction, feeder.spec.policy_type, feeder.spec.af,
+             feeder.cidr_str, feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
@@ -55,7 +49,8 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const policy_feeder& obj) {
     os << "Policy feeder =>"
-       << " id: " << obj.key.id
+       << " id: " << obj.spec.key.id
+       << " dir: " << obj.spec.direction
        << " cidr_str: " << obj.cidr_str;
     return os;
 }

@@ -9,6 +9,9 @@
 
 namespace api_test {
 
+#define MAX_RANGE_RULES_V6 5
+#define MAX_RANGE_RULES_V4 20
+
 //----------------------------------------------------------------------------
 // Policy feeder class routines
 //----------------------------------------------------------------------------
@@ -24,30 +27,28 @@ policy_feeder::init(pds_policy_key_t key,
     uint32_t max_rules = ((af == IP_AF_IPV4) ?
                             PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY :
                             PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY);
-    this->key = key;
-    this->num_rules = max_rules;
+    memset(&this->spec, 0, sizeof(pds_policy_spec_t));
+    this->spec.key = key;
+    this->spec.num_rules = max_rules;
     this->stateful_rules = stateful_rules;
-    this->direction = direction;
-    this->type = type;
-    this->af = af;
+    this->spec.direction = direction;
+    this->spec.policy_type = type;
+    this->spec.af = af;
+    this->spec.rules = NULL;
     this->cidr_str = cidr_str;
     num_obj = num_policy;
 }
 
 void
 policy_feeder::iter_next(int width) {
-    ip_addr_t ipaddr = {0};
-
-    ip_prefix_ip_next(&pfx, &ipaddr);
-    memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
-    key.id += width;
+    spec.key.id += width;
     cur_iter_pos++;
 }
 
 void
 policy_feeder::key_build(pds_policy_key_t *key) const {
     memset(key, 0, sizeof(pds_policy_key_t));
-    key->id = this->key.id;
+    key->id = this->spec.key.id;
 }
 
 void
@@ -55,81 +56,96 @@ create_rules(std::string cidr_str, uint16_t num_rules,
              rule_t **rules, uint16_t stateful_rules)
 {
     ip_prefix_t ip_pfx;
+    uint16_t    num_range_rules;
 
     *rules =
-        (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+        (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                              num_rules * sizeof(rule_t));
     extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
-    for (uint32_t i = 0; i < num_rules; i++) {
-        if (ip_pfx.addr.af == IP_AF_IPV4) {
-            if (stateful_rules-- < PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY) {
-                (*rules)[i].stateful = true;
-                (*rules)[i].match.l4_match.sport_range.port_lo = 0;
-                (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
-                (*rules)[i].match.l4_match.dport_range.port_lo = 0;
-                (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+
+    if (apulu()) {
+        num_range_rules = (ip_pfx.addr.af == IP_AF_IPV6)?
+                           MAX_RANGE_RULES_V6: MAX_RANGE_RULES_V4;
+        for (uint32_t i = 0; i < num_rules; i++) {
+            (*rules)[i].match.l4_match.sport_range.port_lo = 0;
+            (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
+            (*rules)[i].match.l4_match.dport_range.port_lo = 0;
+            (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+            (*rules)[i].match.l3_match.ip_proto = IP_PROTO_TCP;
+            // create few as range match rules and rest as prefix
+            if (num_range_rules) {
+                (*rules)[i].match.l3_match.src_match_type = IP_MATCH_RANGE;
+                (*rules)[i].match.l3_match.dst_match_type = IP_MATCH_RANGE;
+                (*rules)[i].match.l3_match.src_ip_range.af = ip_pfx.addr.af;
+                memcpy(&(*rules)[i].match.l3_match.src_ip_range.ip_lo,
+                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                memcpy(&(*rules)[i].match.l3_match.dst_ip_range.ip_lo,
+                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                increment_ip_addr(&ip_pfx.addr, 2);
+                memcpy(&(*rules)[i].match.l3_match.src_ip_range.ip_hi,
+                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                memcpy(&(*rules)[i].match.l3_match.dst_ip_range.ip_hi,
+                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                increment_ip_addr(&ip_pfx.addr);
+                (*rules)[i].action_data.fw_action.action
+                                = SECURITY_RULE_ACTION_DENY;
+                num_range_rules--;
             } else {
-                (*rules)[i].stateful = false;
-                (*rules)[i].match.l4_match.icmp_type = 1;
-                (*rules)[i].match.l4_match.icmp_code = 1;
-            }
-            (*rules)[i].match.l3_match.ip_proto = 1;
-            str2ipv4pfx((char*)cidr_str.c_str(),
-                        &(*rules)[i].match.l3_match.src_ip_pfx);
-            ip_pfx.addr.addr.v4_addr += 1;
-            cidr_str = ippfx2str(&ip_pfx);
-        } else {
-            if (stateful_rules-- < PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY) {
-                (*rules)[i].stateful = true;
-                (*rules)[i].match.l4_match.sport_range.port_lo = 0;
-                (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
-                (*rules)[i].match.l4_match.dport_range.port_lo = 0;
-                (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
-            } else {
-                (*rules)[i].stateful = false;
-                (*rules)[i].match.l4_match.icmp_type = 1;
-                (*rules)[i].match.l4_match.icmp_code = 1;
-            }
-            (*rules)[i].match.l3_match.ip_proto = 1;
-            str2ipv6pfx((char*)cidr_str.c_str(),
-                        &(*rules)[i].match.l3_match.src_ip_pfx);
-            for (uint8_t byte = IP6_ADDR8_LEN - 1; byte >= 0 ; byte--) {
-                // keep adding one until there is no rollover
-                if ((++(ip_pfx.addr.addr.v6_addr.addr8[byte]))) {
-                    break;
-                }
+                (*rules)[i].match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                (*rules)[i].match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                memcpy(&(*rules)[i].match.l3_match.src_ip_pfx,
+                       &ip_pfx, sizeof(ip_prefix_t));
+                // using same ip as dst ip just for testing
+                memcpy(&(*rules)[i].match.l3_match.dst_ip_pfx,
+                       &ip_pfx, sizeof(ip_prefix_t));
+                increment_ip_addr(&ip_pfx.addr);
+                (*rules)[i].action_data.fw_action.action
+                                = SECURITY_RULE_ACTION_ALLOW;
             }
             cidr_str = ippfx2str(&ip_pfx);
         }
-        (*rules)[i].action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+    } else {
+        for (uint32_t i = 0; i < num_rules; i++) {
+            if (stateful_rules) {
+                (*rules)[i].stateful = true;
+                (*rules)[i].match.l4_match.sport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
+                (*rules)[i].match.l4_match.dport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+                (*rules)[i].match.l3_match.ip_proto = IP_PROTO_TCP;
+                stateful_rules--;
+            } else {
+                (*rules)[i].stateful = false;
+                (*rules)[i].match.l4_match.icmp_type = 1;
+                (*rules)[i].match.l4_match.icmp_code = 1;
+                (*rules)[i].match.l3_match.ip_proto = IP_PROTO_ICMP;
+            }
+            memcpy(&(*rules)[i].match.l3_match.src_ip_pfx,
+                   &ip_pfx, sizeof(ip_prefix_t));
+            increment_ip_addr(&ip_pfx.addr);
+            cidr_str = ippfx2str(&ip_pfx);
+            (*rules)[i].action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+        }
     }
 }
 
 void
 policy_feeder::spec_build(pds_policy_spec_t *spec) const {
-    memset(spec, 0, sizeof(pds_policy_spec_t));
-    this->key_build(&spec->key);
-
-    spec->key.id = this->key.id;
-    spec->num_rules = this->num_rules;
-    create_rules(this->cidr_str, this->num_rules, (rule_t**)&(this->rules),
+    memcpy(spec, &this->spec, sizeof(pds_policy_spec_t));
+    create_rules(this->cidr_str, this->spec.num_rules, (rule_t**)&(spec->rules),
                  this->stateful_rules);
-    spec->rules = this->rules;
-    spec->direction = this->direction;
-    spec->policy_type = this->type;
-    spec->af = this->af;
 }
 
 bool
 policy_feeder::key_compare(const pds_policy_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_policy_key_t)) == 0);
+    return (memcmp(key, &this->spec.key, sizeof(pds_policy_key_t)) == 0);
 }
 
 bool
 policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
-    if (spec->direction != direction)
+    if (spec->direction != this->spec.direction)
         return false;
-    if (spec->af != af)
+    if (spec->af != this->spec.af)
         return false;
 
     return true;

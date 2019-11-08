@@ -28,9 +28,9 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 exit 0
 
 # gtests
-#echo "Running policy test"
-#$GDB apulu_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_policy_test.xml" > /dev/null
-#[[ $? -ne 0 ]] && echo "apulu_policy_test failed!" && exit 1
+echo "Running policy test"
+$GDB apulu_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_policy_test.xml" > /dev/null
+[[ $? -ne 0 ]] && echo "apulu_policy_test failed!" && exit 1
 
 #echo "Running rfc rte bitmap test"
 #$GDB apulu_rte_bitmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_rte_bitmap_test.xml" > apulu_rte_bitmap_test_log.txt
