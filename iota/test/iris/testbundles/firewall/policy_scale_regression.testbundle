@@ -5,7 +5,7 @@ meta:
 testcases:
     -   name    : PolicyNetagentExpansion
         testcase: testcases.security.policy_rules_netagent_expansion
-	iterators :
+        iterators :
             type  : simple
             app : ["udp", "tcp"]
 

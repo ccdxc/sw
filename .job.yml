@@ -66,6 +66,12 @@ targets:
     area:
     sub-area:
     feature:
+  yaml-checker:
+    commands: ["sh", "-c", "./scripts/check-yaml.py iota"]
+    owners: ["email:salvoc@pensando.io"]
+    area:
+    sub-area:
+    feature:
 image:
   bind_dir: "/sw"
   work_dir: "/sw"
