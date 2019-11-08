@@ -57,7 +57,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     pds_lif_spec_t spec = { 0 };
 
     // program tx scheduler
-    lif_program_tx_scheduler_(info);
+    //lif_program_tx_scheduler_(info);
 
     spec.key = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
