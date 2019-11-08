@@ -2,7 +2,7 @@
 
 export MS_ROOT = $(TOPDIR)/nic/third-party/metaswitch
 export GMK_TARGETOS = linuxmt64
-export MODE = release
+export MODE = debug
 
 export MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)/$(MODE)
 
