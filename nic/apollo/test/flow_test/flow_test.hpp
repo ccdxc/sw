@@ -7,6 +7,8 @@
 
 #include "nic/apollo/test/scale/test_common.hpp"
 
+#ifndef SKIP_FLOW
+
 #ifdef APOLLO
 #include "flow_test_apollo.hpp"
 #elif ARTEMIS
@@ -15,6 +17,8 @@
 #include "flow_test_apulu.hpp"
 #else
 #include "flow_test_iris.hpp"
+#endif
+
 #endif
 
 #endif

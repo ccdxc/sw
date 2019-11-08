@@ -5,9 +5,10 @@
 #include <iostream>
 #include <math.h>
 #include "nic/apollo/test/flow_test/flow_test.hpp"
-#include "nic/apollo/test/scale/test_common.hpp"
 
+#ifndef SKIP_FLOW
 flow_test *g_flow_test_obj;
+#endif
 
 sdk_ret_t
 create_route_table (pds_route_table_spec_t *route_table)
@@ -39,7 +40,9 @@ create_local_mapping (pds_local_mapping_spec_t *pds_local_mapping)
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#ifndef SKIP_FLOW
         g_flow_test_obj->add_local_ep(pds_local_mapping);
+#endif
         return rv;
     } else {
         return SDK_RET_OK;
@@ -56,7 +59,9 @@ create_remote_mapping (pds_remote_mapping_spec_t *pds_remote_mapping)
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#ifndef SKIP_FLOW
         g_flow_test_obj->add_remote_ep(pds_remote_mapping);
+#endif
         return rv;
     } else {
         return SDK_RET_OK;
@@ -214,6 +219,7 @@ create_mirror_session (pds_mirror_session_spec_t *ms)
 sdk_ret_t
 create_objects_init (test_params_t *test_params)
 {
+#ifndef SKIP_FLOW
     g_flow_test_obj = new flow_test();
     g_flow_test_obj->set_cfg_params(test_params,
             test_params->dual_stack,
@@ -236,18 +242,21 @@ create_objects_init (test_params_t *test_params)
             TESTAPP_MAX_SERVICE_TEP,
             TESTAPP_MAX_REMOTE_SERVICE_TEP);
 #endif
+#endif
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 create_objects_end (void)
 {
+#ifndef SKIP_FLOW
     sdk_ret_t ret;
 
     ret = g_flow_test_obj->create_flows();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#endif
 
     return SDK_RET_OK;
 }
