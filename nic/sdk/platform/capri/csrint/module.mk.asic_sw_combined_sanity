@@ -93,6 +93,7 @@ MODULE_SRCS     = ${ASIC_SRC}/capri/model/cap_top/cap_top_csr.cc \
                   ${ASIC_SRC}/capri/verif/apis/cap_sbus_api.cc \
                   ${ASIC_SRC}/capri/verif/apis/cap_platform_api.cc \
                   ${ASIC_SRC}/capri/verif/apis/cap_freq_api.cc \
+                  ${ASIC_SRC}/capri/verif/apis/gen/cap_elam_api.cc \
                   $(wildcard ${ASIC_SRC}/capri/model/cap_dpa/*csr.cc) \
                   $(wildcard ${ASIC_SRC}/capri/model/cap_pb/*port*csr.cc) \
                   ${SDKDIR}/platform/capri/csrint/csr_init.cc

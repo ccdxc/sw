@@ -147,6 +147,7 @@
 ./capri/verif/apis/cap_pb_api.h
 ./capri/verif/apis/cap_wa_api.h
 ./capri/verif/apis/sdram_csr_ipxact.h
+./capri/verif/apis/cap_elam_api.h 
 ./ip/verif/pcpp/dpi_utils.h
 ./ip/verif/pcpp/pen_axi_decoders.h
 ./ip/verif/pcpp/pen_axi_info.h
