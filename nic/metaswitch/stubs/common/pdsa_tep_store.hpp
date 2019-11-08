@@ -14,39 +14,45 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include <cstdint>
 #include <map>
 
 namespace pdsa_stub {
 
 struct tep_dmac_t {
-     pds_tep_id_t hal_tep_idx;
-     pds_nexthop_group_id_t hal_ov_ecmp_idx; // Need to be made list of back-pointers
-                                             // when we support Overlay ecmp
+    pds_tep_id_t hal_tep_idx;
+    // TODO: Overlay ECMP support - Change to list of back-pointers.
+    // Refer below.
+    pds_nexthop_group_id_t hal_oecmp_idx;
 };
+class tep_store_t;
 
-class tep_obj_t : public slab_obj_t<tep_obj_t> {
+class tep_obj_t : public slab_obj_t<tep_obj_t>,
+                  public base_obj_t {
 public:
     struct properties_t {
-        ip_addr_t      tep_ip;
-        ms_ps_id_t     ms_ps_id;
-        pds_tep_id_t   hal_tep_idx;
-        // Need to be made list of back-pointers when we support Overlay ecmp
-        // But for no overlay ECMP support case we can allocate 
-        // the ECMP entry in HAL for each TEP at TEP create time
-        // rather than MAC-IP mapping create.
-        // This will avoid the need for ECMP Mgmt and ref-counting 
-        // of VXLAN tunnel ECMP based on MAC-IP create / delete. 
-        // Instead we can delete the ECMP entry as part of the TEP delete. 
-        pds_nexthop_group_id_t  hal_ov_ecmp_idx; 
+        ip_addr_t               tep_ip;
+        ms_ps_id_t              ms_ps_id;
+        pds_nexthop_group_id_t  hal_uecmp_idx;
+        pds_tep_id_t            hal_tep_idx;
+        // TODO: Overlay ECMP support - Change to list of back-pointers.
+        // Without overlay ECMP support simplify to tie the life of the 
+        // ECMP entry for each TEP in HAL to the life of the TEP itself.
+        // This avoids the need for ECMP Mgmt and ref-counting 
+        // based on MAC-IP create / delete. 
+        // ECMP entries for Type-5 routes are managed independently by 
+        // Metaswitch ROPI stub.
+        pds_nexthop_group_id_t  hal_oecmp_idx; 
 
-        properties_t(ip_addr_t tep_ip_, ms_ps_id_t ms_ps_id_, pds_tep_id_t hal_tep_idx_, 
-                   pds_nexthop_group_id_t hal_ov_ecmp_idx_) 
-            : tep_ip(tep_ip_), ms_ps_id(ms_ps_id_), hal_tep_idx(hal_tep_idx_),
-              hal_ov_ecmp_idx(hal_ov_ecmp_idx_) {};
+        properties_t(ip_addr_t tep_ip_, pds_nexthop_group_id_t hal_uecmp_idx_, pds_tep_id_t hal_tep_idx_, 
+                     pds_nexthop_group_id_t hal_oecmp_idx_) 
+            : tep_ip(tep_ip_), hal_uecmp_idx(hal_uecmp_idx_), hal_tep_idx(hal_tep_idx_),
+              hal_oecmp_idx(hal_oecmp_idx_) {};
     };
 
     tep_obj_t(const properties_t& prop) : prop_(prop) {};
 
+    properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
     void set_properties(const properties_t& prop) {prop_ = prop;}
 
@@ -58,6 +64,9 @@ public:
     const tep_dmac_t* dmac_info(const mac_addr_wr_t& mac) const;
     // return copy
     bool dmac_info(const mac_addr_wr_t& mac, tep_dmac_t* tep_dmac) const;
+    uint32_t key(void) const {return prop_.tep_ip.addr.v4_addr;}
+
+    void update_store(state_t* state, bool op_delete) override;
 
 private:
     properties_t  prop_;
@@ -68,10 +77,11 @@ private:
 };
 
 // TODO: Need hash function for ip_addr_t to support ipv6
-class tep_store_t : public obj_store_t <uint32_t, tep_obj_t> 
+class tep_store_t : public obj_store_t<uint32_t, tep_obj_t> 
 {
 };
 
+void tep_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 }
 
 #endif

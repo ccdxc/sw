@@ -14,7 +14,8 @@
 
 namespace pdsa_stub {
 
-class bd_obj_t : public slab_obj_t<bd_obj_t> {
+class bd_obj_t : public slab_obj_t<bd_obj_t>,
+                 public base_obj_t {
 public:
     struct properties_t {
         ms_bd_id_t        bd_id;
@@ -26,7 +27,10 @@ public:
 
     bd_obj_t(const properties_t& prop) : prop_(prop) {};
     void set_properties(const properties_t& prop) {prop_ = prop;}
+    properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
+    ms_bd_id_t key(void) const {return prop_.bd_id;}
+    void update_store(state_t* state, bool op_delete) override;
 
 private:  
     properties_t prop_;
@@ -34,6 +38,8 @@ private:
 
 class bd_store_t : public obj_store_t <ms_bd_id_t, bd_obj_t> {
 };
+
+void bd_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 
 }
 

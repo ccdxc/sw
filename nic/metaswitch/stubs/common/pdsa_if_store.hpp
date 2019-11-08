@@ -27,8 +27,13 @@ enum class ms_iftype_t
     UNKNOWN
 };
 
-class if_obj_t : public slab_obj_t<if_obj_t> {
+class if_obj_t : public slab_obj_t<if_obj_t>, 
+                 public base_obj_t {
 public:
+    // *** WARNING 
+    // Ensure that ifindex is always the first member in any of the 
+    // xxx_properties_t struct below sinhce the key() member function 
+    // directly accesses this without checking for the struct type
     struct vxlan_tunnel_properties_t {
         ms_ifindex_t ifindex;
         ip_addr_t tep_ip;
@@ -50,9 +55,22 @@ public:
         : prop_(irb) {};
 
     ms_iftype_t type(void) {return prop_.iftype_;}
-    const vxlan_tunnel_properties_t& vxlan_tunnel_properties(ms_ifindex_t ifindex) const; // throws Error if wrong type
-    const vxlan_port_properties_t& vxlan_port_properties(ms_ifindex_t ifindex) const; // throws Error if wrong type
-    const irb_properties_t& irb_properties(ms_ifindex_t ifindex) const; // throws Error if wrong type
+    const vxlan_tunnel_properties_t& vxlan_tunnel_properties() const {
+        SDK_ASSERT (prop_.iftype_ == ms_iftype_t::VXLAN_TUNNEL);
+        return prop_.vxt_;
+    }
+    const vxlan_port_properties_t& vxlan_port_properties() const {
+        SDK_ASSERT (prop_.iftype_ == ms_iftype_t::VXLAN_PORT);
+        return prop_.vxp_;
+    }
+    const irb_properties_t& irb_properties() const {
+        SDK_ASSERT (prop_.iftype_ == ms_iftype_t::IRB);
+        return prop_.irb_;
+    }
+    ms_ifindex_t key(void) const {return prop_.vxt_.ifindex;} // Accessing any of the union types 
+                                                          // should be fine since this is always
+                                                          // the first member
+    void update_store(state_t* state, bool op_delete) override;
 
 private:
     struct properties_t {
@@ -76,27 +94,35 @@ private:
 class if_store_t : public obj_store_t <ms_ifindex_t, if_obj_t> {
 };
 
-class lif_obj_t: public slab_obj_t<lif_obj_t> {
+void if_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
+
+class host_lif_obj_t: public slab_obj_t<host_lif_obj_t>, 
+                 public base_obj_t {
 public:
     struct properties_t {
-        pds_lif_key_t lif;
+        pds_lif_key_t host_lif;
         ms_bd_id_t  bd_id;
         ms_ifindex_t ifindex;
-        properties_t(pds_lif_key_t lif_, ms_bd_id_t bd_id_, ms_ifindex_t ifindex_) 
-            : lif(lif_), bd_id(bd_id_), ifindex(ifindex_) {};
+        properties_t(pds_lif_key_t host_lif_, ms_bd_id_t bd_id_, ms_ifindex_t ifindex_) 
+            : host_lif(host_lif_), bd_id(bd_id_), ifindex(ifindex_) {};
     };
-    lif_obj_t(const properties_t& prop) 
+    host_lif_obj_t(const properties_t& prop) 
         : prop_(prop) {};
 
-    const properties_t& properties(void) {return prop_;}
+    properties_t& properties(void) {return prop_;}
+    const properties_t& properties(void) const {return prop_;}
     void set_properties(const properties_t& prop) {prop_ = prop;}
+    pds_lif_key_t key (void) const {return prop_.host_lif;}
+    void update_store(state_t* state, bool op_delete) override;
 
 private:
     properties_t prop_;
 };
 
-class lif_store_t : public obj_store_t <pds_lif_key_t, lif_obj_t> {
+class host_lif_store_t : public obj_store_t <pds_lif_key_t, host_lif_obj_t> {
 };
+
+void host_lif_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 
 }
 

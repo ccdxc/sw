@@ -8,8 +8,9 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include <new>
+#include <memory>
 
-// NBASE mempool
+// NBASE mempool for comparison
 // nbb_mm_cb_data
 // * operator new(size, usage = NBB_NORETRY_ACT) {
 //      Control block type mempool
@@ -28,45 +29,41 @@
 
 namespace pdsa_stub {
 
-class slab_destroy_t {
-public:
-    void operator()(sdk::lib::slab* ptr) {
-#if 0 // TODO: Need HAL slab library linkage
-        ptr->destroy (ptr);
-#endif
-    }
-};
-
-//-----------------------------------------------------------------------------------------
-// All PDSA stub objects that need to be allocated from the Slab needs to derive from this.  
-// They should also prove a slab() static method to obtain the slab pointer for the object
-//----------------------------------------------------------------------------------------- 
+//----------------------------------------------------------------
+// All PDSA stub objects that need to be allocated from the Slab 
+// needs to derive from this. set_slab() needs to be called for
+// each of them at init time.
+//--------------------------------------------------------------- 
 template <typename DERIVED_OBJ>
 class slab_obj_t
 {
 public :
     void* operator new(size_t size) {
-        SDK_ASSERT (slab()->elem_sz() > size);
+        SDK_ASSERT (slab()->elem_sz() >= size);
         auto ptr = slab()->alloc(); 
         if (ptr == nullptr) {throw std::bad_alloc();}
         return ptr;
     }
 
     void operator delete(void* ptr) {
-#if 0 // TODO: Requires SDK library linkage
         slab()->free(ptr); 
-#else
-        ptr= ptr;
-#endif
     }
 
     static sdk::lib::slab* slab(void) {return slab_;}
     static void set_slab(sdk::lib::slab* slb) {slab_ = slb;}
-
 private:
     static sdk::lib::slab* slab_;
 };
 
+class slab_destroy_t {
+public:
+    void operator()(sdk::lib::slab* ptr) {
+        ptr->destroy (ptr);
+    }
+};
+
+// Unique pointer to entire slab
+using slab_uptr_t = std::unique_ptr<sdk::lib::slab, slab_destroy_t>;
 }
 
 #endif
