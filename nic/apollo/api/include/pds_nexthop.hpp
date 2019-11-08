@@ -156,7 +156,8 @@ typedef struct pds_nexthop_group_info_s {
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_t *spec,
-                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+                                   pds_batch_ctxt_t bctxt =
+                                                     PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read a given nexthop group
 /// \param[in]  key  key of the nexthop group
@@ -170,15 +171,18 @@ sdk_ret_t pds_nexthop_group_read(pds_nexthop_group_key_t *key,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_t *spec,
-                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+                                   pds_batch_ctxt_t bctxt =
+                                                     PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete a given nexthop group
 /// \param[in] key key of the nexthop group
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-/// \remark    A valid nexthop key should be passed
+/// \remark    A valid nexthop group key should be passed
 sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
-                                   pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+                                   pds_batch_ctxt_t bctxt =
+                                                     PDS_BATCH_CTXT_INVALID);
+
 /// @}
 
 #endif    // __INCLUDE_API_PDS_NEXTHOP_HPP__

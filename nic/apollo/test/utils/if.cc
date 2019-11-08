@@ -11,6 +11,7 @@
 namespace api_test {
 
 std::string k_if_ippfx("90.0.0.1");
+uint32_t k_l3_if_id = 0x70000001;
 
 //----------------------------------------------------------------------------
 // Interface feeder class routines

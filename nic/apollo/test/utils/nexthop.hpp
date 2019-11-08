@@ -9,10 +9,12 @@
 #include "nic/apollo/api/nexthop_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/if.hpp"
 
 namespace api_test {
 
 extern const pds_nh_type_t k_nh_type;
+extern const uint32_t k_max_nh;
 
 // NH test feeder class
 class nexthop_feeder : public feeder {
@@ -35,7 +37,7 @@ public:
               pds_nexthop_id_t id=1,
               pds_nh_type_t type=k_nh_type,
               uint16_t vlan=1, pds_vpc_id_t vpc_id=1,
-              pds_if_id_t if_id = 1,
+              pds_if_id_t if_id = k_l3_if_id,
               pds_tep_id_t tep_id = 1);
 
     // Iterate helper routines
@@ -78,8 +80,10 @@ API_DELETE(nexthop);
 
 // Misc function prototypes
 void sample_nexthop_setup(pds_batch_ctxt_t);
-void sample_nexthop_teardown(pds_batch_ctxt_t);
+void sample_underlay_nexthop_setup(pds_batch_ctxt_t);
 
+void sample_nexthop_teardown(pds_batch_ctxt_t);
+void sample_underlay_nexthop_teardown(pds_batch_ctxt_t);
 }    // namespace api_test
 
 #endif    // __TEST_UTILS_NH_HPP__

@@ -54,6 +54,10 @@ echo "Running nexthop test"
 $GDB apulu_nh_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_nh_test.xml" > apulu_nh_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_nh_test failed!" && exit 1
 
+echo "Running nexthop-group test"
+$GDB apulu_nh_group_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_nh_group_test.xml" > apulu_nh_group_test.log.txt
+[[ $? -ne 0 ]] && echo "apulu_nh_group_test failed!" && exit 1
+
 echo "Running vnic test"
 $GDB apulu_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_vnic_test.xml" > apulu_vnic_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_vnic_test failed!" && exit 1
@@ -73,6 +77,7 @@ $GDB apulu_if_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu
 #echo "Running mirror session test"
 #$GDB apulu_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_mirror_session_test.xml" > apulu_mirror_session_test.log.txt
 #[[ $? -ne 0 ]] && echo "apulu_mirror_session_test failed!" && exit 1
+
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apulu_scale_test -c hal.json -i ${NICDIR}/apulu/test/scale/scale_cfg.json
 
 echo "Success"

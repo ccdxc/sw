@@ -15,6 +15,7 @@ namespace api_test {
 
 // Export variables
 extern std::string k_if_ippfx;
+extern uint32_t k_l3_if_id;
 
 // Interface test feeder class
 class if_feeder : public feeder {

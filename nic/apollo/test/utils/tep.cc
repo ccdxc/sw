@@ -14,10 +14,13 @@ constexpr uint64_t k_tep_mac = 0x0E0D0A0B0200;
 constexpr pds_nexthop_key_t k_base_nh_key = {1};
 constexpr pds_nexthop_group_key_t k_base_nh_group_key = {1};
 const uint16_t k_max_tep = apulu() ? 2048 : PDS_MAX_TEP;
+static constexpr bool k_nat = FALSE;
+static const std::string k_base_dipi = "50::50:1:1";
 
 //----------------------------------------------------------------------------
 // TEP feeder class routines
 //----------------------------------------------------------------------------
+
 
 void
 tep_feeder::init(uint32_t id, std::string ip_str, uint32_t num_tep,
@@ -166,22 +169,35 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 // do not modify these sample values as rest of system is sync with these
 static tep_feeder k_tep_feeder;
 
+static inline void tep_feeder_init(uint32_t tep_id, std::string ip_str,
+                                   uint32_t num_tep)
+{
+    if (artemis()) {
+        k_tep_feeder.init(tep_id, ip_str, k_max_tep, k_zero_encap,
+                          k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, k_tep_mac);
+    } else if (apulu()) {
+        k_tep_feeder.init(tep_id, k_tep_mac, ip_str);
+    } else if (apollo()) {
+        k_tep_feeder.init(tep_id, ip_str, num_tep);
+    }
+}
+
 void sample_tep_setup(pds_batch_ctxt_t bctxt, uint32_t tep_id,
                       std::string ip_str, uint32_t num_tep) {
     // setup and teardown parameters should be in sync
-    k_tep_feeder.init(tep_id, ip_str, num_tep);
+    tep_feeder_init(tep_id, ip_str, num_tep);
     many_create(bctxt, k_tep_feeder);
 }
 
 void sample_tep_validate(uint32_t tep_id, std::string ip_str,
                          uint32_t num_tep) {
-    k_tep_feeder.init(tep_id, ip_str, num_tep);
+    tep_feeder_init(tep_id, ip_str, num_tep);
     many_read(k_tep_feeder);
 }
 
 void sample_tep_teardown(pds_batch_ctxt_t bctxt, uint32_t tep_id,
                          std::string ip_str, uint32_t num_tep) {
-    k_tep_feeder.init(tep_id, ip_str, num_tep);
+    tep_feeder_init(tep_id, ip_str, num_tep);
     many_delete(bctxt, k_tep_feeder);
 }
 

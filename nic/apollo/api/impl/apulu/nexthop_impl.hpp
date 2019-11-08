@@ -179,6 +179,11 @@ populate_nh_info_ (pds_nexthop_spec_t *spec,
     memset(nh_data, 0, sizeof(*nh_data));
     nh_data->action_id = NEXTHOP_NEXTHOP_INFO_ID;
     intf = if_db()->find(&spec->l3_if);
+    if (!intf) {
+        PDS_TRACE_ERR("Interface not found for nh group %u l3 if %u",
+                      spec->key.id, spec->l3_if.id);
+        return SDK_RET_INVALID_ARG;
+    }
     if (intf->type() != PDS_IF_TYPE_L3) {
         PDS_TRACE_ERR("Unsupported interface %u type %u in nexthop %u",
                       intf->key().id, intf->type(), spec->key.id);

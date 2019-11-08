@@ -27,7 +27,7 @@ public:
 
     /// \brief Initialize the iterator
     void iter_init(void) { cur_iter_pos = 0; }
-    /// \brief Returns true if there are more objects 
+    /// \brief Returns true if there are more objects
     bool iter_more(void) const { return (cur_iter_pos < num_obj); }
     /// \brief Whether this object support read
     bool read_unsupported(void) const { return false; }

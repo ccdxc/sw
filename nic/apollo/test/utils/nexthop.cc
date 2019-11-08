@@ -11,6 +11,7 @@
 namespace api_test {
 
 const pds_nh_type_t k_nh_type = apulu() ? PDS_NH_TYPE_UNDERLAY : PDS_NH_TYPE_IP;
+const uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 
 //----------------------------------------------------------------------------
 // NEXTHOP feeder class routines
@@ -132,12 +133,22 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-static nexthop_feeder k_nexthop_feeder;
+static nexthop_feeder k_nexthop_feeder, k_unh_feeder;
 
 void sample_nexthop_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_nexthop_feeder.init("30.30.30.1");
     many_create(bctxt, k_nexthop_feeder);
+}
+
+void sample_underlay_nexthop_setup(pds_batch_ctxt_t bctxt) {
+    k_unh_feeder.init("", 0x1, k_max_nh, 1, PDS_NH_TYPE_UNDERLAY);
+    many_create(bctxt, k_unh_feeder);
+}
+
+void sample_underlay_nexthop_teardown(pds_batch_ctxt_t bctxt) {
+    k_unh_feeder.init("", 0x1, k_max_nh, 1, PDS_NH_TYPE_UNDERLAY);
+    many_delete(bctxt, k_unh_feeder);
 }
 
 void sample_nexthop_teardown(pds_batch_ctxt_t bctxt) {

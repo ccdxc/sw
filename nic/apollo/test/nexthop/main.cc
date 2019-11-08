@@ -17,7 +17,6 @@ namespace api_test {
 // Globals
 static const std::string k_base_nh_ip = "50.50.1.1";
 static constexpr uint64_t k_base_mac = 0x0E0D0A0B0200;
-static constexpr uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 
 //----------------------------------------------------------------------------
 // NH test class

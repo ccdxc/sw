@@ -77,7 +77,6 @@ nexthop_group::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 nexthop_group::program_config(obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming nexthop group %u, type %u", key_, type_);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -122,8 +121,9 @@ nexthop_group::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
 sdk_ret_t
 nexthop_group::read(pds_nexthop_group_key_t *key,
                     pds_nexthop_group_info_t *info) {
-    return impl_->read_hw(this, (impl::obj_key_t *)key,
-                          (impl::obj_info_t *)info);
+    if (impl_)
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                              (impl::obj_info_t *)info);
     return sdk::SDK_RET_INVALID_OP;
 }
 

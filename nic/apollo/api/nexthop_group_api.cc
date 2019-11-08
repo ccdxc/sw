@@ -107,7 +107,8 @@ pds_nexthop_group_read (pds_nexthop_group_key_t *key,
         return rv;
     }
 
-    return SDK_RET_OK;
+    info->spec.key = *key;
+    return entry->read(key, info);
 }
 
 sdk_ret_t
