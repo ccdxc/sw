@@ -100,12 +100,14 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     p4pd_error_t p4pd_ret;
     pds_ifindex_t if_index;
     nacl_swkey_t key = { 0 };
+    static uint32_t oob_lif = 0;
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Creating oob lif %u", key_);
+    snprintf(name_, SDK_MAX_NAME_LEN, "oob_mnic%u", oob_lif++);
+    PDS_TRACE_DEBUG("Creating oob lif %s, key %u", name_, key_);
     // TODO: fix this once block indexer starts working
     // allocate required nexthops
     //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
@@ -225,13 +227,15 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     pds_ifindex_t if_index;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
+    static uint32_t inb_lif = 0;
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
     lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Creating inband lif %u", key_);
+    snprintf(name_, SDK_MAX_NAME_LEN, "inb_mnic%u", inb_lif++);
+    PDS_TRACE_DEBUG("Creating inband lif %s, key %u", name_, key_);
     // allocate required nexthops
     //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
@@ -353,12 +357,14 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
+    static uint32_t dplif = 0;
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Creating s/w datapath lif %u", key_);
+    snprintf(name_, SDK_MAX_NAME_LEN, "dp%u", dplif++);
+    PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);
     // allocate required nexthop to point to ARM datapath lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
@@ -443,18 +449,22 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
+    static uint32_t hmlif = 0, imlif = 0;
     nexthop_actiondata_t nh_data = { 0 };
     lif_internal_mgmt_ctx_t cb_ctx = { 0 };
     sdk_table_api_params_t  tparams = { 0 };
     lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
-        PDS_TRACE_DEBUG("Creating host mgmt. lif %u", key_);
+        snprintf(name_, SDK_MAX_NAME_LEN, "host_mgmt%u", hmlif++);
+        PDS_TRACE_DEBUG("Creating host lif %s for naples mgmt, key %u",
+                        name_, key_);
         host_mgmt_lif = this;
         int_mgmt_lif =
             lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
     } else if (spec->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
-        PDS_TRACE_DEBUG("Creating internal mgmt. lif %u", key_);
+        snprintf(name_, SDK_MAX_NAME_LEN, "int_mgmt%u", imlif++);
+        PDS_TRACE_DEBUG("Creating internal mgmt. lif %s, key %u", name_, key_);
         int_mgmt_lif = this;
         host_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_HOST_MGMT);
     }
