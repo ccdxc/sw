@@ -1,6 +1,7 @@
 package state
 
 import (
+	"math"
 	"testing"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -361,4 +362,22 @@ func TestInterfaceUpdateHandlerNameChanges(t *testing.T) {
 	AssertEquals(t, true, ok, "Failed to find lif1")
 	AssertEquals(t, "UP", updatedMockLif.Status.OperStatus, "Oper status doesn't reflect up status")
 	AssertEquals(t, "gandalf-the-white", mockLif.Status.IFHostStatus.HostIfName, "IF Names did not match")
+}
+
+func TestInterfaceGetByID(t *testing.T) {
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	intf, err := ag.GetInterfaceByID(1)
+	AssertOk(t, err, "Getting interface by id must work")
+	AssertEquals(t, uint64(1), intf.Status.InterfaceID, "Interface id must match")
+}
+
+func TestInterfaceGetByIDFailure(t *testing.T) {
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	intf, err := ag.GetInterfaceByID(math.MaxInt64)
+	Assert(t, err != nil, "Getting interface on non existing interface must error out")
+	AssertEquals(t, (*netproto.Interface)(nil), intf, "Interface must be nil")
 }

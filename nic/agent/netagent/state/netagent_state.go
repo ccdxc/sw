@@ -190,7 +190,6 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.SecgroupDB = make(map[string]*netproto.SecurityGroup)
 	na.TenantDB = make(map[string]*netproto.Tenant)
 	na.NamespaceDB = make(map[string]*netproto.Namespace)
-	na.EnicDB = make(map[string]*netproto.Interface)
 	na.NatPoolDB = make(map[string]*netproto.NatPool)
 	na.NatPoolLUT = make(map[string]*types.NatPoolRef)
 	na.NatPolicyDB = make(map[string]*netproto.NatPolicy)

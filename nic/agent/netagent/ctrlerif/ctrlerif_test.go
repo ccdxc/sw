@@ -296,9 +296,9 @@ func (ag *fakeAgent) ListInterface() []*netproto.Interface {
 	return nil
 }
 
-// ListHwInterface lists interfaces. Stubbed out to satisfy the ctrlerIf interface
-func (ag *fakeAgent) ListHwInterface() []*netproto.Interface {
-	return nil
+// GetInterfaceByID gets interface based on hw id. Stubbed out to satisfy interface
+func (ag *fakeAgent) GetInterfaceByID(intfID uint64) (*netproto.Interface, error) {
+	return nil, nil
 }
 
 // UpdateInterface updates an interface. Stubbed out to satisfy the ctrlerIf interface

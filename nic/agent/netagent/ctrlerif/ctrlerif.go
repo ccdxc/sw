@@ -249,7 +249,7 @@ func (client *NpmClient) netifWorker() {
 	idPrefix := client.agent.GetAgentID()
 
 	// fetch interfaes discovered by hw and populate them in npm
-	netifs := client.agent.ListHwInterface()
+	netifs := client.agent.ListInterface()
 	for _, n := range netifs {
 		netif := *n
 		netif.ObjectMeta.Name = idPrefix + "-" + netif.ObjectMeta.Name

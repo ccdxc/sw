@@ -131,7 +131,6 @@ type NetAgent struct {
 	SecgroupDB              map[string]*netproto.SecurityGroup         // security group object db
 	TenantDB                map[string]*netproto.Tenant                // tenant object db
 	NamespaceDB             map[string]*netproto.Namespace             // tenant object db
-	EnicDB                  map[string]*netproto.Interface             // ENIC interface object db
 	NatPoolDB               map[string]*netproto.NatPool               // Nat Pool object DB
 	NatPolicyDB             map[string]*netproto.NatPolicy             // Nat Policy Object DB
 	NatBindingDB            map[string]*netproto.NatBinding            // Nat Binding Object DB
@@ -204,7 +203,6 @@ type CtrlerIntf interface {
 	UpdateInterface(intf *netproto.Interface) error                                         // updates an interface
 	DeleteInterface(tn, ns, name string) error                                              // deletes an interface
 	ListInterface() []*netproto.Interface                                                   // lists all interfaces
-	ListHwInterface() []*netproto.Interface                                                 // lists all hw interfaces
 	CreateNatPool(np *netproto.NatPool) error                                               // creates nat pool
 	FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error)                             // finds a nat pool
 	ListNatPool() []*netproto.NatPool                                                       // lists nat pools
@@ -282,7 +280,8 @@ type CtrlerIntf interface {
 	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to delete dependent objects
 	PurgeConfigs() error                                                                    // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
 	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                        // Allow client to query for options to use for watch
-	LifUpdateHandler(lif *halproto.LifGetResponse) error
+	LifUpdateHandler(lif *halproto.LifGetResponse) error                                    // Handle async lif updates
+	GetInterfaceByID(intfID uint64) (*netproto.Interface, error)                            // ID to name mapping API for interfaces
 }
 
 // PluginIntf is the API provided by the netagent to plugins

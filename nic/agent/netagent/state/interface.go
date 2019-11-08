@@ -88,7 +88,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	na.saveInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	na.EnicDB[key] = intf
+	na.HwIfDB[key] = intf
 	na.Unlock()
 	err = na.Store.Write(intf)
 
@@ -107,7 +107,7 @@ func (na *Nagent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error
 
 	// lookup the database
 	key := na.Solver.ObjectKey(meta, typeMeta)
-	tn, ok := na.EnicDB[key]
+	tn, ok := na.HwIfDB[key]
 	if !ok {
 		return nil, fmt.Errorf("interface not found %v", meta.Name)
 	}
@@ -117,20 +117,6 @@ func (na *Nagent) FindInterface(meta api.ObjectMeta) (*netproto.Interface, error
 
 // ListInterface returns the list of interfaces
 func (na *Nagent) ListInterface() []*netproto.Interface {
-	var intfList []*netproto.Interface
-	// lock the db
-	na.Lock()
-	defer na.Unlock()
-
-	for _, intf := range na.EnicDB {
-		intfList = append(intfList, intf)
-	}
-
-	return intfList
-}
-
-// ListHwInterface returns the list of interfaces
-func (na *Nagent) ListHwInterface() []*netproto.Interface {
 	var intfList []*netproto.Interface
 	// lock the db
 	na.Lock()
@@ -167,7 +153,7 @@ func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	err = na.Datapath.UpdateInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	na.EnicDB[key] = intf
+	na.HwIfDB[key] = intf
 	na.Unlock()
 	err = na.Store.Write(intf)
 	return err
@@ -209,11 +195,24 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 	na.discardInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
-	delete(na.EnicDB, key)
+	delete(na.HwIfDB, key)
 	na.Unlock()
 	err = na.Store.Delete(intf)
 
 	return err
+}
+
+// GetInterfaceByID returns an interface with a given ID
+func (na *Nagent) GetInterfaceByID(id uint64) (*netproto.Interface, error) {
+	na.Lock()
+	defer na.Unlock()
+
+	for _, intf := range na.HwIfDB {
+		if intf.Status.InterfaceID == id {
+			return intf, nil
+		}
+	}
+	return nil, fmt.Errorf("interface %d not found", id)
 }
 
 // saveInterface saves interface to state stores
@@ -432,7 +431,7 @@ func (na *Nagent) LifUpdateHandler(lifResp *halproto.LifGetResponse) error {
 }
 
 func (na *Nagent) findInterfaceByID(id uint64) (*netproto.Interface, error) {
-	for _, intf := range na.ListHwInterface() {
+	for _, intf := range na.ListInterface() {
 		if intf.Status.InterfaceID == id {
 			log.Infof("Found an existing interface: %v", intf)
 			return intf, nil

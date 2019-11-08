@@ -109,6 +109,7 @@ func NewRestServer(agent types.CtrlerIntf, tsAgent troubleshooting.CtrlerIntf, t
 	localRoutes := map[string]routeAddFunc{
 		"/api/system/info":  addNaplesInfoAPIRoutes,
 		"/api/system/debug": addSystemDebugRoutes,
+		"/api/mapping/":     addAPIMappingRoutes,
 	}
 
 	for prefix, subRouter := range localRoutes {
