@@ -591,7 +591,7 @@ public:
                              uint8_t proto) {
         // install iflow
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = iflow_bd_id - 1;
+        v4entry.bd_id = iflow_bd_id;
         v4entry.sport = iflow_sport;
         v4entry.dport = iflow_dport;
         v4entry.proto = proto;
@@ -608,7 +608,7 @@ public:
 
         // install rflow
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = rflow_bd_id - 1;
+        v4entry.bd_id = rflow_bd_id;
         v4entry.sport = rflow_sport;
         v4entry.dport = rflow_dport;
         v4entry.proto = proto;

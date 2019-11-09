@@ -307,7 +307,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // if subnet has ingress IPv4 policy, that should be evaluated first in the
     // Rx direction
-    i = 1; // Policy roots start at index 1
+    i = 1; // policy roots start at index 1
     policy_key = subnet->ing_v4_policy();
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
@@ -388,7 +388,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         }
     }
 
-    i = 1; // Policy roots start at index 1
+    i = 1; // policy roots start at index 1
     // populate egress IPv4 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v4_policy; j++, i++) {
         sec_policy = policy_db()->find(&spec->egr_v4_policy[j]);
