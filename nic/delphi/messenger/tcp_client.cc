@@ -52,7 +52,7 @@ error TcpClient::Connect(char *hostName, int hostPort) {
     // connect to the server
     if (connect(hsock, (struct sockaddr*)&my_addr, sizeof(my_addr)) == -1 ){
         if(errno != EINPROGRESS){
-            LogError("Error connecting socket {}", errno);
+            // LogError("Error connecting socket {}", errno);
             close(hsock);
             return error::New("Connection failed");
         }

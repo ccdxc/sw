@@ -41,7 +41,7 @@ error DelphiClient::Connect() {
     // connect to server
     error err = this->mclient_->Connect();
     if (err.IsNotOK()) {
-        LogInfo("Error({}) connecting to hub. Will try again", err);
+        // LogInfo("Error({}) connecting to hub. Will try again", err);
 
         // reconnect in background
         this->reconnectTimer_.start(0, this->reconnectPeriod_);
@@ -794,7 +794,7 @@ void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
 // reconnectTimerHandler tries to reconnect in background
 // FIXME: do we need to force a sync of local objects to hub??
 void DelphiClient::reconnectTimerHandler(ev::timer &watcher, int revents) {
-    LogInfo("Trying to reconnect to delphi hub");
+    // LogInfo("Trying to reconnect to delphi hub");
     this->isConnected_ = false;
 
     // connect to server
