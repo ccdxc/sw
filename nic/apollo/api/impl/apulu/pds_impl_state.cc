@@ -33,6 +33,7 @@ pds_impl_state::init(pds_state *state) {
     impl_state_[PDS_IMPL_STATE_IF] = new if_impl_state(state);
     impl_state_[PDS_IMPL_STATE_TEP] = new tep_impl_state(state);
     impl_state_[PDS_IMPL_STATE_VPC] = new vpc_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_SUBNET] = new subnet_impl_state(state);
     impl_state_[PDS_IMPL_STATE_VNIC] = new vnic_impl_state(state);
     impl_state_[PDS_IMPL_STATE_MAPPING] = new mapping_impl_state(state);
     impl_state_[PDS_IMPL_STATE_ROUTE_TABLE] = new route_table_impl_state(state);

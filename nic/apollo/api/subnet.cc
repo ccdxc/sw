@@ -100,13 +100,14 @@ subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
-        if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) ==
-                         sdk::lib::indexer::SUCCESS) {
-            if (impl_) {
-                ret = impl_->reserve_resources(this, obj_ctxt);
-            }
+        if (impl_) {
+            ret = impl_->reserve_resources(this, obj_ctxt);
         } else {
-            ret = sdk::SDK_RET_NO_RESOURCE;
+            if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) ==
+                    sdk::lib::indexer::SUCCESS) {
+            } else {
+                ret = sdk::SDK_RET_NO_RESOURCE;
+            }
         }
         break;
 
@@ -119,19 +120,6 @@ subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::nuke_resources_(void) {
-    if (hw_id_ == 0xFFFF) {
-        // resources not yet allocated
-        return sdk::SDK_RET_OK;
-    }
-
-    if (impl_) {
-        impl_->nuke_resources(this);
-    }
-    return this->release_resources();
-}
-
-sdk_ret_t
 subnet_entry::release_resources(void) {
     if (impl_) {
         impl_->release_resources(this);
@@ -140,6 +128,16 @@ subnet_entry::release_resources(void) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::nuke_resources_(void) {
+    if (impl_) {
+        impl_->nuke_resources(this);
+    }
+    if (hw_id_ != 0xFFFF) {
+        subnet_db()->subnet_idxr()->free(hw_id_);
+    }
 }
 
 sdk_ret_t

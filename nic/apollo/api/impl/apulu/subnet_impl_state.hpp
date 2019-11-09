@@ -11,6 +11,7 @@
 #ifndef __SUBNET_IMPL_STATE_HPP__
 #define __SUBNET_IMPL_STATEHPP__
 
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -51,7 +52,12 @@ public:
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
 private:
-    friend class subnet_impl;   // subnet_impl class is friend of subnet_impl_state
+    rte_indexer *subnet_idxr(void) const { return subnet_idxr_; }
+    // subnet_impl class is friend of subnet_impl_state
+    friend class subnet_impl;
+
+private:
+    rte_indexer *subnet_idxr_;    ///< indexer to allocate hw subnet id
 };
 
 /// @}

@@ -18,6 +18,7 @@
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl_state.hpp"
@@ -46,6 +47,7 @@ enum {
     PDS_IMPL_STATE_TEP,
     PDS_IMPL_STATE_VPC,
     PDS_IMPL_STATE_VNIC,
+    PDS_IMPL_STATE_SUBNET,
     PDS_IMPL_STATE_MAPPING,
     PDS_IMPL_STATE_ROUTE_TABLE,
     PDS_IMPL_STATE_SECURITY_POLICY,
@@ -81,6 +83,9 @@ public:
     }
     vpc_impl_state *vpc_impl_db(void) const {
         return (vpc_impl_state *)impl_state_[PDS_IMPL_STATE_VPC];
+    }
+    subnet_impl_state *subnet_impl_db(void) const {
+        return (subnet_impl_state *)impl_state_[PDS_IMPL_STATE_SUBNET];
     }
     vnic_impl_state *vnic_impl_db(void) const {
         return (vnic_impl_state*)impl_state_[PDS_IMPL_STATE_VNIC];
@@ -138,6 +143,12 @@ static inline vpc_impl_state *
 vpc_impl_db (void)
 {
     return g_pds_impl_state.vpc_impl_db();
+}
+
+static inline subnet_impl_state *
+subnet_impl_db (void)
+{
+    return g_pds_impl_state.subnet_impl_db();
 }
 
 static inline vnic_impl_state *

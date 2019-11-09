@@ -130,6 +130,7 @@ public:
 private:
     /// \brief  constructor
     subnet_impl() {
+        hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
     }
 
@@ -153,6 +154,7 @@ private:
     sdk_ret_t activate_delete_(pds_epoch_t epoch, subnet_entry *subnet);
 
 private:
+    uint16_t    hw_id_;
     handle_t    vni_hdl_;
 };
 

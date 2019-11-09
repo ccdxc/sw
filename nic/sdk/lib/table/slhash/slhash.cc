@@ -137,6 +137,7 @@ __label__ done, outhandle;
 
     // Validate this ctx (& api params) with the transaction
     ret = txn_.validate(ctx_);
+    SDK_ASSERT(ret == SDK_RET_OK);
     SLHASH_RET_CHECK_AND_GOTO(ret, done, "txn validate, r:%d", ret);
 
     // If handle is valid, we dont need to find the entry.
@@ -248,6 +249,7 @@ __label__ done;
 
     // Validate this ctx (& api params) with the transaction
     ret = txn_.validate(ctx_);
+    SDK_ASSERT(ret == SDK_RET_OK);
     SLHASH_RET_CHECK_AND_GOTO(ret, done, "txn validate, r:%d", ret);
 
     // Make sure the entry exists.
