@@ -43,6 +43,10 @@ func main() {
 			EnvVar: "ASSETS_HOST_HQ",
 			Usage:  "host name of hq asset server. if hostname is NULL, it means not push to hq",
 		},
+		cli.StringFlag{
+			Name:  "remote-name",
+			Usage: "new file name at remote asset server",
+		},
 	}
 
 	app.Action = action
@@ -83,19 +87,22 @@ func action(ctx *cli.Context) error {
 		remote = append(remote, assetServerHQ)
 	}
 
-	assetPath := path.Join(dirName, version, filename)
-
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return err
 	}
 
 	if fi.IsDir() {
-		assetPath = assetPath + ".tar.gz"
+		assetPath := ""
+		if ctx.String("remote-name") != "" {
+			assetPath = path.Join(dirName, version, ctx.String("remote-name"))
+		} else {
+			assetPath = path.Join(dirName, version, filename) + ".tar.gz"
+		}
 		return uploadDir(bucket, filename, assetPath, remote)
 	}
 
-	return uploadFile(bucket, filename, assetPath, remote, fi)
+	return uploadFile(bucket, filename, path.Join(dirName, version, filename), remote, fi)
 }
 
 func uploadFile(bucket, localFile, remoteFile string, remoteHosts []string, fi os.FileInfo) error {
