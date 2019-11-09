@@ -24,7 +24,7 @@
 #include "third-party/asic/capri/verif/apis/cap_ptd_api.h"
 #include "third-party/asic/capri/verif/apis/cap_stg_api.h"
 #include "third-party/asic/capri/verif/apis/cap_wa_api.h"
-#include "third-party/asic/capri/verif/apis/gen/cap_elam_api.h"
+#include "third-party/asic/capri/verif/apis/cap_elam_api.h"
 //#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "third-party/asic/capri/model/cap_ms/cap_ms_csr.h"
@@ -278,15 +278,15 @@ capri_prd_init()
     pr_csr.prd.cfg_debug_ctrl.write();
 
 
-    ms_csr.ms.cfg_elam_general.read();
-    ms_csr.ms.cfg_elam_general.rst(1);
-    ms_csr.ms.cfg_elam_general.write();
+    ms_csr.cfg_elam_general.read();
+    ms_csr.cfg_elam_general.rst(1);
+    ms_csr.cfg_elam_general.write();
 
-    ms_csr.ms.cfg_elam_general.read();
-    ms_csr.ms.cfg_elam_general.rst(0);
-    ms_csr.ms.cfg_elam_general.arm(1);
-    ms_csr.ms.cfg_elam_general.num_post_sample(1);
-    ms_csr.ms.cfg_elam_general.write();
+    ms_csr.cfg_elam_general.read();
+    ms_csr.cfg_elam_general.rst(0);
+    ms_csr.cfg_elam_general.arm(1);
+    ms_csr.cfg_elam_general.num_post_sample(1);
+    ms_csr.cfg_elam_general.write();
     
     return SDK_RET_OK;
 }
