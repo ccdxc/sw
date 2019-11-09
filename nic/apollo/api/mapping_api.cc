@@ -112,9 +112,9 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->fabric_encap = spec->fabric_encap;
     memcpy(&local_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
     local_spec->vnic.id = spec->vnic.id;
-    spec->public_ip_valid = local_spec->public_ip_valid;
+    local_spec->public_ip_valid = spec->public_ip_valid;
     local_spec->public_ip = spec->public_ip;
-    spec->provider_ip_valid = local_spec->provider_ip_valid;
+    local_spec->provider_ip_valid = spec->provider_ip_valid;
     local_spec->provider_ip = spec->provider_ip;
     local_spec->svc_tag = spec->svc_tag;
 }
@@ -127,8 +127,15 @@ pds_mapping_spec_to_remote_spec (pds_remote_mapping_spec_t *remote_spec,
     remote_spec->key = spec->key;
     remote_spec->subnet = spec->subnet;
     remote_spec->fabric_encap = spec->fabric_encap;
-    remote_spec->tep = spec->tep;
+    remote_spec->nh_type = spec->nh_type;
+    if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
+        remote_spec->tep = spec->tep;
+    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_ECMP) {
+        remote_spec->nh_group = spec->nh_group;
+    }
     memcpy(&remote_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
+    remote_spec->provider_ip_valid = spec->provider_ip_valid;
+    remote_spec->provider_ip = spec->provider_ip;
 }
 
 //----------------------------------------------------------------------------

@@ -647,9 +647,10 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     }
     status->vnic_hw_id = local_mapping_data.vnic_id;
 
-    if (to_public_ip_nat_idx_ != 0xFFFF) {
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT, to_public_ip_nat_idx_,
-                                          NULL, NULL, &nat_data);
+    if (local_mapping_data.xlate_id != 0xFFFF) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT,
+                                          local_mapping_data.xlate_id, NULL,
+                                          NULL, &nat_data);
         if (p4pd_ret != P4PD_SUCCESS) {
             return sdk::SDK_RET_HW_READ_ERR;
         }
