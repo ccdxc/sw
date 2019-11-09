@@ -145,6 +145,7 @@ pds_if_info_from_entry (void *entry, void *ctxt)
 
     if (intf->type() != PDS_IF_TYPE_NONE) {
         pds_if_spec_fill(&info.spec, intf);
+        intf->read(&info.spec.key, &info);
         pds_if_status_fill(&info.status, intf);
         pds_if_stats_fill(&info.stats, intf);
 

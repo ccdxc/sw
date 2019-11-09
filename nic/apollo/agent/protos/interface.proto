@@ -90,9 +90,17 @@ message InterfaceSpec {
   }
 }
 
+message UplinkStatus {
+  uint32 LifId = 1;
+}
+
 // operational status of an interface, if any
 message InterfaceStatus {
-  IfStatus OperStatus = 1;
+  IfStatus OperStatus         = 1;
+  oneof ifstatus {
+    // uplink specific status
+    UplinkStatus UplinkStatus = 2;
+  }
 }
 
 // stats for an interface, if any

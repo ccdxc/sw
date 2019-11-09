@@ -464,14 +464,25 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
 }
 
 static inline void
-pds_if_api_status_to_proto (pds::InterfaceStatus *proto_spec,
-                            const pds_if_status_t *api_spec)
+pds_if_api_status_to_proto (pds::InterfaceStatus *proto_status,
+                            const pds_if_status_t *api_status,
+                            pds_if_type_t type)
 {
+    switch (type) {
+    case PDS_IF_TYPE_UPLINK:
+        {
+            auto uplink_status = proto_status->mutable_uplinkstatus();
+            uplink_status->set_lifid(api_status->uplink_status.lif_id);
+        }
+        break;
+    default:
+        break;
+    }
 }
 
 static inline void
-pds_if_api_stats_to_proto (pds::InterfaceStats *proto_spec,
-                           const pds_if_stats_t *api_spec)
+pds_if_api_stats_to_proto (pds::InterfaceStats *proto_stats,
+                           const pds_if_stats_t *api_stats)
 {
 }
 
@@ -483,7 +494,7 @@ pds_if_api_info_to_proto (void *entry, void *ctxt)
     pds_if_info_t *info = (pds_if_info_t *)entry;
 
     pds_if_api_spec_to_proto(intf->mutable_spec(), &info->spec);
-    pds_if_api_status_to_proto(intf->mutable_status(), &info->status);
+    pds_if_api_status_to_proto(intf->mutable_status(), &info->status, info->spec.type);
     pds_if_api_stats_to_proto(intf->mutable_stats(), &info->stats);
 }
 

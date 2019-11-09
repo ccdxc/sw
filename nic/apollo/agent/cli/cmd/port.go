@@ -509,6 +509,16 @@ func ifIndexToIfType(ifindex uint32) string {
 		return "EthPC"
 	case 3:
 		return "Tunnel"
+	case 4:
+		return "Mgmt"
+	case 5:
+		return "Uplink"
+	case 6:
+		return "UplinkPC"
+	case 7:
+		return "L3"
+	case 8:
+		return "Lif"
 	}
 	return "None"
 }

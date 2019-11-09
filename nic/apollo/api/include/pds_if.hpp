@@ -69,9 +69,17 @@ typedef struct pds_if_spec_s {
     };
 } __PACK__ pds_if_spec_t;
 
+/// \brief uplink interface status
+typedef struct pds_if_uplink_status_s {
+    uint16_t lif_id;
+} __PACK__ pds_if_uplink_status_t;
+
 /// \brief interface status
 typedef struct pds_if_status_s {
     pds_if_state_t    state;    ///< operational status of the interface
+    union {
+        pds_if_uplink_status_t uplink_status;
+    };
 } __PACK__ pds_if_status_t;
 
 /// \brief interface statistics
