@@ -24,8 +24,10 @@
 #include "third-party/asic/capri/verif/apis/cap_ptd_api.h"
 #include "third-party/asic/capri/verif/apis/cap_stg_api.h"
 #include "third-party/asic/capri/verif/apis/cap_wa_api.h"
+#include "third-party/asic/capri/verif/apis/gen/cap_elam_api.h"
 //#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/cap_prd/cap_prd_csr.h"
+#include "third-party/asic/capri/model/cap_ms/cap_ms_csr.h"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 
 namespace sdk {
@@ -221,6 +223,7 @@ capri_prd_init()
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pr_csr_t &pr_csr = cap0.pr.pr;
     cap_pt_csr_t &pt_csr = cap0.pt.pt;
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
 
 /*
  * ASIC teams wants to disable Error recovery of Seq ID check pRDMA,
@@ -254,6 +257,36 @@ capri_prd_init()
     pt_csr.ptd.cfg_xoff.numphv_thresh(84);
     pt_csr.ptd.cfg_xoff.write();
     SDK_TRACE_DEBUG("Programmed numphv_thresh to 84 in pr_prd_cfg_xoff/pt_ptd_cfg_xoff");
+
+/*
+ *  Enable elam by default to get a snapshot of PDMA after hitting an error.
+ *  ASIC team confirmed that there should not be any impact on performance if we turn this
+ *  on by default.
+ */
+
+    cap_ms_elam_write_m_fields(0, 0, 0, 0, 121, 1, 1, 123, 1, 1);
+    cap_ms_elam_write_capture_en_fields(0, 0, 0, 0, 1);
+
+    pr_csr.prd.cfg_debug_port.read();
+    pr_csr.prd.cfg_debug_port.enable(1);
+    pr_csr.prd.cfg_debug_port.select(1);
+    pr_csr.prd.cfg_debug_port.write();
+
+    pr_csr.prd.cfg_debug_ctrl.read();
+    pr_csr.prd.cfg_debug_ctrl.dbg_bus_sel(2);
+    pr_csr.prd.cfg_debug_ctrl.cmn_dbg_sel(1);
+    pr_csr.prd.cfg_debug_ctrl.write();
+
+
+    ms_csr.ms.cfg_elam_general.read();
+    ms_csr.ms.cfg_elam_general.rst(1);
+    ms_csr.ms.cfg_elam_general.write();
+
+    ms_csr.ms.cfg_elam_general.read();
+    ms_csr.ms.cfg_elam_general.rst(0);
+    ms_csr.ms.cfg_elam_general.arm(1);
+    ms_csr.ms.cfg_elam_general.num_post_sample(1);
+    ms_csr.ms.cfg_elam_general.write();
     
     return SDK_RET_OK;
 }
