@@ -7,7 +7,7 @@ builds:
     artifacts:
       - /sw/build_iris_x86.tar.gz
   build-iris-arm:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make naples-firmware && make naples-firmware-tarball-iris"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make naples-firmware && make PIPELINE=iris naples-firmware-tarball-iris"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/naples_fw_all.tgz
@@ -37,7 +37,7 @@ builds:
     artifacts:
       - /sw/build_apulu_x86.tar.gz
   build-apulu-arm:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make PIPELINE=apulu naples-firmware && make naples-firmware-tarball-apulu"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make PIPELINE=apulu naples-firmware && make PIPELINE=apulu naples-firmware-tarball-apulu"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/naples_fw_all_apulu.tgz

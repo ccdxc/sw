@@ -580,11 +580,9 @@ naples-firmware-tarball:
 	tar -zcf $(NAPLES_FW_TAR) nic/naples_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
 
 naples-firmware-tarball-iris: NAPLES_FW_TAR=naples_fw_all.tgz
-naples-firmware-tarball-iris: PIPELINE=iris
 naples-firmware-tarball-iris: naples-firmware-tarball
 
 naples-firmware-tarball-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
-naples-firmware-tarball-apulu: PIPELINE=apulu
 naples-firmware-tarball-apulu: naples-firmware-tarball
 
 e2e-iota: e2e-naples
