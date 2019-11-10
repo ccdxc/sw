@@ -23,29 +23,29 @@ operator<<(std::ostream& os, const pds_nexthop_group_key_t *key) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_group_spec_t *spec) {
     os << &spec->key
-        << " type " << spec->type
-        << " num nexthops " << unsigned(spec->num_nexthops);
-        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
-            os << "nexthop " << unsigned(i + 1)
-               << &spec->nexthops[i] << std::endl;
-        }
+       << " type " << spec->type
+       << " num nexthops " << unsigned(spec->num_nexthops);
+    for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+        os << "nexthop " << unsigned(i + 1)
+           << &spec->nexthops[i] << std::endl;
+    }
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_group_status_t *status) {
     os << " HW id " << status->hw_id
-        << "nh base idx " << status->nh_base_idx;
+       << "nh base idx " << status->nh_base_idx;
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_group_info_t *obj) {
     os << " NH group info =>"
-        << &obj->spec
-        << &obj->status
-        << &obj->stats
-        << std::endl;
+       << &obj->spec
+       << &obj->status
+       << &obj->stats
+       << std::endl;
     return os;
 }
 

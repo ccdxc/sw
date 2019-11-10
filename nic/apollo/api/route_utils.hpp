@@ -17,18 +17,18 @@ inline std::ostream&
 operator<<(std::ostream& os, const pds_route_t *route) {
     os << " pfx: " << ippfx2str(&route->prefix)
        << " nh type: " << route->nh_type;
-    switch(route->nh_type) {
-        case PDS_NH_TYPE_OVERLAY:
-            os << " TEP id: " << route->tep.id;
-            break;
-        case PDS_NH_TYPE_IP:
-            os << " NH id: " << route->nh.id;
-            break;
-        case PDS_NH_TYPE_PEER_VPC:
-            os << " vpc id: " << route->vpc.id;
-            break;
-        default:
-            break;
+    switch (route->nh_type) {
+    case PDS_NH_TYPE_OVERLAY:
+        os << " TEP id: " << route->tep.id;
+        break;
+    case PDS_NH_TYPE_IP:
+        os << " NH id: " << route->nh.id;
+        break;
+    case PDS_NH_TYPE_PEER_VPC:
+        os << " vpc id: " << route->vpc.id;
+        break;
+    default:
+        break;
     }
     os << std::endl;
     return os;
