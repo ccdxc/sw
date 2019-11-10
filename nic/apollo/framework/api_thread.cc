@@ -47,9 +47,6 @@ api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, void *ctxt)
     assert(likely(api_msg != NULL));
     assert(likely(api_msg->msg_id == API_MSG_ID_BATCH));
     ret = api_engine_get()->batch_commit(&api_msg->batch);
-    if (api_msg->batch.async) {
-        api_batch_destroy((pds_batch_ctxt_t)api_msg);
-    }
     sdk::event_thread::rpc_response(msg, &ret, sizeof(ret));
 }
 

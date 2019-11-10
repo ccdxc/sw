@@ -88,6 +88,15 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
     return ret;
 }
 
+// this callback is invoked after getting async response from the API thread,
+// to free all the API msg related state allocated for the batch processing of
+// APIs by API thread
+static inline void
+api_msg_cleanup_cb (void *api_msg)
+{
+    api_batch_destroy((pds_batch_ctxt_t)api_msg);
+}
+
 sdk_ret_t
 process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
 {
@@ -122,7 +131,8 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         // for async response using rpc_reg_response_handler() API
         sdk::event_thread::rpc_request(core::THREAD_ID_API, API_MSG_ID_BATCH,
                                        &api_msg, sizeof(api_msg),
-                                       (void *)api_msg->batch.cookie, NULL);
+                                       (void *)api_msg->batch.cookie,
+                                       api_msg_cleanup_cb);
     } else {
         rsp = sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH,
                                 &api_msg, sizeof(api_msg));
