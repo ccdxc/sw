@@ -12,7 +12,6 @@
 #define __API_NEXTHOP_UTILS_HPP__
 
 #include<iostream>
-#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 
 inline std::ostream&
@@ -32,7 +31,7 @@ operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
             << " vpc: " << spec->vpc.id;
     } else if (spec->type == PDS_NH_TYPE_UNDERLAY) {
         os << " underlay mac:" << macaddr2str(spec->underlay_mac)
-            << " l3 if: " << spec->l3_if.id;
+            << " l3 if: " << std::hex << spec->l3_if.id;
     } else if (spec->type == PDS_NH_TYPE_OVERLAY) {
         os << " tep: " << spec->tep.id;
     }

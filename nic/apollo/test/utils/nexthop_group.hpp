@@ -6,7 +6,7 @@
 #define __TEST_UTILS_NH_GROUP_HPP__
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
-#include "nic/apollo/api/nexthop_utils.hpp"
+#include "nic/apollo/api/nexthop_group_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -48,20 +48,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const nexthop_group_feeder& obj) {
     os << "NH group feeder =>"
-       << " id: " << obj.spec.key.id
-       << " type: " << obj.spec.type
-       << " num nexthops: " << unsigned(obj.spec.num_nexthops) << endl;
-    for (uint8_t i = 0; i < obj.spec.num_nexthops; i++) {
-        os << " nexthop" << unsigned(i) << ": ";
-        if (obj.spec.nexthops[i].type == PDS_NH_TYPE_UNDERLAY) {
-            os << " l3 if: " << obj.spec.nexthops[i].l3_if.id
-               << " underlay mac: "
-               << macaddr2str(obj.spec.nexthops[i].underlay_mac)
-               << endl;
-        } else if (obj.spec.nexthops[i].type == PDS_NH_TYPE_OVERLAY) {
-            os << " tep id: " << obj.spec.nexthops[i].tep.id << endl;
-        }
-    }
+       << &obj.spec;
     return os;
 }
 
