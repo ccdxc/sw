@@ -10,8 +10,17 @@ struct phv_             p;
 %%
 
 pkt_enqueue:
-    /* Is this the last pass? */
+
+    // Clear the intrinsic recirc count to prevent TTL drop
+    phvwr        p.capri_p4_intr_recirc_count, r0
+
+    // Increment the local_recirc_count.
+    add          r1, k.lpm_metadata_recirc_count, 1
+    phvwr        p.lpm_metadata_recirc_count, r1
+
+    // Are we done with processing SACLs...?!
     seq          c1, k.lpm_metadata_sacl_base_addr, r0
+    // If not, stop
     nop.!c1.e
 
     // Yes. Copy the data that need to go to txdma

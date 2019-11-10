@@ -1,4 +1,5 @@
-#include "../include/apulu_sacl_defines.h"
+#include "rxlpm1.p4"
+#include "rxlpm2.p4"
 
 action rxlpm1_res_handler()
 {
@@ -237,11 +238,6 @@ action setup_lpm1()
             }
         }
     }
-
-    // Clear the hw controlled ttl
-    modify_field(capri_p4_intr.recirc_count, 0);
-    // Increment the TTL
-    modify_field(lpm_metadata.recirc_count, lpm_metadata.recirc_count + 1);
 }
 
 @pragma stage 7
@@ -291,7 +287,16 @@ table setup_lpm2 {
     }
 }
 
-control sacl {
+control sacl_lpm {
+
+    if (p4_to_rxdma.lpm1_enable == TRUE) {
+        rxlpm1();
+    }
+
+    if (p4_to_rxdma.lpm2_enable == TRUE) {
+        rxlpm2();
+    }
+
     apply(setup_lpm1);
     apply(setup_lpm2);
 }

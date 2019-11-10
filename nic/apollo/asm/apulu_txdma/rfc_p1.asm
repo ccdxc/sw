@@ -18,8 +18,8 @@ rfc_p1:
     phvwr      p.txdma_control_rfc_p1_classid, r7
     /* Load sacl base addr to r1 */
     add        r1, r0, k.rx_to_tx_hdr_sacl_base_addr0
-    /* Is this the first pass? */
-    seq        c1, k.capri_p4_intr_recirc_count, 0
+    /* Is this an even numbered pass? */
+    seq        c1, k.txdma_control_recirc_count[0:0], r0
     /* If so, add SACL_P2_1_TABLE_OFFSET to sacl base address. */
     addi.c1    r1, r1, SACL_P2_1_TABLE_OFFSET
     /* P2 table index = (proto_dport_classid0 | (dip_classid0 << 8)). */

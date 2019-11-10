@@ -2,7 +2,7 @@ control rxlpm1 {}
 control rxlpm2 {}
 control vnic_info_rxdma {}
 control nat_rxdma {}
-control sacl {}
+control sacl_lpm {}
 control pkt_enqueue {}
 control session_aging {}
 control session2flow {}

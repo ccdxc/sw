@@ -7,9 +7,15 @@ action pkt_enqueue(PKTQ_QSTATE) {
     //          check sw_cindex0, pindex0
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
-    if (lpm_metadata.sacl_base_addr == 0) {
 
-        // Copy the data that needs to go to TXDMA
+    // Clear the hw controlled ttl to prevent TTL drop
+    modify_field(capri_p4_intr.recirc_count, 0);
+    // Increment the local ttl
+    modify_field(lpm_metadata.recirc_count, lpm_metadata.recirc_count + 1);
+
+    // Are we done with processing SACLs...?!
+    if (lpm_metadata.sacl_base_addr == 0) {
+        // If so, Copy the data that needs to go to TXDMA
         modify_field(rx_to_tx_hdr.rx_packet, p4_to_rxdma.rx_packet);
         modify_field(rx_to_tx_hdr.payload_len, capri_p4_intr.packet_len);
         modify_field(rx_to_tx_hdr.vpc_id, p4_to_rxdma.vpc_id);

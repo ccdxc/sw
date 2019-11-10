@@ -6,7 +6,7 @@ control vnic_info_txdma {}
 control remote_46_mapping {}
 control local_46_mapping_txdma {}
 control route_lookup {}
-control rfc {}
+control sacl_rfc {}
 control pkt_dma {}
 
 #define txdma_predicate             app_header

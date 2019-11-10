@@ -1,4 +1,3 @@
-#include "../include/apulu_sacl_defines.h"
 
 action rfc_action_p1(pad,id50,
                          id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
@@ -68,7 +67,7 @@ action rfc_action_p1(pad,id50,
     modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field10);
 
     // Initialize the correct table base and index based on the recirc count
-    if (capri_p4_intr.recirc_count == 0) {
+    if ((txdma_control.recirc_count & 0x1) == 0) {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_1_TABLE_OFFSET);
         // P2 table index
@@ -90,6 +89,18 @@ action rfc_action_p1(pad,id50,
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+}
+
+@pragma stage 2
+@pragma hbm_table
+@pragma raw_index_table
+table rfc_p1 {
+    reads {
+        txdma_control.rfc_table_addr : exact;
+    }
+    actions {
+        rfc_action_p1;
+    }
 }
 
 action rfc_action_p2(pad,id50,
@@ -157,7 +168,7 @@ action rfc_action_p2(pad,id50,
     modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
 
     // Initialize the correct table base based on the recirc count
-    if (capri_p4_intr.recirc_count == 0) {
+    if ((txdma_control.recirc_count & 0x1) == 0) {
         // P3 table base
         modify_field(scratch_metadata.field40, SACL_P3_1_TABLE_OFFSET);
     } else {
@@ -176,6 +187,18 @@ action rfc_action_p2(pad,id50,
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
+}
+
+@pragma stage 3
+@pragma hbm_table
+@pragma raw_index_table
+table rfc_p2 {
+    reads {
+        txdma_control.rfc_table_addr : exact;
+    }
+    actions {
+        rfc_action_p2;
+    }
 }
 
 action rfc_action_p3(pad,pr45, res45, pr44, res44,
@@ -298,7 +321,7 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     }
 
     // Initialize the correct table base and index based on the recirc count
-    if (capri_p4_intr.recirc_count == 0) {
+    if ((txdma_control.recirc_count & 0x1) == 0) {
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
         // P1 table index
@@ -320,6 +343,18 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+}
+
+@pragma stage 4
+@pragma hbm_table
+@pragma raw_index_table
+table rfc_p3 {
+    reads {
+        txdma_control.rfc_table_addr : exact;
+    }
+    actions {
+        rfc_action_p3;
+    }
 }
 
 action rfc_action_p1_1(pad, id50,
@@ -390,7 +425,7 @@ action rfc_action_p1_1(pad, id50,
     modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field10);
 
     // Initialize the correct table base and index based on the recirc count
-    if (capri_p4_intr.recirc_count == 0) {
+    if ((txdma_control.recirc_count & 0x1) == 0) {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_2_TABLE_OFFSET);
         // P2 table index
@@ -412,6 +447,18 @@ action rfc_action_p1_1(pad, id50,
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+}
+
+@pragma stage 5
+@pragma hbm_table
+@pragma raw_index_table
+table rfc_p1_1 {
+    reads {
+        txdma_control.rfc_table_addr : exact;
+    }
+    actions {
+        rfc_action_p1_1;
+    }
 }
 
 action rfc_action_p2_1(pad, id50,
@@ -479,7 +526,7 @@ action rfc_action_p2_1(pad, id50,
     modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
 
     // Initialize the correct table base based on the recirc count
-    if (capri_p4_intr.recirc_count == 0) {
+    if ((txdma_control.recirc_count & 0x1) == 0) {
         // P3 table base
         modify_field(scratch_metadata.field40, SACL_P3_2_TABLE_OFFSET);
     } else {
@@ -498,6 +545,18 @@ action rfc_action_p2_1(pad, id50,
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
                  (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
+}
+
+@pragma stage 6
+@pragma hbm_table
+@pragma raw_index_table
+table rfc_p2_1 {
+    reads {
+        txdma_control.rfc_table_addr : exact;
+    }
+    actions {
+        rfc_action_p2_1;
+    }
 }
 
 action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
@@ -618,79 +677,33 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
     }
 
-    if (capri_p4_intr.recirc_count == 0) {
-        // P1 table index for the next recirc
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
-                                                rx_to_tx_hdr.dtag_classid);
+    if (rx_to_tx_hdr.sacl_base_addr0 != 0) {
+        if ((txdma_control.recirc_count & 0x1) == 0) {
+            // P1 table base
+            modify_field(scratch_metadata.field40, SACL_P1_3_TABLE_OFFSET);
+            // P1 table index
+            modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
+                                                    rx_to_tx_hdr.dtag_classid);
+        } else {
+            // P1 table base
+            modify_field(scratch_metadata.field40, SACL_P1_1_TABLE_OFFSET);
+            // P1 table index
+            modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
+                                                    rx_to_tx_hdr.sport_classid0);
+        }
+
         // Write P1 table index to PHV
         modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
         // Write P1 table lookup address to PHV
         modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
                      rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
-                     SACL_P1_3_TABLE_OFFSET +                   // Table Base +
+                     scratch_metadata.field40 +                 // Table Base +
                      (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+    } else {
+        modify_field(txdma_predicate.rfc_enable, FALSE);
     }
-}
 
-@pragma stage 2
-@pragma hbm_table
-@pragma raw_index_table
-table rfc_p1 {
-    reads {
-        txdma_control.rfc_table_addr : exact;
-    }
-    actions {
-        rfc_action_p1;
-    }
-}
-
-@pragma stage 3
-@pragma hbm_table
-@pragma raw_index_table
-table rfc_p2 {
-    reads {
-        txdma_control.rfc_table_addr : exact;
-    }
-    actions {
-        rfc_action_p2;
-    }
-}
-
-@pragma stage 4
-@pragma hbm_table
-@pragma raw_index_table
-table rfc_p3 {
-    reads {
-        txdma_control.rfc_table_addr : exact;
-    }
-    actions {
-        rfc_action_p3;
-    }
-}
-
-@pragma stage 5
-@pragma hbm_table
-@pragma raw_index_table
-table rfc_p1_1 {
-    reads {
-        txdma_control.rfc_table_addr : exact;
-    }
-    actions {
-        rfc_action_p1_1;
-    }
-}
-
-@pragma stage 6
-@pragma hbm_table
-@pragma raw_index_table
-table rfc_p2_1 {
-    reads {
-        txdma_control.rfc_table_addr : exact;
-    }
-    actions {
-        rfc_action_p2_1;
-    }
 }
 
 @pragma stage 7
@@ -705,7 +718,62 @@ table rfc_p3_1 {
     }
 }
 
-control rfc {
+action setup_rfc()
+{
+    if (txdma_control.recirc_count == 1) {
+        modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr1);
+        modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid1);
+        modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid1);
+        modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid1);
+        modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid1);
+    } else {
+        if (txdma_control.recirc_count == 3) {
+            modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr2);
+            modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid2);
+            modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid2);
+            modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid2);
+            modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid2);
+        } else {
+            if (txdma_control.recirc_count == 5) {
+                modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr3);
+                modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid3);
+                modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid3);
+                modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid3);
+                modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid3);
+            } else {
+                if (txdma_control.recirc_count == 7) {
+                    modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr4);
+                    modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid4);
+                    modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid4);
+                    modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid4);
+                    modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid4);
+                } else {
+                    if (txdma_control.recirc_count == 9) {
+                        modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr5);
+                        modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid5);
+                        modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid5);
+                        modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid5);
+                        modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid5);
+                    } else {
+                        if (txdma_control.recirc_count == 11) {
+                            // No more RFC Lookups
+                            modify_field(rx_to_tx_hdr.sacl_base_addr0, 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@pragma stage 6
+table setup_rfc {
+    actions {
+        setup_rfc;
+    }
+}
+
+control sacl_rfc {
     if (txdma_predicate.rfc_enable == TRUE) {
         apply(rfc_p1);
         apply(rfc_p2);
@@ -714,4 +782,6 @@ control rfc {
         apply(rfc_p2_1);
         apply(rfc_p3_1);
     }
+
+    apply(setup_rfc);
 }

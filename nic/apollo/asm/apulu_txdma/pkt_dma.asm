@@ -10,15 +10,22 @@ struct phv_         p;
 
 pkt_dma:
     // clear hardware error (hack)
-    phvwr           p.capri_intr_hw_error, 0
+    phvwr           p.capri_intr_hw_error, r0
 
-    /* Is this the first pass? */
-    seq              c1, k.capri_p4_intr_recirc_count, 0
-    /* Then enable Recirc */
+    // Clear the intrinsic recirc count to prevent TTL drop
+    phvwr            p.capri_p4_intr_recirc_count, r0
+
+    // Increment the local_recirc_count.
+    add              r1, k.txdma_control_recirc_count, 1
+    phvwr            p.txdma_control_recirc_count, r1
+
+    /* Do we have more SACLs to process... ? */
+    sne             c1, k.rx_to_tx_hdr_sacl_base_addr0, r0
+    /* If so, enable Recirc, and stop */
     phvwr.c1.e      p.capri_p4_intr_recirc, TRUE
     phvwr           p.txdma_predicate_pass_two, TRUE
 
-    /* Else disable Recirc */
+    /* Else disable Recirc. */
     phvwr           p.capri_p4_intr_recirc, FALSE
     phvwr           p.txdma_predicate_pass_two, FALSE
 

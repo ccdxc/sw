@@ -2,11 +2,10 @@
 #include "../include/apulu_defines.h"
 #include "../include/apulu_headers.p4"
 #include "../include/apulu_table_sizes.h"
+#include "../include/apulu_sacl_defines.h"
 #include "../include/lpm_defines.h"
 
-#include "rxlpm1.p4"
-#include "rxlpm2.p4"
-#include "sacl.p4"
+#include "sacl_lpm.p4"
 #include "vnic_info_rxdma.p4"
 #include "packet_queue.p4"
 

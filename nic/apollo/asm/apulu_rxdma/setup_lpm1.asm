@@ -50,16 +50,8 @@ setup_lpm_dport_sport:
 
     // Enable both LPMs and recirc again
     phvwr            p.p4_to_rxdma_lpm1_enable, TRUE
-    phvwr            p.p4_to_rxdma_lpm2_enable, TRUE
+    phvwr.e          p.p4_to_rxdma_lpm2_enable, TRUE
     phvwr            p.capri_p4_intr_recirc, TRUE
-
-    // Clear the intrinsic recirc count to prevent TTL drop
-    phvwr            p.capri_p4_intr_recirc_count, 0
-
-    // Increment the local_recirc_count.
-    add.e            r1, k.lpm_metadata_recirc_count, 1
-    phvwr            p.lpm_metadata_recirc_count, r1
-
 
 /*****************************************************************************/
 /* error function                                                            */

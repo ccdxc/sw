@@ -1194,14 +1194,7 @@ control ingress {
         if (p4_to_rxdma.vnic_info_en == TRUE) {
             vnic_info_rxdma();
         }
-        if (p4_to_rxdma.lpm1_enable == TRUE) {
-            rxlpm1();
-        }
-        if (p4_to_rxdma.lpm2_enable == TRUE) {
-            rxlpm2();
-        }
-
-        sacl();
+        sacl_lpm();
         pkt_enqueue();
     } else {
         common_p4plus_stage0();

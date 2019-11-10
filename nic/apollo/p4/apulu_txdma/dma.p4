@@ -11,7 +11,7 @@ table pkt_dma_setup {
 }
 
 action pkt_dma() {
-    if (capri_p4_intr.recirc_count == 0) {
+    if (rx_to_tx_hdr.sacl_base_addr0 != 0) {
         modify_field(scratch_metadata.lif, capri_intr.lif);
         modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
         modify_field(txdma_predicate.pass_two, TRUE);
@@ -25,6 +25,11 @@ action pkt_dma() {
         modify_field(rx_to_tx_hdr.payload_len, rx_to_tx_hdr.payload_len);
         modify_field(txdma_control.rxdma_cindex_addr, txdma_control.rxdma_cindex_addr);
     }
+
+    // Clear the hw controlled ttl
+    modify_field(capri_p4_intr.recirc_count, 0);
+    // Increment the TTL
+    modify_field(txdma_control.recirc_count, txdma_control.recirc_count + 1);
 }
 
 @pragma stage 7

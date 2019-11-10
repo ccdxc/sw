@@ -1061,10 +1061,7 @@ control ingress {
             route_lookup();
         }
 
-        if (txdma_predicate.rfc_enable == TRUE) {
-            rfc();
-        }
-
+        sacl_rfc();
         pkt_dma();
     } else {
         if (app_header.table0_valid == 1) {
