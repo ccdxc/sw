@@ -229,31 +229,6 @@ devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
 sdk_ret_t
 devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
                            pds_ifindex_t ifidx, bool is_oob) {
-#if 0
-    sdk_ret_t ret;
-    if_entry *intf;
-    uint32_t logical_port, tm_port;
-
-    PDS_TRACE_DEBUG("Uplink Create ifidx %u, pds_ifidx 0x%x, is_oob %d",
-                    uplink_ifidx, ifidx, is_oob);
-
-    intf = if_db()->find(&ifidx);
-    if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to get if for ifidx 0x%x", ifidx);
-        return SDK_RET_INVALID_ARG;
-    }
-    logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifidx);
-    tm_port = g_pds_state.catalogue()->ifindex_to_tm_port(ifidx);
-    PDS_TRACE_DEBUG("TM Register log_port %u, tm_port %u",
-                    logical_port, tm_port);
-    // we use logical port as uplink hw lif identifier in the system
-    ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, logical_port);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program uplink ifidx 0x%x's lif id "
-                      "in TM, err %u", ret);
-    }
-    return ret;
-#endif
     return SDK_RET_OK;
 }
 
@@ -270,7 +245,6 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
     }
 
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
-
     config->speed = sdk::lib::port_speed_enum_to_mbps(port_args.port_speed);
     config->mtu = port_args.mtu;
     config->state =
@@ -288,6 +262,7 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
     return ret;
 }
 
+// TODO: @akoradha please look at iris and fill this properly
 sdk_ret_t
 devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
     sdk_ret_t ret = SDK_RET_OK;
@@ -319,7 +294,7 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
     return ret;
 }
 
-
+// TODO: @akoradha please look at iris and fill this properly
 sdk_ret_t
 devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
     PDS_TRACE_WARN("Not implemented");
@@ -453,8 +428,6 @@ devapi_impl::lif_get_cos_bmp_(lif_info_t *info) {
     cos_bmp =  ((1 << cosA) | (1 << cosB) | (1 << cos_control));
     return cos_bmp;
 }
-
-
 
 }    // namespace impl
 }    // namespace api

@@ -227,10 +227,9 @@ IfSvcImpl::LifGet(ServerContext *context,
                   pds::LifGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
-    PDS_TRACE_VERBOSE("Received Lif Get");
     if (proto_req) {
         for (int i = 0; i < proto_req->lifid_size(); i ++) {
-            pds_lif_info_t info = {0};
+            pds_lif_info_t info = { 0 };
             pds_lif_key_t key = proto_req->lifid(i);
             ret = pds_lif_read(&key, &info);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

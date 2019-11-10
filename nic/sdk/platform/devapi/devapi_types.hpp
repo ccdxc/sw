@@ -5,6 +5,7 @@
 #define __DEVAPI_TYPES_HPP__
 
 #include "include/sdk/base.hpp"
+#include "include/sdk/eth.hpp"
 #include "nic/include/accel_ring.h"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 
@@ -78,6 +79,7 @@ typedef struct lif_info_s {
     lif_queue_info_t queue_info[NUM_QUEUE_TYPES];
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
     lif_state_t lif_state;
+    mac_addr_t mac;
 } __PACK__ lif_info_t;
 
 

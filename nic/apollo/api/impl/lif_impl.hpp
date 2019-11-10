@@ -90,6 +90,7 @@ public:
     uint16_t vnic_hw_id(void) const { return vnic_hw_id_; }
 
     /// \brief     set/update the name of the lif
+    /// \param[in] name    name of the device corresponding to this lif
     void set_name(const char *name) {
         if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
             (type_ == sdk::platform::LIF_TYPE_HOST)) {
@@ -106,7 +107,19 @@ public:
         state_ = state;
     }
 
+    /// \brief     return the operational state of the lif
+    /// \return    operational state of the lif
     lif_state_t state(void) const { return state_; }
+
+    /// \brief     set/update the mac address of the lif
+    /// \param[in] mac    mac address of the device corresponding to this lif
+    void set_mac(mac_addr_t mac) {
+        memcpy(mac_, mac, ETH_ADDR_LEN);
+    }
+
+    /// \brief     return the MAC address corresponding to this lif
+    /// \return    ethernet MAC address of this lif
+    mac_addr_t& mac(void) { return mac_; }
 
 private:
     ///< constructor
@@ -146,16 +159,17 @@ private:
     pds_lif_key_t    key_;            ///< (s/w & h/w) lif id
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
-    ht_ctxt_t        ht_ctxt_;        ///< hash table context
+    char             name_[SDK_MAX_NAME_LEN];    ///< lif name
+    mac_addr_t       mac_;            ///< MAC address of lif
+
+    /// operational state
     // TODO: we can have state per pipeline in this class
     //       ideally, we should have the concrete class inside pipeline specific
     //       dir and this should be a base class !!
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
-
-    /// operational state
-    char             name_[SDK_MAX_NAME_LEN];    ///< lif name
     lif_state_t      state_;                     ///< operational state
+    ht_ctxt_t        ht_ctxt_;        ///< hash table context
     ///< lif_impl_state is friend of lif_impl
     friend class lif_impl_state;
 } __PACK__;

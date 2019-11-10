@@ -31,24 +31,30 @@ lif_state_to_if_state (lif_state_t state)
     }
 }
 
-sdk_ret_t
-pds_lif_read (pds_lif_key_t *key, pds_lif_info_t *info)
-{
+static inline sdk_ret_t
+pds_lif_to_lif_info (pds_lif_info_t *info, api::impl::lif_impl *lif) {
     pds_lif_spec_t *spec = &info->spec;
     pds_lif_status_t *status = &info->status;
 
-    api::impl::lif_impl *lif = (api::impl::lif_impl *)(lif_db()->find(key));
-    if (lif == NULL) {
-        return SDK_RET_ENTRY_NOT_FOUND;
-    }
     spec->key = lif->key();
     spec->pinned_ifidx = lif->pinned_ifindex();
     spec->type = lif->type();
     strncpy(status->name, lif->name(), SDK_MAX_NAME_LEN);
+    memcpy(spec->mac, lif->mac(), ETH_ADDR_LEN);
     status->state = lif_state_to_if_state(lif->state());
     status->ifindex = LIF_IFINDEX(spec->key);
-   
-   return SDK_RET_OK;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+pds_lif_read (pds_lif_key_t *key, pds_lif_info_t *info)
+{
+    api::impl::lif_impl *lif = (api::impl::lif_impl *)(lif_db()->find(key));
+    if (lif == NULL) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    pds_lif_to_lif_info(info, lif);
+    return SDK_RET_OK;
 }
 
 typedef struct pds_lif_read_args_s {
@@ -61,15 +67,9 @@ pds_lif_spec_from_impl (void *entry, void *ctxt)
 {
     api::impl::lif_impl *lif = (api::impl::lif_impl *)entry;
     pds_lif_read_args_t *args = (pds_lif_read_args_t *)ctxt;
-    pds_lif_info_t info = {0};
+    pds_lif_info_t info = { 0 };
 
-    info.spec.key = lif->key();
-    info.spec.pinned_ifidx = lif->pinned_ifindex();
-    info.spec.type = lif->type();
-    strncpy(info.status.name, lif->name(), SDK_MAX_NAME_LEN);
-    info.status.state = lif_state_to_if_state(lif->state());
-    info.status.ifindex = LIF_IFINDEX(info.spec.key);
-    
+    pds_lif_to_lif_info(&info, lif);
     args->cb(&info, args->ctxt);
     return false;
 }

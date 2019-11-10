@@ -363,7 +363,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "dp%u", dplif++);
+    snprintf(name_, SDK_MAX_NAME_LEN, "swdp%u", dplif++);
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);
     // allocate required nexthop to point to ARM datapath lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);

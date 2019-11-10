@@ -7,6 +7,7 @@
 #ifndef __INCLUDE_API_PDS_LIF_HPP__
 #define __INCLUDE_API_PDS_LIF_HPP__
 
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
@@ -21,6 +22,8 @@ typedef struct pds_lif_spec_s {
     lif_type_t       type;
     ///< vlan_strip_en is set to true if vlan needs to be stripped in datapath
     bool vlan_strip_en;
+    ///< mac address of the device
+    mac_addr_t mac;
 } pds_lif_spec_t;
 
 /// \brief lif status
@@ -54,4 +57,4 @@ typedef void (*lif_read_cb_t)(void *spec, void *ctxt);
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_lif_read_all(lif_read_cb_t cb, void *ctxt);
 
-#endif    ///  __INCLUDE_API_PDS_LIF_HPP__
+#endif    // __INCLUDE_API_PDS_LIF_HPP__

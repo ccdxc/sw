@@ -546,7 +546,7 @@ pds_slab_to_proto (void *entry, void *ctxt)
     stats->set_numfrees(s->num_frees());
     stats->set_numallocerrors(s->num_alloc_fails());
     stats->set_numblocks(s->num_blocks());
-    
+
     return false;
 }
 
@@ -625,7 +625,7 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
     proto_spec->set_lifid(api_info->spec.key);
     proto_spec->set_pinnedinterfaceid(api_info->spec.pinned_ifidx);
     proto_spec->set_type(types::LifType(api_info->spec.type));
-
+    proto_spec->set_macaddress(MAC_TO_UINT64(api_info->spec.mac));
     proto_status->set_name(api_info->status.name);
     proto_status->set_ifindex(api_info->status.ifindex);
     proto_status->set_operstatus(pds_admin_state_to_proto_admin_state(api_info->status.state));

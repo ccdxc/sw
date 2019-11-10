@@ -153,10 +153,16 @@ message InterfaceDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1; // API status code
 }
 
+/// Lif (Logical interface) object represents a device (eth/storage etc.)
 message LifSpec {
+  // unique key of the lif
   uint32        LifId             = 1;
+  // pinned interface, if applicable for this device
   uint32        PinnedInterfaceId = 2;
+  // type of the lif device
   types.LifType Type              = 3;
+  // MAC address of the lif, if any
+  uint64        MacAddress        = 4;
 }
 
 message LifStatus {
