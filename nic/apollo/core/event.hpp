@@ -55,6 +55,7 @@ typedef struct uplink_event_info_s {
 typedef struct lif_event_info_s {
     pds_ifindex_t    ifindex;
     char             name[SDK_MAX_NAME_LEN];
+    mac_addr_t       mac;
     lif_state_t      state;
 } lif_event_info_t;
 

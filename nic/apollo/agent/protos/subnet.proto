@@ -57,6 +57,8 @@ message SubnetSpec {
   /// present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
   /// HostIfIndex is the interface index of such VF/PF
   uint32          HostIfIndex           = 15;
+  // DHCP policy to be applied in this subnet
+  uint32          DHCPPolicyId          = 16;
 }
 
 // operational status of the subnet, if any

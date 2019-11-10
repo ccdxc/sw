@@ -42,6 +42,7 @@ typedef struct pds_subnet_spec_s {
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, subnet can be attached to PF/VF
     pds_ifindex_t host_ifindex;
+    pds_policy_key_t dhcp_policy;            ///< DHCP policy, if any
 } __PACK__ pds_subnet_spec_t;
 
 /// \brief Subnet status

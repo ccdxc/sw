@@ -138,6 +138,7 @@ subnet_entry::nuke_resources_(void) {
     if (hw_id_ != 0xFFFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

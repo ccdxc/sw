@@ -27,30 +27,30 @@
 #define PDS_PORT_INVALID              0xFF   ///< invalid port#
 
 // Basic PDS data types
-typedef uint64_t                  pds_batch_ctxt_t;          ///< opaque batch context
-typedef uint32_t                  pds_vpc_id_t;              ///< vpc id
-typedef uint32_t                  pds_subnet_id_t;           ///< subnet id
-typedef uint16_t                  pds_vnic_id_t;             ///< vnic id
-typedef uint32_t                  pds_rule_id_t;             ///< rule identifier
-typedef uint32_t                  pds_rsc_pool_id_t;         ///< resource pool id
-typedef uint32_t                  pds_epoch_t;               ///< epoch id
-typedef uint32_t                  pds_slot_id_t;             ///< MPLS tag value
-typedef uint16_t                  pds_vlan_id_t;             ///< VLAN tag value
-typedef uint32_t                  pds_vnid_id_t;             ///< VxLAN id
-typedef uint32_t                  pds_mpls_tag_t;            ///< MPLS tag value
-typedef uint32_t                  pds_mapping_id_t;          ///< mapping table index
-typedef uint32_t                  pds_route_table_id_t;      ///< route table index
-typedef uint32_t                  pds_policy_id_t;           ///< policy table index
-typedef uint16_t                  pds_lif_key_t;             ///< lif key id
-typedef uint32_t                  pds_if_id_t;               ///< interface id
-typedef uint32_t                  pds_mirror_session_id_t;   ///< mirror session table index
-typedef uint32_t                  pds_meter_id_t;            ///< meter table index
-typedef uint32_t                  pds_tag_id_t;              ///< tag table index
-typedef uint32_t                  pds_vpc_peer_id_t;         ///< vpc peer id
-typedef uint32_t                  pds_nexthop_id_t;          ///< nexthop table index
-typedef uint32_t                  pds_nexthop_group_id_t;    ///< nexthop group table index
-typedef uint32_t                  pds_tep_id_t;              ///< TEP table index
-typedef uint32_t                  pds_ifindex_t;             ///< interface index
+typedef uint64_t    pds_batch_ctxt_t;          ///< opaque batch context
+typedef uint32_t    pds_vpc_id_t;              ///< vpc id
+typedef uint32_t    pds_subnet_id_t;           ///< subnet id
+typedef uint16_t    pds_vnic_id_t;             ///< vnic id
+typedef uint32_t    pds_rule_id_t;             ///< rule identifier
+typedef uint32_t    pds_rsc_pool_id_t;         ///< resource pool id
+typedef uint32_t    pds_epoch_t;               ///< epoch id
+typedef uint32_t    pds_slot_id_t;             ///< MPLS tag value
+typedef uint16_t    pds_vlan_id_t;             ///< VLAN tag value
+typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
+typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
+typedef uint32_t    pds_mapping_id_t;          ///< mapping table index
+typedef uint32_t    pds_route_table_id_t;      ///< route table index
+typedef uint32_t    pds_policy_id_t;           ///< policy table index
+typedef uint16_t    pds_lif_key_t;             ///< lif key id
+typedef uint32_t    pds_if_id_t;               ///< interface id
+typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
+typedef uint32_t    pds_meter_id_t;            ///< meter table index
+typedef uint32_t    pds_tag_id_t;              ///< tag table index
+typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
+typedef uint32_t    pds_nexthop_id_t;          ///< nexthop table index
+typedef uint32_t    pds_nexthop_group_id_t;    ///< nexthop group table index
+typedef uint32_t    pds_tep_id_t;              ///< TEP table index
+typedef uint32_t    pds_ifindex_t;             ///< interface index
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface

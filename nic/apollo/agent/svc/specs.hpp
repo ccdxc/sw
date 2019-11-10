@@ -2611,6 +2611,7 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_hostifindex(api_spec->host_ifindex);
+    proto_spec->set_dhcppolicyid(api_spec->dhcp_policy.id);
 }
 
 // populate proto buf status from subnet API status
@@ -2665,6 +2666,7 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     api_spec->egr_v6_policy.id = proto_spec.egv6securitypolicyid();
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     api_spec->host_ifindex = proto_spec.hostifindex();
+    api_spec->dhcp_policy.id = proto_spec.dhcppolicyid();
 }
 
 // build VPC API spec from protobuf spec
