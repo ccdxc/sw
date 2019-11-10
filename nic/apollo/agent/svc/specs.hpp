@@ -1201,8 +1201,8 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
         api_spec->nh_group.id = proto_spec.nexthopgroupid();
         break;
     default:
-        //PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
-                      //proto_spec.nh_case(), api_spec->key.id);
+        PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
+                      proto_spec.nh_case(), api_spec->key.id);
         return SDK_RET_INVALID_ARG;
         break;
     }

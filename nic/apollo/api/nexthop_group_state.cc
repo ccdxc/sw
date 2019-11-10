@@ -42,13 +42,14 @@ nexthop_group_state::alloc(void) {
 
 sdk_ret_t
 nexthop_group_state::insert(nexthop_group *nh_group) {
+    PDS_TRACE_VERBOSE("Adding nexthop group %u to db", nh_group->key().id);
     return nexthop_group_ht_->insert_with_key(&nh_group->key_,
                                           nh_group, &nh_group->ht_ctxt_);
 }
 
 nexthop_group *
 nexthop_group_state::remove(nexthop_group *nh_group) {
-    PDS_TRACE_VERBOSE("Adding nexthop group %u to db", nh_group->key().id);
+    PDS_TRACE_VERBOSE("Removing nexthop group %u from db", nh_group->key().id);
     return (nexthop_group *)(nexthop_group_ht_->remove(&nh_group->key_));
 }
 

@@ -81,6 +81,12 @@ cfg_db::init(void) {
     }
     nh_map_ = new(mem) nh_db_t();
 
+    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(nh_group_db_t));
+    if (mem == NULL) {
+        return false;
+    }
+    nh_group_map_ = new(mem) nh_group_db_t();
+
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_peer_db_t));
     if (mem == NULL) {
         return false;
@@ -169,6 +175,9 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_NEXTHOP] =
         slab::factory("nh", SLAB_ID_NEXTHOP, sizeof(pds_nexthop_spec_t),
                       16, true, true, true);
+    slabs_[SLAB_ID_NEXTHOP_GROUP] =
+        slab::factory("nh", SLAB_ID_NEXTHOP_GROUP, sizeof(pds_nexthop_group_spec_t),
+                      16, true, true, true);
     slabs_[SLAB_ID_POLICY] =
         slab::factory("policy", SLAB_ID_POLICY, sizeof(pds_policy_spec_t),
                       16, true, true, true);
@@ -195,6 +204,7 @@ cfg_db::cfg_db() {
     mirror_session_map_ = NULL;
     policy_map_ = NULL;
     nh_map_ = NULL;
+    nh_group_map_ = NULL;
     memset(&device_, 0, sizeof(pds_device_spec_t));
     memset(slabs_, 0, sizeof(slabs_));
 }
@@ -238,6 +248,7 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, mirror_session_map_);
     FREE(MEM_ALLOC_ID_INFRA, policy_map_);
     FREE(MEM_ALLOC_ID_INFRA, nh_map_);
+    FREE(MEM_ALLOC_ID_INFRA, nh_group_map_);
     for (i = SLAB_ID_MIN; i < SLAB_ID_MAX; i++) {
         if (slabs_[i]) {
             slab::destroy(slabs_[i]);
@@ -448,6 +459,33 @@ agent_state::nh_db_walk(nh_walk_cb_t cb, void *ctxt) {
 bool
 agent_state::del_from_nh_db(pds_nexthop_key_t *key) {
     DEL_FROM_DB(nh, key);
+}
+
+sdk_ret_t
+agent_state::add_to_nh_group_db(pds_nexthop_group_key_t *key,
+                                pds_nexthop_group_spec_t *spec) {
+    ADD_TO_DB(nh_group, key, spec);
+}
+
+pds_nexthop_group_spec_t *
+agent_state::find_in_nh_group_db(pds_nexthop_group_key_t *key) {
+    FIND_IN_DB(nh_group, key);
+}
+
+sdk_ret_t
+agent_state::nh_group_db_walk(nh_group_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(nh_group);
+    auto it_end = DB_END(nh_group);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+bool
+agent_state::del_from_nh_group_db(pds_nexthop_group_key_t *key) {
+    DEL_FROM_DB(nh_group, key);
 }
 
 sdk_ret_t
