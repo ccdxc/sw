@@ -87,6 +87,13 @@ var pbShowCmd = &cobra.Command{
 	Run:   pbShowCmdHandler,
 }
 
+var dropShowCmd = &cobra.Command{
+	Use:   "drop-stats",
+	Short: "show system drop stats",
+	Long:  "show system drop stats",
+	Run:   dropShowCmdHandler,
+}
+
 var pbDetailShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "show packet buffer stats detail",
@@ -131,6 +138,70 @@ func init() {
 
 	pbShowCmd.AddCommand(systemQueueCreditsShowCmd)
 	pbShowCmd.AddCommand(pbDetailShowCmd)
+
+	systemShowCmd.AddCommand(dropShowCmd)
+}
+
+func dropShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDeviceSvcClient(c)
+
+	var req *pds.Empty
+
+	// PDS call
+	resp, err := client.DeviceGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting drop stats failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	printDropStats(resp)
+}
+
+func printDropStatsHeader() {
+	hdrLine := strings.Repeat("-", 70)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-50s%-12s\n",
+		"Reason", "Drop Count")
+	fmt.Println(hdrLine)
+}
+
+func printDropStats(resp *pds.DeviceGetResponse) {
+	stats := resp.GetResponse().GetStats()
+	ingress := stats.GetIngress()
+	egress := stats.GetEgress()
+
+	fmt.Printf("Ingress drop stats\n")
+	printDropStatsHeader()
+	for _, entry := range ingress {
+		fmt.Printf("%-50s%-12d\n",
+			entry.GetName(),
+			entry.GetCount())
+	}
+	fmt.Printf("\nEgress drop stats\n")
+	printDropStatsHeader()
+	for _, entry := range egress {
+		fmt.Printf("%-50s%-12d\n",
+			entry.GetName(),
+			entry.GetCount())
+	}
 }
 
 func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
