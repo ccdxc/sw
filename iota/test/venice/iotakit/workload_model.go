@@ -138,6 +138,13 @@ func (sm *SysModel) Workloads() *WorkloadCollection {
 	return &wpc
 }
 
+// GetSingleWorkloadPair gets a single pair collection based on index
+func (wlpc *WorkloadPairCollection) GetSingleWorkloadPair(i int) *WorkloadPairCollection {
+	collection := WorkloadPairCollection{}
+    collection.pairs = append(collection.pairs, wlpc.pairs[i])
+    return &collection
+}
+
 // WorkloadPairs creates full mesh of workload pairs
 func (sm *SysModel) WorkloadPairs() *WorkloadPairCollection {
 	collection := WorkloadPairCollection{}
