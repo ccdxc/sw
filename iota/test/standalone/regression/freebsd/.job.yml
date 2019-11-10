@@ -27,6 +27,8 @@ e2e-targets:
          server-type: server-d
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
+         constraints:
+           same-switch: true
    provision:
        username: vm
        password: vm
@@ -53,6 +55,8 @@ e2e-targets:
          server-type: server-d
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
+         constraints:
+           same-switch: true
    provision:
        username: vm
        password: vm
