@@ -16,7 +16,7 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 
 .align
 eth_rx_app_header:
-  tblwr.f         d.rsvd_cfg, 0
+  tblwr.f         d.rsvd, 0
   // !!! No table updates after this point !!!
 
   // Save required information from APP header

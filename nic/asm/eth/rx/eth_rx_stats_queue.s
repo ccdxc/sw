@@ -38,7 +38,6 @@ union eth_rx_stats_queue_d d;
 
 .align
 eth_rx_stats_queue_accept:
-    // End of pipeline - Make sure no more tables will be launched
     phvwri.f        p.app_header_table2_valid, 0
 
     crestore        [c6-c1], k.eth_rx_global_stats[STAT_oper_vlan_strip:STAT_oper_rss], 0x3f
@@ -48,10 +47,10 @@ eth_rx_stats_queue_accept:
     tbladd.c4.e.f   d.{oper_csum_tcp_bad}.dx, 1
     tbladd.c5.e.f   d.{oper_csum_udp_bad}.dx, 1
     tbladd.c6.e.f   d.{oper_vlan_strip}.dx, 1
+    nop
 
 .align
 eth_rx_stats_queue_drop:
-    // End of pipeline - Make sure no more tables will be launched
     phvwri.f        p.app_header_table2_valid, 0
 
     crestore        [c7-c1], k.eth_rx_global_stats[STAT_event_error:STAT_queue_disabled], 0x7f
@@ -62,3 +61,4 @@ eth_rx_stats_queue_drop:
     tbladd.c5.e.f   d.{desc_data_error}.dx, 1
     tbladd.c6.e.f   d.{event_disabled}.dx, 1
     tbladd.c7.e.f   d.{event_error}.dx, 1
+    nop

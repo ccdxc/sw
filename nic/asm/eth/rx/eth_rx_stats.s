@@ -57,8 +57,8 @@ eth_rx_stats_drop:
     phvwri          p.common_te1_phv_table_lock_en, 1
     phvwri          p.common_te1_phv_table_pc, eth_rx_stats_packet_drop[38:6]
     add             r7, _r_base, LIF_STATS_RX_UCAST_DROP_BYTES_OFFSET
-    phvwr.e         p.common_te1_phv_table_addr, r7
-    phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_STATS_BLOCK_SZ
+    phvwr           p.common_te1_phv_table_addr, r7
+    phvwr           p.common_te1_phv_table_raw_table_size, LG2_RX_STATS_BLOCK_SZ
 
     phvwri          p.app_header_table2_valid, 1
     phvwri          p.common_te2_phv_table_lock_en, 1

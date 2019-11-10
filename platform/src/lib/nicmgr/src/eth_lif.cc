@@ -1071,8 +1071,8 @@ EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     memset(ident, 0, sizeof(union q_identity));
 
-    ident->version = 1;
-    ident->supported = 0x3;
+    ident->version = 0;
+    ident->supported = 1;
     ident->features = IONIC_QIDENT_F_CQ;
     ident->desc_sz = sizeof(struct admin_cmd);
     ident->comp_sz = sizeof(struct admin_comp);
@@ -1105,19 +1105,25 @@ status_code_t
 EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union q_identity *ident = (union q_identity *)resp_data;
-    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
     struct q_identify_comp *comp = (struct q_identify_comp *)resp;
 
     memset(ident, 0, sizeof(union q_identity));
 
-    ident->version = 0;
-    ident->supported = 1;
+    ident->supported = 0x3;
     ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
     ident->desc_sz = sizeof(struct rxq_desc);
     ident->comp_sz = sizeof(struct rxq_comp);
     ident->sg_desc_sz = sizeof(struct rxq_sg_desc);
     ident->max_sg_elems = IONIC_RX_MAX_SG_ELEMS;
     ident->sg_desc_stride = IONIC_RX_MAX_SG_ELEMS;
+
+    if (cmd->ver == 1) {
+        ident->version = 1;
+        ident->features |= IONIC_QIDENT_F_EQ;
+    } else {
+        ident->version = 0;
+    }
 
     comp->ver = ident->version;
 
@@ -1133,21 +1139,27 @@ EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     memset(ident, 0, sizeof(union q_identity));
 
-    ident->supported = 0x3;
-    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
+    ident->supported = 0x7;
+    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG | IONIC_QIDENT_F_EQ;
     ident->desc_sz = sizeof(struct txq_desc);
     ident->comp_sz = sizeof(struct txq_comp);
 
-    if (cmd->ver == 0) {
-        ident->version = 0;
-        ident->sg_desc_sz = sizeof(struct txq_sg_desc);
-        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS;
-        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE;
-    } else {
+    if (cmd->ver == 1) {
         ident->version = 1;
         ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
+    } else if (cmd->ver == 2) {
+        ident->version = 2;
+        ident->features |= IONIC_QIDENT_F_EQ;
+        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
+        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
+    } else {
+        ident->version = 0;
+        ident->sg_desc_sz = sizeof(struct txq_sg_desc);
+        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS;
+        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE;
     }
 
     comp->ver = ident->version;
@@ -1316,14 +1328,20 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver > 1) {
-        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+    if (cmd->ver > 2) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->txq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
         return (IONIC_RC_EQID);
+    }
+
+    if ((cmd->ver < 2) && (cmd->flags & IONIC_QINIT_F_EQ)) {
+        NIC_LOG_ERR("{}: bad ver {} invalid flag IONIC_QINIT_F_EQ",
+            hal_lif_info_.name, cmd->ver);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->flags & IONIC_QINIT_F_EQ) {
@@ -1335,6 +1353,11 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
             NIC_LOG_ERR("{}: bad EQ qid {}", hal_lif_info_.name, cmd->intr_index);
             return (IONIC_RC_EQID);
         }
+        if (cmd->ring_size > 15) {
+            NIC_LOG_ERR("{}: bad ring size {} for TX eq", hal_lif_info_.name,
+                cmd->ring_size);
+            return (IONIC_RC_EINVAL);
+        }
     } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
         if (cmd->intr_index >= spec->intr_count) {
             NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
@@ -1344,10 +1367,6 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
-        return (IONIC_RC_ERROR);
-    }
-    if ((cmd->flags & IONIC_QINIT_F_EQ) && cmd->ring_size > 15) {
-        NIC_LOG_ERR("{}: bad ring_size {} for eq", hal_lif_info_.name, cmd->ring_size);
         return (IONIC_RC_ERROR);
     }
 
@@ -1479,14 +1498,20 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver != 0) {
-        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+    if (cmd->ver > 1) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->index >= spec->rxq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
         return (IONIC_RC_EQID);
+    }
+
+    if ((cmd->ver < 1) && (cmd->flags & IONIC_QINIT_F_EQ)) {
+        NIC_LOG_ERR("{}: bad ver {} invalid flag IONIC_QINIT_F_EQ",
+            hal_lif_info_.name, cmd->ver);
+        return (IONIC_RC_ENOSUPP);
     }
 
     if (cmd->flags & IONIC_QINIT_F_EQ) {
@@ -1498,6 +1523,11 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
             NIC_LOG_ERR("{}: bad EQ qid {}", hal_lif_info_.name, cmd->intr_index);
             return (IONIC_RC_EQID);
         }
+        if (cmd->ring_size > 15) {
+            NIC_LOG_ERR("{}: bad ring size {} for RX eq", hal_lif_info_.name,
+                cmd->ring_size);
+            return (IONIC_RC_EINVAL);
+        }
     } else if (cmd->flags & IONIC_QINIT_F_IRQ) {
         if (cmd->intr_index >= spec->intr_count) {
             NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
@@ -1507,10 +1537,6 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
-        return (IONIC_RC_ERROR);
-    }
-    if ((cmd->flags & IONIC_QINIT_F_EQ) && cmd->ring_size > 15) {
-        NIC_LOG_ERR("{}: bad ring_size {} for eq", hal_lif_info_.name, cmd->ring_size);
         return (IONIC_RC_ERROR);
     }
 
@@ -1631,7 +1657,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     if (cmd->ver != 0) {
-        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
 
@@ -1740,8 +1766,8 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver > 1) {
-        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->index);
+    if (cmd->ver != 0) {
+        NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
 

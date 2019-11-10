@@ -163,7 +163,7 @@ eth_tx_arm_rx:
   sne             _c_arm, _r_arm_index, 0xffff // BD Slot
   tblwr._c_arm    d.p_index1, 0xffff
   bcf             [ !_c_arm ], eth_tx_arm_rx_no_eq
-  tblwr.f         d.rsvd_cfg, 0
+  tblwr.f         d.rsvd, 0
 
 #ifdef PHV_DEBUG
   seq             c7, d.debug, 1

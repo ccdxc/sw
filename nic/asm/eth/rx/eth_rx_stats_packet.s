@@ -38,30 +38,30 @@ union eth_rx_stats_packet_d d;
 
 .align
 eth_rx_stats_packet_accept:
-    // End of pipeline - Make sure no more tables will be launched
     phvwri.f        p.app_header_table1_valid, 0
 
     seq             c1, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_UNICAST
-    tbladd.c1       d.{ucast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c1.e.f   d.{ucast_packets}.dx, 1
+    tbladd.c1.e     d.{ucast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c1.f     d.{ucast_packets}.dx, 1
     seq             c2, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_MULTICAST
-    tbladd.c2       d.{mcast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c2.e.f   d.{mcast_packets}.dx, 1
+    tbladd.c2.e     d.{mcast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c2.f     d.{mcast_packets}.dx, 1
     seq             c3, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_BROADCAST
-    tbladd.c3       d.{bcast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c3.e.f   d.{bcast_packets}.dx, 1
+    tbladd.c3.e     d.{bcast_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c3.f     d.{bcast_packets}.dx, 1
+    nop
 
 .align
 eth_rx_stats_packet_drop:
-    // End of pipeline - Make sure no more tables will be launched
     phvwri.f        p.app_header_table1_valid, 0
 
     seq             c1, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_UNICAST
-    tbladd.c1       d.{ucast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c1.e.f   d.{ucast_drop_packets}.dx, 1
+    tbladd.c1.e     d.{ucast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c1.f     d.{ucast_drop_packets}.dx, 1
     seq             c2, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_MULTICAST
-    tbladd.c2       d.{mcast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c2.e.f   d.{mcast_drop_packets}.dx, 1
+    tbladd.c2.e     d.{mcast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c2.f     d.{mcast_drop_packets}.dx, 1
     seq             c3, k.eth_rx_t1_s2s_l2_pkt_type, PACKET_TYPE_BROADCAST
-    tbladd.c3       d.{bcast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
-    tbladd.c3.e.f   d.{bcast_drop_packets}.dx, 1
+    tbladd.c3.e     d.{bcast_drop_bytes}.dx, k.eth_rx_t1_s2s_pkt_len
+    tbladd.c3.f     d.{bcast_drop_packets}.dx, 1
+    nop
