@@ -118,9 +118,18 @@ nexthop_group::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
+void
+nexthop_group::spec_fill_(pds_nexthop_group_spec_t *spec) {
+    memcpy(&spec->key, &this->key_, sizeof(pds_nexthop_group_key_t));
+    spec->type = type_;
+    spec->num_nexthops = num_nexthops_;
+    return;
+}
+
 sdk_ret_t
 nexthop_group::read(pds_nexthop_group_key_t *key,
                     pds_nexthop_group_info_t *info) {
+    spec_fill_(&info->spec);
     if (impl_)
         return impl_->read_hw(this, (impl::obj_key_t *)key,
                               (impl::obj_info_t *)info);

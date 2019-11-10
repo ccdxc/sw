@@ -171,6 +171,10 @@ private:
     /// \brief destructor
     ~nexthop_group();
 
+    /// \brief      fill the nexthop group sw spec
+    /// \param[out] spec specification
+    void spec_fill_(pds_nexthop_group_spec_t *spec);
+
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)
     /// \return SDK_RET_OK on success, failure status code on error

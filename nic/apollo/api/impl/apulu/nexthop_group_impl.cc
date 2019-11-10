@@ -289,7 +289,12 @@ nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
                       hw_id_, p4pd_ret);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    spec->num_nexthops = ecmp_data.ecmp_info.num_nexthops;
+    if (spec->num_nexthops != ecmp_data.ecmp_info.num_nexthops) {
+        spec->num_nexthops = ecmp_data.ecmp_info.num_nexthops;
+        PDS_TRACE_ERR("Mismatch in number of nexthops in sw(%u) and hw(%u)"
+                      " at index %u key %u", spec->num_nexthops,
+                      ecmp_data.ecmp_info.num_nexthops, hw_id_, spec->key.id);
+    }
     if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
         spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
         // TODO - fetch nh spec from ecmp_data tunnel ids
