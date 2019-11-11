@@ -24,12 +24,12 @@ import (
 // PerformImageUpload triggers image upgrade
 func (act *ActionCtx) PerformImageUpload() error {
 
-	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
+	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
 
 	fileBuf, err := ioutil.ReadFile(rolloutFile)
 	if err != nil {
-		log.Infof("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
-		return fmt.Errorf("Error (%+v) reading file /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar", err)
+		log.Infof("Error (%+v) reading file /go/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", err)
+		return fmt.Errorf("Error (%+v) reading file /go/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", err)
 	}
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
@@ -522,10 +522,10 @@ func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
 		break
 	}
 
-	if err := act.model.DeleteNaplesNodes(names); err != nil {
+	/*if err := act.model.DeleteNaplesNodes(names); err != nil {
 		log.Errorf("Failed to delete naples nodes %v", names)
 		return err
-	}
+	}*/
 	//create the rollout object
 	r1, err := restcls[0].RolloutV1().Rollout().CreateRollout(ctx, rollout)
 	if err != nil || r1.Name != rollout.Name {

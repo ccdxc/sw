@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/resolver"
 	. "github.com/pensando/sw/venice/utils/rpckit"

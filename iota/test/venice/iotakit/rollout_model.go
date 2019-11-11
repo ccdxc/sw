@@ -4,6 +4,8 @@ package iotakit
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -43,10 +45,11 @@ func processMetadataFile(metadata string) map[string]map[string]string {
 	return versionMap
 }
 
-func getCmdGitVersion(metadataFile string) string {
+func getCmdGitVersion() string {
+	metadataFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/metadata.json", os.Getenv("GOPATH"))
 	versionMap := processMetadataFile(metadataFile)
 	if versionMap != nil {
-		return versionMap["Venice"]["Version"]
+		return versionMap["Bundle"]["Version"]
 	}
 	return ""
 }
@@ -68,16 +71,8 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	if err != nil {
 		fmt.Println(fmt.Sprintf("curl Error: %s, err: %v\n", outStr, err))
 		fmt.Println()
-	}
-
-	version := GetCmdGitVersion()
-	log.Errorf("Calling GetGitVersion %s", version)
-	if version == "" {
-		log.Errorf("ts:%s Build Failure. Couldnt get version.json", time.Now().String())
-		err := errors.New("Build Failure. Couldnt get version information")
-		return nil, err
-
 	}*/
+
 	var req labels.Requirement
 	req.Key = "type"
 	req.Operator = "in"
@@ -89,7 +84,12 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	var order []*labels.Selector
 	order = append(order, &orderelem)
 
-	version := "1.2.0-140"
+	version := getCmdGitVersion()
+	log.Errorf("Calling GetGitVersion %s", version)
+	if version == "" {
+		log.Errorf("ts:%s Build Failure. Couldnt get version.json", time.Now().String())
+		return nil, errors.New("Build Failure. Couldnt get version information")
+	}
 
 	if scaleData {
 		var req labels.Requirement
@@ -134,10 +134,10 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 			Spec: rollout.RolloutSpec{
 				Version:                   version,
 				ScheduledStartTime:        scheduledStartTime,
-				Duration:                  "",
+				Duration:                  "60m",
 				Strategy:                  "LINEAR",
 				MaxParallel:               1,
-				MaxNICFailuresBeforeAbort: 0,
+				MaxNICFailuresBeforeAbort: 2,
 				OrderConstraints:          nil,
 				Suspend:                   false,
 				DSCsOnly:                  false,

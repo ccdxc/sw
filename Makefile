@@ -73,15 +73,20 @@ DIND_CONTAINER ?= pens-dind:v0.4
 E2E_CONTAINER ?= pens-e2e:v0.6
 TARGETS ?= ws-tools pull-assets-venice gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
+UPGRADE_TARGETS ?= ws-tools pull-assets-venice gen upgrade-build
+UPGRADE_BUILD_CMD ?= bash -c  "make ${UPGRADE_TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --dirty --always)
+GIT_UPGRADE_VERSION ?= iota-upgrade
 #IMAGE_VERSION is venice image version
 IMAGE_VERSION ?= ${GIT_VERSION}
 BUNDLE_VERSION ?= ${IMAGE_VERSION}
+IMAGE_UPGRADE_VERSION ?= ${GIT_UPGRADE_VERSION}
+BUNDLE_UPGRADE_VERSION ?= ${IMAGE_UPGRADE_VERSION}
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
-export GIT_COMMIT GIT_VERSION BUILD_DATE
+export GIT_COMMIT GIT_VERSION BUILD_DATE GIT_UPGRADE_VERSION
 
 default:
 	$(MAKE) pregen-clean
@@ -179,6 +184,14 @@ build: gopkglist
 		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -ldflags '-X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
 	else \
 		echo "+++ rebuilding all go sources";CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -a -ldflags '-X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
+	fi
+
+# build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
+upgrade-build: gopkglist
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -ldflags '-X main.GitVersion=${GIT_UPGRADE_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
+	else \
+		echo "+++ rebuilding all go sources";CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -a -ldflags '-X main.GitVersion=${GIT_UPGRADE_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
 	fi
 
 # VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
@@ -283,6 +296,35 @@ endif
 	docker save -o bin/tars/pen-netagent.tar pen-netagent:latest
 	docker save -o bin/tars/pen-install.tar pen-install:latest
 
+upgrade-install:
+	@#copy the agent binaries to netagent
+	@cp -p ${PWD}/bin/cbin/fakedelphihub tools/docker-files/netagent/fakedelphihub
+	@cp -p ${PWD}/bin/cbin/fwgen tools/docker-files/netagent/fwgen
+	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
+	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
+	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
+	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
+	@cp -p ${PWD}/nic/tools/fakefwupdate tools/docker-files/netagent/fwupdate
+	@cp -p ${PWD}/bin/cbin/ntsa tools/docker-files/netagent/ntsa
+	@cp -p ${PWD}/nic/conf/naples-tsa.json tools/docker-files/netagent/naples-tsa.json
+	@echo  ${GIT_UPGRADE_VERSION} > tools/docker-files/netagent/VERSION
+	@cp -p ${PWD}/venice/vtsa/cmd/vtsa/vtsa.json tools/docker-files/vtsa/vtsa.json
+	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
+	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
+ifndef PARALLEL
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+else
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c} ; done
+	@for c in $(TO_DOCKERIZE); do (echo docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c}) ; done | parallel --will-cite --jobs 4
+endif
+	@tools/scripts/createImage.py ${IMAGE_UPGRADE_VERSION} ${GIT_UPGRADE_VERSION}
+	@# the above script populates venice.json which needs to be 'installed' on the venice. Hence creation of installer is done at the end
+	@# For now the installer is a docker container.
+	@# In the future, this can be a shell script, rpm, curl script or whatever..
+	docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0" --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
+	docker save -o bin/tars/pen-netagent.tar pen-netagent:latest
+	docker save -o bin/tars/pen-install.tar pen-install:latest
+
 gen-clean:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Cleaning $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} gen-clean || exit 1; done
 
@@ -358,6 +400,18 @@ container-compile:
 		echo "+++ rebuilding all go sources"; echo docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
 		docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
 	fi
+# running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
+upgrade-container-compile:
+	@mkdir -p ${PWD}/bin/cbin
+	@mkdir -p ${PWD}/bin/pkg
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; echo docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${UPGRADE_BUILD_CMD} ; \
+		docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${UPGRADE_BUILD_CMD} ; \
+	else \
+		echo "+++ rebuilding all go sources"; echo docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${UPGRADE_BUILD_CMD} ;\
+		docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${UPGRADE_BUILD_CMD} ;\
+	fi
+
 
 populate-web-app-framework-node-modules:
 	echo "+++ populating node_modules from cache for ui-framework";\
@@ -390,6 +444,25 @@ ui-dependencies:
 		cd venice/ui/web-app-framework && tar xf web-app-framework.tgz && cd ../../..; \
 	fi; \
 
+
+upgrade-fixtures:
+	mkdir -p bin
+	@if [ -z ${BYPASS_UI} ]; then \
+		$(MAKE) ui-dependencies ;\
+		echo "+++ building ui sources" ; \
+		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_UPGRADE_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		echo rm -r tools/docker-files/apigw/dist ;\
+		rm -r tools/docker-files/apigw/dist ;\
+		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
+		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
+	fi
+	@if [ -z ${BYPASS_DOCS} ]; then \
+		echo "++ generating documentation"; \
+		tools/scripts/gendocs.sh "${REGISTRY_URL}/${BUILD_CONTAINER}" "${REGISTRY_URL}/${UI_BUILD_CONTAINER}" ;\
+		cp -r api/docs tools/docker-files/apigw; \
+		cp -r docs/examples tools/docker-files/apigw/docs; \
+	fi
 
 fixtures:
 	mkdir -p bin
@@ -587,6 +660,7 @@ naples-firmware-tarball-apulu: naples-firmware-tarball
 
 e2e-iota: e2e-naples
 	$(MAKE) venice-image
+	$(MAKE) venice-upgrade-image
 	$(MAKE) -C iota
 	$(MAKE) -C iota/test/venice
 
@@ -670,8 +744,30 @@ venice-image:
 	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
+venice-upgrade-image:
+	printf "\n+++++++++++++++++ start upgrade-container-compile $$(date) +++++++++++++++++\n"
+	$(MAKE) upgrade-container-compile
+	printf "\n+++++++++++++++++ start upgrade-fixture $$(date) +++++++++++++++++\n"
+	$(MAKE) upgrade-fixtures
+	printf "\n+++++++++++++++++ start upgrade-install $$(date) +++++++++++++++++\n"
+	$(MAKE) upgrade-install
+	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
+	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
+	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.upg.tgz
+	printf "\n+++++++++++++++++ complete venice-upgrade-image $$(date) +++++++++++++++++\n"
+
 ci-venice-image:
 	$(MAKE) venice-image
+ci-venice-upgrade-image:
+	echo "ci-venice-upgrade-image"
+	echo ${GIT_UPGRADE_VERSION}
+	echo ${GIT_COMMIT}
+	$(MAKE) venice-base-iso
+	sudo mkdir -p bin/venice-install
+	sudo mkdir -p bin/pxe
+	$(MAKE) venice-iso
+	cd bin/venice-install && tar -cf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
+	$(MAKE) venice-upgrade-image
 
 # this creates the OS image - like buildroot for venice from centos DVD image
 # Only needed to be run when contents of FS need to change
@@ -695,6 +791,21 @@ bundle-image:
 	ln -f nic/naples_fw_.tar bin/bundle/naples_fw.tar
 	ln -f bin/venice-install/venice_appl_os.tgz bin/bundle/venice_appl_os.tgz
 	cd bin/bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+
+bundle-upgrade-image:
+	mkdir -p upgrade-bundle/bin
+	mkdir -p upgrade-bundle/nic
+	mkdir -p upgrade-bundle/bin/venice-install
+	ln -f bin/venice.upg.tgz upgrade-bundle/bin/venice.tgz
+	ln -f nic/naples_fw_.tar upgrade-bundle/nic/naples_fw.tar
+	ln -f bin/venice-install/venice_appl_os.tgz upgrade-bundle/bin/venice-install/venice_appl_os.tgz
+	@ #bundle.py creates metadata.json for the bundle image
+	@tools/scripts/bundle.py -v ${BUNDLE_UPGRADE_VERSION}  -d ${BUILD_DATE} -p "upgrade-bundle/"
+	ln -f upgrade-bundle/bin/venice.tgz upgrade-bundle/venice.tgz
+	ln -f upgrade-bundle/nic/naples_fw.tar upgrade-bundle/naples_fw.tar
+	ln -f upgrade-bundle/bin/venice-install/venice_appl_os.tgz upgrade-bundle/venice_appl_os.tgz
+	cd upgrade-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+	cd upgrade-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
 
 VENICE_RELEASE_TAG := v0.3
 gs-venice-release: venice-image

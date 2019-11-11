@@ -58,6 +58,24 @@ builds:
       password: vm
       # additional vars to pass to ansible.
       vars:
+  build-venice-upgrade-image:
+    commands: ["bash", "-c", "mkdir -p /sw/bin/venice-install; cd /usr/src/github.com/pensando/sw/test/ci_targets/e2e-venice-upgrade-image; GIT_UPGRADE_VERSION=iota-upgrade GIT_COMMIT=$(git rev-list -1 HEAD --abbrev-commit) go run make-venice-upgrade-image.go"]
+    owners: ["email:sw-team@pensando.io"]
+    artifacts:
+      - /sw/bin/venice.upg.tgz
+      - /sw/bin/venice-install/venice_appl_os.tgz
+    repo_dir: "/import/src/github.com/pensando/sw"
+    create:
+      image: build-150
+      count: 1
+      resources:
+        cpus: 16
+        memory: 32
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:
 
 targets:
   submodules:
