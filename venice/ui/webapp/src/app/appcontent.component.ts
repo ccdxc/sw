@@ -31,6 +31,8 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { RolloutRollout, RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
 import { ConfirmDialog } from 'primeng/primeng';
+import { SearchService } from './services/generated/search.service';
+import { ISearchSearchRequest, SearchSearchRequest_mode, SearchSearchRequest, FieldsRequirement_operator, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -119,6 +121,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     public dialog: MatDialog,
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService,
+    protected searchService: SearchService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
     protected rolloutService: RolloutService,
@@ -575,16 +578,25 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     if (this.alertGetSubscription) {
       this.alertGetSubscription.unsubscribe();
     }
-    this.alertGetSubscription = this.monitoringService.ListAlert().subscribe(
-      resp => {
-        const body = resp.body as IMonitoringAlertList;
-        if (body.items == null) {
-          body.items = [];
+    const query: SearchSearchRequest = new SearchSearchRequest({
+      query: {
+        kinds:  ['Alert'],
+        fields: {
+         'requirements': [{
+           key: 'spec.state',
+           operator: FieldsRequirement_operator.equals,
+           values: ['open']
+         }]
         }
-        const openAlerts = body.items.filter((alert: MonitoringAlert) => {
-          return (this.isAlertInOpenState(alert));
-        });
-        this.startingAlertCount = openAlerts.length;
+      },
+      'max-results': 2,
+      aggregate: false,
+      mode: SearchSearchRequest_mode.preview,
+    });
+    this.alertGetSubscription = this.searchService.PostQuery(query).subscribe(
+      resp => {
+        const body = resp.body as ISearchSearchResponse;
+        this.startingAlertCount = parseInt(body['total-hits'], 10);
         this.alertNumbers = this.startingAlertCount;
         // Now that we have the count already in the system, we start the watch
         this.getAlertsWatch();

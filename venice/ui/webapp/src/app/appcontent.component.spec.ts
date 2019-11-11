@@ -63,6 +63,7 @@ import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import {Router} from '@angular/router';
 import { Utility } from './common/Utility';
+import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 
 describe('AppcontentComponent', () => {
   let component: AppcontentComponent;
@@ -143,10 +144,14 @@ describe('AppcontentComponent', () => {
     const toasterSpy = spyOn(controllerService, 'invokeInfoToaster');
 
     const monitoringService = TestBed.get(MonitoringService);
-    const body = new MonitoringAlertList();
-    body.items = alerts;
-    spyOn(monitoringService, 'ListAlert').and.returnValue(
-      TestingUtility.createListResponse(alerts)
+    const searchService = TestBed.get(SearchService);
+    const searchResp: ISearchSearchResponse = {
+      'total-hits': alerts.length.toString(),
+    };
+    spyOn(searchService, 'PostQuery').and.returnValue(
+      new BehaviorSubject({
+        body: searchResp
+      })
     );
     const watchSubject = TestingUtility.createWatchEventsSubject(alerts.slice(0, 10));
     spyOn(monitoringService, 'WatchAlert').and.returnValue(
