@@ -73,9 +73,15 @@ tep_feeder::iter_next(int width) {
     switch (this->spec.nh_type) {
     case PDS_NH_TYPE_UNDERLAY_ECMP:
         this->spec.nh_group.id += width;
+        if (this->spec.nh_group.id >= PDS_MAX_NEXTHOP_GROUP) {
+            this->spec.nh_group.id = 1;
+        }
         break;
     case PDS_NH_TYPE_UNDERLAY:
         this->spec.nh.id += width;
+        if (this->spec.nh.id >= PDS_MAX_NEXTHOP) {
+            this->spec.nh.id = 1;
+        }
         break;
     default:
         break;

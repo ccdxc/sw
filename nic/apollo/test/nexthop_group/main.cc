@@ -37,13 +37,11 @@ protected:
         sample_if_setup(bctxt);
         sample_tep_setup(bctxt);
         sample_underlay_nexthop_setup(bctxt);
-        sample_nexthop_group_setup(bctxt);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
         sample_underlay_nexthop_teardown(bctxt);
-        sample_nexthop_group_teardown(bctxt);
         sample_tep_teardown(bctxt);
         sample_if_teardown(bctxt);
         batch_commit(bctxt);

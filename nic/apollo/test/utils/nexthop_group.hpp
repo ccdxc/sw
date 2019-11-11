@@ -12,7 +12,7 @@
 
 namespace api_test {
 
-uint16_t k_max_groups = PDS_MAX_NEXTHOP_GROUP;
+static constexpr uint16_t k_max_groups = PDS_MAX_NEXTHOP_GROUP;
 
 // NH group test feeder class
 class nexthop_group_feeder : public feeder {
@@ -59,9 +59,7 @@ API_UPDATE(nexthop_group);
 API_DELETE(nexthop_group);
 
 // Misc function prototypes
-void sample_nexthop_setup(pds_batch_ctxt_t bctxt);
 void sample_nexthop_group_setup(pds_batch_ctxt_t bctxt);
-void sample_nexthop_teardown(pds_batch_ctxt_t bctxt);
 void sample_nexthop_group_teardown(pds_batch_ctxt_t bctxt);
 
 }    // namespace api_test

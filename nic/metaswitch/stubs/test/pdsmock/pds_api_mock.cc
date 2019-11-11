@@ -262,6 +262,21 @@ sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_s *spec,
     return SDK_RET_OK;
 }
 
+sdk_ret_t pds_nexthop_group_read(pds_nexthop_group_key_t *key,
+                                 pds_nexthop_group_info_t *info) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_s *spec,
+                                   pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
+                                   pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+
 sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
                             pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;

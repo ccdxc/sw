@@ -8,8 +8,9 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/if.hpp"
+#include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/apollo/test/utils/nexthop_group.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
@@ -42,7 +43,7 @@ protected:
         if (apulu()) {
             sample_if_setup(bctxt);
             sample_nexthop_setup(bctxt);
-            // sample_nexthop_group_setup(bctxt);
+            sample_nexthop_group_setup(bctxt);
         }
         batch_commit(bctxt);
     }
@@ -51,7 +52,7 @@ protected:
         if (apulu()) {
             sample_nexthop_teardown(bctxt);
             sample_if_teardown(bctxt);
-            // sample_nexthop_group_teardown(bctxt);
+            sample_nexthop_group_teardown(bctxt);
         }
         batch_commit(bctxt);
         if (!agent_mode())
@@ -206,8 +207,6 @@ TEST_F(tep_test, tep_workflow_7) {
         feeder1B.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
                       k_nat, PDS_TEP_TYPE_SERVICE, "30::30:1:1", 0);
     } else if (apulu()) {
-        // TODO: nh group support
-        return;
         feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip);
         // feeder1A =  feeder1 + ipv6 remote ip
         feeder1A.init(g_tep_id, k_tep_mac, k_base_nh_ipv6);

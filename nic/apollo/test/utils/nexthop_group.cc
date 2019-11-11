@@ -13,8 +13,7 @@ namespace api_test {
 // NEXTHOP group feeder class routines
 //----------------------------------------------------------------------------
 
-uint16_t k_num_obj = 10;
-uint64_t k_mac_addr = 0x010203040506;
+static constexpr uint64_t k_mac_addr = 0x010203040506;
 
 void
 nh_spec_fill(pds_nexthop_spec_t *spec, pds_nexthop_id_t id, pds_nh_type_t type,
@@ -153,13 +152,18 @@ nexthop_group_feeder::spec_compare(const pds_nexthop_group_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
+static nexthop_group_feeder k_nh_group_feeder;
 
 void sample_nexthop_group_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
+    k_nh_group_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP);
+    many_create(bctxt, k_nh_group_feeder);
 }
 
 void sample_nexthop_group_teardown(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
+    k_nh_group_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP);
+    many_delete(bctxt, k_nh_group_feeder);
 }
 
 }    // namespace api_test
