@@ -70,6 +70,12 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 
     case INTR_SEV_TYPE_FATAL:
     case INTR_SEV_TYPE_ERR:
+        if (field->count == 1) {
+            TRACE_INFO(GetAsicErrObflOnetimeLogger(),
+                       "name: {}_{}, count: {}, severity: {}, desc: {}",
+                       reg->name, field->name, field->count,
+                       get_severity_str(field->severity).c_str(), field->desc);
+        }
         TRACE_INFO(GetAsicErrObflLogger(),
                    "name: {}_{}, count: {}, severity: {}, desc: {}",
                    reg->name, field->name, field->count,

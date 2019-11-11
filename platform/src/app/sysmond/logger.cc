@@ -9,7 +9,7 @@
 ::utils::log *obfl_trace_logger;
 ::utils::log *g_asicerr_trace_logger;
 ::utils::log *g_asicerr_obfl_trace_logger;
-
+::utils::log *g_asicerr_obfl_onetime_trace_logger;
 
 // wrapper APIs to get logger
 std::shared_ptr<spdlog::logger>
@@ -45,6 +45,15 @@ GetAsicErrObflLogger (void)
 {
     if (g_asicerr_obfl_trace_logger) {
         return g_asicerr_obfl_trace_logger->logger();
+    }
+    return NULL;
+}
+
+std::shared_ptr<spdlog::logger>
+GetAsicErrObflOnetimeLogger (void)
+{
+    if (g_asicerr_obfl_onetime_trace_logger) {
+        return g_asicerr_obfl_onetime_trace_logger->logger();
     }
     return NULL;
 }
@@ -103,6 +112,7 @@ sysmond_flush_logger (void)
     GetObflLogger()->flush();
     GetAsicErrLogger()->flush();
     GetAsicErrObflLogger()->flush();
+    GetAsicErrObflOnetimeLogger()->flush();
 }
 
 void
@@ -135,6 +145,14 @@ initializeLogger (void)
                                         "asicerrord_obfl", 0x0,
                                         ::utils::log_mode_sync, false,
                                         ASICERR_OBFL_LOG_FILENAME, NULL,
+                                        OBFL_LOG_MAX_FILESIZE,
+                                        LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::trace_debug,
+                                        ::utils::log_none);
+        g_asicerr_obfl_onetime_trace_logger = ::utils::log::factory(
+                                        "asicerrord_obfl_onetime", 0x0,
+                                        ::utils::log_mode_sync, false,
+                                        ASICERR_OBFL_LOG_ONETIME_FILENAME, NULL,
                                         OBFL_LOG_MAX_FILESIZE,
                                         LOG_MAX_FILES, ::utils::trace_debug,
                                         ::utils::trace_debug,
