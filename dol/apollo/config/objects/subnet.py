@@ -18,11 +18,6 @@ import apollo.config.utils as utils
 
 import subnet_pb2 as subnet_pb2
 
-#TODO: move these protos
-PROTO_TCP = 6
-PROTO_UDP = 17
-protos = {PROTO_TCP, PROTO_UDP}
-
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
         super().__init__()
@@ -74,7 +69,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- Prefix %s VNI %d" % (self.IPPrefix, self.Vnid))
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
-        logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
+        logger.info("- NaclIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
                     (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
@@ -107,15 +102,7 @@ class SubnetObject(base.ConfigObjectBase):
                 pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
-        srcPfx = pfx
-        dstPfx = pfx
-        l4match = policy.L4MatchObject(True)
-        for proto in protos:
-            l3match = policy.L3MatchObject(True, proto, srcpfx=srcPfx, dstpfx=dstPfx)
-            rule = policy.RuleObject(l3match, l4match)
-            rules.append(rule)
-        policyobj.rules = rules
-        policyobj.Show()
+        policyobj.rules = policy.client.Generate_Allow_All_Rules(srcPfx, dstPfx)
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
@@ -158,6 +145,18 @@ class SubnetObject(base.ConfigObjectBase):
             spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
 
+    def GetNaclId(self, direction, af=utils.IP_VERSION_4):
+        if af == utils.IP_VERSION_4:
+            if direction == 'ingress':
+                return self.IngV4SecurityPolicyId
+            else:
+                return self.EgV4SecurityPolicyId
+        elif af == utils.IP_VERSION_6:
+            if direction == 'ingress':
+                return self.IngV6SecurityPolicyId
+            else:
+                return self.EgV6SecurityPolicyId
+        return None
 
 class SubnetObjectClient:
     def __init__(self):

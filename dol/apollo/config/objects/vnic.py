@@ -12,6 +12,7 @@ import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.meter as meter
+from apollo.config.objects.policy import client as PolicyClient
 import apollo.config.utils as utils
 
 import vnic_pb2 as vnic_pb2
@@ -38,11 +39,14 @@ class VnicObject(base.ConfigObjectBase):
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
         self.HostIf = parent.HostIf
-        self.IngV4SecurityPolicyIds = {}
-        self.IngV6SecurityPolicyIds = {}
-        self.EgV4SecurityPolicyIds = {}
-        self.EgV6SecurityPolicyIds = {}
+        self.IngV4SecurityPolicyIds = []
+        self.IngV6SecurityPolicyIds = []
+        self.EgV4SecurityPolicyIds = []
+        self.EgV6SecurityPolicyIds = []
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
+        self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
+        # get num of policies [0-5] in rrob order if needed
+        self.__numpolicy = resmgr.NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self._derive_oper_info()
         self.Show()
@@ -79,7 +83,12 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
-        # TODO: show policy objects if any
+        if self.__attachpolicy:
+            logger.info("- NumSecurityPolicies:", self.__numpolicy)
+            logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
+            logger.info("- Ing V6 Policies:", self.IngV6SecurityPolicyIds)
+            logger.info("- Egr V4 Policies:", self.EgV4SecurityPolicyIds)
+            logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
         return
 
     def SetBaseClassAttr(self):
@@ -141,6 +150,17 @@ class VnicObject(base.ConfigObjectBase):
             return False
         return True
 
+    def Generate_vnic_security_policies(self):
+        if self.__numpolicy == 0:
+            return
+        numpolicy = self.__numpolicy
+        subnetobj = self.SUBNET
+        self.IngV4SecurityPolicyIds = PolicyClient.GenerateVnicPolicies(numpolicy, subnetobj, 'ingress')
+        self.IngV6SecurityPolicyIds = PolicyClient.GenerateVnicPolicies(numpolicy, subnetobj, 'ingress', True)
+        self.EgV4SecurityPolicyIds = PolicyClient.GenerateVnicPolicies(numpolicy, subnetobj, 'egress')
+        self.EgV6SecurityPolicyIds = PolicyClient.GenerateVnicPolicies(numpolicy, subnetobj, 'egress', True)
+        return
+
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
 
@@ -166,6 +186,12 @@ class VnicObjectClient:
         grpcmsg = vnic_pb2.VnicDeleteRequest()
         grpcmsg.VnicId.append(self.VnicId)
         return grpcmsg
+
+    def AssociateObjects(self):
+        # generate security policies and associate with vnic
+        for vnic in self.Objects():
+            vnic.Generate_vnic_security_policies()
+        return
 
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
@@ -197,9 +223,16 @@ class VnicObjectClient:
                 self.__objs.update({obj.VnicId: obj})
         return
 
+    def ShowObjects(self):
+        for obj in self.Objects():
+            obj.Show()
+        return
+
     def CreateObjects(self):
         if len(self.__objs.values()) == 0:
             return
+        logger.info("Creating Vnic Objects in agent")
+        self.ShowObjects()
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VNIC, msgs)

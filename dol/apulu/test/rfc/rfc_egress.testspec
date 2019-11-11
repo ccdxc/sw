@@ -43,7 +43,7 @@ packets:
 
     - packet:
         id          : TO_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=IN_PKT
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
@@ -106,7 +106,7 @@ session:
 
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=TO_SWITCH_PKT
+                    object  : callback://networking/packets/GetExpectedCPSPacket/ipkt=FROM_HOST_PKT,epkt_pass=TO_SWITCH_PKT
                     port    : callback://networking/packets/GetExpectedEgressUplinkPort
 
             descriptors:

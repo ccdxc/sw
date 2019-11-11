@@ -72,6 +72,7 @@ vpc:
             - count   : 1             # VNICs per subnet
               ipcount : 2             # Local IP mapping per vnic
               public  : true
+              policy  : true          # security policy at vnic level (0 - 5)
           rmap:                       # Remote IP mappings per subnet
             - count : 2
       routetbl:

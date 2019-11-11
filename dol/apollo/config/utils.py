@@ -444,6 +444,11 @@ def IsRouteTableSupported():
         return False
     return True
 
+def IsVnicPolicySupported():
+    if IsPipelineApulu():
+        return True
+    return False
+
 def IsTagSupported():
     if IsPipelineArtemis():
         return True

@@ -13,20 +13,20 @@ modules:
         name    : ALLOW_ALL
         spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=allow_all
+            - policy : filter://AddrFamily=IPV4,PolicyType=allow_all,Level=subnet
 
     - module:
         name    : SPECIFIC
         spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific
-            #- policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific
+            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific,Level=subnet
+            #- policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific,Level=subnet
 
     - module:
         name    : DISJOINT_RANDOM
         spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=none
+            - policy : filter://AddrFamily=IPV4,OverlapType=none,Level=subnet
 
     - module:
         name    : DISJOINT_FIRST
@@ -36,7 +36,7 @@ modules:
             - sport  : first
             - dport  : first
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=none
+            - policy : filter://AddrFamily=IPV4,OverlapType=none,Level=subnet
 
     - module:
         name    : DISJOINT_LAST
@@ -46,7 +46,7 @@ modules:
             - sport  : last
             - dport  : last
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=none
+            - policy : filter://AddrFamily=IPV4,OverlapType=none,Level=subnet
 
     - module:
         name    : DISJOINT_LEFT
@@ -56,7 +56,7 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=none
+            - policy : filter://AddrFamily=IPV4,OverlapType=none,Level=subnet
 
     - module:
         name    : DISJOINT_RIGHT
@@ -66,20 +66,20 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=none
+            - policy : filter://AddrFamily=IPV4,OverlapType=none,Level=subnet
 
     - module:
         name    : OVERLAP_RANDOM
         spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=partial
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full,Level=subnet
 
     - module:
         name    : OVERLAP_FIRST
@@ -89,14 +89,14 @@ modules:
             - sport  : first
             - dport  : first
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=partial
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full,Level=subnet
 
     - module:
         name    : OVERLAP_LAST
@@ -106,14 +106,14 @@ modules:
             - sport  : last
             - dport  : last
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=partial
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full,Level=subnet
 
     - module:
         name    : OVERLAP_LEFT
@@ -123,14 +123,14 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=partial
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full,Level=subnet
 
     - module:
         name    : OVERLAP_RIGHT
@@ -140,23 +140,23 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=partial
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport
-            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport
-            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full
+            - policy : filter://AddrFamily=IPV4,OverlapType=partial,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=full_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_overlap,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=sport_full,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=dport_full,Level=subnet
 
     - module:
         name    : ADJACENT_RANDOM
         spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent,Level=subnet
 
     - module:
         name    : ADJACENT_FIRST
@@ -166,10 +166,10 @@ modules:
             - sport  : first
             - dport  : first
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent,Level=subnet
 
     - module:
         name    : ADJACENT_LAST
@@ -179,10 +179,10 @@ modules:
             - sport  : last
             - dport  : last
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent,Level=subnet
 
     - module:
         name    : ADJACENT_LEFT
@@ -192,10 +192,10 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent,Level=subnet
 
     - module:
         name    : ADJACENT_RIGHT
@@ -205,7 +205,7 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default,Level=subnet
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent,Level=subnet

@@ -107,9 +107,12 @@ MAX_SUBNET = 64
 MAX_ROUTE_TABLE = 128 if utils.IsPipelineArtemis() else 1024
 MAX_ROUTES_PER_ROUTE_TBL = 63 if utils.IsPipelineArtemis() else 1023
 MAX_POLICY = 1023
+MAX_POLICY_PER_VNIC = 5
 MAX_MIRROR = 8
 MAX_TAG = 1
 MAX_METER = 64
+
+NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'

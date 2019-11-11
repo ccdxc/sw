@@ -15,6 +15,7 @@ from apollo.config.objects.nexthop import client as NhClient
 import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
+from apollo.config.objects.vnic import client as VnicClient
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 
@@ -221,6 +222,7 @@ class VpcObjectClient:
         if utils.IsPipelineApulu():
             # Associate Nexthop objects
             NhClient.AssociateObjects()
+            VnicClient.AssociateObjects()
         return
 
     def CreateObjects(self):

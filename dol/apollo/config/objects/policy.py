@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import copy
+import enum
 import ipaddress
 import random
 import sys
@@ -18,6 +19,10 @@ import apollo.config.utils as utils
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
+
+class SupportedIPProtos(enum.IntEnum):
+    TCP = 6
+    UDP = 17
 
 class L4MatchObject:
     def __init__(self, valid=False,\
@@ -85,8 +90,8 @@ class L3MatchObject:
 class RuleObject:
     def __init__(self, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
         self.Stateful = stateful
-        self.L3Match = l3match
-        self.L4Match = l4match
+        self.L3Match = copy.deepcopy(l3match)
+        self.L4Match = copy.deepcopy(l4match)
         self.Priority = priority
         self.Action = action
 
@@ -102,11 +107,11 @@ class RuleObject:
         self.L4Match.Show()
 
 class PolicyObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, direction, rules, policytype, overlaptype):
+    def __init__(self, vpcid, af, direction, rules, policytype, overlaptype, level='subnet'):
         super().__init__()
         self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
-        self.VPCId = parent.VPCId
+        self.VPCId = vpcid
         self.Direction = direction
         if af == utils.IP_VERSION_6:
             self.PolicyId = next(resmgr.V6SecurityPolicyIdAllocator)
@@ -117,6 +122,7 @@ class PolicyObject(base.ConfigObjectBase):
         self.GID('Policy%d'%self.PolicyId)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
         self.PolicyType = policytype
+        self.Level = level
         self.OverlapType = overlaptype
         self.rules = copy.deepcopy(rules)
         self.Show()
@@ -348,6 +354,61 @@ class PolicyObjectClient:
         if len(self.__v6egressobjs[vpcid]) == 0:
             return 0
         return self.__v6epolicyiter[vpcid].rrnext().PolicyId
+
+    def Add_V4Policy(self, vpcid, direction, v4rules, policytype, overlaptype, level='subnet'):
+        obj = PolicyObject(vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype, level)
+        if direction == 'ingress':
+            self.__v4ingressobjs[vpcid].append(obj)
+        else:
+            self.__v4egressobjs[vpcid].append(obj)
+        self.__objs.update({obj.PolicyId: obj})
+        return obj.PolicyId
+
+    def Add_V6Policy(self, vpcid, direction, v6rules, policytype, overlaptype, level='subnet'):
+        obj = PolicyObject(vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype, level)
+        if direction == 'ingress':
+            self.__v6ingressobjs[vpcid].append(obj)
+        else:
+            self.__v6egressobjs[vpcid].append(obj)
+        self.__objs.update({obj.PolicyId: obj})
+        return obj.PolicyId
+
+    def Generate_Allow_All_Rules(self, spfx, dpfx):
+        rules = []
+        l4match = L4MatchObject(True)
+        for proto in SupportedIPProtos:
+            l3match = L3MatchObject(True, proto, srcpfx=spfx, dstpfx=dpfx)
+            rule = RuleObject(l3match, l4match)
+            rules.append(rule)
+        return rules
+
+    def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
+        # TODO: make it random. Add allow all for now
+        return self.Generate_Allow_All_Rules(subnetpfx, subnetpfx)
+
+    def GenerateVnicPolicies(self, numPolicy, subnet, direction, is_v6=False):
+        if not self.__supported:
+            return
+
+        vpcid = subnet.VPC.VPCId
+        if is_v6:
+            af = utils.IP_VERSION_6
+            add_policy = self.Add_V6Policy
+        else:
+            af = utils.IP_VERSION_4
+            add_policy = self.Add_V4Policy
+        subnetpfx = subnet.IPPrefix[1] if af == utils.IP_VERSION_4 else subnet.IPPrefix[0]
+        naclid = subnet.GetNaclId(direction, af)
+        naclobj = self.GetPolicyObject(naclid)
+
+        vnic_policies = []
+        for i in range(numPolicy):
+            overlaptype = naclobj.OverlapType
+            policytype = naclobj.PolicyType
+            rules = self.Generate_random_rules_from_nacl(naclobj, subnetpfx, af)
+            policyid = add_policy(vpcid, direction, rules, policytype, overlaptype, 'vnic')
+            vnic_policies.append(policyid)
+        return vnic_policies
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         if not self.__supported:
@@ -591,7 +652,7 @@ class PolicyObjectClient:
             return rules
 
         def __add_v4policy(direction, v4rules, policytype, overlaptype):
-            obj = PolicyObject(parent, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype)
+            obj = PolicyObject(vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype)
             if direction == 'ingress':
                 self.__v4ingressobjs[vpcid].append(obj)
             else:
@@ -599,7 +660,7 @@ class PolicyObjectClient:
             self.__objs.update({obj.PolicyId: obj})
 
         def __add_v6policy(direction, v6rules, policytype, overlaptype):
-            obj = PolicyObject(parent, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
+            obj = PolicyObject(vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
             if direction == 'ingress':
                 self.__v6ingressobjs[vpcid].append(obj)
             else:
@@ -677,8 +738,8 @@ class PolicyObjectClient:
 
     def CreateObjects(self):
         #Show before create as policy gets modified after GenerateObjects()
-        self.ShowObjects()
         logger.info("Creating Policy Objects in agent")
+        self.ShowObjects()
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.POLICY, msgs)
