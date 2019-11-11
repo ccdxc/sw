@@ -168,6 +168,7 @@ skip_cnp_receive:
     crestore [c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
     // c6: cswap, c5: fna, c4: write, c3: read, c2: send, c1: only
 
+    CAPRI_SET_FIELD2(phv_global_common, spec_cindex, SPEC_RQ_C_INDEX)
     // do sanity checks
     // is pkt psn same as e_psn ?
     seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN

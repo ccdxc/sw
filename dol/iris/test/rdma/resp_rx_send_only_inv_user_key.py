@@ -37,8 +37,8 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
         return False
 
-    # verify that proxy_cindex is NOT incremented
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 0):
+    # verify that proxy_cindex is incremented by 1
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 1):
         return False
 
     # verify that token_id is incremented by 1

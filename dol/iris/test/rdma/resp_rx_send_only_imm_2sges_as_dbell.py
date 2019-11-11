@@ -94,7 +94,6 @@ def TestCaseTeardown(tc):
     rs.lqp.rq.qstate.Read()
     rs.lqp.rq.qstate.data.immdt_as_dbell = 0
     rs.lqp.rq.qstate.data.proxy_cindex = 0;
-    rs.lqp.rq.qstate.data.spec_cindex = 0;
     rs.lqp.rq.qstate.data.p_index0 = 0;
     rs.lqp.rq.qstate.data.c_index0 = 0;
     rs.lqp.rq.qstate.data.proxy_pindex = 0;

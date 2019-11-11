@@ -230,7 +230,7 @@ def ResetErrQState(tc):
     rs.lqp.rq.qstate.data.in_progress = 0
     rs.lqp.rq.qstate.data.rsq_pindex = rs.lqp.rq.qstate.data.p_index1
     rs.lqp.rq.qstate.data.proxy_cindex = rs.lqp.rq.qstate.data.p_index0
-    rs.lqp.rq.qstate.data.spec_cindex = rs.lqp.rq.qstate.data.p_index0
+    rs.lqp.rq.qstate.data.ack_nak_pindex = rs.lqp.rq.qstate.data.c_index2
     rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id
     rs.lqp.rq.qstate.data.error_disable_qp = 0
     rs.lqp.rq.qstate.data.work_not_done_recirc_cnt = 0

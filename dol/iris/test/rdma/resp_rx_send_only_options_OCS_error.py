@@ -117,6 +117,5 @@ def TestCaseTeardown(tc):
     rs = tc.config.rdmasession
     logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
     rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
     rs.lqp.rq.qstate.WriteWithDelay();
     return

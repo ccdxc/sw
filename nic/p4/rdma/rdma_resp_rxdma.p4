@@ -137,7 +137,8 @@
     modify_field(phv_global_common_scr.cb_addr, phv_global_common.cb_addr);\
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
-    modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
+    modify_field(phv_global_common_scr.spec_cindex, phv_global_common.spec_cindex);\
+    modify_field(phv_global_common_scr.rsvd, phv_global_common.rsvd);\
     modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
     modify_field(phv_global_common_scr._ring_dbell, phv_global_common._ring_dbell);\
     modify_field(phv_global_common_scr._ack_req, phv_global_common._ack_req);\
@@ -367,7 +368,8 @@ header_type phv_global_common_t {
         cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
-        pad                              :   22;
+        spec_cindex                      :   16;
+        rsvd                             :    6;
         _ud                              :    1;
         _ring_dbell                      :    1;
         _ack_req                         :    1;

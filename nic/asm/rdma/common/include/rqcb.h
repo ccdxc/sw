@@ -37,6 +37,7 @@
 #define DCQCN_TIMER_P_INDEX d.{ring5.pindex}.hx
 #define DCQCN_TIMER_C_INDEX d.{ring5.cindex}.hx
 
+#define ACK_NAK_PROXY_P_INDEX   d.{ack_nak_pindex}.hx
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
 #define PROXY_RQ_P_INDEX   d.{proxy_pindex}.hx
 
@@ -207,7 +208,7 @@ struct rqcb1_t {
     // scheduler ringing RQ all the time.
     // proxy_pindex variable is updated using memwr from resp_tx,
     // hence it should be at 16-bit boundary.
-    proxy_cindex: 16;   // written by S4, read by S0
+    ack_nak_pindex: 16;   // written by S4, read by S0
     proxy_pindex: 16;   // written by TxDMA, read by RxDMA
 
     srq_id: 24;

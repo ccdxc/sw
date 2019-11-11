@@ -17,6 +17,7 @@ struct rqcb1_t d;
 #define TMP r3
 #define TMP1 r3
 #define TMP2 r5
+#define SPEC_CINDEX r4
 #define DB_ADDR r4
 #define DB_DATA r5
 #define RQCB2_ADDR r6
@@ -33,6 +34,7 @@ struct rqcb1_t d;
 #define K_CURR_WQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, curr_wqe_ptr)
 #define K_ASYNC_OR_ASYNC_ERROR_EVENT CAPRI_KEY_FIELD(IN_TO_S_P, async_or_async_error_event)
 #define K_INV_RKEY CAPRI_KEY_RANGE(IN_P, inv_r_key_sbit0_ebit15, inv_r_key_sbit24_ebit31)
+#define K_GLOBAL_SPEC_C_INDEX CAPRI_KEY_RANGE(phv_global_common, spec_cindex_sbit0_ebit5, spec_cindex_sbit14_ebit15)
 
 %%
     .param  resp_rx_cqcb_process
@@ -74,8 +76,9 @@ resp_rx_rqcb1_write_back_process:
     // soft_nak means we don't need to move the qp to error disable state upon
     // encountering this soft error. for soft nak or dup we shouldn't be
     // incrementing msn etc.
+    add             SPEC_CINDEX, r0, K_GLOBAL_SPEC_C_INDEX
     bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1, check_ack_nak
-    tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
+    mincr.c1        SPEC_CINDEX, d.log_num_wqes, 1     // BD Slot
 
     bbeq            d.prefetch_en, 0, skip_prefetch_update
     // memwr prefetch proxy cindex in rqcb2
@@ -151,7 +154,7 @@ check_ack_nak:
     // bt_info are in a union 
     bcf         [!c3 & c4 & c2], invoke_stats
     // populate ack info
-    RQ_CREDITS_GET(ACK_CREDITS, TMP1, TMP2, c2) // BD Slot
+    RQ_CREDITS_GET(ACK_CREDITS, SPEC_CINDEX, TMP1, TMP2, c2) // BD Slot
     phvwrpair   p.s1.ack_info.msn, d.msn, \
                 p.s1.ack_info.credits, ACK_CREDITS
 
@@ -171,21 +174,13 @@ check_ack_nak:
     bcf         [!c3], invoke_stats
     nop // BD Slot
 
-// TODO: Temporarily change SET_PI to INC_PI for the ACK/NAK ring.
-// This is until we find space in rqcb1 to hold full ACK/NAK ring pindex.
-#if defined (HAPS) || defined (HW)
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
+    tblmincri   ACK_NAK_PROXY_P_INDEX, 16, 1 // BD Slot
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_HW_DB_ONLY(DMA_CMD_BASE,
                                    K_GLOBAL_LIF,
                                    K_GLOBAL_QTYPE,
                                    K_GLOBAL_QID,
+                                   ACK_NAK_PROXY_P_INDEX,
                                    DB_ADDR, DB_DATA)
-#else
-     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
-                                    K_GLOBAL_LIF,
-                                    K_GLOBAL_QTYPE,
-                                    K_GLOBAL_QID,
-                                    DB_ADDR, DB_DATA)
-#endif
 
 invoke_stats:
     // invoke stats as mpu only

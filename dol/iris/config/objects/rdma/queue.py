@@ -190,7 +190,10 @@ class RdmaRQstate(Packet):
         BitField("rqcb1_rsvd1", 0, 5),
         BitField("in_progress", 0, 1),
         BitField("rqcb1_rsvd2", 0, 7),
-        LEShortField("spec_cindex", 0),
+        # This field is spec_cindex in asm. It has been intentionally called
+        # proxy_cindex to avoid changing previously included checks in multiple
+        # testcases. Changing this name will result in dol failures.
+        LEShortField("proxy_cindex", 0),
 
         X3BytesField("e_psn", 0),
         BitField("next_op_type", 0, 2),
@@ -211,7 +214,7 @@ class RdmaRQstate(Packet):
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
 
-        LEShortField("proxy_cindex", 0),
+        LEShortField("ack_nak_pindex", 0),
         LEShortField("proxy_pindex", 0),
 
         X3BytesField("srq_id", 0),

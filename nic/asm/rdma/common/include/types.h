@@ -209,8 +209,8 @@ struct rdma_atomiceth_t {
     ((AETH_CODE_RNR << AETH_SYNDROME_CODE_SHIFT) | (_t))
 
 //TODO perform log(credits) * 2 
-#define RQ_CREDITS_GET(_credits, _tmp1, _tmp2, _tmp_c) \
-    sub             _credits, PROXY_RQ_P_INDEX, PROXY_RQ_C_INDEX; \
+#define RQ_CREDITS_GET(_credits, _spec_cindex, _tmp1, _tmp2, _tmp_c) \
+    sub             _credits, PROXY_RQ_P_INDEX, _spec_cindex; \
     mincr           _credits, d.log_num_wqes, 0; \
     sle             _tmp_c, _credits, 1; \
     clz.!_tmp_c     _tmp1, _credits; \
