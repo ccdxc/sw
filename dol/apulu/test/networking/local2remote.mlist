@@ -8,9 +8,55 @@ feature:
     ignore      : True
 
 modules:
+    # L2 switching based on MAC filtering
+    # L2 switching within same subnet
+    - module:
+        name    : L2_IPV4_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    # L2 switching within same subnet
+    - module:
+        name    : L2_IPV6_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
     - module:
         name    : L3_IPV4_TCP_QTAG
         spec    : local2remote.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2remote_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2remote_srcguard_pass.testspec
+        enable  : False
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2remote_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2remote_srcguard_pass.testspec
+        enable  : False
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING

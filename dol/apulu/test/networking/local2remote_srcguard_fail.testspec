@@ -2,7 +2,7 @@
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
-    flow: filter://any
+    flow: filter://SourceGuard=True
 
 packets:
     - packet:
@@ -17,11 +17,11 @@ packets:
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : ref://testcase/config/localmapping/IP
+                src     : 1.0.0.1
                 dst     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/localmapping/IP
+                src     : aaaa:0010:0010:0010::0010
                 dst     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             tcp:
@@ -29,23 +29,6 @@ packets:
                 dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
-    - packet:
-        id          : TO_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
-        headers     :
-            outereth:
-                src     : callback://networking/packets/GetOuterSrcMac
-                dst     : callback://networking/packets/GetOuterDstMac
-            outeripv4:
-                src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/remotemapping/TunIP
-                ttl     : 64
-                tos     : 0
-                id      : 0
-            vxlan:
-                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
 
 buffers:
     - buffer:
@@ -83,8 +66,7 @@ session:
             delay    :    1
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=TO_SWITCH_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+                    object  : None
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2

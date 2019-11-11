@@ -5,7 +5,7 @@ feature:
     package     : test.networking
     module      : networking
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 
@@ -57,7 +57,6 @@ modules:
     - module:
         name    : L2L_IPV4_TCP_QTAG_SRCGUARD_ENABLE
         spec    : local2local_srcguard_fail.testspec
-        enable  : False      # remove this once supported
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
 
@@ -71,6 +70,5 @@ modules:
     - module:
         name    : L2L_IPV6_TCP_QTAG_SRCGUARD_ENABLE
         spec    : local2local_srcguard_fail.testspec
-        enable  : False      # remove this once supported
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING

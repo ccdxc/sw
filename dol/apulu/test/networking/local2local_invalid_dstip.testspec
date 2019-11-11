@@ -1,4 +1,4 @@
-# Test Spec for local2remote scenarios from Host
+# Test Spec for local2local scenarios from host
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
@@ -13,16 +13,16 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/MACAddr
+                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
-                dst     : ref://testcase/config/remotemapping/IP
+                dst     : 1.0.0.1
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/localmapping/IP
-                dst     : ref://testcase/config/remotemapping/IP
+                dst     : aaaa:0010:0010:0010::0010
                 hlim    : 64
             tcp:
                 sport   : 100
@@ -30,31 +30,22 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
-    - packet:
-        id          : TO_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
-        headers     :
-            outereth:
-                src     : callback://networking/packets/GetOuterSrcMac
-                dst     : callback://networking/packets/GetOuterDstMac
-            outeripv4:
-                src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/remotemapping/TunIP
-                ttl     : 64
-                tos     : 0
-                id      : 0
-            vxlan:
-                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
-
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF1    # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
            size : ref://testcase/packets/id=FROM_HOST_PKT/size
            data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+    - buffer:
+        id          : BUF3  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind    : True
+            size    : 1518
+            data    : None
 
 descriptors:
     - descriptor:
@@ -71,6 +62,13 @@ descriptors:
         fields:
             status     : 0x0
 
+    - descriptor:
+        id          : DESC3 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf    : ref://testcase/buffers/id=BUF3
+            addr    : ref://testcase/buffers/id=BUF3/addr
+            len     : ref://testcase/buffers/id=BUF3/size
 
 session:
     - step:
@@ -79,13 +77,16 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3
+                    ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX
+
         expect:
             delay    :    1
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=TO_SWITCH_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : None
+                    ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX

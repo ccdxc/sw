@@ -1,0 +1,45 @@
+# Feature networking Modules List for Negative scenario
+feature:
+    id          : networking
+    sub         : negative
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2_IPV4_TCP_QTAG_INVIP
+        spec    : local2remote_ip_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_INVIP
+        spec    : local2remote_ip_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+         name    : L2_IPV4_TCP_QTAG_INVCSUM
+         spec    : local2remote_csum_invalid.testspec
+         iterate :
+             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+         name    : L2_IPV6_TCP_QTAG_INVCSUM
+         spec    : local2remote_csum_invalid.testspec
+         iterate :
+             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2L_VNIC_IPV4_INVALID_DST_IP
+        spec    : local2local_invalid_dstip.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_VNIC_IPV6_INVALID_DST_IP
+        spec    : local2local_invalid_dstip.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING

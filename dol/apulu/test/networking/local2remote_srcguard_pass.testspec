@@ -2,7 +2,7 @@
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
-    flow: filter://any
+    flow: filter://SourceGuard=False
 
 packets:
     - packet:
@@ -17,11 +17,11 @@ packets:
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : ref://testcase/config/localmapping/IP
+                src     : 1.0.0.1
                 dst     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/localmapping/IP
+                src     : aaaa:0010:0010:0010::0010
                 dst     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             tcp:
