@@ -26,6 +26,7 @@
 #include "nic/apollo/api/impl/apulu/mirror_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/service_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -35,6 +36,7 @@ enum {
     PDS_SLAB_ID_IMPL_MIN     = 8192,
     PDS_SLAB_ID_VNIC_IMPL,
     PDS_SLAB_ID_MAPPING_IMPL,
+    PDS_SLAB_ID_SVC_MAPPING_IMPL,
     PDS_SLAB_ID_MIRROR_IMPL,
 };
 
@@ -54,6 +56,7 @@ enum {
     PDS_IMPL_STATE_MIRROR,
     PDS_IMPL_STATE_NEXTHOP,
     PDS_IMPL_STATE_NEXTHOP_GROUP,
+    PDS_IMPL_STATE_SVC_MAPPING,
     PDS_IMPL_STATE_MAX,
 };
 
@@ -107,6 +110,9 @@ public:
     }
     nexthop_group_impl_state *nexthop_group_impl_db(void) const {
         return (nexthop_group_impl_state *)impl_state_[PDS_IMPL_STATE_NEXTHOP_GROUP];
+    }
+    svc_mapping_impl_state *svc_mapping_impl_db(void) const {
+        return (svc_mapping_impl_state *)impl_state_[PDS_IMPL_STATE_SVC_MAPPING];
     }
 
 private:
@@ -191,6 +197,12 @@ static inline nexthop_group_impl_state *
 nexthop_group_impl_db (void)
 {
     return g_pds_impl_state.nexthop_group_impl_db();
+}
+
+static inline svc_mapping_impl_state *
+svc_mapping_impl_db (void)
+{
+    return g_pds_impl_state.svc_mapping_impl_db();
 }
 
 /// \@}

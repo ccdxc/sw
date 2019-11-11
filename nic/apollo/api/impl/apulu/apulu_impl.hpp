@@ -29,6 +29,9 @@
 // reserved VPC h/w id
 #define PDS_IMPL_RSVD_VPC_HW_ID                0
 
+// reserved NAT h/w id
+#define PDS_IMPL_RSVD_NAT_HW_ID                0
+
 namespace api {
 namespace impl {
 

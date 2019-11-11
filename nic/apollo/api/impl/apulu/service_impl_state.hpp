@@ -60,6 +60,12 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
 private:
     slhash *svc_mapping_tbl(void) { return svc_mapping_tbl_; }
     slab *svc_mapping_impl_slab(void) { return svc_mapping_impl_slab_; }

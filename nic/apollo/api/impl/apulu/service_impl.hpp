@@ -126,8 +126,8 @@ public:
 private:
     /// \brief  constructor
     svc_mapping_impl() {
-        to_dip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
-        to_vip_nat_hdl_ = PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX;
+        to_dip_nat_hdl_ = PDS_IMPL_RSVD_NAT_HW_ID;
+        to_vip_nat_hdl_ = PDS_IMPL_RSVD_NAT_HW_ID;
         vip_to_dip_handle_ = handle_t::null();
         dip_to_vip_handle_ = handle_t::null();
     }

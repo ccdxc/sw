@@ -20,7 +20,6 @@
 #include "nic/apollo/api/impl/artemis/route_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
-//#include "nic/apollo/api/impl/artemis/mirror_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/tag_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl_state.hpp"
