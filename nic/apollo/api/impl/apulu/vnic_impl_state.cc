@@ -24,8 +24,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     sdk_table_factory_params_t    table_params;
 
     // allocate indexer for vnic hw id allocation and reserve 0th entry
-    // accomodate one extra for the reserved
-    vnic_idxr_ = rte_indexer::factory(PDS_MAX_VNIC + 1, false, true);
+    vnic_idxr_ = rte_indexer::factory(PDS_MAX_VNIC, false, true);
     SDK_ASSERT(vnic_idxr_ != NULL);
 
     // create a slab for vnic impl entries
