@@ -68,12 +68,18 @@
         <a routerLink="/cluster/hosts" [matTooltip]="'Host machine'">
           {{rowData.spec["host-name"]}}</a>
       </div>
-      <div *ngIf="rowData.dscs && rowData.dscs.length>0"> DSC:
+      <div *ngIf="rowData.dscs && rowData.dscs.length>0"> DSCS:
         <ng-container *ngFor="let dsc of rowData.dscs">
           <a [matTooltip]="'Disctributed Services Card'"
              routerLink="/cluster/naples/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
         </ng-container>
-
+      </div>
+      <div *ngIf="rowData.linkedsecuritygroups && rowData.linkedsecuritygroups.length>0"> SECURITY
+        GROUPS:
+        <ng-container *ngFor="let securitygroup of rowData.linkedsecuritygroups">
+          <a [matTooltip]="'Security Groups'"
+             routerLink="/security/securitygroups/">{{securitygroup.meta.name}}</a>
+        </ng-container>
       </div>
     </ng-container>
     <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">

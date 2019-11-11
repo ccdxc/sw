@@ -16,9 +16,11 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
 import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { ObjectsRelationsUtility, WorkloadDSCHostTuple } from '@app/common/ObjectsRelationsUtility';
+import { ObjectsRelationsUtility, WorkloadDSCHostSecurityTuple } from '@app/common/ObjectsRelationsUtility';
 import { LabelEditorMetadataModel } from '../shared/labeleditor';
 import { SelectItem } from 'primeng/primeng';
+import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
+import { SecurityService } from '@app/services/generated/security.service';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -34,6 +36,7 @@ import { SelectItem } from 'primeng/primeng';
 export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, WorkloadWorkload> implements OnInit, OnDestroy {
 
   public static WORKLOAD_FIELD_DSCS: string = 'dscs';
+  public static WORKLOAD_FIELD_SECURITYGROUPS: string = 'linkedsecuritygroups';
   // Feature Flags
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
@@ -92,8 +95,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   // Modal vars
   dialogRef: any;
-  securityGroups: string[] = ['SG1', 'SG2'];
-  labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
 
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
@@ -102,7 +103,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-  workloadDSCHostTupleMap: { [key: string]: WorkloadDSCHostTuple } = {};
+  workloadDSCHostTupleMap: { [key: string]: WorkloadDSCHostSecurityTuple } = {};
   labelEditorMetaData: LabelEditorMetadataModel;
   inLabelEditMode: boolean = false;
 
@@ -111,13 +112,17 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   hostObjects: ReadonlyArray<ClusterHost>;
   hostOptions: SelectItem[] = [];
 
+  securitygroupsEventUtility: HttpEventUtility<SecuritySecurityGroup>;
+  securitygroups: ReadonlyArray<SecuritySecurityGroup>;
+
   constructor(
     private workloadService: WorkloadService,
     protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
     protected cdr: ChangeDetectorRef,
-    private clusterService: ClusterService
+    private clusterService: ClusterService,
+    private securityService: SecurityService
   ) {
     super(_controllerService, cdr, uiconfigsService);
   }
@@ -128,6 +133,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   postNgInit() {
     this.getHosts() ; // prepare hostOptions needed by newworkload component.
     this.getNaples(); // get DSC cards
+    this.getSecuritygroups(); // get security groups
     this.getWorkloads(); // Once workloads are available, it will build object-maps
   }
 
@@ -157,6 +163,18 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
+  getSecuritygroups() {
+    this.securitygroupsEventUtility = new HttpEventUtility<SecuritySecurityGroup>(SecuritySecurityGroup, true);
+    this.securitygroups = this.securitygroupsEventUtility.array as ReadonlyArray<SecuritySecurityGroup>;
+    const subscription = this.securityService.WatchSecurityGroup().subscribe(
+      response => {
+        this.securitygroupsEventUtility.processEvents(response);
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get Security Groups info')
+    );
+    this.subscriptions.push(subscription);
+  }
+
   setDefaultToolbar() {
     let buttons = [];
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)) {
@@ -173,7 +191,12 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     });
   }
 
-  // Commenting out as modal isn't part of August release
+  // Commenting out as modal isn't part of 2018-August release
+  //
+  // Component variables
+  // securityGroups: string[] = ['SG1', 'SG2'];
+  // labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
+  //
   // generateModalAddToGroup() {
   //   this.dialogRef = this.dialog.open(WorkloadModalComponent, {
   //     panelClass: 'workload-modal',
@@ -186,6 +209,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   //     }
   //   });
   // }
+  //
 
   toggleHeroStats() {
     this.heroStatsToggled = !this.heroStatsToggled;
@@ -287,8 +311,9 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   }
 
   public buildObjectsMap() {
-    this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostMap(this.dataObjects, this.naples, this.hostObjects);
+    this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostSecuritygroupMap(this.dataObjects, this.naples, this.hostObjects, this.securitygroups);
     this.buildWorkloadDSCS();
+    this.buildWorkloadSecurityGroups();
   }
 
   deleteRecord(object: WorkloadWorkload): Observable<{ body: IWorkloadWorkload | IApiStatus | Error, statusCode: number }> {
@@ -325,10 +350,25 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     }
   }
 
+  getLinkedSecuritygroups(workload: WorkloadWorkload): SecuritySecurityGroup [] {
+    if (this.workloadDSCHostTupleMap[workload.meta.name]) {
+      return this.workloadDSCHostTupleMap[workload.meta.name].securitygroups;
+    } else {
+      return [];
+    }
+  }
+
   buildWorkloadDSCS() {
     this.dataObjects.forEach( (workload) => {
       const dscs = this.getDSCs(workload);
       workload[WorkloadComponent.WORKLOAD_FIELD_DSCS] = (dscs || dscs.length > 0) ? dscs : [];
+    });
+  }
+
+  buildWorkloadSecurityGroups() {
+    this.dataObjects.forEach( (workload) => {
+      const linkedSecuritygroups = this.getLinkedSecuritygroups(workload);
+      workload[WorkloadComponent.WORKLOAD_FIELD_SECURITYGROUPS] = (linkedSecuritygroups && linkedSecuritygroups.length > 0) ? linkedSecuritygroups : [];
     });
   }
 

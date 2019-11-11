@@ -22,6 +22,9 @@ import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { WorkloadService } from '@app/services/generated/workload.service';
+import { NetworkService} from '@app/services/generated/network.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -98,12 +101,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
   workloads: ReadonlyArray<WorkloadWorkload> = [];
 
+  networkInterfacesEventUtility: HttpEventUtility<NetworkNetworkInterface>;
+  networkInterfaces: ReadonlyArray<NetworkNetworkInterface> = [];
+
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
     protected UIConfigService: UIConfigsService,
     protected workloadService: WorkloadService,
+    protected networkService: NetworkService
   ) {
     super(_controllerService, UIConfigService);
   }
@@ -116,9 +123,30 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this.selectedId = id;
       this.initializeData();
       this.getWorkloads();
+      this.getNetworkInterfaces();
       this.getNaplesDetails();
       this.setNapleDetailToolbar(id); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
     });
+  }
+  getNetworkInterfaces() {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
+      /*  This block is for test only
+      this.networkService.ListNetworkInterface().subscribe(
+        (response) => {
+            console.log('get NetworkNetworkInterface list', response);
+        }
+      );
+      // */
+      this.networkInterfacesEventUtility = new HttpEventUtility<NetworkNetworkInterface>();
+      this.networkInterfaces = this.networkInterfacesEventUtility.array;
+    const subscription = this.networkService.WatchNetworkInterface().subscribe(
+      (response) => {
+        this.networkInterfacesEventUtility.processEvents(response);
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get NetworkInterfaces')
+    );
+    this.subscriptions.push(subscription);
+    }
   }
 
   setNapleDetailToolbar(id: string) {

@@ -1,11 +1,19 @@
-import { WorkloadWorkload, IWorkloadWorkload, IApiStatus } from '@sdk/v1/models/generated/workload';
+import { WorkloadWorkload, IWorkloadWorkload, IApiStatus, WorkloadWorkloadIntfSpec } from '@sdk/v1/models/generated/workload';
 import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster';
 import { Utility } from '@app/common/Utility';
+import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 
-export interface WorkloadDSCHostTuple {
+
+export interface SecuritygroupWorkloadPolicyTuple {
+    securitygroup: SecuritySecurityGroup;
+    workloads: WorkloadWorkload[];
+    policies?: SecurityNetworkSecurityPolicy[];
+}
+export interface WorkloadDSCHostSecurityTuple {
     dscs: ClusterDistributedServiceCard[];
     workload: WorkloadWorkload;
     host: ClusterHost;
+    securitygroups?: SecuritySecurityGroup[];
 }
 
 export interface DSCWorkloadHostTuple {
@@ -58,6 +66,18 @@ export interface DSCsNameMacMap {
    SGPolicy.spec.rules[i].to-ip-addresses[i]  //  virtual IP  -  not real DSC's IP  //"10.100.0.102", "10.100.0.103"  link to (E)
    SGPolicy.spec.attach-groups =  security-group // To F
 
+   SGPolicy.status.rule-status[i] is
+    (
+      either
+        security-group-X to security-group-Y
+      or
+        from-IP-range to to-IP-range
+    )
+    &&
+    (
+       protocal-port or app
+    )
+
   SGPolicy.spec.rules[i] maps to SGPolicy.status.rule-status[i] // the status i-th "rule-hash" --> the i-rule
   rule-hash is log in firewall log
    fwlog record
@@ -71,7 +91,7 @@ export interface DSCsNameMacMap {
       "direction": "from-host",
       "rule-id": "4918",                // policy's rule
       "session-id": "92",
-      "session-state": "flow_delete",
+      "session-state": "flow_delete",0
       "reporter-id": "00ae.cd00.1146",  // link back to NIC  ID:naples-2, mac:00ae.cd00.1146
       "time": "2019-10-03T17:49:06.353077274Z"
     },
@@ -83,6 +103,11 @@ export interface DSCsNameMacMap {
  *  Workload.spec.interfaces[i].mac-address !=   NIC.meta.name and NIC.status.primary-mac // "00ae.cd00.50a0"
  *  Workload.spec.interfaces[i].ip-addresses[i] = policy.spec.rules[i].to-ip-addresses or from-ip-addresses // "10.100.0.103"
  *
+ *  F. SecurityGroup (2019-11-06 understanding)
+ *    SecurityGroup.spec.WorkloadSelector[i] = Workload.meta.labels?
+ *    SecurityGroup.spec.MatchPrefixes[i] = other security groups (name)
+ *    SecurityGroup.status.Workloads[i] = workloads names  // To E
+ *    SecurityGroup.status.Policies = Policies names  // To D
  */
 export class ObjectsRelationsUtility {
 
@@ -105,12 +130,14 @@ export class ObjectsRelationsUtility {
      *
      * workload -- 1:1 --> host
      * host -- 1:m --> DSCs
+     * workload and security-groups are linked
      */
-    public static buildWorkloadDscHostMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
+    public static buildWorkloadDscHostSecuritygroupMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
         naples: ReadonlyArray<ClusterDistributedServiceCard> | ClusterDistributedServiceCard[],
         hosts: ReadonlyArray<ClusterHost> | ClusterHost[],
-    ): { [workloadkey: string]: WorkloadDSCHostTuple; } {
-        const workloadDSCHostTupleMap: { [workloadkey: string]: WorkloadDSCHostTuple; } = {};
+        securitygroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[],
+    ): { [workloadkey: string]: WorkloadDSCHostSecurityTuple; } {
+        const workloadDSCHostTupleMap: { [workloadkey: string]: WorkloadDSCHostSecurityTuple; } = {};
         for (const workload of workloads) {
             const workloadSpecHostName = workload.spec['host-name'];
             const host: ClusterHost = this.getHostByMetaName(hosts, workloadSpecHostName);
@@ -118,11 +145,16 @@ export class ObjectsRelationsUtility {
             if (host) {
                 nics = this.getDSCsByHost(naples, host);
             }
+            let mysecurtiygrous: SecuritySecurityGroup[] = [];
+            if (securitygroups) {
+                mysecurtiygrous = this.getSecurityGroupsByWorkload(securitygroups, workload);
+            }
 
-            const newTuple: WorkloadDSCHostTuple = {
+            const newTuple: WorkloadDSCHostSecurityTuple = {
                 workload: workload,
                 host: host,
-                dscs: nics
+                dscs: nics,
+                securitygroups: mysecurtiygrous
             };
             workloadDSCHostTupleMap[workload.meta.name] = newTuple;
         }
@@ -171,8 +203,8 @@ export class ObjectsRelationsUtility {
     public static buildHostWorkloadsMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
         hosts: ReadonlyArray<ClusterHost> | ClusterHost[],
     ): { [hostKey: string]: HostWorkloadTuple; } {
-            const hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; } = {};
-            for (const host of hosts) {
+        const hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; } = {};
+        for (const host of hosts) {
             const linkworkloads = this.findAssociatedWorkloadsByHost(workloads, host);
             const newTuple: HostWorkloadTuple = {
                 workloads: linkworkloads,
@@ -192,7 +224,7 @@ export class ObjectsRelationsUtility {
      * @param naples
      */
     public static buildDscWorkloadsMaps(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], naples: ReadonlyArray<ClusterDistributedServiceCard> | ClusterDistributedServiceCard[])
-    : { [dscKey: string]: DSCWorkloadsTuple; } {
+        : { [dscKey: string]: DSCWorkloadsTuple; } {
         const dscWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; } = {};
         for (const naple of naples) {
             const linkworkloads = this.findAssociatedWorkloadsByDSC(workloads, naple);
@@ -204,6 +236,23 @@ export class ObjectsRelationsUtility {
         }
         return dscWorkloadsTuple;
     }
+
+    public static buildSecuitygroupWorkloadPolicyMap(securityGroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[], workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], securitypolicies?: ReadonlyArray<SecurityNetworkSecurityPolicy> | SecurityNetworkSecurityPolicy[])
+        : { [securitygroupKey: string]: SecuritygroupWorkloadPolicyTuple; } {
+        const securitygroupWorkloadPolicyTuple: { [securitygroupKey: string]: SecuritygroupWorkloadPolicyTuple; } = {};
+        for (const securitygroup of securityGroups) {
+            const inclduedworkloads = this.findAssociatedWorkloadsFromSecuritygroup(workloads, securitygroup);
+            const policies = this.findIncludedSecuritypolicesFromSecuritygroup(securitypolicies, securitygroup);
+            const newTuple: SecuritygroupWorkloadPolicyTuple = {
+                workloads: inclduedworkloads,
+                securitygroup: securitygroup,
+                policies: policies
+            };
+            securitygroupWorkloadPolicyTuple[securitygroup.meta.name] = newTuple;
+        }
+        return securitygroupWorkloadPolicyTuple;
+    }
+
 
     /**
      * Given a DSC/Naple, find all associated workloads
@@ -227,7 +276,7 @@ export class ObjectsRelationsUtility {
      * @param workloads
      * @param host
      */
-    public static findAssociatedWorkloadsByHost(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], host: ClusterHost  ): WorkloadWorkload[] {
+    public static findAssociatedWorkloadsByHost(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], host: ClusterHost): WorkloadWorkload[] {
         const workloadWorkloads: WorkloadWorkload[] = [];
         for (const workload of workloads) {
             const workloadSpecHostName = workload.spec['host-name'];
@@ -238,7 +287,7 @@ export class ObjectsRelationsUtility {
         return workloadWorkloads;
     }
 
-    public static findAllWorkloadsInHosts (workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[] ): WorkloadWorkload[] {
+    public static findAllWorkloadsInHosts(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[]): WorkloadWorkload[] {
         const workloadWorkloads: WorkloadWorkload[] = [];
         for (const workload of workloads) {
             const workloadSpecHostName = workload.spec['host-name'];
@@ -267,7 +316,7 @@ export class ObjectsRelationsUtility {
                     nics.push(dsc);
                 }
             } else if (hostSpecDsc.id != null) {
-                const hostId = hostSpecDsc.id ;
+                const hostId = hostSpecDsc.id;
                 const dsc = this.getDSCById(naples, hostId);
                 if (dsc) {
                     nics.push(dsc);
@@ -280,10 +329,10 @@ export class ObjectsRelationsUtility {
     public static getHostByMetaName(hosts: ReadonlyArray<ClusterHost> | ClusterHost[], hostname: string): ClusterHost {
         const interfacesLength = hosts.length;
         for (let i = 0; i < interfacesLength; i++) {
-                const host: ClusterHost = hosts[i];
-                if (host.meta.name === hostname) {
-                    return host;
-                }
+            const host: ClusterHost = hosts[i];
+            if (host.meta.name === hostname) {
+                return host;
+            }
         }
         return null;
     }
@@ -309,4 +358,186 @@ export class ObjectsRelationsUtility {
         }
         return null;
     }
+
+    /**
+     * As a user, I want find trace from ip-1 to ip-2
+     *  1. ip1's workload,  workload to DSC
+     *     ip2's workload,  workload to DSC
+     *  2.
+     */
+
+    /**
+     * Given an ipAddress, find all the workloads
+     * @param workloads
+     * @param ipAddress
+     */
+    public static getWorkloadFromIPAddress(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], ipAddress: string): WorkloadWorkload[] {
+        const matchingWorkloads: WorkloadWorkload[] = [];
+        for (const workload of workloads) {
+            const interfaces: WorkloadWorkloadIntfSpec[] = workload.spec.interfaces;
+            for (const wlInterface of interfaces) {
+                const matchedIps = wlInterface['ip-addresses'].find((ip) => {
+                    return (ip === ipAddress);
+                });
+                if (matchedIps && matchedIps.length > 0) {
+                    matchingWorkloads.push(workload);
+                }
+            }
+        }
+        return matchingWorkloads;
+    }
+
+    /**
+     * Give a workload, this API finds all connected workloads
+     * @param workloads
+     * @param givenWorkload
+     */
+    public static findPossibleConnectedWorkloadsFromWorkload(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], givenWorkload: WorkloadWorkload): WorkloadWorkload[] {
+        const workloadWorkloads: WorkloadWorkload[] = [];
+        const interfaces: WorkloadWorkloadIntfSpec[] = givenWorkload.spec.interfaces;
+        for (const wlInterface of interfaces) {
+            const ips = wlInterface['ip-addresses'];
+            for (const ip of ips) {
+                const wls: WorkloadWorkload[] = this.getWorkloadFromIPAddress(workloads, ip);
+                workloadWorkloads.concat(...wls);
+            }
+        }
+        return workloadWorkloads;
+    }
+
+    /**
+     * Given securitygroup, find associated workloads
+     * Logic:  all securitygroup.spec['workload-selector'].requirements[i] .key = workload.meta.labels.key
+     *                                                                     .value = workload.meta.labels.value
+     * "workload-selector": {
+            "requirements": [
+              {
+                "key": "env",
+                "operator": "in",
+                "values": [
+                  "21"
+                ]
+              },
+              {
+                "key": "tag",
+                "operator": "in",
+                "values": [
+                  "1"
+                ]
+              }
+            ]
+          }
+     * worloads
+       {
+        "events": [
+            {
+            "type": "Created",
+            "object": {
+                "kind": "Workload",
+                "api-version": "v1",
+                "meta": {
+                    "name": "wl1-a",
+                    "labels": {
+                        "env": "21",  // match
+                        "tag": "1"
+                    }
+                }
+            }
+            },
+            {
+            "type": "Created",
+            "object": {
+                "kind": "Workload",
+                "api-version": "v1",
+                "meta": {
+                    "name": "wl1",
+                    "labels": {   // match
+                        "env": "21",
+                        "tag": "1"
+                    }
+                }
+            }
+            }
+        ]
+        }
+     * @param workloads
+     * @param securityGroup
+     */
+    public static findAssociatedWorkloadsFromSecuritygroup(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], securityGroup: SecuritySecurityGroup): WorkloadWorkload[] {
+        const workloadWorkloads: WorkloadWorkload[] = [];
+        for (const workload of workloads) {
+            /* let allRequirementMatch: boolean = true;
+            for (const sgroupWorkloadSelectorRequirement of securityGroup.spec['workload-selector'].requirements) {
+                const key = sgroupWorkloadSelectorRequirement.key;
+                const values = sgroupWorkloadSelectorRequirement.values;
+                const labelValue = workload.meta.labels[key];
+                if (labelValue) {
+                    if (!values.includes(labelValue)) {
+                        allRequirementMatch = false;
+                        break;
+                    }
+                } else {
+                    allRequirementMatch = false;
+                    break;
+                }
+            } */
+            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload );
+            if (allRequirementMatch) {
+                workloadWorkloads.push(workload);
+            }
+        }
+        return workloadWorkloads;
+    }
+
+    public static isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup: SecuritySecurityGroup, workload: WorkloadWorkload): boolean {
+        let allRequirementMatch: boolean = true;
+        for (const sgroupWorkloadSelectorRequirement of securityGroup.spec['workload-selector'].requirements) {
+            const key = sgroupWorkloadSelectorRequirement.key;
+            const values = sgroupWorkloadSelectorRequirement.values;
+            const operator = sgroupWorkloadSelectorRequirement.operator;
+            const labelValue = workload.meta.labels[key];
+            if (labelValue) {
+                if (!values.includes(labelValue)) { // TODO: add more check here. Here, it only handles operator is "equal"
+                    allRequirementMatch = false;
+                    break;
+                }
+            } else {
+                allRequirementMatch = false;
+                break;
+            }
+        }
+        return allRequirementMatch;
+    }
+
+    /**
+     * Give a securityGroup, find all assoicated security-policies
+     * Logic:  securitypolicy.spec['attach-groups'][i] === securityGroup.meta.name
+     *
+     * @param securitypolicies
+     * @param securitygroup
+     */
+    public static findIncludedSecuritypolicesFromSecuritygroup(securitypolicies: ReadonlyArray<SecurityNetworkSecurityPolicy> | SecurityNetworkSecurityPolicy[], securitygroup: SecuritySecurityGroup): SecurityNetworkSecurityPolicy[] {
+        const securityNetworkSecurityPolicies: SecurityNetworkSecurityPolicy[] = [];
+        for (const securitypolicy of securitypolicies) {
+            const attachedGroups = securitypolicy.spec['attach-groups'];
+            for (const attachedGroup of attachedGroups) {
+                if (attachedGroup === securitygroup.meta.name) {
+                    securityNetworkSecurityPolicies.push(securitypolicy);
+                }
+            }
+        }
+        return securityNetworkSecurityPolicies;
+    }
+
+    static getSecurityGroupsByWorkload(securitygroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[], workload: WorkloadWorkload): SecuritySecurityGroup[] {
+        const linkedSecurityGroups: SecuritySecurityGroup[] = [];
+        for (const securityGroup of securitygroups) {
+            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload );
+            if (allRequirementMatch) {
+                linkedSecurityGroups.push(securityGroup);
+            }
+        }
+        return linkedSecurityGroups;
+    }
+
 }

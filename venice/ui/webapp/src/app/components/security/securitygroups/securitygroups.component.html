@@ -26,7 +26,7 @@
   <app-tableheader title="Security Groups" [total]="dataObjects.length" [enableColumnSelect]="true"
                    fxFlex="auto"
                    fxLayout="row"
-                   [icon]="headerIcon" [cols]="cols"
+                   [icon]="headerIcon" [cols]="cols" [tableMenuItems]="tableMenuItems"
                    (columnSelectChange)="onColumnSelectChange($event)">
   </app-tableheader>
   <div fxFlex="none" fxLayoutAlign="start center">
@@ -39,7 +39,7 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newsecuritygroup (formClose)="creationFormClose()"
+  <app-newsecuritygroup (formClose)="creationFormClose()" [workloads]="workloads"
                         fxFlex="none" [existingObjects]='dataObjects'>
   </app-newsecuritygroup>
 </ng-template>
@@ -53,7 +53,17 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
-
+    <ng-container *ngSwitchCase="'workloads'">
+      <div *ngFor="let w of rowData['securityworkloads'] let i=index"
+           class="securitygroups-workloads-div">
+        <ng-container *roleGuard="'workloadworkload_read'">
+          <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
+             [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+          <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
+             [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
+        </ng-container>
+      </div>
+    </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
     </ng-container>
@@ -78,5 +88,6 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newsecuritygroup [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                        [workloads]="workloads"
                         (formClose)="closeRowExpand()" fxFlex="none"></app-newsecuritygroup>
 </ng-template>

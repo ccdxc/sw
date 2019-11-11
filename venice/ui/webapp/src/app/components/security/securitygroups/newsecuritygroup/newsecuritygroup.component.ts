@@ -5,6 +5,7 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { IApiStatus, ILabelsRequirement } from '@sdk/v1/models/generated/security';
 import { ISecuritySecurityGroup, SecuritySecurityGroup} from '@sdk/v1/models/generated/security/security-security-group.model';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Observable } from 'rxjs';
@@ -39,6 +40,7 @@ export class NewsecuritygroupComponent  extends CreationForm<ISecuritySecurityGr
 
 
   @Input() existingObjects: ISecuritySecurityGroup[] = [];
+  @Input() workloads: WorkloadWorkload [] = [];
 
   newSecuritygroupForm: FormGroup;
   labelData: RepeaterData[] = [];
@@ -60,7 +62,9 @@ export class NewsecuritygroupComponent  extends CreationForm<ISecuritySecurityGr
     this.labelData = [
       {
         key: { label: 'text', value: 'text' },
-        operators: SearchUtil.stringOperators,
+        operators: [
+          { label: 'equals', value: 'in' }
+        ],
         fieldType: ValueType.inputField,
         valueType: ValueType.inputField
       }

@@ -112,18 +112,21 @@ export class MetricsUtility {
     }
   }
 
-  public static timeSeriesQuery(kind: string, fields: string[], selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static timeSeriesQuery(kind: string, fields: string[], selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+  ): Telemetry_queryMetricsQuerySpec {
     const timeSeriesQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
+      function: functionToUse,
       'group-by-time': '5m',
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
       fields: fields != null ? fields : [],
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      'sort-order': sortOrder,
       'start-time': 'now() - 24h' as any,
       // Round down so we don't pick up an incomplete bucket
       'end-time': Utility.roundDownTime(5).toISOString() as any,
@@ -180,13 +183,15 @@ export class MetricsUtility {
     return currData;
   }
 
-  public static currentFiveMinQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static currentFiveMinQuery(kind: string, selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending): Telemetry_queryMetricsQuerySpec {
     const query: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      function: functionToUse,
+      'sort-order': sortOrder,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -206,16 +211,19 @@ export class MetricsUtility {
 
   public static currentFiveMinQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = Utility.roundDownTime(5).toISOString() as any,
-    queryBody['end-time'] = 'now()' as any;
+      queryBody['end-time'] = 'now()' as any;
   }
 
-  public static pastFiveMinAverageQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static pastFiveMinAverageQuery(kind: string, selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+  ): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      function: functionToUse,
+      'sort-order': sortOrder,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -239,13 +247,16 @@ export class MetricsUtility {
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static intervalAverageQuery(kind: string, startTime, endTime, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static intervalAverageQuery(kind: string, startTime, endTime, selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+  ): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      function: functionToUse,
+      'sort-order': sortOrder,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -265,13 +276,16 @@ export class MetricsUtility {
   }
 
 
-  public static pastDayAverageQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static pastDayAverageQuery(kind: string, selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+  ): Telemetry_queryMetricsQuerySpec {
     const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      function: functionToUse,
+      'sort-order': sortOrder,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -297,13 +311,16 @@ export class MetricsUtility {
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static maxObjQuery(kind: string, selector: IFieldsSelector = null): Telemetry_queryMetricsQuerySpec {
+  public static maxObjQuery(kind: string, selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+  ): Telemetry_queryMetricsQuerySpec {
     const maxNodeQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Telemetry_queryMetricsQuerySpec_function.mean,
-      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+      function: functionToUse,
+      'sort-order': sortOrder,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -701,7 +718,7 @@ export class MetricsUtility {
       if (val != null && toRound) {
         val = Math.round(val);
       }
-      retData.push({ t: item[0], y:  val });
+      retData.push({ t: item[0], y: val });
     });
     return retData;
   }
@@ -715,7 +732,7 @@ export class MetricsUtility {
   public static addMultiColorLineGraph() {
     Chart.defaults.multicolorLine = Chart.defaults.line;
     Chart.controllers.multicolorLine = Chart.controllers.line.extend({
-      draw: function(ease) {
+      draw: function (ease) {
         let startIndex = 0;
         const
           meta = this.getMeta(),
@@ -746,7 +763,7 @@ export class MetricsUtility {
         meta.dataset.draw();
         meta.dataset._children = originalDatasets;
 
-        points.forEach(function(point) {
+        points.forEach(function (point) {
           point.draw(area);
         });
       }

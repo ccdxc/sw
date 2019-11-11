@@ -191,8 +191,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   // properties from tableview component
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
-  // TODO: add exporting capability
-  exportFilename: string = '';
+
+  exportFilename: string = 'Venice-sgpolicy';
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
@@ -547,6 +547,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
           this.generateRuleMap();
           this.getPolicyMetrics();
           this.updateRulesByPolicy();
+          this.exportFilename = this.selectedPolicy.meta.name;
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;

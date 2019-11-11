@@ -24,6 +24,8 @@ import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { NetworkService} from '@app/services/generated/network.service';
+
 import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
@@ -161,7 +163,8 @@ describe('NaplesdetailComponent', () => {
           provide: ActivatedRoute,
           useClass: MockActivatedRoute
         },
-        MessageService
+        MessageService,
+        NetworkService
       ]
     });
       });

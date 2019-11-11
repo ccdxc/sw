@@ -18,10 +18,10 @@ import { ISecuritySecurityGroup, SecuritySecurityGroup} from '@sdk/v1/models/gen
 import { SecurityService } from '@app/services/generated/security.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 import { NewsecuritygroupComponent } from './newsecuritygroup/newsecuritygroup.component';
-
 import { SecuritygroupsComponent } from './securitygroups.component';
 
 describe('SecuritygroupsComponent', () => {
@@ -51,7 +51,8 @@ describe('SecuritygroupsComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         SecurityService,
-        MessageService
+        MessageService,
+        WorkloadService
       ]
     })
     .compileComponents();

@@ -45,6 +45,8 @@ import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
 import { NewworkloadComponent } from './newworkload/newworkload.component';
 import { ClusterService } from '@app/services/generated/cluster.service';
+import { SecurityService } from '@app/services/generated/security.service';
+
 
 @Component({
   template: ''
@@ -192,7 +194,8 @@ describe('WorkloadComponent', () => {
         UIConfigsService,
         MessageService,
         AuthService,
-        ClusterService
+        ClusterService,
+        SecurityService
       ]
     });
 
