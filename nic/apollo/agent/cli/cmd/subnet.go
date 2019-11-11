@@ -92,22 +92,27 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 180)
+	hdrLine := strings.Repeat("-", 190)
 	fmt.Printf("\n")
 	fmt.Printf("V4RtTblID - IPv4 Route Table ID                V6RtTblID - IPv6 Route Table ID\n")
 	fmt.Printf("IngV4SGID - Ingress IPv4 Security Group ID     IngV6SGID - Ingress IPv6 Security Group ID\n")
 	fmt.Printf("EgV4SGID  - Egress IPv4 Security Group ID      EgV6SGID  - Egress IPv6 Security Group ID\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-20s%-20s%-16s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s\n",
-		"ID", "VpcID", "IPv4Prefix", "IPv6Prefix", "VRouterIPv4", "VRouterIPv6", "VRouterMAC", "V4RtTblID",
+	fmt.Printf("%-6s%-6s%-10s%-20s%-20s%-16s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s\n",
+		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VRouterIPv4", "VRouterIPv6", "VRouterMAC", "V4RtTblID",
 		"V6RtTblID", "IngV4SGID", "IngV6SGID", "EgV4SGID", "EgV6SGID")
 	fmt.Println(hdrLine)
 }
 
 func printSubnet(subnet *pds.Subnet) {
 	spec := subnet.GetSpec()
-	fmt.Printf("%-6d%-6d%-20s%-20s%-16s%-16s%-20s%-10d%-10d%-14d%-14d%-14d%-14d\n",
-		spec.GetId(), spec.GetVPCId(), utils.IPv4PrefixToStr(spec.GetV4Prefix()),
+	lifName := "-"
+	if spec.GetHostIfIndex() != 0 {
+		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
+	}
+	fmt.Printf("%-6d%-6d%-10s%-20s%-20s%-16s%-16s%-20s%-10d%-10d%-14d%-14d%-14d%-14d\n",
+		spec.GetId(), spec.GetVPCId(), lifName,
+		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 		utils.ByteIPv6AddrtoStr(spec.GetIPv6VirtualRouterIP()),

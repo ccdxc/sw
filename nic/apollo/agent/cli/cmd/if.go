@@ -125,6 +125,37 @@ func printIf(intf *pds.Interface) {
 		vpc, ipPrefix, encap, mac)
 }
 
+func lifGetNameFromIfIndex(ifIndex uint32) string {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return ""
+	}
+	defer c.Close()
+
+	req := &pds.LifGetRequest{
+		LifId: []uint32{ifIndex},
+	}
+
+	client := pds.NewIfSvcClient(c)
+
+	respMsg, err := client.LifGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Get Lif failed. %v\n", err)
+		return ""
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return ""
+	}
+
+	resp := respMsg.Response[0]
+
+	return resp.GetStatus().GetName()
+}
+
 func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()

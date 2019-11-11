@@ -92,12 +92,13 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 150)
+	hdrLine := strings.Repeat("-", 165)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-7s%-6s%-9s%-14s%-20s%-10s%-10s%-14s%-15s%-15s%-10s%-10s%-10s\n",
+	fmt.Printf("%-7s%-6s%-9s%-14s%-20s%-10s%-10s%-14s%-18s%-18s%-11s%-10s%-10s%-10s\n",
 		"VnicID", "VpcID", "SubnetID", "VnicEncap", "MAC",
 		"RscPoolID", "SrcGuard", "FabricEncap", "RxMirrorSessionID",
-		"TxMirrorSessionID", "SwitchVnic", "V4MeterId", "V6MeterID")
+		"TxMirrorSessionID", "SwitchVnic", "V4MeterId", "V6MeterID",
+		"HostIf")
 	fmt.Println(hdrLine)
 }
 
@@ -105,13 +106,25 @@ func printVnic(vnic *pds.Vnic) {
 	spec := vnic.GetSpec()
 	fabricEncapStr := utils.EncapToString(spec.GetFabricEncap())
 	vnicEncapStr := utils.EncapToString(spec.GetVnicEncap())
-	txMirrorSessionStr := strings.Replace(strings.Trim(fmt.Sprint(spec.GetTxMirrorSessionId()), "[]"), " ", ",", -1)
-	rxMirrorSessionStr := strings.Replace(strings.Trim(fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
+	txMirrorSessionStr := "-"
+	if len(spec.GetTxMirrorSessionId()) != 0 {
+		txMirrorSessionStr = strings.Replace(strings.Trim(
+			fmt.Sprint(spec.GetTxMirrorSessionId()), "[]"), " ", ",", -1)
+	}
+	rxMirrorSessionStr := "-"
+	if len(spec.GetRxMirrorSessionId()) != 0 {
+		rxMirrorSessionStr = strings.Replace(strings.Trim(
+			fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
+	}
+	lifName := "-"
+	if spec.GetHostIfIndex() != 0 {
+		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
+	}
 
-	fmt.Printf("%-7d%-6d%-9d%-14s%-20s%-10d%-10t%-14s%-15s%-15s%-10t%-10d%-10d\n",
+	fmt.Printf("%-7d%-6d%-9d%-14s%-20s%-10d%-10t%-14s%-18s%-18s%-11t%-10d%-10d%-10s\n",
 		spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
 		vnicEncapStr, utils.MactoStr(spec.GetMACAddress()),
 		spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), fabricEncapStr,
 		rxMirrorSessionStr, txMirrorSessionStr, spec.GetSwitchVnic(),
-		spec.GetV4MeterId(), spec.GetV6MeterId())
+		spec.GetV4MeterId(), spec.GetV6MeterId(), lifName)
 }
