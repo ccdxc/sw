@@ -33,7 +33,6 @@ typedef struct pds_mapping_spec_s {
             pds_nexthop_key_t nexthop;        // nexthop (used in case traffic is
                                               // going out natively without encap)
         };
-
         // information specific to local IP mappings
         struct {
             pds_vnic_key_t vnic;              // vnic for local IP

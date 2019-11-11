@@ -127,6 +127,10 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return subnet's h/w id
+    /// \return    h/w id assigned to the subnet
+    uint16_t hw_id(void) { return hw_id_; }
+
 private:
     /// \brief  constructor
     subnet_impl() {

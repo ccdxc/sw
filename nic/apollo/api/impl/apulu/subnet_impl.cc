@@ -193,6 +193,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
+    vni_data.action_id = VNI_VNI_INFO_ID;
     vni_data.vni_info.bd_id = hw_id_;
     vni_data.vni_info.vpc_id = vpc->hw_id();
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);

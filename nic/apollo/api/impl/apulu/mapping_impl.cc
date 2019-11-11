@@ -238,17 +238,24 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
-    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
-                    "local %u, subnet %u, vnic %u, tep %u, "
-                    "pub_ip_valid %u, pub_ip %s",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, spec->vnic.id, spec->tep.id,
-                    spec->public_ip_valid, ipaddr2str(&spec->public_ip));
     if (is_local_) {
+        PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
+                        "local %u, subnet %u, vnic %u, pub_ip_valid %u, "
+                        "pub_ip %s", spec->key.vpc.id,
+                        ipaddr2str(&spec->key.ip_addr), is_local_,
+                        spec->subnet.id, spec->vnic.id,
+                        spec->public_ip_valid, ipaddr2str(&spec->public_ip));
         // reserve all local IP mapping resources
         return reserve_local_mapping_resources_(orig_obj, vpc, spec);
     }
     // reserve all remote MAC or IP mapping resources
+    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
+                    "local %u, subnet %u, nh type %u, %s %u", spec->key.vpc.id,
+                    ipaddr2str(&spec->key.ip_addr), is_local_, spec->subnet.id,
+                    spec->nh_type,
+                    (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
+                    (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
+                        spec->tep.id : spec->nh_group.id);
     return reserve_remote_mapping_resources_(orig_obj, vpc, spec);
 }
 

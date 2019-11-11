@@ -186,6 +186,10 @@ public:
     pds_policy_key_t egr_v4_policy(void) const { return egr_v4_policy_; }
     pds_policy_key_t egr_v6_policy(void) const { return egr_v6_policy_; }
 
+    /// \brief     return impl instance of this subnet object
+    /// \return    impl instance of the subnet object
+    impl_base *impl(void) { return impl_; }
+
 private:
     /// \brief constructor
     subnet_entry();

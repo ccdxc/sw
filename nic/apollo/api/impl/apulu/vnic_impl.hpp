@@ -187,6 +187,17 @@ private:
                                        subnet_entry *subnet, vnic_entry *vnic,
                                        pds_vnic_spec_t *spec);
 
+    /// \brief     add an entry to VLAN table
+    /// \param[in] epoch epoch being activated
+    /// \param[in] vpc vpc of this vnic
+    /// \param[in] subnet subnet of this vnic
+    /// \param[in] vnic  VNIC obj being programmed
+    /// \param[in] spec  VNIC configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_vlan_entry_(pds_epoch_t epoch, vpc_entry *vpc,
+                              subnet_entry *subnet, vnic_entry *vnic,
+                              pds_vnic_spec_t *spec);
+
     /// \brief     add an entry to MAPPING table
     /// \param[in] epoch epoch being activated
     /// \param[in] vpc vpc of this vnic
