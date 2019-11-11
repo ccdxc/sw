@@ -119,7 +119,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
@@ -236,7 +238,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
@@ -371,7 +375,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
@@ -442,7 +448,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
@@ -513,7 +521,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())
@@ -577,7 +587,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
@@ -641,7 +653,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
@@ -806,7 +820,9 @@ var _ = Describe("diagnostics tests", func() {
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
 					!strings.Contains(respStr, "\"level\":\"info\"") &&
 					!strings.Contains(respStr, "\"level\":\"error\"") {
-					return fmt.Errorf("no logs returned: {%v}", respStr)
+					// logs are no longer pushed to Elastic so we should not expect any response
+					// but the API should still succeed
+					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
 				return nil
 			}, 30, 1).Should(BeNil())

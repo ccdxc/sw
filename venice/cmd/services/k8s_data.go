@@ -127,43 +127,49 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
-	globals.Filebeat: {
-		TypeMeta: api.TypeMeta{
-			Kind: "Module",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.Filebeat,
-		},
-		Spec: protos.ModuleSpec{
-			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []protos.ModuleSpec_Submodule{
-				{
-					Name: globals.Filebeat,
+	// We don't want to run filebeat on Venice logs to avoid bloating Elastic.
+	// Howerver, filebeat may be useful for other purposes as well, so we are
+	// leaving the manifest here and keeping the CMD code to generate and update
+	// config files.
+	/*
+		globals.Filebeat: {
+			TypeMeta: api.TypeMeta{
+				Kind: "Module",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: globals.Filebeat,
+			},
+			Spec: protos.ModuleSpec{
+				Type: protos.ModuleSpec_DaemonSet,
+				Submodules: []protos.ModuleSpec_Submodule{
+					{
+						Name: globals.Filebeat,
+					},
+				},
+				Volumes: []protos.ModuleSpec_Volume{
+					// Volume definition for Filebeat config
+					{
+						Name:      "configs",
+						HostPath:  globals.FilebeatConfigFile,
+						MountPath: "/usr/share/filebeat/filebeat.yml",
+					},
+					// Volume definition for Filebeat fields config.
+					{
+						Name:      "fields",
+						HostPath:  globals.FilebeatFieldsFile,
+						MountPath: "/usr/share/filebeat/logging_fields.yml",
+					},
+					logVolume,
+					eventsVolume,
+					{
+						Name:      "elastic-client-credentials",
+						HostPath:  globals.ElasticClientAuthDir,
+						MountPath: globals.FilebeatElasticClientAuthDir,
+					},
 				},
 			},
-			Volumes: []protos.ModuleSpec_Volume{
-				// Volume definition for Filebeat config
-				{
-					Name:      "configs",
-					HostPath:  globals.FilebeatConfigFile,
-					MountPath: "/usr/share/filebeat/filebeat.yml",
-				},
-				// Volume definition for Filebeat fields config.
-				{
-					Name:      "fields",
-					HostPath:  globals.FilebeatFieldsFile,
-					MountPath: "/usr/share/filebeat/logging_fields.yml",
-				},
-				logVolume,
-				eventsVolume,
-				{
-					Name:      "elastic-client-credentials",
-					HostPath:  globals.ElasticClientAuthDir,
-					MountPath: globals.FilebeatElasticClientAuthDir,
-				},
-			},
 		},
-	},
+	*/
 	globals.Ntp: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",

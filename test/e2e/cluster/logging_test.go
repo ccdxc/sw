@@ -40,6 +40,7 @@ var _ = Describe("logging tests", func() {
 		})
 
 		It("Logs should be exported to elastic from services running on all venice nodes", func() {
+			Skip("Logs are no longer pushed to Elastic")
 			for service, info := range ts.tu.VeniceModules {
 				Eventually(func() error {
 					if info.DaemonSet == true {
