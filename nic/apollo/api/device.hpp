@@ -147,6 +147,14 @@ public:
     /// \return operational mode of the device
     pds_device_oper_mode_t oper_mode(void) const { return oper_mode_; }
 
+    /// \brief return true if L2 bridging is enabled or else false
+    /// \return    true of false based on whether bridging is enabled or not
+    bool bridging_enabled(void) const { return bridging_en_; }
+
+    /// \brief return true if learning is enabled or else false
+    /// \return    true of false based on whether learning is enabled or not
+    bool learning_enabled(void) const { return learning_en_; }
+
 private:
     /// \brief constructor
     device_entry() {
@@ -173,6 +181,10 @@ private:
     ip_addr_t gw_ip_addr_;
     ///< operational mode of the device
     pds_device_oper_mode_t oper_mode_;
+    ///< true if L2 bridging is enabled
+    bool bridging_en_;
+    ///< true if learning is enabled
+    bool learning_en_;
     ///< impl object instance
     impl_base *impl_;
 } __PACK__;

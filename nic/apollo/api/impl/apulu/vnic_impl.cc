@@ -61,6 +61,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     lif_impl *lif;
+    device_entry *device;
     subnet_entry *subnet;
     pds_lif_key_t lif_key;
     sdk_table_api_params_t tparams;
@@ -83,7 +84,9 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                       spec->vpc.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
-    if ((spec->host_ifindex == IFINDEX_INVALID) ||
+
+    if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) ||
+        (spec->host_ifindex == IFINDEX_INVALID) ||
         (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM)) {
         // allocate hw id for this vnic
         if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
@@ -106,35 +109,38 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         hw_id_ = lif->vnic_hw_id();
     }
 
-    // reserve an entry in LOCAL_MAPPING table
-    local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
-    sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
-                     spec->mac_addr, ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING"
-                      "table for vnic %u, err %u", spec->key.id, ret);
-        goto error;
-    }
-    local_mapping_hdl_ = tparams.handle;
+    device = device_db()->find();
+    if (device->bridging_enabled()) {
+        // reserve an entry in LOCAL_MAPPING table for MAC entry
+        local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
+        local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+        sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
+                         spec->mac_addr, ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
+                                       sdk::table::handle_t::null());
+        ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING"
+                          "table for vnic %u, err %u", spec->key.id, ret);
+            goto error;
+        }
+        local_mapping_hdl_ = tparams.handle;
 
-    // reserve an entry in MAPPING table
-    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
-    mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
-    sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
-                     spec->mac_addr, ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in MAPPING "
-                      "table for vnic %u, err %u", spec->key.id, ret);
-        goto error;
+        // reserve an entry in MAPPING table for MAC entry
+        mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+        mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+        sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
+                         spec->mac_addr, ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
+                                       sdk::table::handle_t::null());
+        ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in MAPPING "
+                          "table for vnic %u, err %u", spec->key.id, ret);
+            goto error;
+        }
+        mapping_hdl_ = tparams.handle;
     }
-    mapping_hdl_ = tparams.handle;
     return SDK_RET_OK;
 
 error:
@@ -191,32 +197,36 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     subnet_key = vnic->subnet();
     subnet = subnet_db()->find(&subnet_key);
 
-    // remove entry from LOCAL_MAPPING table
-    local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
-    sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
-                     vnic->mac(), ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
-                                   0, sdk::table::handle_t::null());
-    ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING"
-                      "table for vnic %u, err %u", vnic->key().id, ret);
-        // fall thru
+    if (local_mapping_hdl_.valid()) {
+        // remove entry from LOCAL_MAPPING table
+        local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
+        local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+        sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
+                         vnic->mac(), ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
+                                       0, sdk::table::handle_t::null());
+        ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING"
+                          "table for vnic %u, err %u", vnic->key().id, ret);
+            // fall thru
+        }
     }
 
-    // remove entry from MAPPING table
-    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
-    mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
-    sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
-                     vnic->mac(), ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
-                                   0, sdk::table::handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remote entry in MAPPING "
-                      "table for vnic %u, err %u", vnic->key().id, ret);
-        // fall thru
+    if (mapping_hdl_.valid()) {
+        // remove entry from MAPPING table
+        mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+        mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+        sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
+                         vnic->mac(), ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
+                                       0, sdk::table::handle_t::null());
+        ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to remote entry in MAPPING "
+                          "table for vnic %u, err %u", vnic->key().id, ret);
+            // fall thru
+        }
     }
 
     // release the NEXTHOP table entry
@@ -530,11 +540,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_data.nexthop_info.lif = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         nh_data.nexthop_info.port = TM_PORT_DMA;
     }
-    // TODO: remove later
-    PDS_TRACE_DEBUG("Operating mode %u", device->oper_mode());
-    PDS_TRACE_DEBUG("Programming nh %u for vnic %u, port %u, vlan %u, lif %u",
-                    nh_idx_, spec->key.id, nh_data.nexthop_info.port,
-                    nh_data.nexthop_info.vlan, nh_data.nexthop_info.lif);
 
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
@@ -647,6 +652,11 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     vpc_entry *vpc;
     subnet_entry *subnet;
 
+    if (!local_mapping_hdl_.valid()) {
+        // L2 mappings need not be programmed if briding is not enabled
+        return SDK_RET_OK;
+    }
+
     // fetch the subnet of this vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
@@ -657,6 +667,7 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     if (unlikely(vpc == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
+
     ret = add_local_mapping_entry_(epoch, vpc, subnet, vnic, spec);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
@@ -683,10 +694,15 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     local_mapping_swkey_t local_mapping_key = { 0 };
     local_mapping_appdata_t local_mapping_data = { 0 };
 
+    if (!local_mapping_hdl_.valid()) {
+        // L2 mappings weren't programmed if bridging wasn't enabled
+        return SDK_RET_OK;
+    }
+
     subnet_key = vnic->subnet();
     subnet = subnet_db()->find(&subnet_key);
 
-    // invalidate LOCAL_MAPPING table entry
+    // invalidate LOCAL_MAPPING table entry of the MAC entry
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
     local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
     sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
@@ -704,7 +720,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     }
 
 
-    // invalidate MAPPING table entry
+    // invalidate MAPPING table entry of the MAC entry
     mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
     mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
     sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,

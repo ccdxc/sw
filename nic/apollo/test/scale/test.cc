@@ -494,12 +494,15 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                     pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
                     pds_vnic.vnic_encap.val.value = 0;
                 }
-                if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    pds_vnic.fabric_encap.val.vnid = vnic_key;
-                } else {
-                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                    pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
+                if (!apulu()) {
+                    if (g_test_params.fabric_encap.type ==
+                            PDS_ENCAP_TYPE_VXLAN) {
+                        pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                        pds_vnic.fabric_encap.val.vnid = vnic_key;
+                    } else {
+                        pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
+                    }
                 }
                 // MAC ADDR bits based as below
                 // vnic:   bits  0 - 10

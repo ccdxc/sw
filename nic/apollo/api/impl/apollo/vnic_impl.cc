@@ -69,12 +69,14 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // reserve an entry in LOCAL_VNIC_BY_VLAN_TX table
     if (!spec->switch_vnic) {
         if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-            local_vnic_by_vlan_tx_key.ctag_1_vid = spec->vnic_encap.val.vlan_tag;
+            local_vnic_by_vlan_tx_key.ctag_1_vid =
+                spec->vnic_encap.val.vlan_tag;
         }
         local_vnic_by_vlan_tx_mask.ctag_1_vid_mask = ~0;
-        sdk::lib::memrev(local_vnic_by_vlan_tx_key.ethernet_1_srcAddr, spec->mac_addr,
-                         ETH_ADDR_LEN);
-        memset(local_vnic_by_vlan_tx_mask.ethernet_1_srcAddr_mask, 0xFF, ETH_ADDR_LEN);
+        sdk::lib::memrev(local_vnic_by_vlan_tx_key.ethernet_1_srcAddr,
+                         spec->mac_addr, ETH_ADDR_LEN);
+        memset(local_vnic_by_vlan_tx_mask.ethernet_1_srcAddr_mask, 0xFF,
+               ETH_ADDR_LEN);
     }
     tparams.key = &local_vnic_by_vlan_tx_key;
     tparams.mask = &local_vnic_by_vlan_tx_mask;
@@ -97,7 +99,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     }
 
     if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        local_vnic_by_slot_rx_key.mpls_dst_label = spec->fabric_encap.val.mpls_tag;
+        local_vnic_by_slot_rx_key.mpls_dst_label =
+            spec->fabric_encap.val.mpls_tag;
     } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
         local_vnic_by_slot_rx_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     }

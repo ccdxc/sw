@@ -59,6 +59,8 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
     memcpy(mac_addr_, spec->device_mac_addr, ETH_ADDR_LEN);
     memcpy(&gw_ip_addr_, &spec->gateway_ip_addr, sizeof(gw_ip_addr_));
     oper_mode_ = spec->dev_oper_mode;
+    bridging_en_ = spec->bridging_en;
+    learning_en_ = spec->learning_en;
     return SDK_RET_OK;
 }
 
