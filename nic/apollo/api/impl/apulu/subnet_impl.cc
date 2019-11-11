@@ -236,7 +236,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
                            spec->host_ifindex, spec->key.id);
             return ret;
         }
-        ret = program_lif_table(lif_key, vpc->hw_id(), subnet->hw_id(),
+        ret = program_lif_table(lif_key, vpc->hw_id(), hw_id_,
                                 lif->vnic_hw_id());
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u create, "
