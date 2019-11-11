@@ -1237,7 +1237,11 @@ union header_template_t {
 // ROME CB, 64 bytes
 #define ROME_CB_T_SIZE_BYTES    64
 // AH Table Entry has header template, DCQCN CB and ROME CB
+#if !(defined (HAPS) || defined (HW))
 #define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES + ROME_CB_T_SIZE_BYTES)
+#else
+#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
+#endif
 
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20
@@ -1719,7 +1723,9 @@ struct resp_rx_send_fml_t {
 #define AQ_CAPTRACE_DISABLE     8
 #define AQ_STATS_DUMP_TYPE_DCQCN_CONFIG 9
 #define AQ_STATS_DUMP_TYPE_DCQCN_CB 10
+#if !(defined (HAPS) || defined (HW))
 #define AQ_STATS_DUMP_TYPE_ROME_RECEIVER 11
+#endif
 
 #define AQ_QPF_LOCAL_WRITE      0x00000001
 #define AQ_QPF_REMOTE_WRITE     0x00000002
