@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 #
 # Capri-Non-Compiler-Compiler (capri-ncc)
 # Mahesh Shirshyad (Pensando Systems)
@@ -9,186 +9,28 @@ import re
 import string
 import pdb, json
 import logging
+import copy
 from collections import OrderedDict
 from enum import IntEnum
 from tenjin import *
 from tenjin_wrapper import *
 
-from p4_hlir.main import HLIR
-import p4_hlir.hlir.p4 as p4
-import p4_hlir.hlir.table_dependency as table_dependency
-from p4_hlir.graphs.dependency_graph import *
-import p4_hlir.hlir.analysis_utils as hlir_utils
-
-import capri_logging
+#import capri_logging
 from capri_utils import *
-from capri_pa import capri_field as capri_field
+#from capri_pa import capri_field as capri_field
 from capri_output import _get_output_name as _get_output_name
-from capri_output import capri_p4pd_create_swig_makefile as capri_p4pd_create_swig_makefile
-from capri_output import capri_p4pd_create_swig_makefile_click as capri_p4pd_create_swig_makefile_click
-from capri_output import capri_p4pd_create_swig_custom_hdr as capri_p4pd_create_swig_custom_hdr
-from capri_output import capri_p4pd_create_swig_interface as capri_p4pd_create_swig_interface
-from capri_output import capri_p4pd_create_swig_main as capri_p4pd_create_swig_main
-
-tenjin_prefix = "//::"
+#from capri_output import capri_p4pd_create_swig_makefile as capri_p4pd_create_swig_makefile
+#from capri_output import capri_p4pd_create_swig_makefile_click as capri_p4pd_create_swig_makefile_click
+#from capri_output import capri_p4pd_create_swig_custom_hdr as capri_p4pd_create_swig_custom_hdr
+#from capri_output import capri_p4pd_create_swig_interface as capri_p4pd_create_swig_interface
+#from capri_output import capri_p4pd_create_swig_main as capri_p4pd_create_swig_main
 
 CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
-
-def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, cli_name, pipeline):
-
-    # file-names in template_dir will be used
-    # to generate corresponding .c or .h files and
-    # output to output_dir
-    files = []
-    search_dir = template_dir + pipeline
-
-    # walk the pipeline specific dir
-    for dir_name, subdir_list, file_list in os.walk(search_dir):
-        files.extend([pipeline +'/' + f for f in file_list])
-
-    # walk the template dir
-    for dir_name, subdir_list, file_list in os.walk(template_dir):
-        if dir_name == template_dir:
-            files.extend([os.path.relpath(os.path.join(dir_name, f), template_dir) for f in file_list])
-
-    pdoutfiles = []
-    for f in files:
-        if f.endswith('.py'):
-            output_dir = cli_outputdir_map['default']
-            if "p4pd_cli_backend.py" == os.path.basename(f):
-                genf = cli_name + '_backend.py'
-            elif "p4pd_cli_frontend.py" == f:
-                genf = cli_name + '_frontend.py'
-            else:
-                genf = os.path.basename(f)
-        else:
-            if f.endswith('.h'):
-                output_dir = output_h_dir
-            elif f.endswith(".cc"):
-                output_dir = output_c_dir
-            else:
-                continue
-
-            if prog_name != '':
-                genf = prog_name + '_' + os.path.basename(f)
-            else:
-                genf = os.path.basename(f)
-        pdoutfiles.append((os.path.join(template_dir, f), \
-                           os.path.join(output_dir, genf)))
-    return pdoutfiles
-
-def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, gen_dir, pipeline):
-
-    #print(template_dir, output_h_dir, output_c_dir, prog_name, gen_dir, pipeline)
-    if output_h_dir and not os.path.exists(output_h_dir):
-        try:
-            os.makedirs(output_h_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-    if output_c_dir and not os.path.exists(output_c_dir):
-        try:
-            os.makedirs(output_c_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-    if cli_outputdir_map is not None:
-        for output_dir in cli_outputdir_map.values():
-            if output_dir and not os.path.exists(output_dir):
-                try:
-                    os.makedirs(output_dir)
-                except OSError as e:
-                    if e.errno != errno.EEXIST:
-                        raise
-    cli_name = pd_dict['cli-name']
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir,
-                                                 output_c_dir,
-                                                 cli_outputdir_map, prog_name,
-                                                 cli_name, pipeline)
-    _prog_name = ''
-    if prog_name != '':
-        prog_name = prog_name + '_'
-        _prog_name = '_' + prog_name
-    for templatefile, outfile in templates_outfiles:
-        outputfile_path = os.path.dirname(outfile)
-        pdd = {}
-        with open(outfile, "w") as of:
-            pdd['pddict'] = pd_dict
-            p4tbl_types = render_template(of, templatefile, pdd, os.path.dirname(templatefile), \
-                                          prefix=tenjin_prefix)
-            of.close()
-            if p4tbl_types:
-                outfile = output_h_dir + '/' + prog_name + 'p4pd_table.h'
-                with open(outfile, "w") as of:
-                    file_prologue =  \
-                            '/* ' + prog_name + 'p4pd_table.h\n'+\
-                            ' * Pensando Systems\n'  +\
-                            ' */\n' + \
-                            '/*\n'  + \
-                            ' * This file is generated from P4 program. Any changes made to this file will\n' + \
-                            ' * be lost.\n' + \
-                            ' */\n\n' + \
-                            '#ifndef __' + prog_name.upper() + 'P4PD_TABLE_H__\n' + \
-                            '#define __' + prog_name.upper() + 'P4PD_TABLE_H__\n'
-                    of.write(file_prologue)
-                    of.write('\n')
-                    of.write('\n')
-                    code_str = 'typedef enum '+ prog_name + 'p4pd_table_range_ {\n'
-                    of.write(code_str)
-                    for k, v in p4tbl_types.items():
-                        code_str =  '    ' + k + ' = ' + str(v) + ','  + '\n'
-                        of.write(code_str)
-                    code_str = '} ' + prog_name + 'p4pd_table_range_en;\n\n'
-                    of.write(code_str)
-                    ####
-                    code_str = '#endif\n\n'
-                    of.write(code_str)
-                    of.close()
-
-
-def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pipeline):
-
-    if output_h_dir and not os.path.exists(output_h_dir):
-        try:
-            os.mkdir(output_h_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-    if output_c_dir and not os.path.exists(output_c_dir):
-        try:
-            os.mkdir(output_c_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-    if cli_outputdir_map is not None:
-        for output_dir in cli_outputdir_map.values():
-            if output_dir and not os.path.exists(output_dir):
-                try:
-                    os.mkdir(output_dir)
-                except OSError as e:
-                    if e.errno != errno.EEXIST:
-                        raise
-
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pd_dict['cli-name'], pipeline)
-    kd_json = {}
-    for templatefile, outfile in templates_outfiles:
-        outputfile_path = os.path.dirname(outfile)
-        pdd = {}
-        with open(outfile, "w") as of:
-            pdd['pddict'] = pd_dict
-            kd_dict = render_template(of, templatefile, pdd, os.path.dirname(templatefile), \
-                            prefix=tenjin_prefix)
-            for k, v in kd_dict.items():
-                kd_json[k] = v
-            of.close()
-    return kd_json
 
 class capri_p4pd:
     def __init__(self, capri_be):
         self.be = capri_be
-        self.logger = logging.getLogger('P4PD')
+        #self.logger = logging.getLogger('P4PD')
         self.alltables = {}
         self.pddict = {}
 
@@ -544,6 +386,7 @@ class capri_p4pd:
         kdict['km_byte_to_cf']          = km_byte_to_cf_map
         kdict['km_bit_to_cf']           = km_bit_to_cf_map
         kdict['wide_key_len']           = 0
+        kdict['is_wide_key']            = 1 if ctable.is_wide_key else 0
         if ctable.is_wide_key:
             kdict['wide_key_len']       = ctable.last_flit_end_key_off - ctable.last_flit_start_key_off
         return kdict
@@ -635,6 +478,8 @@ class capri_p4pd:
             kdict['keys']                   = []
             kdict['keysize']                = 0
             kdict['wide_key_len']           = 0
+            kdict['is_wide_key']            = 0
+        '''
         # Build all table action data fields
         tblactions = []
         if not ctable.is_hbm and ctable.is_writeback and not ctable.is_raw and not ctable.is_raw_index:
@@ -656,8 +501,105 @@ class capri_p4pd:
                 tblactions.append((actionname, adatafields))
 
         kdict['actions'] = tblactions
-
+        '''
+        self.build_action_data_fields(ctable, kdict)
         return kdict
+
+    def build_action_data_fields(self, ctable, kdict):
+        # Build all table action data fields
+        # Perform action data fields around the k-vector for hash table, allocate action_id
+        # setup the dvec_start for each action data fields
+        tblactions = []
+        action_pc_size = 8 if (len(ctable.action_data) > 1 and not ctable.is_raw) else 0
+        key_start = kdict['match_key_start_bit']
+        # take key info from last flit for wide key tables
+        key_end =  key_start + (kdict['match_key_len'] if kdict['is_wide_key'] == 0 else \
+                    kdict['wide_key_len'])
+
+        for actionname,adatafields in ctable.action_data.items():
+            dvec_start = action_pc_size
+            # needs a list per action
+            actiondata = []
+            actiondata.append(actionname)
+            adatalist = []
+            for actiondata_fld, actiondata_fld_width in adatafields:
+                adatadict = {}
+                adatadict['p4_name'] = actiondata_fld
+                adatadict['field_start'] = 0
+                if ctable.is_hash_table() or ctable.is_otcam:
+                    if dvec_start + actiondata_fld_width > key_start and \
+                        dvec_start <= key_start:
+                        # split this field around the key
+                        len1 = key_start - dvec_start
+                        # if len1 == 0 means no split. just put the field after the key
+                        if len1 > 0:
+                            # follow sorrento o/p convention for asm_name
+                            # name_<endbit>_<startbit>
+                            # change it back to ncc naming sbit_ebit
+                            adatadict['asm_name'] = "%s_sbit0_ebit%d" % (actiondata_fld, len1-1)
+                            adatadict['dvec_start'] = dvec_start
+                            adatadict['len'] = len1
+                            adatalist.append(copy.deepcopy(adatadict))
+                            # part after the key
+                            adatadict = {}
+                            dvec_start = key_end
+                            adatadict['p4_name'] = actiondata_fld
+                            adatadict['asm_name'] = "%s_sbit%d_ebit%d" % \
+                                                        (actiondata_fld, len1, actiondata_fld_width-1)
+                            adatadict['field_start'] = len1
+                            adatadict['dvec_start'] = dvec_start
+                            adatadict['len'] = actiondata_fld_width - len1
+                            dvec_start = dvec_start + actiondata_fld_width - len1
+                        else:
+                            # entire field after the key
+                            dvec_start = key_end
+                            adatadict['asm_name'] = actiondata_fld
+                            adatadict['dvec_start'] = dvec_start
+                            adatadict['len'] = actiondata_fld_width
+                            dvec_start = dvec_start + actiondata_fld_width
+                    else:
+                        # entire field before key
+                        adatadict['asm_name'] = actiondata_fld
+                        adatadict['dvec_start'] = dvec_start
+                        adatadict['len'] = actiondata_fld_width
+                        dvec_start = dvec_start + actiondata_fld_width
+                else:
+                    adatadict['asm_name'] = actiondata_fld
+                    adatadict['dvec_start'] = dvec_start
+                    adatadict['len'] = actiondata_fld_width
+                    dvec_start = dvec_start + actiondata_fld_width
+
+                adatalist.append(copy.deepcopy(adatadict))
+
+            if not ctable.is_hbm and ctable.is_writeback and not ctable.is_raw and not ctable.is_raw_index:
+                if dvec_start % 128 > 0:
+                    pad_size = 128 - (dvec_start % 128)
+                    adatadict = {}
+                    fldname = '__' + actionname + '_wb_pad'
+                    adatadict['p4_name'] = fldname
+                    adatadict['asm_name'] = fldname
+                    adatadict['field_start'] = 0
+                    adatadict['dvec_start'] = dvec_start
+                    adatadict['len'] = pad_size
+                    adatalist.append(copy.deepcopy(adatadict))
+
+            actiondata.append(adatalist) 
+
+            # add annotations
+            action_annotations = []
+            for p4act in ctable.p4_table.actions:
+                if p4act.name != actionname: continue
+                for anno_name, val in p4act._parsed_pragmas.items():
+                    anno_params = get_pragma_param_list(val)
+                    action_annotations.append({anno_name : anno_params})
+
+            annotations = {}
+            annotations['annotations'] = action_annotations
+
+            actiondata.append(annotations)
+            tblactions.append(actiondata)
+
+        kdict['actions'] = tblactions
 
     def remove_duplicate_cfs(self, ctable, ki_or_kd_to_cf_map, bit_extractors, is_tcam):
         if len(bit_extractors):
@@ -1359,10 +1301,12 @@ class capri_p4pd:
             # are unionized, such table keys are exclusive in use and will be
             # part of union data structure.
             tdict['fldunion_keys'] = keydict['fld_u_keys']
+            # tdict['fldunion_keys'] = []
             # Table keys that are header unionized. When more than one table keys
             # are unionized, such table keys are exclusive in use and will be
             # part of union data structure.
             tdict['hdrunion_keys'] = keydict['hdr_u_keys']
+            # tdict['hdrunion_keys'] = []
             tdict['keysize'] = keydict['keysize']
             tdict['match_key_start_byte'] = keydict['match_key_start_byte']
             tdict['match_key_start_bit'] = keydict['match_key_start_bit']
@@ -1424,6 +1368,12 @@ class capri_p4pd:
                 tdict['is_raw'] = False
                 tdict['is_raw_index'] = False
 
+            # add table annotations
+            tdict['annotations'] = []
+            for anno_name, val in ctable.p4_table._parsed_pragmas.items():
+                anno_params = get_pragma_param_list(val)
+                tdict['annotations'].append({anno_name : anno_params})
+                
             alltables[table_name] = tdict
 
         self.pddict['tables'] = alltables
@@ -1536,79 +1486,8 @@ class capri_p4pd:
             assert(0), pdb.set_trace()
             pass
 
-    def generate_code(self):
-        gen_dir = self.be.args.gen_dir
-        h_outputdir = gen_dir + '/%s/include' % (self.be.prog_name)
-        c_outputdir = gen_dir + '/%s/src/' % (self.be.prog_name)
-        py_outputdir = gen_dir + '/%s/cli' % (self.be.prog_name)
-
-        if not os.path.exists(py_outputdir):
-            try:
-                os.makedirs(py_outputdir)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-
-        cur_path = os.path.abspath(__file__)
-        cur_path = os.path.split(cur_path)[0]
-        templatedir = os.path.join(cur_path, 'pd_templates/')
-
-        if self.be.args.p4_plus:
-            prog_name = self.be.prog_name
-        else:
-            prog_name = ''
-
-        cli_outputdir_map = {}
-        cli_outputdir_map['default'] = py_outputdir
-
-        '''
-        generate code under : build/$ARCH/$PIPIPELINE/gen/p4gen/$PROG_NAME
-        '''
-        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir,
-                           cli_outputdir_map, prog_name, gen_dir,
-                           self.be.pipeline)
-
-        '''
-        Below ifcondition should be removed when we move apollo code to
-        x86_64/apollo/gen/p4gen/apollo to 86_64/apollo/gen/p4gen/p4/ by
-        changing the prog name from apollo to p4. generate code under
-        build/$ARCH/$PIPIPELINE/gen/p4gen/$PROG_NAME
-        '''
-        if self.be.prog_name in ['apollo', 'artemis', 'apulu']:
-            h_outputdir = gen_dir + '/p4/include'
-            c_outputdir = gen_dir + '/p4/src/'
-            py_outputdir = gen_dir + '/p4/cli/'
-            cli_outputdir_map['default'] = py_outputdir
-            p4pd_generate_code(self.pddict, templatedir, h_outputdir,
-                               c_outputdir, cli_outputdir_map, prog_name,
-                               gen_dir, self.be.pipeline)
-
-        outputdir = gen_dir + '/%s/asm_out' % (self.be.prog_name)
-        if not os.path.exists(outputdir):
-            try:
-                os.makedirs(outputdir)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-        cur_path = os.path.abspath(__file__)
-        cur_path = os.path.split(cur_path)[0]
-        templatedir = os.path.join(cur_path, 'asm_templates/')
-        kd_dict = p4pd_generate_asm_code(self.pddict, templatedir, outputdir,
-                                         None, None, '',self.be.pipeline)
-        return kd_dict
-
-    def generate_swig(self):
-        capri_p4pd_create_swig_interface(self.be)
-        capri_p4pd_create_swig_custom_hdr(self.be)
-
-def capri_p4pd_code_generate(capri_be):
+def capri_p4pd_generate_info(capri_be):
     p4pd = capri_p4pd(capri_be)
     p4pd.build_pd_dict()
     p4pd.verify_table_ki()
-    #with open('/tmp/pddict.json', "w") as of:
-    #    json.dump(p4pd.pddict, of, indent=2)
-    #    of.close()
-    k_plus_d_dict = p4pd.generate_code()
-    p4pd.generate_swig()
-
-    return k_plus_d_dict
+    return p4pd

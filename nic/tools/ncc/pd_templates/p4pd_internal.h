@@ -261,32 +261,44 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask_bitfield {
 //::            i = 0
 //::            tbl = table.upper()
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    if len(actionfldlist):
+//::                    (actionname, actionflddict, _) = action
+//::                    if len(actionflddict):
 typedef struct __attribute__((__packed__)) __${table}_${actionname}_bitfield {
-//::                    total_bits = sum([fldwidth for (_, fldwidth) in actionfldlist])
-//::			byte_align_pad = 0
-//::                    if (total_bits % 8) > 0: byte_align_pad = 8 - (total_bits % 8)
-//::                    if byte_align_pad > 0:
-    uint64_t _${actionname}_pad : ${byte_align_pad};
-//::                    #endif
-//::                        for actionfld in reversed(actionfldlist):
-//::                            actionfldname, actionfldwidth = actionfld
-//::                            if (actionfldwidth <= 64):
-    uint64_t ${actionfldname} : ${actionfldwidth};
-//::                            else:
-//::                                actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-    uint8_t ${actionfldname}[${actionfldwidth_byte}];
-//::                            #endif
+//::                        total_bits = 0
+//::                        for actionfld in actionflddict:
+//::                            total_bits += actionfld['len']
 //::                        #endfor
+//::                        byte_align_pad = 0
+//::                        if (total_bits % 8) > 0: byte_align_pad = 8 - (total_bits % 8)
+//::                            if byte_align_pad > 0:
+    uint64_t _${actionname}_pad : ${byte_align_pad};
+//::                            #endif
+//::                            # reverse the order of d fields
+//::                            flds = OrderedDict()
+//::                            for fld in actionflddict:
+//::                                actionfldname  = fld['p4_name']
+//::                                actionfldwidth = fld['len']
+//::                                if actionfldname in flds:
+//::                                    flds[actionfldname] = flds[actionfldname] + actionfldwidth
+//::                                else:
+//::                                    flds[actionfldname] = actionfldwidth
+//::                                #endif
+//::                            #endfor
+//::                            for fldname, fldlen in reversed(flds.items()):
+//::                                if (fldlen <= 64):
+    uint64_t ${fldname} : ${fldlen};
+//::                                else:
+//::                                    actionfldwidth_byte = (fldlen / 8) + (1 if fldlen % 8 else 0)
+    uint8_t ${fldname}[${actionfldwidth_byte}];
+//::                                #endif
+//::                            #endfor
 } ${table}_${actionname}_bitfield_t;
-
-//::                    #endif
+//::                        #endif
 //::                #endfor
 typedef union __${table}_action_union_bitfield {
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    if len(actionfldlist):
+//::                    (actionname, actionflddict, _) = action
+//::                    if len(actionflddict):
     ${table}_${actionname}_bitfield_t ${table}_${actionname};
 //::                    #endif
 //::                #endfor

@@ -33,14 +33,15 @@
 /* K + D fields */
 //::        pad_to_512 = 0
 //::        for action in pddict['tables'][table]['actions']:
-//::            (actionname, actionfldlist) = action
+//::            (actionname, actionfldlist, _) = action
 //::            kd_size = 0
 //::            if len(actionfldlist):
 struct __attribute__((__packed__)) ${table}_${actionname}_d {
 
 //::                kd_size = pad_to_512
 //::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                    actionfldname = actionfld['asm_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    if actionfldwidth <= 64:
     uint64_t ${actionfldname} : ${actionfldwidth};
 //::                    else:
@@ -59,7 +60,7 @@ struct __attribute__((__packed__)) ${table}_d {
 //::            #endif
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionfldlist, _) = action
 //::                if len(actionfldlist):
 //::                    empty_action = False
 //::                    break
@@ -68,7 +69,7 @@ struct __attribute__((__packed__)) ${table}_d {
 //::            if not empty_action:
     union {
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
+//::                    (actionname, actionfldlist, _) = action
 //::                    if len(actionfldlist):
         struct ${table}_${actionname}_d  ${actionname}_d;
 //::                    #endif
@@ -77,7 +78,7 @@ struct __attribute__((__packed__)) ${table}_d {
 //::            #endif
 };
 //::        elif len(pddict['tables'][table]['actions']) == 1:
-//::            (actionname, actionfldlist) = pddict['tables'][table]['actions'][0]
+//::            (actionname, actionfldlist, _) = pddict['tables'][table]['actions'][0]
 //::            if len(actionfldlist):
 struct __attribute__((__packed__)) ${table}_d {
     struct ${table}_${actionname}_d  ${actionname}_d;

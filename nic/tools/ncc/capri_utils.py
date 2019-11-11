@@ -3,10 +3,10 @@
 # Capri-Non-Compiler-Compiler (capri-ncc)
 # Parag Bhide (Pensando Systems)
 
-import argparse
 import os
 import sys
 import pdb
+import json
 from enum import IntEnum
 from enum import Enum
 from capri_logging import ncc_assert as ncc_assert

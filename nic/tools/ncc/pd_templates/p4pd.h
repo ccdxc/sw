@@ -334,7 +334,7 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
 //::            tbl = table.upper()
 typedef enum ${table}_actions_enum {
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionfldlist, _) = action
 //::                actname = actionname.upper()
     ${tbl}_${actname}_ID = ${i},
 //::                i+=1
@@ -343,11 +343,23 @@ typedef enum ${table}_actions_enum {
 } ${table}_actions_en;
 
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    if len(actionfldlist):
+//::                    (actionname, actionflddict, _) = action
+//::                    if len(actionflddict):
 typedef struct __attribute__((__packed__)) __${table}_${actionname} {
-//::                        for actionfld in actionfldlist:
-//::                            actionfldname, actionfldwidth = actionfld
+//::                        iter = 0
+//::                        while iter < len(actionflddict):
+//::                            actionfld = actionflddict[iter]
+//::                            actionfldname  = actionfld['p4_name']
+//::                            actionfldwidth = actionfld['len']
+//::                            if ((iter + 1) < len(actionflddict)):
+//::                                nextactionfld = actionflddict[iter + 1]
+//::                                nextactionfldname = nextactionfld['p4_name']
+//::                                if actionfldname == nextactionfldname:
+//::                                    iter = iter + 1;
+//::                                    actionfldwidth += nextactionfld['len']
+//::                                #endif
+//::                            #endif
+//::                            iter = iter + 1
 //::                            if (actionfldwidth <= 8):
     uint8_t ${actionfldname};
 //::                            elif (actionfldwidth <= 16):
@@ -358,10 +370,10 @@ typedef struct __attribute__((__packed__)) __${table}_${actionname} {
 //::                                actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
     uint8_t ${actionfldname}[${actionfldwidth_byte}];
 //::                            #endif
-//::                        #endfor
+//::                        #endwhile
 } ${table}_${actionname}_t;
 //::                    #endif
-//::                    if pddict['tables'][table]['appdatafields']:
+//::                    if 'appdatafields' in pddict['tables'][table].keys() and len(pddict['tables'][table]['appdatafields']) > 0:
 //::                        actionname = pddict['tables'][table]['appdatafields'].keys()[0]
 //::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
 //::                        if len(fieldlist):
@@ -386,7 +398,7 @@ typedef struct __attribute__((__packed__)) __${table}_appdata {
 
 typedef union __${table}_action_union {
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
+//::                    (actionname, actionfldlist, _) = action
 //::                    if len(actionfldlist):
     ${table}_${actionname}_t ${table}_${actionname};
 //::                    #endif

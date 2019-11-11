@@ -112,7 +112,7 @@ class ${table}():
 //::            tbl = table.upper()
 //::            var = 0
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionfldlist, _) = action
 //::            if actionname.startswith("__"):
 //::                continue
 //::            #endif
@@ -373,7 +373,7 @@ class ${table}():
 
             # for each actions
 //::        for action in pddict['tables'][table]['actions']:
-//::            (actionname, actionfldlist) = action
+//::            (actionname, actionfldlist, _) = action
 //::            if actionname.startswith("__"):
 //::                continue
 //::            #endif
@@ -385,7 +385,8 @@ class ${table}():
 //::            if len(actionfldlist):
                     # for each action field
 //::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                    actionfldname = actionfld['p4_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    if actionfldname.startswith("__"):
 //::                        continue
 //::                    #endif
@@ -804,7 +805,7 @@ class ${table}():
         print('  action_u:')
 //::        table_upper = table.upper()
 //::        for action in pddict['tables'][table]['actions']:
-//::            (actionname, actionfldlist) = action
+//::            (actionname, actionfldlist, _) = action
 //::            actionname_upper = actionname.upper()
 //::            if actionname.startswith("__"):
 //::                continue
@@ -813,7 +814,8 @@ class ${table}():
 //::            if len(actionfldlist):
             print('    ${table}_${actionname}_t:')
 //::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                    actionfldname = actionfld['p4_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    if actionfldname.startswith("__"):
 //::                        continue
 //::                    #endif

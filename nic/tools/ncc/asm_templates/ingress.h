@@ -141,16 +141,17 @@ struct ${table}_k {
 //::        #endif
 //::        for action in pddict['tables'][table]['actions']:
 //::            pad_to_512 = 0
-//::            (actionname, actionfldlist) = action
+//::            (actionname, actionflddict, _) = action
 //::            kd_size = 0
 //::            pad_data_bits = 0
 //::            totaladatabits = 0
 //::            kd_json = OrderedDict()
 //::            _kdbit = _start_kd_bit
-//::            if len(actionfldlist):
+//::            if len(actionflddict):
 //::                totaladatabits = 0
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                for actionfld in actionflddict:
+//::                    actionfldname  = actionfld['asm_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    totaladatabits += actionfldwidth
 //::                #endfor
 struct ${table}_${actionname}_d {
@@ -163,16 +164,15 @@ struct ${table}_${actionname}_d {
 //::                    else:
 //::                        actionpc_bits = 0
 //::                    #endif
-//::                    assert(mat_key_start_bit >= actionpc_bits)
 //::                    adata_bits_before_key = mat_key_start_bit - actionpc_bits
 //::                    axi_pad_bits = 0
 //::                    spilled_adata_bits = 0
 //::                    max_adata_bits_before_key = min(totaladatabits, adata_bits_before_key)
-//::                    if pddict['tables'][table]['location'] != 'HBM' and totaladatabits < mat_key_start_bit and (mat_key_start_bit - totaladatabits) > 16:
+//::                    if totaladatabits < mat_key_start_bit and (mat_key_start_bit - totaladatabits) > 16:
 //::                        spilled_adata_bits = totaladatabits % 16
-//::                        max_adata_bits_before_key = totaladatabits - spilled_adata_bits if totaladatabits > spilled_adata_bits else totaladatabits
+//::                        max_adata_bits_before_key = totaladatabits - spilled_adata_bits
 //::                    #endif
-//::                    if pddict['tables'][table]['location'] != 'HBM' and adata_bits_before_key > max_adata_bits_before_key:
+//::                    if adata_bits_before_key > max_adata_bits_before_key:
 //::                        # Pad axi shift amount of bits
 //::                        axi_pad_bits = ((adata_bits_before_key - max_adata_bits_before_key) >> 4) << 4
 //::                        if axi_pad_bits:
@@ -187,8 +187,11 @@ struct ${table}_${actionname}_d {
 //::                    if adata_bits_before_key:
 //::                        total_adatabits_beforekey = 0
 //::                        fill_adata = max_adata_bits_before_key
-//::                        for actionfld in actionfldlist:
-//::                            actionfldname, actionfldwidth = actionfld
+//::                        for actionfld in actionflddict:
+//::                            actionfldname  = actionfld['asm_name']
+//::                            actionfldwidth = actionfld['len']
+//::                            dvec_start = actionfld['dvec_start']
+//::                            fle_start = 511-dvec_start
 //::                            little_str = ''
 //::                            if actionname in pddict['tables'][table]['le_action_params'].keys():
 //::                                if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
@@ -196,14 +199,14 @@ struct ${table}_${actionname}_d {
 //::                                #endif
 //::                            #endif
 //::                            if actionfldwidth <= fill_adata:
-    ${actionfldname} : ${actionfldwidth} ${little_str};
+    ${actionfldname} : ${actionfldwidth} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
 //::                                _kdbit += actionfldwidth
 //::                                fill_adata -= actionfldwidth
 //::                                last_actionfld_bits = actionfldwidth
 //::                                total_adatabits_beforekey += actionfldwidth
 //::                            else:
-    ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata} ${little_str};
+    ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': fill_adata, 'field': actionfldname + '_sbit0_ebit' + str(fill_adata-1)}
 //::                                _kdbit += fill_adata
 //::                                last_actionfld_bits = fill_adata
@@ -372,8 +375,11 @@ struct ${table}_${actionname}_d {
 //::                if adata_bits_before_key:
 //::                    # Pack remaining Action Data bits after Key
 //::                    skip_adatafld  = True
-//::                    for actionfld in actionfldlist:
-//::                        actionfldname, actionfldwidth = actionfld
+//::                    for actionfld in actionflddict:
+//::                        actionfldname  = actionfld['asm_name']
+//::                        actionfldwidth = actionfld['len']
+//::                        dvec_start = actionfld['dvec_start']
+//::                        fle_start = 511-dvec_start
 //::                        little_str = ''
 //::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
 //::                            if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
@@ -385,26 +391,29 @@ struct ${table}_${actionname}_d {
 //::                        elif skip_adatafld:
 //::                            skip_adatafld  = False
 //::                            if actionfldwidth > last_actionfld_bits:
-    ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits} ${little_str};
+    ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                                kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth - last_actionfld_bits, 'field': actionfldname + '_sbit' + str(last_actionfld_bits) + '_ebit' + str(actionfldwidth - 1)}
 //::                                _kdbit += (actionfldwidth - last_actionfld_bits)
 //::                            #endif
 //::                            continue
 //::                        #endif
-    ${actionfldname} : ${actionfldwidth};
+    ${actionfldname} : ${actionfldwidth}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                            kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
 //::                            _kdbit += actionfldwidth
 //::                    #endfor
 //::                else:
-//::                    for actionfld in actionfldlist:
-//::                        actionfldname, actionfldwidth = actionfld
+//::                    for actionfld in actionflddict:
+//::                        actionfldname  = actionfld['p4_name']
+//::                        actionfldwidth = actionfld['len']
+//::                        dvec_start = actionfld['dvec_start']
+//::                        fle_start = 511-dvec_start
 //::                        little_str = ''
 //::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
 //::                            if actionfldname in pddict['tables'][table]['le_action_params'][actionname]:
 //::                                little_str = ' (little)'
 //::                            #endif
 //::                        #endif
-    ${actionfldname} : ${actionfldwidth} ${little_str};
+    ${actionfldname} : ${actionfldwidth} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                        kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
 //::                        _kdbit += actionfldwidth
 //::                    #endfor
@@ -439,8 +448,8 @@ struct ${table}_d {
 //::            #endif
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
-//::                if len(actionfldlist):
+//::                (actionname, actionflddict, _) = action
+//::                if len(actionflddict):
 //::                    empty_action = False
 //::                    break
 //::                #endif
@@ -448,8 +457,8 @@ struct ${table}_d {
 //::            if not empty_action:
     union {
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    if len(actionfldlist):
+//::                    (actionname, actionflddict, _) = action
+//::                    if len(actionflddict):
 //::                        if add_kd_action_bits:
 //::                            k_d_action_data_json['INGRESS_KD'][table][actionname][0] = {'bit': 0, 'width': 8, 'field': "__action_pc"}
 //::                        #endif
@@ -460,8 +469,8 @@ struct ${table}_d {
 //::            #endif
 };
 //::        elif len(pddict['tables'][table]['actions']) == 1:
-//::            (actionname, actionfldlist) = pddict['tables'][table]['actions'][0]
-//::            if len(actionfldlist):
+//::            (actionname, actionflddict, _) = pddict['tables'][table]['actions'][0]
+//::            if len(actionflddict):
 struct ${table}_d {
     struct ${table}_${actionname}_d  ${actionname}_d;
 };

@@ -47,7 +47,7 @@ ${api_prefix}_table_types_enum = [
 #    pass
 //::                actionid = 0
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
+//::                    (actionname, actionfldlist, _) = action
 #@${table}.group(invoke_without_command=True)
 #@click.argument('hwaddr', metavar='<Hardware Address>')
 #@click.pass_context
@@ -139,8 +139,8 @@ def process_results(ctx, rslt, ids):
     ${pddict['cli-name']}_backend.populate_table(config)
 
 //::        for action in pddict['tables'][table]['actions']:
-//::            (actionname, actionfldlist) = action
-//::            fld_len = len(actionfldlist)
+//::            (actionname, actionflddict, _) = action
+//::            fld_len = len(actionflddict)
 //::            if fld_len == 0:
 @${table}_index.group(invoke_without_command=True, chain=True)
 //::            else:
@@ -151,9 +151,11 @@ def ${actionname}(ctx):
     ctx.obj['action_name'] =  '${actionname}'
     pass
 
-//::            if (len(actionfldlist) > 0):
-//::                for actionfld in actionfldlist:
-//::                    actionfldname,actionfldwidth = actionfld
+//::            if (len(actionflddict) > 0):
+//::                for actionfld in actionflddict:
+//::                    actionfldname  = actionfld['p4_name']
+//::                    actionfldwidth = actionfld['len']
+//::                    dest_start_bit = actionfld['dvec_start']
 @${actionname}.command(name='${actionfldname}')
 @click.argument('arg_${actionfldname}', type=click.STRING)
 def ${actionfldname}_cmd(arg_${actionfldname}):

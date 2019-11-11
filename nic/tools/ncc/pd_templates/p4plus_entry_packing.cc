@@ -79,14 +79,15 @@ uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 //::        keylen = pddict['tables'][table]['keysize']
 //::        max_actionfld_len = 0
 //::        for action in pddict['tables'][table]['actions']:
-//::            (actionname, actionfldlist) = action
+//::            (actionname, actionflddict, _) = action
 //::            actname = actionname.upper()
-//::            if not len(actionfldlist):
+//::            if not len(actionflddict):
 //::                continue
 //::            #endif
 //::            actionfldlen = 0
-//::            for actionfld in actionfldlist:
-//::                actionfldname, actionfldwidth = actionfld
+//::            for actionfld in actionflddict:
+//::                actionfldname  = actionfld['p4_name']
+//::                actionfldwidth = actionfld['len']
 //::                actionfldlen += actionfldwidth
 //::            #endfor
 //::            if actionfldlen > max_actionfld_len:
@@ -107,12 +108,13 @@ ${table}_hwentry_query(uint32_t tableid, uint8_t action_id, uint32_t* hwactionda
     *hwactiondata_len = 0;
     switch(action_id) {
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionflddict, _) = action
 //::                actname = actionname.upper()
 //::                actionfldlen = 0
-//::                if len(actionfldlist):
-//::                    for actionfld in actionfldlist:
-//::                        actionfldname, actionfldwidth = actionfld
+//::                if len(actionflddict):
+//::                    for actionfld in actionflddict:
+//::                        actionfldname  = actionfld['p4_name']
+//::                        actionfldwidth = actionfld['len']
 //::                        actionfldlen += actionfldwidth
 //::                    #endfor
 //::                #endif
@@ -129,17 +131,18 @@ ${table}_pack_action_data(uint32_t tableid, uint8_t action_id, ${table}_actionda
 {
     switch(action_id) {
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionflddict, _) = action
 //::                actname = actionname.upper()
-//::                if not len(actionfldlist):
+//::                if not len(actionflddict):
 //::                    continue
 //::                #endif
-//::                total_bits = sum([fldwidth for (_, fldwidth) in actionfldlist])
+//::                total_bits = sum([ad['len'] for ad in actionflddict])
         case ${tbl}_${actname}_ID:
             {
                 ${table}_actiondata_bitfield_t *__actiondata = (${table}_actiondata_bitfield_t *)packed_actiondata;
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                for actionfld in actionflddict:
+//::                    actionfldname  = actionfld['p4_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    if actionfldwidth <= 8:
                 __actiondata->action_u.${table}_${actionname}.${actionfldname} =
                              (uint8_t)(actiondata->action_u.${table}_${actionname}.${actionfldname});
@@ -177,12 +180,12 @@ ${table}_unpack_action_data(uint32_t tableid, uint8_t actionid, uint8_t *packed_
     memset(actiondata, 0, sizeof(${table}_actiondata_t));
     switch(actionid) {
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionflddict, _) = action
 //::                actname = actionname.upper()
-//::                if not len(actionfldlist):
+//::                if not len(actionflddict):
 //::                    continue
 //::                #endif
-//::                total_bits = sum([fldwidth for (_, fldwidth) in actionfldlist])
+//::                total_bits = sum([ad['len'] for ad in actionflddict])
         case ${tbl}_${actname}_ID:
             {
                 unsigned int s = (${total_bits} + 7) >> 3; // Packed action data bytes length
@@ -192,8 +195,9 @@ ${table}_unpack_action_data(uint32_t tableid, uint8_t actionid, uint8_t *packed_
                     packed_actiondata[s - i - 1] = b;
                 }
                 ${table}_actiondata_bitfield_t *__actiondata = (${table}_actiondata_bitfield_t *)packed_actiondata;
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
+//::                for actionfld in actionflddict:
+//::                    actionfldname  = actionfld['p4_name']
+//::                    actionfldwidth = actionfld['len']
 //::                    if actionfldwidth <= 8:
                 actiondata->action_u.${table}_${actionname}.${actionfldname} =
                                  (uint8_t)(__actiondata->action_u.${table}_${actionname}.${actionfldname});

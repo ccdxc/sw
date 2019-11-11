@@ -116,6 +116,8 @@
         uint16_t ${p4fldname};
 //::                        elif (p4fldwidth <= 32):
         uint32_t ${p4fldname};
+//::                        elif (p4fldwidth <= 64):
+        uint64_t ${p4fldname};
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
         uint8_t ${p4fldname}[${p4fldwidth_byte}];
@@ -139,6 +141,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
     uint16_t ${p4fldname};
 //::                elif (p4fldwidth <= 32):
     uint32_t ${p4fldname};
+//::                elif (p4fldwidth <= 64):
+    uint64_t ${p4fldname};
 //::                else:
 //::                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}[${p4fldwidth_byte}];
@@ -159,6 +163,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
     uint16_t ${p4fldname};/* Sourced from field union */
 //::                        elif (p4fldwidth <= 32):
     uint32_t ${p4fldname};/* Sourced from field union */
+//::                        elif (p4fldwidth <= 64):
+    uint64_t ${p4fldname};/* Sourced from field union */
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}[${p4fldwidth_byte}];/* Sourced from field union */
@@ -204,6 +210,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
         uint16_t ${p4fldname}_mask;
 //::                            elif (p4fldwidth <= 32):
         uint32_t ${p4fldname}_mask;
+//::                            elif (p4fldwidth <= 64):
+        uint64_t ${p4fldname}_mask;
 //::                            else:
 //::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
         uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
@@ -227,6 +235,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
     uint16_t ${p4fldname}_mask;
 //::                    elif (p4fldwidth <= 32):
     uint32_t ${p4fldname}_mask;
+//::                    elif (p4fldwidth <= 64):
+    uint64_t ${p4fldname}_mask;
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
@@ -247,6 +257,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
     uint16_t ${p4fldname}_mask;/* Sourced from field union */
 //::                            elif (p4fldwidth <= 32):
     uint32_t ${p4fldname}_mask;/* Sourced from field union */
+//::                            elif (p4fldwidth <= 64):
+    uint64_t ${p4fldname}_mask;/* Sourced from field union */
 //::                            else:
 //::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
     uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];/* Sourced from field union */
@@ -276,7 +288,7 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask {
 //::            tbl = table.upper()
 typedef enum ${table}_actions_enum {
 //::            for action in pddict['tables'][table]['actions']:
-//::                (actionname, actionfldlist) = action
+//::                (actionname, actionflddict, _) = action
 //::                actname = actionname.upper()
     ${tbl}_${actname}_ID = ${i},
 //::                i+=1
@@ -285,11 +297,23 @@ typedef enum ${table}_actions_enum {
 } ${table}_actions_en;
 
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    if len(actionfldlist):
+//::                    (actionname, actionflddict, _) = action
+//::                    if len(actionflddict):
 typedef struct __attribute__((__packed__)) __${table}_${actionname} {
-//::                        for actionfld in actionfldlist:
-//::                            actionfldname, actionfldwidth = actionfld
+//::                        iter = 0
+//::                        while iter < len(actionflddict):
+//::                            actionfld = actionflddict[iter]
+//::                            actionfldname  = actionfld['p4_name']
+//::                            actionfldwidth = actionfld['len']
+//::                            if ((iter + 1) < len(actionflddict)):
+//::                                nextactionfld = actionflddict[iter + 1]
+//::                                nextactionfldname = nextactionfld['p4_name']
+//::                                if actionfldname == nextactionfldname:
+//::                                    iter = iter + 1;
+//::                                    actionfldwidth += nextactionfld['len']
+//::                                #endif
+//::                            #endif
+//::                            iter = iter + 1
 //::                            if not (pddict['tables'][table]['is_raw']):
 //::                                if (actionfldwidth <= 8):
     uint8_t ${actionfldname};
@@ -297,6 +321,8 @@ typedef struct __attribute__((__packed__)) __${table}_${actionname} {
     uint16_t ${actionfldname};
 //::                                elif (actionfldwidth <= 32):
     uint32_t ${actionfldname};
+//::                                elif (actionfldwidth <= 64):
+    uint64_t ${actionfldname};
 //::                                else:
 //::                                    actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
     uint8_t ${actionfldname}[${actionfldwidth_byte}];
@@ -308,14 +334,14 @@ typedef struct __attribute__((__packed__)) __${table}_${actionname} {
     uint8_t ${actionfldname}[${actionfldwidth}/8]; // bitwidth = ${actionfldwidth}
 //::                                #endif
 //::                            #endif
-//::                        #endfor
+//::                        #endwhile
 } ${table}_${actionname}_t;
 //::                    #endif
 //::                #endfor
 
 typedef union __${table}_action_union {
 //::                for action in pddict['tables'][table]['actions']:
-//::                    (actionname, actionfldlist) = action
+//::                    (actionname, actionfldlist, _) = action
 //::                    if len(actionfldlist):
     ${table}_${actionname}_t ${table}_${actionname};
 //::                    #endif
@@ -413,7 +439,7 @@ inline void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *acti
 //::            if len(pddict['tables'][tblname]['actions']):
             switch(actionid) {
 //::                for action in pddict['tables'][tblname]['actions']:
-//::                    (actionname, actionfldlist) = action
+//::                    (actionname, actionfldlist, _) = action
 //::                    actname = actionname.upper()
                 case ${caps_tblname}_${actname}_ID:
                     strcpy(action_name, "${actionname}");

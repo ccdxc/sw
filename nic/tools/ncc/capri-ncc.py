@@ -25,7 +25,9 @@ import capri_tables, capri_parser, capri_pa, \
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_model_dbg_output as capri_model_dbg_output
-from capri_p4pd import capri_p4pd_code_generate as capri_p4pd_code_generate
+from capri_p4pd_gen import capri_p4pd_code_generate as capri_p4pd_code_generate
+from capri_p4pd_gen import capri_p4pd_generator as capri_p4pd_generator
+from capri_p4pd import capri_p4pd_generate_info as capri_p4pd_generate_info
 from capri_logging import logger_init as logger_init, ncc_assert as ncc_assert, \
         set_pdb_on_assert as set_pdb_on_assert
 
@@ -282,7 +284,24 @@ def main():
 
     k_plus_d_dict = None
     if args.pd_gen or args.asm_out:
-        k_plus_d_dict = capri_p4pd_code_generate(capri_be)
+        p4pd = capri_p4pd_generate_info(capri_be)
+        p4pd_gen = capri_p4pd_generator(capri_be)
+        p4pd_gen.pddict = p4pd.pddict
+
+        gen_dir = args.gen_dir
+        cur_path = gen_dir + '/%s' % capri_be.prog_name
+        if not os.path.exists(cur_path):
+            try:
+                os.makedirs(cur_path)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+        fname = cur_path + '/pddict.api.json'
+        pddict_json = open(fname, 'w+')
+        json.dump(p4pd.pddict['tables'],
+                pddict_json, indent=4, sort_keys=True, separators=(',', ': '))
+
+        k_plus_d_dict = capri_p4pd_code_generate(p4pd_gen)
 
     # generate debug information for model
     # output into a JSON file for model debug logs
