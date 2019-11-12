@@ -114,7 +114,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (device->bridging_enabled()) {
         // reserve an entry in LOCAL_MAPPING table for MAC entry
         local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-        local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+        local_mapping_key.key_metadata_local_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
         sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
                          spec->mac_addr, ETH_ADDR_LEN);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key,
@@ -129,7 +130,8 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         local_mapping_hdl_ = tparams.handle;
 
         // reserve an entry in MAPPING table for MAC entry
-        mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+        mapping_key.p4e_i2e_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
         mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
         sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                          spec->mac_addr, ETH_ADDR_LEN);
@@ -203,7 +205,8 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     if (local_mapping_hdl_.valid()) {
         // remove entry from LOCAL_MAPPING table
         local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-        local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+        local_mapping_key.key_metadata_local_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
         sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
                          vnic->mac(), ETH_ADDR_LEN);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
@@ -218,7 +221,8 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 
     if (mapping_hdl_.valid()) {
         // remove entry from MAPPING table
-        mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+        mapping_key.p4e_i2e_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
         mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
         sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                          vnic->mac(), ETH_ADDR_LEN);
@@ -589,7 +593,8 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
 
     // fill the key
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+    local_mapping_key.key_metadata_local_mapping_lkp_id =
+        ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
                      spec->mac_addr, ETH_ADDR_LEN);
 
@@ -661,7 +666,8 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     }
 
     // fill the key
-    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_id =
+        ((subnet_impl *)subnet->impl())->hw_id();
     mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
     sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                      spec->mac_addr, ETH_ADDR_LEN);
@@ -670,7 +676,8 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     mapping_data.nexthop_valid = true;
     mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     mapping_data.nexthop_id = nh_idx_;
-    mapping_data.egress_bd_id = subnet->hw_id();
+    mapping_data.egress_bd_id =
+        ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data.dmaci, spec->mac_addr, ETH_ADDR_LEN);
 
     // program MAPPING table entry
@@ -766,7 +773,8 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
 
     // invalidate LOCAL_MAPPING table entry of the MAC entry
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-    local_mapping_key.key_metadata_local_mapping_lkp_id = subnet->hw_id();
+    local_mapping_key.key_metadata_local_mapping_lkp_id =
+        ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
                      vnic->mac(), ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
@@ -782,7 +790,8 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     }
 
     // invalidate MAPPING table entry of the MAC entry
-    mapping_key.p4e_i2e_mapping_lkp_id = subnet->hw_id();
+    mapping_key.p4e_i2e_mapping_lkp_id =
+        ((subnet_impl *)subnet->impl())->hw_id();
     mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
     sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
                      vnic->mac(), ETH_ADDR_LEN);

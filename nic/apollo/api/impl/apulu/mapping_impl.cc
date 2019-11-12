@@ -19,6 +19,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
@@ -402,7 +403,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
             break;
     }
     subnet = subnet_db()->find(&spec->subnet);
-    mapping_data.egress_bd_id = subnet->hw_id();
+    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data.dmaci, spec->overlay_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
                                    NULL, &mapping_data,
@@ -448,7 +449,7 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
     mapping_data.nexthop_valid = TRUE;
     mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     mapping_data.nexthop_id = vnic_impl_obj->nh_idx();
-    mapping_data.egress_bd_id = subnet->hw_id();
+    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data.dmaci, vnic->mac(), ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
                                    NULL, &mapping_data,
@@ -457,6 +458,7 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
     if (ret != SDK_RET_OK) {
         goto error;
     }
+
     // TODO: remove later
     PDS_TRACE_DEBUG("programming local mapping with vnic hw id %u's nh %u",
                     vnic_impl_obj->hw_id(), vnic_impl_obj->nh_idx());
