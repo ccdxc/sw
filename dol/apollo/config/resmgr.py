@@ -92,10 +92,13 @@ SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::
 # -------------------------------------------------------------------
 SvcTunAllocator = None
 RemoteSvcTunAllocator = None
+UnderlayTunAllocator = None
+UnderlayECMPTunAllocator = None
 RemoteSvcTunIPv4Addr = ipaddress.IPv4Network('30.0.0.0/24').hosts()
 
 #Apulu specific configs
 UnderlayNHAllocator = None
+UnderlayNhGroupAllocator = None
 DeviceMacAllocator = objects.TemplateFieldObject("macstep/0002.0100.0000/0000.0000.0001")
 
 #TODO: read from PDS header files & init
@@ -176,12 +179,22 @@ def CreateUnderlayTunnels():
     objs = Store.GetUnderlayTunnels()
     if len(objs) != 0:
         UnderlayTunAllocator = utils.rrobiniter(objs)
+    global UnderlayECMPTunAllocator
+    objs = Store.GetUnderlayTunnels(ecmp=True)
+    if len(objs) != 0:
+        UnderlayECMPTunAllocator = utils.rrobiniter(objs)
 
 def CreateUnderlayNHAllocator():
     global UnderlayNHAllocator
     objs = Store.GetUnderlayNexthops()
     if len(objs) != 0:
         UnderlayNHAllocator = utils.rrobiniter(objs)
+
+def CreateUnderlayNhGroupAllocator():
+    global UnderlayNhGroupAllocator
+    objs = Store.GetUnderlayNexthopGroups()
+    if len(objs) != 0:
+        UnderlayNhGroupAllocator = utils.rrobiniter(objs)
 
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():

@@ -112,10 +112,8 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
             spec.NexthopId = self.NEXTHOP.NexthopId
-            pass
         elif self.IsUnderlayEcmp():
-            # spec.NexthopGroupId = self.NEXTHOPGROUP.Id
-            pass
+            spec.NexthopGroupId = self.NEXTHOPGROUP.Id
         return
 
     def IsWorkload(self):
@@ -171,15 +169,19 @@ class TunnelObjectClient:
         for tun in self.Objects():
             if tun.IsUnderlay():
                 tun.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
+                logger.info("Tunnel%d - Nexthop%d" %
+                            (tun.Id, tun.NEXTHOP.NexthopId))
             elif tun.IsUnderlayEcmp():
-                tun.NEXTHOPGROUP = None #resmgr.UnderlayNHEcmpAllocator.rrnext()
+                tun.NEXTHOPGROUP = resmgr.UnderlayNhGroupAllocator.rrnext()
+                logger.info("Tunnel%d - NexthopGroup%d" %
+                            (tun.Id, tun.NEXTHOPGROUP.Id))
         return
 
     def GenerateObjects(self, parent, tunnelspec):
         def __isTunFeatureSupported(tunnel_type):
             if tunnel_type == 'service':
                 return utils.IsServiceTunnelSupported()
-            elif tunnel_type == 'underlay':# or tunnel_type == 'underlay-ecmp':
+            elif tunnel_type == 'underlay' or tunnel_type == 'underlay-ecmp':
                 return utils.IsUnderlayTunnelSupported()
             elif tunnel_type == 'internet-gateway':
                 return utils.IsIGWTunnelSupported()

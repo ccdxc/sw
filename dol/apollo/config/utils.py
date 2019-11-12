@@ -440,8 +440,6 @@ def IsUnderlayTunnelSupported():
     return False
 
 def IsRouteTableSupported():
-    if IsPipelineApulu():
-        return False
     return True
 
 def IsVnicPolicySupported():
@@ -456,6 +454,11 @@ def IsTagSupported():
 
 def IsFlowInstallationNeeded():
     if IsPipelineArtemis():
+        return True
+    return False
+
+def IsNatSupported():
+    if IsPipelineArtemis() or IsPipelineApollo():
         return True
     return False
 

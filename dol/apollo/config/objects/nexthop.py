@@ -72,8 +72,7 @@ class NexthopObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.NexthopId)
         return
 
-    def PopulateSpec(self, grpcmsg):
-        spec = grpcmsg.Request.add()
+    def FillSpec(self, spec):
         spec.Id = self.NexthopId
         if self.__type == utils.NhType.IP:
             spec.IPNhInfo.VPCId = self.VPC.VPCId
@@ -87,8 +86,18 @@ class NexthopObject(base.ConfigObjectBase):
             spec.TunnelId = self.TunnelId
         return
 
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        self.FillSpec(spec)
+        return
+
     def IsUnderlay(self):
         if self.__type == utils.NhType.UNDERLAY:
+            return True
+        return False
+
+    def IsUnderlayEcmp(self):
+        if self.__type == utils.NhType.UNDERLAY_ECMP:
             return True
         return False
 

@@ -13,6 +13,7 @@ class ApolloConfigStore:
         self.trunks = ObjectDatabase()
         self.tunnels = ObjectDatabase()
         self.nexthops = ObjectDatabase()
+        self.nexthopgroups = ObjectDatabase()
         self.device = None
         self.substrate_vpc = None
         # Batch client
@@ -32,6 +33,9 @@ class ApolloConfigStore:
 
     def SetNexthops(self, objs):
         return self.nexthops.SetAll(objs)
+
+    def SetNexthopgroups(self, objs):
+        return self.nexthopgroups.SetAll(objs)
 
     def SetDevice(self,obj):
         self.device = obj
@@ -113,17 +117,29 @@ class ApolloConfigStore:
                 tunnels.append(tun)
         return tunnels
 
-    def GetUnderlayTunnels(self):
+    def GetUnderlayTunnels(self, ecmp=False):
         tunnels = []
         for tun in self.tunnels.GetAllInList():
-            if tun.IsUnderlay() or tun.IsUnderlayEcmp(): tunnels.append(tun)
+            if ecmp is False:
+                if tun.IsUnderlay(): tunnels.append(tun)
+            elif ecmp is True:
+                if tun.IsUnderlayEcmp(): tunnels.append(tun)
         return tunnels
 
-    def GetUnderlayNexthops(self):
+    def GetUnderlayNexthops(self, ecmp=False):
         nhops = []
         for nh in self.nexthops.GetAllInList():
-            if nh.IsUnderlay(): nhops.append(nh)
+            if ecmp is False:
+                if nh.IsUnderlay(): nhops.append(nh)
+            if ecmp is True:
+                if nh.IsUnderlayEcmp(): nhops.append(nh)
         return nhops
+
+    def GetUnderlayNexthopGroups(self):
+        nhgs = []
+        for nhg in self.nexthopgroups.GetAllInList():
+            nhgs.append(nhg)
+        return nhgs
 
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()

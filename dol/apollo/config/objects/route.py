@@ -146,10 +146,15 @@ class RouteObjectClient:
         return
 
     def __internet_tunnel_get(self, nat, teptype=None):
-        if teptype is not None and "service" in teptype:
-            if "remoteservice" == teptype:
-                return resmgr.RemoteSvcTunAllocator.rrnext()
-            return resmgr.SvcTunAllocator.rrnext()
+        if teptype is not None:
+            if "service" in teptype:
+                if "remoteservice" == teptype:
+                    return resmgr.RemoteSvcTunAllocator.rrnext()
+                return resmgr.SvcTunAllocator.rrnext()
+            if "underlay" in teptype:
+                if "underlay-ecmp" == teptype:
+                    return resmgr.UnderlayECMPTunAllocator.rrnext()
+                return resmgr.UnderlayTunAllocator.rrnext()
         if nat is False:
             return resmgr.RemoteInternetNonNatTunAllocator.rrnext()
         else:
@@ -214,9 +219,11 @@ class RouteObjectClient:
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
 
-        if resmgr.RemoteInternetNonNatTunAllocator == None and resmgr.RemoteInternetNatTunAllocator == None:
-            logger.info("Skipping route creation as there are no Internet tunnels")
-            return
+        if utils.IsNatSupported():
+            if resmgr.RemoteInternetNonNatTunAllocator == None and \
+                resmgr.RemoteInternetNatTunAllocator == None:
+                logger.info("Skipping route creation as there are no Internet tunnels")
+                return
 
         def __get_adjacent_routes(base, count):
             routes = []
@@ -323,9 +330,6 @@ class RouteObjectClient:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
     def CreateObjects(self):
-        if utils.IsPipelineApulu():
-            logger.error("Route Table object not supported yet - Skip creating!!!")
-            return
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.ROUTE, msgs)

@@ -12,6 +12,7 @@ import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 from apollo.config.objects.nexthop import client as NhClient
+from apollo.config.objects.nexthop_group import client as NhGroupClient
 import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
@@ -75,7 +76,7 @@ class VpcObject(base.ConfigObjectBase):
         NhClient.GenerateObjects(self, spec)
 
         # Generate NextHop configuration
-        nexthop_group.client.GenerateObjects(self, spec)
+        NhGroupClient.GenerateObjects(self, spec)
 
         # Generate Tag configuration.
         if getattr(spec, 'tagtbl', None) != None:
@@ -221,6 +222,7 @@ class VpcObjectClient:
             self.__write_cfg(vpc_count)
         if utils.IsPipelineApulu():
             # Associate Nexthop objects
+            NhGroupClient.CreateAllocator()
             NhClient.AssociateObjects()
             VnicClient.AssociateObjects()
         return

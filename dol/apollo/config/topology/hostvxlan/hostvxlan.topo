@@ -32,19 +32,19 @@ device:
           type  : underlay
         - count : 16
           type  : underlay-ecmp
-        - count : 16
-          type  : internet-gateway
-          nat   : true
-        - count : 16
-          type  : internet-gateway
-        - count : 32
-          type  : workload
+        #- count : 16
+        #  type  : internet-gateway
+        #  nat   : true
+        #- count : 16
+        #  type  : internet-gateway
+        #- count : 32
+        #  type  : workload
         # artemis
-        - count : 2
-          type  : service
-        - count : 1
-          type  : service
-          remote : true
+        #- count : 2
+        #  type  : service
+        #- count : 1
+        #  type  : service
+        #  remote : true
 
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
@@ -93,7 +93,7 @@ vpc:
       routetbl:
         - type: specific
           routetype: only_default
-          teptype : service
+          teptype : underlay
           v4routes:
              - '0.0.0.0\0'
           v6routes:
@@ -101,7 +101,7 @@ vpc:
 
         - type: specific
           routetype: only_default
-          teptype : remoteservice
+          teptype : underlay-ecmp
           v4routes:
              - '0.0.0.0\0'
           v6routes:
@@ -154,7 +154,8 @@ vpc:
         #  count : 1
       routetbl:
              - type: base
-               routetype: adjacent
+               routetype: only_default
+               #routetype: adjacent
                count : 8
                nat : true # tunnel with nat flag set will be used as next-hop
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
@@ -165,6 +166,7 @@ vpc:
                nv6routes   : 10
                v4routes:
                v6routes:
+               teptype : underlay
 
              - type: base
                routetype: adjacent
@@ -177,6 +179,7 @@ vpc:
                nv6routes   : 10
                v4routes:
                v6routes:
+               teptype : underlay
 
              - type: base
                routetype: overlap
@@ -189,11 +192,13 @@ vpc:
                nv6routes   : 10
                v4routes:
                v6routes:
+               teptype : underlay
 
              - type: specific # route table with empty routes
                routetype: empty
                v4routes:
                v6routes:
+               teptype : underlay
 
              - type: specific # vpc peering
                routetype: vpc_peer_with_default
@@ -205,6 +210,7 @@ vpc:
                    - '1234:5678:4321:8765:1111::\80'
                    - '1234:5678:4321:8765:1111:3333::\96'
                    - '0::\0'
+               teptype : underlay
       meter:
         - auto_fill: True
           base_priority: 1

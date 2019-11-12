@@ -1,0 +1,15 @@
+# Feature networking Modules List for Local to Internet Gateway scenario
+feature:
+    id          : networking
+    sub         : local2igw
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_UDP_QTAG
+        spec    : local2igw.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING

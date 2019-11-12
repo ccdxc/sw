@@ -2,6 +2,7 @@
 import pdb
 
 from infra.common.logging import logger
+from apollo.config.store import Store
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -16,8 +17,8 @@ class NexthopGroupObject(base.ConfigObjectBase):
         super().__init__()
         self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
-        self.NexthopGroupId = next(resmgr.NexthopGroupIdAllocator)
-        self.GID('NexthopGroup%d'%self.NexthopGroupId)
+        self.Id = next(resmgr.NexthopGroupIdAllocator)
+        self.GID('NexthopGroup%d'%self.Id)
         self.NumNexthops = spec.count
         self.Nexthops = {}
         if spec.type == 'overlay':
@@ -40,7 +41,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "NexthopGroupID:%d|Num of nexthops:%d|Nexthop ID List:%s" %\
-                (self.NexthopGroupId, self.NumNexthops, self.get_nexthop_list())
+                (self.Id, self.NumNexthops, self.get_nexthop_list())
 
     def Show(self):
         logger.info("NexthopGroup object:", self)
@@ -52,19 +53,17 @@ class NexthopGroupObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.NexthopGroupId)
+        grpcmsg.Id.append(self.Id)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.NexthopGroupId
+        spec.Id = self.Id
         spec.Type = self.__type
         for i in range(self.NumNexthops):
-            nh_grpcmsg = nexthop.GetGrpcCreateMessage()
-            nhspec = nh_grpcmsg.Request.add()
+            nhspec = spec.Members.add()
             nexthop_obj = self.Nexthops[i]
-            #self.Nexthops[i] = nexthop.GetObjectFromID(i)
-            nexthop_obj.PopulateSpec(nh_grpcmsg)
+            nexthop_obj.FillSpec(nhspec)
         return
 
 class NexthopGroupObjectClient:
@@ -92,6 +91,10 @@ class NexthopGroupObjectClient:
     def GetNumNextHopGroupsPerVPC(self):
         return self.__num_nhgs_per_vpc
 
+    def CreateAllocator(self):
+        Store.SetNexthopgroups(self.Objects())
+        resmgr.CreateUnderlayNhGroupAllocator()
+
     def GenerateObjects(self, parent, vpc_spec_obj):
         if not self.__supported:
             return
@@ -112,7 +115,7 @@ class NexthopGroupObjectClient:
         for nhg_spec_obj in nhg_spec:
             for c in range(nhg_spec_obj.count):
                 obj = NexthopGroupObject(parent, nhg_spec_obj)
-                self.__objs.update({obj.NexthopGroupId: obj})
+                self.__objs.update({obj.Id: obj})
                 if isV4Stack:
                     self.__v4objs[vpcid].append(obj)
                 if isV6Stack:

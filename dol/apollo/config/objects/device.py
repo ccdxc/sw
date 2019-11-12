@@ -4,6 +4,7 @@ import pdb
 from infra.common.logging import logger
 
 from apollo.config.store import Store
+from apollo.config.objects.nexthop_group import client as NhGroupClient
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -127,6 +128,9 @@ class DeviceObjectClient:
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
         api.client.Create(api.ObjectTypes.SWITCH, msgs)
+
+        # Create Nexthop group object before tunnel as tep impl looks up nhgroup
+        NhGroupClient.CreateObjects()
         tunnel.client.CreateObjects()
         return
 
