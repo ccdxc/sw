@@ -15,7 +15,6 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
@@ -29,7 +28,6 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
@@ -43,7 +41,6 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
@@ -57,7 +54,6 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4
         }
@@ -71,7 +67,6 @@
             "lif_count" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 64,
             "mac_addr" : "00:02:00:00:01:03",
@@ -87,7 +82,7 @@
                 "sq_count" : 4096,
                 "rq_count" : 4096,
                 "cq_count" : 2048,
-                "eq_count" : 4096,
+                "eq_count" : 128,
                 "adminq_count" : 15,
 				"num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
@@ -105,7 +100,6 @@
             "lif_count" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 64,
             "pcie" : {
@@ -120,7 +114,7 @@
                 "sq_count" : 4096,
                 "rq_count" : 4096,
                 "cq_count" : 2048,
-                "eq_count" : 4096,
+                "eq_count" : 128,
                 "adminq_count" : 15,
 				"num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
@@ -138,7 +132,6 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4,
             "pcie" : {

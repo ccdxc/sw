@@ -1661,7 +1661,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ENOSUPP);
     }
 
-    if (cmd->index >= spec->eq_count) {
+    if (cmd->index >= 1) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
         return (IONIC_RC_EQID);
     }
@@ -2190,7 +2190,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case IONIC_QTYPE_NOTIFYQ:
-        if (cmd->index >= spec->eq_count) {
+        if (cmd->index >= 1) {
             NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
             return (IONIC_RC_EQID);
         }

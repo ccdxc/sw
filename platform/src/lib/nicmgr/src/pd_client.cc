@@ -238,6 +238,34 @@ uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
     return addr;
 }
 
+int
+PdClient::nicmgr_mem_reserve(uint64_t addr, uint32_t size)
+{
+    uint32_t alloc_units;
+    int alloc_offset, reserved_offset = 0;
+
+    // Allocations must be cache-line aligned because this memory is used
+    // for rings.
+    assert((addr & 0x3F) == 0);
+
+    alloc_offset = ((addr - nicmgr_hbm_base_)/kNicmgrAllocUnit);
+
+    alloc_units = (size + kNicmgrAllocUnit - 1) & ~(kNicmgrAllocUnit - 1);
+    alloc_units /= kNicmgrAllocUnit;
+    reserved_offset = nicmgr_hbm_allocator_->CheckAndReserve(alloc_offset, alloc_units);
+
+    if ((reserved_offset < 0) || (reserved_offset != alloc_offset)) {
+        NIC_FUNC_ERR("Failed to reserve nicmgr mem at addr {}", addr);
+        return -1;
+    }
+
+    nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
+    NIC_FUNC_DEBUG("reserved: size: {} reserved_offset: {} addr: {:#x}",
+                    size, reserved_offset, addr);
+
+    return 0;
+}
+
 void PdClient::devcmd_mem_init (void)
 {
     uint64_t hbm_addr = mp_->start_addr(kDevcmdHBMLabel);

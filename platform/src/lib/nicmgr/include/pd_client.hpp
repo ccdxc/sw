@@ -145,6 +145,7 @@ public:
 
     void nicmgr_mem_init(void);
     uint64_t nicmgr_mem_alloc(uint32_t size);
+    int nicmgr_mem_reserve(uint64_t addr, uint32_t size);
 
     void devcmd_mem_init(void);
     uint64_t devcmd_mem_alloc(uint32_t size);

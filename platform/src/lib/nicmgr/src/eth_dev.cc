@@ -113,6 +113,37 @@ Eth::Eth(devapi *dev_api,
     NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
         dev_resources.intr_base, spec->intr_count);
 
+    // Reserve or allocate EQ states
+    if (spec->eq_count) {
+        if (dev_resources.rx_eq_base) {
+            err = pd->nicmgr_mem_reserve(dev_resources.rx_eq_base, spec->eq_count * sizeof(eth_eq_qstate_t));
+            if (err) {
+                NIC_LOG_ERR("{}: Failed to reserve rx eq states with error: {}", spec->name, err);
+                throw;
+            }
+        } else {
+            dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+            if (dev_resources.rx_eq_base == 0) {
+                NIC_LOG_ERR("{}: Failed to allocate rx eq states", spec->name);
+                throw;
+            }
+        }
+
+        if (dev_resources.tx_eq_base) {
+            err = pd->nicmgr_mem_reserve(dev_resources.tx_eq_base, spec->eq_count * sizeof(eth_eq_qstate_t));
+            if (err) {
+                NIC_LOG_ERR("{}: Failed to reserve tx eq states with error: {}", spec->name, err);
+                throw;
+            }
+        } else {
+            dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+            if (dev_resources.tx_eq_base == 0) {
+                NIC_LOG_ERR("{}: Failed to allocate tx eq states", spec->name);
+                throw;
+            }
+        }
+    }
+
     // Reserve Device registers
     err = pd->devcmd_mem_reserve(dev_resources.regs_mem_addr, sizeof(union dev_regs));
     if (err) {
@@ -315,11 +346,13 @@ Eth::Eth(devapi *dev_api,
         dev_resources.intr_base, spec->intr_count);
 
     // Allocate EQ states
-    dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
-    dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
-    if (dev_resources.rx_eq_base == 0 || dev_resources.tx_eq_base == 0) {
-        NIC_LOG_ERR("{}: Failed to allocate eq states", spec->name);
-        throw;
+    if (spec->eq_count) {
+        dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+        dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+        if (dev_resources.rx_eq_base == 0 || dev_resources.tx_eq_base == 0) {
+            NIC_LOG_ERR("{}: Failed to allocate eq states", spec->name);
+            throw;
+        }
     }
 
     // Allocate & Init Device registers
@@ -563,7 +596,7 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     eth_spec->lif_count = val.get<uint64_t>("lif_count");
     eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
     eth_spec->txq_count = val.get<uint64_t>("txq_count");
-    eth_spec->eq_count = val.get<uint64_t>("eq_count");
+    eth_spec->eq_count = val.get<uint64_t>("eq_count", 0);
     eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
     eth_spec->intr_count = val.get<uint64_t>("intr_count");
 
