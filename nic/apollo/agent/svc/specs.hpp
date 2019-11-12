@@ -1783,6 +1783,21 @@ pds_policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
     pds_policy_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
+static inline pds_nh_type_t
+proto_nh_type_to_pds_nh_type (pds::NexthopType type)
+{
+    switch (type) {
+    case pds::NEXTHOP_TYPE_IP:
+        return PDS_NH_TYPE_IP;
+    case pds::NEXTHOP_TYPE_UNDERLAY:
+        return PDS_NH_TYPE_UNDERLAY;
+    case pds::NEXTHOP_TYPE_OVERLAY:
+        return PDS_NH_TYPE_OVERLAY;
+    default:
+        return PDS_NH_TYPE_NONE;
+    }
+}
+
 // build nh API spec from protobuf spec
 static inline void
 pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,

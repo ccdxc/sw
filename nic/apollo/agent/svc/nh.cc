@@ -204,8 +204,16 @@ NhSvcImpl::NexthopGet(ServerContext *context,
         return Status::OK;
     }
 
-    for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
+    switch (proto_req->gettype_case()) {
+    case pds::NexthopGetRequest::kType:
+        {
+            pds_nh_type_t type = proto_nh_type_to_pds_nh_type(proto_req->type());
+            ret = core::nh_get_all(pds_nh_api_info_to_proto, proto_rsp, type);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        }
+        break;
+    case pds::NexthopGetRequest::kId:
+        key.id = proto_req->id();
         ret = core::nh_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
@@ -213,12 +221,12 @@ NhSvcImpl::NexthopGet(ServerContext *context,
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         pds_nh_api_info_to_proto(&info, proto_rsp);
+        break;
+    default:
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        break;
     }
-
-    if (proto_req->id_size() == 0) {
-        ret = core::nh_get_all(pds_nh_api_info_to_proto, proto_rsp);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    }
+    
     return Status::OK;
 }
 

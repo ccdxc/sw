@@ -124,8 +124,12 @@ nh_get_all_cb (pds_nexthop_spec_t *spec, void *ctxt)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_nexthop_info_t info;
-
     nh_db_cb_ctxt_t *cb_ctxt = (nh_db_cb_ctxt_t *)ctxt;
+
+    // If nexthop type doesn't match bail out
+    if (spec->type != cb_ctxt->type) {
+        return ret;
+    }
 
     memcpy(&info.spec, spec, sizeof(pds_nexthop_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
@@ -141,12 +145,13 @@ nh_get_all_cb (pds_nexthop_spec_t *spec, void *ctxt)
 }
 
 sdk_ret_t
-nh_get_all (nh_get_cb_t nh_get_cb, void *ctxt)
+nh_get_all (nh_get_cb_t nh_get_cb, void *ctxt, pds_nh_type_t type)
 {
     nh_db_cb_ctxt_t cb_ctxt;
 
     cb_ctxt.cb = nh_get_cb;
     cb_ctxt.ctxt = ctxt;
+    cb_ctxt.type = type;
 
     return agent_state::state()->nh_db_walk(nh_get_all_cb, &cb_ctxt);
 }

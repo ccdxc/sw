@@ -19,7 +19,8 @@ import (
 
 var (
 	// nhID holds Nexthop ID
-	nhID uint32
+	nhID   uint32
+	nhType string
 )
 
 var nhShowCmd = &cobra.Command{
@@ -32,6 +33,7 @@ var nhShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(nhShowCmd)
 	nhShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	nhShowCmd.Flags().StringVar(&nhType, "type", "overlay", "Specify nexthop type (overlay, underlay or ip)")
 	nhShowCmd.Flags().Uint32VarP(&nhID, "id", "i", 0, "Specify nexthop ID")
 }
 
@@ -55,13 +57,24 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Nexthop
 		req = &pds.NexthopGetRequest{
-			Id: []uint32{nhID},
+			Gettype: &pds.NexthopGetRequest_Id{
+				Id: nhID,
+			},
+		}
+	} else if cmd.Flags().Changed("type") {
+		if checkNhTypeValid(nhType) != true {
+			fmt.Printf("Invalid nexthop type\n")
+			return
+		}
+		// Get specific Nexthop
+		req = &pds.NexthopGetRequest{
+			Gettype: &pds.NexthopGetRequest_Type{
+				Type: nhTypeToPdsNhType(nhType),
+			},
 		}
 	} else {
-		// Get all Nexthops
-		req = &pds.NexthopGetRequest{
-			Id: []uint32{},
-		}
+		fmt.Printf("--type or --id argument needed\n")
+		return
 	}
 
 	// PDS call
@@ -85,35 +98,99 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("---")
 		}
 	} else {
-		printNexthopHeader()
+		first := true
 		for _, resp := range respMsg.Response {
+			if first == true {
+				printNexthopHeader(resp)
+				first = false
+			}
 			printNexthop(resp)
 		}
 	}
 }
 
-func printNexthopHeader() {
+func checkNhTypeValid(nh string) bool {
+	switch nh {
+	case "ip":
+		return true
+	case "underlay":
+		return true
+	case "overlay":
+		return true
+	default:
+		return false
+	}
+}
+
+func nhTypeToPdsNhType(nh string) pds.NexthopType {
+	switch nh {
+	case "ip":
+		return pds.NexthopType_NEXTHOP_TYPE_IP
+	case "underlay":
+		return pds.NexthopType_NEXTHOP_TYPE_UNDERLAY
+	case "overlay":
+		return pds.NexthopType_NEXTHOP_TYPE_OVERLAY
+	default:
+		return pds.NexthopType_NEXTHOP_TYPE_NONE
+	}
+}
+
+func printNexthopIPHeader() {
 	hdrLine := strings.Repeat("-", 67)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-10s%-6s%-18s%-7s%-20s\n", "Id", "Type", "VPCId", "IP", "Vlan", "MAC")
 	fmt.Println(hdrLine)
 }
 
+func printNexthopOverlayHeader() {
+	hdrLine := strings.Repeat("-", 14)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-8s\n", "Id", "TunnelId")
+	fmt.Println(hdrLine)
+}
+
+func printNexthopUnderlayHeader() {
+	hdrLine := strings.Repeat("-", 36)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-10s%-20s\n", "Id", "L3IntfId", "UnderlayMAC")
+	fmt.Println(hdrLine)
+}
+
+func printNexthopHeader(nh *pds.Nexthop) {
+	spec := nh.GetSpec()
+	switch spec.GetNhinfo().(type) {
+	case *pds.NexthopSpec_IPNhInfo:
+		printNexthopIPHeader()
+	case *pds.NexthopSpec_TunnelId:
+		printNexthopOverlayHeader()
+	case *pds.NexthopSpec_UnderlayNhInfo:
+		printNexthopUnderlayHeader()
+	}
+}
+
 func printNexthop(nh *pds.Nexthop) {
-	//spec := nh.GetSpec()
-	//if spec.GetType() == pds.NexthopType_NEXTHOP_TYPE_IP {
-		//nhInfo := spec.GetIPNhInfo()
-		//fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
-			//spec.GetId(),
-			//strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
-			//nhInfo.GetVPCId(),
-			//utils.IPAddrToStr(nhInfo.GetIP()),
-			//nhInfo.GetVlan(),
-			//utils.MactoStr(nhInfo.GetMac()))
-	//} else {
-		//fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
-			//spec.GetId(),
-			//strings.Replace(spec.GetType().String(), "NEXTHOP_TYPE_", "", -1),
-			//"-", "-", "-", "-")
-	//}
+	spec := nh.GetSpec()
+	switch spec.GetNhinfo().(type) {
+	case *pds.NexthopSpec_IPNhInfo:
+		{
+			nhInfo := spec.GetIPNhInfo()
+			fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
+				spec.GetId(), "IP", nhInfo.GetVPCId(),
+				utils.IPAddrToStr(nhInfo.GetIP()),
+				nhInfo.GetVlan(),
+				utils.MactoStr(nhInfo.GetMac()))
+		}
+	case *pds.NexthopSpec_TunnelId:
+		{
+			fmt.Printf("%-6d%-8d\n",
+				spec.GetId(), spec.GetTunnelId())
+		}
+	case *pds.NexthopSpec_UnderlayNhInfo:
+		{
+			info := spec.GetUnderlayNhInfo()
+			fmt.Printf("%-6d%-10d%-20s\n",
+				spec.GetId(), info.GetL3InterfaceId(),
+				utils.MactoStr(info.GetUnderlayMAC()))
+		}
+	}
 }

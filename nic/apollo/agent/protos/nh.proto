@@ -23,6 +23,13 @@ service NhSvc {
   rpc NhGroupDelete (NhGroupDeleteRequest) returns (NhGroupDeleteResponse) {}
 }
 
+enum NexthopType {
+  NEXTHOP_TYPE_NONE     = 0;
+  NEXTHOP_TYPE_IP       = 1;
+  NEXTHOP_TYPE_UNDERLAY = 2;
+  NEXTHOP_TYPE_OVERLAY  = 3;
+}
+
 // IP nexthop information
 message IPNhSpec {
   // egress VRF id
@@ -95,8 +102,12 @@ message NexthopResponse {
 
 // nexthop get request
 message NexthopGetRequest {
-  // list of nexthops of interest
-  repeated uint32 Id = 1;
+  oneof gettype {
+    // nexthop type to be retrieved
+    NexthopType Type = 1;
+    // nexthop to be retrieved
+    uint32      Id   = 2;
+  }
 }
 
 // nexthop get response
