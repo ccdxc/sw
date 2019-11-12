@@ -9,7 +9,6 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api"
@@ -536,19 +535,34 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
 		if !ok {
 			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "no user in grpc metadata")
-			return i, true, status.Errorf(codes.Internal, "no user in context")
+			return i, true, &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"no user in context"},
+				Code:     int32(codes.Internal),
+				Result:   api.StatusResult{Str: "Internal error"},
+			}
 		}
 		user := &auth.User{ObjectMeta: *userMeta}
 		// check if user is authorized to create the role binding
 		authorizer, err := authzgrpc.NewAuthorizer(ctx)
 		if err != nil {
 			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "err", err)
-			return i, true, status.Error(codes.Internal, err.Error())
+			return i, true, &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{err.Error()},
+				Code:     int32(codes.Internal),
+				Result:   api.StatusResult{Str: "Internal error"},
+			}
 		}
 		ops := authz.GetOperationsFromPermissions(role.Spec.Permissions)
 		ok, _ = authorizer.IsAuthorized(user, ops...)
 		if !ok {
-			return i, true, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName()))
+			return i, true, &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName())},
+				Code:     int32(codes.PermissionDenied),
+				Result:   api.StatusResult{Str: "Authorization failed"},
+			}
 		}
 		s.logger.InfoLog("method", "privilegeEscalationCheck", "msg", "success")
 	}

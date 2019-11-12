@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api"
@@ -1872,7 +1871,12 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					auth.Permission_AllActions.String()),
 			},
 			result: true,
-			err:    status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")},
+				Code:     int32(codes.PermissionDenied),
+				Result:   api.StatusResult{Str: "Authorization failed"},
+			},
 		},
 		{
 			name: "no user in context",
@@ -1894,7 +1898,12 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					auth.Permission_AllActions.String()),
 			},
 			result: true,
-			err:    status.Errorf(codes.Internal, "no user in context"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"no user in context"},
+				Code:     int32(codes.Internal),
+				Result:   api.StatusResult{Str: "Internal error"},
+			},
 		},
 		{
 			name: "no permissions",
@@ -1921,7 +1930,12 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 			},
 			allowedPerms: []auth.Permission{},
 			result:       true,
-			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")},
+				Code:     int32(codes.PermissionDenied),
+				Result:   api.StatusResult{Str: "Authorization failed"},
+			},
 		},
 		{
 			name: "nil permissions",
@@ -1948,7 +1962,12 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 			},
 			allowedPerms: nil,
 			result:       true,
-			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")},
+				Code:     int32(codes.PermissionDenied),
+				Result:   api.StatusResult{Str: "Authorization failed"},
+			},
 		},
 		{
 			name: "non existent role",

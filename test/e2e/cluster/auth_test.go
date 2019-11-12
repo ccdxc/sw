@@ -514,4 +514,94 @@ var _ = Describe("auth tests", func() {
 			Expect(newLoginTime.After(loginTime)).Should(BeTrue())
 		})
 	})
+	Context("privilege escalation", func() {
+		It("check privilege escalation while using commit buffer", func() {
+			var err error
+			var nauthuser *auth.User
+			authuser := &auth.User{}
+			authuser.Defaults("all")
+			authuser.Name = "authRoleUser"
+			authuser.Spec.Password = ts.tu.Password
+			Eventually(func() error {
+				nauthuser, err = ts.restSvc.AuthV1().User().Create(ts.loggedInCtx, authuser)
+				return err
+			}, 10, 1).Should(BeNil())
+			var nauthrole *auth.Role
+			authrole := &auth.Role{}
+			authrole.Defaults("all")
+			authrole.Name = "AuthRole"
+			authrole.Spec.Permissions = append(authrole.Spec.Permissions, login.NewPermission(
+				globals.DefaultTenant,
+				string(apiclient.GroupAuth),
+				authz.ResourceKindAll,
+				authz.ResourceNamespaceAll,
+				"",
+				auth.Permission_AllActions.String()))
+			Eventually(func() error {
+				nauthrole, err = ts.restSvc.AuthV1().Role().Create(ts.loggedInCtx, authrole)
+				return err
+			}, 10, 1).Should(BeNil())
+			var nauthrb *auth.RoleBinding
+			authrb := &auth.RoleBinding{}
+			authrb.Defaults("all")
+			authrb.Name = "AuthRoleBinding"
+			authrb.Spec.Role = "AuthRole"
+			authrb.Spec.Users = append(authrb.Spec.Users, "authRoleUser")
+			Eventually(func() error {
+				nauthrb, err = ts.restSvc.AuthV1().RoleBinding().Create(ts.loggedInCtx, authrb)
+				return err
+			}, 10, 1).Should(BeNil())
+			authUserCtx, err := authntestutils.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: nauthuser.Name, Password: ts.tu.Password, Tenant: globals.DefaultTenant})
+			Expect(err).ShouldNot(HaveOccurred())
+			// create buffer
+			const testbuffer = "TestBuffer"
+			Eventually(func() error {
+				_, err := ts.restSvc.StagingV1().Buffer().Create(authUserCtx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: testbuffer, Tenant: globals.DefaultTenant}})
+				return err
+			}, 10, 1).Should(BeNil())
+			stagecl, err := apiclient.NewStagedRestAPIClient(ts.tu.APIGwAddr, testbuffer)
+			Expect(err).ShouldNot(HaveOccurred())
+			// create auth objects
+			user := &auth.User{}
+			user.Defaults("all")
+			user.Name = "test2"
+			user.Spec.Password = ts.tu.Password
+			Eventually(func() error {
+				user, err = stagecl.AuthV1().User().Create(authUserCtx, user)
+				return err
+			}, 10, 1).Should(BeNil())
+			var fadminrb *auth.RoleBinding
+			adminrb := &auth.RoleBinding{}
+			adminrb.Defaults("all")
+			adminrb.Name = "AdminRoleBinding"
+			adminrb.Tenant = globals.DefaultTenant
+			Eventually(func() error {
+				fadminrb, err = ts.restSvc.AuthV1().RoleBinding().Get(ts.loggedInCtx, adminrb.GetObjectMeta())
+				return err
+			}, 10, 1).Should(BeNil())
+			fadminrb.Spec.Users = append(fadminrb.Spec.Users, "test2")
+
+			_, err = stagecl.AuthV1().RoleBinding().Update(authUserCtx, fadminrb)
+			Expect(err).ShouldNot(BeNil())
+			Expect(err.Error()).Should(ContainSubstring("Reason([unauthorized to create role binding (default|AdminRoleBinding)]"))
+			// delete buffer
+			Eventually(func() error {
+				_, err := ts.restSvc.StagingV1().Buffer().Delete(ts.loggedInCtx, &api.ObjectMeta{Name: testbuffer, Tenant: globals.DefaultTenant})
+				return err
+			}, 10, 1).Should(BeNil())
+			// delete authuser, authrole, authrb
+			Eventually(func() error {
+				_, err = ts.restSvc.AuthV1().RoleBinding().Delete(ts.loggedInCtx, nauthrb.GetObjectMeta())
+				return err
+			}, 10, 1).Should(BeNil())
+			Eventually(func() error {
+				_, err = ts.restSvc.AuthV1().Role().Delete(ts.loggedInCtx, nauthrole.GetObjectMeta())
+				return err
+			}, 10, 1).Should(BeNil())
+			Eventually(func() error {
+				_, err = ts.restSvc.AuthV1().User().Delete(ts.loggedInCtx, nauthuser.GetObjectMeta())
+				return err
+			}, 10, 1).Should(BeNil())
+		})
+	})
 })
