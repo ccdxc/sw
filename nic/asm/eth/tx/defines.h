@@ -101,16 +101,16 @@
 
 #define DMA_PKT(_r_addr, _r_ptr, hdr) \
     BUF_ADDR_FROM_KEY(_r_addr, hdr); \
-    DMA_MEM2PKT(_r_ptr, c0, k.eth_tx_global_host_queue, _r_addr, k.{eth_tx_##hdr##_len}.hx);
+    DMA_MEM2PKT(_r_ptr, c0, k.eth_tx_global_host_queue, _r_addr, k.{eth_tx_##hdr##_len}.hx, r7);
 
 #define DMA_HDR(_r_addr, _r_ptr, hdr) \
     BUF_ADDR_FROM_KEY(_r_addr, hdr); \
     seq          c7, k.eth_tx_global_num_sg_elems, 0; \
-    DMA_MEM2PKT(_r_ptr, c7, k.eth_tx_global_host_queue, _r_addr, k.{eth_tx_##hdr##_len}.hx);
+    DMA_MEM2PKT(_r_ptr, c7, k.eth_tx_global_host_queue, _r_addr, k.{eth_tx_##hdr##_len}.hx, r7);
 
 #define DMA_TSO_HDR(_r_addr, _r_ptr, hdr) \
     phvwr      p.{eth_tx_app_hdr_ip_id_delta,eth_tx_app_hdr_tcp_seq_delta}, k.{eth_tx_t1_s2s_tso_ipid_delta,eth_tx_t1_s2s_tso_seq_delta};\
-    DMA_MEM2PKT(_r_ptr, !c0, k.eth_tx_global_host_queue, k.eth_tx_t1_s2s_tso_hdr_addr, k.eth_tx_t1_s2s_tso_hdr_len);
+    DMA_MEM2PKT(_r_ptr, !c0, k.eth_tx_global_host_queue, k.eth_tx_t1_s2s_tso_hdr_addr, k.eth_tx_t1_s2s_tso_hdr_len, r7);
 
 #define DMA_FRAG(n, _c, _r_addr, _r_ptr) \
-    DMA_MEM2PKT(_r_ptr, _c, k.eth_tx_global_host_queue, d.{addr##n}.dx, d.{len##n}.hx);
+    DMA_MEM2PKT(_r_ptr, _c, k.eth_tx_global_host_queue, d.{addr##n}.dx, d.{len##n}.hx, r7);

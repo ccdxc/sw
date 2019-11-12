@@ -96,10 +96,10 @@
  * DMA Macros
  */
 
-#define DMA_PKT(_r_ptr, _r_addr, _gs_len) \
+#define DMA_PKT(_r_ptr, _r_addr, _r_len) \
     add         _r_addr, r0, d.{addr}.dx; \
-    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _gs_len);
+    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _r_len, r7);
 
 #define DMA_FRAG(n, _r_addr, _r_len, _r_ptr) \
     add         _r_addr, r0, d.{addr##n}.dx; \
-    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _r_len);
+    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _r_len, r7);
