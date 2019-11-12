@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
@@ -147,6 +148,21 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, quer
 	return &dn, nil
 }
 
+// getDbFiles returns db files for the store type
+func (dn *DNode) getDbFiles(clusterType string) map[string]string {
+	dbfiles := map[string]string{}
+
+	if fds, err := ioutil.ReadDir(fmt.Sprintf("%s/%s", dn.dbPath, clusterType)); err == nil {
+		for _, f := range fds {
+			if f.Name() != "qdb" {
+				dbfiles[fmt.Sprintf("%s/%s/%v", dn.dbPath, clusterType, f.Name())] = f.Name()
+			}
+		}
+	}
+
+	return dbfiles
+}
+
 // getDbPath returns the db path for store type
 func (dn *DNode) getDbPath(clusterType string, replicaID uint64) string {
 	return fmt.Sprintf("%s/%s/%d", dn.dbPath, clusterType, replicaID)
@@ -162,6 +178,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 	// read current state of the cluster and restore the shards
 	// FIXME: if etcd was unreachable when we come up we need to handle it
 	if cfg.EnableTstore {
+		dbfiles := dn.getDbFiles(meta.ClusterTypeTstore)
 
 		// query aggregator for this data node
 		if err := dn.newQueryStore(); err != nil {
@@ -174,6 +191,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 				for _, repl := range shard.Replicas {
 					if repl.NodeUUID == dn.nodeUUID {
 						dbPath := dn.getDbPath(meta.ClusterTypeTstore, repl.ReplicaID)
+						delete(dbfiles, dbPath)
 						ts, serr := tstore.NewTstore(dbPath)
 						if serr != nil {
 							dn.logger.Errorf("Error creating tstore at %s. Err: %v", dbPath, serr)
@@ -229,15 +247,26 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 				}
 			}
 		}
+		for k := range dbfiles {
+			log.Infof("deleting replica file %v", k)
+			if err := os.RemoveAll(k); err != nil {
+				log.Errorf("failed to delete %v, %v", k, err)
+			}
+		}
+
 	}
 	// restore all kstore shards
 	if cfg.EnableKstore {
+		dbfiles := dn.getDbFiles(meta.ClusterTypeKstore)
+
 		cluster, err := meta.GetClusterState(cfg, meta.ClusterTypeKstore)
 		if err == nil {
 			for _, shard := range cluster.ShardMap.Shards {
 				for _, repl := range shard.Replicas {
 					if repl.NodeUUID == dn.nodeUUID {
 						dbPath := dn.getDbPath(meta.ClusterTypeKstore, repl.ReplicaID)
+						delete(dbfiles, dbPath)
+
 						ks, serr := kstore.NewKstore(kstore.BoltDBType, dbPath)
 						if serr != nil {
 							dn.logger.Errorf("Error creating kstore at %s. Err: %v", dbPath, serr)
@@ -293,6 +322,13 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 				}
 			}
 		}
+		for k := range dbfiles {
+			log.Infof("deleting replica file %v", k)
+			if err := os.RemoveAll(k); err != nil {
+				log.Errorf("failed to delete %v, %v", k, err)
+			}
+		}
+
 	}
 
 	return nil
