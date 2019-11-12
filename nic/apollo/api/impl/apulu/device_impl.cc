@@ -54,8 +54,9 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
-    memcpy(spec->device_mac_addr,
-           device_info.p4i_device_info.device_mac_addr1, ETH_ADDR_LEN);
+    sdk::lib::memrev(spec->device_mac_addr,
+                     device_info.p4i_device_info.device_mac_addr1,
+                     ETH_ADDR_LEN);
 
     // check if there is an ipv4 address
     if (device_info.p4i_device_info.device_ipv4_addr) {
@@ -135,7 +136,7 @@ sdk_ret_t
 device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_device_info_t *dinfo = (pds_device_info_t *)info;
     sdk_ret_t          rv;
-    
+
     (void)api_obj;
     (void)key;
 
@@ -174,8 +175,8 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
         // program MyTEP mac, if provided
         if (is_mac_set(spec->device_mac_addr)) {
-            memcpy(p4i_device_info_data.p4i_device_info.device_mac_addr1,
-                   spec->device_mac_addr, ETH_ADDR_LEN);
+            sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                             spec->device_mac_addr, ETH_ADDR_LEN);
         }
         // populate the MyTEP IP
         if (spec->device_ip_addr.af == IP_AF_IPV4) {
