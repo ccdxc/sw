@@ -207,7 +207,6 @@ var _ = Describe("rollout object tests", func() {
 				Spec: rollout.RolloutSpec{
 					Version:                   "2.0",
 					ScheduledStartTime:        scheduledStartTime,
-					Duration:                  "",
 					Strategy:                  "LINEAR",
 					MaxParallel:               0,
 					MaxNICFailuresBeforeAbort: 0,
@@ -407,7 +406,6 @@ var _ = Describe("rollout object tests", func() {
 				Spec: rollout.RolloutSpec{
 					Version:                   version,
 					ScheduledStartTime:        nil,
-					Duration:                  "",
 					Strategy:                  "LINEAR",
 					MaxParallel:               0,
 					MaxNICFailuresBeforeAbort: 0,

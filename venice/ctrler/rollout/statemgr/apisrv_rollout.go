@@ -42,6 +42,7 @@ type RolloutState struct {
 	numFailuresSeen       uint32
 	numSkipped            uint32
 	completionDelta       float32
+	numRetries            uint32
 }
 
 func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Rollout) {
@@ -378,9 +379,19 @@ func (ros *RolloutState) checkIntendForRetry() bool {
 		log.Infof("Venice rollout failed. No retry!")
 		return false
 	}
+	//no retry if retry is not enabled on spec
+	if !ros.Spec.Retry {
+		log.Infof("Retry not enabled in spec. No retry!")
+		return false
+	}
 	numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
 	if numFailures > ros.Spec.MaxNICFailuresBeforeAbort {
 		log.Infof("NIC failures (%d) are greater than spec.maxNICFailures (%d)", numFailures, ros.Spec.MaxNICFailuresBeforeAbort)
+		return false
+	}
+	numRetries := atomic.LoadUint32(&ros.numRetries)
+	if numRetries >= maxRetriesBeforeAbort {
+		log.Infof("Performed (%d) retries. Returning.", numRetries)
 		return false
 	}
 	if ros.Spec.GetSuspend() {
@@ -389,9 +400,12 @@ func (ros *RolloutState) checkIntendForRetry() bool {
 		return false
 	}
 	if ros.Spec.ScheduledStartTime != nil {
-		duration, _ := time.ParseDuration(ros.Spec.Duration)
-		startTime, _ := ros.Spec.ScheduledStartTime.Time()
-		endTime := startTime.Add(duration)
+		if ros.Spec.ScheduledEndTime == nil {
+			log.Infof("No EndTime time specified. Perform retry.. ")
+			ros.eventChan <- fsmEvRetry
+			return true
+		}
+		endTime, _ := ros.Spec.ScheduledEndTime.Time()
 		newduration = endTime.Sub(time.Now())
 		log.Infof("New duration %+v", newduration.Seconds())
 		if newduration < 0 {

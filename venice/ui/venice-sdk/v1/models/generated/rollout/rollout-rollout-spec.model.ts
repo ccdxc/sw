@@ -14,7 +14,7 @@ import { RolloutRolloutSpec_upgrade_type,  RolloutRolloutSpec_upgrade_type_uihin
 export interface IRolloutRolloutSpec {
     'version'?: string;
     'scheduled-start-time'?: Date;
-    'duration'?: string;
+    'scheduled-end-time'?: Date;
     'strategy': RolloutRolloutSpec_strategy;
     'max-parallel'?: number;
     'max-nic-failures-before-abort'?: number;
@@ -23,15 +23,14 @@ export interface IRolloutRolloutSpec {
     'dscs-only'?: boolean;
     'dsc-must-match-constraint'?: boolean;
     'upgrade-type': RolloutRolloutSpec_upgrade_type;
+    'retry'?: boolean;
 }
 
 
 export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec {
     'version': string = null;
     'scheduled-start-time': Date = null;
-    /** should be a valid time duration
-     */
-    'duration': string = null;
+    'scheduled-end-time': Date = null;
     'strategy': RolloutRolloutSpec_strategy = null;
     /** MaxParallel is the maximum number of nodes getting updated at any time
     This setting is applicable only to DistributedServiceCards.
@@ -45,6 +44,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     'dscs-only': boolean = null;
     'dsc-must-match-constraint': boolean = null;
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
+    'retry': boolean = null;
     public static propInfo: { [prop in keyof IRolloutRolloutSpec]: PropInfoItem } = {
         'version': {
             required: false,
@@ -54,11 +54,9 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             required: false,
             type: 'Date'
         },
-        'duration': {
-            description:  'should be a valid time duration ',
-            hint:  '2h',
+        'scheduled-end-time': {
             required: false,
-            type: 'string'
+            type: 'Date'
         },
         'strategy': {
             enum: RolloutRolloutSpec_strategy_uihint,
@@ -98,6 +96,10 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             default: 'disruptive',
             required: true,
             type: 'string'
+        },
+        'retry': {
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -147,12 +149,12 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         } else {
             this['scheduled-start-time'] = null
         }
-        if (values && values['duration'] != null) {
-            this['duration'] = values['duration'];
-        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('duration')) {
-            this['duration'] = RolloutRolloutSpec.propInfo['duration'].default;
+        if (values && values['scheduled-end-time'] != null) {
+            this['scheduled-end-time'] = values['scheduled-end-time'];
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('scheduled-end-time')) {
+            this['scheduled-end-time'] = RolloutRolloutSpec.propInfo['scheduled-end-time'].default;
         } else {
-            this['duration'] = null
+            this['scheduled-end-time'] = null
         }
         if (values && values['strategy'] != null) {
             this['strategy'] = values['strategy'];
@@ -208,6 +210,13 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         } else {
             this['upgrade-type'] = null
         }
+        if (values && values['retry'] != null) {
+            this['retry'] = values['retry'];
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('retry')) {
+            this['retry'] = RolloutRolloutSpec.propInfo['retry'].default;
+        } else {
+            this['retry'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -217,7 +226,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             this._formGroup = new FormGroup({
                 'version': CustomFormControl(new FormControl(this['version']), RolloutRolloutSpec.propInfo['version']),
                 'scheduled-start-time': CustomFormControl(new FormControl(this['scheduled-start-time']), RolloutRolloutSpec.propInfo['scheduled-start-time']),
-                'duration': CustomFormControl(new FormControl(this['duration']), RolloutRolloutSpec.propInfo['duration']),
+                'scheduled-end-time': CustomFormControl(new FormControl(this['scheduled-end-time']), RolloutRolloutSpec.propInfo['scheduled-end-time']),
                 'strategy': CustomFormControl(new FormControl(this['strategy'], [required, enumValidator(RolloutRolloutSpec_strategy), ]), RolloutRolloutSpec.propInfo['strategy']),
                 'max-parallel': CustomFormControl(new FormControl(this['max-parallel']), RolloutRolloutSpec.propInfo['max-parallel']),
                 'max-nic-failures-before-abort': CustomFormControl(new FormControl(this['max-nic-failures-before-abort']), RolloutRolloutSpec.propInfo['max-nic-failures-before-abort']),
@@ -226,6 +235,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
                 'dscs-only': CustomFormControl(new FormControl(this['dscs-only']), RolloutRolloutSpec.propInfo['dscs-only']),
                 'dsc-must-match-constraint': CustomFormControl(new FormControl(this['dsc-must-match-constraint']), RolloutRolloutSpec.propInfo['dsc-must-match-constraint']),
                 'upgrade-type': CustomFormControl(new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]), RolloutRolloutSpec.propInfo['upgrade-type']),
+                'retry': CustomFormControl(new FormControl(this['retry']), RolloutRolloutSpec.propInfo['retry']),
             });
             // generate FormArray control elements
             this.fillFormArray<LabelsSelector>('order-constraints', this['order-constraints'], LabelsSelector);
@@ -246,7 +256,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         if (this._formGroup) {
             this._formGroup.controls['version'].setValue(this['version']);
             this._formGroup.controls['scheduled-start-time'].setValue(this['scheduled-start-time']);
-            this._formGroup.controls['duration'].setValue(this['duration']);
+            this._formGroup.controls['scheduled-end-time'].setValue(this['scheduled-end-time']);
             this._formGroup.controls['strategy'].setValue(this['strategy']);
             this._formGroup.controls['max-parallel'].setValue(this['max-parallel']);
             this._formGroup.controls['max-nic-failures-before-abort'].setValue(this['max-nic-failures-before-abort']);
@@ -255,6 +265,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
             this._formGroup.controls['dscs-only'].setValue(this['dscs-only']);
             this._formGroup.controls['dsc-must-match-constraint'].setValue(this['dsc-must-match-constraint']);
             this._formGroup.controls['upgrade-type'].setValue(this['upgrade-type']);
+            this._formGroup.controls['retry'].setValue(this['retry']);
         }
     }
 }

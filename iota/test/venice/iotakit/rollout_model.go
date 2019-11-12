@@ -113,7 +113,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 			Spec: rollout.RolloutSpec{
 				Version:                   version,
 				ScheduledStartTime:        scheduledStartTime,
-				Duration:                  "",
+				ScheduledEndTime:          nil,
 				Strategy:                  "LINEAR",
 				MaxParallel:               10,
 				MaxNICFailuresBeforeAbort: 0,
@@ -134,7 +134,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 			Spec: rollout.RolloutSpec{
 				Version:                   version,
 				ScheduledStartTime:        scheduledStartTime,
-				Duration:                  "60m",
+				ScheduledEndTime:          nil,
 				Strategy:                  "LINEAR",
 				MaxParallel:               1,
 				MaxNICFailuresBeforeAbort: 2,

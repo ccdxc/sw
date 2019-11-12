@@ -366,6 +366,12 @@ outerLoop:
 			}
 		}
 
+		if r1.Status.OperationalState == rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String() {
+			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
 		if r1.Status.OperationalState != rollout.RolloutStatus_PROGRESSING.String() {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			numRetries = 0
@@ -405,7 +411,8 @@ outerLoop:
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			break
 		}
-		if opState == rollout.RolloutStatus_FAILURE.String() || opState == rollout.RolloutStatus_SUSPENDED.String() {
+		if opState == rollout.RolloutStatus_FAILURE.String() || opState == rollout.RolloutStatus_SUSPENDED.String() ||
+			opState == rollout.RolloutStatus_SUCCESS.String() {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			break
 		}

@@ -111,7 +111,7 @@ func TestVeniceRolloutRestartEvent(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               1,
 			MaxNICFailuresBeforeAbort: 0,
@@ -578,7 +578,7 @@ func TestVeniceOnlyRollout(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -759,7 +759,7 @@ func TestSNICOnlyRollout(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -837,7 +837,7 @@ func TestFutureRollout(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        ts,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -903,7 +903,7 @@ func TestPreUpgFail(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -967,7 +967,7 @@ func TestPreUpgTimeout(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -1026,7 +1026,7 @@ func TestMaxFailuresNotHit(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 1,
@@ -1092,7 +1092,7 @@ func TestMaxFailuresHit(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 0,
@@ -1148,6 +1148,11 @@ func TestRolloutRetry(t *testing.T) {
 		},
 	}
 
+	scheduledEndTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds + 1800, //Add a scheduled rollout
+		},
+	}
 	ro := roproto.Rollout{
 		TypeMeta: api.TypeMeta{
 			Kind: "Rollout",
@@ -1159,7 +1164,7 @@ func TestRolloutRetry(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        scheduledStartTime,
-			Duration:                  "30m",
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 3,
@@ -1167,6 +1172,7 @@ func TestRolloutRetry(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  true,
 			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+			Retry:                     true,
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -1219,6 +1225,12 @@ func TestRolloutRetryTimer(t *testing.T) {
 		},
 	}
 
+	scheduledEndTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds + 1800, //Add a scheduled rollout
+		},
+	}
+
 	ro := roproto.Rollout{
 		TypeMeta: api.TypeMeta{
 			Kind: "Rollout",
@@ -1230,7 +1242,7 @@ func TestRolloutRetryTimer(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        scheduledStartTime,
-			Duration:                  "30m",
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 3,
@@ -1238,6 +1250,7 @@ func TestRolloutRetryTimer(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  true,
 			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+			Retry:                     true,
 		},
 	}
 	evt := kvstore.WatchEvent{
@@ -1290,7 +1303,7 @@ func TestRolloutSuspend(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  "",
 			MaxParallel:               3,
 			MaxNICFailuresBeforeAbort: 1,
@@ -1348,7 +1361,7 @@ func TestExponentialRollout(t *testing.T) {
 		Spec: roproto.RolloutSpec{
 			Version:                   version,
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  roproto.RolloutSpec_EXPONENTIAL.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,

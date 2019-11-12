@@ -17,6 +17,7 @@ const defaultNumParallel = 2 // if user has not specified parallelism in Spec, w
 var preUpgradeTimeout = 480 * time.Second
 var veniceUpgradeTimeout = 15 * time.Minute
 var rolloutRetryTimeout = 5 * time.Minute
+var maxRetriesBeforeAbort uint32 = 5
 
 type rofsmEvent uint
 type rofsmState uint
@@ -476,6 +477,7 @@ func fsmAcRetry(ros *RolloutState) {
 		ros.numPreUpgradeFailures = 0
 		ros.numSkipped = 0
 		ros.numFailuresSeen = 0
+		atomic.AddUint32(&ros.numRetries, 1)
 		smartNICROs, err := ros.Statemgr.ListDSCRollouts()
 		if err != nil {
 			log.Errorf("Error %v listing DSCRollouts", err)

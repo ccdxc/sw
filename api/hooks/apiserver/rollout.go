@@ -47,7 +47,7 @@ func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur
 		}
 		rObj.Spec.Version = cur.Spec.Version
 		rObj.Spec.ScheduledStartTime = cur.Spec.ScheduledStartTime
-		rObj.Spec.Duration = cur.Spec.Duration
+		rObj.Spec.ScheduledEndTime = cur.Spec.ScheduledEndTime
 		rObj.Spec.MaxNICFailuresBeforeAbort = cur.Spec.MaxNICFailuresBeforeAbort
 		rObj.Spec.MaxParallel = cur.Spec.MaxParallel
 		rObj.Spec.OrderConstraints = cur.Spec.OrderConstraints
@@ -73,7 +73,7 @@ func updateRolloutActionObj(rolloutActionObj *rollout.RolloutAction, buf *rollou
 	}
 	rolloutActionObj.Spec.Version = buf.Spec.Version
 	rolloutActionObj.Spec.ScheduledStartTime = buf.Spec.ScheduledStartTime
-	rolloutActionObj.Spec.Duration = buf.Spec.Duration
+	rolloutActionObj.Spec.ScheduledEndTime = buf.Spec.ScheduledEndTime
 	rolloutActionObj.Spec.MaxNICFailuresBeforeAbort = buf.Spec.MaxNICFailuresBeforeAbort
 	rolloutActionObj.Spec.MaxParallel = buf.Spec.MaxParallel
 	rolloutActionObj.Spec.OrderConstraints = buf.Spec.OrderConstraints

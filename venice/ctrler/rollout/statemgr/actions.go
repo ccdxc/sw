@@ -348,6 +348,19 @@ Loop:
 					log.Infof("Skipping upgrade for %s as MaxFailures reached", snicState)
 					continue
 				}
+				if ros.Spec.ScheduledStartTime != nil && ros.Spec.ScheduledEndTime != nil {
+					endTime, _ := ros.Spec.ScheduledEndTime.Time()
+					newduration := endTime.Sub(time.Now())
+					log.Infof("New duration %+v", newduration.Seconds())
+					if newduration < 0 {
+						log.Infof("Specified endtime is in the past. Skip upgrade for %s", snicState)
+						continue
+					}
+					if newduration.Seconds() < preUpgradeTimeout.Seconds() {
+						log.Infof("Not enough time to perform retries. Skip upgrade for %s", snicState)
+						continue
+					}
+				}
 
 				log.Infof("Got work %#v", snicState)
 

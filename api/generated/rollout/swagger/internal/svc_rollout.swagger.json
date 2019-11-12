@@ -574,11 +574,12 @@
             "format": "date-time"
           },
           {
-            "name": "spec.duration",
-            "description": "Duration, if specified, after which the rollout is supposed to stop, if not completed by that time\nTypically represents the end of Maintenance window. should be a valid time duration",
+            "name": "spec.scheduled-end-time",
+            "description": "ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time\nTypically represents the end of Maintenance window.",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           {
             "name": "spec.strategy",
@@ -631,6 +632,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "spec.retry",
+            "description": "If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "status.state",
@@ -1355,6 +1364,10 @@
         "prev-version": {
           "type": "string",
           "title": "Version of the cluster before the start of rollout"
+        },
+        "reason": {
+          "type": "string",
+          "title": "details the reason for overall Failure or Suspend"
         }
       },
       "title": "RolloutAction Status gives the status of the rollout at the top level as well as details of\n individual components"
@@ -1455,11 +1468,10 @@
           "format": "date-time",
           "title": "Time, if specified, at which the rollout is supposed to start"
         },
-        "duration": {
+        "scheduled-end-time": {
           "type": "string",
-          "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "Duration, if specified, after which the rollout is supposed to stop, if not completed by that time\nTypically represents the end of Maintenance window"
+          "format": "date-time",
+          "title": "ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time\nTypically represents the end of Maintenance window"
         },
         "strategy": {
           "type": "string",
@@ -1517,6 +1529,11 @@
             "disruptive": "Disruptive",
             "on-next-reboot": "OnNextHostReboot"
           }
+        },
+        "retry": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times"
         }
       },
       "title": "RolloutSpec is the Spec of a Rollout"

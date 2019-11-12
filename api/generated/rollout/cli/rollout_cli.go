@@ -29,13 +29,6 @@ var CreateRolloutFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "duration",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "max-nic-failures-before-abort",
 		Type:   "String",
 		Help:   "",
@@ -45,6 +38,13 @@ var CreateRolloutFlags = []gen.CliFlag{
 	{
 		ID:     "max-parallel",
 		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "retry",
+		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
@@ -107,13 +107,6 @@ var CreateRolloutActionFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "duration",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "max-nic-failures-before-abort",
 		Type:   "String",
 		Help:   "",
@@ -123,6 +116,13 @@ var CreateRolloutActionFlags = []gen.CliFlag{
 	{
 		ID:     "max-parallel",
 		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "retry",
+		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

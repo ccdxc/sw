@@ -56,7 +56,6 @@ var typesMapRollout = map[string]*api.Struct{
 			"completion-percent":            api.CLIInfo{Path: "Status.CompletionPercentage", Skip: false, Insert: "", Help: ""},
 			"dsc-must-match-constraint":     api.CLIInfo{Path: "Spec.DSCMustMatchConstraint", Skip: false, Insert: "", Help: ""},
 			"dscs-only":                     api.CLIInfo{Path: "Spec.DSCsOnly", Skip: false, Insert: "", Help: ""},
-			"duration":                      api.CLIInfo{Path: "Spec.Duration", Skip: false, Insert: "", Help: ""},
 			"generation-id":                 api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                          api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                        api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -70,6 +69,7 @@ var typesMapRollout = map[string]*api.Struct{
 			"prev-version":                  api.CLIInfo{Path: "Status.PreviousVersion", Skip: false, Insert: "", Help: ""},
 			"reason":                        api.CLIInfo{Path: "Status.DSCsStatus[].Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":              api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"retry":                         api.CLIInfo{Path: "Spec.Retry", Skip: false, Insert: "", Help: ""},
 			"self-link":                     api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"state":                         api.CLIInfo{Path: "Status.OperationalState", Skip: false, Insert: "", Help: ""},
 			"strategy":                      api.CLIInfo{Path: "Spec.Strategy", Skip: false, Insert: "", Help: ""},
@@ -121,7 +121,6 @@ var typesMapRollout = map[string]*api.Struct{
 			"completion-percent":            api.CLIInfo{Path: "Status.CompletionPercentage", Skip: false, Insert: "", Help: ""},
 			"dsc-must-match-constraint":     api.CLIInfo{Path: "Spec.DSCMustMatchConstraint", Skip: false, Insert: "", Help: ""},
 			"dscs-only":                     api.CLIInfo{Path: "Spec.DSCsOnly", Skip: false, Insert: "", Help: ""},
-			"duration":                      api.CLIInfo{Path: "Spec.Duration", Skip: false, Insert: "", Help: ""},
 			"generation-id":                 api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                          api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                        api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -130,7 +129,9 @@ var typesMapRollout = map[string]*api.Struct{
 			"name":                          api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                     api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"prev-version":                  api.CLIInfo{Path: "Status.PreviousVersion", Skip: false, Insert: "", Help: ""},
+			"reason":                        api.CLIInfo{Path: "Status.Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":              api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"retry":                         api.CLIInfo{Path: "Spec.Retry", Skip: false, Insert: "", Help: ""},
 			"self-link":                     api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"state":                         api.CLIInfo{Path: "Status.OperationalState", Skip: false, Insert: "", Help: ""},
 			"strategy":                      api.CLIInfo{Path: "Spec.Strategy", Skip: false, Insert: "", Help: ""},
@@ -153,6 +154,8 @@ var typesMapRollout = map[string]*api.Struct{
 			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"PreviousVersion": api.Field{Name: "PreviousVersion", CLITag: api.CLIInfo{ID: "prev-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "prev-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"rollout.RolloutPhase": &api.Struct{
@@ -180,7 +183,7 @@ var typesMapRollout = map[string]*api.Struct{
 
 			"ScheduledStartTime": api.Field{Name: "ScheduledStartTime", CLITag: api.CLIInfo{ID: "scheduled-start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "scheduled-start-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
-			"Duration": api.Field{Name: "Duration", CLITag: api.CLIInfo{ID: "duration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "duration", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ScheduledEndTime": api.Field{Name: "ScheduledEndTime", CLITag: api.CLIInfo{ID: "scheduled-end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "scheduled-end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"Strategy": api.Field{Name: "Strategy", CLITag: api.CLIInfo{ID: "strategy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "strategy", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -197,6 +200,8 @@ var typesMapRollout = map[string]*api.Struct{
 			"DSCMustMatchConstraint": api.Field{Name: "DSCMustMatchConstraint", CLITag: api.CLIInfo{ID: "dsc-must-match-constraint", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-must-match-constraint", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
 			"UpgradeType": api.Field{Name: "UpgradeType", CLITag: api.CLIInfo{ID: "upgrade-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "upgrade-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Retry": api.Field{Name: "Retry", CLITag: api.CLIInfo{ID: "retry", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "retry", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"rollout.RolloutStatus": &api.Struct{

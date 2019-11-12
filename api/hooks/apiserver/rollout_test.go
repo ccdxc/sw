@@ -38,7 +38,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -62,7 +62,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -108,7 +108,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -143,7 +143,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
 			ScheduledStartTime:        nil,
-			Duration:                  "",
+			ScheduledEndTime:          nil,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,

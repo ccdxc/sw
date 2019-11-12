@@ -720,18 +720,6 @@ func init() {
 	validatorMapRollout["RolloutSpec"] = make(map[string][]func(string, interface{}) error)
 	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutSpec)
-		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "0")
-
-		if err := validators.EmptyOr(validators.Duration, m.Duration, args); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"Duration", err.Error())
-		}
-		return nil
-	})
-
-	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*RolloutSpec)
 
 		if _, ok := RolloutSpec_StrategyType_vvalue[m.Strategy]; !ok {
 			vals := []string{}
