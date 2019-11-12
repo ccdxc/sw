@@ -517,5 +517,711 @@ typedef struct aqcb_s {
     aqcb1_t aqcb1;
 } aqcb_t;
 
+typedef struct sqcb0_s {
+
+    uint8_t  rsvd2: 3;
+    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+    uint8_t  congestion_mgmt_type          : 2;
+    uint8_t  bktrack_marker_in_progress    : 1;
+    uint8_t  skip_pt                       : 1;
+    uint8_t  spec_enable                   : 1;
+
+    uint32_t state_flags                   : 8;
+    uint32_t rsvd_state_flags              : 7;
+    uint32_t sq_drained                    : 1;
+    uint32_t msg_psn                       : 24;
+    uint32_t spec_msg_psn                  : 24;
+
+    uint64_t curr_wqe_ptr;
+    uint32_t spec_sq_cindex               : 16;
+    uint8_t  ring_empty_sched_eval_done    : 1;
+    uint8_t  local_ack_timeout             : 5;
+    uint8_t  rsvd5                         : 1;
+    uint8_t  sq_in_hbm                     : 1;
+
+    uint32_t state                         : 3;
+    uint32_t flush_rq                      : 1;
+    uint32_t service                       : 4;
+
+    uint32_t dcqcn_rl_failure              : 1;
+    uint32_t signalled_completion          : 1;
+    uint32_t poll_for_work                 : 1;
+    uint32_t log_num_wqes                  : 5;
+    uint16_t log_wqe_size                  : 5;
+    uint16_t log_sq_page_size              : 5;
+    uint16_t log_pmtu                      : 5;
+    uint16_t poll_in_progress              : 1;
+
+    uint32_t pd;
+    uint32_t header_template_addr;
+    uint64_t base_addr                     : 40;
+    uint64_t rsvd1                         :  8;
+    uint64_t sqd_cindex                    : 16;
+
+    uint16_t c_index3;
+    uint16_t p_index3;
+    uint16_t c_index2;
+    uint16_t p_index2;
+    uint16_t c_index1;
+    uint16_t p_index1;
+    uint16_t c_index0;
+    uint16_t p_index0;
+
+    uint16_t pid: 16;
+    uint8_t  host_rings: 4;
+    uint8_t  total_rings: 4;
+
+    uint8_t  eval_last;
+    uint8_t  cos_selector;
+
+    uint8_t  cosA: 4;
+    uint8_t  cosB: 4;
+    uint8_t  rsvd;
+    uint8_t  pc;
+
+} PACKED sqcb0_t;
+
+typedef struct sqcb1_s {
+
+    uint16_t rsvd7;
+    uint16_t rrq_spec_cindex;
+    uint32_t pd;
+    uint8_t  bktrack_in_progress;
+
+    uint8_t  rsvd6: 2;
+    uint8_t  sqd_async_notify_enable: 1;
+    uint8_t  sq_drained: 1;
+    uint8_t  sqcb1_priv_oper_enable: 1;
+    uint8_t  state:3;
+    uint32_t rrqwqe_cur_sge_offset;
+    uint8_t  rrqwqe_cur_sge_id;
+    uint8_t  rrqwqe_num_sges;
+
+    uint32_t max_ssn:24;
+    uint32_t max_tx_psn:24;
+
+    uint32_t rsvd5:1;
+    uint32_t congestion_mgmt_type: 2;
+    uint32_t credits:5;
+
+    uint32_t msn:24;
+    uint32_t rexmit_psn:24;
+    uint32_t rsvd4:24;
+
+    uint8_t  token_id;
+    uint8_t  nxt_to_go_token_id;
+
+    uint8_t  header_template_size;
+    uint32_t header_template_addr;
+
+    uint32_t rsvd3:2;
+    uint32_t pkt_spec_enable:1;
+    uint32_t log_sqwqe_size:5;
+    uint32_t rsvd2:16;
+    uint32_t ssn:24;
+    uint32_t tx_psn:24;      //tx
+
+    uint32_t work_not_done_recirc_cnt: 8;
+    uint32_t rnr_retry_count : 3;
+    uint32_t err_retry_count : 3;
+    uint32_t log_pmtu: 5;
+    uint32_t rsvd8:1 ;
+    uint32_t service:4;
+    uint8_t  log_rrq_size;
+    uint32_t rrq_base_addr;  //common
+
+    uint16_t rsvd1;
+    // RRQ RING for rxdma
+    uint8_t  rrq_cindex;
+    uint8_t  rrq_pindex;
+    uint32_t cq_id:24;       //rx
+    uint32_t pc:8;
+
+} PACKED sqcb1_t;
+
+typedef struct sqcb2_s {
+
+    uint32_t sq_msg_psn:24;
+    uint32_t rsvd3:7;
+    uint32_t disable_credits:1;
+    uint32_t timestamp:16;
+    uint32_t exp_rsp_psn:24;
+
+    uint8_t  curr_op_type:5;
+    uint8_t  fence_done:1;
+    uint8_t  li_fence:1;
+    uint8_t  fence:1;
+    uint16_t rsvd2:14;
+    uint16_t need_credits:1;
+    uint16_t busy:1;
+    uint8_t  rrq_cindex;
+    uint8_t  rrq_pindex;
+    uint16_t sq_cindex;
+    uint32_t inv_key;
+
+    uint64_t wqe_start_psn:24;
+    uint64_t lsn:24;
+    uint64_t ssn:24;
+    uint64_t tx_psn:24;      //tx
+
+    uint64_t local_ack_timeout:5;
+    uint64_t timer_on:1;
+    uint64_t rsvd1:2;
+
+    uint64_t rnr_timeout:8;
+    uint64_t rnr_retry_ctr:4;
+    uint64_t err_retry_ctr:4;
+    uint64_t last_ack_or_req_ts:48;
+
+    uint64_t rexmit_psn:24;
+    uint32_t lsn_rx:24;
+    uint32_t lsn_tx:24;
+
+    uint32_t service:4;
+    uint32_t roce_opt_mss_enable:1;
+    uint32_t roce_opt_ts_enable:1;
+
+    uint32_t log_sq_size:5;
+    uint32_t log_rrq_size:5;
+    uint32_t rrq_base_addr;  //common
+
+    uint32_t header_template_addr;
+    uint32_t header_template_size:8;
+    uint32_t dst_qp:24;      //tx
+
+} PACKED sqcb2_t;
+
+typedef struct sqcb3_s {
+
+    uint64_t  rsvd[8];
+} PACKED sqcb3_t;
+
+typedef struct sqcb4_s {
+
+    uint64_t qp_err_dis_rsvd                          : 26;
+    uint64_t qp_err_dis_rnr_retry_exceed              : 1;
+    uint64_t qp_err_dis_err_retry_exceed              : 1;
+    uint64_t qp_err_dis_inv_optype                    : 1;
+    uint64_t qp_err_dis_table_resp_error              : 1;
+    uint64_t qp_err_dis_phv_intrinsic_error           : 1;
+    uint64_t qp_err_dis_table_error                   : 1;
+    uint64_t qp_err_dis_inv_lkey_inv_not_allowed      : 1;
+    uint64_t qp_err_dis_inv_lkey_invalid_state        : 1;
+    uint64_t qp_err_dis_inv_lkey_pd_mismatch          : 1;
+    uint64_t qp_err_dis_inv_lkey_qp_mismatch          : 1;
+    uint64_t qp_err_dis_frpmr_ukey_not_enabled        : 1;
+    uint64_t qp_err_dis_frpmr_invalid_len             : 1;
+    uint64_t qp_err_dis_frpmr_invalid_state           : 1;
+    uint64_t qp_err_dis_frpmr_invalid_pd              : 1;
+    uint64_t qp_err_dis_frpmr_fast_reg_not_enabled    : 1;
+    uint64_t qp_err_dis_bktrack_inv_rexmit_psn        : 1;
+    uint64_t qp_err_dis_bktrack_inv_num_sges          : 1;
+    uint64_t qp_err_dis_bind_mw_lkey_invalid_va       : 1;
+    uint64_t qp_err_dis_bind_mw_lkey_invalid_acc_ctrl : 1;
+    uint64_t qp_err_dis_bind_mw_lkey_zero_based       : 1;
+    uint64_t qp_err_dis_bind_mw_lkey_no_bind          : 1;
+    uint64_t qp_err_dis_bind_mw_lkey_state_valid      : 1;
+    uint64_t qp_err_dis_bind_mw_rkey_type_disallowed  : 1;
+    uint64_t qp_err_dis_bind_mw_rkey_inv_mw_state     : 1;
+    uint64_t qp_err_dis_bind_mw_rkey_inv_len          : 1;
+    uint64_t qp_err_dis_bind_mw_rkey_inv_zbva         : 1;
+    uint64_t qp_err_dis_bind_mw_rkey_inv_pd           : 1;
+    uint64_t qp_err_dis_bind_mw_len_exceeded          : 1;
+    uint64_t qp_err_dis_lkey_access_violation :    1;
+    uint64_t qp_err_dis_lkey_rsvd_lkey        :    1;
+    uint64_t qp_err_dis_lkey_inv_pd           :    1;
+    uint64_t qp_err_dis_lkey_inv_state        :    1;
+    uint64_t qp_err_dis_no_dma_cmds           :    1;
+    uint64_t qp_err_dis_ud_priv               :    1;
+    uint64_t qp_err_dis_ud_fast_reg           :    1;
+    uint64_t qp_err_dis_ud_pmtu               :    1;
+    uint64_t qp_err_dis_flush_rq              :    1;
+    uint64_t qp_err_disabled                  :    1;
+    uint16_t rp_num_byte_threshold_db;
+    uint16_t np_cnp_sent;
+    uint16_t num_sq_drains;
+    uint16_t num_timeout_rnr;
+    uint16_t num_timeout_local_ack;
+    uint16_t num_inline_req;
+    uint16_t num_npg_local_inv_req;
+    uint16_t num_npg_frpmr_req;
+    uint16_t num_npg_bindmw_t2_req;
+    uint16_t num_npg_bindmw_t1_req;
+    uint32_t num_npg_req;
+    uint16_t max_pkts_in_any_msg;
+    uint16_t num_pkts_in_cur_msg;
+    uint16_t num_write_msgs_imm_data;
+    uint16_t num_send_msgs_imm_data;
+    uint16_t num_send_msgs_inv_rkey;
+    uint16_t num_atomic_cswap_msgs;
+    uint16_t num_atomic_fna_msgs;
+    uint16_t num_read_req_msgs;
+    uint16_t num_write_msgs;
+    uint16_t num_send_msgs;
+    uint32_t num_pkts;
+    uint64_t num_bytes;
+
+} PACKED sqcb4_t;
+
+typedef struct sqcb5_s {
+
+    uint8_t rsvd[27];
+    uint8_t rsvd1: 3;
+    uint8_t max_recirc_cnt_err: 1;
+    uint8_t recirc_reason: 4;
+    uint32_t recirc_bth_opcode: 8;
+    //a packet which went thru too many recirculations in req_rx had to be terminated and qp had to
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
+    //are remembered for further debugging.
+    uint32_t recirc_bth_psn: 24;
+
+    uint32_t qp_err_dis_rsvd                  :    16;
+    uint32_t qp_err_dis_table_resp_error      :    1;
+    uint32_t qp_err_dis_phv_intrinsic_error   :    1;
+    uint32_t qp_err_dis_table_error           :    1;
+
+    uint32_t qp_err_dis_rrqwqe_remote_oper_err_rcvd    :    1;
+    uint32_t qp_err_dis_rrqwqe_remote_acc_err_rcvd     :    1;
+    uint32_t qp_err_dis_rrqwqe_remote_inv_req_err_rcvd :    1;
+
+    uint32_t qp_err_dis_rrqsge_insuff_dma_cmds:    1;
+    uint32_t qp_err_dis_rrqsge_insuff_sge_len :    1;
+    uint32_t qp_err_dis_rrqsge_insuff_sges    :    1;
+
+    uint32_t qp_err_dis_rrqlkey_acc_len_higher:    1;
+    uint32_t qp_err_dis_rrqlkey_acc_len_lower :    1;
+    uint32_t qp_err_dis_rrqlkey_acc_no_wr_perm:    1;
+    uint32_t qp_err_dis_rrqlkey_rsvd_lkey     :    1;
+    uint32_t qp_err_dis_rrqlkey_inv_state     :    1;
+    uint32_t qp_err_dis_rrqlkey_pd_mismatch   :    1;
+    uint32_t qp_err_disabled                  :    1;
+
+    uint16_t max_pkts_in_any_msg;
+    uint16_t num_pkts_in_cur_msg;
+    uint16_t num_atomic_ack;
+    uint16_t num_ack;
+    uint16_t num_feedback;
+    uint16_t num_read_resp_msgs;
+    uint32_t num_read_resp_pkts;
+    uint32_t num_pkts;
+    uint64_t num_bytes;
+
+} PACKED sqcb5_t;
+
+typedef struct sqcb_s {
+    sqcb0_t sqcb0;
+    sqcb1_t sqcb1;
+    sqcb2_t sqcb2;
+    sqcb3_t sqcb3;
+    sqcb4_t sqcb4;
+    sqcb5_t sqcb5;
+    uint64_t pad[16];
+} PACKED sqcb_t;
+
+typedef struct rqcb0_s {
+	uint32_t     log_pmtu: 5;                //Ronly
+	uint32_t     serv_type: 3;               //Ronly
+	 
+	uint32_t     bt_rsq_cindex: 16;          //Read by S0, write by Sx
+	 
+	uint32_t     rsvd1: 3;
+	uint32_t     dcqcn_cfg_id: 4;            //Ronly
+	uint32_t     ring_empty_sched_eval_done: 1;  //rw in S0
+
+	uint32_t     header_template_size: 8;    //Ronly
+	 
+	uint32_t     curr_read_rsp_psn: 24;      //Written by S5, Read by S0 and S5
+	 
+	uint32_t     rsvd0: 2;
+	uint32_t     drain_done: 1;              //Written by S5, Read by S0
+	uint32_t     bt_in_progress: 1;          //RW by S0 and Sx
+	uint32_t     bt_lock: 1;                 //Rw by S0 and Sx
+	uint32_t     rq_in_hbm: 1;               //Ronly
+	uint32_t     read_rsp_in_progress: 1;    //Rw by S0 and S4 ?
+	uint32_t     curr_color: 1;              //Written by S5, Read by S0
+	uint32_t     dst_qp: 24;                 //Ronly
+	 
+	uint32_t     header_template_addr: 32;   //Ronly
+	 
+	uint32_t     rsvd: 4;
+	uint32_t     prefetch_en: 1;             //Rw by S0
+	uint32_t     skip_pt: 1;
+	uint32_t     drain_in_progress: 1;       //Rw by S0
+	uint32_t     spec_color: 1;              //Rw by S0
+	uint32_t     spec_read_rsp_psn: 24;      //Written by S0, Read by S5
+	 
+	uint32_t     rsq_base_addr: 32;      //Ronly
+	 
+	uint64_t     phy_base_addr             : 40;            
+	 
+	uint64_t     log_rsq_size: 5;            //Ronly
+	uint64_t     state: 3;                   //Ronly?
+	uint64_t     congestion_mgmt_enable:1;   //Ronly
+	uint64_t     log_num_wqes: 5;            //Ronly
+	uint64_t     log_wqe_size: 5;            //Ronly
+	uint64_t     log_rq_page_size: 5;        //Ronly
+	 
+	uint32_t     c_index5: 16;
+	uint32_t     p_index5: 16;
+	uint32_t     c_index4: 16;
+	uint32_t     p_index4: 16;
+	uint32_t     c_index3: 16;
+	uint32_t     p_index3: 16;
+	uint32_t     c_index2: 16;
+	uint32_t     p_index2: 16;
+	uint32_t     c_index1: 16;
+	uint32_t     p_index1: 16;
+	uint32_t     c_index0: 16;
+	uint32_t     p_index0: 16;
+	 
+	uint32_t     pid: 16;
+	uint32_t     host_rings: 4;
+	uint32_t     total_rings: 4;
+	uint32_t     eval_last: 8;
+
+	uint32_t     cos_selector: 8;
+	uint32_t     cosA: 4;
+	uint32_t     cosB: 4;
+	uint32_t     intrinsic_rsvd: 8;
+	uint32_t     pc: 8;  
+} PACKED rqcb0_t;
+
+typedef struct rqcb1_s {
+	uint32_t     log_pmtu: 5;            //Ronly
+	uint32_t     serv_type: 3;           //Ronly
+	
+	uint32_t     srq_id: 24;
+	
+	uint32_t     proxy_pindex: 16;   // written by TxDMA, read by RxDMA
+	uint32_t     proxy_cindex: 16;   // written by S4, read by S0
+	
+	uint32_t     num_sges: 8;
+	uint32_t     current_sge_id: 8;
+	
+	uint32_t     current_sge_offset: 32;
+	
+	uint64_t     curr_wqe_ptr: 64;
+	
+	uint32_t     rsq_pindex: 8;  // written by S0
+	
+	uint32_t     bt_in_progress: 8;  // set to 1 by rxdma, to 0 by txdma
+	
+	uint32_t     header_template_size: 8;    //Ronly
+	uint32_t     msn:24;                 //rw by S0 ?
+	
+	uint32_t     rsvd3: 1;
+	uint32_t     access_flags: 3; // rw by S0
+	uint32_t     spec_en: 1; //rw by S0
+	uint32_t     next_pkt_type: 1; //rw by S0
+	uint32_t     next_op_type: 2;  //rw by S0
+	uint32_t     e_psn: 24;        //rw by S0
+	
+	uint32_t     spec_cindex: 16;  // cindex used for speculation
+	uint32_t     rsvd2: 7;
+	uint32_t     in_progress: 1;         // written by S4, read by S0
+	uint32_t     rsvd1: 7;
+	uint32_t     busy: 1; // set to 1 by S0, to 0 by S3
+	
+	uint32_t     work_not_done_recirc_cnt: 8; //rw by S0
+	uint32_t     nxt_to_go_token_id: 8;  // written by S4, read by S0
+	uint32_t     token_id: 8;            //rw by S0
+	
+	uint32_t     header_template_addr: 32;   //Ronly
+	
+	uint32_t     pd: 32;                 //Ronly
+	
+	uint32_t     cq_id: 24;              //Ronly
+	
+	uint32_t     prefetch_en: 1;         //Ronly
+	uint32_t     skip_pt :1;
+	uint32_t     priv_oper_enable: 1;    //Ronly
+	uint32_t     nak_prune: 1;           //rw by S0
+	uint32_t     rq_in_hbm: 1;           //Ronly
+	uint32_t     immdt_as_dbell: 1;      //Ronly
+	uint32_t     cache: 1;               //Ronly
+	uint32_t     srq_enabled: 1;         //Ronly
+	
+	uint64_t     log_rsq_size: 5;        //Ronly     
+	uint64_t     state: 3;               //Ronly ?
+	uint64_t     congestion_mgmt_enable:1;   //Ronly
+	uint64_t     log_num_wqes: 5;        //Ronly
+	uint64_t     log_wqe_size: 5;        //Ronly
+	uint64_t     log_rq_page_size: 5;    //Ronly
+	 
+	uint64_t     phy_base_addr             : 40;            
+	
+	uint32_t     rsq_base_addr: 32;  //Ronly
+	
+	uint8_t     pc: 8;
+} PACKED rqcb1_t;	
+
+typedef struct rqcb2_s {
+    //word0-3
+	uint64_t     pad0;
+    uint64_t     pad1;
+
+    //word4
+    uint64_t     pad2:6;
+	uint32_t     prefetch_init_done: 1;
+	uint32_t     checkout_done: 1;
+	uint32_t     prefetch_buf_index: 16;
+	uint32_t     rsvd3       : 3;
+	uint32_t     log_num_prefetch_wqes: 5;
+
+    //word5
+	uint32_t     prefetch_base_addr: 32; //Ronly
+
+    //word6
+	uint32_t     prefetch_proxy_cindex: 16;
+	uint32_t     prefetch_pindex: 16;
+
+    //9 words from here
+	uint32_t     proxy_cindex: 16;
+
+	uint32_t     pd: 32; //4B
+
+	uint32_t     rsvd2: 3;
+	uint32_t     rnr_timeout: 5;
+
+	uint32_t     len: 32;
+	
+    uint32_t     r_key: 32;
+	
+    uint64_t     va: 64;
+
+	uint32_t     psn: 24;
+	uint32_t     rsvd: 7;
+	uint32_t     read_or_atomic: 1;
+
+	uint32_t     rsvd1       : 3;
+	uint32_t     credits     : 5;
+	
+	uint32_t     syndrome    : 8;            //1B
+	uint32_t     msn         : 24;           //3B
+
+	uint32_t     ack_nak_psn: 24;            //3B
+	uint32_t     rsvd0: 8;                    //1B
+} PACKED rqcb2_t;
+
+typedef struct rqcb3_s {
+	uint32_t     pad[5]; //20B
+
+	uint32_t     dma_len: 32;
+	uint32_t     num_pkts_in_curr_msg: 32;
+
+	uint32_t     rsvd1:             16;
+	uint32_t     roce_opt_mss:      16;
+	uint32_t     roce_opt_ts_echo:  32;
+	uint32_t     roce_opt_ts_value: 32;
+
+	uint32_t     r_key: 32;
+	uint32_t     len: 32;
+	uint64_t     va: 64;         
+	uint64_t     wrid: 64;
+} PACKED rqcb3_t;
+
+typedef struct rqcb4_s {
+	uint32_t     pad: 32;
+
+	uint32_t     qp_err_dis_resp_rx                  :    1;
+
+	uint32_t     qp_err_dis_type2a_mw_qp_mismatch    :    1;
+	uint32_t     qp_err_dis_rkey_va_err              :    1;
+	uint32_t     qp_err_dis_rkey_acc_ctrl_err        :    1;
+	uint32_t     qp_err_dis_rkey_pd_mismatch         :    1;
+	uint32_t     qp_err_dis_rkey_state_err           :    1;
+	uint32_t     qp_err_dis_rsvd_rkey_err            :    1;
+
+	uint32_t     qp_err_disabled                     :    1;
+
+	uint32_t     rp_num_max_rate_reached             :   16;
+	uint32_t     rp_num_timer_T_expiry               :   16;
+	uint32_t     rp_num_alpha_timer_expiry           :   16;
+	uint32_t     rp_num_byte_threshold_db            :   16;
+	uint32_t     rp_num_hyper_increase               :   16;
+	uint32_t     rp_num_fast_recovery                :   16;
+	uint32_t     rp_num_additive_increase            :   16;
+
+	uint32_t     last_msn: 24;
+	uint32_t     last_syndrome: 8;
+	uint32_t     last_psn: 24;
+
+	uint32_t     num_seq_errs: 32;
+	uint32_t     num_rnrs: 32;
+
+	uint32_t     num_prefetch: 16;
+	uint32_t     max_pkts_in_any_msg: 16;
+	uint32_t     num_pkts_in_cur_msg: 16;
+	uint32_t     num_atomic_resp_msgs: 16;
+	uint32_t     num_read_resp_msgs: 16;
+	uint32_t     num_acks: 32;
+	uint32_t     num_read_resp_pkts: 32;
+	uint32_t     num_pkts: 32;
+	uint64_t     num_bytes: 64;
+} PACKED rqcb4_t;
+
+typedef struct rqcb5_s {
+	uint64_t     pad: 43;
+	uint32_t     max_recirc_cnt_err: 1;
+	uint32_t     recirc_reason: 4;
+
+	uint32_t     last_bth_opcode: 8;
+	uint32_t     recirc_bth_psn: 24;
+
+	uint32_t     qp_err_dis_rsvd                     :    2;
+	uint32_t     qp_err_dis_table_resp_error         :    1;
+	uint32_t     qp_err_dis_phv_intrinsic_error      :    1;
+	uint32_t     qp_err_dis_table_error              :    1;
+
+	uint32_t     qp_err_dis_feedback                 :    1;
+
+	uint32_t     qp_err_dis_mr_cookie_mismatch       :    1;
+	uint32_t     qp_err_dis_mr_state_invalid         :    1;
+
+	uint32_t     qp_err_dis_mr_mw_pd_mismatch        :    1;
+	uint32_t     qp_err_dis_type2a_mw_qp_mismatch    :    1; 
+	uint32_t     qp_err_dis_type1_mw_inv_err         :    1; 
+	uint32_t     qp_err_dis_inv_rkey_state_err       :    1; 
+	uint32_t     qp_err_dis_ineligible_mr_err        :    1; 
+	uint32_t     qp_err_dis_inv_rkey_rsvd_key_err    :    1; 
+
+	uint32_t     qp_err_dis_key_va_err               :    1;
+	uint32_t     qp_err_dis_user_key_err             :    1;
+	uint32_t     qp_err_dis_key_acc_ctrl_err         :    1;
+	uint32_t     qp_err_dis_key_pd_mismatch          :    1;
+	uint32_t     qp_err_dis_key_state_err            :    1;
+	uint32_t     qp_err_dis_rsvd_key_err             :    1;
+
+	uint32_t     qp_err_dis_max_sge_err              :    1;
+	uint32_t     qp_err_dis_insuff_sge_err           :    1;
+
+	uint32_t     qp_err_dis_dma_len_err              :    1;
+
+	uint32_t     qp_err_dis_unaligned_atomic_va_err  :    1;
+	uint32_t     qp_err_dis_wr_only_zero_len_err     :    1;
+	uint32_t     qp_err_dis_access_err               :    1;
+	uint32_t     qp_err_dis_opcode_err               :    1;
+	uint32_t     qp_err_dis_pmtu_err                 :    1;
+	uint32_t     qp_err_dis_last_pkt_len_err         :    1;
+	uint32_t     qp_err_dis_pyld_len_err             :    1;
+	uint32_t     qp_err_dis_svc_type_err             :    1;
+
+	uint32_t     qp_err_disabled                     :    1;
+
+	uint32_t     rp_cnp_processed: 16;
+	uint32_t     np_ecn_marked_packets: 16;
+
+	uint32_t     num_dup_rd_atomic_drop_pkts: 16;
+	uint32_t     num_dup_rd_atomic_bt_pkts: 16;
+	uint32_t     num_dup_wr_send_pkts: 16;
+	uint32_t     num_mem_window_inv: 16;
+	uint32_t     num_recirc_drop_pkts: 16;
+	uint32_t     max_pkts_in_any_msg : 16;
+	uint32_t     num_pkts_in_cur_msg: 16;
+	uint32_t     num_ring_dbell: 16;
+	uint32_t     num_ack_requested: 16;
+	uint32_t     num_write_msgs_imm_data: 16;
+	uint32_t     num_send_msgs_imm_data: 16;
+	uint32_t     num_send_msgs_inv_rkey: 16;
+	uint32_t     num_atomic_cswap_msgs: 16;
+	uint32_t     num_atomic_fna_msgs: 16;
+	uint32_t     num_read_req_msgs: 16;
+	uint32_t     num_write_msgs: 16;
+	uint32_t     num_send_msgs: 16;
+	uint32_t     num_pkts: 32;
+	uint64_t     num_bytes: 64;
+} PACKED rqcb5_t;
+
+typedef struct rqcb_s {
+    rqcb0_t rqcb0;
+    rqcb1_t rqcb1;
+    rqcb2_t rqcb2;
+    rqcb3_t rqcb3;
+    rqcb4_t rqcb4;
+    rqcb5_t rqcb5;
+    uint64_t pad[16];
+} PACKED rqcb_t;
+
+typedef struct cqcb0_s {
+	uint64_t     pt_next_pa: 64;
+	uint64_t     phy_base_addr: 64;
+
+	uint32_t     pad: 14;
+	uint32_t     is_phy_addr: 1;
+	uint32_t     host_addr: 1;
+	uint32_t     pt_next_pg_index: 16;
+	uint32_t     pt_pg_index: 16;
+
+	uint32_t     cq_full: 1;
+	uint32_t     cq_full_hint: 1;
+	uint32_t     wakeup_ring_id:3;
+	uint32_t     wakeup_qid:24;
+	uint32_t     wakeup_qtype:3;
+	uint32_t     wakeup_lif:12;
+
+	uint32_t     color: 1;
+	uint32_t     wakeup_dpath:1;
+	uint32_t     sarm: 1;
+	uint32_t     arm: 1;
+
+	uint32_t     eq_id: 24;
+	uint32_t     cq_id: 24;
+
+	uint32_t     ring_empty_sched_eval_done : 1;
+	uint32_t     log_num_wqes: 5;
+	uint32_t     log_wqe_size: 5;
+	uint32_t     log_cq_page_size: 5;
+
+	uint32_t     pt_base_addr: 32;
+
+	uint32_t     proxy_s_pindex: 16;
+
+	uint32_t     proxy_pindex: 16;
+	
+	uint32_t     c_index2: 16;
+	uint32_t     p_index2: 16;
+	uint32_t     c_index1: 16;
+	uint32_t     p_index1: 16;
+	uint32_t     c_index0: 16;
+	uint32_t     p_index0: 16;
+
+	uint32_t     pid: 16;
+	uint32_t     host_rings: 4;
+	uint32_t     total_rings: 4;
+	uint32_t     eval_last: 8;
+	uint32_t     cos_selector: 8;
+	uint32_t     cosA: 4;
+	uint32_t     cosB: 4;
+	uint32_t     rsvd: 8;
+	uint32_t     pc: 8;  
+} PACKED cqcb0_t;
+
+typedef struct eqcb0_s {    // 64 bytes
+	uint64_t     rsvd0;
+    uint64_t     rsvd1;
+    uint64_t     rsvd2;
+	uint64_t     int_assert_addr: 64;
+	uint32_t     rsvd3: 28;
+	uint32_t     color: 1;
+	uint32_t     int_enabled: 1;
+	uint32_t     log_wqe_size: 5;
+	uint32_t     log_num_wqes: 5;
+	uint32_t     eq_id: 24;
+	uint32_t     rsvd4: 32;
+	uint64_t     eqe_base_addr: 64;
+
+	uint32_t     cindex: 16;
+	uint32_t     pindex: 16;
+
+	uint32_t     pid: 16;
+	uint32_t     host_rings: 4;
+	uint32_t     total_rings: 4;
+	uint32_t     eval_last: 8;
+	uint32_t     cos_selector: 8;
+	uint32_t     cosa: 4;
+	uint32_t     cosb: 4;
+	uint32_t     rsvd5: 8;
+	uint32_t     pc: 8;  
+} PACKED eqcb0_t;
 
 #endif /*__RDMA_DEV_HPP__*/

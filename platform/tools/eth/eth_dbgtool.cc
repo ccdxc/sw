@@ -26,6 +26,7 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"
+#include "platform/src/lib/nicmgr/include/rdma_dev.hpp"
 
 #include "gen/platform/mem_regions.hpp"
 
@@ -143,6 +144,941 @@ get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
 }
 
 #define NUM_POSTED(LogN, h, t) (((h) - (t)) & ((1u << LogN) - 1))
+
+void
+rdma_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
+{
+    sqcb_t qstate_sq = {0};
+    rqcb_t qstate_rq = {0};
+    cqcb0_t qstate_cq = {0};
+    eqcb0_t qstate_eq = {0};
+    queue_info_t qinfo[8] = {0};
+
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    if (qid >= qinfo[qtype].length) {
+        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
+        return;
+    }
+
+    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+
+    switch (qtype) {
+    case 3: // SQ
+        printf("\naddr: 0x%lx, sizeof(qstate_sq): 0x%lx\n\n", addr, sizeof(qstate_sq));
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_sq, sizeof(qstate_sq));
+        memrev((uint8_t *)&qstate_sq.sqcb0, sizeof(qstate_sq.sqcb0));
+        memrev((uint8_t *)&qstate_sq.sqcb1, sizeof(qstate_sq.sqcb1));
+        memrev((uint8_t *)&qstate_sq.sqcb2, sizeof(qstate_sq.sqcb2));
+        memrev((uint8_t *)&qstate_sq.sqcb3, sizeof(qstate_sq.sqcb3));
+        memrev((uint8_t *)&qstate_sq.sqcb4, sizeof(qstate_sq.sqcb4));
+        memrev((uint8_t *)&qstate_sq.sqcb5, sizeof(qstate_sq.sqcb5));
+
+        printf("=====\n");
+        printf("SQCB0\n");
+        printf("=====\n");
+        printf("pc_offset=0x%0x\n"
+               "rsvd0=0x%0x\n"
+               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+               "eval_last=0x%0x\n"
+               "host=0x%0x\ntotal=0x%0x\n"
+               "pid=0x%0x\n"
+               "p_index0=0x%0x\nc_index0=0x%0x\n"
+               "p_index1=0x%0x\nc_index1=0x%0x\n"
+               "p_index2=0x%0x\nc_index2=0x%0x\n"
+               "p_index3=0x%0x\nc_index3=0x%0x\n"
+               "sqd_cindex=0x%0lx\nrsvd1=0x%0lx\n"
+               "base_addr=%#lx\nheader_template_addr=0x%0x\n"
+               "pd=0x%0x\npoll_in_progress=0x%0x\n"
+               "log_pmtu=0x%0x\nlog_sq_page_size=0x%0x\n"
+               "log_wqe_size=0x%0x\nlog_num_wqes=0x%0x\n"
+               "poll_for_work=0x%0x\nsignalled_completion=0x%0x\n"
+               "dcqcn_rl_failure=0x%0x\nservice=0x%0x\n"
+               "flush_rq=0x%0x\nstate=0x%0x\n"
+               "sq_in_hbm=0x%0x\nrsvd5=0x%0x\n"
+               "local_ack_timeout=0x%0x\nring_empty_sched_eval_done=0x%0x\n"
+               "spec_sq_cindex=0x%0x\ncurr_wqe_ptr=%#lx\n"
+               "spec_msg_psn=0x%0x\nmsg_psn=0x%0x\n"
+               "sq_drained=0x%0x\nrsvd_state_flags=0x%0x\n"
+               "state_flags=0x%0x\nspec_enable=0x%0x\n"
+               "skip_pt=0x%0x\nbktrack_marker_in_progress=0x%0x\n"
+               "congestion_mgmt_type=0x%0x\nrsvd2=0x%0x\n",
+               qstate_sq.sqcb0.pc, qstate_sq.sqcb0.rsvd, qstate_sq.sqcb0.cosA, qstate_sq.sqcb0.cosB,
+               qstate_sq.sqcb0.cos_selector, qstate_sq.sqcb0.eval_last, qstate_sq.sqcb0.host_rings, qstate_sq.sqcb0.total_rings,
+               qstate_sq.sqcb0.pid, qstate_sq.sqcb0.p_index0, qstate_sq.sqcb0.c_index0,
+               qstate_sq.sqcb0.p_index1, qstate_sq.sqcb0.c_index1,
+               qstate_sq.sqcb0.p_index2, qstate_sq.sqcb0.c_index2,
+               qstate_sq.sqcb0.p_index3, qstate_sq.sqcb0.c_index3,
+               qstate_sq.sqcb0.sqd_cindex, qstate_sq.sqcb0.rsvd1,
+               qstate_sq.sqcb0.base_addr,
+               qstate_sq.sqcb0.header_template_addr, qstate_sq.sqcb0.pd,
+               qstate_sq.sqcb0.poll_in_progress, qstate_sq.sqcb0.log_pmtu,
+               qstate_sq.sqcb0.log_sq_page_size, qstate_sq.sqcb0.log_wqe_size,
+               qstate_sq.sqcb0.log_num_wqes, qstate_sq.sqcb0.poll_for_work,
+               qstate_sq.sqcb0.signalled_completion, qstate_sq.sqcb0.dcqcn_rl_failure,
+               qstate_sq.sqcb0.service, qstate_sq.sqcb0.flush_rq,
+               qstate_sq.sqcb0.state, qstate_sq.sqcb0.sq_in_hbm,
+               qstate_sq.sqcb0.rsvd5, qstate_sq.sqcb0.local_ack_timeout,
+               qstate_sq.sqcb0.ring_empty_sched_eval_done, qstate_sq.sqcb0.spec_sq_cindex,
+               qstate_sq.sqcb0.curr_wqe_ptr, qstate_sq.sqcb0.spec_msg_psn,
+               qstate_sq.sqcb0.msg_psn, qstate_sq.sqcb0.sq_drained,
+               qstate_sq.sqcb0.rsvd_state_flags, qstate_sq.sqcb0.state_flags,
+               qstate_sq.sqcb0.spec_enable, qstate_sq.sqcb0.skip_pt,
+               qstate_sq.sqcb0.bktrack_marker_in_progress, qstate_sq.sqcb0.congestion_mgmt_type,
+               qstate_sq.sqcb0.rsvd2);
+        printf("=====\n");
+        printf("SQCB1\n");
+        printf("=====\n");
+        printf("pc=0x%0x\ncq_id=0x%0x\n"
+               "rrq_pindex=0x%0x\nrrq_cindex=0x%0x\n"
+               "rrq_base_addr=0x%0x\nlog_rrq_size=0x%0x\n"
+               "service=0x%0x\nrsvd8=0x%0x\n"
+               "log_pmtu=0x%0x\nerr_retry_count=0x%0x\n"
+               "rnr_retry_count=0x%0x\nwork_not_done_recirc_cnt=0x%0x\n"
+               "tx_psn=0x%0x\nssn=0x%0x\n"
+               "rsvd2=0x%0x\nlog_sqwqe_size=0x%0x\n"
+               "pkt_spec_enable=0x%0x\nrsvd3=0x%0x\n"
+               "header_template_addr=0x%0x\nheader_template_size=0x%0x\n"
+               "nxt_to_go_token_id=0x%0x\ntoken_id=0x%0x\n"
+               "rsvd4=0x%0x\nrexmit_psn=0x%0x\n"
+               "msn=0x%0x\ncredits=0x%0x\n"
+               "congestion_mgmt_type=0x%0x\nrsvd5=0x%0x\n"
+               "max_tx_psn=0x%0x\nmax_ssn=0x%0x\n"
+               "rrqwqe_num_sges=0x%0x\nrrqwqe_cur_sge_id=0x%0x\n"
+               "rrqwqe_cur_sge_offset=0x%0x\nstate=0x%0x\n"
+               "sqcb1_priv_oper_enable=0x%0x\nsq_drained=0x%0x\n"
+               "sqd_async_notify_enable=0x%0x\nrsvd6=0x%0x\n"
+               "bktrack_in_progress=0x%0x\npd=0x%0x\n"
+               "rrq_spec_cindex=0x%0x\nrsvd7=0x%0x\n",
+               qstate_sq.sqcb1.pc, qstate_sq.sqcb1.cq_id,
+               qstate_sq.sqcb1.rrq_pindex, qstate_sq.sqcb1.rrq_cindex,
+               qstate_sq.sqcb1.rrq_base_addr, qstate_sq.sqcb1.log_rrq_size,
+               qstate_sq.sqcb1.service, qstate_sq.sqcb1.rsvd8,
+               qstate_sq.sqcb1.log_pmtu, qstate_sq.sqcb1.err_retry_count,
+               qstate_sq.sqcb1.rnr_retry_count, qstate_sq.sqcb1.work_not_done_recirc_cnt,
+               qstate_sq.sqcb1.tx_psn, qstate_sq.sqcb1.ssn,
+               qstate_sq.sqcb1.rsvd2, qstate_sq.sqcb1.log_sqwqe_size,
+               qstate_sq.sqcb1.pkt_spec_enable, qstate_sq.sqcb1.rsvd3,
+               qstate_sq.sqcb1.header_template_addr, qstate_sq.sqcb1.header_template_size,
+               qstate_sq.sqcb1.nxt_to_go_token_id, qstate_sq.sqcb1.token_id,
+               qstate_sq.sqcb1.rsvd4, qstate_sq.sqcb1.rexmit_psn,
+               qstate_sq.sqcb1.msn, qstate_sq.sqcb1.credits,
+               qstate_sq.sqcb1.congestion_mgmt_type, qstate_sq.sqcb1.rsvd5,
+               qstate_sq.sqcb1.max_tx_psn, qstate_sq.sqcb1.max_ssn,
+               qstate_sq.sqcb1.rrqwqe_num_sges, qstate_sq.sqcb1.rrqwqe_cur_sge_id,
+               qstate_sq.sqcb1.rrqwqe_cur_sge_offset, qstate_sq.sqcb1.state,
+               qstate_sq.sqcb1.sqcb1_priv_oper_enable, qstate_sq.sqcb1.sq_drained,
+               qstate_sq.sqcb1.sqd_async_notify_enable, qstate_sq.sqcb1.rsvd6,
+               qstate_sq.sqcb1.bktrack_in_progress, qstate_sq.sqcb1.pd,
+               qstate_sq.sqcb1.rrq_spec_cindex, qstate_sq.sqcb1.rsvd7);
+        printf("=====\n");
+        printf("SQCB2\n");
+        printf("=====\n");
+        printf("dst_qp=0x%0x\nheader_template_size=0x%0x\n"
+               "header_template_addr=0x%0x\nrrq_base_addr=0x%0x\n"
+               "log_rrq_size=0x%0x\nlog_sq_size=0x%0x\n"
+               "roce_opt_ts_enable=0x%0x\nroce_opt_mss_enable=0x%0x\n"
+               "service=0x%0x\nlsn_tx=0x%0x\n"
+               "lsn_rx=0x%0x\nrexmit_psn=0x%0lx\n"
+               "last_ack_or_req_ts=%#lx\nerr_retry_ctr=0x%0lx\n"
+               "rnr_retry_ctr=0x%0lx\nrnr_timeout=0x%0lx\n"
+               "rsvd1=0x%0lx\ntimer_on=0x%0lx\n"
+               "local_ack_timeout=0x%0lx\ntx_psn=0x%0lx\n"
+               "ssn=0x%0lx\nlsn=0x%0lx\n"
+               "wqe_start_psn=0x%0lx\ninv_key=0x%0x\n"
+               "sq_cindex=0x%0x\nrrq_pindex=0x%0x\n"
+               "rrq_cindex=0x%0x\nbusy=0x%0x\n"
+               "need_credits=0x%0x\nrsvd2=0x%0x\n"
+               "fence=0x%0x\nli_fence=0x%0x\n"
+               "fence_done=0x%0x\ncurr_op_type=0x%0x\n"
+               "exp_rsp_psn=0x%0x\ntimestamp=0x%0x\n"
+               "disable_credits=0x%0x\nrsvd3=0x%0x\n"
+               "sq_msg_psn=0x%0x\n",
+               qstate_sq.sqcb2.dst_qp, qstate_sq.sqcb2.header_template_size,
+               qstate_sq.sqcb2.header_template_addr, qstate_sq.sqcb2.rrq_base_addr,
+               qstate_sq.sqcb2.log_rrq_size, qstate_sq.sqcb2.log_sq_size,
+               qstate_sq.sqcb2.roce_opt_ts_enable, qstate_sq.sqcb2.roce_opt_mss_enable,
+               qstate_sq.sqcb2.service, qstate_sq.sqcb2.lsn_tx,
+               qstate_sq.sqcb2.lsn_rx, qstate_sq.sqcb2.rexmit_psn,
+               qstate_sq.sqcb2.last_ack_or_req_ts, qstate_sq.sqcb2.err_retry_ctr,
+               qstate_sq.sqcb2.rnr_retry_ctr, qstate_sq.sqcb2.rnr_timeout,
+               qstate_sq.sqcb2.rsvd1, qstate_sq.sqcb2.timer_on,
+               qstate_sq.sqcb2.local_ack_timeout, qstate_sq.sqcb2.tx_psn,
+               qstate_sq.sqcb2.ssn, qstate_sq.sqcb2.lsn,
+               qstate_sq.sqcb2.wqe_start_psn, qstate_sq.sqcb2.inv_key,
+               qstate_sq.sqcb2.sq_cindex, qstate_sq.sqcb2.rrq_pindex,
+               qstate_sq.sqcb2.rrq_cindex, qstate_sq.sqcb2.busy,
+               qstate_sq.sqcb2.need_credits, qstate_sq.sqcb2.rsvd2,
+               qstate_sq.sqcb2.fence, qstate_sq.sqcb2.li_fence,
+               qstate_sq.sqcb2.fence_done, qstate_sq.sqcb2.curr_op_type,
+               qstate_sq.sqcb2.exp_rsp_psn, qstate_sq.sqcb2.timestamp,
+               qstate_sq.sqcb2.disable_credits, qstate_sq.sqcb2.rsvd3,
+               qstate_sq.sqcb2.sq_msg_psn);
+        printf("=====\n");
+        printf("SQCB4\n");
+        printf("=====\n");
+        printf("num_bytes=%#lx\nnum_pkts=0x%0x\n"
+               "num_send_msgs=0x%0x\nnum_write_msgs=0x%0x\n"
+               "num_read_req_msgs=0x%0x\nnum_atomic_fna_msgs=0x%0x\n"
+               "num_atomic_cswap_msgs=0x%0x\nnum_send_msgs_inv_rkey=0x%0x\n"
+               "num_send_msgs_imm_data=0x%0x\nnum_write_msgs_imm_data=0x%0x\n"
+               "num_pkts_in_cur_msg=0x%0x\nmax_pkts_in_any_msg=0x%0x\n"
+               "num_npg_req=0x%0x\nnum_npg_bindmw_t1_req=0x%0x\n"
+               "num_npg_bindmw_t2_req=0x%0x\nnum_npg_frpmr_req=0x%0x\n"
+               "num_npg_local_inv_req=0x%0x\nnum_inline_req=0x%0x\n"
+               "num_timeout_local_ack=0x%0x\nnum_timeout_rnr=0x%0x\n"
+               "num_sq_drains=0x%0x\nnp_cnp_sent=0x%0x\n"
+               "rp_num_byte_threshold_db=0x%0x\nqp_err_disabled=0x%0lx\n"
+               "qp_err_dis_flush_rq=0x%0lx\nqp_err_dis_ud_pmtu=0x%0lx\n"
+               "qp_err_dis_ud_fast_reg=0x%0lx\nqp_err_dis_ud_priv=0x%0lx\n"
+               "qp_err_dis_no_dma_cmds=0x%0lx\nqp_err_dis_lkey_inv_state=0x%0lx\n"
+               "qp_err_dis_lkey_inv_pd=0x%0lx\nqp_err_dis_lkey_rsvd_lkey=0x%0lx\n"
+               "qp_err_dis_lkey_access_violation=0x%0lx\nqp_err_dis_bind_mw_len_exceeded=0x%0lx\n"
+               "qp_err_dis_bind_mw_rkey_inv_pd=0x%0lx\nqp_err_dis_bind_mw_rkey_inv_zbva=0x%0lx\n"
+               "qp_err_dis_bind_mw_rkey_inv_len=0x%0lx\nqp_err_dis_bind_mw_rkey_inv_mw_state=0x%0lx\n"
+               "qp_err_dis_bind_mw_rkey_type_disallowed=0x%0lx\nqp_err_dis_bind_mw_lkey_state_valid=0x%0lx\n"
+               "qp_err_dis_bind_mw_lkey_no_bind=0x%0lx\nqp_err_dis_bind_mw_lkey_zero_based=0x%0lx\n"
+               "qp_err_dis_bind_mw_lkey_invalid_acc_ctrl=0x%0lx\nqp_err_dis_bind_mw_lkey_invalid_va=0x%0lx\n"
+               "qp_err_dis_bktrack_inv_num_sges=0x%0lx\nqp_err_dis_bktrack_inv_rexmit_psn=0x%0lx\n"
+               "qp_err_dis_frpmr_fast_reg_not_enabled=0x%0lx\nqp_err_dis_frpmr_invalid_pd=0x%0lx\n"
+               "qp_err_dis_frpmr_invalid_state=0x%0lx\nqp_err_dis_frpmr_invalid_len=0x%0lx\n"
+               "qp_err_dis_frpmr_ukey_not_enabled=0x%0lx\nqp_err_dis_inv_lkey_qp_mismatch=0x%0lx\n"
+               "qp_err_dis_inv_lkey_pd_mismatch=0x%0lx\nqp_err_dis_inv_lkey_invalid_state=0x%0lx\n"
+               "qp_err_dis_inv_lkey_inv_not_allowed=0x%0lx\nqp_err_dis_table_error=0x%0lx\n"
+               "qp_err_dis_phv_intrinsic_error=0x%0lx\nqp_err_dis_table_resp_error=0x%0lx\n"
+               "qp_err_dis_inv_optype=0x%0lx\nqp_err_dis_err_retry_exceed=0x%0lx\n"
+               "qp_err_dis_rnr_retry_exceed=0x%0lx\nqp_err_dis_rsvd=0x%0lx\n",
+               qstate_sq.sqcb4.num_bytes, qstate_sq.sqcb4.num_pkts,
+               qstate_sq.sqcb4.num_send_msgs, qstate_sq.sqcb4.num_write_msgs,
+               qstate_sq.sqcb4.num_read_req_msgs, qstate_sq.sqcb4.num_atomic_fna_msgs,
+               qstate_sq.sqcb4.num_atomic_cswap_msgs, qstate_sq.sqcb4.num_send_msgs_inv_rkey,
+               qstate_sq.sqcb4.num_send_msgs_imm_data, qstate_sq.sqcb4.num_write_msgs_imm_data,
+               qstate_sq.sqcb4.num_pkts_in_cur_msg, qstate_sq.sqcb4.max_pkts_in_any_msg,
+               qstate_sq.sqcb4.num_npg_req, qstate_sq.sqcb4.num_npg_bindmw_t1_req,
+               qstate_sq.sqcb4.num_npg_bindmw_t2_req, qstate_sq.sqcb4.num_npg_frpmr_req,
+               qstate_sq.sqcb4.num_npg_local_inv_req, qstate_sq.sqcb4.num_inline_req,
+               qstate_sq.sqcb4.num_timeout_local_ack, qstate_sq.sqcb4.num_timeout_rnr,
+               qstate_sq.sqcb4.num_sq_drains, qstate_sq.sqcb4.np_cnp_sent,
+               qstate_sq.sqcb4.rp_num_byte_threshold_db, qstate_sq.sqcb4.qp_err_disabled,
+               qstate_sq.sqcb4.qp_err_dis_flush_rq, qstate_sq.sqcb4.qp_err_dis_ud_pmtu,
+               qstate_sq.sqcb4.qp_err_dis_ud_fast_reg,
+               qstate_sq.sqcb4.qp_err_dis_ud_priv,
+               qstate_sq.sqcb4.qp_err_dis_no_dma_cmds,
+               qstate_sq.sqcb4.qp_err_dis_lkey_inv_state,
+               qstate_sq.sqcb4.qp_err_dis_lkey_inv_pd,
+               qstate_sq.sqcb4.qp_err_dis_lkey_rsvd_lkey,
+               qstate_sq.sqcb4.qp_err_dis_lkey_access_violation,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_len_exceeded,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_rkey_inv_pd,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_rkey_inv_zbva,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_rkey_inv_len,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_rkey_inv_mw_state,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_rkey_type_disallowed,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_lkey_state_valid,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_lkey_no_bind,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_lkey_zero_based,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_lkey_invalid_acc_ctrl,
+               qstate_sq.sqcb4.qp_err_dis_bind_mw_lkey_invalid_va,
+               qstate_sq.sqcb4.qp_err_dis_bktrack_inv_num_sges,
+               qstate_sq.sqcb4.qp_err_dis_bktrack_inv_rexmit_psn,
+               qstate_sq.sqcb4.qp_err_dis_frpmr_fast_reg_not_enabled,
+               qstate_sq.sqcb4.qp_err_dis_frpmr_invalid_pd,
+               qstate_sq.sqcb4.qp_err_dis_frpmr_invalid_state,
+               qstate_sq.sqcb4.qp_err_dis_frpmr_invalid_len,
+               qstate_sq.sqcb4.qp_err_dis_frpmr_ukey_not_enabled,
+               qstate_sq.sqcb4.qp_err_dis_inv_lkey_qp_mismatch,
+               qstate_sq.sqcb4.qp_err_dis_inv_lkey_pd_mismatch,
+               qstate_sq.sqcb4.qp_err_dis_inv_lkey_invalid_state,
+               qstate_sq.sqcb4.qp_err_dis_inv_lkey_inv_not_allowed,
+               qstate_sq.sqcb4.qp_err_dis_table_error,
+               qstate_sq.sqcb4.qp_err_dis_phv_intrinsic_error,
+               qstate_sq.sqcb4.qp_err_dis_table_resp_error,
+               qstate_sq.sqcb4.qp_err_dis_inv_optype,
+               qstate_sq.sqcb4.qp_err_dis_err_retry_exceed,
+               qstate_sq.sqcb4.qp_err_dis_rnr_retry_exceed,
+               qstate_sq.sqcb4.qp_err_dis_rsvd);
+        printf("=====\n");
+        printf("SQCB5\n");
+        printf("=====\n");
+        printf("num_bytes=%#lx\nnum_pkts=0x%0x\n"
+               "num_read_resp_pkts=0x%0x\nnum_read_resp_msgs=0x%0x\n"
+               "num_feedback=0x%0x\nnum_ack=0x%0x\n"
+               "num_atomic_ack=0x%0x\nnum_pkts_in_cur_msg=0x%0x\n"
+               "max_pkts_in_any_msg=0x%0x\nqp_err_disabled=0x%0x\n"
+               "qp_err_dis_rrqlkey_pd_mismatch=0x%0x\nqp_err_dis_rrqlkey_inv_state=0x%0x\n"
+               "qp_err_dis_rrqlkey_rsvd_lkey=0x%0x\nqp_err_dis_rrqlkey_acc_no_wr_perm=0x%0x\n"
+               "qp_err_dis_rrqlkey_acc_len_lower=0x%0x\nqp_err_dis_rrqlkey_acc_len_higher=0x%0x\n"
+               "qp_err_dis_rrqsge_insuff_sges=0x%0x\nqp_err_dis_rrqsge_insuff_sge_len=0x%0x\n"
+               "qp_err_dis_rrqsge_insuff_dma_cmds=0x%0x\nqp_err_dis_rrqwqe_remote_inv_req_err_rcvd=0x%0x\n"
+               "qp_err_dis_rrqwqe_remote_acc_err_rcvd=0x%0x\nqp_err_dis_rrqwqe_remote_oper_err_rcvd=0x%0x\n"
+               "qp_err_dis_table_error=0x%0x\nqp_err_dis_phv_intrinsic_error=0x%0x\n"
+               "qp_err_dis_table_resp_error=0x%0x\nqp_err_dis_rsvd=0x%0x\n"
+               "recirc_bth_psn=0x%0x\nrecirc_bth_opcode=0x%0x\n"
+               "recirc_reason=0x%0x\nmax_recirc_cnt_err=0x%0x\n"
+               "rsvd1=0x%0x\n",
+               qstate_sq.sqcb5.num_bytes,
+               qstate_sq.sqcb5.num_pkts,
+               qstate_sq.sqcb5.num_read_resp_pkts,
+               qstate_sq.sqcb5.num_read_resp_msgs,
+               qstate_sq.sqcb5.num_feedback,
+               qstate_sq.sqcb5.num_ack,
+               qstate_sq.sqcb5.num_atomic_ack,
+               qstate_sq.sqcb5.num_pkts_in_cur_msg,
+               qstate_sq.sqcb5.max_pkts_in_any_msg,
+               qstate_sq.sqcb5.qp_err_disabled,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_pd_mismatch,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_inv_state,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_rsvd_lkey,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_acc_no_wr_perm,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_acc_len_lower,
+               qstate_sq.sqcb5.qp_err_dis_rrqlkey_acc_len_higher,
+               qstate_sq.sqcb5.qp_err_dis_rrqsge_insuff_sges,
+               qstate_sq.sqcb5.qp_err_dis_rrqsge_insuff_sge_len,
+               qstate_sq.sqcb5.qp_err_dis_rrqsge_insuff_dma_cmds,
+               qstate_sq.sqcb5.qp_err_dis_rrqwqe_remote_inv_req_err_rcvd,
+               qstate_sq.sqcb5.qp_err_dis_rrqwqe_remote_acc_err_rcvd,
+               qstate_sq.sqcb5.qp_err_dis_rrqwqe_remote_oper_err_rcvd,
+               qstate_sq.sqcb5.qp_err_dis_table_error,
+               qstate_sq.sqcb5.qp_err_dis_phv_intrinsic_error,
+               qstate_sq.sqcb5.qp_err_dis_table_resp_error,
+               qstate_sq.sqcb5.qp_err_dis_rsvd,
+               qstate_sq.sqcb5.recirc_bth_psn,
+               qstate_sq.sqcb5.recirc_bth_opcode,
+               qstate_sq.sqcb5.recirc_reason,
+               qstate_sq.sqcb5.max_recirc_cnt_err,
+               qstate_sq.sqcb5.rsvd1);
+       break;
+    case 4: // RQ
+        printf("\naddr: 0x%lx, sizeof(qstate_rq): 0x%lx\n\n", addr, sizeof(qstate_rq));
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_rq, sizeof(qstate_rq));
+        memrev((uint8_t *)&qstate_rq.rqcb0, sizeof(qstate_rq.rqcb0));
+        memrev((uint8_t *)&qstate_rq.rqcb1, sizeof(qstate_rq.rqcb1));
+        memrev((uint8_t *)&qstate_rq.rqcb2, sizeof(qstate_rq.rqcb2));
+        memrev((uint8_t *)&qstate_rq.rqcb3, sizeof(qstate_rq.rqcb3));
+        memrev((uint8_t *)&qstate_rq.rqcb4, sizeof(qstate_rq.rqcb4));
+        memrev((uint8_t *)&qstate_rq.rqcb5, sizeof(qstate_rq.rqcb5));
+
+        printf("=====\n");
+        printf("RQCB0\n");
+        printf("=====\n");
+        printf(
+            "log_pmtu=0x%0x\n"
+            "serv_type=0x%0x\n"
+            "bt_rsq_cindex=0x%0x\n"
+            "rsvd1=0x%0x\n"
+            "dcqcn_cfg_id=0x%0x\n"
+            "ring_empty_sched_eval_done=0x%0x\n"
+            "header_template_size=0x%0x\n"
+            "curr_read_rsp_psn=0x%0x\n"
+            "rsvd0=0x%0x\n"
+            "drain_done=0x%0x\n"
+            "bt_in_progress=0x%0x\n"
+            "bt_lock=0x%0x\n"
+            "rq_in_hbm=0x%0x\n"
+            "read_rsp_in_progress=0x%0x\n"
+            "curr_color=0x%0x\n"
+            "dst_qp=0x%0x\n"
+            "header_template_addr=0x%0x\n"
+            "rsvd=0x%0x\n"
+            "prefetch_en=0x%0x\n"
+            "skip_pt=0x%0x\n"
+            "drain_in_progress=0x%0x\n"
+            "spec_color=0x%0x\n"
+            "spec_read_rsp_psn=0x%0x\n"
+            "rsq_base_addr=0x%0x\n"
+            "phy_base_addr=0x%0lx\n"
+            "log_rsq_size=0x%0lx\n"
+            "state=0x%0lx\n"
+            "congestion_mgmt_enable=0x%0lx\n"
+            "log_num_wqes=0x%0lx\n"
+            "log_wqe_size=0x%0lx\n"
+            "log_rq_page_size=0x%0lx\n"
+            "c_index5=0x%0x\n"
+            "p_index5=0x%0x\n"
+            "c_index4=0x%0x\n"
+            "p_index4=0x%0x\n"
+            "c_index3=0x%0x\n"
+            "p_index3=0x%0x\n"
+            "c_index2=0x%0x\n"
+            "p_index2=0x%0x\n"
+            "c_index1=0x%0x\n"
+            "p_index1=0x%0x\n"
+            "c_index0=0x%0x\n"
+            "p_index0=0x%0x\n"
+            "pid=0x%0x\n"
+            "host_rings=0x%0x\n"
+            "total_rings=0x%0x\n"
+            "eval_last=0x%0x\n"
+            "cos_selector=0x%0x\n"
+            "cosA=0x%0x\n"
+            "cosB=0x%0x\n"
+            "intrinsic_rsvd=0x%0x\n"
+            "pc=0x%0x\n",
+            qstate_rq.rqcb0.log_pmtu, 
+            qstate_rq.rqcb0.serv_type, 
+            qstate_rq.rqcb0.bt_rsq_cindex, 
+            qstate_rq.rqcb0.rsvd1, 
+            qstate_rq.rqcb0.dcqcn_cfg_id, 
+            qstate_rq.rqcb0.ring_empty_sched_eval_done, 
+            qstate_rq.rqcb0.header_template_size, 
+            qstate_rq.rqcb0.curr_read_rsp_psn, 
+            qstate_rq.rqcb0.rsvd0, 
+            qstate_rq.rqcb0.drain_done, 
+            qstate_rq.rqcb0.bt_in_progress, 
+            qstate_rq.rqcb0.bt_lock, 
+            qstate_rq.rqcb0.rq_in_hbm, 
+            qstate_rq.rqcb0.read_rsp_in_progress, 
+            qstate_rq.rqcb0.curr_color, 
+            qstate_rq.rqcb0.dst_qp, 
+            qstate_rq.rqcb0.header_template_addr, 
+            qstate_rq.rqcb0.rsvd, 
+            qstate_rq.rqcb0.prefetch_en, 
+            qstate_rq.rqcb0.skip_pt, 
+            qstate_rq.rqcb0.drain_in_progress, 
+            qstate_rq.rqcb0.spec_color, 
+            qstate_rq.rqcb0.spec_read_rsp_psn, 
+            qstate_rq.rqcb0.rsq_base_addr, 
+            qstate_rq.rqcb0.phy_base_addr, 
+            qstate_rq.rqcb0.log_rsq_size, 
+            qstate_rq.rqcb0.state, 
+            qstate_rq.rqcb0.congestion_mgmt_enable, 
+            qstate_rq.rqcb0.log_num_wqes, 
+            qstate_rq.rqcb0.log_wqe_size, 
+            qstate_rq.rqcb0.log_rq_page_size, 
+            qstate_rq.rqcb0.c_index5, 
+            qstate_rq.rqcb0.p_index5, 
+            qstate_rq.rqcb0.c_index4, 
+            qstate_rq.rqcb0.p_index4, 
+            qstate_rq.rqcb0.c_index3, 
+            qstate_rq.rqcb0.p_index3, 
+            qstate_rq.rqcb0.c_index2, 
+            qstate_rq.rqcb0.p_index2, 
+            qstate_rq.rqcb0.c_index1, 
+            qstate_rq.rqcb0.p_index1, 
+            qstate_rq.rqcb0.c_index0, 
+            qstate_rq.rqcb0.p_index0, 
+            qstate_rq.rqcb0.pid, 
+            qstate_rq.rqcb0.host_rings, 
+            qstate_rq.rqcb0.total_rings, 
+            qstate_rq.rqcb0.eval_last, 
+            qstate_rq.rqcb0.cos_selector, 
+            qstate_rq.rqcb0.cosA, 
+            qstate_rq.rqcb0.cosB, 
+            qstate_rq.rqcb0.intrinsic_rsvd, 
+            qstate_rq.rqcb0.pc); 
+        printf("=====\n");
+        printf("RQCB1\n");
+        printf("=====\n");
+		printf(
+			"log_pmtu=0x%0x\n"
+			"serv_type=0x%0x\n"
+			"srq_id=0x%0x\n"
+			"proxy_pindex=0x%0x\n"
+			"proxy_cindex=0x%0x\n"
+			"num_sges=0x%0x\n"
+			"current_sge_id=0x%0x\n"
+			"current_sge_offset=0x%0x\n"
+			"curr_wqe_ptr=0x%0lx\n"
+			"rsq_pindex=0x%0x\n"
+			"bt_in_progress=0x%0x\n"
+			"header_template_size=0x%0x\n"
+			"msn=0x%0x\n"
+			"rsvd3=0x%0x\n"
+			"access_flags=0x%0x\n"
+			"spec_en=0x%0x\n"
+			"next_pkt_type=0x%0x\n"
+			"next_op_type=0x%0x\n"
+			"e_psn=0x%0x\n"
+			"spec_cindex=0x%0x\n"
+			"rsvd2=0x%0x\n"
+			"in_progress=0x%0x\n"
+			"rsvd1=0x%0x\n"
+			"busy=0x%0x\n"
+			"work_not_done_recirc_cnt=0x%0x\n"
+			"nxt_to_go_token_id=0x%0x\n"
+			"token_id=0x%0x\n"
+			"header_template_addr=0x%0x\n"
+			"pd=0x%0x\n"
+			"cq_id=0x%0x\n"
+			"prefetch_en=0x%0x\n"
+			"skip_pt=0x%0x\n"
+			"priv_oper_enable=0x%0x\n"
+			"nak_prune=0x%0x\n"
+			"rq_in_hbm=0x%0x\n"
+			"immdt_as_dbell=0x%0x\n"
+			"cache=0x%0x\n"
+			"srq_enabled=0x%0x\n"
+			"log_rsq_size=0x%0lx\n"
+			"state=0x%0lx\n"
+			"congestion_mgmt_enable=0x%0lx\n"
+			"log_num_wqes=0x%0lx\n"
+			"log_wqe_size=0x%0lx\n"
+			"log_rq_page_size=0x%0lx\n"
+			"phy_base_addr=0x%0lx\n"
+			"rsq_base_addr=0x%0x\n"
+			"pc=0x%0x\n",
+            qstate_rq.rqcb1.log_pmtu,
+			qstate_rq.rqcb1.serv_type,
+			qstate_rq.rqcb1.srq_id,
+			qstate_rq.rqcb1.proxy_pindex,
+			qstate_rq.rqcb1.proxy_cindex,
+			qstate_rq.rqcb1.num_sges,
+			qstate_rq.rqcb1.current_sge_id,
+			qstate_rq.rqcb1.current_sge_offset,
+			qstate_rq.rqcb1.curr_wqe_ptr,
+			qstate_rq.rqcb1.rsq_pindex,
+			qstate_rq.rqcb1.bt_in_progress,
+			qstate_rq.rqcb1.header_template_size,
+			qstate_rq.rqcb1.msn,
+			qstate_rq.rqcb1.rsvd3,
+			qstate_rq.rqcb1.access_flags,
+			qstate_rq.rqcb1.spec_en,
+			qstate_rq.rqcb1.next_pkt_type,
+			qstate_rq.rqcb1.next_op_type,
+			qstate_rq.rqcb1.e_psn,
+			qstate_rq.rqcb1.spec_cindex,
+			qstate_rq.rqcb1.rsvd2,
+			qstate_rq.rqcb1.in_progress,
+			qstate_rq.rqcb1.rsvd1,
+			qstate_rq.rqcb1.busy,
+			qstate_rq.rqcb1.work_not_done_recirc_cnt,
+			qstate_rq.rqcb1.nxt_to_go_token_id,
+			qstate_rq.rqcb1.token_id,
+			qstate_rq.rqcb1.header_template_addr,
+			qstate_rq.rqcb1.pd,
+			qstate_rq.rqcb1.cq_id,
+			qstate_rq.rqcb1.prefetch_en,
+			qstate_rq.rqcb1.skip_pt,
+			qstate_rq.rqcb1.priv_oper_enable,
+			qstate_rq.rqcb1.nak_prune,
+			qstate_rq.rqcb1.rq_in_hbm,
+			qstate_rq.rqcb1.immdt_as_dbell,
+			qstate_rq.rqcb1.cache,
+			qstate_rq.rqcb1.srq_enabled,
+			qstate_rq.rqcb1.log_rsq_size,
+			qstate_rq.rqcb1.state,
+			qstate_rq.rqcb1.congestion_mgmt_enable,
+			qstate_rq.rqcb1.log_num_wqes,
+			qstate_rq.rqcb1.log_wqe_size,
+			qstate_rq.rqcb1.log_rq_page_size,
+			qstate_rq.rqcb1.phy_base_addr,
+			qstate_rq.rqcb1.rsq_base_addr,
+			qstate_rq.rqcb1.pc);
+        printf("=====\n");
+        printf("RQCB2\n");
+        printf("=====\n");
+		printf(
+			"prefetch_init_done=0x%0x\n"
+			"checkout_done=0x%0x\n"
+			"prefetch_buf_index=0x%0x\n"
+			"rsvd3=0x%0x\n"
+			"log_num_prefetch_wqes=0x%0x\n"
+			"prefetch_base_addr=0x%0x\n"
+			"prefetch_proxy_cindex=0x%0x\n"
+			"prefetch_pindex=0x%0x\n"
+			"proxy_cindex=0x%0x\n"
+			"pd=0x%0x\n"
+			"rsvd2=0x%0x\n"
+			"rnr_timeout=0x%0x\n"
+			"len=0x%0x\n"
+			"r_key=0x%0x\n"
+			"va=0x%0lx\n"
+			"psn=0x%0x\n"
+			"rsvd=0x%0x\n"
+			"read_or_atomic=0x%0x\n"
+			"rsvd1=0x%0x\n"
+			"credits=0x%0x\n"
+			"syndrome=0x%0x\n"
+			"msn=0x%0x\n"
+			"ack_nak_psn=0x%0x\n"
+			"rsvd0=0x%0x\n",
+			qstate_rq.rqcb2.prefetch_init_done,
+			qstate_rq.rqcb2.checkout_done,
+			qstate_rq.rqcb2.prefetch_buf_index,
+			qstate_rq.rqcb2.rsvd3,
+			qstate_rq.rqcb2.log_num_prefetch_wqes,
+			qstate_rq.rqcb2.prefetch_base_addr,
+			qstate_rq.rqcb2.prefetch_proxy_cindex,
+			qstate_rq.rqcb2.prefetch_pindex,
+			qstate_rq.rqcb2.proxy_cindex,
+			qstate_rq.rqcb2.pd,
+			qstate_rq.rqcb2.rsvd2,
+			qstate_rq.rqcb2.rnr_timeout,
+			qstate_rq.rqcb2.len,
+			qstate_rq.rqcb2.r_key,
+			qstate_rq.rqcb2.va,
+			qstate_rq.rqcb2.psn,
+			qstate_rq.rqcb2.rsvd,
+			qstate_rq.rqcb2.read_or_atomic,
+			qstate_rq.rqcb2.rsvd1,
+			qstate_rq.rqcb2.credits,
+			qstate_rq.rqcb2.syndrome,
+			qstate_rq.rqcb2.msn,
+			qstate_rq.rqcb2.ack_nak_psn,
+			qstate_rq.rqcb2.rsvd0);
+        printf("=====\n");
+        printf("RQCB3\n");
+        printf("=====\n");
+		printf(
+			"dma_len=0x%0x\n"
+			"num_pkts_in_curr_msg=0x%0x\n"
+			"rsvd1=0x%0x\n"
+			"roce_opt_mss=0x%0x\n"
+			"roce_opt_ts_echo=0x%0x\n"
+			"roce_opt_ts_value=0x%0x\n"
+			"r_key=0x%0x\n"
+			"len=0x%0x\n"
+			"va=0x%0lx\n"
+			"wrid=0x%0lx\n",
+            qstate_rq.rqcb3.dma_len,
+			qstate_rq.rqcb3.num_pkts_in_curr_msg,
+			qstate_rq.rqcb3.rsvd1,
+			qstate_rq.rqcb3.roce_opt_mss,
+			qstate_rq.rqcb3.roce_opt_ts_echo,
+			qstate_rq.rqcb3.roce_opt_ts_value,
+			qstate_rq.rqcb3.r_key,
+			qstate_rq.rqcb3.len,
+			qstate_rq.rqcb3.va,
+			qstate_rq.rqcb3.wrid);
+        printf("=====\n");
+        printf("RQCB4\n");
+        printf("=====\n");
+		printf(
+			"qp_err_dis_resp_rx=0x%0x\n"
+			"qp_err_dis_type2a_mw_qp_mismatch=0x%0x\n"
+			"qp_err_dis_rkey_va_err=0x%0x\n"
+			"qp_err_dis_rkey_acc_ctrl_err=0x%0x\n"
+			"qp_err_dis_rkey_pd_mismatch=0x%0x\n"
+			"qp_err_dis_rkey_state_err=0x%0x\n"
+			"qp_err_dis_rsvd_rkey_err=0x%0x\n"
+			"qp_err_disabled=0x%0x\n"
+			"rp_num_max_rate_reached=0x%0x\n"
+			"rp_num_timer_T_expiry=0x%0x\n"
+			"rp_num_alpha_timer_expiry=0x%0x\n"
+			"rp_num_byte_threshold_db=0x%0x\n"
+			"rp_num_hyper_increase=0x%0x\n"
+			"rp_num_fast_recovery=0x%0x\n"
+			"rp_num_additive_increase=0x%0x\n"
+			"last_msn=0x%0x\n"
+			"last_syndrome=0x%0x\n"
+			"last_psn=0x%0x\n"
+			"num_seq_errs=0x%0x\n"
+			"num_rnrs=0x%0x\n"
+			"num_prefetch=0x%0x\n"
+			"max_pkts_in_any_msg=0x%0x\n"
+			"num_pkts_in_cur_msg=0x%0x\n"
+			"num_atomic_resp_msgs=0x%0x\n"
+			"num_read_resp_msgs=0x%0x\n"
+			"num_acks=0x%0x\n"
+			"num_read_resp_pkts=0x%0x\n"
+			"num_pkts=0x%0x\n"
+			"num_bytes=0x%0lx\n",
+            qstate_rq.rqcb4.qp_err_dis_resp_rx,
+			qstate_rq.rqcb4.qp_err_dis_type2a_mw_qp_mismatch,
+			qstate_rq.rqcb4.qp_err_dis_rkey_va_err,
+			qstate_rq.rqcb4.qp_err_dis_rkey_acc_ctrl_err,
+			qstate_rq.rqcb4.qp_err_dis_rkey_pd_mismatch,
+			qstate_rq.rqcb4.qp_err_dis_rkey_state_err,
+			qstate_rq.rqcb4.qp_err_dis_rsvd_rkey_err,
+			qstate_rq.rqcb4.qp_err_disabled,
+			qstate_rq.rqcb4.rp_num_max_rate_reached,
+			qstate_rq.rqcb4.rp_num_timer_T_expiry,
+			qstate_rq.rqcb4.rp_num_alpha_timer_expiry,
+			qstate_rq.rqcb4.rp_num_byte_threshold_db,
+			qstate_rq.rqcb4.rp_num_hyper_increase,
+			qstate_rq.rqcb4.rp_num_fast_recovery,
+			qstate_rq.rqcb4.rp_num_additive_increase,
+			qstate_rq.rqcb4.last_msn,
+			qstate_rq.rqcb4.last_syndrome,
+			qstate_rq.rqcb4.last_psn,
+			qstate_rq.rqcb4.num_seq_errs,
+			qstate_rq.rqcb4.num_rnrs,
+			qstate_rq.rqcb4.num_prefetch,
+			qstate_rq.rqcb4.max_pkts_in_any_msg,
+			qstate_rq.rqcb4.num_pkts_in_cur_msg,
+			qstate_rq.rqcb4.num_atomic_resp_msgs,
+			qstate_rq.rqcb4.num_read_resp_msgs,
+			qstate_rq.rqcb4.num_acks,
+			qstate_rq.rqcb4.num_read_resp_pkts,
+			qstate_rq.rqcb4.num_pkts,
+			qstate_rq.rqcb4.num_bytes);
+        printf("=====\n");
+        printf("RQCB5\n");
+        printf("=====\n");
+		printf(
+			"max_recirc_cnt_err=0x%0x\n"
+			"recirc_reason=0x%0x\n"
+			"last_bth_opcode=0x%0x\n"
+			"recirc_bth_psn=0x%0x\n"
+			"qp_err_dis_rsvd=0x%0x\n"
+			"qp_err_dis_table_resp_error=0x%0x\n"
+			"qp_err_dis_phv_intrinsic_error=0x%0x\n"
+			"qp_err_dis_table_error=0x%0x\n"
+			"qp_err_dis_feedback=0x%0x\n"
+			"qp_err_dis_mr_cookie_mismatch=0x%0x\n"
+			"qp_err_dis_mr_state_invalid=0x%0x\n"
+			"qp_err_dis_mr_mw_pd_mismatch=0x%0x\n"
+			"qp_err_dis_type2a_mw_qp_mismatch=0x%0x\n"
+			"qp_err_dis_type1_mw_inv_err=0x%0x\n"
+			"qp_err_dis_inv_rkey_state_err=0x%0x\n"
+			"qp_err_dis_ineligible_mr_err=0x%0x\n"
+			"qp_err_dis_inv_rkey_rsvd_key_err=0x%0x\n"
+			"qp_err_dis_key_va_err=0x%0x\n"
+			"qp_err_dis_user_key_err=0x%0x\n"
+			"qp_err_dis_key_acc_ctrl_err=0x%0x\n"
+			"qp_err_dis_key_pd_mismatch=0x%0x\n"
+			"qp_err_dis_key_state_err=0x%0x\n"
+			"qp_err_dis_rsvd_key_err=0x%0x\n"
+			"qp_err_dis_max_sge_err=0x%0x\n"
+			"qp_err_dis_insuff_sge_err=0x%0x\n"
+			"qp_err_dis_dma_len_err=0x%0x\n"
+			"qp_err_dis_unaligned_atomic_va_err=0x%0x\n"
+			"qp_err_dis_wr_only_zero_len_err=0x%0x\n"
+			"qp_err_dis_access_err=0x%0x\n"
+			"qp_err_dis_opcode_err=0x%0x\n"
+			"qp_err_dis_pmtu_err=0x%0x\n"
+			"qp_err_dis_last_pkt_len_err=0x%0x\n"
+			"qp_err_dis_pyld_len_err=0x%0x\n"
+			"qp_err_dis_svc_type_err=0x%0x\n"
+			"qp_err_disabled=0x%0x\n"
+			"rp_cnp_processed=0x%0x\n"
+			"np_ecn_marked_packets=0x%0x\n"
+			"num_dup_rd_atomic_drop_pkts=0x%0x\n"
+			"num_dup_rd_atomic_bt_pkts=0x%0x\n"
+			"num_dup_wr_send_pkts=0x%0x\n"
+			"num_mem_window_inv=0x%0x\n"
+			"num_recirc_drop_pkts=0x%0x\n"
+			"max_pkts_in_any_msg=0x%0x\n"
+			"num_pkts_in_cur_msg=0x%0x\n"
+			"num_ring_dbell=0x%0x\n"
+			"num_ack_requested=0x%0x\n"
+			"num_write_msgs_imm_data=0x%0x\n"
+			"num_send_msgs_imm_data=0x%0x\n"
+			"num_send_msgs_inv_rkey=0x%0x\n"
+			"num_atomic_cswap_msgs=0x%0x\n"
+			"num_atomic_fna_msgs=0x%0x\n"
+			"num_read_req_msgs=0x%0x\n"
+			"num_write_msgs=0x%0x\n"
+			"num_send_msgs=0x%0x\n"
+			"num_pkts=0x%0x\n"
+			"num_bytes=0x%0lx\n",
+            qstate_rq.rqcb5.max_recirc_cnt_err,
+			qstate_rq.rqcb5.recirc_reason,
+			qstate_rq.rqcb5.last_bth_opcode,
+			qstate_rq.rqcb5.recirc_bth_psn,
+			qstate_rq.rqcb5.qp_err_dis_rsvd,
+			qstate_rq.rqcb5.qp_err_dis_table_resp_error,
+			qstate_rq.rqcb5.qp_err_dis_phv_intrinsic_error,
+			qstate_rq.rqcb5.qp_err_dis_table_error,
+			qstate_rq.rqcb5.qp_err_dis_feedback,
+			qstate_rq.rqcb5.qp_err_dis_mr_cookie_mismatch,
+			qstate_rq.rqcb5.qp_err_dis_mr_state_invalid,
+			qstate_rq.rqcb5.qp_err_dis_mr_mw_pd_mismatch,
+			qstate_rq.rqcb5.qp_err_dis_type2a_mw_qp_mismatch,
+			qstate_rq.rqcb5.qp_err_dis_type1_mw_inv_err,
+			qstate_rq.rqcb5.qp_err_dis_inv_rkey_state_err,
+			qstate_rq.rqcb5.qp_err_dis_ineligible_mr_err,
+			qstate_rq.rqcb5.qp_err_dis_inv_rkey_rsvd_key_err,
+			qstate_rq.rqcb5.qp_err_dis_key_va_err,
+			qstate_rq.rqcb5.qp_err_dis_user_key_err,
+			qstate_rq.rqcb5.qp_err_dis_key_acc_ctrl_err,
+			qstate_rq.rqcb5.qp_err_dis_key_pd_mismatch,
+			qstate_rq.rqcb5.qp_err_dis_key_state_err,
+			qstate_rq.rqcb5.qp_err_dis_rsvd_key_err,
+			qstate_rq.rqcb5.qp_err_dis_max_sge_err,
+			qstate_rq.rqcb5.qp_err_dis_insuff_sge_err,
+			qstate_rq.rqcb5.qp_err_dis_dma_len_err,
+			qstate_rq.rqcb5.qp_err_dis_unaligned_atomic_va_err,
+			qstate_rq.rqcb5.qp_err_dis_wr_only_zero_len_err,
+			qstate_rq.rqcb5.qp_err_dis_access_err,
+			qstate_rq.rqcb5.qp_err_dis_opcode_err,
+			qstate_rq.rqcb5.qp_err_dis_pmtu_err,
+			qstate_rq.rqcb5.qp_err_dis_last_pkt_len_err,
+			qstate_rq.rqcb5.qp_err_dis_pyld_len_err,
+			qstate_rq.rqcb5.qp_err_dis_svc_type_err,
+			qstate_rq.rqcb5.qp_err_disabled,
+			qstate_rq.rqcb5.rp_cnp_processed,
+			qstate_rq.rqcb5.np_ecn_marked_packets,
+			qstate_rq.rqcb5.num_dup_rd_atomic_drop_pkts,
+			qstate_rq.rqcb5.num_dup_rd_atomic_bt_pkts,
+			qstate_rq.rqcb5.num_dup_wr_send_pkts,
+			qstate_rq.rqcb5.num_mem_window_inv,
+			qstate_rq.rqcb5.num_recirc_drop_pkts,
+			qstate_rq.rqcb5.max_pkts_in_any_msg,
+			qstate_rq.rqcb5.num_pkts_in_cur_msg,
+			qstate_rq.rqcb5.num_ring_dbell,
+			qstate_rq.rqcb5.num_ack_requested,
+			qstate_rq.rqcb5.num_write_msgs_imm_data,
+			qstate_rq.rqcb5.num_send_msgs_imm_data,
+			qstate_rq.rqcb5.num_send_msgs_inv_rkey,
+			qstate_rq.rqcb5.num_atomic_cswap_msgs,
+			qstate_rq.rqcb5.num_atomic_fna_msgs,
+			qstate_rq.rqcb5.num_read_req_msgs,
+			qstate_rq.rqcb5.num_write_msgs,
+			qstate_rq.rqcb5.num_send_msgs,
+			qstate_rq.rqcb5.num_pkts,
+			qstate_rq.rqcb5.num_bytes);
+        break;
+    case 5: //CQ
+        printf("\naddr: 0x%lx, sizeof(qstate_cq): 0x%lx\n\n", addr, sizeof(qstate_cq));
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_cq, sizeof(qstate_cq));
+        memrev((uint8_t *)&qstate_sq, sizeof(qstate_sq));
+
+        printf("=====\n");
+        printf("CQCB\n");
+        printf("=====\n");
+		printf(
+			"pt_next_pa=0x%0lx\n"
+			"phy_base_addr=0x%0lx\n"
+			"pad=0x%0x\n"
+			"is_phy_addr=0x%0x\n"
+			"host_addr=0x%0x\n"
+			"pt_next_pg_index=0x%0x\n"
+			"pt_pg_index=0x%0x\n"
+			"cq_full=0x%0x\n"
+			"cq_full_hint=0x%0x\n"
+			"wakeup_ring_id=0x%0x\n"
+			"wakeup_qid=0x%0x\n"
+			"wakeup_qtype=0x%0x\n"
+			"wakeup_lif=0x%0x\n"
+			"color=0x%0x\n"
+			"wakeup_dpath=0x%0x\n"
+			"sarm=0x%0x\n"
+			"arm=0x%0x\n"
+			"eq_id=0x%0x\n"
+			"cq_id=0x%0x\n"
+			"ring_empty_sched_eval_done=0x%0x\n"
+			"log_num_wqes=0x%0x\n"
+			"log_wqe_size=0x%0x\n"
+			"log_cq_page_size=0x%0x\n"
+			"pt_base_addr=0x%0x\n"
+			"proxy_s_pindex=0x%0x\n"
+			"proxy_pindex=0x%0x\n"
+			"c_index2=0x%0x\n"
+			"p_index2=0x%0x\n"
+			"c_index1=0x%0x\n"
+			"p_index1=0x%0x\n"
+			"c_index0=0x%0x\n"
+			"p_index0=0x%0x\n"
+			"pid=0x%0x\n"
+			"host_rings=0x%0x\n"
+			"total_rings=0x%0x\n"
+			"eval_last=0x%0x\n"
+			"cos_selector=0x%0x\n"
+			"cosA=0x%0x\n"
+			"cosB=0x%0x\n"
+			"rsvd=0x%0x\n"
+			"pc=0x%0x\n",
+            qstate_cq.pt_next_pa,
+			qstate_cq.phy_base_addr,
+			qstate_cq.pad,
+			qstate_cq.is_phy_addr,
+			qstate_cq.host_addr,
+			qstate_cq.pt_next_pg_index,
+			qstate_cq.pt_pg_index,
+			qstate_cq.cq_full,
+			qstate_cq.cq_full_hint,
+			qstate_cq.wakeup_ring_id,
+			qstate_cq.wakeup_qid,
+			qstate_cq.wakeup_qtype,
+			qstate_cq.wakeup_lif,
+			qstate_cq.color,
+			qstate_cq.wakeup_dpath,
+			qstate_cq.sarm,
+			qstate_cq.arm,
+			qstate_cq.eq_id,
+			qstate_cq.cq_id,
+			qstate_cq.ring_empty_sched_eval_done,
+			qstate_cq.log_num_wqes,
+			qstate_cq.log_wqe_size,
+			qstate_cq.log_cq_page_size,
+			qstate_cq.pt_base_addr,
+			qstate_cq.proxy_s_pindex,
+			qstate_cq.proxy_pindex,
+			qstate_cq.c_index2,
+			qstate_cq.p_index2,
+			qstate_cq.c_index1,
+			qstate_cq.p_index1,
+			qstate_cq.c_index0,
+			qstate_cq.p_index0,
+			qstate_cq.pid,
+			qstate_cq.host_rings,
+			qstate_cq.total_rings,
+			qstate_cq.eval_last,
+			qstate_cq.cos_selector,
+			qstate_cq.cosA,
+			qstate_cq.cosB,
+			qstate_cq.rsvd,
+			qstate_cq.pc);
+        break;
+    case 6: //EQ
+        printf("\naddr: 0x%lx, sizeof(qstate_eq): 0x%lx\n\n", addr, sizeof(qstate_eq));
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_eq, sizeof(qstate_eq));
+        memrev((uint8_t *)&qstate_eq, sizeof(qstate_eq));
+
+        printf("=====\n");
+        printf("EQCB\n");
+        printf("=====\n");
+		printf(
+			"rsvd0=0x%0lx\n"
+			"rsvd1=0x%0lx\n"
+			"rsvd2=0x%0lx\n"
+			"int_assert_addr=0x%0lx\n"
+			"rsvd3=0x%0x\n"
+			"color=0x%0x\n"
+			"int_enabled=0x%0x\n"
+			"log_wqe_size=0x%0x\n"
+			"log_num_wqes=0x%0x\n"
+			"eq_id=0x%0x\n"
+			"rsvd4=0x%0x\n"
+			"eqe_base_addr=0x%0lx\n"
+			"cindex=0x%0x\n"
+			"pindex=0x%0x\n"
+			"pid=0x%0x\n"
+			"host_rings=0x%0x\n"
+			"total_rings=0x%0x\n"
+			"eval_last=0x%0x\n"
+			"cos_selector=0x%0x\n"
+			"cosa=0x%0x\n"
+			"cosb=0x%0x\n"
+			"rsvd5=0x%0x\n"
+			"pc=0x%0x\n",
+            qstate_eq.rsvd0,
+			qstate_eq.rsvd1,
+			qstate_eq.rsvd2,
+			qstate_eq.int_assert_addr,
+			qstate_eq.rsvd3,
+			qstate_eq.color,
+			qstate_eq.int_enabled,
+			qstate_eq.log_wqe_size,
+			qstate_eq.log_num_wqes,
+			qstate_eq.eq_id,
+			qstate_eq.rsvd4,
+			qstate_eq.eqe_base_addr,
+			qstate_eq.cindex,
+			qstate_eq.pindex,
+			qstate_eq.pid,
+			qstate_eq.host_rings,
+			qstate_eq.total_rings,
+			qstate_eq.eval_last,
+			qstate_eq.cos_selector,
+			qstate_eq.cosa,
+			qstate_eq.cosb,
+			qstate_eq.rsvd5,
+			qstate_eq.pc);
+        break;
+    default:
+        printf("Invalid qtype %u for lif %u\n", qtype, lif);
+    }
+}
 
 void
 nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
@@ -1648,6 +2584,7 @@ usage()
     printf("   qdump          <lif> <qtype> <qid> <ring>\n");
     printf("   debug          <lif> <qtype> <qid> <enable>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
+    printf("   rdma_qstate    <lif> <qtype> <qid>\n");
     printf("   virtio_qstate  <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
@@ -1729,6 +2666,14 @@ main(int argc, char **argv)
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
         nvme_qstate(lif, qtype, qid);
+    } else if (strcmp(argv[1], "rdma_qstate") == 0) {
+        if (argc != 5) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        uint32_t qid = std::strtoul(argv[4], NULL, 0);
+        rdma_qstate(lif, qtype, qid);
     } else if (strcmp(argv[1], "virtio_qstate") == 0) {
         if (argc != 5) {
             usage();
