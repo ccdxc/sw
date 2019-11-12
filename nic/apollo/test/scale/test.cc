@@ -522,7 +522,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                                      (((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
 #endif
-                pds_vnic.rsc_pool_id = 1;
                 pds_vnic.src_dst_check = false; //(k & 0x1);
                 pds_vnic.tx_mirror_session_bmap =
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;

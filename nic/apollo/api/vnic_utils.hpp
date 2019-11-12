@@ -29,7 +29,6 @@ operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
-       << " resource pool id: " << spec->rsc_pool_id
        << " src dst check: " << spec->src_dst_check
        << " tx_mirror_session_bmap: " << +spec->tx_mirror_session_bmap
        << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap

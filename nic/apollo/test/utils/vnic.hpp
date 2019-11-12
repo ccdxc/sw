@@ -26,7 +26,6 @@ public:
     pds_encap_t vnic_encap;
     pds_encap_t fabric_encap;
     uint64_t mac_u64;
-    pds_rsc_pool_id_t rsc_pool_id;
     bool src_dst_check;
     uint8_t tx_mirror_session_bmap;
     uint8_t rx_mirror_session_bmap;

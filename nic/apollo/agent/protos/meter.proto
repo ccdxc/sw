@@ -10,28 +10,13 @@ package pds;
 import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
+import "policer.proto";
 
 service MeterSvc {
   rpc MeterCreate (MeterRequest) returns (MeterResponse) {}
   rpc MeterUpdate (MeterRequest) returns (MeterResponse) {}
   rpc MeterGet (MeterGetRequest) returns (MeterGetResponse) {}
   rpc MeterDelete (MeterDeleteRequest) returns (MeterDeleteResponse) {}
-}
-
-// packet policer
-message PacketPolicerSpec {
-  // packets per second
-  uint32 PacketsPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // number/burst of packets to absorb
-  uint32 Burst            = 2 [(gogoproto.moretags) = "meta:mandatory"];
-}
-
-// byte policer
-message BytePolicerSpec {
-  // bytes per second
-  uint64 BytesPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // number/burst of bytes to absorb
-  uint64 Burst          = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // meter rule
@@ -70,9 +55,9 @@ message MeterStatus {
 
 // stats of the meter, if any
 message MeterStats {
-    uint32 MeterId = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-    uint64 RxBytes = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-    uint64 TxBytes = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32 MeterId = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint64 RxBytes = 2;
+  uint64 TxBytes = 3;
 }
 
 // meter policy object

@@ -51,6 +51,7 @@ typedef uint32_t    pds_nexthop_id_t;          ///< nexthop table index
 typedef uint32_t    pds_nexthop_group_id_t;    ///< nexthop group table index
 typedef uint32_t    pds_tep_id_t;              ///< TEP table index
 typedef uint32_t    pds_ifindex_t;             ///< interface index
+typedef uint32_t    pds_policer_id_t;
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface
@@ -214,10 +215,10 @@ typedef struct pds_nexthop_group_key_s {
     pds_nexthop_group_id_t  id;    ///< unique id of nexthop group
 } __PACK__ pds_nexthop_group_key_t;
 
-/// \brief    resource pool key
-typedef struct pds_rsc_pool_key_s {
-    pds_rsc_pool_id_t id;    ///< resource pool id
-} __PACK__ pds_rsc_pool_key_t;
+/// \brief    policer key
+typedef struct pds_policer_key_s {
+    pds_policer_id_t id;
+} __PACK__ pds_policer_key_t;
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {

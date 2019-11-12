@@ -32,36 +32,38 @@ message VnicSpec {
   types.Encap     VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // overlay MAC of this VNIC
   uint64          MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory"];
-  // resource pool to be used to enforce resource limits
-  uint32          ResourcePoolId        = 6;
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
-  bool            SourceGuardEnable     = 7;
+  bool            SourceGuardEnable     = 6;
   // fabric encap information to be used for traffic originated from this vnic
-  types.Encap     FabricEncap           = 8;
+  types.Encap     FabricEncap           = 7;
   // Tx/egress mirror session id list, if any
-  repeated uint32 TxMirrorSessionId     = 9;
+  repeated uint32 TxMirrorSessionId     = 8;
   // Rx/ingress mirror session id list, if any
-  repeated uint32 RxMirrorSessionId     = 10;
+  repeated uint32 RxMirrorSessionId     = 9;
   // switch vnic is router/bridge/appliance sitting behind the VLAN of this VNIC
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
-  bool            SwitchVnic            = 11;
+  bool            SwitchVnic            = 10;
   // metering policy to apply for IPv4 traffic coming in and going out of vnic
-  uint32          V4MeterId             = 12;
+  uint32          V4MeterId             = 11;
   // metering policy to apply for IPv6 traffic coming in and going out of vnic
-  uint32          V6MeterId             = 13;
+  uint32          V6MeterId             = 12;
   // identifier of ingress IPv4 security policy to be enforced
-  repeated uint32 IngV4SecurityPolicyId = 14;
+  repeated uint32 IngV4SecurityPolicyId = 13;
   // identifier of ingress IPv6 security policy to be enforced
-  repeated uint32 IngV6SecurityPolicyId = 15;
+  repeated uint32 IngV6SecurityPolicyId = 14;
   // identifier of egress IPv4 security policy to be enforced
-  repeated uint32 EgV4SecurityPolicyId  = 16;
+  repeated uint32 EgV4SecurityPolicyId  = 15;
   // identifier of egress IPv6 security policy to be enforced
-  repeated uint32 EgV6SecurityPolicyId  = 17;
-  /// when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
-  /// present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
-  /// HostIfIndex is the interface index of such VF/PF
-  uint32          HostIfIndex           = 18;
+  repeated uint32 EgV6SecurityPolicyId  = 16;
+  // when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
+  // present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
+  // HostIfIndex is the interface index of such VF/PF
+  uint32          HostIfIndex           = 17;
+  // policer to be applied on the traffic coming from vnic
+  uint32          TxPolicerId           = 18;
+  // policer to be applied on the traffic going to vnic
+  uint32          RxPolicerId           = 19;
 }
 
 // operational status of Vnic, if any

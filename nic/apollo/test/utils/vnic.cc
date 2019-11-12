@@ -79,7 +79,6 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
     this->id = id;
     this->vpc_id = 1;
     this->subnet_id = 1;
-    this->rsc_pool_id = 0;
     this->mac_u64 = mac | (id << 24);
     vnic_feeder_encap_init(id, vnic_encap_type, &vnic_encap);
     vnic_feeder_encap_init(id, fabric_encap_type, &fabric_encap);
@@ -110,7 +109,7 @@ vnic_feeder::key_build(pds_vnic_key_t *key) const {
 
 void
 vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
-    static uint32_t lif_id = HOST_LIF_ID_MIN;    
+    static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     memset(spec, 0, sizeof(pds_vnic_spec_t));
     this->key_build(&spec->key);
@@ -120,7 +119,6 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     spec->vnic_encap = vnic_encap;
     spec->fabric_encap = fabric_encap;
     MAC_UINT64_TO_ADDR(spec->mac_addr, mac_u64);
-    spec->rsc_pool_id = rsc_pool_id;
     spec->src_dst_check = src_dst_check;
     spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
     spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
@@ -146,9 +144,6 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
 
     if (apollo()) {
         if (!pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
-            return false;
-
-        if (rsc_pool_id != spec->rsc_pool_id)
             return false;
 
         if (src_dst_check != spec->src_dst_check)

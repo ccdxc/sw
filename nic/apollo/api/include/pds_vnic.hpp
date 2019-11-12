@@ -30,7 +30,6 @@ typedef struct pds_vnic_spec_s {
     pds_encap_t vnic_encap;            ///< vnic encap for this vnic
     pds_encap_t fabric_encap;          ///< fabric encap for this vnic
     mac_addr_t mac_addr;               ///< vnic's overlay mac address
-    pds_rsc_pool_id_t rsc_pool_id;     ///< resource pool
     bool src_dst_check;                ///< TRUE if src/dst check is enabled
     uint8_t tx_mirror_session_bmap;    ///< Tx mirror sessions, if any
     uint8_t rx_mirror_session_bmap;    ///< Rx mirror sessions, if any
@@ -56,6 +55,10 @@ typedef struct pds_vnic_spec_s {
     /// host interface) a particular vnic is attached to by passing
     /// host_ifindex (of type IF_TYPE_LIF)
     pds_ifindex_t host_ifindex;
+    /// Tx policer, if any
+    pds_policer_key_t tx_policer;
+    /// Rx policer, if any
+    pds_policer_key_t rx_policer;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

@@ -330,8 +330,6 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check2 = false;
-    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group1 =
-        spec->rsc_pool_id;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group2 = 0;
 
     // program the LPM tree base address
@@ -422,8 +420,6 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check2 = false;
-    vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group1 =
-        spec->rsc_pool_id;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group2 = 0;
 
     // program security policy block's base address
@@ -872,8 +868,6 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     tx_src_dst_check =
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 == true
             ? false : true;
-    spec->rsc_pool_id =
-        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group1;
     if (vnic_by_vlan_data.local_vnic_by_vlan_tx_info.mirror_en == true) {
         spec->tx_mirror_session_bmap =
             vnic_by_vlan_data.local_vnic_by_vlan_tx_info.mirror_session;
