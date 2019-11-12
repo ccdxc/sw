@@ -27,6 +27,9 @@ public:
                          pds::MappingResponse *rsp) override;
     Status MappingDelete(ServerContext *context, const pds::MappingDeleteRequest *req,
                          pds::MappingDeleteResponse *rsp) override;
+    Status MappingGet(ServerContext *context,
+                      const pds::MappingGetRequest *req,
+                      pds::MappingGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__

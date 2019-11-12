@@ -2904,6 +2904,50 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
     }
 }
 
+// populate proto buf status from mapping API status
+static inline void
+pds_mapping_api_status_to_proto (pds::MappingStatus *proto_status,
+                                 const pds_mapping_status_t *api_status)
+{
+}
+
+// populate proto buf stats from mapping API stats
+static inline void
+pds_mapping_api_stats_to_proto (pds::MappingStats *proto_stats,
+                                const pds_mapping_stats_t *api_stats)
+{
+}
+
+// populate proto buf from local mapping API info
+static inline void
+pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info , void *ctxt)
+{
+    pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
+    auto mapping = proto_rsp->add_response();
+    pds::MappingSpec *proto_spec = mapping->mutable_spec();
+    pds::MappingStatus *proto_status = mapping->mutable_status();
+    pds::MappingStats *proto_stats = mapping->mutable_stats();
+
+    pds_local_mapping_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_mapping_api_status_to_proto(proto_status, &api_info->status);
+    pds_mapping_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+// populate proto buf from remote mapping API info
+static inline void
+pds_remote_mapping_api_info_to_proto (const pds_remote_mapping_info_t *api_info , void *ctxt)
+{
+    pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
+    auto mapping = proto_rsp->add_response();
+    pds::MappingSpec *proto_spec = mapping->mutable_spec();
+    pds::MappingStatus *proto_status = mapping->mutable_status();
+    pds::MappingStats *proto_stats = mapping->mutable_stats();
+
+    pds_remote_mapping_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_mapping_api_status_to_proto(proto_status, &api_info->status);
+    pds_mapping_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
 static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                       const pds::MappingSpec &proto_spec)

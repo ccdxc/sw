@@ -217,3 +217,56 @@ end:
     proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }
+Status
+MappingSvcImpl::MappingGet(ServerContext *context,
+                           const pds::MappingGetRequest *proto_req,
+                           pds::MappingGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_mapping_key_t key;
+    pds_local_mapping_info_t local_info;
+    pds_remote_mapping_info_t remote_info;
+
+    if (proto_req == NULL || proto_req->id_size() == 0) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    for (int i = 0; i < proto_req->id_size(); i++) {
+
+        // perhaps reference is sufficient here ?
+        pds::MappingKey proto_key;
+        proto_key = proto_req->id(i);
+
+        switch (proto_key.keyinfo_case()) {
+
+        case pds::MappingKey::kIPKey:
+            key.type = PDS_MAPPING_TYPE_L3;
+            key.vpc.id = proto_key.ipkey().vpcid();
+            ipaddr_proto_spec_to_api_spec(&key.ip_addr, proto_key.ipkey().ipaddr());
+            break;
+
+        // TODO: L2 key needs to be taken care of
+        case pds::MappingKey::kMACKey:
+            key.type = PDS_MAPPING_TYPE_L2;
+            key.subnet.id = proto_key.mackey().subnetid();
+            MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
+            // Fall through for now
+
+        default:
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+            return Status::OK;
+        }
+        ret = pds_local_mapping_read(&key, &local_info);
+        if (ret == SDK_RET_OK) {
+            pds_local_mapping_api_info_to_proto(&local_info, proto_rsp);
+            continue;
+        }
+        ret = pds_remote_mapping_read(&key, &remote_info);
+        if (ret != SDK_RET_OK) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        pds_remote_mapping_api_info_to_proto(&remote_info, proto_rsp);
+    }
+    return Status::OK;
+}
