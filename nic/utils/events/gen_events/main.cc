@@ -3,6 +3,7 @@
 #include "gen/proto/eventtypes.pb.h"
 #include "gen/proto/attributes.pb.h"
 #include <stdint.h>
+#include <cmath>
 #include <string>
 #include <spdlog/spdlog.h>
 
@@ -12,7 +13,7 @@ Logger logger = spdlog::stdout_color_mt("gen_events");
 events_recorder* init_events_recorder()
 {
     const char* component = "genevents";
-    int shm_size = (SHM_BUF_SIZE * 11) + IPC_OVH_SIZE; // shm can hold up to 10 events
+    int shm_size = (SHM_BUF_SIZE * 1501) + IPC_OVH_SIZE; // shm can hold up to 10 events
     return events_recorder::init(component, logger, shm_size);
 }
 
@@ -70,43 +71,80 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
 
 // records list of events as per requested rate and total events. message_substr will be added to
 // all the events generated. It will be easy to verify the events using this substr.
-int record_events(events_recorder* recorder, int rps, int total_events, char* message_substr)
+int record_events(events_recorder* recorder, int rps, int total_events, int percent_crit_events, char* message_substr)
 {
-    int num_non_critical_events_recorded = 0;
-    int num_critical_events_recorded = 0;
+    int num_critical_events_to_be_recorded = (percent_crit_events / 100.0) * total_events;
+
+    // number of critical events to be recorded per iteration
+    int num_critical_events_per_iteration = (percent_crit_events / 100.0) * rps;
+    num_critical_events_per_iteration = (num_critical_events_per_iteration > 0) ? round((percent_crit_events / 100.0) *
+    rps): num_critical_events_per_iteration;
+
+    int raise_critical_event_over_every_ith_iteration = 0;
+    if (num_critical_events_per_iteration == 0) {
+        // raise critical event for every (percent_crit_events * rps)th iteration
+        raise_critical_event_over_every_ith_iteration = (rps/((percent_crit_events / 100.0) * rps))/rps;
+    }
+
+    logger->info("total critical_events to be recorded: {}, num critical events per iteration: {}, raise critical event over every ith iteration: {}",
+        num_critical_events_to_be_recorded, num_critical_events_per_iteration,
+        raise_critical_event_over_every_ith_iteration);
+
+    int num_non_critical_events_per_iteration = rps - num_critical_events_per_iteration;
+
+    int time_to_sleep = 1000000 / rps;
     int num_events_recorded = 0;
-    int num_events_per_iteration = (rps < 5) ? rps : (rps / 5);
-
-    // 1s or 200ms accounts for the time to send events
-    int time_to_sleep = (rps < 5) ? 1000000 : 200000;
-
+    int iteration = 1;
     while (num_events_recorded < total_events) {
-        for (int i = 0; i < num_events_per_iteration; i++) {
+        // raise non-critical events
+        for (int i = 0; i < num_non_critical_events_per_iteration; i++) {
             char rand_str[10];
             gen_random_str(rand_str, 10);
-            std::string evt_message = message_substr + std::string("-") + std::to_string(i + num_events_recorded) +
-                std::string(" ") + rand_str;
+            std::string evt_message = message_substr + std::string("-") + std::to_string(i + num_events_recorded) + std::string(" ") + rand_str;
             int ret_val = record_event(recorder, get_random_event_type(), evt_message.c_str());
             if (ret_val != 0) {
                 return ret_val;
             }
-        }
-        num_non_critical_events_recorded += num_events_per_iteration;
-        usleep(time_to_sleep); // 1s or 200ms
 
-        // record 1 critical event every second
-        if ((rps - num_events_per_iteration) != 0 && num_non_critical_events_recorded % (rps - num_events_per_iteration) == 0) {
-            std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
-            int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
-            if (ret_val != 0) {
-                return ret_val;
-            }
-            num_critical_events_recorded++;
-            usleep(time_to_sleep/num_events_per_iteration);
+            usleep(time_to_sleep);
         }
-        num_events_recorded = num_non_critical_events_recorded + num_critical_events_recorded;
-        logger->info("num events recorded so far: non-critical - {}, critical - {}, total - {}",
-            num_non_critical_events_recorded, num_critical_events_recorded, num_events_recorded);
+        num_events_recorded += num_non_critical_events_per_iteration;
+
+        // raise critical events
+        if (num_critical_events_to_be_recorded > 0) {
+            if (num_critical_events_per_iteration > 0) {
+                for (int i = 0; i < num_critical_events_per_iteration; i++) {
+                    std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
+                    int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
+                    if (ret_val != 0) {
+                        return ret_val;
+                    }
+
+                    usleep(time_to_sleep);
+                }
+                num_events_recorded += num_critical_events_per_iteration;
+                num_critical_events_to_be_recorded -= num_critical_events_per_iteration;
+            }
+            else {
+                if (raise_critical_event_over_every_ith_iteration != 0 &&
+                    iteration % raise_critical_event_over_every_ith_iteration == 0)
+                    {
+                        std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
+                        int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
+                        if (ret_val != 0) {
+                            return ret_val;
+                        }
+                        usleep(time_to_sleep);
+                        num_events_recorded += 1;
+                        num_critical_events_to_be_recorded -= 1;
+                    }
+            }
+        }
+
+        iteration++;
+
+        logger->info("total events recorded so far: {}, pending critical events: {}", num_events_recorded,
+            num_critical_events_to_be_recorded);
     }
 
     return 0;
@@ -119,6 +157,7 @@ void print_usage(char* name)
                     "\t -h help \n"
                     "\t -r rate per second \n"
                     "\t -t total events \n"
+                    "\t -c percentage of critical events (default: 1%) \n"
                     "\t -s substring to be included in all the event messages\n",
         name);
 }
@@ -130,11 +169,12 @@ int main(int argc, char** argv)
     logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
 
     int rate_per_second = 1;
+    int percent_crit_events = 1;
     int total_events = 1;
     char* evt_message_substr = strdup("");
 
     int opt;
-    while ((opt = getopt(argc, argv, "r:t:s:h")) != -1) {
+    while ((opt = getopt(argc, argv, "r:t:c:s:h")) != -1) {
         switch (opt) {
         case 'r':
             rate_per_second = atoi(optarg);
@@ -142,6 +182,9 @@ int main(int argc, char** argv)
             break;
         case 't':
             total_events = atoi(optarg);
+            break;
+        case 'c':
+            percent_crit_events = atoi(optarg);
             break;
         case 's':
             evt_message_substr = optarg;
@@ -160,8 +203,14 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    if (percent_crit_events < 0 || percent_crit_events > 100) {
+        fprintf(stderr, "[-c percentage of critical events] should be between (0..100)\n");
+        exit(EXIT_FAILURE);
+    }
+
     logger->info("rate per second: {}", rate_per_second);
     logger->info("total events: {}", total_events);
+    logger->info("percent critical events: {}", percent_crit_events);
 
     // initialize events recorder
     events_recorder* recorder = init_events_recorder();
@@ -170,7 +219,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    int ret_val = record_events(recorder, rate_per_second, total_events, evt_message_substr);
+    int ret_val = record_events(recorder, rate_per_second, total_events, percent_crit_events, evt_message_substr);
     if (ret_val == -1) {
         printf("failed to record requested number of events\n");
         exit(EXIT_FAILURE);
