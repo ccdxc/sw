@@ -400,6 +400,7 @@ struct ${table}_${actionname}_d {
 //::                else:
 //::                    for actionfld in actionflddict:
 //::                        actionfldname  = actionfld['p4_name']
+//::                        asmfldname = actionfld['asm_name']
 //::                        actionfldwidth = actionfld['len']
 //::                        little_str = ''
 //::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
@@ -407,7 +408,7 @@ struct ${table}_${actionname}_d {
 //::                                little_str = ' (little)'
 //::                            #endif
 //::                        #endif
-    ${actionfldname} : ${actionfldwidth} ${little_str};
+    ${asmfldname} : ${actionfldwidth} ${little_str};
 //::                        kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
 //::                        _kdbit += actionfldwidth
 //::                    #endfor

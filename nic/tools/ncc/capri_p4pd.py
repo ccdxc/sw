@@ -164,38 +164,47 @@ class capri_p4pd:
     def build_table_key_bitextract_hwformat(self, ctable, km_inst, km_bit_extractor_byte, km_cprofile, km_byte_to_cf_map,
                                             km_bit_to_cf_map, not_my_key_bits, not_my_key_bytes,
                                             cf_table_keylist):
+        # the code seems to assume that the two bit extractors are placed next to each other
+        # which may not be the case - FIX it TBD
         start_kbit = km_cprofile.bit_loc * 8 + (km_inst * 32 * 8)
-        start_kbit_sel = km_bit_extractor_byte * 8
-        end_kbit_sel = len(km_cprofile.k_bit_sel)
+        start_kbit_sel = km_bit_extractor_byte * 8  # start at 8 for second extractor
         if len(km_cprofile.k_bit_sel) > 0:
             key_bit_in_bit_extractor_byte = False
             for km_bit in range(start_kbit_sel, start_kbit_sel + 8):
-                if km_bit < end_kbit_sel:
-                    phv_bit = km_cprofile.k_bit_sel[km_bit]
-                    for cf in cf_table_keylist:
-                        if phv_bit <= cf.phv_bit + cf.width:
-                            for cf_bit in range(0, cf.width):
-                                if (cf.phv_bit + cf_bit) == phv_bit:
-                                    key_bit_in_bit_extractor_byte = True
-                                    break
-                        if key_bit_in_bit_extractor_byte: break
+                if km_bit >= len(km_cprofile.bit_sel):
+                    continue
+                phv_bit = km_cprofile.bit_sel[km_bit]
+                if phv_bit < 0:
+                    continue
+                for cf in cf_table_keylist:
+                    if phv_bit <= cf.phv_bit + cf.width:
+                        for cf_bit in range(0, cf.width):
+                            if (cf.phv_bit + cf_bit) == phv_bit:
+                                key_bit_in_bit_extractor_byte = True
+                                break
+                    if key_bit_in_bit_extractor_byte: break
+
                 if key_bit_in_bit_extractor_byte: break
+
             for km_bit in range(start_kbit_sel, start_kbit_sel + 8):
                 cf_bit_found = False
-                if km_bit < end_kbit_sel:
-                    phv_bit = km_cprofile.k_bit_sel[km_bit]
-                    for cf in cf_table_keylist:
-                        if phv_bit <= cf.phv_bit + cf.width:
-                            for cf_bit in range(0, cf.width):
-                                if (cf.phv_bit + cf_bit) == phv_bit:
-                                    if start_kbit + km_bit not in km_bit_to_cf_map.keys():
-                                        km_bit_to_cf_map[start_kbit + km_bit] = [(cf, cf_bit, 1, "K")]
-                                    else:
-                                        # Incase of field union, 2 different k bytes can map
-                                        # same km byte position.
-                                        km_bit_to_cf_map[start_kbit + km_bit].append[(cf, cf_bit, 1, "K")]
-                                    cf_bit_found = True
-                                    break
+                if km_bit < len(km_cprofile.bit_sel):
+                    # key bits need not be allocated left justified in the bit selector
+                    phv_bit = km_cprofile.bit_sel[km_bit]
+                    if phv_bit >= 0:
+                        for cf in cf_table_keylist:
+                            if phv_bit <= cf.phv_bit + cf.width:
+                                for cf_bit in range(0, cf.width):
+                                    if (cf.phv_bit + cf_bit) == phv_bit:
+                                        if start_kbit + km_bit not in km_bit_to_cf_map.keys():
+                                            km_bit_to_cf_map[start_kbit + km_bit] = [(cf, cf_bit, 1, "K")]
+                                        else:
+                                            # Incase of field union, 2 different k bytes can map
+                                            # same km byte position.
+                                            km_bit_to_cf_map[start_kbit + km_bit].append((cf, cf_bit, 1, "K"))
+                                        cf_bit_found = True
+                                        break
+
                 if not cf_bit_found:
                     # Phv bit that is not my table key bit.
                     # Belongs to key of another table and part
@@ -208,8 +217,12 @@ class capri_p4pd:
                         # part of this table's key that need to be
                         # masked out.
                         if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0 or \
-                            (key_bit_in_bit_extractor_byte and km_bit < end_kbit_sel): # when leading bits in
-                                                                                       # bit-xtor are not in key
+                            key_bit_in_bit_extractor_byte:
+                            '''
+                            # I don't know what this check is ... not making sense. end_km_bit cannot
+                            # be computes this way
+                            and km_bit < end_kbit_sel): # when leading bits in bit-xtor are not in key
+                            '''
                             kbitlen = 0
                             if len(km_byte_to_cf_map) > 0:
                                 kbitlen =  len(km_byte_to_cf_map) * 8

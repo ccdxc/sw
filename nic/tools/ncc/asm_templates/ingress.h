@@ -404,6 +404,7 @@ struct ${table}_${actionname}_d {
 //::                else:
 //::                    for actionfld in actionflddict:
 //::                        actionfldname  = actionfld['p4_name']
+//::                        asmfldname  = actionfld['asm_name']
 //::                        actionfldwidth = actionfld['len']
 //::                        dvec_start = actionfld['dvec_start']
 //::                        fle_start = 511-dvec_start
@@ -413,7 +414,7 @@ struct ${table}_${actionname}_d {
 //::                                little_str = ' (little)'
 //::                            #endif
 //::                        #endif
-    ${actionfldname} : ${actionfldwidth} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
+    ${asmfldname} : ${actionfldwidth} ${little_str}; /* BE[${dvec_start}], FLE[${fle_start}] */
 //::                        kd_json[_kdbit] = {'bit': _kdbit, 'width': actionfldwidth, 'field': actionfldname}
 //::                        _kdbit += actionfldwidth
 //::                    #endfor
