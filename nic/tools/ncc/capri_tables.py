@@ -4723,6 +4723,7 @@ class capri_stage:
             test_val >>= 1
             mask = self.table_profile_masks[val]
             cp = self.gtm.table_predicates[c_name]
+            is_multibit = True if len(cp.cfield_vals) > 1 else False
             for cf, v in cp.cfield_vals:
                 if mask & test_val:
                     # this condition is used (not X)
@@ -4733,7 +4734,7 @@ class capri_stage:
                         cf_val_mask[cf] = (v, ((1<<cf.width) - 1))
                     else:
                         # condition is false
-                        if cf.width == 1:
+                        if cf.width == 1 and not is_multibit:
                             # For a single bit field, false value is opposite (1-v) or True value
                             # Programming this may result in redundant entries in TCAM - XXX optimize
                             if cf in cf_val_mask and cf_val_mask[cf][1] != 0:

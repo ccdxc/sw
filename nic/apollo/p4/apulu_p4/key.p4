@@ -109,9 +109,4 @@ table key_tunneled {
 
 control key_init {
     apply(key_native);
-    if ((control_metadata.rx_packet == TRUE) and
-        (control_metadata.to_device_ip == TRUE) and
-        (vxlan_1.valid == TRUE)) {
-        apply(key_tunneled);
-    }
 }

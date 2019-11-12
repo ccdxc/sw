@@ -114,13 +114,12 @@ action p4i_inter_pipe() {
         // return
     }
 
-    if (control_metadata.tunneled_packet == TRUE) {
-        tunnel_decap();
-    }
-
     if (control_metadata.flow_miss_redirect == TRUE) {
         ingress_to_rxdma();
     } else {
+        if (control_metadata.tunneled_packet == TRUE) {
+            tunnel_decap();
+        }
         ingress_to_egress();
     }
 }

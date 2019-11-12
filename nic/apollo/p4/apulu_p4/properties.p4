@@ -182,6 +182,7 @@ control input_properties {
         (vxlan_1.valid == TRUE)) {
         apply(vni);
         apply(vni_otcam);
+        apply(key_tunneled);
     } else {
         apply(vlan);
     }

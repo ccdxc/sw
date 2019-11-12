@@ -12,14 +12,13 @@ p4i_inter_pipe:
     seq             c1, k.ingress_recirc_flow_done, FALSE
     seq.!c1         c1, k.ingress_recirc_local_mapping_done, FALSE
     bcf             [c1], ingress_recirc
-    seq             c1, k.control_metadata_tunneled_packet, TRUE
-    balcf           r7, [c1], tunnel_decap
-    add             r6, r0, k.capri_p4_intrinsic_packet_len
     seq             c1, k.control_metadata_flow_miss_redirect, TRUE
     bcf             [c1], ingress_to_rxdma
-    nop
+    seq             c1, k.control_metadata_tunneled_packet, TRUE
 
 ingress_to_egress:
+    balcf           r7, [c1], tunnel_decap
+    add             r6, r0, k.capri_p4_intrinsic_packet_len
     /*
     phvwr           p.p4i_i2e_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
