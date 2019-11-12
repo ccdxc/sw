@@ -20,19 +20,12 @@ constexpr int k_max_cookie = 1000;
 
 class cookie_t : public slab_obj_t<cookie_t> {
 public:    
-    std::vector<pdsa_stub::base_obj_t*> objs;
+    std::vector<std::unique_ptr<pdsa_stub::base_obj_t>> objs;
     bool op_delete = false;
     NBB_IPS* ips = nullptr;
     NBB_PROC_ID nbb_stub_pid;
     NBB_PROC_ID nbb_send_pid;
     NBB_QUEUE_ID nbb_qid;
-
-    ~cookie_t() {
-        for (auto& cookie_obj: objs) {
-            delete (cookie_obj);
-            cookie_obj = nullptr;
-        }
-    }
 };
 
 }

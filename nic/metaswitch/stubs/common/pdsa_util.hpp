@@ -104,5 +104,9 @@ private:
     pds_batch_ctxt_t bctxt_ = 0;
 };
 
-}
+// Utility function to get MAC address for interface from Linux
+bool 
+get_interface_mac_address (const std::string& if_name, mac_addr_t& if_mac);
+
+} // End namespace
 #endif

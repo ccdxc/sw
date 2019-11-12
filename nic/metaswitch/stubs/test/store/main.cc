@@ -9,8 +9,14 @@
 //----------------------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/test/utils/base.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <netpacket/packet.h>
+#include <iostream>
 
 using pdsa_stub::state_t;
 using pdsa_stub::bd_store_t;
@@ -56,12 +62,14 @@ TEST_F(bd_store_test, update) {
     // Update existing entry
     auto state = state_thr_ctxt.state();
     auto bd_old = state->bd_store().get (100);
-    auto bd_obj = new bd_obj_t(*bd_old);
-    ASSERT_TRUE (bd_obj != nullptr);
-    bd_obj->properties().hal_idx = 101;
-    ASSERT_TRUE (bd_obj->properties().hal_idx == 101);
-    state->bd_store().add_upd (100, bd_obj);
 
+    // Make a new copy of the old object and update a field
+    auto bd_obj = new bd_obj_t(*bd_old);
+    bd_obj->properties().hal_idx = 101;
+
+    // After insert old object should be freed back to slab
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 2);
+    state->bd_store().add_upd (100, bd_obj);
     ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 1);
 
     // Test the BD store
@@ -81,6 +89,11 @@ TEST_F(bd_store_test, delete_store) {
     ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 0);
 }
 
+TEST(util_test, mac_get) {
+   mac_addr_t if_mac;
+   pdsa_stub::get_interface_mac_address ("eth0", if_mac);
+   std::cout << "Found MAC " << macaddr2str(if_mac) << std::endl;
+}
 
 } // namespace api_test
 

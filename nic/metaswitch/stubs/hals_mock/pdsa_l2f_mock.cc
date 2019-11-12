@@ -1,6 +1,6 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA Implementation of Metaswitch L2F stub integration
+// Mock implementation of Metaswitch L2F stub integration
 //---------------------------------------------------------------
 
 #include <l2f_c_includes.hpp>

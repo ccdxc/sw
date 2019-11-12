@@ -21,7 +21,7 @@ extern "C"
 #include <ntloffst.h>
 #include <a0spec.h>
 #include <o0mac.h>
-#include "lipi.h"
+#include <lipi.h>
 }
 
 namespace pdsa_stub {

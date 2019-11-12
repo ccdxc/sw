@@ -4,7 +4,6 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
@@ -41,9 +40,6 @@ hal_callback (uint64_t cookie)
 
 bool hal_init(void)
 {
-    static pdsa_stub::LiIntegSubcomponent g_pdsa_li;
-    /* LI stub implementation instance needs to be registered with Metaswitch*/
-    li_pen::is_initialize(&g_pdsa_li);
     // TODO: Register callback with PDS
     return true;
 }

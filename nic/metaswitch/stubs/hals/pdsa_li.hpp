@@ -1,18 +1,27 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Class that implements the Metaswitch LI stub integration interface
+// PDSA LI stub DP APIs
 //---------------------------------------------------------------
 
 #ifndef __PDSA_LI_HPP__
 #define __PDSA_LI_HPP__
 
-#include "nic/third-party/metaswitch/code/stubs/li/li_pen_is.hpp"
+#include <nbase.h>
+#include <ntl_remote_object.hpp>
+extern "C"
+{
+#include <lipi.h>
+}
 
 namespace pdsa_stub {
 
-class LiIntegSubcomponent : public li_pen::IntegrationSubcomponent {
+class li_integ_subcomp_t {
 public:
-    ~LiIntegSubcomponent() {};
+    ~li_integ_subcomp_t() {};
+      // Physical interface 
+    NBB_BYTE port_add_update (ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
+    NBB_BYTE port_delete (NBB_ULONG port_ifindex);
+
     NBB_BYTE vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
     NBB_BYTE vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_len);
 
@@ -26,6 +35,8 @@ public:
     NBB_BYTE irb_delete(NBB_ULONG irb_ifindex);
 };
 
-}
+li_integ_subcomp_t* li_is (void);
+
+} // End namespace
 
 #endif

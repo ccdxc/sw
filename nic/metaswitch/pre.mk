@@ -3,7 +3,6 @@
 export MS_ROOT = $(TOPDIR)/nic/third-party/metaswitch
 export GMK_TARGETOS = linuxmt64
 export MODE = debug
-
 export MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)/$(MODE)
 
 export MS_COMPILATION_SWITCH = \
@@ -34,7 +33,8 @@ export MS_INCLPATH = \
 	code/stubs/sck/          \
 	code/stubs/l2f/          \
 	code/stubs/hals/         \
-	code/comn/l2              \
+	code/stubs/smi           \
+	code/comn/l2             \
 	code/comn/worker         \
 	output/$(GMK_TARGETOS)
 
@@ -42,7 +42,7 @@ export MS_LD_LIBS = \
         dcgeolocn dcamx dchm dci3dl dcadll dctpl dchals dcjoinxcpi \
         dcftm dcjoinropi dclim dcjoinbdii dcjoinlapi dcjointci \
         dcjointpi dcjoinsmi dci3filter dcysscam dcyssdef dcpcepsl \
-        dcsck dcipl dccpfl dcnrm dcjoinnbpi dcl2radv dcnar \
+        dcsmi dcsck dcipl dccpfl dcnrm dcjoinnbpi dcl2radv dcnar \
         dcjoinnari dcevpn dcbdpl dcraid dcbgp dcqaql dcamh \
         dcqcft dcla dcl2 dcli dcjoinfri dcfrl dcjoinlipi \
         dcqcrt dccipr dcqrml dcl2rdisc dcpsm dcjoinbfdi \

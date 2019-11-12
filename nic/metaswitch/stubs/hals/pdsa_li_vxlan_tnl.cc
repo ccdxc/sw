@@ -11,30 +11,35 @@ namespace pdsa_stub {
 void 
 li_vxlan_tnl::cache_obj_in_cookie_for_create_op_ (void)
 {
-    // Create new If Object but do not update it in the Global State Store yet
     if (likely (store_info_.tun_if_obj == nullptr)) {
-        auto new_if_obj = new if_obj_t(if_obj_t::vxlan_tunnel_properties_t{ips_info_.if_index, 
-                                       ips_info_.tep_ip});
-        // Update the store info pointer so that the make_pds_spec uses the latest fields
-        store_info_.tun_if_obj = new_if_obj; 
+        // Create new If Object but do not save it in the Global State yet
+        std::unique_ptr<if_obj_t> new_if_obj 
+            (new if_obj_t(if_obj_t::vxlan_tunnel_properties_t
+                              {ips_info_.if_index, 
+                              ips_info_.tep_ip}));
+        // Update the local store info context so that the make_pds_spec 
+        // refers to the latest fields
+        store_info_.tun_if_obj = new_if_obj.get(); 
         // Cache the new object in the cookie to revisit asynchronously
         // when the PDS API response is received
-        cookie_uptr_->objs.push_back(new_if_obj);
+        cookie_uptr_->objs.push_back(std::move (new_if_obj));
     } else {
         auto& tnl_if_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
         // Dest IP cannot change for existing tunnel
         SDK_ASSERT(IPADDR_EQ (&tnl_if_prop.tep_ip, &ips_info_.tep_ip));
     }
 
-    // Create new Tep Object but do not update it in the Global State Store yet
+    // Create new Tep Object but do not save it in the Global State yet
     // Use the MS Tunnel IfIndex as the HAL index for ECMP and TEP tables
-    auto new_tep_obj = new tep_obj_t({ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
-                                     ips_info_.if_index, ips_info_.if_index});
-    // Update the store info pointer so that the make_pds_spec uses the latest fields
-    store_info_.tep_obj = new_tep_obj; 
+    std::unique_ptr<tep_obj_t> new_tep_obj 
+        (new tep_obj_t({ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
+                       ips_info_.if_index, ips_info_.if_index}));
+    // Update the local store info context so that the make_pds_spec 
+    // refers to the latest fields
+    store_info_.tep_obj = new_tep_obj.get(); 
     // Cache the new object in the cookie to revisit asynchronously
     // when the PDS API response is received
-    cookie_uptr_->objs.push_back(new_tep_obj);
+    cookie_uptr_->objs.push_back(std::move(new_tep_obj));
 }
 
 bool 
@@ -45,20 +50,23 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_ (void)
     // Dest IP cannot change for existing tunnel
     SDK_ASSERT(IPADDR_EQ (&tnl_if_prop.tep_ip, &ips_info_.tep_ip));
 
-    if (unlikely (ips_info_.hal_uecmp_idx == store_info_.tep_obj->properties().hal_uecmp_idx)) {
+    if (unlikely (ips_info_.hal_uecmp_idx == 
+                  store_info_.tep_obj->properties().hal_uecmp_idx)) {
         // No change in TEP
         return false;
     }
 
     // Create a new object with the updated fields
-    // but do not update it in the Global State Store yet
-    auto new_tep_obj = new tep_obj_t(*(store_info_.tep_obj));
+    // but do not save it in the Global State yet
+    std::unique_ptr<tep_obj_t> new_tep_obj 
+        (new tep_obj_t(*(store_info_.tep_obj)));
     new_tep_obj->properties().hal_uecmp_idx = ips_info_.hal_uecmp_idx;
-    // Update the store info pointer so that the make_pds_spec uses the latest fields
-    store_info_.tep_obj = new_tep_obj; 
+    // Update the local store info context so that the make_pds_spec 
+    // refers to the latest fields
+    store_info_.tep_obj = new_tep_obj.get(); 
     // Cache the new object in the cookie to revisit asynchronously
     // when the PDS API response is received
-    cookie_uptr_->objs.push_back(new_tep_obj);
+    cookie_uptr_->objs.push_back(std::move(new_tep_obj));
     return true;
 }
 
@@ -68,12 +76,12 @@ li_vxlan_tnl::cache_obj_in_cookie_for_delete_op_ (void)
     // Do not delete the object from the store until PDS Async response is received
     // Cache a copy of the object in the cookie to revisit and delete asynchronously
     if (store_info_.tep_obj != nullptr) {
-        auto new_tep_obj = new tep_obj_t(*(store_info_.tep_obj));
-        cookie_uptr_->objs.push_back(new_tep_obj);
+        std::unique_ptr<tep_obj_t> new_tep_obj (new tep_obj_t(*(store_info_.tep_obj)));
+        cookie_uptr_->objs.push_back(std::move(new_tep_obj));
     }
     if (store_info_.tun_if_obj != nullptr) {
-        auto new_if_obj = new if_obj_t(*(store_info_.tun_if_obj));
-        cookie_uptr_->objs.push_back(new_if_obj);
+        std::unique_ptr<if_obj_t> new_if_obj (new if_obj_t(*(store_info_.tun_if_obj)));
+        cookie_uptr_->objs.push_back(std::move(new_if_obj));
     }
 }
 
@@ -82,12 +90,9 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
 {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
-#if 0 /* TODO: SDK Library linkage */
     pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
-#else
-    pds_batch_ctxt_t bctxt = 1;
-#endif
+
     if (unlikely (!bctxt)) {
         throw Error {"VxlanAddUpdate PDS Batch Start failed"};
     }
@@ -95,20 +100,12 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
 
     if (op_delete_) { // Delete
         auto tep_key = make_pds_tep_key_();
-#if 0 /* TODO: SDK Library linkage */
         pds_tep_delete(&tep_key, bctxt);
-#else
-        tep_key = tep_key;
-#endif
+
         auto nhgroup_key = make_pds_nhgroup_key_();
-#if 0 /* TODO: SDK Library linkage */
         pds_nexthop_group_delete(&nhgroup_key, bctxt);
-#else
-        nhgroup_key = nhgroup_key;
-#endif
     } else { // Add or update
         auto tep_spec = make_pds_tep_spec_();
-#if 0 /* TODO: SDK Library linkage */
         sdk_ret_t ret;
         if (op_create_) {
             ret = pds_tep_create(&tep_spec, bctxt);
@@ -118,9 +115,6 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error {"PDS Tep Create failed"};
         }
-#else
-        tep_spec = tep_spec;
-#endif
 
         auto nhgroup_spec = make_pds_nhgroup_spec_();
 #if 0 // TODO: API unavailable
@@ -182,9 +176,7 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
 
     // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
     cookie_uptr_.release();
-#if 0 /* TODO: SDK Library linkage */
     pds_batch_commit(pds_bctxt_guard.release());
-#endif
     SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", tep_ip_str);
     return true;
 }
@@ -225,9 +217,7 @@ li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex)
 
     // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
     cookie_uptr_.release();
-#if 0 /* TODO: SDK Library linkage */
     pds_batch_commit(pds_bctxt_guard.release());
-#endif
     SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", tep_ip_str);
     return true;
 }
