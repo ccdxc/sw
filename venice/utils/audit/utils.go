@@ -110,6 +110,21 @@ func NewErrorPopulator(apierr error) EventPopulator {
 			return nil
 		}
 		status := apierrors.FromError(apierr)
+		// truncate if error messages are more than 512 bytes
+		var currLen, msgCap int
+		for i, msg := range status.Message {
+			top := len(msg)
+			if top > 512-currLen {
+				top = 512 - currLen
+			}
+			if top <= 0 {
+				break
+			}
+			status.Message[i] = string([]byte(msg)[:top])
+			currLen += top
+			msgCap++
+		}
+		status.Message = status.Message[:msgCap]
 		b, err := json.Marshal(status)
 		if err != nil {
 			return err

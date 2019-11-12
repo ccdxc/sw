@@ -1191,6 +1191,114 @@ func TestAudit(t *testing.T) {
 	}
 }
 
+func TestAuditErrorTruncation(t *testing.T) {
+	errBytes := []byte(CreateAlphabetString(513))
+	sgPolicy := &security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "policy1",
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"10.0.0.0/24"},
+					ToIPAddresses:   []string{"11.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
+					Action: "PERMIT",
+				},
+			},
+		},
+	}
+	tests := []struct {
+		name         string
+		err          error
+		errStr       string
+		errStrCount  int
+		loggedErrStr string
+		truncated    bool
+	}{
+		{
+			name:         "error message more than 512 bytes",
+			err:          apierrors.ToGrpcError("Operation failed to complete", []string{string(errBytes)}, int32(codes.Aborted), "", nil),
+			errStr:       string(errBytes),
+			errStrCount:  1,
+			loggedErrStr: string(errBytes[:512]),
+			truncated:    true,
+		},
+		{
+			name:         "error message less than 512 bytes",
+			err:          apierrors.ToGrpcError("Operation failed to complete", []string{string(errBytes[:300])}, int32(codes.Aborted), "", nil),
+			errStr:       string(errBytes[:300]),
+			errStrCount:  1,
+			loggedErrStr: string(errBytes[:300]),
+			truncated:    false,
+		},
+		{
+			name:         "multiple error messages more than 512 bytes",
+			err:          apierrors.ToGrpcError("Operation failed to complete", []string{string(errBytes[:300]), string(errBytes[:300])}, int32(codes.Aborted), "", nil),
+			errStr:       string(errBytes[:301]),
+			errStrCount:  2,
+			loggedErrStr: string(errBytes[:212]),
+			truncated:    true,
+		},
+		{
+			name:         "multiple error messages less than 512 bytes",
+			err:          apierrors.ToGrpcError("Operation failed to complete", []string{string(errBytes[:256]), string(errBytes[:256])}, int32(codes.Aborted), "", nil),
+			errStr:       string(errBytes[:256]),
+			errStrCount:  2,
+			loggedErrStr: string(errBytes[:256]),
+			truncated:    false,
+		},
+	}
+	user := &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testUser",
+		},
+		Spec: auth.UserSpec{
+			Fullname: "Test User",
+			Password: "password",
+			Email:    "testuser@pensandio.io",
+			Type:     auth.UserSpec_Local.String(),
+		},
+	}
+	ops := []authz.Operation{authz.NewOperation(
+		authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+		auth.Permission_Create.String())}
+
+	_ = MustGetAPIGateway()
+
+	a := singletonAPIGw
+	a.runstate.running = true
+	a.runstate.addr = &mockAddr{}
+	for _, test := range tests {
+		buf := &bytes.Buffer{}
+		logConfig := log.GetDefaultConfig("TestApiGw")
+		l := log.GetNewLogger(logConfig).SetOutput(buf)
+		a.logger = l
+		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
+		err := a.audit("event1", user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "")
+		AssertOk(t, err, "unexpected error logging audit event")
+		bufStr := buf.String()
+		bufStr = strings.Replace(bufStr, "\\", "", -1)
+		Assert(t, strings.Contains(bufStr, test.loggedErrStr), fmt.Sprintf("[%s] test failed, expected log [%s] to contain [%s]", test.name, bufStr, test.loggedErrStr))
+		Assert(t, strings.Count(bufStr, test.loggedErrStr) == test.errStrCount,
+			fmt.Sprintf("[%s] test failed, expected log [%s] to contain error string count [%d], got [%d]", test.name, bufStr, test.errStrCount, strings.Count(bufStr, test.loggedErrStr)))
+		if test.truncated {
+			Assert(t, !strings.Contains(bufStr, test.errStr), fmt.Sprintf("[%s] test failed, expected log [%s] to not contain [%s]", test.name, bufStr, test.errStr))
+		}
+	}
+}
+
 func TestModuleChangeCb(t *testing.T) {
 	_ = MustGetAPIGateway()
 
