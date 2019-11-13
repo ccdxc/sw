@@ -43,6 +43,7 @@ struct intr_reg_t {
         intr_field_t fields[];
 };
 
+typedef void (*intr_walk_cb_t)(intr_reg_t *reg, intr_field_t *field);
 typedef void (*intr_event_cb_t)(const intr_reg_t *reg,
                                 const intr_field_t *field);
 typedef struct intr_cfg_s {
@@ -51,15 +52,6 @@ typedef struct intr_cfg_s {
 
 extern intr_reg_t cap0;
 extern intr_reg_t all_csrs;
-
-// interrupt lib initialization
-int intr_init(intr_cfg_t *intr_cfg);
-
-// dump all non-zero interrupts
-void print_interrupts(intr_reg_t &reg);
-
-// interrupts poll
-void traverse_interrupts(intr_reg_t &reg);
 
 static inline std::string
 get_severity_str (intr_sev_type_t sev)
@@ -79,5 +71,17 @@ get_severity_str (intr_sev_type_t sev)
         return "INFO";
     }
 }
+
+// interrupt lib initialization
+int intr_init(intr_cfg_t *intr_cfg);
+
+// interrupts poll
+void traverse_interrupts(void);
+
+// walk all interrupts
+void walk_interrupts(intr_walk_cb_t intr_walk_cb);
+
+// clear sw state for all interrupts
+void clear_interrupts(void);
 
 #endif    // __SDK_INTERRUPTS_HPP__

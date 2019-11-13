@@ -11,23 +11,29 @@
 
 static intr_cfg_t intr_cfg;
 
-void
-print_interrupts (intr_reg_t &reg)
+static void
+walk_interrupts (intr_reg_t &reg,
+                 intr_walk_cb_t intr_walk_cb)
 {
     intr_field_t *field;
 
     for(int i=0; i < reg.field_count; i++) {
         field = &reg.fields[i];
 
-        if (field->count != 0) {
-            SDK_TRACE_ERR("name: %s_%s, count: %lu, severity: %s, desc: %s",
-                          reg.name, field->name, field->count,
-                          get_severity_str(field->severity).c_str(), field->desc);
+        if (intr_walk_cb) {
+            intr_walk_cb(&reg, field);
         }
         if(field->next_ptr) {
-            print_interrupts(*field->next_ptr);
+            walk_interrupts(*field->next_ptr, intr_walk_cb);
         }
     }
+}
+
+static void
+intr_clear_cb (intr_reg_t *reg,
+               intr_field_t *field)
+{
+    field->count = 0;
 }
 
 static void
@@ -38,7 +44,7 @@ handle_interrupt (intr_reg_t *reg, intr_field_t *field)
     }
 }
 
-void
+static void
 traverse_interrupts (intr_reg_t &reg)
 {
     pal_ret_t ret;
@@ -96,4 +102,24 @@ intr_init (intr_cfg_t *cfg)
 {
     intr_cfg = *cfg;
     return 0;
+}
+
+void
+traverse_interrupts (void)
+{
+    traverse_interrupts(cap0);
+    traverse_interrupts(all_csrs);
+}
+
+void
+walk_interrupts (intr_walk_cb_t intr_walk_cb)
+{
+    walk_interrupts(cap0, intr_walk_cb);
+    walk_interrupts(all_csrs, intr_walk_cb);
+}
+
+void
+clear_interrupts (void)
+{
+    walk_interrupts(intr_clear_cb);
 }

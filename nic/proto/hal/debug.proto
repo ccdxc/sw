@@ -768,3 +768,18 @@ message OifListGetResponseMsg {
   types.ApiStatus               api_status = 1;  // API status code
   repeated OifListGetResponse   response = 2;    // batched response
 }
+
+enum Command {
+  CMD_NONE         = 0;
+  CMD_DUMP_INTR    = 1;
+  CMD_CLEAR_INTR   = 2;
+}
+
+message CommandCtxt {
+  int64    Version  = 1;
+  Command  Cmd      = 2;
+}
+
+message CommandResponse {
+  types.ApiStatus ApiStatus = 1;
+}

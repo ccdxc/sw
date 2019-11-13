@@ -8,10 +8,32 @@
 #include "platform/src/app/sysmond/event_recorder/sysmond_eventrecorder_cb.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 
+extern int g_print_fd;
+
 void
 event_cb_init (void)
 {
     delphi_event_cb_init();
+}
+
+void
+intr_dump_cb (intr_reg_t *reg, intr_field_t *field)
+{
+    if (field->count == 0) {
+        return;
+    }
+
+    std::string name = string(reg->name) + "_" + string(field->name);
+
+    if (g_print_fd == -1) {
+        SDK_TRACE_ERR("name %s, count %lu, severity %s, desc %s",
+                  name.c_str(), field->count,
+                  get_severity_str(field->severity).c_str(), field->desc);
+    } else {
+        dprintf(g_print_fd, "%-50s %-10lu %-9s %-s\n",
+                  name.c_str(), field->count,
+                  get_severity_str(field->severity).c_str(), field->desc);
+    }
 }
 
 void

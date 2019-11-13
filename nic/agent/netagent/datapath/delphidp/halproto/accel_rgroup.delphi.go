@@ -246,6 +246,8 @@ It has these top-level messages:
 	OifListGetRequestMsg
 	OifListGetResponse
 	OifListGetResponseMsg
+	CommandCtxt
+	CommandResponse
 	ICMPMsg
 	DoSService
 	DoSSessionLimits
