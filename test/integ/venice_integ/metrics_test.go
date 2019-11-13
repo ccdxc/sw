@@ -265,3 +265,61 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 
 	}, "failed to query metrics", "2s", "120s")
 }
+
+func (it *veniceIntegSuite) TestFlowMetrics(c *C) {
+	// metrics iterators don't work in OSX
+	if runtime.GOOS == "darwin" {
+		return
+	}
+	iter, err := goproto.NewIPv4FlowDropMetricsIterator()
+	AssertOk(c, err, "Error creating v4 Flow Drop metrics Iterator")
+
+	// create an entry
+	flowKey := goproto.IPv4FlowKey{
+		Svrf:     1,
+		Dvrf:     2,
+		Sip:      0x01020304,
+		Dip:      0x10101010,
+		Sport:    20,
+		Dport:    200,
+		Ip_proto: 7,
+	}
+	tdrpmtr, err := iter.Create(flowKey)
+	AssertOk(c, err, "Error creating v4 drop metrics entry")
+
+	// set some values
+	tdrpmtr.SetDropPackets(100)
+	tdrpmtr.SetDropReason(0x1F)
+
+	//query
+	apiGwAddr := "localhost:" + it.config.APIGatewayPort
+	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+	AssertOk(c, err, "Error creating metrics client")
+
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error in logged in context")
+	AssertEventually(c, func() (bool, interface{}) {
+		nodeQuery := &telemetry_query.MetricsQueryList{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Queries: []*telemetry_query.MetricsQuerySpec{
+				{
+					TypeMeta: api.TypeMeta{
+						Kind: "IPv4FlowDropMetrics",
+					},
+				},
+			},
+		}
+
+		res, err := tc.Metrics(ctx, nodeQuery)
+		if err != nil {
+			return false, err
+		}
+
+		if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
+			return false, res
+		}
+
+		return true, res
+	}, "failed to query flow metrics", "2s", "120s")
+}

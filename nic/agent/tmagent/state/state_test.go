@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -214,6 +215,18 @@ func startNetagent() (*state.Nagent, *restapi.RestServer, error) {
 	}
 
 	return nagent, nRest, nil
+}
+
+func TestValidateLifIdToLifName(t *testing.T) {
+	ag, rest, err := startNetagent()
+	AssertOk(t, err, "failed to create mock netagent")
+	defer func() {
+		ag.Stop()
+		rest.Stop()
+	}()
+	metrics.Agenturl = rest.GetListenURL()
+	intfname := metrics.GetLifName(1)
+	Assert(t, intfname == "lif1", "invalid intfname received")
 }
 
 func TestValidateFwlogPolicy(t *testing.T) {

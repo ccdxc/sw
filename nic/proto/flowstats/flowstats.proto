@@ -36,36 +36,36 @@ enum DropReasons {
 
 // Key for L2 flows (i.e, non-IP flows)
 message L2FlowKey {
-    uint32 svrf       = 1; // Source VRF
-    uint32 dvrf       = 2; // Destination VRF
-    uint32 l2seg_id   = 3; // Seqment-id
-    uint32 ether_type = 4; // ETYPE
-    uint64 smac       = 5; // source MAC address
-    uint64 dmac       = 6; // destination MAC address
+    uint32 Svrf       = 1; // Source VRF
+    uint32 Dvrf       = 2; // Destination VRF
+    uint32 L2seg_id   = 3; // Seqment-id
+    uint32 Ether_type = 4; // ETYPE
+    uint64 Smac       = 5; // source MAC address
+    uint64 Dmac       = 6; // destination MAC address
 }
 
 // Key for IPv4 flows
 message IPv4FlowKey {
-    uint32 svrf     = 1; // Source VRF
-    uint32 dvrf     = 2; // Destination VRF
-    uint32 sip      = 3; // source IP address
-    uint32 dip      = 4; // destination IP address
-    uint32 sport    = 5; // TCP/UDP source port or ICMP-id or AH/ESP-spi-hi
-    uint32 dport    = 6; // TCP/UDP destination port or ICMP-type-code or AH/ESP-spi-lo
-    uint32 ip_proto = 7; // IP protocol
+    uint32 Svrf     = 1; // Source VRF
+    uint32 Dvrf     = 2; // Destination VRF
+    uint32 Sip      = 3; // source IP address
+    uint32 Dip      = 4; // destination IP address
+    uint32 Sport    = 5; // TCP/UDP source port or ICMP-id or AH/ESP-spi-hi
+    uint32 Dport    = 6; // TCP/UDP destination port or ICMP-type-code or AH/ESP-spi-lo
+    uint32 Ip_proto = 7; // IP protocol
 }
 
 // Key for IPv6 flows
 message IPv6FlowKey {
-    uint32 svrf     = 1; // Source VRF
-    uint32 dvrf     = 2; // Destination VRF
-    uint64 sip_hi   = 3; // source IP address
-    uint64 sip_lo   = 4; // source IP address
-    uint64 dip_hi   = 5; // destination IP address
-    uint64 dip_lo   = 6; // destination IP address
-    uint32 sport    = 7; // TCP/UDP source port or ICMP-id or AH/ESP-spi-hi
-    uint32 dport    = 8; // TCP/UDP destination port or ICMP-type-code or AH/ESP-spi-lo
-    uint32 ip_proto = 9; // IP protocol
+    uint32 Svrf     = 1; // Source VRF
+    uint32 Dvrf     = 2; // Destination VRF
+    uint64 Sip_hi   = 3; // source IP address
+    uint64 Sip_lo   = 4; // source IP address
+    uint64 Dip_hi   = 5; // destination IP address
+    uint64 Dip_lo   = 6; // destination IP address
+    uint32 Sport    = 7; // TCP/UDP source port or ICMP-id or AH/ESP-spi-hi
+    uint32 Dport    = 8; // TCP/UDP destination port or ICMP-type-code or AH/ESP-spi-lo
+    uint32 Ip_proto = 9; // IP protocol
 }
 
 message L2FlowRawMetrics {

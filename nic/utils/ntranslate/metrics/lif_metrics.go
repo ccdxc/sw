@@ -1,38 +1,48 @@
 package metrics
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/pensando/sw/api"
-	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 type lifMetricsXlate struct{}
 
-// KeyToMeta converts network key to meta
+const maxRetry = 5
+
+// Agenturl exports the rest endpoint for netagent
+var Agenturl string = globals.Localhost + ":" + globals.AgentRESTPort
+
+// GetLifName converts lifId to lifname over rest call to netagent
+func GetLifName(lifID uint64) string {
+	// ToDo Make this into function call once tmagent integrates with netagent
+	var intf netproto.Interface
+	intfName := strconv.FormatUint(uint64(lifID), 10)
+	reqURL := fmt.Sprintf("http://%s/api/mapping/interfaces/%s", Agenturl, intfName)
+	var err error
+	for i := 0; i < maxRetry; i++ {
+		err = netutils.HTTPGet(reqURL, &intf)
+		if err == nil {
+			intfName = intf.ObjectMeta.Name
+			return intfName
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	log.Warnf("failed to Get from %s, %v", reqURL, err)
+	return ""
+}
 func (n *lifMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 	if lifID, ok := key.(uint64); ok {
-		intfName := strconv.FormatUint(uint64(lifID), 10)
-		if delphiClient != nil {
-			nodeUUID := ""
-			nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
-			for _, ns := range nslist {
-				nodeUUID = ns.GetDSCName()
-			}
-			intfList := dnetproto.InterfaceList(delphiClient)
-			for _, intf := range intfList {
-				if intf.Interface.Status.InterfaceID == lifID {
-					if nodeUUID != "" {
-						intfName = nodeUUID + "-" + intf.Interface.ObjectMeta.Name
-					} else {
-						intfName = intf.Interface.ObjectMeta.Name
-					}
-				}
-			}
+		intfName := GetLifName(lifID)
+		if intfName != "" {
+			return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: intfName}
 		}
-
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: intfName}
 	}
 	return nil
 }

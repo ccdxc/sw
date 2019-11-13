@@ -11,17 +11,17 @@ import (
 )
 
 type L2FlowKey struct {
-	svrf uint32 `protobuf:"varint,1,opt,name=svrf,json=svrf" json:"svrf,omitempty"`
+	Svrf uint32 `protobuf:"varint,1,opt,name=Svrf,json=Svrf" json:"Svrf,omitempty"`
 
-	dvrf uint32 `protobuf:"varint,2,opt,name=dvrf,json=dvrf" json:"dvrf,omitempty"`
+	Dvrf uint32 `protobuf:"varint,2,opt,name=Dvrf,json=Dvrf" json:"Dvrf,omitempty"`
 
-	l2seg_id uint32 `protobuf:"varint,3,opt,name=l2seg_id,json=l2seg_id" json:"l2seg_id,omitempty"`
+	L2seg_id uint32 `protobuf:"varint,3,opt,name=L2seg_id,json=L2seg_id" json:"L2seg_id,omitempty"`
 
-	ether_type uint32 `protobuf:"varint,4,opt,name=ether_type,json=ether_type" json:"ether_type,omitempty"`
+	Ether_type uint32 `protobuf:"varint,4,opt,name=Ether_type,json=Ether_type" json:"Ether_type,omitempty"`
 
-	smac uint64 `protobuf:"varint,5,opt,name=smac,json=smac" json:"smac,omitempty"`
+	Smac uint64 `protobuf:"varint,5,opt,name=Smac,json=Smac" json:"Smac,omitempty"`
 
-	dmac uint64 `protobuf:"varint,6,opt,name=dmac,json=dmac" json:"dmac,omitempty"`
+	Dmac uint64 `protobuf:"varint,6,opt,name=Dmac,json=Dmac" json:"Dmac,omitempty"`
 }
 
 func (m *L2FlowKey) Reset()         { *m = L2FlowKey{} }
@@ -29,19 +29,19 @@ func (m *L2FlowKey) String() string { return proto.CompactTextString(m) }
 func (*L2FlowKey) ProtoMessage()    {}
 
 type IPv4FlowKey struct {
-	svrf uint32 `protobuf:"varint,1,opt,name=svrf,json=svrf" json:"svrf,omitempty"`
+	Svrf uint32 `protobuf:"varint,1,opt,name=Svrf,json=Svrf" json:"Svrf,omitempty"`
 
-	dvrf uint32 `protobuf:"varint,2,opt,name=dvrf,json=dvrf" json:"dvrf,omitempty"`
+	Dvrf uint32 `protobuf:"varint,2,opt,name=Dvrf,json=Dvrf" json:"Dvrf,omitempty"`
 
-	sip uint32 `protobuf:"varint,3,opt,name=sip,json=sip" json:"sip,omitempty"`
+	Sip uint32 `protobuf:"varint,3,opt,name=Sip,json=Sip" json:"Sip,omitempty"`
 
-	dip uint32 `protobuf:"varint,4,opt,name=dip,json=dip" json:"dip,omitempty"`
+	Dip uint32 `protobuf:"varint,4,opt,name=Dip,json=Dip" json:"Dip,omitempty"`
 
-	sport uint32 `protobuf:"varint,5,opt,name=sport,json=sport" json:"sport,omitempty"`
+	Sport uint32 `protobuf:"varint,5,opt,name=Sport,json=Sport" json:"Sport,omitempty"`
 
-	dport uint32 `protobuf:"varint,6,opt,name=dport,json=dport" json:"dport,omitempty"`
+	Dport uint32 `protobuf:"varint,6,opt,name=Dport,json=Dport" json:"Dport,omitempty"`
 
-	ip_proto uint32 `protobuf:"varint,7,opt,name=ip_proto,json=ip_proto" json:"ip_proto,omitempty"`
+	Ip_proto uint32 `protobuf:"varint,7,opt,name=Ip_proto,json=Ip_proto" json:"Ip_proto,omitempty"`
 }
 
 func (m *IPv4FlowKey) Reset()         { *m = IPv4FlowKey{} }
@@ -49,23 +49,23 @@ func (m *IPv4FlowKey) String() string { return proto.CompactTextString(m) }
 func (*IPv4FlowKey) ProtoMessage()    {}
 
 type IPv6FlowKey struct {
-	svrf uint32 `protobuf:"varint,1,opt,name=svrf,json=svrf" json:"svrf,omitempty"`
+	Svrf uint32 `protobuf:"varint,1,opt,name=Svrf,json=Svrf" json:"Svrf,omitempty"`
 
-	dvrf uint32 `protobuf:"varint,2,opt,name=dvrf,json=dvrf" json:"dvrf,omitempty"`
+	Dvrf uint32 `protobuf:"varint,2,opt,name=Dvrf,json=Dvrf" json:"Dvrf,omitempty"`
 
-	sip_hi uint64 `protobuf:"varint,3,opt,name=sip_hi,json=sip_hi" json:"sip_hi,omitempty"`
+	Sip_hi uint64 `protobuf:"varint,3,opt,name=Sip_hi,json=Sip_hi" json:"Sip_hi,omitempty"`
 
-	sip_lo uint64 `protobuf:"varint,4,opt,name=sip_lo,json=sip_lo" json:"sip_lo,omitempty"`
+	Sip_lo uint64 `protobuf:"varint,4,opt,name=Sip_lo,json=Sip_lo" json:"Sip_lo,omitempty"`
 
-	dip_hi uint64 `protobuf:"varint,5,opt,name=dip_hi,json=dip_hi" json:"dip_hi,omitempty"`
+	Dip_hi uint64 `protobuf:"varint,5,opt,name=Dip_hi,json=Dip_hi" json:"Dip_hi,omitempty"`
 
-	dip_lo uint64 `protobuf:"varint,6,opt,name=dip_lo,json=dip_lo" json:"dip_lo,omitempty"`
+	Dip_lo uint64 `protobuf:"varint,6,opt,name=Dip_lo,json=Dip_lo" json:"Dip_lo,omitempty"`
 
-	sport uint32 `protobuf:"varint,7,opt,name=sport,json=sport" json:"sport,omitempty"`
+	Sport uint32 `protobuf:"varint,7,opt,name=Sport,json=Sport" json:"Sport,omitempty"`
 
-	dport uint32 `protobuf:"varint,8,opt,name=dport,json=dport" json:"dport,omitempty"`
+	Dport uint32 `protobuf:"varint,8,opt,name=Dport,json=Dport" json:"Dport,omitempty"`
 
-	ip_proto uint32 `protobuf:"varint,9,opt,name=ip_proto,json=ip_proto" json:"ip_proto,omitempty"`
+	Ip_proto uint32 `protobuf:"varint,9,opt,name=Ip_proto,json=Ip_proto" json:"Ip_proto,omitempty"`
 }
 
 func (m *IPv6FlowKey) Reset()         { *m = IPv6FlowKey{} }
