@@ -11,6 +11,7 @@ import time
 from StringIO import StringIO
 import argparse
 import subprocess
+import ast
 
 def curl_send(**data):
     # Note that code 503 is Server Unavailable
@@ -214,7 +215,7 @@ opts = parser.parse_args()
 
 # Reformat the data to what each function expects
 opts.ntpservers = [i.strip() for i in opts.ntpservers.split(',')]
-opts.autoadmit = bool(opts.autoadmit)
+opts.autoadmit = ast.literal_eval(opts.autoadmit)
 if ( opts.verbose is None ):
     opts.verbose = 0
 print "\n"
