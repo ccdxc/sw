@@ -154,8 +154,7 @@ vpc:
         #  count : 1
       routetbl:
              - type: base
-               routetype: only_default
-               #routetype: adjacent
+               routetype: adjacent
                count : 8
                nat : true # tunnel with nat flag set will be used as next-hop
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic

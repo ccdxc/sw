@@ -2,7 +2,7 @@
 selectors:
     root: ref://store/templates/id=POLICY
     maxlimits: 1
-    policy: filter://Direction=egress
+    policy: filter://Direction=egress,Level=subnet
 
 packets:
     - packet:

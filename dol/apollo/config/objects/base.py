@@ -39,6 +39,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         utils.DeleteObject(self, self.ObjType)
         return
 
+    def ValidateSpec(self, spec):
+        logger.error("Method not implemented by class: %s" % self.__class__)
+        assert(0)
+        return False
+
     def ValidateStats(self, stats):
         return True
 

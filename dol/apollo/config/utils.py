@@ -452,6 +452,11 @@ def IsTagSupported():
         return True
     return False
 
+def IsPfxRangeSupported():
+    if IsPipelineApollo():
+        return False
+    return True
+
 def IsFlowInstallationNeeded():
     if IsPipelineArtemis():
         return True

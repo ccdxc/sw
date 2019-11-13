@@ -92,7 +92,10 @@ class NexthopGroupObjectClient:
         return self.__num_nhgs_per_vpc
 
     def CreateAllocator(self):
-        Store.SetNexthopgroups(self.Objects())
+        nh_groups = self.Objects()
+        if not nh_groups:
+            return
+        Store.SetNexthopgroups(nh_groups)
         resmgr.CreateUnderlayNhGroupAllocator()
 
     def GenerateObjects(self, parent, vpc_spec_obj):

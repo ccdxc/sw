@@ -2,11 +2,15 @@
 import pdb
 import ipaddress
 import random
+from scapy.all import *
+
 from infra.common.logging import logger
 from infra.common.glopts import GlobalOptions as GlobalOptions
 import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
+
+import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
 
 from infra.common.glopts import GlobalOptions
@@ -400,12 +404,13 @@ def GetExpectedCPSPacket(testcase, args):
     if tc_rule is None:
         # no rule in policy - so implicit deny
         return None
+    # TODO: handle vnic security policies
     policy = testcase.config.policy
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
     match_rule = __get_matching_rule(policy, pkt, tc_rule)
     final_result = __get_final_result(tc_rule, match_rule)
     if final_result == policy_pb2.SECURITY_RULE_ACTION_DENY:
-        return testcase.packets.Get(args.epkt_fail)
+        return None
     return testcase.packets.Get(args.epkt_pass)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):

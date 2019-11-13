@@ -243,15 +243,19 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
-        obj.tunnel = obj.route.TUNNEL if obj.route else None
+        obj.tunnel = obj.route.TUNNEL
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
         # select a random rule for this testcase
-        if utils.IsPipelineArtemis():
-            obj.tc_rule = self.__get_random_rule()
-        else:
+        if utils.IsPipelineApollo():
+            # TODO: move apollo also to random rule
             obj.tc_rule = self.__get_non_default_random_rule()
+        else:
+            obj.tc_rule = self.__get_random_rule()
+        logger.info("Selected rule for testcase ", obj.tc_rule)
+        if obj.tc_rule:
+            obj.tc_rule.Show()
         return
 
 class PolicyObjectClient:
@@ -284,7 +288,8 @@ class PolicyObjectClient:
         return self.__objs.get(policyid, None)
 
     def ModifyPolicyRules(self, policyid, subnetobj):
-        if not utils.IsPipelineArtemis():
+        if utils.IsPipelineApollo():
+            # apollo does not support both sip & dip match in rules
             return
 
         def __is_default_l3_attr(matchtype=utils.L3MatchType.PFX, pfx=None,\
@@ -330,7 +335,9 @@ class PolicyObjectClient:
         direction = policy.Direction
         af = utils.GetIPVersion(policy.AddrFamily)
         subnetpfx = subnetobj.IPPrefix[1] if af == utils.IP_VERSION_4 else subnetobj.IPPrefix[0]
-        subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
+        subnettag = None
+        if utils.IsTagSupported():
+            subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
         for rule in policy.rules:
             __modify_l3_match(direction, rule.L3Match, subnetpfx, subnettag)
         return
@@ -508,23 +515,36 @@ class PolicyObjectClient:
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
+            def __is_l3_matchtype_supported(matchtype):
+                if matchtype == utils.L3MatchType.TAG:
+                    return utils.IsTagSupported()
+                elif matchtype == utils.L3MatchType.PFXRANGE:
+                    return utils.IsPfxRangeSupported()
+                elif matchtype == utils.L3MatchType.PFX:
+                    return True
+                return False
+
             def __is_proto_supported(proto):
                 if utils.IsICMPProtocol(proto):
                     if utils.IsPipelineApollo():
                         # Apollo does NOT support icmp proto
                         return False
                 return True
+
+            def __convert_tag2pfx(matchtype):
+                return utils.L3MatchType.PFX if matchtype is utils.L3MatchType.TAG else matchtype
+
             proto = __get_l3_proto_from_rule(af, rulespec)
             if not __is_proto_supported(proto):
+                logger.error("policy rule do not support", proto)
                 return None
             srctype, dsttype = __get_l3_match_type_from_rule(rulespec)
             if not utils.IsTagSupported():
-                # TODO: if unsupported, convert to pfx and test?
-                # Apollo does NOT support other match types like range/tag
-                if srctype is not utils.L3MatchType.PFX or\
-                   dsttype is not utils.L3MatchType.PFX:
-                    return None
-
+                srctype = __convert_tag2pfx(srctype)
+                dsttype = __convert_tag2pfx(dsttype)
+            if (not __is_l3_matchtype_supported(srctype)) or (not __is_l3_matchtype_supported(dsttype)):
+                logger.error("Unsupported l3match type ", srctype, dsttype)
+                return None
             srcpfx, dstpfx = __get_l3_pfx_from_rule(af, rulespec)
             srciplow, srciphigh, dstiplow, dstiphigh = __get_l3_pfx_range_from_rule(af, rulespec)
             srctag, dsttag = __get_l3_tag_from_rule(af, rulespec, srctype, dsttype)

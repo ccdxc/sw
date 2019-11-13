@@ -145,6 +145,7 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if spec.V6MeterId != self.V6MeterId:
             return False
+        # TODO: validate policyid, policer
         return True
 
     def Generate_vnic_security_policies(self):

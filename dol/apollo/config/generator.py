@@ -129,6 +129,33 @@ def __read():
     # rmapping.client.ReadObjects()
     return
 
+def __get_topo_file():
+    topo_file = '%s.topo' % GlobalOptions.topology
+    return topo_file
+
+def __get_topo_path(default=False):
+    pipeline = utils.GetPipelineName()
+    if default:
+        pipeline = 'apollo'
+    topo_file = '%s/config/topology/%s/' % (pipeline, GlobalOptions.topology)
+    return topo_file
+
+def __get_topo_spec():
+    topofile = __get_topo_file()
+    topopaths = []
+    # get pipeline specfic topo
+    topopaths.append(__get_topo_path())
+    # fallback to apollo topo
+    topopaths.append(__get_topo_path(True))
+    for path in topopaths:
+        logger.info("Generating Configuration for Topology %s/%s" % (path, topofile))
+        topospec = parser.ParseFile(path, topofile)
+        if topospec:
+            return topospec
+    logger.error("Invalid topofile %s" % (topofile))
+    assert(0)
+    return None
+
 def Main():
     timeprofiler.ConfigTimeProfiler.Start()
     agentapi.Init()
@@ -138,9 +165,7 @@ def Main():
     logger.info("Initializing object info")
     __initialize_object_info()
 
-    logger.info("Generating Configuration for Topology = %s" % GlobalOptions.topology)
-    topospec = parser.ParseFile('apollo/config/topology/%s/'% GlobalOptions.topology,
-                                '%s.topo' % GlobalOptions.topology)
+    topospec = __get_topo_spec()
     __generate(topospec)
 
     logger.info("Creating objects in Agent")
