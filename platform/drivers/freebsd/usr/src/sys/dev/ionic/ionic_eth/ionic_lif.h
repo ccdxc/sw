@@ -77,7 +77,9 @@ struct ionic_rx_stats {
 	uint64_t csum_l4_ok;
 	uint64_t csum_l4_bad;
 	/* Only for debugging. */
-	uint64_t isr_count;
+	uint64_t mbuf_alloc;
+	uint64_t mbuf_free;
+	uint64_t isr_count; 	// Not required.
 	uint64_t task;	/* Number of time task was invoked. */
 	uint64_t comp_err;
 	uint64_t length_err;
@@ -410,6 +412,12 @@ struct ionic_lif {
 #define IONIC_TX_TRYLOCK(x)		mtx_trylock(&(x)->tx_mtx)
 #define IONIC_TX_UNLOCK(x)		mtx_unlock(&(x)->tx_mtx)
 #define IONIC_TX_LOCK_OWNED(x)		mtx_owned(&(x)->tx_mtx)
+
+#define IONIC_RX_LOCK_INIT(x)		mtx_init(&(x)->rx_mtx, (x)->mtx_name, NULL, MTX_DEF)
+#define IONIC_RX_LOCK_DESTROY(x)	mtx_destroy(&(x)->rx_mtx)
+#define IONIC_RX_LOCK(x)		mtx_lock(&(x)->rx_mtx)
+#define IONIC_RX_UNLOCK(x)		mtx_unlock(&(x)->rx_mtx)
+#define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
 #define IONIC_MOD_INC(q, index) (((q)->index + 1) % (q)->num_descs)
 

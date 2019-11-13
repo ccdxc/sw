@@ -106,7 +106,7 @@ ionic_free_msix_vector(struct ionic *ionic)
 #else
 	if (ionic->pdev->dev.msix)
 #endif
-	pci_release_msi(ionic->pdev->dev.bsddev);
+		pci_release_msi(ionic->pdev->dev.bsddev);
 }
 
 static int

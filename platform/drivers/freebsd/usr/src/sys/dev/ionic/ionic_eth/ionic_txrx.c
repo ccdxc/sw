@@ -383,6 +383,8 @@ ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf,
 	struct ifnet *ifp = rxq->lif->netdev;
 	int left, error;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
+
 	if (comp->status) {
 		IONIC_QUE_INFO(rxq, "RX Status %d\n", comp->status);
 		stats->comp_err++;
@@ -481,6 +483,7 @@ ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len)
 	struct ionic_rx_stats *stats = &rxq->stats;
 	int i, nsegs, error, size;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	rxbuf = &rxq->rxbuf[index];
 	desc = &rxq->cmd_ring[index];
 	sg = &rxq->sg_ring[index];
@@ -531,6 +534,7 @@ ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len)
 	}
 
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_PREREAD);
+	rxq->stats.mbuf_alloc++;
 	rxbuf->m = m;
 
 	desc->addr = seg[0].ds_addr;
@@ -561,6 +565,7 @@ void
 ionic_rx_mbuf_free(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf)
 {
 
+	rxq->stats.mbuf_free++;
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);
 	bus_dmamap_unload(rxq->buf_tag, rxbuf->dma_map);
 	bus_dmamap_destroy(rxq->buf_tag, rxbuf->dma_map);
@@ -588,6 +593,7 @@ ionic_queue_isr(int irq, void *data)
 
 	ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
 	    IONIC_INTR_MASK_SET);
+	IONIC_RX_LOCK(rxq);
 	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",
 	    rxstats->isr_count, rxq->comp_index, rxq->head_index,
 	    rxq->tail_index);
@@ -602,14 +608,15 @@ ionic_queue_isr(int irq, void *data)
 		tcp_lro_flush_all(&rxq->lro);
 	}
 	IONIC_RX_TRACE(rxq, "processed: %d packets\n", work_done);
+	IONIC_RX_UNLOCK(rxq);
 
+	IONIC_TX_LOCK(txq);
 	tx_work = ionic_tx_clean(txq, ionic_tx_clean_limit);
 	IONIC_TX_TRACE(txq, "processed: %d packets\n", tx_work);
 	if (tx_work < ionic_tx_clean_limit) {
-		IONIC_TX_LOCK(txq);
 		ionic_start_xmit_locked(txq->lif->netdev, txq);
-		IONIC_TX_UNLOCK(txq);
 	}
+	IONIC_TX_UNLOCK(txq);
 
 	/* Not enough work items for task, unmask interrupt. */
 	if ((work_done < ionic_rx_clean_limit) &&
@@ -638,6 +645,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 
 	KASSERT(rxq, ("task handler called with rxq == NULL"));
 
+	IONIC_RX_LOCK(rxq);
 	if (rxq->lif->stop) {
 		/*
 		 * The task should return early if the interface should be
@@ -653,6 +661,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 		 * Returning early from the task does not change the rxq or txq
 		 * state, and does not unmask the isr.
 		 */
+		IONIC_RX_UNLOCK(rxq);
 		return;
 	}
 
@@ -669,12 +678,13 @@ ionic_queue_task_handler(void *arg, int pendindg)
 		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed %d packets\n", work_done);
 	tcp_lro_flush_all(&rxq->lro);
+	IONIC_RX_UNLOCK(rxq);
 
 	IONIC_TX_LOCK(txq);
 	ionic_start_xmit_locked(txq->lif->netdev, txq);
-	IONIC_TX_UNLOCK(txq);
 	tx_work = ionic_tx_clean(txq, txq->num_descs);
 	IONIC_TX_TRACE(txq, "processed %d packets\n", tx_work);
+	IONIC_TX_UNLOCK(txq);
 
 	ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
 	    (work_done + tx_work), IONIC_INTR_CRED_REARM);
@@ -825,13 +835,17 @@ ionic_legacy_isr(int irq, void *data)
 		if ((status & BIT_ULL(rxq->intr.index)) == 0)
 			continue;
 
+		IONIC_RX_LOCK(rxq);
 		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
 		    IONIC_INTR_MASK_SET);
 		work_done = ionic_rx_clean(rxq, rxq->num_descs);
 		tcp_lro_flush_all(&rxq->lro);
 		ionic_rx_fill(rxq);
+		IONIC_RX_UNLOCK(rxq);
 
+		IONIC_TX_LOCK(txq);
 		tx_work = ionic_tx_clean(txq, txq->num_descs);
+		IONIC_TX_UNLOCK(txq);
 
 		ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
 		    (work_done + tx_work), IONIC_INTR_CRED_REARM);
@@ -1536,8 +1550,10 @@ ionic_tx_qflush(struct ifnet *ifp)
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
+		IONIC_TX_LOCK(txq);
 		while ((m = buf_ring_dequeue_sc(txq->br)) != NULL)
 			m_freem(m);
+		IONIC_TX_UNLOCK(txq);
 	}
 
 	if_qflush(ifp);
@@ -1586,7 +1602,8 @@ ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 	if_setgetcounterfn(ifp, ionic_get_counter);
 	/* Capabilities are set later on. */
 
-	/* Connect lif to ifnet */
+	/* Connect lif to ifnet, taking a long-lived reference */
+	if_ref(ifp);
 	lif->netdev = ifp;
 #ifdef NETAPP_PATCH
 	lif->iff_up = (ifp->if_flags & IFF_UP) != 0;
@@ -1594,12 +1611,31 @@ ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 	return (0);
 }
 
+#define IONIC_IFP_MAX_SLEEPS 40
 void
 ionic_lif_netdev_free(struct ionic_lif *lif)
 {
-	if (lif->netdev) {
-		if_free(lif->netdev);
+	struct ifnet *ifp = lif->netdev;
+	uint32_t sleeps = 0;
+	int chan;
+
+	/* if_free() drops second-to-last reference and sets IFF_DYING flag */
+	if_free(ifp);
+
+	/* wait until ifp callbacks complete */
+	while (ifp->if_refcount > 1 && sleeps < IONIC_IFP_MAX_SLEEPS) {
+		sleeps++;
+		tsleep(&chan, 0, "ifpdrn", HZ / 10);
 	}
+	if (ifp->if_refcount > 1) {
+		IONIC_NETDEV_ERROR(ifp, "slept %u times, %u refs leaked\n",
+				   sleeps, ifp->if_refcount - 1);
+	} else if (sleeps > 0) {
+		IONIC_NETDEV_INFO(ifp, "slept %u times\n", sleeps);
+	}
+
+	/* Finally, drop last reference */
+	if_rele(ifp);
 }
 
 /*
@@ -2221,6 +2257,10 @@ ionic_lif_add_rxtstat(struct ionic_rxque *rxq, struct sysctl_ctx_list *ctx,
 			 &rxstat->isr_count, "ISR count");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "clean_count", CTLFLAG_RD,
 			 &rxstat->task, "Rx clean count");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_alloc", CTLFLAG_RD,
+			&rxstat->mbuf_alloc, "Number of mbufs allocated");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_free", CTLFLAG_RD,
+			&rxstat->mbuf_free, "Number of mbufs free");
 
 	/* LRO related. */
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "lro_queued", CTLFLAG_RD,

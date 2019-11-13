@@ -250,6 +250,7 @@ ionic_txq_wdog_work(struct work_struct *work)
 		/* Check each TxQ for timeouts */
 		for (i = 0; i < lif->ntxqs; i++) {
 			txq = lif->txqs[i];
+			/* XXX: Unlocked to avoid causing data path jitter */
 			if (txq->full &&
 			    ticks > txq->wdog_start + lif->txq_wdog_timeout) {
 				txq->stats.wdog_expired++;
@@ -368,7 +369,9 @@ ionic_hw_open(struct ionic_lif *lif)
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
+		IONIC_RX_LOCK(rxq);
 		ionic_rx_fill(rxq);
+		IONIC_RX_UNLOCK(rxq);
 		ionic_rxq_enable(rxq);
 		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
 		    IONIC_INTR_MASK_CLEAR);
@@ -443,12 +446,16 @@ ionic_stop(struct ifnet *ifp)
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
+		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
+		IONIC_TX_UNLOCK(txq);
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
+		IONIC_RX_LOCK(rxq);
 		ionic_rx_clean(rxq, rxq->num_descs);
+		IONIC_RX_UNLOCK(rxq);
 	}
 
 	return (0);
@@ -1177,7 +1184,9 @@ ionic_change_mtu(struct ifnet *ifp, int new_mtu)
 
 		for (i = 0; i < lif->nrxqs; i++) {
 			rxq = lif->rxqs[i];
+			IONIC_RX_LOCK(rxq);
 			ionic_rx_refill(rxq);
+			IONIC_RX_UNLOCK(rxq);
 		}
 
 		ionic_open_or_stop(lif);
@@ -1708,6 +1717,8 @@ ionic_rxque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	rxq->pid = pid;
 	rxq->intr.index = INTR_INDEX_NOT_ASSIGNED;
 
+	IONIC_RX_LOCK_INIT(rxq);
+
 	/* Setup command ring. */
 	rxq->rxbuf = malloc(sizeof(*rxq->rxbuf) * num_descs, M_IONIC,
 	    M_NOWAIT | M_ZERO);
@@ -2033,6 +2044,7 @@ static void
 ionic_rxq_free(struct ionic_lif *lif, struct ionic_rxque *rxq)
 {
 
+	IONIC_RX_LOCK(rxq);
 	ionic_dev_intr_unreserve(lif, &rxq->intr);
 
 	tcp_lro_free(&rxq->lro);
@@ -2044,6 +2056,8 @@ ionic_rxq_free(struct ionic_lif *lif, struct ionic_rxque *rxq)
 		rxq->comp_ring = NULL;
 	}
 
+	IONIC_RX_UNLOCK(rxq);
+	IONIC_RX_LOCK_DESTROY(rxq);
 	/*
 	 * free_irq() need to be outside since it uses sleepable lock.
 	 */
@@ -2059,6 +2073,8 @@ ionic_rxq_free(struct ionic_lif *lif, struct ionic_rxque *rxq)
 static void
 ionic_txq_free(struct ionic_lif *lif, struct ionic_txque *txq)
 {
+
+	IONIC_TX_LOCK(txq);
 	if (txq->br) {
 		buf_ring_free(txq->br, M_IONIC);
 		txq->br = NULL;
@@ -2072,7 +2088,9 @@ ionic_txq_free(struct ionic_lif *lif, struct ionic_txque *txq)
 		txq->comp_ring = NULL;
 	}
 
+	IONIC_TX_UNLOCK(txq);
 	IONIC_TX_LOCK_DESTROY(txq);
+
 	free(txq, M_IONIC);
 }
 
@@ -2735,8 +2753,10 @@ ionic_lif_txqs_clean_empty(struct ionic_lif *lif)
 		 * RxQ deinit may schedule the task for tx clean but it's
 		 * not guaranteed, so do explicit clean here.
 		 */
+		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
 		ionic_tx_empty(txq);
+		IONIC_TX_UNLOCK(txq);
 	}
 }
 
@@ -2767,8 +2787,11 @@ ionic_lif_rxqs_clean_empty(struct ionic_lif *lif)
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
+
+		IONIC_RX_LOCK(rxq);
 		ionic_rx_clean(rxq, rxq->num_descs);
 		ionic_rx_empty(rxq);
+		IONIC_RX_UNLOCK(rxq);
 	}
 }
 
@@ -3082,6 +3105,7 @@ ionic_tx_clean(struct ionic_txque *txq, int tx_limit)
 	int comp_index, processed, cmd_stop_index, batch = 0;
 	struct ionic_tx_stats *stats = &txq->stats;
 
+	KASSERT(IONIC_TX_LOCK_OWNED(txq), ("%s is not locked", txq->name));
 	stats->clean++;
 
 	bus_dmamap_sync(txq->cmd_dma.dma_tag, txq->cmd_dma.dma_map,
@@ -3237,6 +3261,8 @@ ionic_rx_fill(struct ionic_rxque *rxq)
 	struct ionic_rx_buf *rxbuf;
 	int error, index;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
+
 	index = 0;
 	/* Fill till there is only one slot left empty which is Q full. */
 	while (!IONIC_Q_FULL(rxq)) {
@@ -3276,6 +3302,7 @@ ionic_rx_refill(struct ionic_rxque *rxq)
 	struct ionic_rx_buf *rxbuf;
 	int i, count = 0, error;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	for (i = rxq->tail_index; i != rxq->head_index;
 	    i = (i + 1) % rxq->num_descs) {
 		rxbuf = &rxq->rxbuf[i];
@@ -3306,6 +3333,7 @@ ionic_rx_empty(struct ionic_rxque *rxq)
 {
 	struct ionic_rx_buf *rxbuf;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	IONIC_RX_TRACE(rxq, "head: %d tail: %d desc_posted: %d\n",
 	    rxq->head_index, rxq->tail_index, IONIC_Q_LENGTH(rxq));
 	
@@ -3332,6 +3360,7 @@ ionic_rx_clean(struct ionic_rxque *rxq , int rx_limit)
 	struct ionic_rx_buf *rxbuf;
 	int i, comp_index, cmd_index;
 
+	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	IONIC_RX_TRACE(rxq, "comp: %d head: %d tail: %d desc_posted: %d\n",
 	    rxq->comp_index, rxq->head_index, rxq->tail_index,
 	    IONIC_Q_LENGTH(rxq));
@@ -3529,9 +3558,6 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
 
-	if (!lif->registered)
-		return;
-
 	IONIC_LIF_LOCK(lif);
 	ifmr->ifm_status = IFM_AVALID;
 	ifmr->ifm_active = IFM_ETHER;
@@ -3578,9 +3604,6 @@ ionic_media_change(struct ifnet *ifp)
 
 	if (ionic->is_mgmt_nic)
 		return (ENODEV);
-
-	if (!lif->registered)
-		return (EINVAL);
 
 	switch (IFM_SUBTYPE(ifm->ifm_media)) {
 	case IFM_100G_CR4:
