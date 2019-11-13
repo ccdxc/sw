@@ -2,7 +2,7 @@
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
-    flow: filter://any
+    flow: filter://SourceGuard=True
 
 packets:
     - packet:
@@ -15,18 +15,17 @@ packets:
                 src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
             ipv4:
                 dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
+                src     : 5.0.0.1
                 ttl     : 64
             ipv6:
                 dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
+                src     : aaaa:0010:0010:0010::0010
                 hlim    : 64
             tcp:
                 sport   : 100
                 dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
 
     - packet:
         id          : FROM_SWITCH_PKT # Input packet
@@ -38,24 +37,12 @@ packets:
                 src     : 00:02:0b:0a:0d:0e
             outeripv4:
                 dst     : ref://testcase/config/devicecfg/IP
-                src     : ref://testcase/config/remotemapping/TunIP
+                src     : 5.0.0.1
                 ttl     : 64
                 tos     : 0
                 id      : 0
             vxlan:
                 vni     : ref://testcase/config/localmapping/VNIC/SUBNET/Vnid
-
-    - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
-        headers     :
-            eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
 
 buffers                 :
     - buffer            :
@@ -66,14 +53,6 @@ buffers                 :
             size        : 1518
             data        : None
 
-    - buffer            :
-        id              : BUF2  # Expected Buffer
-        template        : ref://factory/templates/id=ETH_BUFFER
-        fields:
-            bind        : False
-            size        : ref://testcase/packets/id=TO_HOST_PKT/size
-            data        : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
-
 descriptors             :
     - descriptor        :
         id              : DESC1 # Input Descriptor
@@ -82,13 +61,6 @@ descriptors             :
             _buf        : ref://testcase/buffers/id=BUF1
             addr        : ref://testcase/buffers/id=BUF1/addr
             len         : ref://testcase/buffers/id=BUF1/size
-
-    - descriptor        :
-        id              : DESC2 # Expected Descriptor
-        template        : ref://factory/templates/id=DESCR_ETH_RX_CQ
-        fields          :
-            _buf        : ref://testcase/buffers/id=BUF2
-            len         : ref://testcase/buffers/id=BUF2/size
 
 session:
     - step:
@@ -102,9 +74,10 @@ session:
                     object      : ref://testcase/packets/id=FROM_SWITCH_PKT
                     # TODO: Fix topo & choose one of the uplink port
                     port        : ref://testcase/config/switchport
+
         expect                  :
             delay               : 1
             descriptors         :
                 - descriptor    :
-                    object      : ref://testcase/descriptors/id=DESC2
+                    object      : None
                     ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
