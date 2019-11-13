@@ -18,6 +18,7 @@ nic/buildroot/output/host/include/*
 nic/buildroot/output/host/lib/*
 nic/buildroot/output/host/lib64/*
 nic/buildroot/output/host/libexec/*
+nic/buildroot/output/host/opt/*
 nic/buildroot/output/host/sbin/*
 nic/buildroot/output/host/share/*
 nic/buildroot/output/linux-headers/*

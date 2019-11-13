@@ -87,14 +87,14 @@ build-image: build-squashfs
 .PHONY: build-gold-image
 build-gold-image: gold_env build-rootfs.cpio
 	$(eval KERNEL_DIR=linux-custom)
-	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-buildroot-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
+	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
 	/usr/bin/install -m 0644 -D ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR}/arch/arm64/boot/Image ${NICDIR}/buildroot/${OUT_DIR}/images/Image
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
 .PHONY: build-diag-image
 build-diag-image: diag_env build-rootfs.cpio
 	$(eval KERNEL_DIR=linux-custom)
-	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-buildroot-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
+	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
 	/usr/bin/install -m 0644 -D ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR}/arch/arm64/boot/Image ${NICDIR}/buildroot/${OUT_DIR}/images/Image
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
