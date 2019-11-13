@@ -137,6 +137,11 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		// Reject user-initiated modifications of Spec fields like ID and NetworkMode, as NMD currently
 		// does not have code to react to the changes.
 		if apiutils.IsUserRequestCtx(ctx) {
+			// Workaround for ...
+			// Once the SmartNIC is admitted, disallow flipping "Spec.Admit" back to false
+			if admitted && updNIC.Spec.Admit == false && curNIC.Spec.Admit == true {
+				return i, true, fmt.Errorf("Spec.Admit cannot be changed to false once the DistributedServiceCard is admitted")
+			}
 			errs := cl.checkNonUserModifiableSmartNICFields(&updNIC, curNIC)
 			if len(errs) > 0 {
 				return i, true, fmt.Errorf("Modification of SmartNIC object fields %s is not allowed", strings.Join(errs, ", "))
