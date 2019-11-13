@@ -18,20 +18,20 @@ e2e-targets:
    feature:
    clusters:
      - image: build-186
-       count: 3
+       count: 1
        resources:
-         cpus: 12
-         memory: 32
+         cpus: 32
+         memory: 64
          pvt-networks:
          - control-1
          - control-2
-     - image: build-10
-       count: 9
-       resources:
+           #- image: build-10
+           #count: 0
+           #resources:
          # server-type could be server-a or server-d
-         server-type: server-d
+         #server-type: server-d
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
+         #nic-type: naples
    provision:
        username: vm
        password: vm

@@ -1,4 +1,4 @@
-    // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
 package iotakit
 
@@ -54,7 +54,9 @@ type SwitchPort struct {
 
 // VeniceNode represents a venice node
 type VeniceNode struct {
+	cnode    *cluster.Node
 	iotaNode *iota.Node
+	testNode *TestNode
 	sm       *SysModel // pointer back to the model
 }
 
@@ -302,25 +304,47 @@ func (sm *SysModel) createMultiSimNaples(node *TestNode) error {
 
 	}
 	log.Infof("Adding fake naples : %v", (node.NaplesMultSimConfig.GetNumInstances()))
-	for _, simInfo := range node.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo() {
-		//TODO: (iota agent is also following the same format.)
-		simName := simInfo.GetName()
-		snic, err := sm.GetSmartNICByName(simName)
+
+	success := false
+	var err error
+	for i := 0; i < 3; i++ {
+		var snicList []*cluster.DistributedServiceCard
+		snicList, err = sm.ListSmartNIC()
 		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
-			log.Errorf("%v", err)
-			return err
+			continue
 		}
+		for _, simInfo := range node.iotaNode.GetNaplesMultiSimConfig().GetSimsInfo() {
+			//TODO: (iota agent is also following the same format.)
+			simName := simInfo.GetName()
+			success = false
+			for _, snic := range snicList {
+				if snic.Spec.ID == simName {
+					naples := Naples{
+						iotaNode: node.iotaNode,
+						testNode: node,
+						smartNic: snic,
+						sm:       sm,
+						name:     simName,
+					}
+					sm.fakeNaples[simName] = &naples
+					success = true
+				}
+			}
 
-		naples := Naples{
-			iotaNode: node.iotaNode,
-			testNode: node,
-			smartNic: snic,
-			sm:       sm,
-			name:     simName,
+			if !success {
+				err = fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
+				log.Errorf("%v", err)
+				break
+			}
 		}
+		//All got added, success!
+		if success {
+			break
+		}
+	}
 
-		sm.fakeNaples[simName] = &naples
+	if !success {
+		return fmt.Errorf("Errorr adding fake naples  %v", err.Error())
 	}
 
 	return nil
@@ -399,13 +423,14 @@ func (npc *NaplesCollection) Error() error {
 	return npc.err
 }
 
-func (sm *SysModel) createVeniceNode(iotaNode *iota.Node) error {
+func (sm *SysModel) createVeniceNode(node *TestNode) error {
 	vn := VeniceNode{
-		iotaNode: iotaNode,
+		iotaNode: node.iotaNode,
+		testNode: node,
 		sm:       sm,
 	}
 
-	sm.veniceNodes[iotaNode.Name] = &vn
+	sm.veniceNodes[node.iotaNode.Name] = &vn
 
 	return nil
 }
@@ -430,6 +455,17 @@ func (sm *SysModel) VeniceNodes() *VeniceNodeCollection {
 	}
 
 	return &vnc
+}
+
+// GenVeniceIPs get venice IPs
+func (vnc *VeniceNodeCollection) GenVeniceIPs() []string {
+
+	ipAddrs := []string{}
+	for _, node := range vnc.nodes {
+		ipAddrs = append(ipAddrs, node.iotaNode.GetIpAddress())
+	}
+
+	return ipAddrs
 }
 
 // Leader returns the leader node

@@ -1053,15 +1053,11 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 		ApiResponse: &iota.IotaAPIResponse{},
 	}
 
-	for _, reqNode := range req.Nodes {
-		if node, ok := ts.ProvisionedNodes[reqNode.Name]; ok {
-			nodeHealth := &iota.NodeHealth{NodeName: reqNode.Name, ClusterDone: req.GetClusterDone()}
-			nodeResp, err := node.AgentClient.CheckHealth(ctx, nodeHealth)
-			if err == nil {
-				resp.Health = append(resp.Health, nodeResp)
-			}
-		} else {
-			resp.Health = append(resp.Health, &iota.NodeHealth{NodeName: reqNode.Name, HealthCode: iota.NodeHealth_NOT_PROVISIONED})
+	for name, node := range ts.ProvisionedNodes {
+		nodeHealth := &iota.NodeHealth{NodeName: name, ClusterDone: req.GetClusterDone()}
+		nodeResp, err := node.AgentClient.CheckHealth(ctx, nodeHealth)
+		if err == nil {
+			resp.Health = append(resp.Health, nodeResp)
 		}
 	}
 

@@ -26,7 +26,7 @@ import (
 )
 
 // maxUpdateChannelSize is the size of the update pending channel
-const maxUpdateChannelSize = 1000
+const maxUpdateChannelSize = 16384
 
 // updatable is an interface all updatable objects have to implement
 type updatable interface {
@@ -182,7 +182,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	//Remove state endpoints after we start the watch
 	//Start watch would synchronosly does diff of all workload and endpoints.
 	//Stale endpoints would then be deleted.
-	statemgr.RemoveStaleEndpoints()
+	//statemgr.RemoveStaleEndpoints()
 
 	// create all topics on the message bus
 	statemgr.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, statemgr)

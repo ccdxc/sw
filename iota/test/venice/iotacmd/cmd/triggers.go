@@ -184,6 +184,7 @@ type noiseBase struct {
 type noise interface {
 	Name() string
 	Run() error
+	Stop() error
 }
 
 type genEventsNoise struct {
@@ -205,12 +206,21 @@ func (*genFWLogsNoise) Name() string {
 func (n *genFWLogsNoise) Run() error {
 	return generateFWLogs(n.Rate, n.Count)
 }
+
+func (n *genFWLogsNoise) Stop() error {
+	return stopFWLogs(n.Rate, n.Count)
+}
+
 func newGenFWLogsNoise(name string, rate string, count string) noise {
 	return &genFWLogsNoise{noiseBase: noiseBase{Name: name, Rate: rate, Count: count}}
 }
 
 func (n *genEventsNoise) Run() error {
 	return generateEvents(n.Rate, n.Count)
+}
+
+func (n *genEventsNoise) Stop() error {
+	return stopEvents(n.Rate, n.Count)
 }
 
 func newGenEventsNoise(name string, rate string, count string) noise {
@@ -229,6 +239,10 @@ func (n *flapPortsNoise) Run() error {
 	rate, _ := strconv.Atoi(n.Rate)
 	count, _ := strconv.Atoi(n.Count)
 	return startFlapPortsPeriodically(rate, count, 50)
+}
+
+func (n *flapPortsNoise) Stop() error {
+	return nil
 }
 
 func newFlapPortsNoise(name string, rate string, count string) noise {

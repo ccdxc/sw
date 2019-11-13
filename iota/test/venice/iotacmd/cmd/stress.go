@@ -107,7 +107,7 @@ func runCmd(cmdArgs []string, outfile string, env []string) (int, string) {
 }
 
 //run testsuite
-func (suite testsuite) run(skipSetup, skipInstall, rebootOnly bool) error {
+func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) error {
 	exitCode := 0
 	stdoutStderr := ""
 
@@ -123,6 +123,12 @@ func (suite testsuite) run(skipSetup, skipInstall, rebootOnly bool) error {
 		skipInstall = false
 	} else {
 		env = append(env, `SKIP_INSTALL=""`)
+	}
+
+	if skipConfig {
+		env = append(env, "SKIP_CONFIG=1")
+	} else {
+		env = append(env, `SKIP_CONFIG=""`)
 	}
 
 	if skipSetup {
@@ -142,7 +148,7 @@ func (suite testsuite) run(skipSetup, skipInstall, rebootOnly bool) error {
 	env = append(env, "JOB_ID=1")
 	env = append(env, "STOP_ON_ERROR=1")
 
-	cmd := []string{"go", "test", testPath, "-timeout", "240m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
+	cmd := []string{"go", "test", testPath, "-timeout", "360m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
 	if suite.focus != "" {
 		cmd = append(cmd, "-ginkgo.focus")
 		cmd = append(cmd, suite.focus)
@@ -193,6 +199,7 @@ type stressRecipe struct {
 		Name               string `yaml:"trigger"`
 		Percent            string `yaml:"percent"`
 		SkipSetup          bool   `yaml:"skip-setup"`
+		SkipConfig         bool   `yaml:"skip-config"`
 		ReinstallOnFailure bool   `yaml:"reinstall-on-failure"`
 		handle             trigger
 		runCount           int
@@ -336,7 +343,9 @@ func (stRecipe *stressRecipe) execute() error {
 	runTrigger := func(it int, tg trigger) error {
 		fmt.Printf("Running trigger : %v (iteration : %v)\n", tg.Name(), it+1)
 		if !dryRun {
-			return tg.Run()
+			err := tg.Run()
+			fmt.Printf("Running trigger failed : %v (iteration : %v) %v\n", tg.Name(), it+1, err)
+			return err
 		}
 		return nil
 	}
@@ -348,9 +357,20 @@ func (stRecipe *stressRecipe) execute() error {
 		}
 		return nil
 	}
+	stopNoise := func(it int, n noise) error {
+		fmt.Printf("Stopping noise : %v\n", n.Name())
+		if !dryRun {
+			return n.Stop()
+		}
+		return nil
+	}
 
 Loop:
 	for index, tg := range stRecipe.Triggers {
+		//Clean up some data before each triggera
+		if !dryRun {
+			cleanUpVeniceNodes()
+		}
 		//First time suite running, don't skip setup.
 		for it := 0; it < stRecipe.Config.Iterations; it++ {
 			skipSetup := tg.SkipSetup
@@ -383,10 +403,15 @@ Loop:
 					sdata = tg.suiteData[suite.name]
 				}
 				fmt.Printf("Running suite  : %v (iteration : %v)\n", suite.name, it+1)
-				err := suite.run(skipSetup, skipInstall, rebootOnly)
+				err := suite.run(skipSetup, skipInstall, tg.SkipConfig, rebootOnly)
 				if err != nil {
 					sdata.failCount++
 					if suite.stopOnError {
+						for _, n := range noises {
+							if err := stopNoise(it, n); err != nil {
+								return err
+							}
+						}
 						fmt.Printf("Stopping on error")
 						return err
 					}

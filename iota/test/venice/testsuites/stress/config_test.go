@@ -101,6 +101,9 @@ var _ = Describe("Config Stress tests", func() {
 				log.Infof("Average Config Cleanup time : %v",
 					time.Duration(int64(totalCfgCleanTime)/int64(totalIterations)))
 			}()
+			if ts.stress == 0 {
+				ts.stress = 1
+			}
 			for i := uint64(0); i < ts.stress; i++ {
 				totalIterations++
 				ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)

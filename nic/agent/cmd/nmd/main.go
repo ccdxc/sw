@@ -31,6 +31,7 @@ func main() {
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		oobInterface    = flag.String("oob-interface", "", "naples oob interface")
+		inbInterface    = flag.String("inb-interface", "", "naples inband interface")
 		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
 		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
 	)
@@ -99,6 +100,9 @@ func main() {
 
 	if *oobInterface != "" {
 		ipif.NaplesOOBInterface = *oobInterface
+	}
+	if *inbInterface != "" {
+		ipif.NaplesInbandInterface = *inbInterface
 	}
 	nm, err := nmd.NewAgent(p,
 		*nmdDbPath,

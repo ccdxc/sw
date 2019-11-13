@@ -134,12 +134,51 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		}
 	}
 
-	// check venice service status
-	_, err = act.model.CheckVeniceServiceStatus(cl.Status.Leader)
+	// verify each naples health
+	snics, err := act.model.ListSmartNIC()
 	if err != nil {
+		log.Errorf("Unable to list dsc")
 		return err
 	}
 
+	for _, snic := range snics {
+		if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
+			log.Errorf("Invalid Naples status: %+v", snic)
+			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", snic.Spec.GetID(), snic.Status)
+		}
+		if len(snic.Status.Conditions) < 1 {
+			log.Errorf("Invalid Naples status: %+v", snic)
+			return fmt.Errorf("No naples status reported for naples %v", snic.Spec.GetID())
+		}
+		if snic.Status.Conditions[0].Type != cluster.DSCCondition_HEALTHY.String() {
+			log.Errorf("Invalid Naples status: %+v", snic)
+			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Spec.GetID(), snic.Status.Conditions[0].Type)
+		}
+		if snic.Status.Conditions[0].Status != cluster.ConditionStatus_TRUE.String() {
+			log.Errorf("Invalid Naples status: %+v", snic)
+			return fmt.Errorf("Invalid status %v for naples %v", snic.Spec.GetID(), snic.Status.Conditions[0].Status)
+		}
+	}
+
+	// check venice service status
+	_, err = act.model.CheckVeniceServiceStatus(cl.Status.Leader)
+	if err != nil {
+		log.Errorf("Checking venice service status failed : %v", err)
+		return err
+	}
+
+	// check health of citadel
+	err = act.model.CheckCitadelServiceStatus()
+	if err != nil {
+		log.Errorf("Checking venice citadel status failed : %v", err)
+		return err
+	}
+
+	//Make sure config push in complete.
+	if ok, err := act.model.IsConfigPushComplete(); !ok || err != nil {
+		log.Errorf("Config push incomplete")
+		return errors.New("Config not in sync")
+	}
 	return nil
 }
 
@@ -204,12 +243,14 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	}
 
 	// verify workload status is good
-	err = act.VerifyWorkloadStatus(act.model.Workloads())
-	if err != nil {
-		if collectLogOnErr {
-			act.model.CollectLogs()
+	if act.model.tb.HasNaplesHW() {
+		err = act.VerifyWorkloadStatus(act.model.Workloads())
+		if err != nil {
+			if collectLogOnErr {
+				act.model.CollectLogs()
+			}
+			return err
 		}
-		return err
 	}
 
 	//Verify Config is in sync
@@ -244,17 +285,19 @@ func (act *ActionCtx) VerifySystemHealth(collectLogOnErr bool) error {
 	}
 
 	// verify ping is successful across all workloads
-	for i := 0; i < numRetries; i++ {
-		err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
-		if err == nil {
-			break
+	if act.model.tb.HasNaplesHW() {
+		for i := 0; i < numRetries; i++ {
+			err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
+			if err == nil {
+				break
+			}
 		}
-	}
-	if err != nil {
-		if collectLogOnErr {
-			act.model.CollectLogs()
+		if err != nil {
+			if collectLogOnErr {
+				act.model.CollectLogs()
+			}
+			return err
 		}
-		return err
 	}
 
 	return nil

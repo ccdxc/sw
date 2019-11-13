@@ -49,12 +49,22 @@ func cleanUpVeniceNodes() {
 	vnc := setupModel.VeniceNodes()
 
 	setupModel.Action().RunCommandOnVeniceNodes(vnc, "curl -i -XDELETE http://localhost:7086/db?db=default")
-	setupModel.Action().RunCommandOnVeniceNodes(vnc,
-		"if [[ $(curl -s localhost:7086/info  | jq .tstore.NodeMap.$HOSTNAME.NumShards) -gt 0 ]]; then  for i in  $(ls /var/lib/pensando/citadel/tstore); do curl -s localhost:7086/info  | jq .tstore.NodeMap.$HOSTNAME.Replicas | grep -w ${i}  || rm -rf /var/lib/pensando/citadel/tstore/${i} ; done;fi")
+
+	/*
+		cmds := []string{}
+		for _, ip := range vnc.GenVeniceIPs() {
+			cmd := fmt.Sprintf("if [[ $(curl -s localhost:7086/info  | jq .tstore.NodeMap.\\\"%s\\\".NumShards) -gt 0 ]]; then  for i in  $(ls /var/lib/pensando/citadel/tstore); do curl -s localhost:7086/info  | jq .tstore.NodeMap.\\\"%s\\\".Replicas | grep -w ${i}  || rm -rf /var/lib/pensando/citadel/tstore/${i} ; done;fi",
+				ip, ip)
+			cmds = append(cmds, cmd)
+
+		}
+		for _, cmd := range cmds {
+
+			setupModel.Action().RunCommandOnVeniceNodes(vnc, cmd)
+		}*/
 }
 
 func partitionVeniceNode(percent int) error {
-	//dis
 
 	vnc, err := setupModel.VeniceNodes().SelectByPercentage(percent)
 
@@ -62,12 +72,14 @@ func partitionVeniceNode(percent int) error {
 		return err
 	}
 
-	err = setupModel.Action().DisconnectVeniceNodesFromCluster(vnc)
+	naples := setupModel.Naples()
+	err = setupModel.Action().DisconnectVeniceNodesFromCluster(vnc, naples)
 	if err != nil {
 		return err
 	}
 	time.Sleep(120 * time.Second)
-	err = setupModel.Action().ConnectVeniceNodesToCluster(vnc)
+
+	err = setupModel.Action().ConnectVeniceNodesToCluster(vnc, naples)
 	if err != nil {
 		return err
 	}

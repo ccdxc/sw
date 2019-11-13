@@ -131,12 +131,6 @@ func initialize() {
 		errorExit("failed to setup model", err)
 	}
 
-	// fully clean up venice/iota config before starting the tests
-	err = setupModel.CleanupAllConfig()
-	if err != nil {
-		errorExit("error cleaning up all config", err)
-	}
-
 	err = setupModel.SetupDefaultConfig(context2.TODO(), false, false)
 	if err != nil {
 		errorExit("error setting up default config", err)

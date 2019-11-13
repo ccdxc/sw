@@ -221,7 +221,7 @@ func (eh *NetworkTopic) WatcherInConfigSync(nodeID string, event api.EventType) 
 		return false
 	}
 
-	if evAckStatus.LastObjectMeta.ResourceVersion != evStatus.LastObjectMeta.ResourceVersion {
+	if evAckStatus.LastObjectMeta.ResourceVersion < evStatus.LastObjectMeta.ResourceVersion {
 		log.Infof("watcher %v resource version mismatch for %v(%v)  sent %v: recived %v",
 			nodeID, "Network", event, evStatus.LastObjectMeta.ResourceVersion,
 			evAckStatus.LastObjectMeta.ResourceVersion)

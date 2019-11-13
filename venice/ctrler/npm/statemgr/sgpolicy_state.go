@@ -158,7 +158,10 @@ func (sgp *SgpolicyState) Write() error {
 	//Do write only if changed
 	if sgp.stateMgr.propgatationStatusDifferent(prop, newProp) {
 		sgp.NetworkSecurityPolicy.Status.PropagationStatus = *newProp
-		return sgp.NetworkSecurityPolicy.Write()
+		err := sgp.NetworkSecurityPolicy.Write()
+		if err != nil {
+			sgp.NetworkSecurityPolicy.Status.PropagationStatus = *prop
+		}
 	}
 
 	return nil

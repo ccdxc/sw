@@ -1566,8 +1566,22 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 	naples.logger.Println("Successfull naples bring up : ", name)
 
+	wload := Workload.NewWorkload(Workload.WorkloadTypeContainer, name, name, naples.logger)
+
+	wDir := Common.DstIotaEntitiesDir + "/" + name
+	wload.SetBaseDir(wDir)
+	if err := wload.BringUp(name, ""); err != nil {
+		naples.logger.Errorf("Naples sim entity type add failed")
+		return "", err
+	}
+	naples.dataNode.entityMap.Store(name, iotaWorkload{workload: wload, name: name})
 	i = 0
 	for true {
+		//Try to delete eth1 as it might have been created by retry.
+		cmd = []string{"ip", "link", "del", "eth1"}
+
+		wload.RunCommand(cmd, "", 0, 0, false, false)
+
 		if err := Utils.ConnectToDockerNetwork(naplesContainer, dockerNW); err == nil {
 			break
 		}
@@ -1579,16 +1593,6 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 		return "", errors.Wrap(err, "Failed to connect to docker network")
 	}
-
-	wload := Workload.NewWorkload(Workload.WorkloadTypeContainer, name, name, naples.logger)
-
-	wDir := Common.DstIotaEntitiesDir + "/" + name
-	wload.SetBaseDir(wDir)
-	if err := wload.BringUp(name, ""); err != nil {
-		naples.logger.Errorf("Naples sim entity type add failed")
-		return "", err
-	}
-	naples.dataNode.entityMap.Store(name, iotaWorkload{workload: wload, name: name})
 
 	getIPAddr := func() (string, error) {
 		cmd = []string{"ip", "-o", "-f", "inet", "addr", "show", "|", "grep", "eth1", "|", "grep", "-v",
@@ -1649,7 +1653,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 		return nil
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 6; i++ {
 		ipAddress, err := getIPAddr()
 		if err != nil {
 			return "", err
@@ -1659,7 +1663,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 		if err == nil {
 			return ipAddress, nil
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(30 * time.Second)
 	}
 
 	return "", errors.New("Mode Switch failed")
@@ -1743,6 +1747,9 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 	var dockerNW string
 	naples.dataNode.init(in)
 
+	//Sleep as reload have to wait
+	naples.logger.Println("Sleeping, Bring up request received for : " + in.GetName())
+	time.Sleep(3 * time.Minute)
 	naples.iotaNode.name = in.GetName()
 	naples.logger.Println("Bring up request received for : " + in.GetName())
 
@@ -1916,13 +1923,18 @@ func (naples *naplesMultiSimNode) checkAdmitted() error {
 	naples.dataNode.entityMap.Range(func(key interface{}, item interface{}) bool {
 		wl := item.(iotaWorkload)
 		if wl.workload.Type() == Workload.WorkloadTypeContainer {
-
+			wl := wl
 			go func(wl iotaWorkload) {
 				cmd := []string{"curl", naplesStatusURL}
 				cmdResp, _, rerr := wl.workload.RunCommand(cmd, "", 0, 0, false, false)
 				if rerr != nil || cmdResp.ExitCode != 0 {
-					msg := fmt.Sprintf("Error getting naples status %v", cmdResp.Stderr)
-					naples.logger.Println(msg)
+					if cmdResp != nil {
+						msg := fmt.Sprintf("Error getting naples status %v", cmdResp.Stderr)
+						naples.logger.Println(msg)
+					} else {
+						msg := fmt.Sprintf("Error getting naples status with error %v", rerr)
+						naples.logger.Println(msg)
+					}
 					err = rerr
 					waitCh <- err
 					return

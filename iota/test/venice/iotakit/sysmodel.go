@@ -189,7 +189,7 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 	for _, nr := range sm.tb.Nodes {
 		if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			// create
-			err := sm.createVeniceNode(nr.iotaNode)
+			err := sm.createVeniceNode(nr)
 			if err != nil {
 				return nil, err
 			}
@@ -300,6 +300,10 @@ func (sm *SysModel) CleanupAllConfig() error {
 		}
 	}
 
+	//Sleep for a while to make sure to avoid stress on etcd for scale
+	//if scale {
+	//	time.Sleep(5 * time.Minute)
+	//}
 	return nil
 }
 
@@ -616,6 +620,7 @@ func (sm *SysModel) PrintConfigPushStat() {
 // populateConfig creates scale configuration based on some predetermined parameters
 // TBD: we can enhance this to take the scale parameters fromt he user
 func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
+
 	cfg := cfgen.DefaultCfgenParams
 	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
 
@@ -728,22 +733,30 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	configPushCheck := func(done chan error) {
 		startTime := time.Now()
 		iter := 1
-		for ; iter <= 2000 && ctx.Err() == nil; iter++ {
+		for ; iter <= 1500 && ctx.Err() == nil; iter++ {
 			//Check every second
 			time.Sleep(time.Second * time.Duration(iter))
 			complete, err := sm.IsConfigPushComplete()
 			if complete && err == nil {
 				cfgPushTime.Config = timeTrack(startTime, "Config Push").String()
 				done <- nil
-				return
 			}
 		}
 		done <- fmt.Errorf("Config push incomplete")
 	}
 
-	setupWorkloads := func() {
+	setupConfigs := func() {
+		for _, o := range cfg.ConfigItems.Hosts {
+			h := &Host{veniceHost: o}
+			sm.fakeHosts[o.ObjectMeta.Name] = h
+		}
+		for _, pol := range cfg.ConfigItems.SGPolicies {
+			sm.fakeSGPolicies[pol.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: pol}
+		}
+		for _, app := range cfg.ConfigItems.Apps {
+			sm.fakeApps[app.ObjectMeta.Name] = &App{veniceApp: app}
+		}
 		nwMap := make(map[uint32]uint32)
-
 		tbVlans := make([]uint32, len(sm.tb.allocatedVlans))
 		copy(tbVlans, sm.tb.allocatedVlans)
 
@@ -770,7 +783,7 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		}
 	}
 
-	setupWorkloads()
+	setupConfigs()
 
 	pushConfigUsingStagingBuffer := func() error {
 		defer timeTrack(time.Now(), "Committing Via Config buffer")
@@ -781,8 +794,6 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 
 		for _, o := range cfg.ConfigItems.Hosts {
 			h := &Host{veniceHost: o}
-			sm.fakeHosts[o.ObjectMeta.Name] = h
-
 			err := stagingBuf.AddHost(h.veniceHost)
 			if err != nil {
 				log.Errorf("Error creating host: %+v. Err: %v", h, err)
@@ -807,7 +818,6 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		}
 
 		for _, pol := range cfg.ConfigItems.SGPolicies {
-			sm.fakeSGPolicies[pol.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: pol}
 			err := stagingBuf.AddNetowrkSecurityPolicy(pol)
 			if err != nil {
 				log.Errorf("Error creating app Err: %v", err)
@@ -824,8 +834,6 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 			defer timeTrack(time.Now(), "Creating hosts")
 			for _, o := range cfg.ConfigItems.Hosts {
 				h := &Host{veniceHost: o}
-				sm.fakeHosts[o.ObjectMeta.Name] = h
-
 				err := sm.CreateHost(h.veniceHost)
 				if err != nil {
 					log.Errorf("Error creating host: %+v. Err: %v", h, err)
@@ -854,7 +862,6 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		}
 
 		for _, o := range cfg.ConfigItems.Apps {
-			sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
 			if err := sm.CreateApp(o); err != nil {
 				return fmt.Errorf("error creating app: %s", err)
 			}
@@ -866,7 +873,6 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		for _, o := range cfg.ConfigItems.SGPolicies {
 			createSgPolicy := func() error {
 				defer timeTrack(time.Now(), "Create Sg Policy")
-				sm.fakeSGPolicies[o.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: o}
 				if err := sm.CreateNetworkSecurityPolicy(o); err != nil {
 					return fmt.Errorf("error creating sgpolicy: %s", err)
 				}
@@ -880,57 +886,65 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 	}
 
 	var err error
-	if os.Getenv("USE_STAGING_BUFFER") != "" {
-		err = pushConfigUsingStagingBuffer()
-	} else {
-		err = pushConfig()
-	}
-	if err != nil {
-		return err
-	}
-	policyPushCheck := func(done chan error) {
-		for _, o := range cfg.ConfigItems.SGPolicies {
-			// verify that sgpolicy object has reached all naples
-			startTime := time.Now()
-			iter := 1
-			for ; iter <= 2000 && ctx.Err() == nil; iter++ {
-				time.Sleep(time.Second * time.Duration(iter))
-				retSgp, err := sm.GetNetworkSecurityPolicy(&o.ObjectMeta)
-				if err != nil {
-					done <- fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
-					return
-				} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
-					log.Infof("got back policy satus %+v", retSgp.Status.PropagationStatus)
-					duration := timeTrack(startTime, "Sg Policy Push").String()
-					cfgPushTime.Object.SgPolicy = duration
-					done <- nil
-					return
+	if !sm.tb.skipConfigSetup {
+		err = sm.CleanupAllConfig()
+		if err != nil {
+			return err
+		}
+		if os.Getenv("USE_STAGING_BUFFER") != "" {
+			err = pushConfigUsingStagingBuffer()
+		} else {
+			err = pushConfig()
+		}
+		if err != nil {
+			return err
+		}
+		policyPushCheck := func(done chan error) {
+			for _, o := range cfg.ConfigItems.SGPolicies {
+				// verify that sgpolicy object has reached all naples
+				startTime := time.Now()
+				iter := 1
+				for ; iter <= 2000 && ctx.Err() == nil; iter++ {
+					time.Sleep(time.Second * time.Duration(iter))
+					retSgp, err := sm.GetNetworkSecurityPolicy(&o.ObjectMeta)
+					if err != nil {
+						done <- fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
+						return
+					} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
+						log.Infof("got back policy satus %+v", retSgp.Status.PropagationStatus)
+						duration := timeTrack(startTime, "Sg Policy Push").String()
+						cfgPushTime.Object.SgPolicy = duration
+						done <- nil
+						return
+					}
+					log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus)
 				}
-				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus)
+				done <- fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
+					o.ObjectMeta.Name, o.Status.PropagationStatus, ctx.Err())
 			}
-			done <- fmt.Errorf("unable to update policy '%s' on all naples %+v ctx.Err() is %v",
-				o.ObjectMeta.Name, o.Status.PropagationStatus, ctx.Err())
+		}
+		doneChan := make(chan error, 2)
+		go policyPushCheck(doneChan)
+		go configPushCheck(doneChan)
+
+		for i := 0; i < 2; i++ {
+			retErr := <-doneChan
+			if retErr != nil {
+				err = retErr
+			}
+		}
+
+		if scale {
+			readStatConfig()
+			cfgPushStats.Stats = append(cfgPushStats.Stats, cfgPushTime)
+			writeStatConfig()
 		}
 	}
-	doneChan := make(chan error, 2)
-	go policyPushCheck(doneChan)
-	go configPushCheck(doneChan)
 
-	for i := 0; i < 2; i++ {
-		retErr := <-doneChan
-		if retErr != nil {
-			err = retErr
-		}
-	}
-
-	if scale {
-		readStatConfig()
-		cfgPushStats.Stats = append(cfgPushStats.Stats, cfgPushTime)
-		writeStatConfig()
-	}
 	//Append default Sg polcies
 	for _, sgPolicy := range sm.fakeSGPolicies {
 		sgPolicy.sm = sm
+		log.Infof("Setting up default sg policicies........... \n")
 		sm.defaultSgPolicies = append(sm.defaultSgPolicies, sm.NewVeniceNetworkSecurityPolicy(sgPolicy))
 	}
 
@@ -1177,11 +1191,6 @@ func (sm *SysModel) DeleteNaplesNodes(names []string) error {
 	for _, name := range names {
 		log.Infof("Deleting naples node : %v", name)
 		naples, ok := sm.naples[name]
-
-		if !ok {
-			naples, ok = sm.fakeNaples[name]
-		}
-
 		if !ok {
 			return errors.New("naples not found to delete")
 		}
@@ -1205,6 +1214,140 @@ func (sm *SysModel) DeleteNaplesNodes(names []string) error {
 	}
 	//Reassociate hosts as new naples is added now.
 	return sm.AssociateHosts()
+}
+
+// DeleteVeniceNodes nodes on the fly
+func (sm *SysModel) DeleteVeniceNodes(names []string) error {
+	//First add to testbed.
+
+	clusterNodes, err := sm.ListClusterNodes()
+	if err != nil {
+		return err
+	}
+
+	nodes := []*TestNode{}
+	veniceMap := make(map[string]bool)
+	for _, name := range names {
+		log.Infof("Deleting venice node : %v", name)
+		venice, ok := sm.veniceNodes[name]
+		if !ok {
+			return errors.New("venice not found to delete")
+		}
+
+		if _, ok := veniceMap[venice.iotaNode.Name]; ok {
+			//Node already added
+			continue
+		}
+		veniceMap[venice.iotaNode.Name] = true
+		nodes = append(nodes, venice.testNode)
+	}
+
+	clusterDelNodes := []*cluster.Node{}
+	for _, node := range nodes {
+		added := false
+		for _, cnode := range clusterNodes {
+			if cnode.ObjectMeta.Name == node.iotaNode.IpAddress {
+				clusterDelNodes = append(clusterDelNodes, cnode)
+				added = true
+				break
+			}
+		}
+		if !added {
+			return fmt.Errorf("Node %v not found in the cluster", node.iotaNode.Name)
+		}
+	}
+
+	//Remove from the cluster
+	for _, node := range clusterDelNodes {
+
+		//Remember the cluster node if we want to create again
+		for name, vnode := range sm.veniceNodes {
+			if vnode.iotaNode.IpAddress == node.Name {
+				veniceNode, _ := sm.VeniceNodes().Select("name=" + vnode.iotaNode.Name)
+				if err != nil {
+					log.Errorf("Error finding venice node .%v", "name="+vnode.iotaNode.Name)
+					return err
+				}
+				//Disconnect node before deleting
+				err = sm.Action().DisconnectVeniceNodesFromCluster(veniceNode, sm.Naples())
+				if err != nil {
+					log.Errorf("Error disonnecting venice node.")
+					return err
+				}
+				vnode.cnode = node
+				sm.veniceNodesDisconnected[name] = vnode
+				break
+			}
+		}
+
+		//Sleep for 2 minutes to for cluster to be reformed.
+		time.Sleep(120 * time.Second)
+		log.Infof("Deleting venice node from cluster : %v", node.Name)
+		err := sm.DeleteClusterNode(node)
+		if err != nil {
+			log.Errorf("Error deleting cluster venice node.%v", err)
+			return err
+		}
+
+	}
+
+	log.Infof("Deleting venice node from testbed : %v", nodes)
+	err = sm.tb.DeleteNodes(nodes)
+	if err != nil {
+		log.Errorf("Error cleaning up venice node.%v", err)
+		return err
+	}
+
+	for _, name := range names {
+		delete(sm.veniceNodes, name)
+	}
+	//Sleep for a while to for the cluster
+	time.Sleep(120 * time.Second)
+	log.Infof("Deleting venice complete")
+
+	return nil
+}
+
+// AddVeniceNodes node on the fly
+func (sm *SysModel) AddVeniceNodes(names []string) error {
+	//First add to testbed.
+	log.Infof("Adding venice nodes : %v", names)
+	nodes, err := sm.tb.AddNodes(iota.PersonalityType_PERSONALITY_VENICE, names)
+	if err != nil {
+		return err
+	}
+
+	//Add to cluster
+	for _, node := range nodes {
+		added := false
+		for name, vnode := range sm.veniceNodesDisconnected {
+			if vnode.iotaNode.IpAddress == node.iotaNode.IpAddress {
+				err := sm.AddClusterNode(vnode.cnode)
+				if err != nil {
+					return fmt.Errorf("Node add failed %v", err)
+				}
+			}
+			added = true
+			//Add to connected nodes
+			sm.veniceNodes[name] = vnode
+		}
+
+		if !added {
+			return fmt.Errorf("Node %v not added to cluster", node.iotaNode.Name)
+		}
+
+	}
+
+	for _, name := range names {
+		delete(sm.veniceNodesDisconnected, name)
+	}
+
+	//Sleep for a while to for the cluster
+	time.Sleep(120 * time.Second)
+	//Setup venice nodes again.
+	sm.SetupVeniceNodes()
+
+	return nil
 }
 
 //IsConfigPushComplete checks whether config push is complete.
@@ -1254,8 +1397,8 @@ func (sm *SysModel) IsConfigPushComplete() (bool, error) {
 		}
 
 		if !node.KindStatus.App.Status.Delete {
-			log.Infof("App deletes not synced for node %v", node.NodeID)
-			return false, nil
+			//log.Infof("App deletes not synced for node %v", node.NodeID)
+			//return false, nil
 		}
 
 		if !node.KindStatus.Endpoint.Status.Create {

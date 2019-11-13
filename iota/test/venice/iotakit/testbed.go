@@ -106,6 +106,7 @@ type TestBed struct {
 	mockMode             bool                       // mock iota server and venice node for testing purposes
 	mockIota             *mockIotaServer            // mock iota server
 	skipSetup            bool                       // skip setting up the cluster
+	skipConfigSetup      bool                       // skip config setup
 	hasNaplesSim         bool                       // has Naples sim nodes in the topology
 	hasNaplesHW          bool                       // testbed has Naples HW in the topology
 	allocatedVlans       []uint32                   // VLANs allocated for this testbed
@@ -217,6 +218,11 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 	}
 
 	tb.skipSetup = skipSetup
+
+	if os.Getenv("SKIP_CONFIG") != "" {
+		log.Infof("Skipping config push ...")
+		tb.skipConfigSetup = true
+	}
 
 	// connect to iota server
 	err = tb.connectToIotaServer()
@@ -630,13 +636,18 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 
 	newNodes := []*TestNode{}
+	var pinst *InstanceParams
 	for _, name := range names {
 
 		nodeType := iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
 		if personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
+			pinst = tb.getNaplesInstanceByName(name)
+		} else if personality == iota.PersonalityType_PERSONALITY_VENICE {
+			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
+			pinst = tb.getAvailableInstance(iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM)
 		}
-		pinst := tb.getNaplesInstanceByName(name)
+
 		// setup node state
 		node := &TestNode{
 			NodeName:    name,
@@ -646,10 +657,12 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 			instParams:  pinst,
 			topoNode: &TopoNode{NodeName: name,
 				Personality: personality,
-				HostOS:      tb.Params.Provision.Vars["BmOs"],
 				Type:        nodeType},
 		}
 
+		if personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			node.topoNode.HostOS = tb.Params.Provision.Vars["BmOs"]
+		}
 		if err := tb.preapareNodeParams(nodeType, personality, node); err != nil {
 			return nil, err
 		}
@@ -678,10 +691,12 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 
 	// save node uuid
 	for index, node := range newNodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			tb.addToNaplesCache(node.NodeName, node.instParams.ID)
+		}
 		node.NodeUUID = addNodeResp.Nodes[index].NodeUuid
 		node.iotaNode = addNodeResp.Nodes[index]
 		tb.Nodes = append(tb.Nodes, node)
-		tb.addToNaplesCache(node.NodeName, node.instParams.ID)
 	}
 
 	//Save the context
@@ -1075,9 +1090,9 @@ func (tb *TestBed) setupTestBed() error {
 		tb.allocatedVlans = append(tb.allocatedVlans, vlan)
 	}
 	//Ignore the first one as it is native vlan
-        if len(tb.allocatedVlans) > 1 {
-	        tb.allocatedVlans = tb.allocatedVlans[1:]
-        }
+	if len(tb.allocatedVlans) > 1 {
+		tb.allocatedVlans = tb.allocatedVlans[1:]
+	}
 
 	// Build Topology Object after parsing warmd.json
 	nodes := &iota.NodeMsg{
@@ -1248,11 +1263,19 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 
 	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
 	defer cancel()
-	token, err := utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
-	if err != nil {
-		nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
+	var token string
+	for i := 0; true; i++ {
+
+		token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
+		if err == nil {
+			break
+		}
+		if i == 6 {
+
+			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
 	}
 
 	//After reloading make sure we setup the host
@@ -1703,15 +1726,6 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err
-	}
-
-	// fully clean up venice/iota config before starting the tests
-	if tb.skipSetup {
-		err = model.CleanupAllConfig()
-		if err != nil {
-			model.CollectLogs()
-			return nil, nil, err
-		}
 	}
 
 	// setup default config for the sysmodel

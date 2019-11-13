@@ -155,10 +155,23 @@ func generateEvents(rate, count string) error {
 		rate, count)
 }
 
+func stopEvents(rate, count string) error {
+
+	setupModel.Action().StopEventsGenOnNaples(setupModel.Naples())
+	return nil
+}
+
 func generateFWLogs(rate, count string) error {
 
 	setupModel.Action().StopFWLogGenOnNaples(setupModel.Naples())
 
 	return setupModel.Action().StartFWLogGenOnNaples(setupModel.Naples(),
 		rate, count)
+}
+
+func stopFWLogs(rate, count string) error {
+
+	setupModel.Action().StopFWLogGenOnNaples(setupModel.Naples())
+	return nil
+
 }

@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -257,11 +258,31 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig, reboot bool) error {
 		}
 	} else {
 		// Dont enforce error handling for clean up path
-		for _, cmd := range constants.CleanupCommands {
-			log.Infof("TOPO SVC | CleanUpNode | Clean up on  %v, IPAddress: %v , cmd: %v", n.Node.Name, n.Node.IpAddress, cmd)
-			err := runner.Run(addr, cmd, constants.RunCommandForeground)
-			if err != nil {
-				log.Errorf("TOPO SVC | CleanUpNode | Clean up on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		done := make(chan bool)
+		go func() {
+			for _, cmd := range constants.CleanupCommands {
+				log.Infof("TOPO SVC | CleanUpNode | Clean up on  %v, IPAddress: %v , cmd: %v", n.Node.Name, n.Node.IpAddress, cmd)
+				err := runner.Run(addr, cmd, constants.RunCommandForeground)
+				if err != nil {
+					log.Errorf("TOPO SVC | CleanUpNode | Clean up on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+				}
+			}
+			done <- true
+		}()
+
+		select {
+		case <-done:
+			break
+		case <-time.After(time.Duration(2) * time.Minute):
+			//Reset the node if CIMC info is available
+			cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+				n.CimcIP, n.CimcUserName, n.CimcPassword)
+
+			splitCmd := strings.Split(cmd, " ")
+			if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+				log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+			} else {
+				log.Errorf("TOPO SVC | Reset Node Success")
 			}
 		}
 	}
@@ -355,10 +376,10 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string,
 
 	for _, port := range ports {
 		if err := dataSwitch.SetTrunkMode(port); err != nil {
-			return errors.Wrap(err, "Setting switch trunk mode failed")
+			return errors.Wrapf(err, "Setting switch trunk mode failed %v", port)
 		}
 		if err := dataSwitch.SetTrunkVlanRange(port, vlanRange); err != nil {
-			return errors.Wrap(err, "Setting Vlan trunk range failed")
+			return errors.Wrapf(err, "Setting Vlan trunk range failed %v", port)
 		}
 
 		if igmpDisabled {

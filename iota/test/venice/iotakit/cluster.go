@@ -186,7 +186,7 @@ func (sm *SysModel) SetupVeniceNodes() error {
 	}
 
 	// trigger commands
-	triggerResp, err := trig.RunSerial()
+	triggerResp, err := trig.Run()
 	if err != nil {
 		log.Errorf("Failed to setup venice node. Err: %v", err)
 		return fmt.Errorf("Error triggering commands on venice nodes: %v", err)
@@ -196,6 +196,34 @@ func (sm *SysModel) SetupVeniceNodes() error {
 		// 'echo' command sometimes has exit code 1. ignore it
 		if cmdResp.ExitCode != 0 && !strings.HasPrefix(cmdResp.Command, "echo") {
 			return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		}
+	}
+
+	return nil
+}
+
+//CheckCitadelServiceStatus check citadel status
+func (sm *SysModel) CheckCitadelServiceStatus() error {
+
+	// walk all venice nodes
+	trig := sm.tb.NewTrigger()
+	for _, node := range sm.veniceNodes {
+		entity := node.iotaNode.Name + "_venice"
+		trig.AddCommand(fmt.Sprintf(`curl  http://localhost:7086/query --data-urlencode "db=default" --data-urlencode "q=SELECT * FROM Node" `),
+			entity, node.iotaNode.Name)
+	}
+
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to run citadel status status. Err: %v", err)
+		return err
+	}
+
+	for _, cmdResp := range triggerResp {
+		if cmdResp.ExitCode != 0 {
+			return fmt.Errorf("Venice trigger for citadel check failed %v failed. code %v, Out: %v, StdErr: %v",
+				cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 	}
 

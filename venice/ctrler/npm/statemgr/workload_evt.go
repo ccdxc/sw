@@ -439,16 +439,17 @@ func (sm *Statemgr) FindWorkload(tenant, name string) (*WorkloadState, error) {
 //RemoveStaleEndpoints remove stale endpoints
 func (sm *Statemgr) RemoveStaleEndpoints() error {
 
-	workloads, err := sm.ctrler.Workload().List(context.Background(), &api.ListWatchOptions{})
-	if err != nil {
-		log.Errorf("Failed to get workloads. Err : %v", err)
-		return err
-	}
-
 	endpoints, err := sm.ctrler.Endpoint().List(context.Background(), &api.ListWatchOptions{})
 	if err != nil {
 		log.Errorf("Failed to get endpoints. Err : %v", err)
 		return err
+	}
+
+	workloads, err := sm.ctrler.Workload().List(context.Background(), &api.ListWatchOptions{})
+	workloadCacheEmpty := false
+	if err != nil {
+		log.Errorf("Failed to get workloads. Err : %v", err)
+		workloadCacheEmpty = true
 	}
 
 	workloadMacPresent := func(wName, mac string) bool {
@@ -472,7 +473,7 @@ func (sm *Statemgr) RemoveStaleEndpoints() error {
 		}
 		workloadName := strings.Join(splitString[0:len(splitString)-1], "-")
 		macAddress := splitString[len(splitString)-1]
-		if !workloadMacPresent(workloadName, macAddress) {
+		if workloadCacheEmpty || !workloadMacPresent(workloadName, macAddress) {
 			// delete the endpoint in api server
 			epInfo := workload.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},

@@ -128,21 +128,21 @@ const (
 
 	//after a duration of this time if the server doesn't see any
 	//activity it pings client to see if the transport is still alive.
-	GrpcServerTransportKeepaliveTimeSeconds = time.Second*90
+	GrpcServerTransportKeepaliveTimeSeconds = time.Second * 90
 
 	//after having pinged for keepalive check, the server waits for a
 	//duration of Timeout and if no activity is seen even after that
 	//the connection is closed.
-	GrpcServerTransportKeepaliveTimeoutSeconds = time.Second*300
+	GrpcServerTransportKeepaliveTimeoutSeconds = time.Second * 300
 
 	//after a duration of this time if the client doesn't see any
 	//activity it pings server to see if the transport is still alive.
-	GrpcClientTransportKeepaliveTimeSeconds = time.Second*90
+	GrpcClientTransportKeepaliveTimeSeconds = time.Second * 90
 
 	//after having pinged for keepalive check, the client waits for
 	//a duration of Timeout and if no activity is seen even after
 	//that the connection is closed.
-	GrpcClientTransportKeepaliveTimeoutSeconds = time.Second*300
+	GrpcClientTransportKeepaliveTimeoutSeconds = time.Second * 300
 
 	DefaultCimcUserName = "admin"
 
@@ -177,7 +177,7 @@ var (
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{
-		`sudo /pensando/iota/INSTALL.sh --clean-only`,
+		`sudo /pensando/iota/images/INSTALL.sh --clean-only`,
 		`sudo systemctl stop pen-cmd`,
 		`sudo docker rm -fv $(docker ps -aq)`,
 		`sudo docker system prune -f`,

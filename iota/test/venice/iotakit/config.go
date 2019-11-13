@@ -237,7 +237,7 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped. we are ok with that
 		// already exists
 		if !strings.HasPrefix(err.Error(), "Status:(412)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
-			 !strings.HasPrefix(err.Error(), "already exists") {
+			!strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateTenant failed with err: %v", err)
 		}
 	}
@@ -247,7 +247,7 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 	if err != nil {
 		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
-			 !strings.HasPrefix(err.Error(), "already exists") {
+			!strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateAuthenticationPolicy failed with err: %v", err)
 		}
 	}
@@ -257,7 +257,7 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 	if err != nil {
 		// 409 is returned when user already exists. 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") &&
-			 !strings.HasPrefix(err.Error(), "already exists") {
+			!strings.HasPrefix(err.Error(), "already exists") {
 			return fmt.Errorf("CreateTestUser failed with err: %v", err)
 		}
 	}
@@ -985,6 +985,82 @@ func (sm *SysModel) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err e
 	}
 
 	return snl, err
+}
+
+// ListClusterNodes gets a list of nodes
+func (sm *SysModel) ListClusterNodes() (snl []*cluster.Node, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{}
+
+	for _, restcl := range restcls {
+		snl, err = restcl.ClusterV1().Node().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+	return snl, err
+}
+
+// DeleteClusterNode gets a list of nodes
+func (sm *SysModel) DeleteClusterNode(node *cluster.Node) (err error) {
+	log.Info("Getting loggd in context")
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		log.Errorf("Error getting login ctx %v", err)
+		return err
+	}
+	log.Info("Getting  rest client in context")
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		log.Errorf("Error getting rest client %v", err)
+		return err
+	}
+
+	log.Info("Initiating delete..")
+	for _, restcl := range restcls {
+		_, err = restcl.ClusterV1().Node().Delete(ctx, &node.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+	log.Info("Initiating deleted competed..")
+	if err != nil {
+		log.Errorf("Error deleting cluster nodeß %v", err)
+	}
+	return err
+}
+
+// AddClusterNode gets a list of nodes
+func (sm *SysModel) AddClusterNode(node *cluster.Node) (err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		newNode := &cluster.Node{
+			ObjectMeta: api.ObjectMeta{
+				Name: node.ObjectMeta.Name,
+			},
+		}
+		_, err = restcl.ClusterV1().Node().Create(ctx, newNode)
+		if err == nil {
+			break
+		}
+	}
+	return err
 }
 
 // GetSmartNICInMacRange returns a smartnic object in mac address range

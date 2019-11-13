@@ -5,53 +5,61 @@ meta:
 config:
     #Run a particular testcase
     #Number of iterations
-    iterations: 50
+    iterations: 2
     #Run lineraly or randomize suites
     run-type: linear
     #Scale data run
     scale-data: True
     stop-on-failure: True
     #Max run time for stree in hours
-    max-run-time: 24h
+    max-run-time: 16h
 
 testsuites:
+    #- suite: stress
     #- suite: firewall
-    #  focus: "sanity=true"
-    #- suite: monitor
-    #  focus: "sanity=true"
+   #   focus: "sanity=true"
+   # - suite: monitor
+   #   focus: "sanity=true"
+   # - suite: mirror
     - suite: cluster
-    #  focus: "sanity=true"
+      #focus: "sanity=true"
 
 triggers:
-    - trigger: VenicePartition
-      percent: 50
-      skip-setup: True
-    - trigger: NaplesUpgrade
-      percent: 50
-      reinstall-on-failure: True
-      skip-setup: True
-    - trigger: VeniceReboot
-      percent: 50
-      skip-setup: True
-    - trigger: HostReboot
-      percent: 50
-      skip-setup: True
-    - trigger: NaplesRemoveAdd
-      percent: 50
-      skip-setup: True
     - trigger: FlapDataPorts
       percent: 50
       skip-setup: True
-    - trigger: NaplesMgmtLinkFlap
+      skip-config: True
+    - trigger: VenicePartition
       percent: 50
       skip-setup: True
+      skip-config: True
+    #- trigger: NaplesUpgrade
+    #  percent: 50
+    #  reinstall-on-failure: True
+      skip-setup: True
+      skip-config: True
+    #- trigger: NaplesMgmtLinkFlap
+   #   percent: 50
+   #   skip-setup: True
+   #   skip-config: True
+    - trigger: VeniceReboot
+      percent: 50
+      skip-setup: True
+      #skip-config: True
+    - trigger: HostReboot
+      percent: 50
+      skip-setup: True
+      #skip-config: True
+    #- trigger: NaplesRemoveAdd
+    #  percent: 50
+    #  skip-setup: True
 
 noises:
-   # - noise: GenEvents
-   #   rate: 5
+    #- noise: GenEvents
+   #    rate: 5
    #   count: 50000
     - noise: GenFWLogs
-      rate: 25
+      rate: 5
       count: 1000000
     #- noise: FlapPorts
     #  #Flap every 30 seconds

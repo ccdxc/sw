@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -95,7 +96,7 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 }
 
 //DisconnectVeniceNodesFromCluster disconnect venice nodes from cluster.
-func (act *ActionCtx) DisconnectVeniceNodesFromCluster(vnc *VeniceNodeCollection) error {
+func (act *ActionCtx) DisconnectVeniceNodesFromCluster(vnc *VeniceNodeCollection, naples *NaplesCollection) error {
 
 	trig := act.model.tb.NewTrigger()
 
@@ -122,6 +123,7 @@ func (act *ActionCtx) DisconnectVeniceNodesFromCluster(vnc *VeniceNodeCollection
 			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
 				venice.iotaNode.Name, 3)
 		}
+
 	}
 
 	// run the trigger
@@ -146,11 +148,16 @@ func (act *ActionCtx) DisconnectVeniceNodesFromCluster(vnc *VeniceNodeCollection
 			}
 		}
 	}
+
+	//Disconnect naples nodes too
+	if naples != nil && (len(naples.nodes) != 0 || len(naples.fakeNodes) != 0) {
+		act.model.Action().DenyVeniceNodesFromNaples(vnc, naples)
+	}
 	return nil
 }
 
 //ConnectVeniceNodesToCluster  reconnect venice nodes to cluster.
-func (act *ActionCtx) ConnectVeniceNodesToCluster(vnc *VeniceNodeCollection) error {
+func (act *ActionCtx) ConnectVeniceNodesToCluster(vnc *VeniceNodeCollection, naples *NaplesCollection) error {
 	trig := act.model.tb.NewTrigger()
 
 	for _, venice := range vnc.nodes {
@@ -201,7 +208,27 @@ func (act *ActionCtx) ConnectVeniceNodesToCluster(vnc *VeniceNodeCollection) err
 			}
 		}
 	}
+	//Allow naples nodes too
+	if naples != nil && (len(naples.nodes) != 0 || len(naples.fakeNodes) != 0) {
+		act.model.Action().AllowVeniceNodesFromNaples(vnc, naples)
+	}
 	return nil
+}
+
+func getRuleCookie(naples *NaplesCollection) (string, error) {
+	//For later deletion
+	cookie := ""
+	if len(naples.nodes) == 0 {
+		if len(naples.fakeNodes) == 0 {
+			return "", errors.New("No node to add deny rules")
+		}
+		cookie = "rule-id-" + naples.fakeNodes[0].name
+	} else {
+		cookie = "rule-id-" + naples.nodes[0].name
+
+	}
+
+	return cookie, nil
 }
 
 //DenyVeniceNodesFromNaples denies venice node from list of naples
@@ -210,18 +237,24 @@ func (act *ActionCtx) DenyVeniceNodesFromNaples(vnc *VeniceNodeCollection,
 
 	trig := act.model.tb.NewTrigger()
 
+	//For later deletion
+	cookie, err := getRuleCookie(naples)
+	if err != nil {
+		return err
+	}
+
 	for _, venice := range vnc.nodes {
 
 		for _, n := range naples.nodes {
-			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP",
-				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
 			trig.AddCommand(cmd, venice.iotaNode.Name+"_venice", venice.iotaNode.Name)
 			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
 				venice.iotaNode.Name, 3)
 		}
 		for _, n := range naples.fakeNodes {
-			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP",
-				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
+				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
 			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
 				venice.iotaNode.Name, 3)
 		}
@@ -249,21 +282,16 @@ func (act *ActionCtx) AllowVeniceNodesFromNaples(vnc *VeniceNodeCollection,
 	naples *NaplesCollection) error {
 	trig := act.model.tb.NewTrigger()
 
+	cookie, err := getRuleCookie(naples)
+	if err != nil {
+		return err
+	}
+
 	for _, venice := range vnc.nodes {
-
-		for _, n := range naples.nodes {
-			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r | xargs -n 1 sudo iptables -D INPUT $1",
-				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
-			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
-				venice.iotaNode.Name, 3)
-		}
-
-		for _, n := range naples.fakeNodes {
-			cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r  | xargs -n 1 sudo iptables -D INPUT $1",
-				strings.Split(n.smartNic.GetStatus().IPConfig.IPAddress, "/")[0])
-			trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
-				venice.iotaNode.Name, 3)
-		}
+		cmd := fmt.Sprintf("sudo iptables -L INPUT --line-numbers | grep  -w %v | grep -i drop | awk '{print $1}' | sort -n -r | xargs -n 1 sudo iptables -D INPUT $1",
+			cookie)
+		trig.AddCommandWithRetriesOnFailures(cmd, venice.iotaNode.Name+"_venice",
+			venice.iotaNode.Name, 3)
 	}
 
 	// run the trigger should serial as we are modifying ipables.
@@ -758,6 +786,62 @@ func (act *ActionCtx) RemoveAddNaples(naples *NaplesCollection) error {
 	return nil
 }
 
+// RemoveAddVenice remove and add venice nodes
+func (act *ActionCtx) RemoveAddVenice(venice *VeniceNodeCollection) error {
+
+	names := []string{}
+	for _, obj := range venice.nodes {
+		names = append(names, obj.iotaNode.Name)
+
+	}
+
+	if err := act.model.DeleteVeniceNodes(names); err != nil {
+		log.Errorf("Failed to delete venice nodes %v", names)
+		return err
+	}
+
+	if err := act.model.AddVeniceNodes(names); err != nil {
+		log.Errorf("Failed to add venice node %v", names)
+		return err
+	}
+
+	return nil
+}
+
+// RemoveVenice remove venice nodes
+func (act *ActionCtx) RemoveVenice(venice *VeniceNodeCollection) error {
+
+	names := []string{}
+	for _, obj := range venice.nodes {
+		names = append(names, obj.iotaNode.Name)
+
+	}
+
+	if err := act.model.DeleteVeniceNodes(names); err != nil {
+		log.Errorf("Failed to delete venice nodes %v", names)
+		return err
+	}
+
+	return nil
+}
+
+// AddVenice add venice nodes
+func (act *ActionCtx) AddVenice(venice *VeniceNodeCollection) error {
+
+	names := []string{}
+	for _, obj := range venice.nodes {
+		names = append(names, obj.iotaNode.Name)
+
+	}
+
+	if err := act.model.AddVeniceNodes(names); err != nil {
+		log.Errorf("Failed to add venice node %v, err : %v", names, err)
+		return err
+	}
+
+	return nil
+}
+
 // FlapMgmtLinkNaples flap mgmt link for naples
 func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
 
@@ -768,8 +852,13 @@ func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
 		return err
 	}
 
-	cmd = "ifconfig eth0 down && ifconfig eth1 down && sleep 600 && ifconfig eth0 up && ifconfig eth1 up && route add default gw 172.17.0.1"
-	stdout, err = act.RunFakeNaplesCommand(naples, cmd)
+	for i := 0; i < 3; i++ {
+		cmd = "ifconfig eth0 down && ifconfig eth1 down && sleep 600 && ifconfig eth0 up && ifconfig eth1 up && route add default gw 172.17.0.1"
+		stdout, err = act.RunFakeNaplesCommand(naples, cmd)
+		if err != nil {
+			continue
+		}
+	}
 	if err != nil {
 		log.Errorf("Failed to flap mgmt link node %v :%v", err, stdout)
 		return err

@@ -17,7 +17,7 @@
     "timeout": 0.0
 }, {
     "name": "nmd",
-    "command": "/naples/nic/bin/nmd -oob-interface eth1",
+    "command": "/naples/nic/bin/nmd -oob-interface eth1 -inb-interface eth1",
     "dependencies": [
         {
             "kind": "service",
