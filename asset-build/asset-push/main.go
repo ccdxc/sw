@@ -149,10 +149,6 @@ func getTotalFilesCount(localPath string) (int, int, error) {
 		}
 
 		if info.IsDir() {
-			if skipDir(info.Name()) {
-				return filepath.SkipDir
-			}
-
 			totalDirs++
 			return nil
 		}
@@ -207,10 +203,6 @@ func walkAndTar(localPath string, totalDirs, totalFiles int, tw *tar.Writer, gzw
 
 		link := ""
 		if info.IsDir() {
-			if skipDir(info.Name()) {
-				logrus.Infof("skip %s\n", path)
-				return filepath.SkipDir
-			}
 			processedDirs++
 			return nil
 		} else if info.Mode()&os.ModeSymlink == os.ModeSymlink {
