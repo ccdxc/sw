@@ -1888,15 +1888,18 @@ ionic_rdma_sniffer_sysctl(SYSCTL_HANDLER_ARGS)
 	unsigned int rx_mode = lif->rx_mode;
 	int value, err;
 
+	rx_mode = lif->rx_mode;
+	value = (rx_mode & RX_MODE_F_RDMA_SNIFFER) ? 1 : 0;
+
 	err = sysctl_handle_int(oidp, &value, 0, req);
-	if ((err) || (req->newptr == NULL))
+	if (err || (req->newptr == NULL))
 		return (err);
 
-	rx_mode = lif->rx_mode;
 	if (value)
 		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
 	else
-		rx_mode ^= RX_MODE_F_RDMA_SNIFFER;
+		rx_mode &= ~RX_MODE_F_RDMA_SNIFFER;
+	
 	ionic_lif_rx_mode(lif, rx_mode);
 
 	return (err);

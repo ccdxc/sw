@@ -210,3 +210,4 @@ testcases:
 
     -   name    : DriverLifReset
         testcase: testcases.drivers.driverlifreset
+        disable : True

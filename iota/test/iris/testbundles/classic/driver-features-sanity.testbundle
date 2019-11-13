@@ -274,5 +274,5 @@ testcases:
 
     -   name    : DriverLifReset
         testcase: testcases.drivers.driverlifreset
-        disable : False
+        disable : True
         iterators :
