@@ -173,16 +173,22 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printDeviceHeader() {
-	hdrLine := strings.Repeat("-", 51)
+	hdrLine := strings.Repeat("-", 96)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-16s%-20s%-15s\n", "IPAddr", "MACAddr", "GatewayIP")
+	fmt.Printf("%-16s%-20s%-16s%-10s%-12s%-12s%-10s\n",
+		"IPAddr", "MACAddr", "GatewayIP",
+		"Profile", "BridgingEn", "LearningEn",
+		"OperMode")
 	fmt.Println(hdrLine)
 }
 
 func printDevice(resp *pds.DeviceGetResponse) {
 	spec := resp.GetResponse().GetSpec()
-	fmt.Printf("%-16s%-20s%-15s\n",
+	fmt.Printf("%-16s%-20s%-16s%-10s%-12t%-12t%-10s\n",
 		utils.IPAddrToStr(spec.GetIPAddr()),
 		utils.MactoStr(spec.GetMACAddr()),
-		utils.IPAddrToStr(spec.GetGatewayIP()))
+		utils.IPAddrToStr(spec.GetGatewayIP()),
+		strings.Replace(spec.GetProfile().String(), "DEVICE_PROFILE_", "", -1),
+		spec.GetBridgingEn(), spec.GetLearningEn(),
+		strings.Replace(spec.GetDevOperMode().String(), "DEVICE_OPER_MODE_", "", -1))
 }
