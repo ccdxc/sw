@@ -9,6 +9,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/metaswitch/stubs/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 
 
 extern api_test::pdsa_test_params_t g_test_params;
@@ -294,6 +295,23 @@ sdk_ret_t pds_teardown() {
     return SDK_RET_OK;
 }
 
+namespace sdk {
+namespace platform {
+int readFruKey(std::string key, std::string &value)
+{
+    // Fill some dummy values
+    if (key == NUMMACADDR_KEY) {
+        value = "25";
+        return 0;
+    } 
+    if (key == MACADDRESS_KEY) {
+        value = "00:00:cd:00:00:01";
+        return 0;
+    } 
+    return -1;
+}
+}
+}
 namespace api {
     pds_state g_pds_state;
     pds_state::pds_state() { }

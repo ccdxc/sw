@@ -252,6 +252,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
   nic/tools/ncc:
     - reference: nic/apollo
+  nic/metaswitch:
+    - reference: nic/apollo 
   nic/upgrade_manager:
     - reference: iota/test/standalone/sanity/esx
   nic/utils:
