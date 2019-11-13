@@ -530,6 +530,9 @@ func fsmAcRolloutFail(ros *RolloutState) {
 	}
 	ros.Mutex.Lock()
 	ros.Status.OperationalState = rollout.RolloutStatus_FAILURE.String()
+	if ros.rolloutTimedout {
+		ros.Status.Reason = "Rollout failed due to short maintenance window"
+	}
 	ros.saveStatus()
 	ros.currentState = fsmstRolloutFail
 	ros.Mutex.Unlock()

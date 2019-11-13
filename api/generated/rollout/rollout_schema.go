@@ -67,7 +67,7 @@ var typesMapRollout = map[string]*api.Struct{
 			"num-retries":                   api.CLIInfo{Path: "Status.DSCsStatus[].NumberOfRetries", Skip: false, Insert: "", Help: ""},
 			"phase":                         api.CLIInfo{Path: "Status.DSCsStatus[].Phase", Skip: false, Insert: "", Help: ""},
 			"prev-version":                  api.CLIInfo{Path: "Status.PreviousVersion", Skip: false, Insert: "", Help: ""},
-			"reason":                        api.CLIInfo{Path: "Status.DSCsStatus[].Reason", Skip: false, Insert: "", Help: ""},
+			"reason":                        api.CLIInfo{Path: "Status.Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":              api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"retry":                         api.CLIInfo{Path: "Spec.Retry", Skip: false, Insert: "", Help: ""},
 			"self-link":                     api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -129,7 +129,6 @@ var typesMapRollout = map[string]*api.Struct{
 			"name":                          api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                     api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"prev-version":                  api.CLIInfo{Path: "Status.PreviousVersion", Skip: false, Insert: "", Help: ""},
-			"reason":                        api.CLIInfo{Path: "Status.Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":              api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"retry":                         api.CLIInfo{Path: "Spec.Retry", Skip: false, Insert: "", Help: ""},
 			"self-link":                     api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -154,8 +153,6 @@ var typesMapRollout = map[string]*api.Struct{
 			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"PreviousVersion": api.Field{Name: "PreviousVersion", CLITag: api.CLIInfo{ID: "prev-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "prev-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"rollout.RolloutPhase": &api.Struct{
@@ -222,6 +219,8 @@ var typesMapRollout = map[string]*api.Struct{
 			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"PreviousVersion": api.Field{Name: "PreviousVersion", CLITag: api.CLIInfo{ID: "prev-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "prev-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

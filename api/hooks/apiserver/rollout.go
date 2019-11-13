@@ -3,7 +3,11 @@ package impl
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
+
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/utils"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 
@@ -14,6 +18,8 @@ import (
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/api/labels"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
@@ -29,9 +35,10 @@ type rolloutHooks struct {
 }
 
 const (
-	createRolloutOp = 1
-	modifyRolloutOp = 2
-	stopRolloutOp   = 3
+	createRolloutOp    = 1
+	modifyRolloutOp    = 2
+	stopRolloutOp      = 3
+	defaultNumParallel = 2
 )
 
 func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur *rollout.Rollout, rolloutOp int) error {
@@ -224,17 +231,17 @@ func performRolloutUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore
 }
 
 func (h *rolloutHooks) modifyRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	h.l.InfoLog("msg", "received commitAction preCommit Hook for UpdateRolloutAction  key %s", key)
+	h.l.Infof("received commitAction preCommit Hook for UpdateRolloutAction  key %s", key)
 	return performRolloutUpdate(ctx, kv, txn, key, i, h, modifyRolloutOp)
 }
 
 func (h *rolloutHooks) stopRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	h.l.InfoLog("msg", "received commitAction preCommit Hook for StopRolloutAction  key %s", key)
+	h.l.Infof("received commitAction preCommit Hook for StopRolloutAction  key %s", key)
 	return performRolloutUpdate(ctx, kv, txn, key, i, h, stopRolloutOp)
 }
 
 func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	h.l.InfoLog("msg", "received commitAction preCommit Hook for RolloutAction  key %s", key)
+	h.l.Infof("received commitAction preCommit Hook for RolloutAction  key %s", key)
 	var err error
 
 	buf, ok := i.(rollout.Rollout)
@@ -251,6 +258,86 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 	if buf.Spec.Version == "" {
 		h.l.ErrorLog("Version field is empty in rollout object")
 		return nil, false, errors.New("missing version field in rollout object")
+	}
+
+	if buf.Spec.ScheduledEndTime != nil {
+		var numVenice uint32
+		var numNaples uint32
+		var numRounds uint32
+
+		if buf.Spec.ScheduledStartTime == nil {
+			h.l.ErrorLog("ScheduledStartTime is nil")
+			return nil, false, errors.New("ScheduledStartTime is nil")
+		}
+		if buf.Spec.ScheduledStartTime.Seconds >= buf.Spec.ScheduledEndTime.Seconds {
+			h.l.ErrorLog("ScheduledEndTime is before the ScheduledStartTime")
+			return nil, false, errors.New("ScheduledEndTime is before the ScheduledStartTime")
+		}
+
+		if !buf.Spec.DSCsOnly {
+			nodeList := cluster.NodeList{}
+			nodeList.Kind = "NodeList"
+			r := cluster.Node{}
+			key := r.MakeKey(string(apiclient.GroupCluster))
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Node")
+			err := kv.List(ctx, key, &nodeList)
+			if err != nil {
+				h.l.ErrorLog("Failed to obtain venice node list: err", err)
+				return nil, false, errors.New("Failed to get VeniceNodeList")
+			}
+			numVenice = uint32(len(nodeList.GetItems()))
+			h.l.Infof("Venice List is %+v numVenice %d", nodeList.GetItems(), numVenice)
+		}
+		into := cluster.DistributedServiceCardList{}
+		into.Kind = "DistributedServiceCardList"
+		r := cluster.DistributedServiceCard{}
+		keyDSC := r.MakeKey(string(apiclient.GroupCluster))
+
+		ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.DistributedServiceCard")
+		err = kv.List(ctx, keyDSC, &into)
+		if err != nil {
+			h.l.ErrorLog("msg", "DistributedServiceCardList failed", "key", key, "err", err)
+			return nil, false, errors.New("Failed to get DistributedServiceCardList")
+		}
+		h.l.Infof("DSC List is %+v", into.GetItems())
+
+		numNaples = countSmarNICS(into, buf.Spec.OrderConstraints, buf.Spec.DSCMustMatchConstraint, buf.Spec.Version)
+
+		if buf.Spec.Strategy == rollout.RolloutSpec_LINEAR.String() {
+			if buf.Spec.MaxParallel == 0 {
+				numRounds = uint32(math.Ceil(float64(numNaples) / float64(defaultNumParallel)))
+			} else {
+				numRounds = uint32(math.Ceil(float64(numNaples) / float64(buf.Spec.MaxParallel)))
+			}
+		} else {
+			var count uint32 = 1
+			for numNaples > 0 {
+				numRounds++
+				numNaples = numNaples - count
+				count = count * 2
+				if buf.Spec.MaxParallel != 0 { // user limited max parallelism to this
+					count = min(count, buf.Spec.MaxParallel)
+				}
+			}
+		}
+
+		timeInMinutes := numRounds*5 + numVenice*10
+		h.l.Infof("Number of Naples (%d) Number of Rounds (%d) timeInMinutes (%d)", numNaples, numRounds, timeInMinutes)
+		endTime := time.Now()
+
+		if buf.Spec.ScheduledStartTime.Seconds > int64(time.Now().Second()) {
+			fromTime, _ := buf.Spec.ScheduledStartTime.Time()
+			endTime = fromTime.Add(time.Minute * time.Duration(timeInMinutes))
+		} else {
+			endTime = time.Now().Add(time.Minute * time.Duration(timeInMinutes))
+		}
+
+		if buf.Spec.ScheduledEndTime.Seconds < int64(endTime.Second()) {
+			errmsg := fmt.Sprintf("Maintenance window duration not enough to perform upgrade. Need atleast %d minutes", timeInMinutes)
+			h.l.WarnLog("msg", errmsg)
+			return nil, false, errors.New(errmsg)
+		}
 	}
 
 	rolloutObj := rollout.Rollout{}
@@ -333,4 +420,40 @@ func registerRolloutHooks(svc apiserver.Service, logger log.Logger) {
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
 	apisrv.RegisterHooksCb("rollout.RolloutV1", registerRolloutHooks)
+}
+
+func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels.Selector, smartNICMustMatchConstraint bool, version string) uint32 {
+	var numDscs uint32
+	snicMap := make(map[int]*cluster.DistributedServiceCard)
+	for name, s := range snics.GetItems() {
+		snicMap[name] = s
+	}
+
+	for _, ls := range labelSels {
+		for index, s := range snicMap {
+			if ls.Matches(labels.Set(s.ObjectMeta.Labels)) {
+				log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
+				if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
+					numDscs++
+					delete(snicMap, index)
+				}
+			}
+		}
+	}
+	if !smartNICMustMatchConstraint {
+		// add the remaining SNICs
+		for _, s := range snicMap {
+			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
+			if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
+				numDscs++
+			}
+		}
+	}
+	return numDscs
+}
+func min(a, b uint32) uint32 {
+	if a < b {
+		return a
+	}
+	return b
 }

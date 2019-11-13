@@ -3,12 +3,15 @@ package impl
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/runtime"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,7 +30,17 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		//svc: apisrvpkg.MustGetAPIServer()
 		l: log.SetConfig(log.GetDefaultConfig("Rollout-Precommit-Test")),
 	}
-
+	seconds := time.Now().Unix()
+	scheduledStartTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds + 30, //Add a scheduled rollout with 30 second delay
+		},
+	}
+	scheduledEndTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds + 1800, //30 min window
+		},
+	}
 	roa := rollout.RolloutAction{
 		TypeMeta: api.TypeMeta{
 			Kind: "RolloutAction",
@@ -37,8 +50,8 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		},
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
-			ScheduledStartTime:        nil,
-			ScheduledEndTime:          nil,
+			ScheduledStartTime:        scheduledStartTime,
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -61,8 +74,8 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		},
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
-			ScheduledStartTime:        nil,
-			ScheduledEndTime:          nil,
+			ScheduledStartTime:        scheduledStartTime,
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -107,8 +120,8 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		},
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
-			ScheduledStartTime:        nil,
-			ScheduledEndTime:          nil,
+			ScheduledStartTime:        scheduledStartTime,
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,
@@ -142,8 +155,8 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 		},
 		Spec: rollout.RolloutSpec{
 			Version:                   "2.8",
-			ScheduledStartTime:        nil,
-			ScheduledEndTime:          nil,
+			ScheduledStartTime:        scheduledStartTime,
+			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
 			MaxParallel:               0,
 			MaxNICFailuresBeforeAbort: 0,

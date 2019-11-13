@@ -182,6 +182,10 @@ message RolloutStatus {
 
     // Version of the cluster before the start of rollout
     string PreviousVersion                                = 8 [(gogoproto.jsontag) = "prev-version,omitempty"];
+
+    // details the reason for overall Failure or Suspend
+    string Reason                                = 9 [(gogoproto.jsontag) = "reason,omitempty"];
+
 }
 
 // RolloutAction Status gives the status of the rollout at the top level as well as details of
@@ -202,10 +206,7 @@ message RolloutActionStatus {
 
     // Version of the cluster before the start of rollout
     string PreviousVersion                                = 5 [(gogoproto.jsontag) = "prev-version,omitempty"];
-
-    // details the reason for overall Failure or Suspend
-    string Reason                                = 6 [(gogoproto.jsontag) = "reason,omitempty"];
-}
+ }
 
 // Rollout object captures the admin's intent and status of the software version running on the cluster
 //  It is incorrect to have two different Rollouts active at the same time

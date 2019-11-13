@@ -43,6 +43,7 @@ type RolloutState struct {
 	numSkipped            uint32
 	completionDelta       float32
 	numRetries            uint32
+	rolloutTimedout       bool
 }
 
 func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Rollout) {

@@ -352,12 +352,9 @@ Loop:
 					endTime, _ := ros.Spec.ScheduledEndTime.Time()
 					newduration := endTime.Sub(time.Now())
 					log.Infof("New duration %+v", newduration.Seconds())
+					ros.rolloutTimedout = true
 					if newduration < 0 {
 						log.Infof("Specified endtime is in the past. Skip upgrade for %s", snicState)
-						continue
-					}
-					if newduration.Seconds() < preUpgradeTimeout.Seconds() {
-						log.Infof("Not enough time to perform retries. Skip upgrade for %s", snicState)
 						continue
 					}
 				}

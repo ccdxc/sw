@@ -677,6 +677,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "description": "details the reason for overall Failure or Suspend.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1364,10 +1371,6 @@
         "prev-version": {
           "type": "string",
           "title": "Version of the cluster before the start of rollout"
-        },
-        "reason": {
-          "type": "string",
-          "title": "details the reason for overall Failure or Suspend"
         }
       },
       "title": "RolloutAction Status gives the status of the rollout at the top level as well as details of\n individual components"
@@ -1598,6 +1601,10 @@
         "prev-version": {
           "type": "string",
           "title": "Version of the cluster before the start of rollout"
+        },
+        "reason": {
+          "type": "string",
+          "title": "details the reason for overall Failure or Suspend"
         }
       },
       "title": "Rollout Status gives the status of the rollout at the top level as well as details of\n individual components"

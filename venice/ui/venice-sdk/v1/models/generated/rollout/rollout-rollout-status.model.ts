@@ -19,6 +19,7 @@ export interface IRolloutRolloutStatus {
     'start-time'?: Date;
     'end-time'?: Date;
     'prev-version'?: string;
+    'reason'?: string;
 }
 
 
@@ -33,6 +34,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     'start-time': Date = null;
     'end-time': Date = null;
     'prev-version': string = null;
+    'reason': string = null;
     public static propInfo: { [prop in keyof IRolloutRolloutStatus]: PropInfoItem } = {
         'controller-nodes-status': {
             required: false,
@@ -66,6 +68,10 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             type: 'Date'
         },
         'prev-version': {
+            required: false,
+            type: 'string'
+        },
+        'reason': {
             required: false,
             type: 'string'
         },
@@ -155,6 +161,13 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         } else {
             this['prev-version'] = null
         }
+        if (values && values['reason'] != null) {
+            this['reason'] = values['reason'];
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('reason')) {
+            this['reason'] = RolloutRolloutStatus.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -170,6 +183,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
                 'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutStatus.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutStatus.propInfo['end-time']),
                 'prev-version': CustomFormControl(new FormControl(this['prev-version']), RolloutRolloutStatus.propInfo['prev-version']),
+                'reason': CustomFormControl(new FormControl(this['reason']), RolloutRolloutStatus.propInfo['reason']),
             });
             // generate FormArray control elements
             this.fillFormArray<RolloutRolloutPhase>('controller-nodes-status', this['controller-nodes-status'], RolloutRolloutPhase);
@@ -210,6 +224,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['end-time'].setValue(this['end-time']);
             this._formGroup.controls['prev-version'].setValue(this['prev-version']);
+            this._formGroup.controls['reason'].setValue(this['reason']);
         }
     }
 }
