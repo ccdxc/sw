@@ -4,6 +4,9 @@ nic/buildroot/output/images/Image
 nic/buildroot/output/images/kernel.img
 nic/buildroot/output/images/kernel.its
 nic/buildroot/output/images/u-boot.bin
+nic/buildroot/output/images/u-boot.bin-0x70180000
+nic/buildroot/output/images/u-boot.bin-0x74200000
+nic/buildroot/output/images/u-boot.bin-0x74600000
 nic/buildroot/output/images/u-boot.met
 nic/buildroot/output/images/Image.gz
 nic/buildroot/output/images/kernel.itb
