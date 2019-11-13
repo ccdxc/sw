@@ -23,9 +23,9 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     u16 flag_orig0, flag_orig1;
     u32 nexthop;
 
-    //flag_orig0 = clib_net_to_host_u16(hdr0->flags);
-    //flag_orig1 = clib_net_to_host_u16(hdr1->flags);
-    flag_orig0 = flag_orig1 = VPP_CPU_FLAGS_IPV4_1_VALID;
+    flag_orig0 = clib_net_to_host_u16(hdr0->flags);
+    flag_orig1 = clib_net_to_host_u16(hdr1->flags);
+    //flag_orig0 = flag_orig1 = VPP_CPU_FLAGS_IPV4_1_VALID;
 
     u16 flags0 = flag_orig0 &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
@@ -139,8 +139,8 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     u16 flag_orig;
 
-    //flag_orig = clib_net_to_host_u16(hdr->flags);
-    flag_orig = VPP_CPU_FLAGS_IPV4_1_VALID;
+    flag_orig = clib_net_to_host_u16(hdr->flags);
+    //flag_orig = VPP_CPU_FLAGS_IPV4_1_VALID;
     u16 flags = flag_orig &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);

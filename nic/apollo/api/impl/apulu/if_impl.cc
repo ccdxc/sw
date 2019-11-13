@@ -144,6 +144,13 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                           hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF2, hw_id_,
+                                           NULL, NULL, &lif_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program LIF2 table for uplink lif %u",
+                          hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
     } else if (spec->type == PDS_IF_TYPE_L3) {
         // expecting MAC to passed in L3 interface configuration
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,

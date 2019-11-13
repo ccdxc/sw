@@ -91,7 +91,8 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
 
     PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, v4 meter id %u, "
                     "v6 meter id %u, mac %s, vnic encap %s, fabric encap %s, "
-                    "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u",
+                    "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
+                    "host ifindex 0x%x",
                     key_.id, spec->vpc.id, spec->subnet.id,
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),
@@ -99,7 +100,7 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
                     pds_encap2str(&spec->fabric_encap),
                     spec->rx_mirror_session_bmap,
                     spec->tx_mirror_session_bmap,
-                    spec->switch_vnic);
+                    spec->switch_vnic, spec->host_ifindex);
     return impl_->program_hw(this, obj_ctxt);
 }
 

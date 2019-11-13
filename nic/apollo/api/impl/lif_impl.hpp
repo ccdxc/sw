@@ -121,6 +121,10 @@ public:
     /// \return    ethernet MAC address of this lif
     mac_addr_t& mac(void) { return mac_; }
 
+    /// \brief    return the nexthop index corresponding to this lif
+    /// \return   nexthop index of the lif
+    uint32_t nh_idx(void) const { return nh_idx_; }
+
 private:
     ///< constructor
     ///< \param[in] spec    lif configuration parameters
