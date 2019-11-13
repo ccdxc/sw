@@ -723,6 +723,43 @@ TEST_F(rte_indexer_test, test17) {
     rte_indexer::destroy(ind);
 }
 
+//----------------------------------------------------------------------------
+// Test 19:
+//
+// Summary:
+// --------
+//  - Tests rte_indexer with skip_zero
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test_skip_zero) {
+    uint32_t i = 0, usage;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(128, false, true);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 0);
+
+    rs = ind->alloc(i);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+
+    // Allocate indexes
+    for (i = 1; i < 128; i++) {
+        rs  = ind->alloc(i);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 127);
+
+    // Free index
+    rs = ind->free(0, 128);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 0);
+    rte_indexer::destroy(ind);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

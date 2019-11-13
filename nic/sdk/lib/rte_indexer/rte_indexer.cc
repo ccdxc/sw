@@ -166,12 +166,11 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
     if (skip_zero_) {
         rs = this->alloc(indx);
         if (rs == SDK_RET_OK) {
-            usage_ += 1;
             this->curr_index_ = indx;
             this->set_curr_slab_(indx);
         }
     }
-    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %x", 
+    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %x",
                       (void *)INDEXER, this->curr_slab_, this->curr_index_);
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), false);
@@ -225,7 +224,7 @@ rte_indexer::alloc(uint32_t *index) {
     this->curr_index_ = nextpos;
     this->set_curr_slab_(this->curr_index_);
 
-    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr slab %d curr index %x", 
+    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr slab %d curr index %x",
               (void*)INDEXER, *index, (long)this->curr_slab_, curr_slab, this->curr_index_);
     usage_++;
 end:
@@ -410,9 +409,9 @@ rte_indexer::is_index_allocated(uint32_t index) {
 //---------------------------------------------------------------------------
 uint64_t
 rte_indexer::usage(void) const {
-    if (this->skip_zero_)
-        return (usage_ - 1);
-    return usage_;
+    if (this->skip_zero_ && (this->usage_ > 0))
+        return (this->usage_ - 1);
+    return this->usage_;
 }
 
 }    // namespace lib
