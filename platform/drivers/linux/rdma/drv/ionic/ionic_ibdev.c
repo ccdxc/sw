@@ -18,7 +18,7 @@
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
-#include "ionic_ibdebug.h"
+#include "ionic_sysfs.h"
 
 #ifdef HAVE_IB_API_UDATA
 #include <rdma/uverbs_ioctl.h>
@@ -2378,7 +2378,7 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 
 	ionic_pgtbl_unbuf(dev, &mr->buf);
 
-	ionic_dbgfs_add_mr(dev, mr);
+	ionic_dbg_add_mr(dev, mr);
 
 	return &mr->ibmr;
 
@@ -2495,7 +2495,7 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 			return rc;
 	}
 
-	ionic_dbgfs_rm_mr(mr);
+	ionic_dbg_rm_mr(mr);
 
 	ionic_pgtbl_unbuf(dev, &mr->buf);
 	ionic_put_res(dev, &mr->res);
@@ -2557,7 +2557,7 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 	if (rc)
 		goto err_cmd;
 
-	ionic_dbgfs_add_mr(dev, mr);
+	ionic_dbg_add_mr(dev, mr);
 
 	return &mr->ibmr;
 
@@ -2586,7 +2586,6 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
-	unsigned int page_off = 0;
 	int rc;
 
 	/* mr must be allocated using ib_alloc_mr() */
@@ -2598,9 +2597,6 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 	if (mr->buf.tbl_buf)
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
-
-	if (sg_offset)
-		page_off = *sg_offset;
 
 	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
@@ -2644,7 +2640,7 @@ static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 	if (rc)
 		goto err_cmd;
 
-	ionic_dbgfs_add_mr(dev, mr);
+	ionic_dbg_add_mr(dev, mr);
 
 	return &mr->ibmw;
 
@@ -2666,7 +2662,7 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	if (rc)
 		return rc;
 
-	ionic_dbgfs_rm_mr(mr);
+	ionic_dbg_rm_mr(mr);
 
 	ionic_put_mrid(dev, mr->mrid);
 
@@ -2863,7 +2859,7 @@ static int __ionic_create_cq(struct ionic_cq *cq,
 	list_add_tail(&cq->cq_list_ent, &dev->cq_list);
 	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
-	ionic_dbgfs_add_cq(dev, cq);
+	ionic_dbg_add_cq(dev, cq);
 
 	return 0;
 
@@ -2895,7 +2891,7 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	ionic_cq_rem_ref(cq);
 	wait_for_completion(&cq->cq_rel_comp);
 
-	ionic_dbgfs_rm_cq(cq);
+	ionic_dbg_rm_cq(cq);
 
 	ionic_put_res(dev, &cq->res);
 
@@ -4588,7 +4584,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	list_add_tail(&qp->qp_list_ent, &dev->qp_list);
 	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
-	ionic_dbgfs_add_qp(dev, qp);
+	ionic_dbg_add_qp(dev, qp);
 
 	return &qp->ibqp;
 
@@ -5058,7 +5054,7 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	list_del(&qp->qp_list_ent);
 	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
-	ionic_dbgfs_rm_qp(qp);
+	ionic_dbg_rm_qp(qp);
 
 	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
@@ -5991,7 +5987,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 		ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
 					  qp->rq_spec);
 
-	ionic_dbgfs_add_qp(dev, qp);
+	ionic_dbg_add_qp(dev, qp);
 
 #ifdef HAVE_IB_ALLOC_SRQ_OBJ
 	return 0;
@@ -6057,7 +6053,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 #endif
 	}
 
-	ionic_dbgfs_rm_qp(qp);
+	ionic_dbg_rm_qp(qp);
 
 	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
 		xa_erase_irq(&dev->qp_tbl, qp->qpid);
@@ -6519,7 +6515,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 
 	ionic_intr_mask(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_CLEAR);
 
-	ionic_dbgfs_add_eq(dev, eq);
+	ionic_dbg_add_eq(dev, eq);
 
 	return eq;
 
@@ -6541,7 +6537,7 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 {
 	struct ionic_ibdev *dev = eq->dev;
 
-	ionic_dbgfs_rm_eq(eq);
+	ionic_dbg_rm_eq(eq);
 
 	eq->enable = false;
 	flush_work(&eq->work);
@@ -6655,7 +6651,7 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 	INIT_WORK(&aq->work, ionic_admin_work);
 	aq->armed = false;
 
-	ionic_dbgfs_add_aq(dev, aq);
+	ionic_dbg_add_aq(dev, aq);
 
 	return aq;
 
@@ -6671,7 +6667,7 @@ static void __ionic_destroy_rdma_adminq(struct ionic_ibdev *dev,
 					struct ionic_aq *aq)
 {
 
-	ionic_dbgfs_rm_aq(aq);
+	ionic_dbg_rm_aq(aq);
 
 	ionic_queue_destroy(&aq->q, dev->hwdev);
 	kfree(aq);
@@ -7021,7 +7017,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 
-	ionic_dbgfs_rm_dev(dev);
+	ionic_dbg_rm_dev(dev);
 
 	ionic_resid_destroy(&dev->inuse_qpid);
 	ionic_resid_destroy(&dev->inuse_cqid);
@@ -7342,12 +7338,12 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 	/* skip reserved SMI and GSI qpids */
 	dev->inuse_qpid.next_id = 2;
 
-	if (ionic_dbgfs_enable)
+	if (ionic_dbg_enable)
 		lif_dbgfs = ionic_api_get_debugfs(lif);
 	else
 		lif_dbgfs = NULL;
 
-	ionic_dbgfs_add_dev(dev, lif_dbgfs);
+	ionic_dbg_add_dev(dev, lif_dbgfs);
 
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (rc)
@@ -7479,7 +7475,7 @@ err_register:
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 err_reset:
-	ionic_dbgfs_rm_dev(dev);
+	ionic_dbg_rm_dev(dev);
 	ionic_resid_destroy(&dev->inuse_qpid);
 err_qpid:
 	ionic_resid_destroy(&dev->inuse_cqid);

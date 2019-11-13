@@ -31,8 +31,8 @@
  * SOFTWARE.
  */
 
-#ifndef IONIC_IBDEBUG_H
-#define IONIC_IBDEBUG_H
+#ifndef IONIC_SYSCTL_H
+#define IONIC_SYSCTL_H
 
 struct sysctl_oid;
 
@@ -43,24 +43,24 @@ struct ionic_aq;
 struct ionic_mr;
 struct ionic_qp;
 
-void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp);
-void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev);
-void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev);
+void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp);
+void ionic_dbg_add_dev_info(struct ionic_ibdev *dev);
+void ionic_dbg_rm_dev(struct ionic_ibdev *dev);
 
-void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);
-void ionic_dbgfs_rm_eq(struct ionic_eq *eq);
+void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);
+void ionic_dbg_rm_eq(struct ionic_eq *eq);
 
-void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq);
-void ionic_dbgfs_rm_cq(struct ionic_cq *cq);
+void ionic_dbg_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq);
+void ionic_dbg_rm_cq(struct ionic_cq *cq);
 
-void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq);
-void ionic_dbgfs_rm_aq(struct ionic_aq *aq);
+void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq);
+void ionic_dbg_rm_aq(struct ionic_aq *aq);
 
-void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr);
-void ionic_dbgfs_rm_mr(struct ionic_mr *mr);
+void ionic_dbg_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr);
+void ionic_dbg_rm_mr(struct ionic_mr *mr);
 
-void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
-void ionic_dbgfs_rm_qp(struct ionic_qp *qp);
+void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
+void ionic_dbg_rm_qp(struct ionic_qp *qp);
 
 /* make dev_dbg, pr_debug, print_hex_dump_debug useful */
 
@@ -86,4 +86,4 @@ extern bool ionic_dyndbg_enable;
 		print_hex_dump(NULL, args);				\
 } while (0)
 
-#endif /* IONIC_IBDEBUG_H */
+#endif /* IONIC_SYSCTL_H */

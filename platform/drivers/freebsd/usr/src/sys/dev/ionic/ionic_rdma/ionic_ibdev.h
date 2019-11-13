@@ -45,7 +45,7 @@
 #include <ionic_regs.h>
 
 #include "ionic_fw.h"
-#include "ionic_ibdebug.h"
+#include "ionic_sysctl.h"
 #include "ionic_queue.h"
 #include "ionic_kcompat.h"
 #include "ionic_res.h"
@@ -528,7 +528,7 @@ int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 void ionic_ibdev_reset(struct ionic_ibdev *dev);
 
 /* Global config knobs */
-extern bool ionic_dbgfs_enable;
+extern bool ionic_dbg_enable;
 
 extern int ionic_sqcmb_order;
 extern bool ionic_sqcmb_inline;

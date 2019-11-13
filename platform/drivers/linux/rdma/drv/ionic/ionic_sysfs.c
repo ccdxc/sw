@@ -7,11 +7,11 @@
 #include <linux/debugfs.h>
 #include <linux/module.h>
 
-#include "ionic_ibdebug.h"
+#include "ionic_sysfs.h"
 #include "ionic_ibdev.h"
 
-bool ionic_dbgfs_enable = true;
-module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
+bool ionic_dbg_enable = true;
+module_param_named(dbgfs, ionic_dbg_enable, bool, 0444);
 MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
 
 int ionic_sqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
@@ -282,18 +282,15 @@ static const struct file_operations ionic_dev_reset_fops = {
 	.write = ionic_dev_reset_write,
 };
 
-void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
+void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 {
 	dev->debug = NULL;
-	dev->debug_ah = NULL;
 	dev->debug_aq = NULL;
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_mw = NULL;
 	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
-	dev->debug_srq = NULL;
 
 	if (IS_ERR_OR_NULL(parent))
 		return;
@@ -308,10 +305,6 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 			    &ionic_dev_info_fops);
 	debugfs_create_file("reset", 0220, dev->debug, dev,
 			    &ionic_dev_reset_fops);
-
-	dev->debug_ah = debugfs_create_dir("ah", dev->debug);
-	if (IS_ERR(dev->debug_ah))
-		dev->debug_ah = NULL;
 
 	dev->debug_aq = debugfs_create_dir("aq", dev->debug);
 	if (IS_ERR(dev->debug_aq))
@@ -329,10 +322,6 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	if (IS_ERR(dev->debug_mr))
 		dev->debug_mr = NULL;
 
-	dev->debug_mw = debugfs_create_dir("mw", dev->debug);
-	if (IS_ERR(dev->debug_mw))
-		dev->debug_mw = NULL;
-
 	dev->debug_pd = debugfs_create_dir("pd", dev->debug);
 	if (IS_ERR(dev->debug_pd))
 		dev->debug_pd = NULL;
@@ -340,25 +329,18 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	dev->debug_qp = debugfs_create_dir("qp", dev->debug);
 	if (IS_ERR(dev->debug_qp))
 		dev->debug_qp = NULL;
-
-	dev->debug_srq = debugfs_create_dir("srq", dev->debug);
-	if (IS_ERR(dev->debug_srq))
-		dev->debug_srq = NULL;
 }
 
-void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
+void ionic_dbg_rm_dev(struct ionic_ibdev *dev)
 {
 	debugfs_remove_recursive(dev->debug);
 
 	dev->debug = NULL;
-	dev->debug_ah = NULL;
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_mw = NULL;
 	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
-	dev->debug_srq = NULL;
 }
 
 static int ionic_eq_info_show(struct seq_file *s, void *v)
@@ -424,7 +406,7 @@ static const struct file_operations ionic_eq_q_fops = {
 	.release = seq_release,
 };
 
-void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
+void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 {
 	char name[8];
 
@@ -448,7 +430,7 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 			    &ionic_eq_q_fops);
 }
 
-void ionic_dbgfs_rm_eq(struct ionic_eq *eq)
+void ionic_dbg_rm_eq(struct ionic_eq *eq)
 {
 	debugfs_remove_recursive(eq->debug);
 
@@ -524,7 +506,7 @@ static const struct file_operations ionic_mr_tbl_buf_fops = {
 	.release = seq_release,
 };
 
-void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
+void ionic_dbg_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 {
 	char name[8];
 
@@ -553,7 +535,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 				    &ionic_mr_tbl_buf_fops);
 }
 
-void ionic_dbgfs_rm_mr(struct ionic_mr *mr)
+void ionic_dbg_rm_mr(struct ionic_mr *mr)
 {
 	debugfs_remove_recursive(mr->debug);
 
@@ -635,7 +617,7 @@ static const struct file_operations ionic_cq_umem_fops = {
 	.release = seq_release,
 };
 
-void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+void ionic_dbg_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	char name[8];
 
@@ -664,7 +646,7 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 				    &ionic_cq_umem_fops);
 }
 
-void ionic_dbgfs_rm_cq(struct ionic_cq *cq)
+void ionic_dbg_rm_cq(struct ionic_cq *cq)
 {
 	debugfs_remove_recursive(cq->debug);
 
@@ -764,7 +746,7 @@ static const struct file_operations ionic_aq_cqe_fops = {
 	.release = seq_release,
 };
 
-struct ionic_dbgfs_admin_wr {
+struct ionic_dbg_admin_wr {
 	struct ionic_aq *aq;
 	struct ionic_admin_wr wr;
 	void *data;
@@ -774,8 +756,8 @@ struct ionic_dbgfs_admin_wr {
 static int ionic_aq_data_show(struct seq_file *s, void *v)
 {
 	struct ionic_aq *aq = s->private;
-	struct ionic_dbgfs_admin_wr *wr =
-		container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	struct ionic_dbg_admin_wr *wr =
+		container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
 
 	dma_sync_single_for_cpu(aq->dev->hwdev, wr->dma, PAGE_SIZE,
 				DMA_FROM_DEVICE);
@@ -818,8 +800,8 @@ static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
 				   size_t count, loff_t *ppos)
 {
 	struct ionic_aq *aq = fp->private_data;
-	struct ionic_dbgfs_admin_wr *wr =
-		container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	struct ionic_dbg_admin_wr *wr =
+		container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
 	long timeout;
 	char *buf;
 	int val, num, pos = 0, rc = 0;
@@ -922,9 +904,9 @@ static const struct file_operations ionic_aq_ctrl_fops = {
 	.write = ionic_aq_ctrl_write,
 };
 
-void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
+void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 {
-	struct ionic_dbgfs_admin_wr *wr;
+	struct ionic_dbg_admin_wr *wr;
 	char name[8];
 
 	aq->debug = NULL;
@@ -990,10 +972,10 @@ err_wr:
 	return;
 }
 
-void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
+void ionic_dbg_rm_aq(struct ionic_aq *aq)
 {
 	struct ionic_ibdev *dev = aq->dev;
-	struct ionic_dbgfs_admin_wr *wr;
+	struct ionic_dbg_admin_wr *wr;
 
 	debugfs_remove_recursive(aq->debug);
 
@@ -1002,7 +984,7 @@ void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
 	if (!aq->debug_wr)
 		return;
 
-	wr = container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	wr = container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
 
 	dma_unmap_single(dev->hwdev, wr->dma, PAGE_SIZE, DMA_FROM_DEVICE);
 	kfree(wr->data);
@@ -1165,7 +1147,7 @@ static const struct file_operations ionic_qp_rq_umem_fops = {
 	.release = seq_release,
 };
 
-void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
+void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 {
 	char name[8];
 
@@ -1206,7 +1188,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	}
 }
 
-void ionic_dbgfs_rm_qp(struct ionic_qp *qp)
+void ionic_dbg_rm_qp(struct ionic_qp *qp)
 {
 	debugfs_remove_recursive(qp->debug);
 

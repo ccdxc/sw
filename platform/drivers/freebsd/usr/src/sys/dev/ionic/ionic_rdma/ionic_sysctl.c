@@ -31,9 +31,7 @@
  * SOFTWARE.
  */
 
-#include <linux/sysfs.h>
-
-#include "ionic_ibdebug.h"
+#include "ionic_sysctl.h"
 #include "ionic_ibdev.h"
 
 static SYSCTL_NODE(_hw, OID_AUTO, ionic_rdma, CTLFLAG_RD, 0,
@@ -43,9 +41,9 @@ bool ionic_dyndbg_enable = false;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dyndbg_enable, CTLFLAG_RWTUN,
     &ionic_dyndbg_enable, 0, "Print to dmesg for dev_dbg, et al");
 
-bool ionic_dbgfs_enable = true;
+bool ionic_dbg_enable = true;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbgfs_enable, CTLFLAG_RDTUN,
-    &ionic_dbgfs_enable, 0, "Expose resource info in debug sysctls");
+    &ionic_dbg_enable, 0, "Expose resource info in debug sysctls");
 
 int ionic_sqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, sqcmb_order, CTLFLAG_RWTUN,
@@ -387,8 +385,7 @@ static void ionic_q_add(struct sysctl_ctx_list *ctx,
 		ionic_umem_add(ctx, parent, umem);
 }
 
-void ionic_dbgfs_add_dev(struct ionic_ibdev *dev,
-			 struct sysctl_oid *oidp)
+void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -439,7 +436,7 @@ static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 	return 0;
 }
 
-void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
+void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -558,7 +555,7 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	}
 }
 
-void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
+void ionic_dbg_rm_dev(struct ionic_ibdev *dev)
 {
 	if (dev->debug)
 		sysctl_ctx_free(&dev->debug_ctx);
@@ -571,7 +568,7 @@ void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
 	dev->debug_qp = NULL;
 }
 
-void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
+void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -620,7 +617,7 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 		       "intr_coalesce", "Read Intr Coalesce");
 }
 
-void ionic_dbgfs_rm_eq(struct ionic_eq *eq)
+void ionic_dbg_rm_eq(struct ionic_eq *eq)
 {
 	if (eq->debug)
 		sysctl_ctx_free(&eq->debug_ctx);
@@ -628,7 +625,7 @@ void ionic_dbgfs_rm_eq(struct ionic_eq *eq)
 	eq->debug = NULL;
 }
 
-void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
+void ionic_dbg_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -664,7 +661,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 		ionic_umem_add(ctx, parent, mr->umem);
 }
 
-void ionic_dbgfs_rm_mr(struct ionic_mr *mr)
+void ionic_dbg_rm_mr(struct ionic_mr *mr)
 {
 	if (mr->debug)
 		sysctl_ctx_free(&mr->debug_ctx);
@@ -672,7 +669,7 @@ void ionic_dbgfs_rm_mr(struct ionic_mr *mr)
 	mr->debug = NULL;
 }
 
-void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+void ionic_dbg_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -705,7 +702,7 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 		    "q", "Completion Queue");
 }
 
-void ionic_dbgfs_rm_cq(struct ionic_cq *cq)
+void ionic_dbg_rm_cq(struct ionic_cq *cq)
 {
 	if (cq->debug)
 		sysctl_ctx_free(&cq->debug_ctx);
@@ -713,7 +710,7 @@ void ionic_dbgfs_rm_cq(struct ionic_cq *cq)
 	cq->debug = NULL;
 }
 
-struct ionic_dbgfs_admin_wr {
+struct ionic_dbg_admin_wr {
 	struct ionic_aq *aq;
 	struct ionic_admin_wr wr;
 	void *data;
@@ -736,8 +733,8 @@ static int match_whole_prefix(const char *str, const char *pfx)
 static int ionic_aq_ctrl_write(void *context, const char *buf, size_t count)
 {
 	struct ionic_aq *aq = context;
-	struct ionic_dbgfs_admin_wr *wr =
-		container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	struct ionic_dbg_admin_wr *wr =
+		container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
 	long timeout;
 	int val, num, pos = 0, rc = 0;
 
@@ -828,9 +825,9 @@ out:
 	return -rc;
 }
 
-void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
+void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 {
-	struct ionic_dbgfs_admin_wr *wr;
+	struct ionic_dbg_admin_wr *wr;
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
 	struct sysctl_oid *oidp;
@@ -902,10 +899,10 @@ err_wr:
 	return;
 }
 
-void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
+void ionic_dbg_rm_aq(struct ionic_aq *aq)
 {
 	struct ionic_ibdev *dev = aq->dev;
-	struct ionic_dbgfs_admin_wr *wr;
+	struct ionic_dbg_admin_wr *wr;
 
 	if (aq->debug)
 		sysctl_ctx_free(&aq->debug_ctx);
@@ -915,14 +912,14 @@ void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
 	if (!aq->debug_wr)
 		return;
 
-	wr = container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	wr = container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
 
 	dma_unmap_single(dev->hwdev, wr->dma, PAGE_SIZE, DMA_FROM_DEVICE);
 	kfree(wr->data);
 	kfree(wr);
 }
 
-void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
+void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -1001,7 +998,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 		  "dcqcn_profile", "DCQCN Profile");
 }
 
-void ionic_dbgfs_rm_qp(struct ionic_qp *qp)
+void ionic_dbg_rm_qp(struct ionic_qp *qp)
 {
 	if (qp->debug)
 		sysctl_ctx_free(&qp->debug_ctx);

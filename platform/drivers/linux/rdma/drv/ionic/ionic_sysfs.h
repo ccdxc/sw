@@ -3,10 +3,10 @@
  * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  */
 
-#ifndef IONIC_IBDEBUG_H
-#define IONIC_IBDEBUG_H
+#ifndef IONIC_SYSFS_H
+#define IONIC_SYSFS_H
 
-/* Ionic rdma debugfs directory contents:
+/* Ionic rdma sysfs/debugfs directory contents:
  *
  * The debugfs contents are an informative resource for debugging, only.  They
  * should not be relied on as a stable api from user space.  The location,
@@ -18,9 +18,9 @@
  * - rdma
  *   |- info		- rdma device info
  *   |
- *   |- ah/N
- *   |  `- info		- address handle info (sgid idx, dgid, qkey, ...)
- *   |  `- hdr		- packet header template (raw data)
+ *   |- aq/N
+ *   |  |- info		- admin queue info (id, prod, cons, mask, ...)
+ *   |  `- q		- admin queue content (raw data)
  *   |
  *   |- cq/N
  *   |  |- info		- completion queue info (id, prod, cons, mask, ...)
@@ -32,21 +32,19 @@
  *   |
  *   |- mr/N
  *   |  |- info		- memory region info (lkey, rkey, access, length, ...)
+ *   |  |		- memory key info (lkey, rkey*, access*, length*, ...)
  *   |  `- umem		- (*) page and dma mapping infrmation
- *   |
- *   |- mw/N
- *   |  `- info		- memory key info (lkey, rkey*, access*, length*, ...)
  *   |
  *   |- pd/N
  *   |  `- info		- protection domain info (id)
  *   |
  *   |- qp/N
  *   |  |- info		- queue pair info (id, type, sq/rq prod, cons, ...)
+ *   |  |		- shared receive queue info (id, type, prod, cons, ...)
  *   |  |- rq		- (*) receive queue content (raw data)
  *   |  `- sq		- (*) send queue content (raw data)
  *   |
  *   `- srq/N
- *      |- info		- shared receive queue info (id, type, prod, cons, ...)
  *      `- rq		- (*) receive queue content (raw data)
  *
  * (*) - These files are only present if supported for the resource type.
@@ -63,22 +61,22 @@ struct ionic_mr;
 struct ionic_qp;
 struct dentry;
 
-void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent);
-void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev);
+void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent);
+void ionic_dbg_rm_dev(struct ionic_ibdev *dev);
 
-void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);
-void ionic_dbgfs_rm_eq(struct ionic_eq *eq);
+void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);
+void ionic_dbg_rm_eq(struct ionic_eq *eq);
 
-void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq);
-void ionic_dbgfs_rm_cq(struct ionic_cq *cq);
+void ionic_dbg_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq);
+void ionic_dbg_rm_cq(struct ionic_cq *cq);
 
-void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq);
-void ionic_dbgfs_rm_aq(struct ionic_aq *aq);
+void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq);
+void ionic_dbg_rm_aq(struct ionic_aq *aq);
 
-void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr);
-void ionic_dbgfs_rm_mr(struct ionic_mr *mr);
+void ionic_dbg_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr);
+void ionic_dbg_rm_mr(struct ionic_mr *mr);
 
-void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
-void ionic_dbgfs_rm_qp(struct ionic_qp *qp);
+void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
+void ionic_dbg_rm_qp(struct ionic_qp *qp);
 
-#endif /* IONIC_IBDEBUG_H */
+#endif /* IONIC_SYSFS_H */

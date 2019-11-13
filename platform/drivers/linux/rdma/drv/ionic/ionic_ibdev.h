@@ -148,15 +148,12 @@ struct ionic_ibdev {
 	struct dcqcn_root	*dcqcn;
 
 	struct dentry		*debug;
-	struct dentry		*debug_ah;
 	struct dentry		*debug_aq;
 	struct dentry		*debug_cq;
 	struct dentry		*debug_eq;
 	struct dentry		*debug_mr;
-	struct dentry		*debug_mw;
 	struct dentry		*debug_pd;
 	struct dentry		*debug_qp;
-	struct dentry		*debug_srq;
 };
 
 struct ionic_eq {
@@ -497,7 +494,7 @@ int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 void ionic_ibdev_reset(struct ionic_ibdev *dev);
 
 /* Global config knobs */
-extern bool ionic_dbgfs_enable;
+extern bool ionic_dbg_enable;
 
 extern int ionic_sqcmb_order;
 extern bool ionic_sqcmb_inline;
