@@ -3,6 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = pdsa_hals_test.gtest
 MODULE_PIPELINE = apulu
+MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pdsahals pdsacommon pal pdsframework pdscore pdsapi \
                   pdsapi_impl pdstestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
