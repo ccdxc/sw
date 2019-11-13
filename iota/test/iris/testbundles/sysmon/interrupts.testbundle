@@ -1,0 +1,9 @@
+meta:
+    name    : interrupts_check
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 1
+
+testcases:
+    -   name    : STEADY_STATE_INTR_CHECK
+        testcase: testcases.sysmon.interrupts

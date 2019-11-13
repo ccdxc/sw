@@ -55,6 +55,7 @@ testbundles:
         - penctl/penctl_hostpin.testbundle
         - naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
 
