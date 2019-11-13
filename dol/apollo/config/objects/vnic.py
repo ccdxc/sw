@@ -110,7 +110,6 @@ class VnicObject(base.ConfigObjectBase):
         else:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_NONE
         spec.MACAddress = self.MACAddr.getnum()
-        spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = self.SourceGuard
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.FabricEncap)
         for rxmirror in self.RxMirror:
@@ -139,8 +138,6 @@ class VnicObject(base.ConfigObjectBase):
         if spec.VPCId != self.SUBNET.VPC.VPCId:
             return False
         if spec.MACAddress != self.MACAddr.getnum():
-            return False
-        if spec.ResourcePoolId != 0:
             return False
         if spec.SourceGuardEnable != self.SourceGuard:
             return False

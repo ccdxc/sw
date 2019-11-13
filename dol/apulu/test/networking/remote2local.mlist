@@ -43,6 +43,7 @@ modules:
     - module:
         name    : L2_IPV4_TCP_ENCAP_SRCGUARD_DISABLE
         spec    : remote2local_srcguard_pass.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
@@ -56,5 +57,6 @@ modules:
     - module:
         name    : L2_IPV6_TCP_ENCAP_SRCGUARD_DISABLE
         spec    : remote2local_srcguard_pass.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING

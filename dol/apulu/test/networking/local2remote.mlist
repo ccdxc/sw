@@ -38,6 +38,7 @@ modules:
     - module:
         name    : L2_IPV4_TCP_QTAG_SRCGUARD_TRUE
         spec    : local2remote_srcguard_fail.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
@@ -51,6 +52,7 @@ modules:
     - module:
         name    : L2_IPV6_TCP_QTAG_SRCGUARD_TRUE
         spec    : local2remote_srcguard_fail.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
