@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = rolloutHandler.OnRolloutUpdate(obj, eobj)
+				obj.Rollout = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleRolloutEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Rollout_Updated_Events").Inc()
 					obj.Lock()
 					err = rolloutHandler.OnRolloutUpdate(obj, eobj)
+					obj.Rollout = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleRolloutActionEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = rolloutactionHandler.OnRolloutActionUpdate(obj, eobj)
+				obj.RolloutAction = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallel(evt *kvstore.WatchEvent) e
 					ct.stats.Counter("RolloutAction_Updated_Events").Inc()
 					obj.Lock()
 					err = rolloutactionHandler.OnRolloutActionUpdate(obj, eobj)
+					obj.RolloutAction = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

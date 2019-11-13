@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = userHandler.OnUserUpdate(obj, eobj)
+				obj.User = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("User_Updated_Events").Inc()
 					obj.Lock()
 					err = userHandler.OnUserUpdate(obj, eobj)
+					obj.User = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 				// call the event handler
 				obj.Lock()
 				err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, eobj)
+				obj.AuthenticationPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 					ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, eobj)
+					obj.AuthenticationPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = roleHandler.OnRoleUpdate(obj, eobj)
+				obj.Role = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Role_Updated_Events").Inc()
 					obj.Lock()
 					err = roleHandler.OnRoleUpdate(obj, eobj)
+					obj.Role = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = rolebindingHandler.OnRoleBindingUpdate(obj, eobj)
+				obj.RoleBinding = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("RoleBinding_Updated_Events").Inc()
 					obj.Lock()
 					err = rolebindingHandler.OnRoleBindingUpdate(obj, eobj)
+					obj.RoleBinding = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = userpreferenceHandler.OnUserPreferenceUpdate(obj, eobj)
+				obj.UserPreference = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 					ct.stats.Counter("UserPreference_Updated_Events").Inc()
 					obj.Lock()
 					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, eobj)
+					obj.UserPreference = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

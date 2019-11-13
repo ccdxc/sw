@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = orderHandler.OnOrderUpdate(obj, eobj)
+				obj.Order = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleOrderEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Order_Updated_Events").Inc()
 					obj.Lock()
 					err = orderHandler.OnOrderUpdate(obj, eobj)
+					obj.Order = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = bookHandler.OnBookUpdate(obj, eobj)
+				obj.Book = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleBookEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Book_Updated_Events").Inc()
 					obj.Lock()
 					err = bookHandler.OnBookUpdate(obj, eobj)
+					obj.Book = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = publisherHandler.OnPublisherUpdate(obj, eobj)
+				obj.Publisher = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handlePublisherEventParallel(evt *kvstore.WatchEvent) error
 					ct.stats.Counter("Publisher_Updated_Events").Inc()
 					obj.Lock()
 					err = publisherHandler.OnPublisherUpdate(obj, eobj)
+					obj.Publisher = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = storeHandler.OnStoreUpdate(obj, eobj)
+				obj.Store = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleStoreEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Store_Updated_Events").Inc()
 					obj.Lock()
 					err = storeHandler.OnStoreUpdate(obj, eobj)
+					obj.Store = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = couponHandler.OnCouponUpdate(obj, eobj)
+				obj.Coupon = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleCouponEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Coupon_Updated_Events").Inc()
 					obj.Lock()
 					err = couponHandler.OnCouponUpdate(obj, eobj)
+					obj.Coupon = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2890,6 +2900,7 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = customerHandler.OnCustomerUpdate(obj, eobj)
+				obj.Customer = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2970,6 +2981,7 @@ func (ct *ctrlerCtx) handleCustomerEventParallel(evt *kvstore.WatchEvent) error 
 					ct.stats.Counter("Customer_Updated_Events").Inc()
 					obj.Lock()
 					err = customerHandler.OnCustomerUpdate(obj, eobj)
+					obj.Customer = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

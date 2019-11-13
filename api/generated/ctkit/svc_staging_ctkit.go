@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = bufferHandler.OnBufferUpdate(obj, eobj)
+				obj.Buffer = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleBufferEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Buffer_Updated_Events").Inc()
 					obj.Lock()
 					err = bufferHandler.OnBufferUpdate(obj, eobj)
+					obj.Buffer = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

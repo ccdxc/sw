@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = securitygroupHandler.OnSecurityGroupUpdate(obj, eobj)
+				obj.SecurityGroup = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleSecurityGroupEventParallel(evt *kvstore.WatchEvent) e
 					ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
 					obj.Lock()
 					err = securitygroupHandler.OnSecurityGroupUpdate(obj, eobj)
+					obj.SecurityGroup = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEvent(evt *kvstore.WatchEvent) e
 				// call the event handler
 				obj.Lock()
 				err = networksecuritypolicyHandler.OnNetworkSecurityPolicyUpdate(obj, eobj)
+				obj.NetworkSecurityPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventParallel(evt *kvstore.Watch
 					ct.stats.Counter("NetworkSecurityPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = networksecuritypolicyHandler.OnNetworkSecurityPolicyUpdate(obj, eobj)
+					obj.NetworkSecurityPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = appHandler.OnAppUpdate(obj, eobj)
+				obj.App = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handleAppEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("App_Updated_Events").Inc()
 					obj.Lock()
 					err = appHandler.OnAppUpdate(obj, eobj)
+					obj.App = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = firewallprofileHandler.OnFirewallProfileUpdate(obj, eobj)
+				obj.FirewallProfile = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleFirewallProfileEventParallel(evt *kvstore.WatchEvent)
 					ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
 					obj.Lock()
 					err = firewallprofileHandler.OnFirewallProfileUpdate(obj, eobj)
+					obj.FirewallProfile = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = certificateHandler.OnCertificateUpdate(obj, eobj)
+				obj.Certificate = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleCertificateEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("Certificate_Updated_Events").Inc()
 					obj.Lock()
 					err = certificateHandler.OnCertificateUpdate(obj, eobj)
+					obj.Certificate = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2890,6 +2900,7 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 				// call the event handler
 				obj.Lock()
 				err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj, eobj)
+				obj.TrafficEncryptionPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2970,6 +2981,7 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventParallel(evt *kvstore.Wat
 					ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj, eobj)
+					obj.TrafficEncryptionPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

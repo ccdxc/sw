@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = eventpolicyHandler.OnEventPolicyUpdate(obj, eobj)
+				obj.EventPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("EventPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = eventpolicyHandler.OnEventPolicyUpdate(obj, eobj)
+					obj.EventPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = statspolicyHandler.OnStatsPolicyUpdate(obj, eobj)
+				obj.StatsPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("StatsPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = statspolicyHandler.OnStatsPolicyUpdate(obj, eobj)
+					obj.StatsPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, eobj)
+				obj.FwlogPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("FwlogPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, eobj)
+					obj.FwlogPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 				// call the event handler
 				obj.Lock()
 				err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, eobj)
+				obj.FlowExportPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallel(evt *kvstore.WatchEvent
 					ct.stats.Counter("FlowExportPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, eobj)
+					obj.FlowExportPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = alertHandler.OnAlertUpdate(obj, eobj)
+				obj.Alert = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleAlertEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Alert_Updated_Events").Inc()
 					obj.Lock()
 					err = alertHandler.OnAlertUpdate(obj, eobj)
+					obj.Alert = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2890,6 +2900,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = alertpolicyHandler.OnAlertPolicyUpdate(obj, eobj)
+				obj.AlertPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2970,6 +2981,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallel(evt *kvstore.WatchEvent) err
 					ct.stats.Counter("AlertPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = alertpolicyHandler.OnAlertPolicyUpdate(obj, eobj)
+					obj.AlertPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3444,6 +3456,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 				// call the event handler
 				obj.Lock()
 				err = alertdestinationHandler.OnAlertDestinationUpdate(obj, eobj)
+				obj.AlertDestination = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3524,6 +3537,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallel(evt *kvstore.WatchEvent
 					ct.stats.Counter("AlertDestination_Updated_Events").Inc()
 					obj.Lock()
 					err = alertdestinationHandler.OnAlertDestinationUpdate(obj, eobj)
+					obj.AlertDestination = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3998,6 +4012,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, eobj)
+				obj.MirrorSession = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4078,6 +4093,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallel(evt *kvstore.WatchEvent) e
 					ct.stats.Counter("MirrorSession_Updated_Events").Inc()
 					obj.Lock()
 					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, eobj)
+					obj.MirrorSession = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4552,6 +4568,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 				// call the event handler
 				obj.Lock()
 				err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, eobj)
+				obj.TroubleshootingSession = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4632,6 +4649,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallel(evt *kvstore.Watc
 					ct.stats.Counter("TroubleshootingSession_Updated_Events").Inc()
 					obj.Lock()
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, eobj)
+					obj.TroubleshootingSession = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -5106,6 +5124,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 				// call the event handler
 				obj.Lock()
 				err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, eobj)
+				obj.TechSupportRequest = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -5186,6 +5205,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallel(evt *kvstore.WatchEve
 					ct.stats.Counter("TechSupportRequest_Updated_Events").Inc()
 					obj.Lock()
 					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, eobj)
+					obj.TechSupportRequest = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

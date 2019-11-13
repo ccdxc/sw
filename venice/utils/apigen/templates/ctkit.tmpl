@@ -123,6 +123,7 @@ func (ct *ctrlerCtx) handle{{.}}Event(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = {{ToLower .}}Handler.On{{.}}Update(obj, eobj)
+				obj.{{.}} = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -203,6 +204,7 @@ func (ct *ctrlerCtx) handle{{.}}EventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("{{.}}_Updated_Events").Inc()
 					obj.Lock()
 					err = {{ToLower .}}Handler.On{{.}}Update(obj, eobj)
+					obj.{{.}} = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

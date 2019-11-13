@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleModuleEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = moduleHandler.OnModuleUpdate(obj, eobj)
+				obj.Module = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleModuleEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Module_Updated_Events").Inc()
 					obj.Lock()
 					err = moduleHandler.OnModuleUpdate(obj, eobj)
+					obj.Module = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

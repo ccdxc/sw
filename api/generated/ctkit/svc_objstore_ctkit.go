@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleBucketEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = bucketHandler.OnBucketUpdate(obj, eobj)
+				obj.Bucket = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleBucketEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Bucket_Updated_Events").Inc()
 					obj.Lock()
 					err = bucketHandler.OnBucketUpdate(obj, eobj)
+					obj.Bucket = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleObjectEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = objectHandler.OnObjectUpdate(obj, eobj)
+				obj.Object = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleObjectEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Object_Updated_Events").Inc()
 					obj.Lock()
 					err = objectHandler.OnObjectUpdate(obj, eobj)
+					obj.Object = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

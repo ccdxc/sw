@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = networkHandler.OnNetworkUpdate(obj, eobj)
+				obj.Network = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Network_Updated_Events").Inc()
 					obj.Lock()
 					err = networkHandler.OnNetworkUpdate(obj, eobj)
+					obj.Network = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = serviceHandler.OnServiceUpdate(obj, eobj)
+				obj.Service = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Service_Updated_Events").Inc()
 					obj.Lock()
 					err = serviceHandler.OnServiceUpdate(obj, eobj)
+					obj.Service = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = lbpolicyHandler.OnLbPolicyUpdate(obj, eobj)
+				obj.LbPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 					ct.stats.Counter("LbPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = lbpolicyHandler.OnLbPolicyUpdate(obj, eobj)
+					obj.LbPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = virtualrouterHandler.OnVirtualRouterUpdate(obj, eobj)
+				obj.VirtualRouter = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 					ct.stats.Counter("VirtualRouter_Updated_Events").Inc()
 					obj.Lock()
 					err = virtualrouterHandler.OnVirtualRouterUpdate(obj, eobj)
+					obj.VirtualRouter = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error 
 				// call the event handler
 				obj.Lock()
 				err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, eobj)
+				obj.NetworkInterface = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 					ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
 					obj.Lock()
 					err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, eobj)
+					obj.NetworkInterface = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2890,6 +2900,7 @@ func (ct *ctrlerCtx) handleIPAMPolicyEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, eobj)
+				obj.IPAMPolicy = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2970,6 +2981,7 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) erro
 					ct.stats.Counter("IPAMPolicy_Updated_Events").Inc()
 					obj.Lock()
 					err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, eobj)
+					obj.IPAMPolicy = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

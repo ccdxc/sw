@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = clusterHandler.OnClusterUpdate(obj, eobj)
+				obj.Cluster = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleClusterEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Cluster_Updated_Events").Inc()
 					obj.Lock()
 					err = clusterHandler.OnClusterUpdate(obj, eobj)
+					obj.Cluster = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = nodeHandler.OnNodeUpdate(obj, eobj)
+				obj.Node = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleNodeEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Node_Updated_Events").Inc()
 					obj.Lock()
 					err = nodeHandler.OnNodeUpdate(obj, eobj)
+					obj.Node = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1228,6 +1232,7 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = hostHandler.OnHostUpdate(obj, eobj)
+				obj.Host = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1308,6 +1313,7 @@ func (ct *ctrlerCtx) handleHostEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Host_Updated_Events").Inc()
 					obj.Lock()
 					err = hostHandler.OnHostUpdate(obj, eobj)
+					obj.Host = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1782,6 +1788,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEvent(evt *kvstore.WatchEvent) 
 				// call the event handler
 				obj.Lock()
 				err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, eobj)
+				obj.DistributedServiceCard = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1862,6 +1869,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallel(evt *kvstore.Watc
 					ct.stats.Counter("DistributedServiceCard_Updated_Events").Inc()
 					obj.Lock()
 					err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, eobj)
+					obj.DistributedServiceCard = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2336,6 +2344,7 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = tenantHandler.OnTenantUpdate(obj, eobj)
+				obj.Tenant = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2416,6 +2425,7 @@ func (ct *ctrlerCtx) handleTenantEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Tenant_Updated_Events").Inc()
 					obj.Lock()
 					err = tenantHandler.OnTenantUpdate(obj, eobj)
+					obj.Tenant = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2890,6 +2900,7 @@ func (ct *ctrlerCtx) handleVersionEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = versionHandler.OnVersionUpdate(obj, eobj)
+				obj.Version = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2970,6 +2981,7 @@ func (ct *ctrlerCtx) handleVersionEventParallel(evt *kvstore.WatchEvent) error {
 					ct.stats.Counter("Version_Updated_Events").Inc()
 					obj.Lock()
 					err = versionHandler.OnVersionUpdate(obj, eobj)
+					obj.Version = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

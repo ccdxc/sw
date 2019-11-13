@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleEndpointEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = endpointHandler.OnEndpointUpdate(obj, eobj)
+				obj.Endpoint = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleEndpointEventParallel(evt *kvstore.WatchEvent) error 
 					ct.stats.Counter("Endpoint_Updated_Events").Inc()
 					obj.Lock()
 					err = endpointHandler.OnEndpointUpdate(obj, eobj)
+					obj.Endpoint = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -674,6 +676,7 @@ func (ct *ctrlerCtx) handleWorkloadEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = workloadHandler.OnWorkloadUpdate(obj, eobj)
+				obj.Workload = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -754,6 +757,7 @@ func (ct *ctrlerCtx) handleWorkloadEventParallel(evt *kvstore.WatchEvent) error 
 					ct.stats.Counter("Workload_Updated_Events").Inc()
 					obj.Lock()
 					err = workloadHandler.OnWorkloadUpdate(obj, eobj)
+					obj.Workload = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)

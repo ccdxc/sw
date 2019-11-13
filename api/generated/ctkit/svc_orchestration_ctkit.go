@@ -120,6 +120,7 @@ func (ct *ctrlerCtx) handleOrchestratorEvent(evt *kvstore.WatchEvent) error {
 				// call the event handler
 				obj.Lock()
 				err = orchestratorHandler.OnOrchestratorUpdate(obj, eobj)
+				obj.Orchestrator = *eobj
 				obj.Unlock()
 				if err != nil {
 					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -200,6 +201,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallel(evt *kvstore.WatchEvent) er
 					ct.stats.Counter("Orchestrator_Updated_Events").Inc()
 					obj.Lock()
 					err = orchestratorHandler.OnOrchestratorUpdate(obj, eobj)
+					obj.Orchestrator = *eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
