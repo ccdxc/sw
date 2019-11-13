@@ -64,9 +64,24 @@ else
         ./build.sh
         insmod drivers/eth/ionic/ionic.ko
         sleep 2
+
         #intmgmt=`systool -c net | grep "Class Device"  | tail -4 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
         bdf=`lspci -d :1004 | cut -d' ' -f1`
+
+        if [ -z "$bdf" ]; then
+            echo "No internal mgmt interface detected."
+            if [ -n "$no_mgmt" ]; then
+                echo "Internal mgmt interface is not required."
+                exit 0
+            fi
+
+            echo "ERROR: Internal mgmt interface is required."
+            exit 1
+        fi
+
         intmgmt=`ls /sys/bus/pci/devices/0000:$bdf/net/`
+        echo "Internal mgmt interface $intmgmt detected at $bdf."
+
         dhcp_disable
         ifconfig $intmgmt 169.254.0.2/24
         if [ -n "$no_mgmt" ]; then

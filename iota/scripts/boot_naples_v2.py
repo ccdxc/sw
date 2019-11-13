@@ -308,7 +308,7 @@ class EntityManagement:
         print(full_command)
         retcode = os.system(full_command)
         if ignore_failure is False and retcode != 0:
-            print("ERROR: Failed to run command: %s" % command)
+            print("ERROR: Failed to run command: %s (exit = %d)" % (command,retcode))
             raise Exception(full_command)
         return retcode
 
