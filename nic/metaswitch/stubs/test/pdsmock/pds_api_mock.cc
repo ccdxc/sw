@@ -219,6 +219,13 @@ sdk_ret_t pds_policy_create(pds_policy_spec_s *spec,
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+pds_policy_delete (pds_policy_key_t *key,
+                   pds_batch_ctxt_t bctxt)
+{
+    return SDK_RET_OK;
+}
+
 sdk_ret_t pds_device_read(pds_device_info_s *spec) {
     return SDK_RET_OK;
 }

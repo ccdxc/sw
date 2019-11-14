@@ -10,6 +10,7 @@
 
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/policy.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
@@ -33,10 +34,12 @@ protected:
 
         pds_batch_ctxt_t bctxt = batch_start();
         sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
+        sample_policy_setup(bctxt);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
+        sample_policy_teardown(bctxt);
         sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode())

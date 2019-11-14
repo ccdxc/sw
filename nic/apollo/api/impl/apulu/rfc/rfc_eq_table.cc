@@ -844,10 +844,10 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                     }
                     RFC_RESULT_SET_PRIORITY_BITS(result, priority);
                 } else {
-                    PDS_TRACE_DEBUG("rule %u priority %u < current %u, skipping",
-                                    ruleidx,
-                                    rfc_ctxt->policy->rules[ruleidx].priority,
-                                    priority);
+                    PDS_TRACE_VERBOSE("rule %u priority %u < current %u"
+                                      ", skipping", ruleidx,
+                                      rfc_ctxt->policy->rules[ruleidx].priority,
+                                      priority);
                 }
                 posn = new_posn;
             }

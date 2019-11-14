@@ -8,6 +8,7 @@
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/api/policy_utils.hpp"
 
 namespace api_test {
 
@@ -48,9 +49,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const policy_feeder& obj) {
-    os << "Policy feeder =>"
-       << " id: " << obj.spec.key.id
-       << " dir: " << obj.spec.direction
+    os << "Policy feeder =>" << &obj.spec
        << " cidr_str: " << obj.cidr_str;
     return os;
 }
@@ -60,6 +59,10 @@ API_CREATE(policy);
 API_READ(policy);
 API_UPDATE(policy);
 API_DELETE(policy);
+
+// Function prototypes
+void sample_policy_setup(pds_batch_ctxt_t bctxt);
+void sample_policy_teardown(pds_batch_ctxt_t bctxt);
 
 }    // namespace api_test
 

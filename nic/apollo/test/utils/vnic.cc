@@ -3,10 +3,10 @@
 //
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
-#include "nic/sdk/include/sdk/if.hpp"
 
 #define HOST_LIF_ID_MIN 71
 #define HOST_LIF_ID_MAX 78
@@ -107,8 +107,27 @@ vnic_feeder::key_build(pds_vnic_key_t *key) const {
     key->id = this->id;
 }
 
+static void
+fill_policy_ids (pds_policy_key_t *pol_arr,
+                 pds_policy_id_t start_key, uint8_t num_policy)
+{
+    for (int i = 0; i < num_policy; i++) {
+        pol_arr[i].id = start_key++;
+    }
+}
+
+static void
+increment_num (uint8_t *num)
+{
+    (*num)++;
+    if (*num > PDS_MAX_VNIC_POLICY) {
+        *num = 0;
+    }
+}
+
 void
 vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
+    static uint8_t num_policy = 0;
     static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     memset(spec, 0, sizeof(pds_vnic_spec_t));
@@ -126,6 +145,19 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     if (lif_id > HOST_LIF_ID_MAX) {
         lif_id = HOST_LIF_ID_MIN;
     }
+
+    increment_num(&num_policy);
+    spec->num_ing_v4_policy = num_policy;
+    fill_policy_ids(spec->ing_v4_policy, 1, num_policy);
+    increment_num(&num_policy);
+    spec->num_ing_v6_policy = num_policy;
+    fill_policy_ids(spec->ing_v6_policy, 6, num_policy);
+    increment_num(&num_policy);
+    spec->num_egr_v4_policy = num_policy;
+    fill_policy_ids(spec->egr_v4_policy, 11, num_policy);
+    increment_num(&num_policy);
+    spec->num_egr_v6_policy = num_policy;
+    fill_policy_ids(spec->egr_v6_policy, 16, num_policy);
 }
 
 bool

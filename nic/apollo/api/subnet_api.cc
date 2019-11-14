@@ -105,10 +105,6 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
         return rv;
     }
 
-    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
     info->spec.key = *key;
 
     if ((rv = pds_subnet_status_fill(&info->status, entry)) !=
@@ -117,6 +113,10 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
     }
 
     if ((rv = pds_subnet_stats_fill(&info->stats, entry)) != sdk::SDK_RET_OK) {
+        return rv;
+    }
+
+    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
         return rv;
     }
 

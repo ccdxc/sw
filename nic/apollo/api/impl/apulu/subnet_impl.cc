@@ -305,18 +305,20 @@ subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_ERR;
 }
 
+void
+subnet_impl::fill_status_(pds_subnet_status_t *status) {
+    status->hw_id = hw_id_;
+}
+
 sdk_ret_t
-subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+subnet_impl::fill_spec_(pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
-    pds_subnet_spec_t *spec;
     bd_actiondata_t bd_data;
     vni_actiondata_t vni_data;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams;
-    pds_subnet_info_t *subnet_info = (pds_subnet_info_t *)info;
 
-    spec = &subnet_info->spec;
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, hw_id_,
                                        NULL, NULL, &bd_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -344,6 +346,20 @@ subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     // same
     //SDK_ASSERT(vni_data.vni_info.bd_id == hw_id_);
     //SDK_ASSERT(!memcmp(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN));
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_subnet_info_t *subnet_info = (pds_subnet_info_t *)info;
+
+    if ((ret = fill_spec_(&subnet_info->spec)) != SDK_RET_OK) {
+        return ret;
+    }
+
+    fill_status_(&subnet_info->status);
     return SDK_RET_OK;
 }
 

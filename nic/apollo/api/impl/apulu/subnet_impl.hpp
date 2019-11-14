@@ -131,6 +131,15 @@ public:
     /// \return    h/w id assigned to the subnet
     uint16_t hw_id(void) { return hw_id_; }
 
+    /// \brief      fill the subnet spec
+    /// \param[out] spec specification
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_subnet_spec_t *spec);
+
+    /// \brief      fill the subnet status
+    /// \param[out] status status
+    void fill_status_(pds_subnet_status_t *status);
+
 private:
     /// \brief  constructor
     subnet_impl() {

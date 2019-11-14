@@ -48,17 +48,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const if_feeder& obj) {
-    os << "Interface feeder =>"
-       << " key: " << obj.spec_feeder.key.id
-       << " type: " << obj.spec_feeder.type;
-
-    if (obj.spec_feeder.type == PDS_IF_TYPE_L3) {
-        os << " port num: " << (uint32_t)obj.spec_feeder.l3_if_info.port_num
-           << " ip pfx: " << ippfx2str(&obj.spec_feeder.l3_if_info.ip_prefix)
-           << " mac addr: " << macaddr2str(obj.spec_feeder.l3_if_info.mac_addr);
-    }
-
-    os << " ";
+    os << "Interface feeder =>" << &obj.spec_feeder;
     return os;
 }
 

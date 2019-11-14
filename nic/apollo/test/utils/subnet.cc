@@ -17,119 +17,98 @@ void
 subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
                     std::string cidr_str, std::string vrmac_str,
                     int num_subnet) {
-    this->key = key;
-    this->vpc = vpc_key;
-    this->cidr_str = cidr_str;
-    this->vr_mac = vrmac_str;
-    SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
-    v4_route_table.id = key.id;
-    v6_route_table.id = key.id + 1024; // Unique id, 1-1024 reserved
-                                       // for IPv4 rt table
-    ing_v4_policy.id = key.id;
-    ing_v6_policy.id = key.id + 1024;
-    egr_v4_policy.id = key.id + 2048;
-    egr_v6_policy.id = key.id + 3072;
-    fabric_encap.val.vnid = key.id + 512; 
-    fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    ip_prefix_t pfx = {0};
+
+    memset(&spec, 0, sizeof(pds_subnet_spec_t));
+    spec.key = key;
+    spec.vpc = vpc_key;
+    str2ipv4pfx((char *)cidr_str.c_str(), &pfx);
+    spec.v4_prefix.len = pfx.len;
+    spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
+    mac_str_to_addr((char *)vrmac_str.c_str(), spec.vr_mac);
+    spec.v4_route_table.id = key.id;
+    spec.v6_route_table.id = key.id + 1024; // Unique id, 1-1024 reserved
+                                            // for IPv4 rt table
+    spec.ing_v4_policy.id = 1;
+    spec.ing_v6_policy.id = 6;
+    spec.egr_v4_policy.id = 11;
+    spec.egr_v6_policy.id = 16;
+    spec.fabric_encap.val.vnid = key.id + 512; 
+    spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
 
     num_obj = num_subnet;
 }
 
+subnet_feeder::subnet_feeder(const subnet_feeder& feeder) {
+    memcpy(&this->spec, &feeder.spec, sizeof(pds_subnet_spec_t));
+    num_obj = feeder.num_obj;
+}
+
 void
 subnet_feeder::iter_next(int width) {
-    ip_addr_t ipaddr = {0};
-
-    ip_prefix_ip_next(&pfx, &ipaddr);
-    memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
-    key.id += width;
-    v4_route_table.id += width;
-    v6_route_table.id += width;
-    ing_v4_policy.id += width;
-    ing_v6_policy.id += width;
-    egr_v4_policy.id += width;
-    egr_v6_policy.id += width;
-    fabric_encap.val.vnid += width;
-
+    spec.key.id += width;
+    spec.v4_prefix.v4_addr += (1 << spec.v4_prefix.len);
+    spec.v4_route_table.id += width;
+    spec.v6_route_table.id += width;
+    spec.fabric_encap.val.vnid += width; 
+    
     cur_iter_pos++;
 }
 
 void
 subnet_feeder::key_build(pds_subnet_key_t *key) const {
     memset(key, 0, sizeof(pds_subnet_key_t));
-    key->id = this->key.id;
+    key->id = spec.key.id;
 }
 
 void
 subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
-    memset(spec, 0, sizeof(pds_subnet_spec_t));
-    this->key_build(&spec->key);
-
-    spec->vpc.id = vpc.id;
-    spec->v4_prefix.len = pfx.len;
-    spec->v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
-
-    // Set the subnets IP (virtual router interface IP)
-    if (!this->vr_ip.empty())
-        extract_ipv4_addr(vr_ip.c_str(), &spec->v4_vr_ip);
-
-    // Derive mac address from vr_ip if it has not been configured
-    if (this->vr_mac.empty()) {
-        MAC_UINT64_TO_ADDR(spec->vr_mac, (uint64_t)spec->v4_vr_ip);
-    } else {
-        mac_str_to_addr((char *)vr_mac.c_str(), spec->vr_mac);
-    }
-
-    spec->v4_route_table.id = v4_route_table.id;
-    spec->v6_route_table.id = v6_route_table.id;
-    spec->ing_v4_policy.id = ing_v4_policy.id;
-    spec->ing_v6_policy.id = ing_v6_policy.id;
-    spec->egr_v4_policy.id = egr_v4_policy.id;
-    spec->egr_v6_policy.id = egr_v6_policy.id;
-    spec->fabric_encap.type = fabric_encap.type;
-    spec->fabric_encap.val.vnid = fabric_encap.val.vnid;
+    memcpy(spec, &this->spec, sizeof(pds_subnet_spec_t)); 
 }
 
 bool
 subnet_feeder::key_compare(const pds_subnet_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_subnet_key_t)) == 0);
+    return (memcmp(key, &this->spec.key, sizeof(pds_subnet_key_t)) == 0);
 }
 
 bool
 subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
-    if (spec->vpc.id != vpc.id)
+    if (spec->vpc.id != this->spec.vpc.id) {
         return false;
-
-    if (spec->v4_route_table.id != v4_route_table.id)
-        return false;
-
-    if (spec->v6_route_table.id != v6_route_table.id)
-        return false;
-
-    if (spec->ing_v4_policy.id != ing_v4_policy.id)
-        return false;
-
-    if (spec->ing_v6_policy.id != ing_v6_policy.id)
-        return false;
-
-    if (spec->egr_v4_policy.id != egr_v4_policy.id)
-        return false;
-
-    if (spec->egr_v6_policy.id != egr_v6_policy.id)
-        return false;
-
-    if (!vr_mac.empty()) {
-        mac_addr_t vrmac;
-        mac_str_to_addr((char *)vr_mac.c_str(), vrmac);
-        if (memcmp(&spec->vr_mac, vrmac, sizeof(mac_addr_t)))
-            return false;
     }
 
-    if (apulu()) {
-        if (memcmp(&spec->fabric_encap, &fabric_encap, sizeof(pds_encap_t))) {
-            return false;
-        }
+    if (spec->v4_route_table.id != this->spec.v4_route_table.id) {
+        return false;
     }
 
+    if (spec->v6_route_table.id != this->spec.v6_route_table.id) {
+        return false;
+    }
+
+    if (spec->ing_v4_policy.id != this->spec.ing_v4_policy.id) {
+        return false;
+    }
+
+    if (spec->ing_v6_policy.id != this->spec.ing_v6_policy.id) {
+        return false;
+    }
+
+    if (spec->egr_v4_policy.id != this->spec.egr_v4_policy.id) {
+        return false;
+    }
+
+    if (spec->egr_v6_policy.id != this->spec.egr_v6_policy.id) {
+        return false;
+    }
+
+    if (memcmp(&spec->vr_mac, this->spec.vr_mac, sizeof(mac_addr_t))) {
+        return false;
+    }
+
+    if (memcmp(&spec->fabric_encap, &this->spec.fabric_encap,
+               sizeof(pds_encap_t))) {
+        return false;
+    }
     return true;
 }
 

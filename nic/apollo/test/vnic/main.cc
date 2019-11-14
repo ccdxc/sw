@@ -34,12 +34,14 @@ protected:
         pds_batch_ctxt_t bctxt = batch_start();
         sample_device_setup(bctxt);
         sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
+        sample_policy_setup(bctxt);
         sample_subnet_setup(bctxt);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
         sample_subnet_teardown(bctxt);
+        sample_policy_teardown(bctxt);
         sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         sample_device_teardown(bctxt);
         batch_commit(bctxt);

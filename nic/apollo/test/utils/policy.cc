@@ -151,4 +151,59 @@ policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
     return true;
 }
 
+//----------------------------------------------------------------------------
+// Misc routines
+//----------------------------------------------------------------------------
+
+// do not modify these sample values as rest of system is sync with these
+static policy_feeder k_pol_feeder;
+
+void sample_policy_setup(pds_batch_ctxt_t bctxt) {
+    pds_policy_key_t pol_key = {.id = 1};
+
+    // setup and teardown parameters should be in sync
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV4, "10.0.0.1/16", 5);
+    many_create(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV6, "2001::1/64", 5);
+    many_create(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV4, "20.0.0.1/16", 5);
+    many_create(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV6, "3001::1/64", 5);
+    many_create(bctxt, k_pol_feeder);
+}
+
+void sample_policy_teardown(pds_batch_ctxt_t bctxt) {
+    pds_policy_key_t pol_key = {.id = 1};
+
+    // this feeder base values doesn't matter in case of deletes
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV4, "10.0.0.1/16", 5);
+    many_delete(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV6, "2001::1/64", 5);
+    many_delete(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV4, "20.0.0.1/16", 5);
+    many_delete(bctxt, k_pol_feeder);
+
+    pol_key.id += 5;
+    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
+                      IP_AF_IPV6, "3001::1/64", 5);
+    many_delete(bctxt, k_pol_feeder);
+}
+
 }    // namespace api_test
