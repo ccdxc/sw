@@ -439,7 +439,7 @@ func (dn *DNode) newQueryStore() error {
 
 	// set engine config
 
-	cfg.CacheMaxMemorySize = tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
 	cfg.CacheSnapshotMemorySize = tsdb.DefaultCacheSnapshotMemorySize
 	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
 	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
