@@ -72,6 +72,7 @@ NBB_BOOL sms_create_proc(NBB_PROC_ID our_pid,
   SHARED.our_pid = our_pid;
   sms_our_pid = our_pid;
   SHARED.sm_pid = create_parms->sm_pid;
+  SHARED.css_pid = create_parms->cust_info.css_pid;
 
   SHARED.action = SMS_ACT_START;
   SHARED.wait_issue_get = NULL;
@@ -111,8 +112,8 @@ NBB_BOOL sms_create_proc(NBB_PROC_ID our_pid,
   /*                                                                         */
   /* - NBB_SEND_Q.  Receives N-BASE IPSs (including posted buffers)          */
   /***************************************************************************/
-  NBB_OPEN_QUEUES(AMB_MIB_Q | NBB_SEND_Q);
-  NBB_ENABLE_QUEUES(AMB_MIB_Q | NBB_SEND_Q);
+  NBB_OPEN_QUEUES(AMB_MIB_Q | NBB_SEND_Q | CPI_TO_USER_Q);
+  NBB_ENABLE_QUEUES(AMB_MIB_Q | NBB_SEND_Q | CPI_TO_USER_Q);
 
   ok = TRUE;
 

@@ -1,86 +1,146 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch RTM component
 
-#include "pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "qc0rtmib.h"
-
 
 // Fill rtmEntityTable: AMB_CIPR_RTM_ENTITY 
 NBB_VOID 
-pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS         *mib_msg,
-                        AMB_CIPR_RTM_ENTITY *v_amb_rtm,
-                        NBB_ULONG           fte_index,
-                        NBB_LONG            row_status,
-                        NBB_LONG            admin_status,
-                        NBB_LONG            addr_family,
-                        NBB_ULONG           i3_index)
+pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 {
-  NBB_TRC_ENTRY ("pdsa_fill_amb_cipr_rtm");
+    // Local variables
+    NBB_ULONG           *oid = NULL; 
+    AMB_CIPR_RTM_ENTITY *data= NULL;
 
-  // Set all fields absentt
-  AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
+    NBB_TRC_ENTRY ("pdsa_fill_amb_cipr_rtm");
 
-  // Set all incoming fields
-  v_amb_rtm->row_status = row_status;
-  AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ROW_STATUS);
-  
-  v_amb_rtm->admin_stat = admin_status;
-  AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADMIN_STAT);
+    // Get oid and data offset 
+    oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+    data    = (AMB_CIPR_RTM_ENTITY *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
 
-  if (row_status != AMB_ROW_DESTROY)
-  {
-    NBB_TRC_FLOW ((NBB_FORMAT "Not destroying DC-RTM: fill in fields"));
-    v_amb_rtm->fte_index = fte_index;
+    // Set all fields absentt
+    AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
+
+    // Set OID len and family
+    oid[0] = AMB_QCR_ENT_OID_LEN;
+    oid[1] = AMB_FAM_CIPR_RTM_ENTITY;
+
+    // Set all incoming fields
+    oid[AMB_QCR_ENT_FTE_INDEX_INDEX]    = conf->entity_index;
+    data->fte_index                     = conf->entity_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_FTE_INDEX);
 
-    v_amb_rtm->addr_family = addr_family;
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADDR_FAM);
+    data->row_status = conf->row_status;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ROW_STATUS);
 
-    v_amb_rtm->i3_index = i3_index;
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_I3_INDEX);
-  }
+    if (conf->row_status != AMB_ROW_DESTROY)
+    {
+        NBB_TRC_FLOW ((NBB_FORMAT "Not destroying DC-RTM: fill in fields"));
+        data->admin_stat = conf->admin_status;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADMIN_STAT);
 
-  NBB_TRC_EXIT();
-  return;
+        data->addr_family = conf->addr_family;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADDR_FAM);
+
+        data->i3_index = conf->i3_index;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_I3_INDEX);
+    }
+
+    NBB_TRC_EXIT();
+    return;
 } 
 
 
 // Fill rtmMjTable: AMB_CIPR_RTM_MJ
 NBB_VOID
-pdsa_fill_amb_cipr_rtm_mj (AMB_GEN_IPS      *mib_msg,
-                           AMB_CIPR_RTM_MJ  *v_amb_rtm,
-                           NBB_ULONG        rtm_index,
-                           NBB_ULONG        slave_entity_index,
-                           NBB_ULONG        slave_type,
-                           NBB_LONG         row_status,
-                           NBB_LONG         admin_status)
+pdsa_fill_amb_cipr_rtm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 {
+    // Local variables
+    NBB_ULONG       *oid = NULL; 
+    AMB_CIPR_RTM_MJ *data= NULL;
+
     NBB_TRC_ENTRY ("sms_fill_amb_cipr_rtm_mj");
+
+    // Get oid and data offset 
+    oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+    data    = (AMB_CIPR_RTM_MJ *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
 
     // Set all fields absent
     AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
 
+    // Set OID len and family
+    oid[0] = AMB_QRPM_MJ_OID_LEN;
+    oid[1] = AMB_FAM_CIPR_RTM_MJ;
+
     // Set all incoming fields
-    v_amb_rtm->row_status = row_status;
+    oid[AMB_QRPM_MJ_RTM_FTE_INDEX_INDEX]    = conf->entity_index;
+    data->rtm_fte_index                     = conf->entity_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_RTM_FTE_INDEX);
+
+    oid[AMB_QRPM_MJ_SLAVE_FTE_ID_INDEX]     = conf->slave_entity_index;
+    data->slave_fte_id                      = conf->slave_entity_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_SLAVE_FTE_ID);
+
+    oid[AMB_QRPM_MJ_SLAVE_TYPE_INDEX]       = conf->slave_type;
+    data->slave_type                        = conf->slave_type;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_SLAVE_TYPE);
+
+    data->row_status = conf->row_status;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_ROW_STATUS);
 
-    v_amb_rtm->admin_status = admin_status;
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_ADMIN_STATUS);
-
-    if (row_status != AMB_ROW_DESTROY)
+    if (conf->row_status != AMB_ROW_DESTROY)
     {
         NBB_TRC_FLOW ((NBB_FORMAT "Not DC-RTM: fill in fields"));
-        v_amb_rtm->rtm_fte_index = rtm_index;
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_RTM_FTE_INDEX);
+        data->admin_status = conf->admin_status;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_ADMIN_STATUS);
 
-        v_amb_rtm->slave_fte_id = slave_entity_index;
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_SLAVE_FTE_ID);
-
-        v_amb_rtm->slave_type = slave_type;
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QRPM_MJ_SLAVE_TYPE);
     }
 
     NBB_TRC_EXIT();
     return;
 
 } 
+
+
+NBB_VOID
+pdsa_test_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status)
+{
+    NBB_TRC_ENTRY ("pdsa_test_row_update_rtm");
+
+    // Set params
+    conf->oid_len       = AMB_QCR_ENT_OID_LEN;
+    conf->data_len      = sizeof (AMB_CIPR_RTM_ENTITY);
+    conf->entity_index  = 1;
+    conf->row_status    = AMB_ROW_ACTIVE;
+    conf->admin_status  = admin_status;
+    conf->addr_family   = AMB_INETWK_ADDR_TYPE_IPV4;
+    conf->i3_index      = 1;
+
+    // Convert to row_update and send
+    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_cipr_rtm); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_test_row_update_rtm_mj (pdsa_config_t *conf, NBB_LONG slave_type)
+{
+    NBB_TRC_ENTRY ("pdsa_test_row_update_rtm_mj");
+    
+    // Set params
+    conf->oid_len               = AMB_QRPM_MJ_OID_LEN;
+    conf->data_len              = sizeof (AMB_CIPR_RTM_MJ);
+    conf->entity_index          = 1;
+    conf->row_status            = AMB_ROW_ACTIVE;
+    conf->slave_entity_index    = 1;
+    conf->slave_type            = slave_type;
+    conf->admin_status          = AMB_ADMIN_STATUS_UP;
+
+
+    // Convert to row_update and send
+    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_cipr_rtm_mj); 
+
+    NBB_TRC_EXIT();
+    return;
+}

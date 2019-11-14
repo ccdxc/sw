@@ -14,6 +14,7 @@
 
 #include "nbase.h"
 #include "nbbstub.h"
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 extern "C" {
 #include "smsiincl.h"
 #include "smsincl.h"
@@ -68,6 +69,15 @@ NBB_VOID sms_receive_proc(NBB_IPS *ips,
       /***********************************************************************/
       NBB_TRC_FLOW((NBB_FORMAT "NBB_SEND_Q"));
       sms_rcv_nbase_ips(ips NBB_CCXT);
+      break;
+
+   case CPI_TO_USER_Q:
+      /***********************************************************************/
+      /* IPS from N-BASE                                                     */
+      /***********************************************************************/
+      NBB_TRC_FLOW((NBB_FORMAT "Received IPS_ATG_CPI_TRANSACTION_DONE"));
+      pdsa_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
+      NBB_FREE_BUFFER(ips);
       break;
 
     default:

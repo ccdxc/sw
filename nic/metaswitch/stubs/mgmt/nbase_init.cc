@@ -6,8 +6,9 @@
 extern "C" {
 #include "smsiincl.h"
 }
-#include <iostream>
+#include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
 
+#include <iostream>
 using namespace std;
 
 extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
@@ -15,6 +16,7 @@ extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
 void nbase_init()
 {
     NBB_BOOL nbase_init = FALSE;
+
     /***************************************************************************/
     /* Initialize the N-BASE.                                                  */
     /***************************************************************************/
@@ -71,6 +73,21 @@ void nbase_init()
 
     SMSI_INITIALIZE("DCBGP", qb_initialize);
     SMSI_INITIALIZE("EVPN", evm_initialize);
+    SMSI_INITIALIZE("DCQCRT", qcrt_initialize);
+    SMSI_INITIALIZE("DCQCFT", qcft_initialize);
+    SMSI_INITIALIZE("AMX", amx_initialize);
+    SMSI_FTE_INITIALIZE();
+    SMSI_LI_INITIALIZE();
+    SMSI_LIM_INITIALIZE();
+    SMSI_L2F_INITIALIZE();
+    SMSI_NAR_INITIALIZE();
+    SMSI_NRM_INITIALIZE();
+    SMSI_PSM_INITIALIZE();
+    SMSI_SMI_INITIALIZE();
+    SMSI_HALS_INITIALIZE();
+    SMSI_L2_INITIALIZE();
+    SMSI_FTM_INITIALIZE();
+
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */
@@ -97,21 +114,14 @@ void nbase_init()
     sm_create_parms.location_group_index = 1;
     sm_create_parms.hardware_location = 1;
 
-#ifdef BUILD_CSS
+    // Enable CTM (CSS)
     sm_create_parms.css_enabled = ATG_YES;
     sm_create_parms.css_location_index = 1;
     sm_create_parms.css_location_group_index = 1;
     sm_create_parms.css_hardware_location = 1;
     sm_create_parms.css_entity_index = 1;
+    sm_create_parms.css_management_source = ATG_YES;
     sm_create_parms.initiate_start_of_day_replay = ATG_NO;
-#else
-    sm_create_parms.css_enabled = ATG_NO;
-    sm_create_parms.css_location_index = 0;
-    sm_create_parms.css_location_group_index = 0;
-    sm_create_parms.css_hardware_location = 0;
-    sm_create_parms.css_entity_index = 0;
-    sm_create_parms.initiate_start_of_day_replay = ATG_NO;
-#endif
 
     /***************************************************************************/
     /* CUSTOMIZE ME.  Define a port-specific section in the SM create parms    */
@@ -160,10 +170,23 @@ void nbase_init()
     /* MIB (SMS) Stub so release shared context here so that the function can  */
     /* obtain it in the different context.                                     */
     /***************************************************************************/
+
     NBB_TRC_EXIT();
     NBS_EXIT_SHARED_CONTEXT();
     cout << "N-Base Initialized\n";
     NBS_SPIN_START();
+
+    /*************************************************************************/
+    /* PDSA Init Sequence                                                    */
+    /*************************************************************************/
+    pdsa_test_init();
+
+    /*************************************************************************/
+    /* TODO: Starting N-Base Spin again, this should be removed after       */
+    /* MS-591011 is resolved*/
+    /*************************************************************************/
+    NBS_SPIN_START();
+
 EXIT_LABEL:
     if (nbase_init)
     {
