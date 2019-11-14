@@ -453,4 +453,10 @@ jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apulu/rfc
 jobd/dol/apulu/rfc: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo rfc_disjoint --feature rfc --sub ipv4_egress_disjoint --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_egress_adjacent --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_egress_overlap_1 --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_egress_overlap_2 --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_egress_overlap_3 --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_egress_negative_1 --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_egress_negative_2 --dry

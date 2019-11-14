@@ -1,0 +1,223 @@
+# RFC Topology Specification for overlapping policies
+meta:
+    id: TOPO_RFC_OVERLAP_1
+
+uplink:
+    - entry:
+        id      : uplink0
+        port    : 1
+        mode    : auto # host, switch, auto (default, depending on device mode)
+        status  : UP
+
+    - entry:
+        id      : uplink1
+        port    : 2
+        mode    : auto
+        status  : UP
+
+interface:
+    host:
+        lif         : ref://store/specs/id=LIF_ETH
+
+device:
+    mode        : auto # auto (default, based on pipeline), host, bitw
+    stack       : ipv4 # ipv4 (default), ipv6
+    bridging    : false # false (default), true
+    learning    : false # false (default), true
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    encap       : vxlan # vxlan or mplsodup
+    tunnel      :
+        - count : 16
+          type  : underlay
+
+vpc:
+    - stack  : dual
+      count : 1
+      type  : tenant
+      subnet:
+        # apulu supports max 8 lifs - so 8 subnets & 8 policies for now
+        - count     :  8              # should be same as total routetbl / policy
+          v4prefixlen : 24
+          v6prefixlen : 64
+          vnic:
+            - count   : 1             # VNICs per subnet
+              ipcount : 2             # Local IP mapping per vnic
+              public  : true
+              policy  : true          # security policy at vnic level (0 - 5)
+          rmap:                       # Remote IP mappings per subnet
+            - count : 1
+      routetbl:
+             - type: base
+               routetype: fulloverlap_max_with_default
+               count : 8
+               teptype : underlay
+               v4base: '66.0.0.0\16'
+               v4prefixlen: 24
+               nv4routes   : 1023     # Max routes per route table
+               v6base: '2002::\65'
+               v6prefixlen: 120
+               nv6routes   : 1023
+               v4routes:
+                   - '0.0.0.0\0'
+               v6routes:
+                   - '0::\0'
+      nexthop:
+             - type : underlay
+               count : 2
+      policy:
+
+              - type : specific
+                policytype : stateless      # disjoint prefix but proto & l4 overlap
+                overlaptype : proto
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : deny
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    priority: 4294967294
+                    action  : allow
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+
+              - type : specific
+                policytype : stateless
+                overlaptype : partial           # all attributes partial overlap
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : allow
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : allow
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : partial
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : allow
+                    srctype : pfxrange
+                    v4srciplow : '99.88.1.1'
+                    v4srciphigh : '99.88.99.1'
+                    v6srciplow : 'e1ba:aced:a11:face:b00c:1:1:1'
+                    v6srciphigh : 'e1ba:aced:a11:face:b00c:99:1:1'
+                    dsttype : pfxrange
+                    v4dstiplow : '99.88.1.1'
+                    v4dstiphigh : '99.88.99.99'
+                    v6dstiplow : 'e1ba:aced:a11:face:b00c:1:1:1'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b00c:99:1:1'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    priority: 4294967294
+                    action  : allow
+                    srctype : pfxrange
+                    v4srciplow : '99.88.91.1'
+                    v4srciphigh : '99.88.199.1'
+                    v6srciplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6srciphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    dsttype : pfxrange
+                    v4dstiplow : '99.88.91.1'
+                    v4dstiphigh : '99.88.199.99'
+                    v6dstiplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : partial
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : allow
+                    v4pfx: '1.1.1.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c:91::0\96'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    priority: 4294967294
+                    action  : allow
+                    srctype : pfxrange
+                    v4srciplow : '1.1.1.200'
+                    v4srciphigh : '1.1.2.255'
+                    v6srciplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6srciphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    dsttype : pfxrange
+                    v4dstiplow : '1.1.1.200'
+                    v4dstiphigh : '1.1.2.255'
+                    v6dstiplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : partial
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    priority: 4294967295
+                    action  : deny
+                    srctype : pfx
+                    v4srcpfx: '1.1.1.0\24'
+                    v6srcpfx: 'e1ba:aced:a11:face:b00c:91::0\96'
+                    dsttype : pfxrange
+                    v4dstiplow : '1.1.1.0'
+                    v4dstiphigh : '1.1.1.255'
+                    v6dstiplow : 'e1ba:aced:a11:face:b00c:91::0'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b00c:91:ffff:ffff'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    priority: 4294967294
+                    action  : allow
+                    srctype : pfxrange
+                    v4srciplow : '1.1.1.200'
+                    v4srciphigh : '1.1.2.255'
+                    v6srciplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6srciphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    dsttype : pfxrange
+                    v4dstiplow : '1.1.1.200'
+                    v4dstiphigh : '1.1.2.255'
+                    v6dstiplow : 'e1ba:aced:a11:face:b00c:91:1:1'
+                    v6dstiphigh : 'e1ba:aced:a11:face:b00c:199:1:1'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40

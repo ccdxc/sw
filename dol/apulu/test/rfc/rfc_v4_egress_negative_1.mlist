@@ -1,0 +1,42 @@
+# Apulu RFC IPv4 Egress modules list for disjoint policy
+feature:
+    id          : rfc
+    sub         : ipv4_egress_negative_1
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : EMTPY_POLICY
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty
+
+    - module:
+        name    : DENY_ALL
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=deny_all
+
+    - module:
+        name    : SPECIFIC_LEFT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific
+
+    - module:
+        name    : SPECIFIC_RIGHT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific

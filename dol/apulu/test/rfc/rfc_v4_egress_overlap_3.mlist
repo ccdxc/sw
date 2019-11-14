@@ -1,0 +1,56 @@
+# Apulu RFC IPv4 Egress modules list for overlap policy
+feature:
+    id          : rfc
+    sub         : ipv4_egress_overlap_3
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : OVERLAP_RANDOM
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
+
+    - module:
+        name    : OVERLAP_FIRST
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : first
+            - sport  : first
+            - dport  : first
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
+
+    - module:
+        name    : OVERLAP_LAST
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : last
+            - sport  : last
+            - dport  : last
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
+
+    - module:
+        name    : OVERLAP_LEFT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx
+
+    - module:
+        name    : OVERLAP_RIGHT
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=pfx

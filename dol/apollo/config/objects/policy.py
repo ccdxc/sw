@@ -134,6 +134,7 @@ class PolicyObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Policy Object:", self)
         logger.info("- %s" % repr(self))
+        logger.info("- Level:%s" % self.Level)
         logger.info("- Vpc%d" % self.VPCId)
         logger.info("- Direction:%s" % self.Direction)
         logger.info("- PolicyType:%s" % self.PolicyType)
@@ -724,8 +725,8 @@ class PolicyObjectClient:
 
         for policy_spec_obj in vpc_spec_obj.policy:
             policy_spec_type = policy_spec_obj.type
+            policytype = policy_spec_obj.policytype
             if policy_spec_type == "specific":
-                policytype = policy_spec_obj.policytype
                 if policytype == 'default':
                     __add_default_policies(vpc_spec_obj, policy_spec_obj)
                 else:
