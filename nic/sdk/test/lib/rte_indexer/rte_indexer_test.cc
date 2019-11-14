@@ -724,7 +724,7 @@ TEST_F(rte_indexer_test, test17) {
 }
 
 //----------------------------------------------------------------------------
-// Test 19:
+// Test 18:
 //
 // Summary:
 // --------
@@ -757,6 +757,63 @@ TEST_F(rte_indexer_test, test_skip_zero) {
     ASSERT_TRUE(rs == SDK_RET_OK);
     usage = ind->usage();
     ASSERT_TRUE(usage == 0);
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 19:
+//
+// Summary:
+// --------
+//  - Tests the overlapping indexes in array1 using alloc_block and alloc
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test18) {
+    uint32_t i;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(65536);
+
+    rs = ind->alloc_block(&i, 65536);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->free(0, 65030);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc_block(&i, 65000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 0);
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 65000);
+
+    rs = ind->free(0, 65001);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc_block(&i, 65027);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 0);
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 65027);
+
+    for (uint32_t i = 0; i < 65028; i++) {
+        rs = ind->alloc(i);
+        ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+    }
+
+    for (uint32_t i = 65028; i < 65030; i++) {
+        rs = ind->free(i);
+        ASSERT_TRUE(rs == SDK_RET_ENTRY_NOT_FOUND);
+    }
+
+    for (uint32_t i = 65030; i < 65536; i++) {
+        rs = ind->alloc(i);
+        ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+    }
+
     rte_indexer::destroy(ind);
 }
 

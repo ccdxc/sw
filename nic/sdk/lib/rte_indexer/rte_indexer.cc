@@ -20,15 +20,14 @@ static inline bool
 rte_bitmap_check_slab_set_(rte_bitmap *indxr, uint32_t offset2,
                            uint64_t slab, uint32_t size) {
     uint32_t slab_size;
-    uint64_t mask;
+    uint64_t mask = ~(0llu);
 
     slab_size = RTE_BITMAP_SLAB_BIT_SIZE - offset2;
-    if (slab_size > RTE_BITMAP_SLAB_BIT_MASK)
-        mask = ~(0llu);
-    else {
+    if (slab_size <= RTE_BITMAP_SLAB_BIT_MASK) {
         mask = ~((~1llu) >> slab_size);
         slab = slab & (~(0llu) << offset2);
     }
+
     if (size < slab_size) {
         slab_size = size;
         offset2 = RTE_BITMAP_SLAB_BIT_SIZE - (size + offset2);
@@ -126,6 +125,8 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
         }
         indexer_ = rte_bitmap_init(size, bits_, sz);
         indxr = (rte_bitmap *)indexer_;
+        if (!indxr)
+            return false;
         // number of 64 bits chunks
         array2_64s = size / RTE_BITMAP_SLAB_BIT_SIZE;
         // number of active bits in the last 64 bit chunk.
@@ -170,8 +171,8 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
             this->set_curr_slab_(indx);
         }
     }
-    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %x",
-                      (void *)INDEXER, this->curr_slab_, this->curr_index_);
+    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %u usage %u",
+                      (void *)INDEXER, this->curr_slab_, this->curr_index_, usage_);
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), false);
     }
@@ -187,7 +188,7 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 rte_indexer::alloc(uint32_t *index) {
-    uint32_t nextpos = 0;
+    uint32_t nextpos = 0, offset;
     uint64_t curr_slab = 0;
     bool go2_next = false;
     sdk_ret_t rs = SDK_RET_OK;
@@ -203,10 +204,14 @@ rte_indexer::alloc(uint32_t *index) {
     }
 
     if (this->curr_slab_) {
-        if (!rte_bitmap_slab_scan(this->curr_slab_, this->curr_index_,
+        // get latest slab value at <curr_index_> before scanning
+        this->set_curr_slab_(this->curr_index_);
+        offset = this->curr_index_ & RTE_BITMAP_SLAB_BIT_MASK;
+        if (!rte_bitmap_slab_scan(this->curr_slab_, offset,
                                   &nextpos)) {
             go2_next = true;
         }
+        nextpos = this->curr_index_ + (nextpos - offset);
     }
 
     if (this->curr_slab_ == 0 || go2_next) {
@@ -223,10 +228,9 @@ rte_indexer::alloc(uint32_t *index) {
     rte_bitmap_clear(INDEXER, *index);
     this->curr_index_ = nextpos;
     this->set_curr_slab_(this->curr_index_);
-
-    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr slab %d curr index %x",
-              (void*)INDEXER, *index, (long)this->curr_slab_, curr_slab, this->curr_index_);
     usage_++;
+    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr index %u usage %u",
+                      (void*)INDEXER, *index, (long)this->curr_slab_, this->curr_index_, usage_);
 end:
     if (thread_safe_) {
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), SDK_RET_ERR);
