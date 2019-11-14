@@ -130,7 +130,7 @@ rsync -r --delete --delete-excluded \
 if [ -n "$SW_VERSION" ] ; then
 	VER=$SW_VERSION
 else
-	VER=`git describe`
+	VER=`git describe --tags`
 fi
 sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
 	"$GEN_DIR/sys/dev/ionic/ionic_rdma/ionic_ibdev.c"      \

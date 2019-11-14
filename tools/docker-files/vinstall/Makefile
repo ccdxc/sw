@@ -1,7 +1,7 @@
 
 TOPDIR       := ${realpath ${CURDIR}/../../../}
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
-GIT_VERSION ?= $(shell git describe --dirty --always)
+GIT_VERSION ?= $(shell git describe --tags --dirty --always)
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
 export GIT_COMMIT GIT_VERSION BUILD_DATE TOPDIR
 

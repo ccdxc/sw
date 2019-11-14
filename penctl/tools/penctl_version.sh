@@ -10,6 +10,6 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 if [ -n "$SW_VERSION" ] ; then
 	PENVER=$SW_VERSION
 else
-	PENVER=`git describe`
+	PENVER=`git describe --tags`
 fi
 echo $PENVER > $TOP/penctl/version.txt

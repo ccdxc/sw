@@ -78,7 +78,7 @@ UPGRADE_BUILD_CMD ?= bash -c  "make ${UPGRADE_TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
-GIT_VERSION ?= $(shell git describe --dirty --always)
+GIT_VERSION ?= $(shell git describe --tags --dirty --always)
 GIT_UPGRADE_VERSION ?= iota-upgrade
 #IMAGE_VERSION is venice image version
 IMAGE_VERSION ?= ${GIT_VERSION}

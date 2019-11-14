@@ -81,7 +81,7 @@ rsync -r --copy-links \
 if [ -n "$SW_VERSION" ] ; then
 	VER=$SW_VERSION
 else
-	VER=`git describe`
+	VER=`git describe --tags`
 fi
 echo "Setting Linux driver version to '$VER'"
 sed -i "s/^\\(#define IONIC_DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
