@@ -1,9 +1,13 @@
 package vcprobe
 
 import (
+	"fmt"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
+	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/tags"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
@@ -43,13 +47,15 @@ func TestTags(t *testing.T) {
 
 	// Give time for the probe to connect
 	time.Sleep(time.Second)
-	tp := vcp.tp
-
-	err = tp.fetchTags()
-	if err != nil {
-		t.Error(err)
+	th := &testHelper{
+		t:       t,
+		tp:      vcp.tp,
+		storeCh: storeCh,
 	}
-	AssertOk(t, err, "fetchTags failed")
+
+	th.fetchTags()
+	expMap := map[string][]string{}
+	th.verifyTags(expMap)
 
 	// add some tags and list again
 	tagZone1 := &tags.Tag{
@@ -73,67 +79,159 @@ func TestTags(t *testing.T) {
 		Cardinality:     "10",
 		AssociableTypes: []string{"VirtualMachine"},
 	}
-	tp.tc.CreateCategory(tp.ctx, defaultCat)
-	_, err = tp.tc.CreateTag(tp.ctx, tagZone1)
+	th.tp.tc.CreateCategory(th.tp.ctx, defaultCat)
+	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone1)
 	AssertOk(t, err, "CreateTag failed")
-	_, err = tp.tc.CreateTag(tp.ctx, tagZone2)
+	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone2)
 	AssertOk(t, err, "CreateTag failed")
-	_, err = tp.tc.CreateTag(tp.ctx, tagZone3)
+	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone3)
 	AssertOk(t, err, "CreateTag failed")
 
 	// Attach some VMs
-	err = tp.tc.AttachTag(tp.ctx, "tagZone1", vm1.Reference())
-	AssertOk(t, err, "AttachTag failed")
-	err = tp.tc.AttachTag(tp.ctx, "tagZone1", vm2.Reference())
-	AssertOk(t, err, "AttachTag failed")
-	err = tp.tc.AttachTag(tp.ctx, "tagZone3", vm1.Reference())
-	AssertOk(t, err, "AttachTag failed")
+	th.attachTag("tagZone1", vm1)
+	th.attachTag("tagZone1", vm2)
+	th.attachTag("tagZone1", vm3)
+	th.attachTag("tagZone3", vm1)
 
-	err = tp.tc.AttachTag(tp.ctx, "tagZone1", vm3.Reference())
-	AssertOk(t, err, "AttachTag failed")
+	expMap[vm1.Self.Value] = []string{"default:tagZone1", "default:tagZone3"}
+	expMap[vm2.Self.Value] = []string{"default:tagZone1"}
+	expMap[vm3.Self.Value] = []string{"default:tagZone1"}
+	th.verifyTags(expMap)
 
-	// change tagZone1 to tagZone11
-	tagZone1, err = tp.tc.GetTag(tp.ctx, "tagZone1")
-	AssertOk(t, err, "GetTagByName failed")
-	tagZone1.Name = "tagZone11"
-	err = tp.tc.UpdateTag(tp.ctx, tagZone1)
-	AssertOk(t, err, "UpdateTag failed")
+	// Check tag renaming event
+	th.renameTag("tagZone1", "tagZone11")
 
-	err = tp.fetchTags()
-	AssertOk(t, err, "fetchTags failed")
+	expMap[vm1.Self.Value] = []string{"default:tagZone11", "default:tagZone3"}
+	expMap[vm2.Self.Value] = []string{"default:tagZone11"}
+	expMap[vm3.Self.Value] = []string{"default:tagZone11"}
+	th.verifyTags(expMap)
 
-	idsvm1 := tp.vmInfo[vm1.Self.Value]
-	Assert(t, idsvm1 != nil, "No tags found on vm-vm1")
-	idsvm2 := tp.vmInfo[vm2.Self.Value]
-	Assert(t, idsvm2 != nil, "No tags found on vm-vm2")
-	namesvm1 := NewDeltaStrSet([]string{})
-	for _, id := range idsvm1.Items() {
-		namesvm1.AddSingle(tp.tagName[id])
+	// Check tag removal basic
+	th.detachTag("tagZone11", vm3)
+	expMap = map[string][]string{
+		vm3.Self.Value: []string{},
 	}
+	th.verifyTags(expMap)
 
-	Assert(t, namesvm1.Diff([]string{"tagZone11", "tagZone3"}).Count() == 0, "Tags on vm-vm1 do not match")
-	Assert(t, len(idsvm2.Additions()) == 1, "Tags on vm-vm2 do not match")
-	idsvm3 := tp.vmInfo[vm3.Self.Value]
-	itemsvm3 := idsvm3.Items()
-	Assert(t, len(idsvm3.Additions()) == 1, "Tags on vm-vm3 do not match")
-	err = tp.tc.AttachTag(tp.ctx, "tagZone2", vm3.Reference())
-	AssertOk(t, err, "AttachTag failed")
-	err = tp.tc.DetachTag(tp.ctx, "tagZone11", vm3.Reference())
-	AssertOk(t, err, "DetachTag failed")
-	err = tp.fetchTags()
-	AssertOk(t, err, "FetchTag failed")
-	idsvm3 = tp.vmInfo[vm3.Self.Value]
-	diffvm3 := idsvm3.Diff(itemsvm3)
-	Assert(t, len(diffvm3.Additions()) == 1, "Tags on vm-vm3 do not match")
-	Assert(t, len(diffvm3.Deletions()) == 1, "Tags on vm-vm3 do not match")
-	AssertOk(t, err, "fetchTags failed")
+	// Add tag to vm with no tag
+	th.attachTag("tagZone2", vm3)
+	expMap = map[string][]string{
+		vm3.Self.Value: []string{"default:tagZone2"},
+	}
+	th.verifyTags(expMap)
 
-	tagZone3, err = tp.tc.GetTag(tp.ctx, "tagZone3")
-	AssertOk(t, err, "Failed to get tag tagZone3")
-	err = tp.tc.DeleteTag(tp.ctx, tagZone3)
-	AssertOk(t, err, "DeleteTag failed")
-	idsvm1 = tp.vmInfo[vm2.Self.Value]
-	err = tp.fetchTags()
-	AssertOk(t, err, "DetachTag failed")
-	Assert(t, len(idsvm3.Items()) == 1, "Tags on vm-vm1 do not match")
+	// Remove tag that only exists on one vm
+	th.detachTag("tagZone3", vm1)
+
+	expMap = map[string][]string{
+		vm1.Self.Value: []string{"default:tagZone11"},
+	}
+	th.verifyTags(expMap)
+
+	// Rename category should generate events
+	th.renameCategory("default", "default1")
+	expMap = map[string][]string{
+		vm1.Self.Value: []string{"default1:tagZone11"},
+		vm2.Self.Value: []string{"default1:tagZone11"},
+		vm3.Self.Value: []string{"default1:tagZone2"},
+	}
+	th.verifyTags(expMap)
+
+	// Delete tag that isn't used shouldn't generate new events
+	th.deleteTag("tagZone3")
+	expMap = map[string][]string{}
+	th.verifyTags(expMap)
+
+	// Delete tag that is being used
+	th.deleteTag("tagZone11")
+	expMap = map[string][]string{
+		vm1.Self.Value: []string{},
+		vm2.Self.Value: []string{},
+	}
+	th.verifyTags(expMap)
+
+}
+
+type testHelper struct {
+	t       *testing.T
+	tp      *tagsProbe
+	storeCh chan defs.Probe2StoreMsg
+}
+
+func (h *testHelper) attachTag(tagID string, vm *simulator.VirtualMachine) {
+	err := h.tp.tc.AttachTag(h.tp.ctx, tagID, vm.Reference())
+	AssertOk(h.t, err, "AttachTag failed")
+}
+
+func (h *testHelper) detachTag(tagID string, vm *simulator.VirtualMachine) {
+	err := h.tp.tc.DetachTag(h.tp.ctx, tagID, vm.Reference())
+	AssertOk(h.t, err, "AttachTag failed")
+}
+
+func (h *testHelper) deleteTag(tagID string) {
+	tag, err := h.tp.tc.GetTag(h.tp.ctx, tagID)
+	AssertOk(h.t, err, "GetTagByName failed")
+	err = h.tp.tc.DeleteTag(h.tp.ctx, tag)
+	AssertOk(h.t, err, "deleteTag failed")
+}
+
+func (h *testHelper) renameTag(tagName string, newName string) {
+	tag, err := h.tp.tc.GetTag(h.tp.ctx, tagName)
+	AssertOk(h.t, err, "GetTagByName failed")
+	tag.Name = newName
+	err = h.tp.tc.UpdateTag(h.tp.ctx, tag)
+	AssertOk(h.t, err, "UpdateTag failed")
+}
+
+func (h *testHelper) renameCategory(catName string, newName string) {
+	cat, err := h.tp.tc.GetCategory(h.tp.ctx, catName)
+	AssertOk(h.t, err, "GetTagByName failed")
+	cat.Name = newName
+	err = h.tp.tc.UpdateCategory(h.tp.ctx, cat)
+	AssertOk(h.t, err, "UpdateTag failed")
+}
+
+func (h *testHelper) verifyTags(expMap map[string][]string) {
+	h.fetchTags()
+	items := h.getTagMsgsFromStore()
+
+	AssertEquals(h.t, len(expMap), len(items), "%s : Expected msgs did not match, %+v", getCaller(), items)
+	for _, item := range items {
+		expTags, ok := expMap[item.Key]
+		Assert(h.t, ok, "received event for unexpected key %s", item.Key)
+		for _, change := range item.Changes {
+			tagMsg := change.Val.(defs.TagMsg)
+			for _, tag := range tagMsg.Tags {
+				AssertOneOf(h.t, fmt.Sprintf(("%s:%s"), tag.Category, tag.Name), expTags)
+			}
+		}
+	}
+}
+
+func (h *testHelper) fetchTags() {
+	err := h.tp.fetchTags()
+	AssertOk(h.t, err, "Fetch tags failed")
+}
+
+func (h *testHelper) getTagMsgsFromStore() []defs.Probe2StoreMsg {
+	var items []defs.Probe2StoreMsg
+	hasItems := true
+	for hasItems {
+		select {
+		case item := <-h.storeCh:
+			for _, change := range item.Changes {
+				if change.Name == string(defs.VMPropTag) {
+					items = append(items, item)
+				}
+			}
+		default:
+			hasItems = false
+		}
+	}
+	return items
+}
+
+func getCaller() string {
+	_, file, line, _ := runtime.Caller(2)
+	return fmt.Sprintf("%s:%d", filepath.Base(file), line)
 }

@@ -114,3 +114,10 @@ func (d *DeltaStrSet) ApplyDiff(diff *DeltaStrSet) {
 		}
 	}
 }
+
+// MarkAllForDeletion marks all elements as false
+func (d *DeltaStrSet) MarkAllForDeletion() {
+	for k := range d.items {
+		d.items[k] = false
+	}
+}

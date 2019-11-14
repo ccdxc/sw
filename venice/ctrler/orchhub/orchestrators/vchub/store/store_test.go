@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -19,7 +20,8 @@ import (
 )
 
 var (
-	logger = log.SetConfig(log.GetDefaultConfig("vcstore_integ_test"))
+	logConfig = log.GetDefaultConfig("vcstore_integ_test")
+	logger    = log.SetConfig(logConfig)
 )
 
 func newStateManager() (*statemgr.Statemgr, error) {
@@ -34,13 +36,20 @@ func newStateManager() (*statemgr.Statemgr, error) {
 func TestStoreRun(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
+	// If set, logger will output to console
+	debugMode := false
+	if debugMode {
+		logConfig.LogToStdout = true
+		logConfig.Filter = log.AllowAllFilter
+		logger = log.SetConfig(logConfig)
+	}
 	testCases := []struct {
 		name   string
 		events []defs.Probe2StoreMsg
-		verify func(*statemgr.Statemgr)
+		verify func(*VCHStore)
 	}{
 		{
-			name: "basic workload create",
+			name: "basic workload create without host",
 			events: []defs.Probe2StoreMsg{
 				{
 					VcObject:   defs.VirtualMachine,
@@ -48,7 +57,7 @@ func TestStoreRun(t *testing.T) {
 					Originator: "127.0.0.1:8990",
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -61,10 +70,13 @@ func TestStoreRun(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 				}
-				workloadAPI := s.Controller().Workload()
-				w, err := workloadAPI.Find(expMeta)
-				Assert(t, err == nil, "Failed to get workload. Err: %v", err)
-				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
+
+				item := v.pCache.GetWorkload(expMeta)
+				Assert(t, item != nil, "Workload not in pcache")
+				workloadAPI := v.stateMgr.Controller().Workload()
+				_, err := workloadAPI.Find(expMeta)
+				Assert(t, err != nil, "Workload unexpectedly in stateMgr. Err: %v", err)
+				Assert(t, item.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
 		{
@@ -81,8 +93,8 @@ func TestStoreRun(t *testing.T) {
 							Val: types.VirtualMachineConfigInfo{
 								Hardware: types.VirtualHardware{
 									Device: []types.BaseVirtualDevice{
-										generateVNIC("aaaa:bbbb:cccc", "10", "E1000e"),
-										generateVNIC("aaaa:bbbb:dddd", "11", "E1000"),
+										generateVNIC("aa:bb:cc:dd:ee:ff", "10", "E1000e"),
+										generateVNIC("aa:bb:cc:dd:dd:ff", "11", "E1000"),
 									},
 								},
 							},
@@ -94,10 +106,10 @@ func TestStoreRun(t *testing.T) {
 								Hardware: types.VirtualHardware{
 									// Should ignore other devices
 									Device: []types.BaseVirtualDevice{
-										generateVNIC("aaaa:bbbb:cccc", "10", "E1000e"),
-										generateVNIC("aaaa:bbbb:dddd", "11", "E1000"),
-										generateVNIC("aaaa:bbbb:eeee", "5000", "Vmxnet"), // Outside vlan range
-										generateVNIC("aaaa:bbbb:eeee", "-10", "Vmxnet2"), // Outside vlan range
+										generateVNIC("aa:bb:cc:dd:ee:ff", "10", "E1000e"),
+										generateVNIC("aa:bb:cc:dd:dd:ff", "11", "E1000"),
+										generateVNIC("aa:bb:cc:dd:dd:ee", "5000", "Vmxnet"), // Outside vlan range
+										generateVNIC("aa:bb:cc:dd:dd:ee", "-10", "Vmxnet2"), // Outside vlan range
 										&types.VirtualLsiLogicSASController{},
 									},
 								},
@@ -106,7 +118,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -121,34 +133,53 @@ func TestStoreRun(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa:bbbb:cccc",
+								MACAddress:   "aa:bb:cc:dd:ee:ff",
 								MicroSegVlan: 10,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa:bbbb:dddd",
+								MACAddress:   "aa:bb:cc:dd:dd:ff",
 								MicroSegVlan: 11,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa:bbbb:eeee",
+								MACAddress:   "aa:bb:cc:dd:dd:ee",
 								MicroSegVlan: 0,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa:bbbb:eeee",
+								MACAddress:   "aa:bb:cc:dd:dd:ee",
 								MicroSegVlan: 0,
 							},
 						},
 					},
 				}
-				workloadAPI := s.Controller().Workload()
-				w, err := workloadAPI.Find(expMeta)
-				wT := w.Workload
-				Assert(t, err == nil, "Failed to get workload")
-				Assert(t, wT.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
+				item := v.pCache.GetWorkload(expMeta)
+				Assert(t, item != nil, "Workload not in pcache")
+				Assert(t, item.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
+				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
 			},
 		},
 		{
 			name: "workload create with vm name",
 			events: []defs.Probe2StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-21",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aa:bb:cc:dd:ee:ff",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					VcObject:   defs.VirtualMachine,
 					Key:        "virtualmachine-40",
@@ -161,10 +192,20 @@ func TestStoreRun(t *testing.T) {
 								Name: "test-vm",
 							},
 						},
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "runtime",
+							Val: types.VirtualMachineRuntimeInfo{
+								Host: &types.ManagedObjectReference{
+									Type:  "HostSystem",
+									Value: "hostsystem-21",
+								},
+							},
+						},
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-40",
 					Tenant:    globals.DefaultTenant,
@@ -178,7 +219,8 @@ func TestStoreRun(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{
 						Name: "127.0.0.1:8990-virtualmachine-40",
 						Labels: map[string]string{
-							"vm-name": "test-vm",
+							"vcenter.vm-name":   "test-vm",
+							"vcenter.orch-name": "127.0.0.1:8990",
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -186,17 +228,37 @@ func TestStoreRun(t *testing.T) {
 					Spec: workload.WorkloadSpec{},
 				}
 
-				workloadAPI := s.Controller().Workload()
+				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
-				wT := w.Workload
 				Assert(t, err == nil, "Failed to get workload")
+				wT := w.Workload
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
-				Assert(t, wT.ObjectMeta.Labels["vm-name"] == expWorkload.ObjectMeta.Labels["vm-name"], "workloads are not same. Expected [%v]. Got [%v]", expWorkload, wT)
+				AssertEquals(t, expWorkload.ObjectMeta.Labels, wT.ObjectMeta.Labels, "workload labels are not same")
 			},
 		},
 		{
 			name: "workload create with runtime info",
 			events: []defs.Probe2StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-21",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aa:bb:cc:dd:ee:ff",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					VcObject:   defs.VirtualMachine,
 					Key:        "virtualmachine-41",
@@ -215,7 +277,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -232,7 +294,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
-				workloadAPI := s.Controller().Workload()
+				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
@@ -241,6 +303,26 @@ func TestStoreRun(t *testing.T) {
 		{
 			name: "workload update",
 			events: []defs.Probe2StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-21",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aa:bb:cc:dd:ee:ff",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					VcObject:   defs.VirtualMachine,
 					Key:        "virtualmachine-41",
@@ -259,7 +341,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -284,7 +366,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
-				workloadAPI := s.Controller().Workload()
+				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
@@ -294,6 +376,26 @@ func TestStoreRun(t *testing.T) {
 		{
 			name: "Workload redundant update",
 			events: []defs.Probe2StoreMsg{
+				{
+					VcObject:   defs.HostSystem,
+					Key:        "hostsystem-21",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: "config",
+							Val: types.HostConfigInfo{
+								Network: &types.HostNetworkInfo{
+									Pnic: []types.PhysicalNic{
+										types.PhysicalNic{
+											Mac: "aa:bb:cc:dd:ee:ff",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					VcObject:   defs.VirtualMachine,
 					Key:        "virtualmachine-41",
@@ -312,7 +414,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
@@ -329,7 +431,7 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
-				workloadAPI := s.Controller().Workload()
+				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == existingWorkload.ObjectMeta.Name, "workloads are not same")
@@ -350,15 +452,77 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
 					Name:      "127.0.0.1:8990-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-				workloadAPI := s.Controller().Workload()
-				_, err := workloadAPI.Find(expMeta)
-				Assert(t, err != nil, "Failed to get workload")
+				item := v.pCache.GetWorkload(expMeta)
+				Assert(t, item == nil, "Workload should not be in pcache or stateMgr")
+			},
+		},
+		{
+			name: "workload with tags",
+			events: []defs.Probe2StoreMsg{
+				{
+					VcObject:   defs.VirtualMachine,
+					Key:        "virtualmachine-41",
+					Originator: "127.0.0.1:8990",
+					Changes: []types.PropertyChange{
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAssign, // same as add
+							Name: "config",
+							Val: types.VirtualMachineConfigInfo{
+								Name: "test-vm",
+							},
+						},
+						types.PropertyChange{
+							Op:   types.PropertyChangeOpAdd,
+							Name: string(defs.VMPropTag),
+							Val: defs.TagMsg{
+								Tags: []defs.TagEntry{
+									defs.TagEntry{
+										Name:     "tag1",
+										Category: "cat1",
+									},
+									defs.TagEntry{
+										Name:     "tag2",
+										Category: "cat1",
+									},
+									defs.TagEntry{
+										Name:     "tag1",
+										Category: "cat2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			verify: func(v *VCHStore) {
+				expMeta := &api.ObjectMeta{
+					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Labels: map[string]string{
+						"vcenter.cat1":      "tag1:tag2",
+						"vcenter.cat2":      "tag1",
+						"vcenter.vm-name":   "test-vm",
+						"vcenter.orch-name": "127.0.0.1:8990",
+					},
+				}
+				expWorkload := &workload.Workload{
+					TypeMeta: api.TypeMeta{
+						Kind:       "Workload",
+						APIVersion: "v1",
+					},
+					ObjectMeta: *expMeta,
+				}
+
+				item := v.pCache.GetWorkload(expMeta)
+				Assert(t, item != nil, "Workload not in pcache")
+				AssertEquals(t, expWorkload.ObjectMeta, item.ObjectMeta, "workloads are not same")
 			},
 		},
 		{
@@ -376,7 +540,7 @@ func TestStoreRun(t *testing.T) {
 								Network: &types.HostNetworkInfo{
 									Pnic: []types.PhysicalNic{
 										types.PhysicalNic{
-											Mac: "aaaa:bbbb:cccc",
+											Mac: "aa:bb:cc:dd:ee:ff",
 										},
 									},
 								},
@@ -385,11 +549,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 				expHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -400,15 +562,15 @@ func TestStoreRun(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aaaa:bbbb:cccc",
+								MACAddress: "aa:bb:cc:dd:ee:ff",
 							},
 						},
 					},
 				}
 
-				hostAPI := s.Controller().Host()
+				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
-				Assert(t, err == nil, "Failed to get host")
+				Assert(t, err == nil, "Failed to get host: err %v", err)
 				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
 			},
 		},
@@ -427,7 +589,7 @@ func TestStoreRun(t *testing.T) {
 								Network: &types.HostNetworkInfo{
 									Pnic: []types.PhysicalNic{
 										types.PhysicalNic{
-											Mac: "aaaa:bbbb:dddd",
+											Mac: "aa:bb:cc:dd:dd:ff",
 										},
 									},
 								},
@@ -436,11 +598,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -451,7 +611,7 @@ func TestStoreRun(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aaaa:bbbb:cccc",
+								MACAddress: "aa:bb:cc:dd:ee:ff",
 							},
 						},
 					},
@@ -465,13 +625,13 @@ func TestStoreRun(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aaaa:bbbb:dddd",
+								MACAddress: "aa:bb:cc:dd:dd:ff",
 							},
 						},
 					},
 				}
 
-				hostAPI := s.Controller().Host()
+				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
 				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
@@ -493,7 +653,7 @@ func TestStoreRun(t *testing.T) {
 								Network: &types.HostNetworkInfo{
 									Pnic: []types.PhysicalNic{
 										types.PhysicalNic{
-											Mac: "aaaa:bbbb:cccc",
+											Mac: "aa:bb:cc:dd:ee:ff",
 										},
 									},
 								},
@@ -502,11 +662,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -517,13 +675,13 @@ func TestStoreRun(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aaaa:bbbb:cccc",
+								MACAddress: "aa:bb:cc:dd:ee:ff",
 							},
 						},
 					},
 				}
 
-				hostAPI := s.Controller().Host()
+				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
 				Assert(t, h.ObjectMeta.Name == existingHost.ObjectMeta.Name, "hosts are not same")
@@ -544,14 +702,12 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 
-				hostAPI := s.Controller().Host()
+				hostAPI := v.stateMgr.Controller().Host()
 				_, err := hostAPI.Find(expMeta)
 				Assert(t, err != nil, "Failed to get host")
 			},
@@ -571,14 +727,12 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(s *statemgr.Statemgr) {
+			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-hostsystem-41",
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 
-				hostAPI := s.Controller().Host()
+				hostAPI := v.stateMgr.Controller().Host()
 				_, err := hostAPI.Find(expMeta)
 				Assert(t, err != nil, "Failed to get host")
 			},
@@ -594,11 +748,14 @@ func TestStoreRun(t *testing.T) {
 		return
 	}
 
+	pCache := pcache.NewPCache(sm, logger)
 	store := &VCHStore{
 		ctx:      ctx,
 		Log:      logger,
 		stateMgr: sm,
+		pCache:   pCache,
 	}
+	pCache.SetValidator("Workload", store.validateWorkload)
 
 	for _, tc := range testCases {
 		if len(forceTestName) != 0 && tc.name != forceTestName {
@@ -614,8 +771,8 @@ func TestStoreRun(t *testing.T) {
 			inbox <- e
 		}
 		// Time for events to process
-		time.Sleep(10 * time.Millisecond)
-		tc.verify(store.stateMgr)
+		time.Sleep(20 * time.Millisecond)
+		tc.verify(store)
 
 		// Terminating store instance
 		cancelFn()

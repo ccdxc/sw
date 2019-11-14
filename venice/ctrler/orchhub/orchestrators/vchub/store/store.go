@@ -6,6 +6,7 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -19,18 +20,25 @@ type VCHStore struct {
 	stateMgr *statemgr.Statemgr
 	inbox    <-chan defs.Probe2StoreMsg
 	outbox   chan<- defs.Store2ProbeMsg
+	pCache   *pcache.PCache
 }
 
 // NewVCHStore returns an instance of VCHStore
 func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger) *VCHStore {
 	logger := l.WithContext("submodule", "VCStore")
+	pCache := pcache.NewPCache(stateMgr, logger)
 
-	return &VCHStore{
+	vstore := &VCHStore{
 		Log:      logger,
 		stateMgr: stateMgr,
 		inbox:    inbox,
 		outbox:   outbox,
+		pCache:   pCache,
 	}
+
+	pCache.SetValidator("Workload", vstore.validateWorkload)
+
+	return vstore
 }
 
 // Start starts the worker pool

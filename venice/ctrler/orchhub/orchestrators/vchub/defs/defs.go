@@ -71,3 +71,16 @@ type Store2ProbeMsg struct {
 	// what to cast val to.
 	Val interface{}
 }
+
+// TagEntry is an item of a TagMsg
+type TagEntry struct {
+	// Tag display name in vcenter
+	Name string
+	// category display name in vcenter
+	Category string
+}
+
+// TagMsg specifies the tag probe to store object
+type TagMsg struct {
+	Tags []TagEntry
+}

@@ -13,6 +13,28 @@ import (
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
+const workloadKind = "Workload"
+
+func (v *VCHStore) validateWorkload(in interface{}) bool {
+	obj, ok := in.(*workload.Workload)
+	if !ok {
+		return false
+	}
+	if len(obj.Spec.HostName) == 0 {
+		return false
+	}
+	hostMeta := &api.ObjectMeta{
+		Name: obj.Spec.HostName,
+	}
+	// check that host has been created already
+	if _, err := v.stateMgr.Controller().Host().Find(hostMeta); err != nil {
+		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
+		return false
+	}
+	// TODO: Add check that workload is no longer in pvlan mode
+	return true
+}
+
 func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 	v.Log.Infof("Got handle workload event")
 	meta := &api.ObjectMeta{
@@ -21,19 +43,14 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
 	}
-	var workloadObj, existingWorkload *workload.Workload
-	ctkitWorkload, err := v.stateMgr.Controller().Workload().Find(meta)
-	if err != nil {
-		existingWorkload = nil
-	} else {
-		existingWorkload = &ctkitWorkload.Workload
-	}
+	var workloadObj *workload.Workload
+	existingWorkload := v.pCache.GetWorkload(meta)
 
 	if existingWorkload == nil {
 		v.Log.Infof("Existing workload is nil")
 		workloadObj = &workload.Workload{
 			TypeMeta: api.TypeMeta{
-				Kind:       "Workload",
+				Kind:       workloadKind,
 				APIVersion: "v1",
 			},
 			ObjectMeta: *meta,
@@ -41,6 +58,11 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 	} else {
 		temp := ref.DeepCopy(*existingWorkload).(workload.Workload)
 		workloadObj = &temp
+	}
+
+	if workloadObj.Labels == nil {
+		workloadObj.Labels = map[string]string{}
+		addOrchNameLabel(workloadObj.Labels, m.Originator)
 	}
 
 	toDelete := false
@@ -57,6 +79,8 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 				v.processVMName(workloadObj, prop)
 			case defs.VMPropRT:
 				v.processVMRuntime(workloadObj, prop, m.Originator)
+			case defs.VMPropTag:
+				v.processTags(workloadObj, prop, m.Originator)
 			case defs.VMPropOverallStatus:
 			case defs.VMPropCustom:
 			default:
@@ -66,38 +90,25 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 		}
 	}
 	if toDelete {
-		if existingWorkload == nil {
-			return
-		}
-		// Delete from apiserver
-		v.stateMgr.Controller().Workload().Delete(workloadObj)
+		v.pCache.Delete(workloadKind, workloadObj)
 		return
 	}
-	// If different, write to apiserver
-	if reflect.DeepEqual(workloadObj, existingWorkload) {
-		// Nothing to do
-		return
-	}
-	// TODO: Add retry to apiserver write
-	// It's possible we received the VM event before
-	// the event for creating the host in APIserver,
-	// or apiserver is temporarily down
-	if existingWorkload == nil {
-		v.Log.Infof("existing workload is nil")
-		v.stateMgr.Controller().Workload().Create(workloadObj)
-	} else {
-		v.Log.Infof("existing workload is not nil. calling update")
-		v.stateMgr.Controller().Workload().Update(workloadObj)
-	}
+
+	v.pCache.Set(workloadKind, workloadObj)
 }
 
-func (v *VCHStore) processVMRuntime(workload *workload.Workload, prop types.PropertyChange, VCId string) {
+func (v *VCHStore) processTags(workload *workload.Workload, prop types.PropertyChange, vcID string) {
+	// Ovewrite old labels with new tags. API hook will ensure we don't overwrite user added tags.
+	tagMsg := prop.Val.(defs.TagMsg)
+	workload.Labels = generateLabelsFromTags(workload.Labels, tagMsg)
+}
+
+func (v *VCHStore) processVMRuntime(workload *workload.Workload, prop types.PropertyChange, vcID string) {
 	if prop.Val == nil {
 		return
 	}
 	rt := prop.Val.(types.VirtualMachineRuntimeInfo)
-	// TODO: add naming convention
-	host := rt.Host.Value
+	host := createGlobalKey(vcID, rt.Host.Value)
 	workload.Spec.HostName = host
 }
 
@@ -110,10 +121,7 @@ func (v *VCHStore) processVMName(workload *workload.Workload, prop types.Propert
 	if len(name) == 0 {
 		return
 	}
-	if workload.ObjectMeta.Labels == nil {
-		workload.ObjectMeta.Labels = make(map[string]string)
-	}
-	workload.ObjectMeta.Labels["vm-name"] = name
+	addVMNameLabel(workload.Labels, name)
 }
 
 func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.PropertyChange) {
@@ -127,14 +135,10 @@ func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.Prope
 	}
 	interfaces := v.extractInterfaces(vmConfig)
 	workload.Spec.Interfaces = interfaces
-	// TODO: Determine label naming scheme
 	if len(vmConfig.Name) == 0 {
 		return
 	}
-	if workload.ObjectMeta.Labels == nil {
-		workload.ObjectMeta.Labels = make(map[string]string)
-	}
-	workload.ObjectMeta.Labels["vm-name"] = vmConfig.Name
+	addVMNameLabel(workload.Labels, vmConfig.Name)
 }
 
 func (v *VCHStore) extractInterfaces(vmConfig types.VirtualMachineConfigInfo) []workload.WorkloadIntfSpec {

@@ -9,17 +9,12 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
 func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 	meta := &api.ObjectMeta{
-		// TODO: prefix the key
 		Name: createGlobalKey(m.Originator, m.Key),
-		// TODO: Don't use default tenant
-		Tenant:    globals.DefaultTenant,
-		Namespace: globals.DefaultNamespace,
 	}
 	var existingHost, hostObj *cluster.Host
 	ctkitHost, err := v.stateMgr.Controller().Host().Find(meta)

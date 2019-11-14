@@ -7,6 +7,7 @@ import (
 
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/tags"
+	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 )
@@ -16,6 +17,17 @@ const (
 	deleteDelay   = 500 * time.Millisecond
 )
 
+type tagEntry struct {
+	TagName string
+	CatName string
+	CatID   string
+}
+
+type itemKey struct {
+	tagID string
+	catID string
+}
+
 // tagsProbe is responsible for keeping the tag information
 // in sync using the REST interface. It assumes single
 // thread
@@ -23,9 +35,10 @@ type tagsProbe struct {
 	vcInst
 	tc       *tags.Manager
 	outbox   chan<- defs.Probe2StoreMsg
-	vmsOnTag map[string]*DeltaStrSet // vms that have this tagID
-	vmInfo   map[string]*DeltaStrSet // tags on a VM
-	tagName  map[string]string       // tagID to name
+	vmsOnKey map[itemKey]*DeltaStrSet // vms that have catID:tagID
+	vmInfo   map[string]*DeltaStrSet  // tags on a VM
+	tagMap   map[string]*tagEntry     // catID:tagID to tag info
+	catMap   map[string]string        // catID to cat info
 }
 
 // newTagsProbe creates a new instance of tagsProbe
@@ -36,9 +49,10 @@ func (v *VCProbe) newTagsProbe(ctx context.Context) {
 		vcInst:   v.vcInst,
 		outbox:   v.outbox,
 		tc:       tagCl,
-		vmsOnTag: make(map[string]*DeltaStrSet),
+		vmsOnKey: make(map[itemKey]*DeltaStrSet),
 		vmInfo:   make(map[string]*DeltaStrSet),
-		tagName:  make(map[string]string),
+		tagMap:   make(map[string]*tagEntry),
+		catMap:   make(map[string]string),
 	}
 }
 
@@ -74,6 +88,7 @@ func (t *tagsProbe) pollTags() {
 func (t *tagsProbe) fetchTags() error {
 	tagList, err := t.tc.ListTags(t.ctx)
 	if err != nil {
+		t.Log.Errorf("Tags client list tags failed, %s", err.Error())
 		if strings.Contains(err.Error(), "code: 401") { // auth error
 			loginErr := t.tc.Login(t.ctx, t.vcURL.User)
 			if loginErr != nil {
@@ -82,10 +97,36 @@ func (t *tagsProbe) fetchTags() error {
 		}
 		return err
 	}
+	catList, err := t.tc.GetCategories(t.ctx)
+	if err != nil {
+		t.Log.Errorf("Tags client list categories failed, %s", err.Error())
+		return err
+	}
+	for _, cat := range catList {
+		t.catMap[cat.ID] = cat.Name
+	}
 
 	changedVMs := NewDeltaStrSet([]string{})
 	for _, tagID := range tagList {
 		t.fetchTagInfo(tagID, changedVMs)
+	}
+
+	// Check if any tags have been deleted
+	tagsInUse := make([]string, 0, len(t.vmsOnKey))
+	for key := range t.vmsOnKey {
+		tagsInUse = append(tagsInUse, key.tagID)
+	}
+	tagSet := NewDeltaStrSet(tagsInUse)
+	diffs := tagSet.Diff(tagList)
+	tagsToRemove := diffs.Deletions()
+	for _, rt := range tagsToRemove {
+		entry := t.tagMap[rt]
+		id := createKey(rt, entry.CatID)
+		vms := t.vmsOnKey[id]
+		vms.MarkAllForDeletion()
+		// Remove tag from vms
+		t.updateVMInfo(id, vms)
+		changedVMs.Add(vms.Items())
 	}
 
 	t.genUpdates(changedVMs)
@@ -106,50 +147,61 @@ func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
 		return
 	}
 	tagName := objs[0].Tag.Name
+	catID := objs[0].Tag.CategoryID
+	catName := t.catMap[catID]
+	key := createKey(tagID, catID)
 	for _, obj := range objs[0].ObjectIDs {
 		if obj.Reference().Type == "VirtualMachine" {
 			vmList = append(vmList, obj.Reference().Value)
 		}
 	}
 
-	vmSet := t.vmsOnTag[tagID]
+	vmSet := t.vmsOnKey[key]
 	if vmSet == nil && len(vmList) == 0 {
 		// this tag can be ignored
-		t.Log.Debugf("No vms on tag %s", tagID)
+		t.Log.Debugf("No vms on %s", key)
 		return
 	}
 
 	if vmSet == nil {
 		// new tag
 		vmSet = NewDeltaStrSet(vmList)
-		t.vmsOnTag[tagID] = vmSet
+		t.vmsOnKey[key] = vmSet
 		chSet.Add(vmList)
-		t.updateVMInfo(tagID, vmSet)
-		t.tagName[tagID] = tagName
+		t.updateVMInfo(key, vmSet)
+		t.tagMap[tagID] = &tagEntry{
+			TagName: tagName,
+			CatName: catName,
+			CatID:   catID,
+		}
 		return
 	}
 
-	// if tagName changed, mark the whole vmList as changed
-	if t.tagName[tagID] != tagName {
+	// if tagName or catName changed, mark the whole vmList as changed
+	if t.tagMap[tagID].TagName != tagName || t.tagMap[tagID].CatName != catName {
 		chSet.Add(vmList)
-		t.tagName[tagID] = tagName
+		t.tagMap[tagID] = &tagEntry{
+			TagName: tagName,
+			CatName: catName,
+			CatID:   catID,
+		}
 	}
 
 	// get the changeset on the tag
 	diff := vmSet.Diff(vmList)
 
-	// apply the change to vmsOnTag
+	// apply the change to vmsOnKey
 	vmSet.ApplyDiff(diff)
 
 	// update each VM's tag info
-	t.updateVMInfo(tagID, diff)
+	t.updateVMInfo(key, diff)
 
 	// add vms to changeset to enable notifications
 	chSet.Add(diff.Items())
 }
 
 // updateVMInfo updates tags of vms in the change set
-func (t *tagsProbe) updateVMInfo(tagID string, d *DeltaStrSet) {
+func (t *tagsProbe) updateVMInfo(id itemKey, d *DeltaStrSet) {
 	for _, vmKey := range d.Additions() {
 		vm := t.vmInfo[vmKey]
 		if vm == nil {
@@ -157,17 +209,57 @@ func (t *tagsProbe) updateVMInfo(tagID string, d *DeltaStrSet) {
 			t.vmInfo[vmKey] = vm
 		}
 
-		vm.AddSingle(tagID)
+		vm.AddSingle(id.tagID)
 	}
 
 	for _, vmKey := range d.Deletions() {
 		vm := t.vmInfo[vmKey]
 		if vm != nil {
-			vm.RemoveSingle(tagID)
+			vm.RemoveSingle(id.tagID)
 		}
 	}
 }
 
 // genUpdates generates update notifications for changed VMs
 func (t *tagsProbe) genUpdates(chSet *DeltaStrSet) {
+	changedVms := chSet.Items()
+	for _, vm := range changedVms {
+		tagSet, ok := t.vmInfo[vm]
+		if !ok {
+			continue
+		}
+
+		tags := tagSet.Items()
+		var tagEntries []defs.TagEntry
+		for _, id := range tags {
+			entry := defs.TagEntry{
+				Name:     t.tagMap[id].TagName,
+				Category: t.catMap[t.tagMap[id].CatID],
+			}
+			tagEntries = append(tagEntries, entry)
+		}
+
+		pc := []types.PropertyChange{
+			{
+				Name: string(defs.VMPropTag),
+				Op:   "set",
+				Val:  defs.TagMsg{Tags: tagEntries},
+			},
+		}
+		m := defs.Probe2StoreMsg{
+			VcObject:   defs.VirtualMachine,
+			Key:        vm,
+			Changes:    pc,
+			Originator: t.VcID,
+		}
+		t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, pc)
+		t.outbox <- m
+	}
+}
+
+func createKey(tagID, catID string) itemKey {
+	return itemKey{
+		tagID: tagID,
+		catID: catID,
+	}
 }
