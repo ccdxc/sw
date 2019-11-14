@@ -36,14 +36,14 @@ public:
     /// \return     pointer to the allocated subnet, NULL if no memory
     subnet_entry *alloc(void);
 
-    /// \brief    insert given vpc instance into the vpc db
+    /// \brief    insert given subnet instance into the subnet db
     /// \param[in] subnet    subnet entry to be added to the db
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(subnet_entry *subnet);
 
     /// \brief     remove the (singleton) instance of device object from db
-    /// \param[in] vpc    vpc entry to be deleted from the db
-    /// \return    pointer to the removed vpc instance or NULL, if not found
+    /// \param[in] subnet    subnet entry to be deleted from the db
+    /// \return    pointer to the removed subnet instance or NULL, if not found
     subnet_entry *remove(subnet_entry *subnet);
 
     /// \brief      free subnet instance back to slab

@@ -111,10 +111,12 @@ message NatPortBlockSpec {
   uint32          Id         = 1;
   // VPC identifier this port block is tied to
   uint32          VpcId      = 2;
+  // IP protocol this port block is to be used for
+  uint32          Protocol   = 3;
   // NAT address to be used with this port block
-  types.Address   NatAddress = 3;
+  types.Address   NatAddress = 4;
   // range of ports to be use for NAT
-  types.PortRange Ports      = 4;
+  types.PortRange Ports      = 5;
 }
 
 // operational status of NAT port block

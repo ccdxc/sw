@@ -30,6 +30,7 @@
 #include "nic/apollo/api/vpc_peer_state.hpp"
 #include "nic/apollo/api/nexthop_state.hpp"
 #include "nic/apollo/api/nexthop_group_state.hpp"
+#include "nic/apollo/api/policer_state.hpp"
 
 using std::string;
 
@@ -55,6 +56,7 @@ enum {
     PDS_STATE_VPC_PEER,
     PDS_STATE_NEXTHOP,
     PDS_STATE_NEXTHOP_GROUP,
+    PDS_STATE_POLICER,
     PDS_STATE_MAX,
 };
 
@@ -152,6 +154,9 @@ public:
     }
     nexthop_group_state *nexthop_group_db(void) {
         return (nexthop_group_state *)state_[PDS_STATE_NEXTHOP_GROUP];
+    }
+    policer_state *policer_db(void) {
+        return (policer_state *)state_[PDS_STATE_POLICER];
     }
 
 private:
@@ -276,6 +281,12 @@ static inline nexthop_group_state *
 nexthop_group_db (void)
 {
     return api::g_pds_state.nexthop_group_db();
+}
+
+static inline policer_state *
+policer_db (void)
+{
+    return api::g_pds_state.policer_db();
 }
 
 #endif    // __PDS_STATE_HPP__
