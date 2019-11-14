@@ -46,6 +46,9 @@ namespace psp {
 #include "adminq.hpp"
 #include "edmaq.hpp"
 
+using namespace sdk::platform::capri;
+using namespace sdk::platform::utils;
+
 #define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
 
 // ----------------------------------------------------------------------------
@@ -497,6 +500,9 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Init the stats region
     MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
+    p4plus_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
+    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
+    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
 
     state = LIF_STATE_INIT;
 
@@ -2041,6 +2047,9 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
             switch (cmd->stats_ctl) {
                 case STATS_CTL_RESET:
                     MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
+                    p4plus_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
+                    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
+                    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
                     break;
                 default:
                     NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_LIF_ATTR_STATS_CTRL", hal_lif_info_.name, cmd->stats_ctl);

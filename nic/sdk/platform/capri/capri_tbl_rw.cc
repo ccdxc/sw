@@ -1651,7 +1651,7 @@ capri_hbm_table_entry_write (uint32_t tableid,
     return CAPRI_OK;
 }
 
-static void
+void
 p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes, p4pd_table_cache_t cache)
 {
     while ((int)size_in_bytes > 0) {

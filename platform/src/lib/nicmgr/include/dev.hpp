@@ -13,8 +13,6 @@
 
 #include "nic/include/globals.hpp"
 
-#include "platform/capri/capri_tbl_rw.hpp"
-
 #include "pal_compat.hpp"
 
 #include "nic/sdk/platform/evutils/include/evutils.h"

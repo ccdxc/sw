@@ -2051,7 +2051,7 @@ eth_stats(uint16_t lif)
     struct lif_stats stats;
 
     std::string mpart_json = mpart_cfg_path();
-    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    mpartition *mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
 
     uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
@@ -2160,13 +2160,16 @@ void
 eth_stats_reset(uint16_t lif)
 {
     std::string mpart_json = mpart_cfg_path();
-    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    mpartition *mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
 
     uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
 
     printf("\naddr: 0x%lx\n\n", addr);
     sdk::lib::pal_mem_set(addr, 0, sizeof(struct lif_stats), 0);
+    p4plus_invalidate_cache(addr, sizeof(struct lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
+    p4_invalidate_cache(addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
+    p4_invalidate_cache(addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
 }
 
 void
@@ -2440,7 +2443,7 @@ void
 pd_init()
 {
     int ret;
-    sdk::platform::capri::capri_state_pd_init(NULL);
+    capri_state_pd_init(NULL);
 
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
@@ -2525,7 +2528,7 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_show(uint32_t hw_lif_id)
     eth_rx_rss_indir_actiondata_t data;
 
     std::string mpart_json = mpart_cfg_path();
-    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    mpartition *mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
 
     if (hw_lif_id >= MAX_LIFS) {
