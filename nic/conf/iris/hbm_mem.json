@@ -87,8 +87,7 @@
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "32768K",
-            "cache": "p4plus-all"
+            "size": "32768K"
         },
         {
             "name": "ipsec-cb",
@@ -380,8 +379,7 @@
         },
         {
             "name": "rdma",
-            "size": "280576K",
-            "cache": "p4plus-all"
+            "size": "280576K"
         },
         {
             "name": "rdma-atomic-resource-addr",
