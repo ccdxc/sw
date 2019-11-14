@@ -25,11 +25,13 @@ read_qstate_info:
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
                     d.{read_qstate_info_d.ring_size}.hx, 1
 
+    // initialize txdma_to_p4e heaader
+    phvwr       p.txdma_to_p4e_nexthop_type, NEXTHOP_TYPE_NEXTHOP
+
     phvwr       p.txdma_predicate_cps_path_en, TRUE
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
     phvwr       p.txdma_control_pktdesc_addr1, r3
-
     addi        r3, r3, 64
     phvwr       p.txdma_control_pktdesc_addr2, r3
 

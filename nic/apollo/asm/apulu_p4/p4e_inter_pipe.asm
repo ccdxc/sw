@@ -9,7 +9,7 @@ struct phv_                 p;
 %%
 
 p4e_inter_pipe:
-    phvwr           p.capri_txdma_intrinsic_valid, FALSE
+    phvwr           p.{txdma_to_p4e_valid,capri_txdma_intrinsic_valid}, 0
     sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
     phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq

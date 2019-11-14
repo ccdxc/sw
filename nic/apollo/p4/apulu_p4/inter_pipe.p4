@@ -206,6 +206,7 @@ action egress_recirc() {
 
 action p4e_inter_pipe() {
     remove_header(capri_txdma_intrinsic);
+    remove_header(txdma_to_p4e);
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     } else {

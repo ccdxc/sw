@@ -33,15 +33,17 @@ pkt_dma:
     phvwr           p.capri_intr_tm_oport, TM_PORT_EGRESS
 
     // DMA Commands
-    //   1) Global Intrinsic, Intrinsic P4, TXDMA Intr
+    //   1) Global Intrinsic, Intrinsic P4, TXDMA Intr, TxDMA to P4E
     //   2) Packet Payload (mem2pkt)
     //   3) CI Update (consume the event) and DB Sched Eval
     //   4) Update the rxdma copy of cindex once every 64 pkts
 
-    //  1) Global Intrinsic, Intrinsic P4, TXDMA Intr
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd,
-                                capri_intr_tm_iport, \
-                                capri_txdma_intr_txdma_rsv)
+    //  1) Global Intrinsic, Intrinsic P4, TXDMA Intr, TxDMA to P4E
+    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd,
+                                 capri_intr_tm_iport, \
+                                 capri_txdma_intr_txdma_rsv,
+                                 txdma_to_p4e_pad,
+                                 txdma_to_p4e_meter_id)
 
     // 2) DMA command for payload
     // mem2pkt has an implicit fence. all subsequent dma is blocked

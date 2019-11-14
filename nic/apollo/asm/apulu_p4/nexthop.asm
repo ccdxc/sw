@@ -32,10 +32,7 @@ nexthop_tx_rewrite:
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_TUNNEL
-    phvwrpair.c1    p.ethernet_1_dstAddr[47:40], \
-                        k.rewrite_metadata_tunnel_dmaci_s0_e7, \
-                        p.ethernet_1_dstAddr[39:0], \
-                        k.rewrite_metadata_tunnel_dmaci_s8_e47
+    phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_tunnel_dmaci
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SMAC_BITS], \
                         TX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac

@@ -30,6 +30,7 @@ header mirror_blob_t mirror_blob;
 @pragma pa_field_union ingress p4i_to_rxdma.flow_dport              key_metadata.dport
 @pragma pa_field_union ingress p4i_to_rxdma.vpc_id                  vnic_metadata.vpc_id
 header apulu_p4i_to_rxdma_header_t p4i_to_rxdma;
+header apulu_txdma_to_p4e_header_t txdma_to_p4e;
 
 @pragma synthetic_header
 @pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_sport    key_metadata.sport
@@ -53,6 +54,7 @@ header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 @pragma pa_field_union ingress p4i_to_arm.l4_1_offset               offset_metadata.l4_1
 @pragma pa_field_union ingress p4i_to_arm.l4_2_offset               offset_metadata.l4_2
 header apulu_p4_to_arm_header_t p4i_to_arm;
+
 header apulu_p4_to_arm_header_t p4e_to_arm;
 header apulu_arm_to_p4_header_t arm_to_p4i;
 
@@ -375,6 +377,7 @@ parser parse_egress_recirc_header {
 @pragma xgress egress
 parser parse_txdma_to_egress {
     extract(capri_txdma_intrinsic);
+    extract(txdma_to_p4e);
     extract(p4e_to_arm);
     return parse_egress;
 }
