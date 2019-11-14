@@ -230,6 +230,15 @@ enum LifType {
   LIF_TYPE_SWM                      = 7;
 }
 
+// types of NAT actions supported
+enum NatAction {
+  NAT_ACTION_NONE   = 0;
+  // Address only static NAT
+  NAT_ACTION_STATIC = 1;
+  // NAPT - Address and Port Translation
+  NAT_ACTION_NAPT   = 2;
+}
+
 // BatchCtxt is opaque to application(s) and is expected to be passed
 // back (to identify the batch) in every API call of this batch until
 // BatchCommit() or BatchAbort()

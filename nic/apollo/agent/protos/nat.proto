@@ -25,20 +25,11 @@ message NatPool {
   types.PortRange        Ports     = 2;
 }
 
-// types of NAT actions supported
-enum NatAction {
-  NAT_TYPE_NONE                 = 0;
-  // Address only static NAT
-  NAT_TYPE_STATIC_ADDRESS       = 1;
-  // NAPT - Address and Port Translation
-  NAT_TYPE_DYNAMIC_ADDRESS_PORT = 2;
-}
-
 message NatRuleAction {
   // source NAT action
-  NatAction SrcNatAction = 1;
+  types.NatAction SrcNatAction = 1;
   // NAT pool to use
-  NatPool   NatPool      = 2;
+  NatPool         NatPool      = 2;
 }
 
 message NatRule {

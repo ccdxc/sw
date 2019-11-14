@@ -18,6 +18,19 @@ service RouteSvc {
   rpc RouteTableDelete (RouteTableDeleteRequest) returns (RouteTableDeleteResponse) {}
 }
 
+message NATNexthop {
+  // if SrcNatAction is set to NAT_ACTION_STATIC, floating IP of the
+  // local IP mapping is used to NAT the source IP or else (NAT IP, NAT port)
+  // are dynamically allocated in s/w datapath
+  // NOTE: Floating IP (i.e., public IP in local mapping object is always
+  //       preffered over NAPT port block
+  types.NatAction SrcNatAction = 1;
+  // DstNatIP is set, if 1:1 destination NAT needs to be done
+  // NOTE: if DNAT is done, using the DNAT IP route lookup will be done
+  //       in the same routing table to get forwarding information this time
+  types.IPAddress DstNatIP     = 2;
+}
+
 // route object
 message Route {
   types.IPPrefix      Prefix         = 1;
@@ -35,8 +48,13 @@ message Route {
       uint32          TunnelId       = 6;
       // vnic this prefix is pointing to
       uint32          VnicId         = 7;
-      // TODO: NAT
+      // NAT nexthop
+      NATNexthop      NatNexthop     = 8;
   }
+  // if Meter is on, when traffic from a vnic hist the route and
+  // vnic's meter id (if configured) will be used to account
+  // packet & byte count
+  bool                Meter          = 9;
 }
 
 // route table specification
