@@ -139,7 +139,8 @@ header icrc_t icrc;
 
 header gre_t gre;
 header nvgre_t nvgre;
-header erspan_header_t3_t erspan_t3;
+header erspan_t3_t erspan_t3;
+header erspan_t3_opt_t erspan_t3_opt;
 
 @pragma pa_header_union ingress inner_udp icmp
 header tcp_t tcp;
@@ -1505,6 +1506,14 @@ parser parse_nvgre {
 
 parser parse_erspan_t3 {
     extract(erspan_t3);
+    return select(latest.options) {
+        0 : parse_inner_ethernet;
+        default : parse_erspan_t3_opt;
+    }
+}
+
+parser parse_erspan_t3_opt {
+    extract(erspan_t3_opt);
     return parse_inner_ethernet;
 }
 

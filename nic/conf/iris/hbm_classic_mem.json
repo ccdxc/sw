@@ -551,6 +551,11 @@
             "name": "port_stats",
             "size": "3K",
             "reset": true
+        },
+        {
+            "name": "clock",
+            "size": "64B",
+            "cache": "p4eg"
         }
     ]
 }

@@ -106,7 +106,6 @@ pd_crypto_asym_alloc_key(pd_func_args_t *pd_func_args)
 
 {
     sdk_ret_t              sdk_ret;
-    uint64_t        key_desc;
     pd_crypto_asym_alloc_key_args_t *args = pd_func_args->pd_crypto_asym_alloc_key;
     hal_ret_t       ret = HAL_RET_OK;
     int32_t *key_idx = args->key_idx;
@@ -150,7 +149,6 @@ hal_ret_t pd_crypto_asym_write_key(pd_func_args_t *pd_func_args)
     hal_ret_t                       ret = HAL_RET_OK;
     pd_crypto_asym_write_key_args_t *args = pd_func_args->pd_crypto_asym_write_key;
     capri_barco_asym_key_desc_t     key_desc;
-    uint64_t                        key_desc_addr = 0;
     int32_t key_idx = args->key_idx;
     crypto_asym_key_t *key = args->key;
 

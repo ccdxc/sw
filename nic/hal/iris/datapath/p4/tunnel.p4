@@ -494,6 +494,7 @@ action f_insert_erspan_t3_header(mac_sa, mac_da) {
     copy_header(inner_ethernet, ethernet);
     add_header(gre);
     add_header(erspan_t3);
+    add_header(erspan_t3_opt);
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
     modify_field(gre.C, 0);
@@ -505,28 +506,53 @@ action f_insert_erspan_t3_header(mac_sa, mac_da) {
     modify_field(gre.flags, 0);
     modify_field(gre.ver, 0);
     modify_field(gre.proto, GRE_PROTO_ERSPAN_T3);
-    modify_field(erspan_t3.timestamp, capri_intrinsic.timestamp);
     modify_field(erspan_t3.version, 2);
     modify_field(erspan_t3.sgt, 0);
     if (capri_intrinsic.tm_iport == TM_PORT_EGRESS) {
         modify_field(erspan_t3.direction, 1);
     }
     modify_field(erspan_t3.granularity, 0x3);
+    if (control_metadata.current_time_in_ns != 0) {
+        modify_field(erspan_t3.options, 1);
+        modify_field(erspan_t3_opt.platf_id, 0x3);
+        modify_field(erspan_t3_opt.port_id, capri_intrinsic.lif);
+        modify_field(erspan_t3.timestamp, control_metadata.current_time_in_ns);
+        modify_field(erspan_t3_opt.timestamp,
+                     control_metadata.current_time_in_ns >> 32);
+    }
 }
 
 action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     f_insert_erspan_t3_header(mac_sa, mac_da);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 36);
+        if (control_metadata.current_time_in_ns != 0) {
+            /* IPv4 header (20) + GRE (4) + ERSPAN (12) + ERSPAN options (8) */
+            modify_field(scratch_metadata.packet_len, 44);
+        } else {
+            /* IPv4 header (20) + GRE (4) + ERSPAN (12) */
+            modify_field(scratch_metadata.packet_len, 36);
+        }
+        add(ipv4.totalLen, capri_p4_intrinsic.packet_len,
+            scratch_metadata.packet_len);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
-        add_to_field(capri_p4_intrinsic.packet_len, 50);
+        add_to_field(capri_p4_intrinsic.packet_len,
+                     scratch_metadata.packet_len + 14);
     } else {
 #ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 16);
+        if (control_metadata.current_time_in_ns != 0) {
+            /* GRE (4) + ERSPAN (12) + ERSPAN options (8) */
+            modify_field(scratch_metadata.packet_len, 24);
+        } else {
+            /* GRE (4) + ERSPAN (12) */
+            modify_field(scratch_metadata.packet_len, 16);
+        }
+        add(ipv6.payloadLen, capri_p4_intrinsic.packet_len,
+            scratch_metadata.packet_len);
         modify_field(ethernet.etherType, ETHERTYPE_IPV6);
-        add_to_field(capri_p4_intrinsic.packet_len, 70);
+        add_to_field(capri_p4_intrinsic.packet_len,);
+                     scratch_metadata.packet_len + 40 + 14);
 #endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {

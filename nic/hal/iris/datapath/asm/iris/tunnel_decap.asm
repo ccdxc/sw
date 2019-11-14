@@ -30,11 +30,9 @@ remove_tunnel_hdrs:
   seq         c1, k.mpls_0_valid, TRUE
   add.c1      r1, r1, (14 - 8 - 4)
 
-  phvwr       p.capri_p4_intrinsic_packet_len, r1
-  .assert(offsetof(p, vxlan_valid) - offsetof(p, mpls_0_valid) == 3)
-  phvwr.e     p.{vxlan_valid...mpls_0_valid}, 0
-  .assert(offsetof(p, nvgre_valid) - offsetof(p, gre_valid) == 2)
-  phvwrmi     p.{nvgre_valid...gre_valid}, 0, 0x5
+  phvwr.e     p.capri_p4_intrinsic_packet_len, r1
+  phvwr.f     p.{nvgre_valid,gre_valid,vxlan_valid,genv_valid, \
+                vxlan_gpe_valid,mpls_0_valid}, 0
 
 /*****************************************************************************/
 /* error function                                                            */

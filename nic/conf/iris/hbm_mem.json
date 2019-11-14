@@ -575,6 +575,11 @@
             "name": "qos-dscp-cos-map",
             "size": "64B",
             "reset": true
+        },
+        {
+            "name": "clock",
+            "size": "64B",
+            "cache": "p4eg"
         }
     ]
 }

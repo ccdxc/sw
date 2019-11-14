@@ -20,8 +20,9 @@ encap_vxlan:
   add         r7, r5, 16
 
   // ethernet headers
-  phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
-                  k.{ethernet_dstAddr...ethernet_etherType}
+  phvwrpair   p.inner_ethernet_dstAddr, k.ethernet_dstAddr, \
+                p.{inner_ethernet_srcAddr,inner_ethernet_etherType}, \
+                k.{ethernet_srcAddr,ethernet_etherType}
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                 p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -38,10 +39,17 @@ encap_vxlan:
   phvwr       p.{udp_srcPort...udp_checksum}, r2
 
   // set inner_ethernet_valid, vxlan_valid and udp_valid
-  .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 1)
-  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 4)
-  phvwrmi     p.{inner_ethernet_valid, vxlan_valid, genv_valid, \
-                 vxlan_gpe_valid, mpls_0_valid, udp_valid}, 0x3F, 0x31
+  // 10 0001 0001
+  phvwri      p.{inner_ethernet_valid, \
+                 erspan_t3_opt_valid, \
+                 erspan_t3_valid, \
+                 nvgre_valid, \
+                 gre_valid, \
+                 vxlan_valid, \
+                 genv_valid, \
+                 vxlan_gpe_valid, \
+                 mpls_0_valid, \
+                 udp_valid}, 0x211
 
   // vlan header
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
@@ -115,22 +123,33 @@ encap_mpls_udp:
 
 .align
 encap_erspan:
-  phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
-                  k.{ethernet_dstAddr...ethernet_etherType}
+  phvwrpair   p.inner_ethernet_dstAddr, k.ethernet_dstAddr, \
+                p.{inner_ethernet_srcAddr,inner_ethernet_etherType}, \
+                k.{ethernet_srcAddr,ethernet_etherType}
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                   p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
   phvwri      p.{gre_C...gre_proto}, GRE_PROTO_ERSPAN_T3
   phvwrpair   p.erspan_t3_version, 0x2, p.erspan_t3_bso, 0
-#ifndef CAPRI_IGNORE_TIMESTAMP
-  phvwr       p.erspan_t3_timestamp, r6
-#endif
   seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
   phvwr.c1    p.erspan_t3_direction, 1
   phvwr       p.erspan_t3_granularity, 0x3
   phvwrpair   p.{erspan_t3_sgt...erspan_t3_hw_id}, 0, \
                   p.{erspan_t3_granularity,erspan_t3_options}, 0x6
 
+  sne         c3, k.control_metadata_current_time_in_ns, r0
+#ifndef CAPRI_IGNORE_TIMESTAMP
+  bcf         [!c3], encap_erspan_timestamp_done
+  phvwr.c3    p.erspan_t3_options, 1
+  phvwr       p.erspan_t3_timestamp, k.control_metadata_current_time_in_ns[31:0]
+  phvwr       p.erspan_t3_opt_valid, 1
+  or          r1, k.control_metadata_current_time_in_ns[63:32], \
+                k.capri_intrinsic_lif, 32
+  or          r1, r1, 0x3, 58
+  phvwr       p.{erspan_t3_opt_platf_id...erspan_t3_opt_timestamp}, r1
+#endif
+
+encap_erspan_timestamp_done:
   phvwr       p.inner_ethernet_valid, 1
   phvwr       p.gre_valid, 1
   phvwr       p.erspan_t3_valid, 1
@@ -141,7 +160,8 @@ encap_erspan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  or          r5, r0, k.capri_p4_intrinsic_packet_len
+  cmov        r5, c3, 8, 0
+  add         r5, r5, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 16
 
   // update capri_p4_intrinsic_packet_len

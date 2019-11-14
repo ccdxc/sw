@@ -14,6 +14,7 @@
 #include "nacl.p4"
 #include "qos.p4"
 #include "roce.p4"
+#include "clock.p4"
 #include "stats.p4"
 #include "mirror.p4"
 #include "tunnel.p4"
@@ -127,6 +128,8 @@ header_type control_metadata_t {
         record_route_dst_ip            : 32;
         record_route_inner_dst_ip      : 32;
         nacl_stats_idx                 : 9;
+        clock_idx                      : 1;
+        current_time_in_ns             : 64;
     }
 }
 
@@ -295,6 +298,11 @@ header_type scratch_metadata_t {
         size8                         : 8;
         size4                         : 4;
         discard_drop                  : 1;
+
+        ticks                         : 64;
+        delta                         : 64;
+        size64                        : 64;
+        pad312                        : 312;
     }
 }
 
