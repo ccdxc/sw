@@ -75,6 +75,7 @@ offloads_insert_vlan_tag:
     phvwr           p.capri_p4_intrinsic_packet_len, r1
 
 offloads_checksum:
+    phvwr           p.capri_gso_csum_gso, k.p4plus_to_p4_gso_valid
     bcf             [!c3], offloads_update_checksum_flags
     crestore.!c3    [c7-c6], 0x3, 0x3
     seq             c1, k.p4plus_to_p4_compute_ip_csum, TRUE

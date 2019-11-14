@@ -144,6 +144,12 @@ header_type offset_metadata_t {
     }
 }
 
+header_type capri_gso_csum_phv_loc_t {
+    fields {
+        gso_checksum            : 16;
+    }
+}
+
 metadata key_metadata_t         key_metadata;
 metadata vnic_metadata_t        vnic_metadata;
 metadata control_metadata_t     control_metadata;
@@ -155,6 +161,10 @@ metadata offset_metadata_t      offset_metadata;
 @pragma deparser_variable_length_header
 @pragma dont_trim
 metadata capri_deparser_len_t   capri_deparser_len;
+
+@pragma gso_csum_header
+@pragma dont_trim
+metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;

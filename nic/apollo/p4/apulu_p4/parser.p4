@@ -103,6 +103,8 @@ header_type parser_ohi_t {
         tcp___start_off     : 16;
         udp_1___start_off   : 16;
         udp_2___start_off   : 16;
+        gso_start           : 16;
+        gso_offset          : 16;
     }
 }
 @pragma parser_write_only
@@ -155,17 +157,21 @@ parser parse_egress_to_ingress {
 @pragma xgress ingress
 parser parse_txdma_to_ingress {
     extract(capri_txdma_intrinsic);
-    return parse_txdma_app;
-}
-
-@pragma xgress ingress
-parser parse_txdma_app {
     extract(p4plus_to_p4);
     extract(p4plus_to_p4_vlan);
-    return select(p4plus_to_p4.p4plus_app_id) {
+    set_metadata(ohi.gso_start, p4plus_to_p4.gso_start + 0);
+    set_metadata(ohi.gso_offset, p4plus_to_p4.gso_offset + 0);
+    return select(p4plus_to_p4.gso_valid, p4plus_to_p4.p4plus_app_id) {
+        0x10 mask 0x10 : parse_txdma_gso;
         P4PLUS_APPTYPE_CPU : parse_cpu_packet;
         default : parse_ingress_packet;
     }
+}
+
+@pragma xgress ingress
+@pragma generic_checksum_start capri_gso_csum.gso_checksum
+parser parse_txdma_gso {
+    return parse_ingress_packet;
 }
 
 @pragma xgress ingress
@@ -942,4 +948,27 @@ calculated_field p4e_to_p4plus_classic_nic.csum {
     update l2_checksum_vlan if (valid(ctag_1));
     update l2_checksum_ipv4 if (valid(ipv4_1));
     update l2_checksum_ipv6 if (valid(ipv6_1));
+}
+
+/******************************************************************************
+ * Checksums : Partial checksum                                               *
+ *****************************************************************************/
+field_list gso_checksum_list {
+    p4plus_to_p4.gso_start;
+    payload;
+}
+
+@pragma checksum update_len capri_gso_csum.gso_checksum
+@pragma checksum gso_checksum_offset p4plus_to_p4.gso_offset
+@pragma checksum gress ingress
+field_list_calculation gso_checksum {
+    input {
+        gso_checksum_list;
+    }
+    algorithm : gso;
+    output_width : 16;
+}
+
+calculated_field capri_gso_csum.gso_checksum {
+    update gso_checksum;
 }

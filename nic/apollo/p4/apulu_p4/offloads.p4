@@ -80,6 +80,9 @@ action offloads() {
         add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
     }
 
+    // copy gso valid to capri_gso_csum.gso
+    modify_field(scratch_metadata.flag, p4plus_to_p4.gso_valid);
+
     // update checksum compute flags
     if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
         if (p4plus_to_p4.compute_ip_csum == 1) {
@@ -110,7 +113,7 @@ table offloads {
 }
 
 control offloads {
-    if (p4plus_to_p4.valid == TRUE) {
+    if ((p4plus_to_p4.valid == TRUE) and (arm_to_p4i.valid == FALSE)) {
         apply(offloads);
     }
 }
