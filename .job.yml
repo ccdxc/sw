@@ -285,11 +285,11 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
       exclude_dirs: ["freebsd","linux"]
     - reference: iota/test/standalone/sanity/freebsd
-      exclude_dirs: ["linux","esx"]
+      exclude_dirs: ["linux","esxi"]
     - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["freebsd","esx"]
+      exclude_dirs: ["freebsd","esxi"]
     - reference: iota/test/standalone/sanity/apulu-linux
-      exclude_dirs: ["freebsd","esx"]
+      exclude_dirs: ["freebsd","esxi"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/captrace:
