@@ -30,6 +30,7 @@ else
   make bundle-image
 
   echo "Copy artifacts..."
+  mv /go/src/github.com/pensando/sw/build_iris_sim.tar.gz /sw/output
   mkdir -p /sw/output/bundle
   mv /go/src/github.com/pensando/sw/bin/bundle/bundle.tar /sw/output/bundle/
   mv /go/src/github.com/pensando/sw/bin/pen-install.iso /sw/output/

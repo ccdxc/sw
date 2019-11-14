@@ -10,6 +10,7 @@ targets:
     build-dependencies:
       - build-venice-image
       - build-iris-arm
+      - build-iris-x86-sim
 
 image:
   bind_dir: "/go/src/github.com/pensando/sw"

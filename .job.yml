@@ -6,6 +6,11 @@ builds:
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/build_iris_x86.tar.gz
+  build-iris-x86-sim:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make jobd/e2e/naples-sim-image && tar -zvcf /sw/build_iris_sim.tar.gz /usr/src/github.com/pensando/sw/nic/obj/images"]
+    owners: ["email:sw-team@pensando.io"]
+    artifacts:
+      - /sw/build_iris_sim.tar.gz
   build-iris-arm:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make naples-firmware && make PIPELINE=iris naples-firmware-tarball-iris"]
     owners: ["email:sw-team@pensando.io"]
