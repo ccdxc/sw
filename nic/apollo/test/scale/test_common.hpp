@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 
 #define TESTAPP_METER_NUM_PREFIXES                         16
@@ -52,6 +53,7 @@ typedef struct test_params_s {
         pds_encap_t fabric_encap;
         bool v4_outer;
         bool dual_stack;
+        pds_device_oper_mode_t dev_oper_mode;
     };
     // underlay config
     struct {
@@ -246,6 +248,12 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                     }
                     printf("TEP encap env var %s, encap %u\n",
                            tep_encap_env, test_params->fabric_encap.type);
+                }
+                str = obj.second.get<std::string>("host-mode", "");
+                if (str.empty() || !str.compare("true")) {
+                    test_params->dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
+                } else {
+                    test_params->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
                 }
             } else if (kind == "tep") {
                 test_params->num_teps =

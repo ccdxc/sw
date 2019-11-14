@@ -8,7 +8,7 @@
             "mac-addr" : "0x000201000001",
             "dual-stack": "true",
             "encap": "vxlan",
-            "host-mode": "true"
+            "host-mode": "false"
         },
         {
             "kind" : "tep",
@@ -41,7 +41,8 @@
             "_comment_" : "per vpc, per subnet vnic scale",
             "kind" : "vnic",
             "count" : "1",
-            "tagged": "false"
+            "tagged": "true",
+            "vlan-start" : "1"
         },
         {
             "kind" : "mappings",

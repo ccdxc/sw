@@ -459,10 +459,6 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
         goto error;
     }
 
-    // TODO: remove later
-    PDS_TRACE_DEBUG("programming local mapping with vnic hw id %u's nh %u",
-                    vnic_impl_obj->hw_id(), vnic_impl_obj->nh_idx());
-
     if (spec->public_ip_valid) {
         // add entry to LOCAL_MAPPING table for public IP
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),

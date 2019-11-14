@@ -535,7 +535,8 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 if (v6_meter_id > (2 * num_meter)) {
                     v6_meter_id = num_meter+1;
                 }
-                if (apulu()) {
+                if (apulu() &&
+                    (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
                     pds_vnic.host_ifindex = LIF_IFINDEX(lif_id++);
                     if (lif_id > HOST_LIF_ID_MAX) {
                         lif_id = HOST_LIF_ID_MIN;
@@ -617,9 +618,11 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_subnet.fabric_encap.val.vnid =
                 num_vpcs + (vpc_id - 1) * num_subnets + i;
-            pds_subnet.host_ifindex = LIF_IFINDEX(lif_id++);
-            if (lif_id > HOST_LIF_ID_MAX) {
-                lif_id = HOST_LIF_ID_MIN;
+            if (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST) {
+                pds_subnet.host_ifindex = LIF_IFINDEX(lif_id++);
+                if (lif_id > HOST_LIF_ID_MAX) {
+                    lif_id = HOST_LIF_ID_MIN;
+                }
             }
         }
         rv = create_subnet(&pds_subnet);
@@ -1164,11 +1167,12 @@ create_device_cfg (ip_addr_t *ipaddr, uint64_t macaddr, ip_addr_t *gwip)
     g_device.device_ip_addr = *ipaddr;
     MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
     g_device.gateway_ip_addr = *gwip;
+    g_device.dev_oper_mode = g_test_params.dev_oper_mode;
     if (apulu()) {
         //g_device.bridging_en = true;
         //g_device.learning_en = true;
-        g_device.dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
     } else {
+        // other pipelines don't support host mode
         g_device.dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
     }
     rv = create_device(&g_device);
