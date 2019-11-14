@@ -165,6 +165,8 @@ dependencies:
     - reference: venice/ui
   dol/apollo:
     - reference: nic/apollo
+  dol/apulu:
+    - reference: nic/apollo
   dol/artemis:
     - reference: nic/apollo
   dol/test/networking:

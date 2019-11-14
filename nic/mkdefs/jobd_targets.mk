@@ -451,3 +451,6 @@ jobd/apulu/gtest_2: ${JOBD_PREREQS}
 jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking --dryrun
 
+.PHONY: jobd/dol/apulu/rfc
+jobd/dol/apulu/rfc: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo rfc_disjoint --feature rfc --sub ipv4_egress_disjoint --dry
