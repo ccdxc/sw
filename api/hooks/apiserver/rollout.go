@@ -260,6 +260,11 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		return nil, false, errors.New("missing version field in rollout object")
 	}
 
+	if buf.Spec.Retry && buf.Spec.MaxNICFailuresBeforeAbort == 0 {
+		h.l.ErrorLog("Max allowed DSC failures cannot be zero with Retry")
+		return nil, false, errors.New("Max allowed DSC failures cannot be zero with Retry")
+	}
+
 	if buf.Spec.ScheduledEndTime != nil {
 		var numVenice uint32
 		var numNaples uint32
