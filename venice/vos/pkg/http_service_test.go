@@ -66,17 +66,17 @@ func TestUploadHandler(t *testing.T) {
 	inst := &instance{}
 	inst.Init(fb)
 	srv := httpHandler{client: fb, instance: inst}
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusBadRequest, "invalid response for bad request [%v]", wr.Code)
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "POST", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusOK, "invalid response for bad request [%v][%v]", wr.Code, wr.Body.String())
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "GET", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusMethodNotAllowed, "invalid response for bad request [%v][%v]", wr.Code, wr.Body.String())
 	httphdr := http.Header{}
 	fb.statObject = 0
@@ -110,7 +110,7 @@ func TestUploadHandler(t *testing.T) {
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "POST", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusOK, "invalid response for good request [%v][%v]", wr.Code, wr.Body.String())
 	fb.putSize = 1024
 	fb.putErr = errors.New("some error")
@@ -118,7 +118,7 @@ func TestUploadHandler(t *testing.T) {
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "POST", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusInternalServerError, "invalid response for good request [%v][%v]", wr.Code, wr.Body.String())
 	sObjs = []*minioclient.ObjectInfo{
 		nil,
@@ -129,7 +129,7 @@ func TestUploadHandler(t *testing.T) {
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "POST", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusInternalServerError, "invalid response for good request [%v][%v]", wr.Code, wr.Body.String())
 
 	fb.statObject = 0
@@ -146,7 +146,7 @@ func TestUploadHandler(t *testing.T) {
 	wr = httptest.NewRecorder()
 	req, err = createUploadReq("/test/", metadata, "file", "file.test", "POST", []byte{})
 	AssertOk(t, err, "failed to create request (%s)", err)
-	srv.uploadHandler(wr, req)
+	srv.uploadHandler(wr, req, "images")
 	Assert(t, wr.Code == http.StatusInternalServerError, "invalid response for good request [%v][%v]", wr.Code, wr.Body.String())
 }
 

@@ -9,6 +9,7 @@
 	It is generated from these files:
 		cluster.proto
 		smartnic.proto
+		snapshot.proto
 		svc_cluster.proto
 		tenant.proto
 
@@ -50,16 +51,28 @@
 		DistributedServiceCardStatus
 		IPConfig
 		MacRange
+		ConfigurationSnapshot
+		ConfigurationSnapshotRequest
+		ConfigurationSnapshotSpec
+		ConfigurationSnapshotStatus
+		SnapshotDestination
+		SnapshotRestore
+		SnapshotRestoreSpec
+		SnapshotRestoreStatus
 		AutoMsgClusterWatchHelper
+		AutoMsgConfigurationSnapshotWatchHelper
 		AutoMsgDistributedServiceCardWatchHelper
 		AutoMsgHostWatchHelper
 		AutoMsgNodeWatchHelper
+		AutoMsgSnapshotRestoreWatchHelper
 		AutoMsgTenantWatchHelper
 		AutoMsgVersionWatchHelper
 		ClusterList
+		ConfigurationSnapshotList
 		DistributedServiceCardList
 		HostList
 		NodeList
+		SnapshotRestoreList
 		TenantList
 		VersionList
 		Tenant

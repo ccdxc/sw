@@ -78,6 +78,8 @@ type Controller interface {
 	DistributedServiceCard() DistributedServiceCardAPI   // return DistributedServiceCard API interface
 	Tenant() TenantAPI                                   // return Tenant API interface
 	Version() VersionAPI                                 // return Version API interface
+	ConfigurationSnapshot() ConfigurationSnapshotAPI     // return ConfigurationSnapshot API interface
+	SnapshotRestore() SnapshotRestoreAPI                 // return SnapshotRestore API interface
 	Module() ModuleAPI                                   // return Module API interface
 	EventPolicy() EventPolicyAPI                         // return EventPolicy API interface
 	StatsPolicy() StatsPolicyAPI                         // return StatsPolicy API interface

@@ -125,7 +125,7 @@ func createBundle() (int, error) {
 	return 0, nil
 }
 
-func uploadFile(ctx context.Context, filename string, metadata map[string]string, content []byte) (int, error) {
+func uploadFile(ctx context.Context, bucket, filename string, metadata map[string]string, content []byte) (int, error) {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -145,7 +145,7 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	if err != nil {
 		return 0, errors.Wrap(err, "closing writer")
 	}
-	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", ts.tu.APIGwAddr)
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/%s/", ts.tu.APIGwAddr, bucket)
 	By(fmt.Sprintf("upload URI [%v]", uri))
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
@@ -286,7 +286,7 @@ func testObjCUDOps(testSearch bool) func() {
 		// Use of Eventually is needed for all operations here because success of one objstore operation does not
 		//  guarantee the next one will succeed, because the call may end up on a node that is rebooting.
 		Eventually(func() error {
-			_, err = uploadFile(ctx, filename, metadata, fileBuf)
+			_, err = uploadFile(ctx, "images", filename, metadata, fileBuf)
 			return err
 		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
 

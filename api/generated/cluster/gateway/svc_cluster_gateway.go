@@ -107,6 +107,33 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoAddConfigurationSnapshot(oldctx oldcontext.Context, t *cluster.ConfigurationSnapshot, options ...grpc.CallOption) (*cluster.ConfigurationSnapshot, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddConfigurationSnapshot", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ConfigurationSnapshot)
+		return a.service.AutoAddConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
 func (a adapterClusterV1) AutoAddDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -186,6 +213,33 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
+}
+
+func (a adapterClusterV1) AutoAddSnapshotRestore(oldctx oldcontext.Context, t *cluster.SnapshotRestore, options ...grpc.CallOption) (*cluster.SnapshotRestore, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddSnapshotRestore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.SnapshotRestore)
+		return a.service.AutoAddSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestore), err
 }
 
 func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -269,6 +323,33 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoDeleteConfigurationSnapshot(oldctx oldcontext.Context, t *cluster.ConfigurationSnapshot, options ...grpc.CallOption) (*cluster.ConfigurationSnapshot, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteConfigurationSnapshot", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ConfigurationSnapshot)
+		return a.service.AutoDeleteConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
 func (a adapterClusterV1) AutoDeleteDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -348,6 +429,33 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
+}
+
+func (a adapterClusterV1) AutoDeleteSnapshotRestore(oldctx oldcontext.Context, t *cluster.SnapshotRestore, options ...grpc.CallOption) (*cluster.SnapshotRestore, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteSnapshotRestore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.SnapshotRestore)
+		return a.service.AutoDeleteSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestore), err
 }
 
 func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -431,6 +539,33 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoGetConfigurationSnapshot(oldctx oldcontext.Context, t *cluster.ConfigurationSnapshot, options ...grpc.CallOption) (*cluster.ConfigurationSnapshot, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetConfigurationSnapshot", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ConfigurationSnapshot)
+		return a.service.AutoGetConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
 func (a adapterClusterV1) AutoGetDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -510,6 +645,33 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 		return nil, err
 	}
 	return ret.(*cluster.Node), err
+}
+
+func (a adapterClusterV1) AutoGetSnapshotRestore(oldctx oldcontext.Context, t *cluster.SnapshotRestore, options ...grpc.CallOption) (*cluster.SnapshotRestore, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetSnapshotRestore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.SnapshotRestore)
+		return a.service.AutoGetSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestore), err
 }
 
 func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
@@ -594,6 +756,36 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 		return nil, err
 	}
 	return ret.(*cluster.ClusterList), err
+}
+
+func (a adapterClusterV1) AutoListConfigurationSnapshot(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.ConfigurationSnapshotList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListConfigurationSnapshot", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshotList), err
 }
 
 func (a adapterClusterV1) AutoListDistributedServiceCard(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.DistributedServiceCardList, error) {
@@ -686,6 +878,36 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 	return ret.(*cluster.NodeList), err
 }
 
+func (a adapterClusterV1) AutoListSnapshotRestore(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.SnapshotRestoreList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListSnapshotRestore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestoreList), err
+}
+
 func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.TenantList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -773,6 +995,33 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 	return ret.(*cluster.Cluster), err
 }
 
+func (a adapterClusterV1) AutoUpdateConfigurationSnapshot(oldctx oldcontext.Context, t *cluster.ConfigurationSnapshot, options ...grpc.CallOption) (*cluster.ConfigurationSnapshot, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateConfigurationSnapshot", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ConfigurationSnapshot)
+		return a.service.AutoUpdateConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
 func (a adapterClusterV1) AutoUpdateDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -854,6 +1103,33 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 	return ret.(*cluster.Node), err
 }
 
+func (a adapterClusterV1) AutoUpdateSnapshotRestore(oldctx oldcontext.Context, t *cluster.SnapshotRestore, options ...grpc.CallOption) (*cluster.SnapshotRestore, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateSnapshotRestore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.SnapshotRestore)
+		return a.service.AutoUpdateSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestore), err
+}
+
 func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster.Tenant, options ...grpc.CallOption) (*cluster.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -906,6 +1182,60 @@ func (a adapterClusterV1) AutoUpdateVersion(oldctx oldcontext.Context, t *cluste
 		return nil, err
 	}
 	return ret.(*cluster.Version), err
+}
+
+func (a adapterClusterV1) Restore(oldctx oldcontext.Context, t *cluster.SnapshotRestore, options ...grpc.CallOption) (*cluster.SnapshotRestore, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1Restore", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("Restore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "SnapshotRestore", t.Tenant, t.Namespace, "cluster", t.Name, "Restore"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.SnapshotRestore)
+		return a.service.Restore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.SnapshotRestore), err
+}
+
+func (a adapterClusterV1) Save(oldctx oldcontext.Context, t *cluster.ConfigurationSnapshotRequest, options ...grpc.CallOption) (*cluster.ConfigurationSnapshot, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1Save", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("Save")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "ConfigurationSnapshot", t.Tenant, t.Namespace, "cluster", t.Name, "Save"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ConfigurationSnapshotRequest)
+		return a.service.Save(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.ConfigurationSnapshot), err
 }
 
 func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.UpdateTLSConfigRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
@@ -1331,6 +1661,120 @@ func (a adapterClusterV1) AutoWatchVersion(oldctx oldcontext.Context, in *api.Li
 	return ret.(cluster.ClusterV1_AutoWatchVersionClient), err
 }
 
+func (a adapterClusterV1) AutoWatchConfigurationSnapshot(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchConfigurationSnapshotClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchConfigurationSnapshot")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "ConfigurationSnapshot", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchConfigurationSnapshot] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchConfigurationSnapshot(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchConfigurationSnapshotClient), err
+}
+
+func (a adapterClusterV1) AutoWatchSnapshotRestore(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSnapshotRestoreClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSnapshotRestore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SnapshotRestore", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchSnapshotRestore] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchSnapshotRestore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchSnapshotRestoreClient), err
+}
+
 func (e *sClusterV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1338,11 +1782,15 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 
+	e.svcProf["AutoAddConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.CreateOper)
+
 	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoDeleteConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.DeleteOper)
 
@@ -1354,11 +1802,15 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoGetConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.GetOper)
+
 	e.svcProf["AutoGetDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.GetOper)
+
+	e.svcProf["AutoGetSnapshotRestore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SnapshotRestore", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.GetOper)
 
@@ -1374,6 +1826,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.UpdateOper)
 
+	e.svcProf["AutoUpdateConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.UpdateOper)
+
 	e.svcProf["AutoUpdateDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.UpdateOper)
@@ -1384,6 +1838,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiintf.WatchOper)
 
+	e.svcProf["AutoWatchConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgConfigurationSnapshotWatchHelper", "cluster", apiintf.WatchOper)
+
 	e.svcProf["AutoWatchDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgDistributedServiceCardWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgHostWatchHelper", "cluster", apiintf.WatchOper)
@@ -1393,6 +1849,10 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgVersionWatchHelper", "cluster", apiintf.WatchOper)
+
+	e.svcProf["Restore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SnapshotRestore", "cluster", apiintf.CreateOper)
+
+	e.svcProf["Save"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.CreateOper)
 
 	e.svcProf["UpdateTLSConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 }

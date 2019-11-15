@@ -3,7 +3,7 @@
 package cluster_test
 
 import (
-	//"context"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -475,6 +475,14 @@ var _ = Describe("venice cluster tests", func() {
 
 			}) */
 
+
+		It("should be able to save and restore configuration", func() {
+			Expect(ts.model.Action().VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
+			ss, err := ts.model.Action().VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
+			Expect(err).To(BeNil())
+			name := string(ss[strings.LastIndex(ss, "/")+1:])
+			Expect(ts.model.Action().VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
+		})
 	})
 
 })

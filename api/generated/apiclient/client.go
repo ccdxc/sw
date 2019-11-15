@@ -61,7 +61,7 @@ type Services interface {
 	AuthV1() auth.AuthV1Interface
 	// Package is bookstore and len of messages is 6
 	BookstoreV1() bookstore.BookstoreV1Interface
-	// Package is cluster and len of messages is 6
+	// Package is cluster and len of messages is 8
 	ClusterV1() cluster.ClusterV1Interface
 	// Package is diagnostics and len of messages is 1
 	DiagnosticsV1() diagnostics.DiagnosticsV1Interface

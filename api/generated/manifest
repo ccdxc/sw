@@ -26,6 +26,7 @@ securitygroup.proto security true
 service.proto network true
 sgpolicy.proto security true
 smartnic.proto cluster true
+snapshot.proto cluster true
 staging.proto staging true
 svc_audit.proto audit false
 svc_auth.proto auth true

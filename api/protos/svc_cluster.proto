@@ -11,6 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "cluster.proto";
 import "smartnic.proto";
 import "tenant.proto";
+import "snapshot.proto";
 
 //-------------------------------- R E S T / g R P C  A P I ----------------------------------------------------
 
@@ -26,11 +27,18 @@ service ClusterV1 {
     option(venice.apiGrpcCrudService) = "DistributedServiceCard";
     option(venice.apiGrpcCrudService) = "Tenant";
     option(venice.apiGrpcCrudService) = "Version";
+    option(venice.apiGrpcCrudService) = "ConfigurationSnapshot";
+    option(venice.apiGrpcCrudService) = "SnapshotRestore";
 
 
     option (venice.apiRestService) = {
         Object: "Cluster"
         Method: ["put", "get", "watch"]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "SnapshotRestore"
+        Method: ["get"]
     };
 
     // Action to set auth bootstrap flag once cluster has been bootstrapped with needed auth objects. Once set it cannot be unset.
@@ -72,5 +80,24 @@ service ClusterV1 {
     option (venice.apiRestService) = {
         Object: "Version"
         Method : ["get", "watch"]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "ConfigurationSnapshot"
+        Method : ["put", "get", "delete", "post", "watch"]
+    };
+
+    option (venice.apiAction) = {
+     Object: "ConfigurationSnapshot"
+     Action: "save"
+     Request: "ConfigurationSnapshotRequest"
+     Response: "ConfigurationSnapshot"
+    };
+
+    option (venice.apiAction) = {
+     Collection: "SnapshotRestore"
+     Action: "restore"
+     Request: "SnapshotRestore"
+     Response: "SnapshotRestore"
     };
 }

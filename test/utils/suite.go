@@ -97,19 +97,20 @@ type TestUtils struct {
 	NameToIPMap   map[string]string
 	IPToNameMap   map[string]string
 
-	vIPClient       *ssh.Client
-	sshConfig       *ssh.ClientConfig
-	client          map[string]*ssh.Client
-	resolver        resolver.Interface
-	APIGwAddr       string
-	CA              *certmgr.CertificateAuthority
-	TLSProvider     rpckit.TLSProvider
-	APIClient       apiclient.Services
-	VOSClient       objstore.Client
-	Logger          log.Logger
-	VeniceConf      string                  // whole file in string format
-	DisabledModules []string                // list of disabled venice modules
-	VeniceModules   map[string]*ServiceInfo // list of all the venice modules - disabled modules
+	vIPClient         *ssh.Client
+	sshConfig         *ssh.ClientConfig
+	client            map[string]*ssh.Client
+	resolver          resolver.Interface
+	APIGwAddr         string
+	CA                *certmgr.CertificateAuthority
+	TLSProvider       rpckit.TLSProvider
+	APIClient         apiclient.Services
+	VOSClient         objstore.Client
+	SnapshotVOSClient objstore.Client
+	Logger            log.Logger
+	VeniceConf        string                  // whole file in string format
+	DisabledModules   []string                // list of disabled venice modules
+	VeniceModules     map[string]*ServiceInfo // list of all the venice modules - disabled modules
 }
 
 // ServiceInfo metadata about each service
@@ -442,6 +443,10 @@ func (tu *TestUtils) SetupObjstoreClient() error {
 	tu.VOSClient, err = objstore.NewClient("default", "images", tu.resolver, objstore.WithTLSConfig(tlcConfig))
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create client to objstore, err: %v", err))
+	}
+	tu.SnapshotVOSClient, err = objstore.NewClient("default", "snapshots", tu.resolver, objstore.WithTLSConfig(tlcConfig))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create snapshot client to objstore, err: %v", err))
 	}
 	return err
 }

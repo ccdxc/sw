@@ -85,6 +85,36 @@ func (s *storeImpl) Stat(key []string) []apiintf.ObjectStat {
 	return nil
 }
 
+// StatAll satisfies the apiintf.Store interface
+func (s *storeImpl) StatAll(prefix string) []apiintf.ObjectStat {
+	return nil
+}
+
+// GetFromSnapshot satisfies the apiintf.Store interface
+func (s *storeImpl) GetFromSnapshot(rev uint64, key string) (runtime.Object, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// ListFromSnapshot satisfies the apiintf.Store interface
+func (s *storeImpl) ListFromSnapshot(rev uint64, key string, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// StartSnapshot satisfies the apiintf.Store interface
+func (s *storeImpl) StartSnapshot() uint64 {
+	return 0
+}
+
+// DeleteSnapshot satisfies the apiintf.Store interface
+func (s *storeImpl) DeleteSnapshot(uint64) error {
+	return nil
+}
+
+// ListSnapshotWithCB satisfies the apiintf.Store interface
+func (s *storeImpl) ListSnapshotWithCB(pfix string, rev uint64, cbfunc func(key string, cur, revObj runtime.Object, deleted bool) error) error {
+	return nil
+}
+
 // Stat satisfies the vos.BackendClient interface
 func (s *storeImpl) GetStoreObject(ctx context.Context, bucketName, objectName string, opts minio.GetObjectOptions) (vos.StoreObject, error) {
 	return s.BaseBackendClient.GetObjectWithContext(ctx, bucketName, objectName, opts)

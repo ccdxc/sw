@@ -89,6 +89,8 @@ type Server interface {
 	GetGraphDB() graph.Interface
 	// RuntimeFlags returns runtime flags in use by the Server
 	RuntimeFlags() Flags
+	// SetRuntimeControls sets the runtime controls for the server
+	SetRuntimeControls(Controls)
 	// GetResolver returns the resolver initialized by API Server for use by hooks that need to do non-local work.
 	//  returns nil on error
 	GetResolvers() []string
@@ -133,6 +135,15 @@ type Config struct {
 type Flags struct {
 	// Allow support for multi-tenant operation
 	AllowMultiTenant bool
+	InternalParams   map[string]string
+}
+
+// Controls exposes APIServer runtime control parameters
+type Controls struct {
+	// MaintMode is set when API Server is in maintenance mode
+	MaintMode bool
+	// MaintReason specifies a descriptive reason for maintenance
+	MaintReason string
 }
 
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.

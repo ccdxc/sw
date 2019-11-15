@@ -31,6 +31,12 @@ service ObjstoreV1 {
       Backend:      "pen-vos-http"
     };
 
+    option (venice.proxyPrefix) = {
+      Path:         "/uploads/snapshots/"
+      PathPrefix:   "/apis/v1"
+      Backend:      "pen-vos-http"
+    };
+
     rpc DownloadFile(Object) returns (stream StreamChunk) {
         option (google.api.http) = {
             get: "/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}"

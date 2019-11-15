@@ -226,6 +226,14 @@ func (m mockClusterV1) DistributedServiceCard() cluster.ClusterV1DistributedServ
 	return nil
 }
 
+func (m mockClusterV1) ConfigurationSnapshot() cluster.ClusterV1ConfigurationSnapshotInterface {
+	return nil
+}
+
+func (m mockClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
+	return nil
+}
+
 func (m mockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }

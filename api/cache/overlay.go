@@ -143,6 +143,7 @@ type overlay struct {
 	reqs           apiintf.RequirementSet
 	versioner      runtime.Versioner
 	primaryCount   int
+	maxOvEntries   int
 }
 
 type overlayMap struct {
@@ -215,6 +216,7 @@ func NewOverlay(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv api
 		ephemeral:      local,
 		revision:       1,
 		versioner:      runtime.NewObjectVersioner(),
+		maxOvEntries:   maxOverlayOps,
 	}
 	o.reqs = requirement.NewRequirementSet(apisrv.GetGraphDB(), o, apisrv)
 	log.Infof("creating new overlay %s, base path %s", id, o.baseKey)
@@ -522,7 +524,23 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 	}
 	ovObj, err := c.findObjects(ctx, key, nil)
 	if err == nil {
-		return fmt.Errorf("already exists")
+		// do a special check to see if the object is a secondary in the overlay
+		ovObj, ok := c.overlay[key]
+		if ok && ovObj != nil {
+			if ovObj.oper == operDelete {
+				ovObj.oper = operUpdate
+				ovObj.val = obj
+				ovObj.orig = orig
+				ovObj.primary = primary
+				if primary {
+					if err := c.updateKvObj(ctx, key, ovObj); err != nil {
+						log.Errorf("failed to persist for key %v(%s)", key, err)
+					}
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("already exists in cache")
 	}
 
 	if primary && dryRun == 0 {
@@ -579,6 +597,11 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 //  API Cache the create fails, else the object is added to the overlay cache. No
 //  notifications are generated till the commit of the buffer.
 func (c *overlay) Create(ctx context.Context, key string, obj runtime.Object) error {
+	// if forced persist, persist and return
+	if fpi, ok := apiutils.GetVar(ctx, apiutils.CtxKeyPersistDirectKV); ok && fpi.(bool) {
+		return c.CacheInterface.Create(ctx, key, obj)
+	}
+
 	var verVer int64
 	dm := getDryRun(ctx)
 	if dm == nil {
@@ -736,6 +759,9 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 //   Update                       =>  Update[New Contents]
 //   Delete                       =>  Update[New Contents] IF API cache has object or fail
 func (c *overlay) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
+	if fpi, ok := apiutils.GetVar(ctx, apiutils.CtxKeyPersistDirectKV); ok && fpi.(bool) {
+		return c.CacheInterface.Update(ctx, key, obj)
+	}
 	var verVer int64
 	dm := getDryRun(ctx)
 	if dm == nil {
@@ -754,6 +780,7 @@ func (c *overlay) Update(ctx context.Context, key string, obj runtime.Object, cs
 //  - multiple secondary operations on the same object not allowed, like in update case this is caught during dryRun
 //  - if there is no object in the cache, delete removes the object from overlay
 func (c *overlay) delete(ctx context.Context, service, method, uri, key string, orig, into runtime.Object, dryRun int64, primary bool) error {
+	log.Infof("processing delete operation for key [%v]", key)
 	ovObj, err := c.findObjects(ctx, key, into)
 	// Not in Overlay, not in Cache
 	if ovObj == nil && err != nil {
@@ -843,11 +870,15 @@ func (c *overlay) delete(ctx context.Context, service, method, uri, key string, 
 		c.reqs.AddRequirement(refs)
 	}
 	c.overlay[key] = ovObj
+	log.Infof("processed delete operation for key [%v]", key)
 	return nil
 }
 
 // Delete stages a delete in the overlay Cache. The object should exist in the overlay or the API cache.
 func (c *overlay) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
+	if fpi, ok := apiutils.GetVar(ctx, apiutils.CtxKeyPersistDirectKV); ok && fpi.(bool) {
+		return c.CacheInterface.Delete(ctx, key, into, cs...)
+	}
 	var verVer int64
 	dm := getDryRun(ctx)
 	if dm == nil {
@@ -1059,7 +1090,7 @@ func (c *overlay) CreatePrimary(ctx context.Context, service, method, uri, key s
 	} else {
 		verVer = dm.verVer
 	}
-	if c.primaryCount > maxOverlayOps {
+	if c.primaryCount > c.maxOvEntries {
 		return fmt.Errorf("too many operations in the buffer")
 	}
 	c.primaryCount++
@@ -1077,7 +1108,7 @@ func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key, 
 	} else {
 		verVer = dm.verVer
 	}
-	if c.primaryCount > maxOverlayOps {
+	if c.primaryCount > c.maxOvEntries {
 		return fmt.Errorf("too many operations in the buffer")
 	}
 	c.primaryCount++
@@ -1097,7 +1128,7 @@ func (c *overlay) DeletePrimary(ctx context.Context, service, method, uri, key s
 	} else {
 		verVer = dm.verVer
 	}
-	if c.primaryCount > maxOverlayOps {
+	if c.primaryCount > c.maxOvEntries {
 		return fmt.Errorf("too many operations in the buffer")
 	}
 	c.primaryCount++
@@ -1193,87 +1224,26 @@ func (c *overlay) ClearBuffer(ctx context.Context, action []apiintf.OverlayKey) 
 		c.deleteKvObj(ctx, k, v)
 		delete(c.overlay, k)
 	}
+	c.comparators = nil
+	c.preCommitComps = nil
 	c.primaryCount = 0
 	return nil
 }
 
-func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (kvstore.TxnResponse, error) {
-	// Range over all the items in the overlay and add to commit buffer
-	var (
-		err            error
-		pCount, sCount int
-	)
-	var resp kvstore.TxnResponse
-	retries := 0
-retryLoop:
-	for retries < maxConsistentUpdateRetries {
-		otxn = c.NewTxn()
-		if retries > 0 {
-			// give it a random sleep between 0 - 10ms
-			jitter := rand.Intn(500000)
-			time.Sleep(time.Duration(int(time.Microsecond) * jitter))
-		}
-		retries++
-		kv := c.GetKvConn()
-		if kv == nil {
-			return kvstore.TxnResponse{}, errors.New("no backend KV store connection")
-		}
-		ctx = setDryRun(ctx, verVer)
-		log.Infof("[%v]Comitting overlay (tenant:%s) with %d items", c.id, c.tenant, len(c.overlay))
-		ctxn := &cacheTxn{
-			Txn:    kv.NewTxn(),
-			parent: c.CacheInterface.(*cache),
-		}
-		nctx := setPreCommitApply(ctx)
-		otxn, _ = wrapOverlayTxn(nctx, otxn)
-		// Clear all the pre-commit Apply comparators
-		c.preCommitComps = nil
-		errs := c.reqs.Apply(ctx, otxn, c.CacheInterface)
-		if errs != nil {
-			return kvstore.TxnResponse{}, fmt.Errorf("%v", errs)
-		}
-		retry := false
-		for k, v := range c.overlay {
-			// All objects that get added to the transaction should have the right verVer. Panic for now.
-			if verVer != 0 && v.verVer != verVer {
-				panic(fmt.Sprintf("found wrong version during commit[%s][%v][%s](%d/%d)", v.key, v.oper, v.URI, v.verVer, verVer))
-			}
-			if v.primary {
-				pCount++
-			} else {
-				sCount++
-			}
-			log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, v.oper)
-			switch v.oper {
-			case operCreate:
-				ctxn.Create(k, v.val)
-			case operUpdate:
-				if v.touch {
-					ctxn.Touch(k)
-					continue
-				}
-				if v.updateFn != nil && v.resVer == "" {
-					// txn is already updated, no action needed
-					log.Infof("Consistent updated obj skipped [%v][%v][%+v]", v.resVer, v.key, v.val)
-					retry = true
-				}
-				err = ctxn.Update(k, v.val)
-				if err != nil {
-					return kvstore.TxnResponse{}, errors.Wrap(err, "adding to txn failed")
-				}
-			case operDelete:
-				err = ctxn.Delete(k)
-				if err != nil {
-					return kvstore.TxnResponse{}, errors.Wrap(err, "failed to add delete action to txn")
-				}
-				// operation could fail to delete because the underlying object changed between check and commmit. Retry
-				retry = true
-			}
-			// Delete the persisted key
-			if v.primary && !c.ephemeral {
-				ctxn.Delete(c.makeBufferKey(k))
-			}
-		}
+// commitDirect is used to commit a largeBuffer without retries.
+func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, verVer int64, otxn kvstore.Txn) (resp kvstore.TxnResponse, retry bool, pCount, sCount int, err error) {
+	// The Staging buffer could have more number of objects that are supported in a trasaction.
+	//  breakup the buffer into multiple trasaction if necessary. this API is only called if the cache
+	//  is locked so it is safe to break it into multiple trasactions.
+	kv := c.GetKvConn()
+	if kv == nil {
+		return kvstore.TxnResponse{}, false, pCount, sCount, errors.New("no backend KV store connection")
+	}
+	ctxn := &cacheTxn{
+		Txn:    kv.NewTxn(),
+		parent: c.CacheInterface.(*cache),
+	}
+	applyComps := func(ctxn *cacheTxn) {
 		// Add all comparators
 		for _, cp := range c.comparators {
 			// Filter comparators before ading them
@@ -1297,6 +1267,9 @@ retryLoop:
 			log.Infof("adding comparator [%+v]", cp)
 			ctxn.AddComparator(cp)
 		}
+	}
+
+	commitTxn := func(ctxn *cacheTxn) (kvstore.TxnResponse, bool, error) {
 		if ctxn.IsEmpty() {
 			resp.Succeeded = true
 		} else {
@@ -1304,15 +1277,15 @@ retryLoop:
 			if err != nil {
 				if kvstore.IsVersionConflictError(err) && retry {
 					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
-					continue retryLoop
+					return resp, true, errors.Wrap(err, "transaction commit failed")
 				}
 				if kvstore.IsTxnFailedError(err) && c.ephemeral {
 					// This is a ephemeral overlay for a non-staged operation from user. Retry of txn failed.
 					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
-					continue retryLoop
+					return resp, true, errors.Wrap(err, "transaction commit failed on ephemeral buffer")
 				}
 				log.Errorf("[%v]error on Txn.Commit (%s)", c.id, err)
-				return resp, errors.Wrap(err, "Commit to backend failed")
+				return resp, false, errors.Wrap(err, "Commit to backend failed")
 			}
 		}
 
@@ -1323,13 +1296,152 @@ retryLoop:
 				ovobj, ok := c.overlay[r.Key]
 				if r.Oper != kvstore.OperUpdate || !ok || ovobj.updateFn == nil {
 					// Not recoverable
-					return resp, errors.New("commit failed")
+					return resp, false, errors.New("commit failed")
 				}
 			}
 			log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
-			continue retryLoop
+			return resp, true, errors.Wrap(err, "transaction commit did not succeed")
 		}
-		break retryLoop
+		return resp, false, nil
+	}
+	numTxnEntries := 0
+	otxn = c.NewTxn()
+	kv = c.GetKvConn()
+	if kv == nil {
+		return kvstore.TxnResponse{}, false, pCount, sCount, errors.New("no backend KV store connection")
+	}
+	ctx = setDryRun(ctx, verVer)
+	log.Infof("[%v]Comitting overlay (tenant:%s) with %d items", c.id, c.tenant, len(c.overlay))
+	nctx := setPreCommitApply(ctx)
+	otxn, _ = wrapOverlayTxn(nctx, otxn)
+	// Clear all the pre-commit Apply comparators
+	c.preCommitComps = nil
+	errs := c.reqs.Apply(ctx, otxn, c.CacheInterface)
+	if errs != nil {
+		return kvstore.TxnResponse{}, false, pCount, sCount, fmt.Errorf("%v", errs)
+	}
+	retry = false
+
+	for k, v := range c.overlay {
+		// All objects that get added to the transaction should have the right verVer. Panic for now.
+		if verVer != 0 && v.verVer != verVer {
+			panic(fmt.Sprintf("found wrong version during commit[%s][%v][%s](%d/%d)", v.key, v.oper, v.URI, v.verVer, verVer))
+		}
+		numTxnEntries++
+		if v.primary {
+			pCount++
+		} else {
+			sCount++
+		}
+		log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, v.oper)
+		switch v.oper {
+		case operCreate:
+			ctxn.Create(k, v.val)
+		case operUpdate:
+			if v.touch {
+				ctxn.Touch(k)
+				continue
+			}
+			if v.updateFn != nil && v.resVer == "" {
+				// txn is already updated, no action needed
+				log.Infof("Consistent updated obj skipped [%v][%v][%+v]", v.resVer, v.key, v.val)
+				retry = true
+			}
+			err = ctxn.Update(k, v.val)
+			if err != nil {
+				return kvstore.TxnResponse{}, false, pCount, sCount, errors.Wrap(err, "adding to txn failed")
+			}
+		case operDelete:
+			err = ctxn.Delete(k)
+			if err != nil {
+				return kvstore.TxnResponse{}, false, pCount, sCount, errors.Wrap(err, "failed to add delete action to txn")
+			}
+			// operation could fail to delete because the underlying object changed between check and commmit. Retry
+			retry = true
+		}
+		// Delete the persisted key
+		if v.primary && !c.ephemeral {
+			ctxn.Delete(c.makeBufferKey(k))
+		}
+		if numTxnEntries >= maxEntries {
+			applyComps(ctxn)
+			resp, retry, err := commitTxn(ctxn)
+			if err != nil {
+				return resp, retry, pCount, sCount, err
+			}
+			// Finalize the requirements
+			errs := c.reqs.Finalize(ctx)
+			if errs != nil && len(errs) > 0 {
+				log.Errorf("[%v]Finalizing the references failed! (%v)", c.id, errs)
+			}
+			numTxnEntries = 0
+			ctxn = &cacheTxn{
+				Txn:    kv.NewTxn(),
+				parent: c.CacheInterface.(*cache),
+			}
+		}
+	}
+
+	applyComps(ctxn)
+	resp, retry, err = commitTxn(ctxn)
+	if err != nil {
+		return resp, retry, pCount, sCount, err
+	}
+
+	// Finalize the requirements
+	errs = c.reqs.Finalize(ctx)
+	if errs != nil && len(errs) > 0 {
+		log.Errorf("[%v]Finalizing the references failed! (%v)", c.id, errs)
+	}
+	// Delete all the keys that were committed from the buffer
+	for k := range c.overlay {
+		delete(c.overlay, k)
+	}
+
+	return resp, false, pCount, sCount, nil
+}
+
+func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (kvstore.TxnResponse, error) {
+	// Range over all the items in the overlay and add to commit buffer
+	var (
+		err            error
+		pCount, sCount int
+	)
+	var resp kvstore.TxnResponse
+	retries, maxRetries, maxEntries := 0, 0, c.maxOvEntries*4
+	lb := false
+	// Large Buffer handling takes care of usage of buffer during config restore operations and such where we still want use
+	//  a staging buffer to accumulate operations, but the number of operations may not fit into a KVStore trasaction.
+	//  When large buffer is enabled, it is assumed that apiserver is locked and txn boundaries can be ignored safely.
+	//  The staing buffer commit then splits the buffer into multiple operations
+	lbi, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvLargeBuffer)
+	if ok {
+		log.Infof("Large buffer is set")
+		lb = lbi.(bool)
+	}
+	maxRetries = maxConsistentUpdateRetries
+	if lb {
+		maxRetries = 1
+		maxEntries = 1024 * c.maxOvEntries
+	}
+	retry := false
+
+	for retries < maxRetries {
+		resp, retry, pCount, sCount, err = c.commitDirect(ctx, retries, maxEntries, verVer, otxn)
+		retries++
+		if err != nil {
+			if retry {
+				if retries > 0 {
+					// give it a random sleep between 0 - 10ms
+					jitter := rand.Intn(500000)
+					time.Sleep(time.Duration(int(time.Microsecond) * jitter))
+				}
+				log.Infof("[%v] commit failed, retrying, retry %d", c.id, retries)
+				continue
+			}
+			return resp, err
+		}
+		break
 	}
 
 	if retries == maxConsistentUpdateRetries {
@@ -1338,15 +1450,6 @@ retryLoop:
 		return resp, errors.New("commit failed")
 	}
 
-	// Finalize the requirements
-	errs := c.reqs.Finalize(ctx)
-	if errs != nil && len(errs) > 0 {
-		log.Errorf("[%v]Finalizing the references failed! (%v)", c.id, errs)
-	}
-	// Delete all the keys that were committed from the buffer
-	for k := range c.overlay {
-		delete(c.overlay, k)
-	}
 	c.reqs = requirement.NewRequirementSet(c.server.GetGraphDB(), c, c.server)
 	c.primaryCount = 0
 	log.Infof("Completing commit for buffer [%s/%s] with %d primary and %d secondary objects %d objects left in overlay", c.tenant, c.id, pCount, sCount, len(c.overlay))
@@ -1427,6 +1530,11 @@ func (c *overlay) Stat(ctx context.Context, keys []string) []apiintf.ObjectStat 
 		}
 	}
 	return ret
+}
+
+// StatKind returns stat for all object of kind. Not implemented on the overlay yet.
+func (c *overlay) StatKind(group string, kind string) ([]apiintf.ObjectStat, error) {
+	return nil, fmt.Errorf("unimplemented")
 }
 
 // GetRequirements returns the RequirementSet used by the Overlay

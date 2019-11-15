@@ -195,7 +195,9 @@
           "Host",
           "DistributedServiceCard",
           "Tenant",
-          "Version"
+          "Version",
+          "ConfigurationSnapshot",
+          "SnapshotRestore"
         ],
         "Properties": {
           "Cluster": {
@@ -212,6 +214,22 @@
               "UpdateTLSConfig"
             ],
             "URI": "/configs/cluster/v1/cluster"
+          },
+          "ConfigurationSnapshot": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "watch"
+            ],
+            "Actions": [
+              "save"
+            ],
+            "URI": "/configs/cluster/v1/config-snapshot"
           },
           "DistributedServiceCard": {
             "Scopes": [
@@ -253,6 +271,18 @@
               "watch"
             ],
             "URI": "/configs/cluster/v1/nodes"
+          },
+          "SnapshotRestore": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get"
+            ],
+            "Actions": [
+              "restore"
+            ],
+            "URI": "/configs/cluster/v1/config-restore"
           },
           "Tenant": {
             "Scopes": [

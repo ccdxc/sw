@@ -25,7 +25,7 @@ type objstoreHooks struct {
 	logger           log.Logger
 }
 
-func (b *objstoreHooks) addObjUploadOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+func (b *objstoreHooks) addObjUploadImageOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
 	user, ok := apigwpkg.UserFromContext(ctx)
 	if !ok || user == nil {
 		b.logger.Errorf("no user present in context passed to addObjUploadOps authz hook")
@@ -34,6 +34,24 @@ func (b *objstoreHooks) addObjUploadOps(ctx context.Context, in interface{}) (co
 
 	// Uploads are allowed only for the default tenat now.
 	resource := authz.NewResource(globals.DefaultTenant, string(apiclient.GroupObjstore), string(objstore.KindObject), string(objstore.Buckets_images), "")
+	// get existing operations from context
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	// append requested operation
+	operations = append(operations, authz.NewOperation(resource, auth.Permission_Create.String()))
+
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, in, nil
+}
+
+func (b *objstoreHooks) addObjUploadSnapshotsOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		b.logger.Errorf("no user present in context passed to addObjUploadOps authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+
+	// Uploads are allowed only for the default tenat now.
+	resource := authz.NewResource(globals.DefaultTenant, string(apiclient.GroupObjstore), string(objstore.KindObject), string(objstore.Buckets_snapshots), "")
 	// get existing operations from context
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	// append requested operation
@@ -101,9 +119,18 @@ func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthZHook(r.addObjUploadOps)
+	prof.AddPreAuthZHook(r.addObjUploadImageOps)
 	prof.AddPreCallHook(r.userContext)
 	prof.SetAuditLevel(audit.Level_Basic.String())
+
+	prof, err = svc.GetProxyServiceProfile("/uploads/snapshots")
+	if err != nil {
+		return err
+	}
+	prof.AddPreAuthZHook(r.addObjUploadSnapshotsOps)
+	prof.AddPreCallHook(r.userContext)
+	prof.SetAuditLevel(audit.Level_Basic.String())
+
 	prof, err = svc.GetServiceProfile("DownloadFile")
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package apiintf
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -40,6 +41,11 @@ type ObjRelation struct {
 // ReferenceType defines types of object references
 type ReferenceType string
 
+// Snapshot related constants
+const (
+	InvalidSnapShotHandle = 0
+)
+
 // ObjectStat gives information about a object key in the cache
 type ObjectStat struct {
 	Key        string
@@ -59,11 +65,22 @@ type SuccessCbFunc func(key string, obj, prev runtime.Object)
 type CacheInterface interface {
 	kvstore.Interface
 	Stat(ctx context.Context, keys []string) []ObjectStat
+	StatKind(group string, kind string) ([]ObjectStat, error)
 	Start() error
 	Restore() error
 	Clear()
 	GetKvConn() kvstore.Interface
 	DebugAction(action string, params []string) string
+	StartSnapshot() uint64
+	DeleteSnapshot(uint64) error
+	SnapshotReader(uint64 uint64, include bool, kinds []string) (io.ReadCloser, error)
+	SnapshotWriter(reader io.Reader) SnapshotWriter
+	Rollback(ctx context.Context, rev uint64, kvs kvstore.Interface) error
+}
+
+// SnapshotWriter is a interface to write a configuration snapshot to kvstore.
+type SnapshotWriter interface {
+	Write(ctx context.Context, kvs kvstore.Interface) error
 }
 
 // OverlayStatus is status of Overlay verification including objects in the overlay
@@ -165,12 +182,18 @@ type ConstUpdateItem struct {
 type Store interface {
 	Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
 	Get(key string) (runtime.Object, error)
+	GetFromSnapshot(rev uint64, key string) (runtime.Object, error)
 	Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
 	List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
+	ListFromSnapshot(rev uint64, key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
 	Mark(key string)
 	Sweep(key string, cb SuccessCbFunc)
 	PurgeDeleted(past time.Duration)
 	Stat(key []string) []ObjectStat
+	StatAll(prefix string) []ObjectStat
+	StartSnapshot() uint64
+	DeleteSnapshot(uint64) error
+	ListSnapshotWithCB(pfix string, rev uint64, cbfunc func(key string, cur, revObj runtime.Object, deleted bool) error) error
 	Clear()
 }
 

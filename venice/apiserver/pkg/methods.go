@@ -95,6 +95,7 @@ var (
 	errTransactionErrored = errorStatus{codes.Internal, "Transaction execution error"}
 	errInternalError      = errorStatus{codes.Internal, "Internal error"}
 	errShuttingDown       = errorStatus{codes.Internal, "Server is shutting down"}
+	errInMaintenance      = errorStatus{codes.Internal, "Server is not accepting API operations"}
 )
 
 // NewMethod initializes and returns a new Method object.
@@ -195,6 +196,11 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			return nil, errShuttingDown.makeError(nil, []string{}, "")
 		}
 	}
+
+	if maint, reason := singletonAPISrv.getMaintState(); maint {
+		return i, errInMaintenance.makeError(nil, []string{reason}, "")
+	}
+
 	stTime := time.Now()
 	defer func() {
 		hdr.Record(fmt.Sprintf("%s.%s.stagingBufferUpdate", m.svcPrefix, m.name), time.Since(stTime))

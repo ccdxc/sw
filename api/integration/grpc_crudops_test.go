@@ -18,34 +18,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
-
-	"github.com/pensando/sw/api/generated/network"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
-
-	"google.golang.org/grpc/codes"
-
 	mapset "github.com/deckarep/golang-set"
 	gwruntime "github.com/pensando/grpc-gateway/runtime"
-
-	apierrors "github.com/pensando/sw/api/errors"
-	"github.com/pensando/sw/api/generated/browser"
-	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/test/utils"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/generated/browser"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/api/utils"
+	"github.com/pensando/sw/test/utils"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -3532,4 +3530,42 @@ func TestWatcherEviction(t *testing.T) {
 			t.Fatalf("Eventchannel was not closed!")
 		}
 	}
+}
+
+func TestSnapShot(t *testing.T) {
+	apisrv := apisrvpkg.MustGetAPIServer()
+	apicache := apisrvpkg.GetAPIServerCache()
+	ov, err := cache.NewOverlay("tenant", "xxx", globals.StagingBasePath, apicache, apisrv, true)
+	AssertOk(t, err, "Create overlay should succeed")
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	ctx := context.Background()
+
+	firstrev := apicache.StartSnapshot()
+
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	AssertOk(t, err, "failed to create grpc client")
+	defer apicl.Close()
+
+	pub := bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestRollback",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "111",
+			Address: "#1 hilane, timbuktoo",
+			WebAddr: "http://sahara-books.org",
+		},
+	}
+	apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+
+	_, err = apicl.BookstoreV1().Publisher().Get(ctx, &pub.ObjectMeta)
+	AssertOk(t, err, "get should succeed")
+
+	nctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvInitRestore, true)
+	err = apicache.Rollback(nctx, firstrev, ov)
+	AssertOk(t, err, "Rollback should succeed")
+	ov.Commit(ctx, nil)
 }

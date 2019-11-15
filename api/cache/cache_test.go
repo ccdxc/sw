@@ -1,7 +1,10 @@
 package cache
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"reflect"
 	"sync"
 	"testing"
@@ -81,6 +84,31 @@ func (t *testObjList) Clone(into interface{}) (interface{}, error) {
 	}
 	*out = *t
 	return out, nil
+}
+
+func (t *testObjList) MakeKey(prefix string) string {
+	return "/test/" + prefix + "/"
+}
+
+type testObj2List struct {
+	api.TypeMeta
+	api.ListMeta
+	Items []*testObj
+}
+
+func (t *testObj2List) Clone(into interface{}) (interface{}, error) {
+	var out *testObj2List
+	if into == nil {
+		out = &testObj2List{}
+	} else {
+		out = into.(*testObj2List)
+	}
+	*out = *t
+	return out, nil
+}
+
+func (t *testObj2List) MakeKey(prefix string) string {
+	return "/test2/" + prefix + "/"
 }
 
 func TestCreateCache(t *testing.T) {
@@ -842,4 +870,290 @@ func TestTxnCommit(t *testing.T) {
 		t.Errorf("expecting 3 enqueues in 2 queueus got %d/%d", fakeq1.Enqueues, fakeq2.Enqueues)
 	}
 	cancel()
+}
+
+func TestSnapshotReader(t *testing.T) {
+	b := testObj{}
+	b1 := testObj2{}
+	bl := testObjList{}
+	b1l := testObj2List{}
+
+	scheme := runtime.GetDefaultScheme()
+	types := map[string]*api.Struct{
+		"test.testObj": &api.Struct{
+			Kind:     "TestKind1",
+			APIGroup: "test",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b) },
+		},
+		"test.testObj2": &api.Struct{
+			Kind:     "TestKind2",
+			APIGroup: "test",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b1) },
+		},
+		"test.testObjList": &api.Struct{
+			Kind:     "",
+			APIGroup: "",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(bl) },
+		},
+		"test.testObj2List": &api.Struct{
+			Kind:     "",
+			APIGroup: "",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b1l) },
+		},
+		"test2.testObj": &api.Struct{
+			Kind:     "Test2Kind1",
+			APIGroup: "test2",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b) },
+		},
+	}
+	scheme.AddKnownTypes(&b, &b1, &bl, &b1l)
+	scheme.AddSchema(types)
+
+	listfn := func(rev uint64, key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+		switch kind {
+		case "testObj":
+			return []runtime.Object{
+				&testObj{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj-one"},
+				},
+				&testObj{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj-two"},
+				},
+				&testObj{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj-three"},
+				},
+				&testObj{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj-four"},
+				},
+			}, nil
+		case "testObj2":
+			return []runtime.Object{
+				&testObj2{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj2-one"},
+				},
+				&testObj2{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj2-two"},
+				},
+				&testObj2{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj2-three"},
+				},
+				&testObj2{
+					ObjectMeta: api.ObjectMeta{Name: "TestObj2-four"},
+				},
+			}, nil
+		default:
+			return nil, fmt.Errorf("unknown kind [%s]", kind)
+		}
+	}
+	fstore := &cachemocks.FakeStore{}
+	fstore.ListFromSnapshotFn = listfn
+	c := cache{
+		store:  fstore,
+		pool:   &connPool{},
+		queues: &mocks.FakeWatchPrefixes{},
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+
+	srd, err := c.SnapshotReader(10, false, nil)
+	AssertOk(t, err, "failed to get snapshot reader")
+	sobj := srd.(*snapshotReader)
+	Assert(t, len(sobj.kinds) == 2, "unexpected number of groups [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test"]) == 2, "unexpected number of kinds [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test2"]) == 1, "unexpected number of kinds [%v]", sobj.kinds)
+
+	srd, err = c.SnapshotReader(10, false, []string{"unkKind"})
+	AssertOk(t, err, "failed to get snapshot reader")
+	sobj = srd.(*snapshotReader)
+	Assert(t, len(sobj.kinds) == 2, "unexpected number of groups [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test"]) == 2, "unexpected number of kinds [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test2"]) == 1, "unexpected number of kinds [%v]", sobj.kinds)
+
+	srd, err = c.SnapshotReader(10, false, []string{"TestKind1"})
+	AssertOk(t, err, "failed to get snapshot reader")
+	sobj = srd.(*snapshotReader)
+	Assert(t, len(sobj.kinds) == 2, "unexpected number of groups [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test"]) == 1, "unexpected number of kinds [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test2"]) == 1, "unexpected number of kinds [%v]", sobj.kinds)
+
+	srd, err = c.SnapshotReader(10, true, []string{"TestKind1"})
+	AssertOk(t, err, "failed to get snapshot reader")
+	sobj = srd.(*snapshotReader)
+	Assert(t, len(sobj.kinds) == 1, "unexpected number of groups [%v]", sobj.kinds)
+	Assert(t, len(sobj.kinds["test"]) == 1, "unexpected number of kinds [%v]", sobj.kinds)
+	Assert(t, sobj.kinds["test"][0] == "TestKind1", "wrong kind found in kinds [%v]", sobj.kinds)
+
+	sobj = &snapshotReader{
+		snapRev: 10,
+		store:   fstore,
+		sch:     scheme,
+		kinds: map[string][]string{
+			"test": []string{"testObj", "testObj2"},
+		},
+		groups: []string{"test"},
+	}
+
+	var rbytes, tbuf []byte
+	tbuf = make([]byte, 1024)
+
+	for err == nil {
+		n, err := sobj.Read(tbuf)
+		rbytes = append(rbytes, tbuf[:n]...)
+		if err == io.EOF {
+			err = nil
+			break
+		}
+	}
+	if err != nil {
+		t.Fatalf("Read failed with error (%s)", err)
+	}
+	t.Logf("Receivef buffer is [%s]", string(rbytes))
+
+	reader := bytes.NewReader(rbytes)
+
+	kvs := &cachemocks.FakeKvStore{}
+	sw := snapshotWriter{reader: reader, kvs: kvs}
+	err = sw.Write(context.TODO(), kvs)
+	if err != nil {
+		t.Fatalf("failed to write snapshot (%s)", err)
+	}
+
+	if kvs.Creates != 8 {
+		t.Fatalf("number of Creates do not match want [8] got [%d]", kvs.Creates)
+	}
+}
+
+func TestRollback(t *testing.T) {
+	b := &testObj{}
+	scheme := runtime.NewScheme()
+	scheme.AddKnownTypes(b)
+	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
+	mkv := kstr.(*memkv.MemKv)
+	mkv.SetRevMode(memkv.ClusterRevision)
+	if err != nil {
+		t.Fatalf("unable to create memkv")
+	}
+	str := NewStore()
+	fakeqs := &mocks.FakeWatchPrefixes{}
+	c := cache{
+		store:  str,
+		pool:   &connPool{},
+		queues: fakeqs,
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+	c.pool.AddToPool(kstr)
+
+	b.Name = "obj1"
+	b.Spec = "Spec1"
+
+	ctx := context.TODO()
+	key1 := "/test/obj1"
+	key2 := "/test/obj2"
+	spec1 := "Spec1"
+	spec2 := "Spec2"
+	b.Name = "obj1"
+	b.Spec = spec1
+	err = c.Create(ctx, key1, b)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	rObj := &testObj{}
+	err = c.Get(ctx, key1, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	b1 := &testObj{}
+	b1.Name = "obj2"
+	b1.Spec = spec2
+	err = c.Create(ctx, key2, b1)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	rObj = &testObj{}
+	err = c.Get(ctx, key2, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+
+	rev1 := c.StartSnapshot()
+
+	// Update after snapshot
+	b.Spec = "spec changed"
+	err = c.Update(ctx, key1, b)
+	if err != nil {
+		t.Fatalf("expecting Update to succeed")
+	}
+	rObj = &testObj{}
+	err = c.Get(ctx, key1, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	if rObj.Spec != "spec changed" {
+		t.Fatalf("did not find changed object in store")
+	}
+
+	// Take another snapshot
+	rev2 := c.StartSnapshot()
+	b1.Spec = "spec changed"
+	err = c.Update(ctx, key2, b1)
+	if err != nil {
+		t.Fatalf("expecting Update to succeed")
+	}
+	err = c.Delete(ctx, key2, nil)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	rObj = &testObj{}
+	err = c.Get(ctx, key2, rObj)
+	if err == nil {
+		t.Fatalf("expecting Get to fail")
+	}
+
+	// Rollback to snapshot
+	c.Rollback(ctx, rev2, kstr)
+	err = kstr.Get(ctx, key2, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to Succeed")
+	}
+	rObj = &testObj{}
+	err = c.Get(ctx, key1, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
+	if rObj.Spec != "spec changed" {
+		t.Fatalf("did not find changed object in store")
+	}
+
+	c.Rollback(ctx, rev1, kstr)
+	rObj = &testObj{}
+	err = kstr.Get(ctx, key1, rObj)
+	if err != nil {
+		t.Fatalf("expecting Get to succeed")
+	}
 }

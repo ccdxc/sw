@@ -553,6 +553,7 @@ func (e *sObjstoreV1GwService) setupSvcProfile() {
 
 	e.svcProf["DownloadFileByPrefix"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 	e.svcProf["_RProxy_"+"/"+"uploads/images"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
+	e.svcProf["_RProxy_"+"/"+"uploads/snapshots"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -624,6 +625,19 @@ func (e *sObjstoreV1GwService) CompleteRegistration(ctx context.Context,
 			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
 		}
 		m.Handle("/objstore/v1/uploads/images/", rproxy)
+	}
+	{
+		name := "_RProxy_" + "/" + "uploads/snapshots"
+		svcProf, err := e.GetServiceProfile(name)
+		if err != nil {
+			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
+		}
+
+		rproxy, err := apigwpkg.NewRProxyHandler("uploads/snapshots", "/objstore/v1/", "/apis/v1", "pen-vos-http", svcProf)
+		if err != nil {
+			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
+		}
+		m.Handle("/objstore/v1/uploads/snapshots/", rproxy)
 	}
 	wg.Add(1)
 	go func() {

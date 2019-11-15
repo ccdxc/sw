@@ -3,8 +3,8 @@ package apisrvpkg
 import (
 	"context"
 	"fmt"
-
 	"math"
+	goruntime "runtime"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -76,6 +76,12 @@ type apiSrv struct {
 	config apiserver.Config
 	// flags are runtime flags in use
 	flags apiserver.Flags
+	// maintModeMutex guards the maintMode and maintReason
+	maintModeMutex sync.RWMutex
+	// maintMode is set to true if the server is in maintenance mode
+	maintMode bool
+	// maintReason specifies reason for maintenance mode.
+	maintReason string
 	// apiChace is cache used by the server
 	apiCache apiintf.CacheInterface
 	// objGraph maintains a graph of all relations between objects
@@ -128,7 +134,7 @@ func initAPIServer() {
 	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 	singletonAPISrv.activeWatches = safelist.New()
 	singletonAPISrv.newLocalOverlayFunc = cache.NewLocalOverlay
-	singletonAPISrv.flags = apiserver.Flags{}
+	singletonAPISrv.flags = apiserver.Flags{InternalParams: make(map[string]string)}
 }
 
 // MustGetAPIServer returns the singleton instance. If it is not already
@@ -292,6 +298,19 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 	diagSvc.RegisterCustomAction("list-watchers", func(action string, params map[string]string) (interface{}, error) {
 		return a.apiCache.DebugAction(action, nil), nil
+	})
+
+	diagSvc.RegisterCustomAction("internal-params", func(action string, params map[string]string) (interface{}, error) {
+		for k, v := range params {
+			a.flags.InternalParams[k] = v
+		}
+		return a.flags, nil
+	})
+
+	diagSvc.RegisterCustomAction("stack-trace", func(action string, params map[string]string) (interface{}, error) {
+		buf := make([]byte, 1<<20)
+		blen := goruntime.Stack(buf, true)
+		return fmt.Sprintf("=== goroutine dump ====\n %s \n=== END ===", buf[:blen]), nil
 	})
 
 	opts := []rpckit.Option{}
@@ -482,6 +501,19 @@ func (a *apiSrv) getRunState() bool {
 // RuntimeFlags returns runtime flags in use by the Server
 func (a *apiSrv) RuntimeFlags() apiserver.Flags {
 	return a.flags
+}
+
+func (a *apiSrv) SetRuntimeControls(ctrl apiserver.Controls) {
+	defer a.maintModeMutex.Unlock()
+	a.maintModeMutex.Lock()
+	a.maintMode = ctrl.MaintMode
+	a.maintReason = ctrl.MaintReason
+}
+
+func (a *apiSrv) getMaintState() (bool, string) {
+	defer a.maintModeMutex.RUnlock()
+	a.maintModeMutex.RLock()
+	return a.maintMode, a.maintReason
 }
 
 // GetResolver returns the resolver initialized by API Server for use by hooks that need to do non-local work.

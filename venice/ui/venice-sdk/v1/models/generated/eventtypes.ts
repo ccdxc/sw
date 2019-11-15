@@ -10,6 +10,9 @@ export const categoryToEventType: { [cat: string]: string[] } = {
   cluster: [
     'AUDITING_FAILED',
     'AUTO_GENERATED_TLS_CERT',
+    'CONFIG_RESTORED',
+    'CONFIG_RESTORE_ABORTED',
+    'CONFIG_RESTORE_FAILED',
     'DSC_ADMITTED',
     'DSC_DEADMITTED',
     'DSC_DECOMMISSIONED',
@@ -79,6 +82,21 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "AUTO_GENERATED_TLS_CERT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Auto generated certificate is being used for API Gateway TLS",
+  },
+  'CONFIG_RESTORED' : {
+      "Name": "CONFIG_RESTORED",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "Configuration was restored",
+  },
+  'CONFIG_RESTORE_ABORTED' : {
+      "Name": "CONFIG_RESTORE_ABORTED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Configuration restore operation was aborted",
+  },
+  'CONFIG_RESTORE_FAILED' : {
+      "Name": "CONFIG_RESTORE_FAILED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Configuration restore operation failed",
   },
   'DSC_ADMITTED' : {
       "Name": "DSC_ADMITTED",

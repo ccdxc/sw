@@ -856,6 +856,73 @@ func (sm *SysModel) GetClusterWithRestClient(restcl apiclient.Services) (cl *clu
 	return restcl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{Name: "iota-cluster"})
 }
 
+// TakeConfigSnapshot preforms a snapshot operation
+func (sm *SysModel) ConfigureSnapshot(restcl apiclient.Services) error {
+	cfg := &cluster.ConfigurationSnapshot{
+		ObjectMeta: api.ObjectMeta{
+			Name: "GlobalSnapshotConfig",
+		},
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{
+				Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+			},
+		},
+	}
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+	_, err = restcl.ClusterV1().ConfigurationSnapshot().Create(ctx, cfg)
+	if err != nil {
+		_, err = restcl.ClusterV1().ConfigurationSnapshot().Update(ctx, cfg)
+	}
+	return err
+}
+
+// TakeConfigSnapshot preforms a snapshot operation
+func (sm *SysModel) TakeConfigSnapshot(restcl apiclient.Services, reqname string) (uri string, err error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return "", err
+	}
+	req := &cluster.ConfigurationSnapshotRequest{}
+	req.Name = reqname
+	_, err = restcl.ClusterV1().ConfigurationSnapshot().Save(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	snaps, err := restcl.ClusterV1().ConfigurationSnapshot().Get(ctx, &api.ObjectMeta{})
+	if err != nil {
+		return "", err
+	}
+	return snaps.Status.LastSnapshot.URI, nil
+}
+
+// RestoreConfig restores config to snapshot specified in filename
+func (sm *SysModel) RestoreConfig(restcl apiclient.Services, filename string) error {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return err
+	}
+	req := &cluster.SnapshotRestore{
+		ObjectMeta: api.ObjectMeta{
+			Name: "IOTARestoreOp",
+		},
+		Spec: cluster.SnapshotRestoreSpec{
+			SnapshotPath: filename,
+		},
+	}
+
+	resp, err := restcl.ClusterV1().SnapshotRestore().Restore(ctx, req)
+	if err != nil {
+		return err
+	}
+	if resp.Status.Status != cluster.SnapshotRestoreStatus_Completed.String() {
+		return errors.New("Restore operation did not complete")
+	}
+	return nil
+}
+
 // GetVeniceNode gets venice node state from venice cluster
 func (sm *SysModel) GetVeniceNode(name string) (n *cluster.Node, err error) {
 	ctx, err := sm.VeniceLoggedInCtx(context.TODO())

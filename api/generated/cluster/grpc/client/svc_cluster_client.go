@@ -57,6 +57,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoAddClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddCluster")(lAutoAddClusterEndpoint)
 	}
+	var lAutoAddConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoAddConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddConfigurationSnapshot",
+			cluster.EncodeGrpcReqConfigurationSnapshot,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddConfigurationSnapshot")(lAutoAddConfigurationSnapshotEndpoint)
+	}
 	var lAutoAddDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoAddDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -98,6 +112,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoAddNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddNode")(lAutoAddNodeEndpoint)
+	}
+	var lAutoAddSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoAddSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddSnapshotRestore",
+			cluster.EncodeGrpcReqSnapshotRestore,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddSnapshotRestore")(lAutoAddSnapshotRestoreEndpoint)
 	}
 	var lAutoAddTenantEndpoint endpoint.Endpoint
 	{
@@ -141,6 +169,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoDeleteClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteCluster")(lAutoDeleteClusterEndpoint)
 	}
+	var lAutoDeleteConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteConfigurationSnapshot",
+			cluster.EncodeGrpcReqConfigurationSnapshot,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteConfigurationSnapshot")(lAutoDeleteConfigurationSnapshotEndpoint)
+	}
 	var lAutoDeleteDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -182,6 +224,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteNode")(lAutoDeleteNodeEndpoint)
+	}
+	var lAutoDeleteSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteSnapshotRestore",
+			cluster.EncodeGrpcReqSnapshotRestore,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteSnapshotRestore")(lAutoDeleteSnapshotRestoreEndpoint)
 	}
 	var lAutoDeleteTenantEndpoint endpoint.Endpoint
 	{
@@ -225,6 +281,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetCluster")(lAutoGetClusterEndpoint)
 	}
+	var lAutoGetConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoGetConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetConfigurationSnapshot",
+			cluster.EncodeGrpcReqConfigurationSnapshot,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetConfigurationSnapshot")(lAutoGetConfigurationSnapshotEndpoint)
+	}
 	var lAutoGetDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoGetDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -266,6 +336,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoGetNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetNode")(lAutoGetNodeEndpoint)
+	}
+	var lAutoGetSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoGetSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetSnapshotRestore",
+			cluster.EncodeGrpcReqSnapshotRestore,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetSnapshotRestore")(lAutoGetSnapshotRestoreEndpoint)
 	}
 	var lAutoGetTenantEndpoint endpoint.Endpoint
 	{
@@ -309,6 +393,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoListClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoListCluster")(lAutoListClusterEndpoint)
 	}
+	var lAutoListConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoListConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListConfigurationSnapshot",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespConfigurationSnapshotList,
+			&cluster.ConfigurationSnapshotList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoListConfigurationSnapshot")(lAutoListConfigurationSnapshotEndpoint)
+	}
 	var lAutoListDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoListDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -350,6 +448,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoListNode")(lAutoListNodeEndpoint)
+	}
+	var lAutoListSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoListSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListSnapshotRestore",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespSnapshotRestoreList,
+			&cluster.SnapshotRestoreList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoListSnapshotRestore")(lAutoListSnapshotRestoreEndpoint)
 	}
 	var lAutoListTenantEndpoint endpoint.Endpoint
 	{
@@ -393,6 +505,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateCluster")(lAutoUpdateClusterEndpoint)
 	}
+	var lAutoUpdateConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateConfigurationSnapshot",
+			cluster.EncodeGrpcReqConfigurationSnapshot,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateConfigurationSnapshot")(lAutoUpdateConfigurationSnapshotEndpoint)
+	}
 	var lAutoUpdateDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -435,6 +561,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateNode")(lAutoUpdateNodeEndpoint)
 	}
+	var lAutoUpdateSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateSnapshotRestore",
+			cluster.EncodeGrpcReqSnapshotRestore,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateSnapshotRestore")(lAutoUpdateSnapshotRestoreEndpoint)
+	}
 	var lAutoUpdateTenantEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateTenantEndpoint = grpctransport.NewClient(
@@ -463,6 +603,34 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateVersion")(lAutoUpdateVersionEndpoint)
 	}
+	var lRestoreEndpoint endpoint.Endpoint
+	{
+		lRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"Restore",
+			cluster.EncodeGrpcReqSnapshotRestore,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lRestoreEndpoint = trace.ClientEndPoint("ClusterV1:Restore")(lRestoreEndpoint)
+	}
+	var lSaveEndpoint endpoint.Endpoint
+	{
+		lSaveEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"Save",
+			cluster.EncodeGrpcReqConfigurationSnapshotRequest,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lSaveEndpoint = trace.ClientEndPoint("ClusterV1:Save")(lSaveEndpoint)
+	}
 	var lUpdateTLSConfigEndpoint endpoint.Endpoint
 	{
 		lUpdateTLSConfigEndpoint = grpctransport.NewClient(
@@ -482,35 +650,47 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 
 		AuthBootstrapCompleteEndpoint:            lAuthBootstrapCompleteEndpoint,
 		AutoAddClusterEndpoint:                   lAutoAddClusterEndpoint,
+		AutoAddConfigurationSnapshotEndpoint:     lAutoAddConfigurationSnapshotEndpoint,
 		AutoAddDistributedServiceCardEndpoint:    lAutoAddDistributedServiceCardEndpoint,
 		AutoAddHostEndpoint:                      lAutoAddHostEndpoint,
 		AutoAddNodeEndpoint:                      lAutoAddNodeEndpoint,
+		AutoAddSnapshotRestoreEndpoint:           lAutoAddSnapshotRestoreEndpoint,
 		AutoAddTenantEndpoint:                    lAutoAddTenantEndpoint,
 		AutoAddVersionEndpoint:                   lAutoAddVersionEndpoint,
 		AutoDeleteClusterEndpoint:                lAutoDeleteClusterEndpoint,
+		AutoDeleteConfigurationSnapshotEndpoint:  lAutoDeleteConfigurationSnapshotEndpoint,
 		AutoDeleteDistributedServiceCardEndpoint: lAutoDeleteDistributedServiceCardEndpoint,
 		AutoDeleteHostEndpoint:                   lAutoDeleteHostEndpoint,
 		AutoDeleteNodeEndpoint:                   lAutoDeleteNodeEndpoint,
+		AutoDeleteSnapshotRestoreEndpoint:        lAutoDeleteSnapshotRestoreEndpoint,
 		AutoDeleteTenantEndpoint:                 lAutoDeleteTenantEndpoint,
 		AutoDeleteVersionEndpoint:                lAutoDeleteVersionEndpoint,
 		AutoGetClusterEndpoint:                   lAutoGetClusterEndpoint,
+		AutoGetConfigurationSnapshotEndpoint:     lAutoGetConfigurationSnapshotEndpoint,
 		AutoGetDistributedServiceCardEndpoint:    lAutoGetDistributedServiceCardEndpoint,
 		AutoGetHostEndpoint:                      lAutoGetHostEndpoint,
 		AutoGetNodeEndpoint:                      lAutoGetNodeEndpoint,
+		AutoGetSnapshotRestoreEndpoint:           lAutoGetSnapshotRestoreEndpoint,
 		AutoGetTenantEndpoint:                    lAutoGetTenantEndpoint,
 		AutoGetVersionEndpoint:                   lAutoGetVersionEndpoint,
 		AutoListClusterEndpoint:                  lAutoListClusterEndpoint,
+		AutoListConfigurationSnapshotEndpoint:    lAutoListConfigurationSnapshotEndpoint,
 		AutoListDistributedServiceCardEndpoint:   lAutoListDistributedServiceCardEndpoint,
 		AutoListHostEndpoint:                     lAutoListHostEndpoint,
 		AutoListNodeEndpoint:                     lAutoListNodeEndpoint,
+		AutoListSnapshotRestoreEndpoint:          lAutoListSnapshotRestoreEndpoint,
 		AutoListTenantEndpoint:                   lAutoListTenantEndpoint,
 		AutoListVersionEndpoint:                  lAutoListVersionEndpoint,
 		AutoUpdateClusterEndpoint:                lAutoUpdateClusterEndpoint,
+		AutoUpdateConfigurationSnapshotEndpoint:  lAutoUpdateConfigurationSnapshotEndpoint,
 		AutoUpdateDistributedServiceCardEndpoint: lAutoUpdateDistributedServiceCardEndpoint,
 		AutoUpdateHostEndpoint:                   lAutoUpdateHostEndpoint,
 		AutoUpdateNodeEndpoint:                   lAutoUpdateNodeEndpoint,
+		AutoUpdateSnapshotRestoreEndpoint:        lAutoUpdateSnapshotRestoreEndpoint,
 		AutoUpdateTenantEndpoint:                 lAutoUpdateTenantEndpoint,
 		AutoUpdateVersionEndpoint:                lAutoUpdateVersionEndpoint,
+		RestoreEndpoint:                          lRestoreEndpoint,
+		SaveEndpoint:                             lSaveEndpoint,
 		UpdateTLSConfigEndpoint:                  lUpdateTLSConfigEndpoint,
 	}
 }
@@ -1687,6 +1867,416 @@ func (a *restObjClusterV1Version) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjClusterV1ConfigurationSnapshot struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Create(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddConfigurationSnapshot(nctx, in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Update(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateConfigurationSnapshot(nctx, in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) UpdateStatus(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateConfigurationSnapshot(nctx, in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.ConfigurationSnapshot{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetConfigurationSnapshot(nctx, &in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.ConfigurationSnapshot{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteConfigurationSnapshot(nctx, &in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListConfigurationSnapshot(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchConfigurationSnapshot(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchConfigurationSnapshotClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Save(ctx context.Context, in *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Save ConfigurationSnapshotRequest ConfigurationSnapshot}", "oper", "Save")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Save(nctx, in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1ConfigurationSnapshot struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Create(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddConfigurationSnapshot(ctx, in)
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Update(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateConfigurationSnapshot(ctx, in)
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) UpdateStatus(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.ConfigurationSnapshot{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetConfigurationSnapshot(ctx, &in)
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.ConfigurationSnapshot{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteConfigurationSnapshot(ctx, &in)
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.ConfigurationSnapshot, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListConfigurationSnapshot(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchConfigurationSnapshot(ctx, options)
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
+func (a *restObjClusterV1ConfigurationSnapshot) Save(ctx context.Context, in *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.SaveConfigurationSnapshot(ctx, in)
+}
+
+type grpcObjClusterV1SnapshotRestore struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Create(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddSnapshotRestore(nctx, in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Update(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateSnapshotRestore(nctx, in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) UpdateStatus(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateSnapshotRestore(nctx, in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.SnapshotRestore{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetSnapshotRestore(nctx, &in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.SnapshotRestore{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteSnapshotRestore(nctx, &in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListSnapshotRestore(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSnapshotRestore(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchSnapshotRestoreClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Restore(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Restore SnapshotRestore SnapshotRestore}", "oper", "Restore")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Restore(nctx, in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1SnapshotRestore struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1SnapshotRestore) Create(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddSnapshotRestore(ctx, in)
+}
+
+func (a *restObjClusterV1SnapshotRestore) Update(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateSnapshotRestore(ctx, in)
+}
+
+func (a *restObjClusterV1SnapshotRestore) UpdateStatus(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1SnapshotRestore) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.SnapshotRestore{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetSnapshotRestore(ctx, &in)
+}
+
+func (a *restObjClusterV1SnapshotRestore) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.SnapshotRestore{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteSnapshotRestore(ctx, &in)
+}
+
+func (a *restObjClusterV1SnapshotRestore) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.SnapshotRestore, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListSnapshotRestore(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1SnapshotRestore) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchSnapshotRestore(ctx, options)
+}
+
+func (a *restObjClusterV1SnapshotRestore) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
+func (a *restObjClusterV1SnapshotRestore) Restore(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.RestoreSnapshotRestore(ctx, in)
+}
+
 type crudClientClusterV1 struct {
 	logger log.Logger
 	client cluster.ServiceClusterV1Client
@@ -1697,6 +2287,8 @@ type crudClientClusterV1 struct {
 	grpcDistributedServiceCard cluster.ClusterV1DistributedServiceCardInterface
 	grpcTenant                 cluster.ClusterV1TenantInterface
 	grpcVersion                cluster.ClusterV1VersionInterface
+	grpcConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
+	grpcSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 }
 
 // NewGrpcCrudClientClusterV1 creates a GRPC client for the service
@@ -1712,6 +2304,8 @@ func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluste
 		grpcDistributedServiceCard: &grpcObjClusterV1DistributedServiceCard{client: client, logger: logger},
 		grpcTenant:                 &grpcObjClusterV1Tenant{client: client, logger: logger},
 		grpcVersion:                &grpcObjClusterV1Version{client: client, logger: logger},
+		grpcConfigurationSnapshot:  &grpcObjClusterV1ConfigurationSnapshot{client: client, logger: logger},
+		grpcSnapshotRestore:        &grpcObjClusterV1SnapshotRestore{client: client, logger: logger},
 	}
 }
 
@@ -1737,6 +2331,14 @@ func (a *crudClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 
 func (a *crudClientClusterV1) Version() cluster.ClusterV1VersionInterface {
 	return a.grpcVersion
+}
+
+func (a *crudClientClusterV1) ConfigurationSnapshot() cluster.ClusterV1ConfigurationSnapshotInterface {
+	return a.grpcConfigurationSnapshot
+}
+
+func (a *crudClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
+	return a.grpcSnapshotRestore
 }
 
 func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -1788,6 +2390,8 @@ type crudRestClientClusterV1 struct {
 	restDistributedServiceCard cluster.ClusterV1DistributedServiceCardInterface
 	restTenant                 cluster.ClusterV1TenantInterface
 	restVersion                cluster.ClusterV1VersionInterface
+	restConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
+	restSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 }
 
 // NewRestCrudClientClusterV1 creates a REST client for the service.
@@ -1804,6 +2408,8 @@ func NewRestCrudClientClusterV1(url string, httpClient *http.Client) cluster.Clu
 		restDistributedServiceCard: &restObjClusterV1DistributedServiceCard{endpoints: endpoints, instance: url},
 		restTenant:                 &restObjClusterV1Tenant{endpoints: endpoints, instance: url},
 		restVersion:                &restObjClusterV1Version{endpoints: endpoints, instance: url},
+		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
+		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1821,6 +2427,8 @@ func NewStagedRestCrudClientClusterV1(url string, id string, httpClient *http.Cl
 		restDistributedServiceCard: &restObjClusterV1DistributedServiceCard{endpoints: endpoints, instance: url},
 		restTenant:                 &restObjClusterV1Tenant{endpoints: endpoints, instance: url},
 		restVersion:                &restObjClusterV1Version{endpoints: endpoints, instance: url},
+		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
+		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1846,6 +2454,14 @@ func (a *crudRestClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 
 func (a *crudRestClientClusterV1) Version() cluster.ClusterV1VersionInterface {
 	return a.restVersion
+}
+
+func (a *crudRestClientClusterV1) ConfigurationSnapshot() cluster.ClusterV1ConfigurationSnapshotInterface {
+	return a.restConfigurationSnapshot
+}
+
+func (a *crudRestClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
+	return a.restSnapshotRestore
 }
 
 func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

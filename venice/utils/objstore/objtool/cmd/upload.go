@@ -31,7 +31,7 @@ func upload(cmd *cobra.Command, args []string) {
 	}
 
 	sURI := strings.TrimSuffix(uri, "/")
-	reqURI := "/objstore/v1/uploads/images/"
+	reqURI := fmt.Sprintf("/objstore/v1/uploads/%s/", bucket)
 	metadata := map[string]string{
 		"Version":     "v1.3.2",
 		"Environment": "production",

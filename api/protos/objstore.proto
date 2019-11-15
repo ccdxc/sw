@@ -13,6 +13,7 @@ import "github.com/pensando/sw/api/protos/tenant.proto";
 enum Buckets {
     images          = 0;
     techsupport     = 1;
+    snapshots       = 2;
 }
 
 message BucketSpec {

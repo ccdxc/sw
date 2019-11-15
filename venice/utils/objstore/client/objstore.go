@@ -335,7 +335,6 @@ func (c *client) GetStreamObjectAtOffset(ctx context.Context, objectName string,
 		if err == nil {
 			return r, nil
 		}
-
 		// object not found, retry if the upload is in progress
 		if c.checkInProgress(objectName) != true {
 			return nil, fmt.Errorf("failed to find stream object %s", stObjName)

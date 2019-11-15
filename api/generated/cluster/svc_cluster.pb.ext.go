@@ -36,6 +36,16 @@ func (m *ClusterList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *ConfigurationSnapshotList) MakeKey(prefix string) string {
+	obj := ConfigurationSnapshot{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *ConfigurationSnapshotList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *DistributedServiceCardList) MakeKey(prefix string) string {
 	obj := DistributedServiceCard{}
 	return obj.MakeKey(prefix)
@@ -66,6 +76,16 @@ func (m *NodeList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *SnapshotRestoreList) MakeKey(prefix string) string {
+	obj := SnapshotRestore{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *SnapshotRestoreList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *TenantList) MakeKey(prefix string) string {
 	obj := Tenant{}
 	return obj.MakeKey(prefix)
@@ -92,6 +112,12 @@ func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AutoMsgConfigurationSnapshotWatchHelper) MakeKey(prefix string) string {
+	obj := ConfigurationSnapshot{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgDistributedServiceCardWatchHelper) MakeKey(prefix string) string {
 	obj := DistributedServiceCard{}
 	return obj.MakeKey(prefix)
@@ -106,6 +132,12 @@ func (m *AutoMsgHostWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
 	obj := Node{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgSnapshotRestoreWatchHelper) MakeKey(prefix string) string {
+	obj := SnapshotRestore{}
 	return obj.MakeKey(prefix)
 }
 
@@ -160,6 +192,48 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Clone(into interface{}) (interfac
 
 // Default sets up the defaults for the object
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgConfigurationSnapshotWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgConfigurationSnapshotWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgConfigurationSnapshotWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgConfigurationSnapshotWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgConfigurationSnapshotWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -290,6 +364,48 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSnapshotRestoreWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSnapshotRestoreWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSnapshotRestoreWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgSnapshotRestoreWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgSnapshotRestoreWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgSnapshotRestoreWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSnapshotRestoreWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSnapshotRestoreWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgSnapshotRestoreWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgSnapshotRestoreWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgTenantWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgTenantWatchHelper
 	var ok bool
@@ -395,6 +511,27 @@ func (m *ClusterList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *ConfigurationSnapshotList) Clone(into interface{}) (interface{}, error) {
+	var out *ConfigurationSnapshotList
+	var ok bool
+	if into == nil {
+		out = &ConfigurationSnapshotList{}
+	} else {
+		out, ok = into.(*ConfigurationSnapshotList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*ConfigurationSnapshotList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ConfigurationSnapshotList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *DistributedServiceCardList) Clone(into interface{}) (interface{}, error) {
 	var out *DistributedServiceCardList
 	var ok bool
@@ -454,6 +591,27 @@ func (m *NodeList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NodeList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SnapshotRestoreList) Clone(into interface{}) (interface{}, error) {
+	var out *SnapshotRestoreList
+	var ok bool
+	if into == nil {
+		out = &SnapshotRestoreList{}
+	} else {
+		out, ok = into.(*SnapshotRestoreList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*SnapshotRestoreList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SnapshotRestoreList) Defaults(ver string) bool {
 	return false
 }
 
@@ -554,6 +712,66 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignore
 }
 
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -741,6 +959,66 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgSnapshotRestoreWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgTenantWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -891,6 +1169,36 @@ func (m *ClusterList) Normalize() {
 
 }
 
+func (m *ConfigurationSnapshotList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *ConfigurationSnapshotList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *ConfigurationSnapshotList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
 func (m *DistributedServiceCardList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -971,6 +1279,36 @@ func (m *NodeList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 }
 
 func (m *NodeList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *SnapshotRestoreList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *SnapshotRestoreList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *SnapshotRestoreList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {

@@ -61,6 +61,8 @@ mock_cluster.go: ../generated/cluster/svc_cluster_crudinterface.go Makefile
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1HostInterface[[:space:])]/ (cluster.ClusterV1HostInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1SmartNICInterface[[:space:])]/ (cluster.ClusterV1SmartNICInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1TenantInterface[[:space:])]/ (cluster.ClusterV1TenantInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]ClusterV1ConfigurationSnapshotInterface[[:space:])]/ (cluster.ClusterV1ConfigurationSnapshotInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]ClusterV1SnapshotRestoreInterface[[:space:])]/ (cluster.ClusterV1SnapshotRestoreInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@
 	rm -f *.bak_
 

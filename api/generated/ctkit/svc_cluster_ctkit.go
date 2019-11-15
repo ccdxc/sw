@@ -3359,3 +3359,1115 @@ func (api *versionAPI) StopWatch(handler VersionHandler) error {
 func (ct *ctrlerCtx) Version() VersionAPI {
 	return &versionAPI{ct: ct}
 }
+
+// ConfigurationSnapshot is a wrapper object that implements additional functionality
+type ConfigurationSnapshot struct {
+	sync.Mutex
+	cluster.ConfigurationSnapshot
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *ConfigurationSnapshot) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("ConfigurationSnapshot_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().ConfigurationSnapshot().UpdateStatus(context.Background(), &obj.ConfigurationSnapshot)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), &obj.ConfigurationSnapshot)
+	}
+
+	return nil
+}
+
+// ConfigurationSnapshotHandler is the event handler for ConfigurationSnapshot object
+type ConfigurationSnapshotHandler interface {
+	OnConfigurationSnapshotCreate(obj *ConfigurationSnapshot) error
+	OnConfigurationSnapshotUpdate(oldObj *ConfigurationSnapshot, newObj *cluster.ConfigurationSnapshot) error
+	OnConfigurationSnapshotDelete(obj *ConfigurationSnapshot) error
+}
+
+// handleConfigurationSnapshotEvent handles ConfigurationSnapshot events from watcher
+func (ct *ctrlerCtx) handleConfigurationSnapshotEvent(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.ConfigurationSnapshot:
+		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
+		kind := "ConfigurationSnapshot"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		configurationsnapshotHandler := handler.(ConfigurationSnapshotHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &ConfigurationSnapshot{
+					ConfigurationSnapshot: *eobj,
+					HandlerCtx:            nil,
+					ctrler:                ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("ConfigurationSnapshot_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = configurationsnapshotHandler.OnConfigurationSnapshotCreate(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.delObject(kind, eobj.GetKey())
+					return err
+				}
+			} else {
+				obj := fobj.(*ConfigurationSnapshot)
+
+				ct.stats.Counter("ConfigurationSnapshot_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = configurationsnapshotHandler.OnConfigurationSnapshotUpdate(obj, eobj)
+				obj.ConfigurationSnapshot = *eobj
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
+				}
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*ConfigurationSnapshot)
+
+			ct.stats.Counter("ConfigurationSnapshot_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			err = configurationsnapshotHandler.OnConfigurationSnapshotDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+
+			ct.delObject(kind, eobj.GetKey())
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on ConfigurationSnapshot watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleConfigurationSnapshotEventParallel handles ConfigurationSnapshot events from watcher
+func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.ConfigurationSnapshot:
+		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
+		kind := "ConfigurationSnapshot"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		configurationsnapshotHandler := handler.(ConfigurationSnapshotHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*cluster.ConfigurationSnapshot)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &ConfigurationSnapshot{
+						ConfigurationSnapshot: *eobj,
+						HandlerCtx:            nil,
+						ctrler:                ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("ConfigurationSnapshot_Created_Events").Inc()
+					obj.Lock()
+					err = configurationsnapshotHandler.OnConfigurationSnapshotCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, obj.ConfigurationSnapshot.GetKey())
+					}
+				} else {
+					obj := fobj.(*ConfigurationSnapshot)
+					ct.stats.Counter("ConfigurationSnapshot_Updated_Events").Inc()
+					obj.Lock()
+					err = configurationsnapshotHandler.OnConfigurationSnapshotUpdate(obj, eobj)
+					obj.ConfigurationSnapshot = *eobj
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}
+				return err
+			}
+			ct.runJob("ConfigurationSnapshot", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*cluster.ConfigurationSnapshot)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*ConfigurationSnapshot)
+				ct.stats.Counter("ConfigurationSnapshot_Deleted_Events").Inc()
+				obj.Lock()
+				err = configurationsnapshotHandler.OnConfigurationSnapshotDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+				ct.delObject(kind, obj.ConfigurationSnapshot.GetKey())
+				return nil
+			}
+			ct.runJob("ConfigurationSnapshot", eobj, workFunc)
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on ConfigurationSnapshot watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffConfigurationSnapshot does a diff of ConfigurationSnapshot objects between local cache and API server
+func (ct *ctrlerCtx) diffConfigurationSnapshot(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.ClusterV1().ConfigurationSnapshot().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffConfigurationSnapshot(): ConfigurationSnapshotList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*cluster.ConfigurationSnapshot)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	list, err := ct.ConfigurationSnapshot().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range list {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffConfigurationSnapshot(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.ConfigurationSnapshot,
+			}
+			ct.handleConfigurationSnapshotEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffConfigurationSnapshot(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleConfigurationSnapshotEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runConfigurationSnapshotWatcher() {
+	kind := "ConfigurationSnapshot"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "ConfigurationSnapshotWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffConfigurationSnapshot(apiclt)
+	}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("ConfigurationSnapshot_Watch").Inc()
+		defer ct.stats.Counter("ConfigurationSnapshot_Watch").Dec()
+
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("ConfigurationSnapshot_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
+
+				// ConfigurationSnapshot object watcher
+				wt, werr := apicl.ClusterV1().ConfigurationSnapshot().Watch(ctx, &opts)
+				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
+				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffConfigurationSnapshot(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("ConfigurationSnapshot_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event in parallel
+						ct.handleConfigurationSnapshotEventParallel(evt)
+					}
+				}
+				apicl.Close()
+			}
+
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
+
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+// WatchConfigurationSnapshot starts watch on ConfigurationSnapshot object
+func (ct *ctrlerCtx) WatchConfigurationSnapshot(handler ConfigurationSnapshotHandler) error {
+	kind := "ConfigurationSnapshot"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if ok {
+		return fmt.Errorf("ConfigurationSnapshot watcher already exists")
+	}
+
+	// save handler
+	ct.Lock()
+	ct.handlers[kind] = handler
+	ct.Unlock()
+
+	// run ConfigurationSnapshot watcher in a go routine
+	ct.runConfigurationSnapshotWatcher()
+
+	return nil
+}
+
+// StopWatchConfigurationSnapshot stops watch on ConfigurationSnapshot object
+func (ct *ctrlerCtx) StopWatchConfigurationSnapshot(handler ConfigurationSnapshotHandler) error {
+	kind := "ConfigurationSnapshot"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("ConfigurationSnapshot watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
+// ConfigurationSnapshotAPI returns
+type ConfigurationSnapshotAPI interface {
+	Create(obj *cluster.ConfigurationSnapshot) error
+	CreateEvent(obj *cluster.ConfigurationSnapshot) error
+	Update(obj *cluster.ConfigurationSnapshot) error
+	Delete(obj *cluster.ConfigurationSnapshot) error
+	Find(meta *api.ObjectMeta) (*ConfigurationSnapshot, error)
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*ConfigurationSnapshot, error)
+	Watch(handler ConfigurationSnapshotHandler) error
+	StopWatch(handler ConfigurationSnapshotHandler) error
+}
+
+// dummy struct that implements ConfigurationSnapshotAPI
+type configurationsnapshotAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates ConfigurationSnapshot object
+func (api *configurationsnapshotAPI) Create(obj *cluster.ConfigurationSnapshot) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
+		}
+		return err
+	}
+
+	return api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates ConfigurationSnapshot object and synchronously triggers local event
+func (api *configurationsnapshotAPI) CreateEvent(obj *cluster.ConfigurationSnapshot) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
+	}
+
+	return api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// Update triggers update on ConfigurationSnapshot object
+func (api *configurationsnapshotAPI) Update(obj *cluster.ConfigurationSnapshot) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
+		return err
+	}
+
+	return api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+}
+
+// Delete deletes ConfigurationSnapshot object
+func (api *configurationsnapshotAPI) Delete(obj *cluster.ConfigurationSnapshot) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().ConfigurationSnapshot().Delete(context.Background(), &obj.ObjectMeta)
+		return err
+	}
+
+	return api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *configurationsnapshotAPI) Find(meta *api.ObjectMeta) (*ConfigurationSnapshot, error) {
+	// find the object
+	obj, err := api.ct.FindObject("ConfigurationSnapshot", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *ConfigurationSnapshot:
+		hobj := obj.(*ConfigurationSnapshot)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all ConfigurationSnapshot objects
+func (api *configurationsnapshotAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*ConfigurationSnapshot, error) {
+	var objlist []*ConfigurationSnapshot
+	objs, err := api.ct.List("ConfigurationSnapshot", ctx, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *ConfigurationSnapshot:
+			eobj := obj.(*ConfigurationSnapshot)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for ConfigurationSnapshot", tp)
+		}
+	}
+
+	return objlist, nil
+}
+
+// Watch sets up a event handlers for ConfigurationSnapshot object
+func (api *configurationsnapshotAPI) Watch(handler ConfigurationSnapshotHandler) error {
+	api.ct.startWorkerPool("ConfigurationSnapshot")
+	return api.ct.WatchConfigurationSnapshot(handler)
+}
+
+// StopWatch stop watch for Tenant ConfigurationSnapshot object
+func (api *configurationsnapshotAPI) StopWatch(handler ConfigurationSnapshotHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["ConfigurationSnapshot"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchConfigurationSnapshot(handler)
+}
+
+// ConfigurationSnapshot returns ConfigurationSnapshotAPI
+func (ct *ctrlerCtx) ConfigurationSnapshot() ConfigurationSnapshotAPI {
+	return &configurationsnapshotAPI{ct: ct}
+}
+
+// SnapshotRestore is a wrapper object that implements additional functionality
+type SnapshotRestore struct {
+	sync.Mutex
+	cluster.SnapshotRestore
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *SnapshotRestore) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("SnapshotRestore_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().SnapshotRestore().UpdateStatus(context.Background(), &obj.SnapshotRestore)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), &obj.SnapshotRestore)
+	}
+
+	return nil
+}
+
+// SnapshotRestoreHandler is the event handler for SnapshotRestore object
+type SnapshotRestoreHandler interface {
+	OnSnapshotRestoreCreate(obj *SnapshotRestore) error
+	OnSnapshotRestoreUpdate(oldObj *SnapshotRestore, newObj *cluster.SnapshotRestore) error
+	OnSnapshotRestoreDelete(obj *SnapshotRestore) error
+}
+
+// handleSnapshotRestoreEvent handles SnapshotRestore events from watcher
+func (ct *ctrlerCtx) handleSnapshotRestoreEvent(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.SnapshotRestore:
+		eobj := evt.Object.(*cluster.SnapshotRestore)
+		kind := "SnapshotRestore"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		snapshotrestoreHandler := handler.(SnapshotRestoreHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				obj := &SnapshotRestore{
+					SnapshotRestore: *eobj,
+					HandlerCtx:      nil,
+					ctrler:          ct,
+				}
+				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("SnapshotRestore_Created_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = snapshotrestoreHandler.OnSnapshotRestoreCreate(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.delObject(kind, eobj.GetKey())
+					return err
+				}
+			} else {
+				obj := fobj.(*SnapshotRestore)
+
+				ct.stats.Counter("SnapshotRestore_Updated_Events").Inc()
+
+				// call the event handler
+				obj.Lock()
+				err = snapshotrestoreHandler.OnSnapshotRestoreUpdate(obj, eobj)
+				obj.SnapshotRestore = *eobj
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
+				}
+			}
+		case kvstore.Deleted:
+			fobj, err := ct.findObject(kind, eobj.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*SnapshotRestore)
+
+			ct.stats.Counter("SnapshotRestore_Deleted_Events").Inc()
+
+			// Call the event reactor
+			obj.Lock()
+			err = snapshotrestoreHandler.OnSnapshotRestoreDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+
+			ct.delObject(kind, eobj.GetKey())
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SnapshotRestore watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleSnapshotRestoreEventParallel handles SnapshotRestore events from watcher
+func (ct *ctrlerCtx) handleSnapshotRestoreEventParallel(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *cluster.SnapshotRestore:
+		eobj := evt.Object.(*cluster.SnapshotRestore)
+		kind := "SnapshotRestore"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		snapshotrestoreHandler := handler.(SnapshotRestoreHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				var err error
+				eobj := userCtx.(*cluster.SnapshotRestore)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					obj := &SnapshotRestore{
+						SnapshotRestore: *eobj,
+						HandlerCtx:      nil,
+						ctrler:          ct,
+					}
+					ct.addObject(kind, obj.GetKey(), obj)
+					ct.stats.Counter("SnapshotRestore_Created_Events").Inc()
+					obj.Lock()
+					err = snapshotrestoreHandler.OnSnapshotRestoreCreate(obj)
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.delObject(kind, obj.SnapshotRestore.GetKey())
+					}
+				} else {
+					obj := fobj.(*SnapshotRestore)
+					ct.stats.Counter("SnapshotRestore_Updated_Events").Inc()
+					obj.Lock()
+					err = snapshotrestoreHandler.OnSnapshotRestoreUpdate(obj, eobj)
+					obj.SnapshotRestore = *eobj
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}
+				return err
+			}
+			ct.runJob("SnapshotRestore", eobj, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+				eobj := userCtx.(*cluster.SnapshotRestore)
+				fobj, err := ct.findObject(kind, eobj.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*SnapshotRestore)
+				ct.stats.Counter("SnapshotRestore_Deleted_Events").Inc()
+				obj.Lock()
+				err = snapshotrestoreHandler.OnSnapshotRestoreDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+				ct.delObject(kind, obj.SnapshotRestore.GetKey())
+				return nil
+			}
+			ct.runJob("SnapshotRestore", eobj, workFunc)
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SnapshotRestore watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffSnapshotRestore does a diff of SnapshotRestore objects between local cache and API server
+func (ct *ctrlerCtx) diffSnapshotRestore(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.ClusterV1().SnapshotRestore().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffSnapshotRestore(): SnapshotRestoreList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*cluster.SnapshotRestore)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	list, err := ct.SnapshotRestore().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range list {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffSnapshotRestore(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.SnapshotRestore,
+			}
+			ct.handleSnapshotRestoreEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffSnapshotRestore(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleSnapshotRestoreEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runSnapshotRestoreWatcher() {
+	kind := "SnapshotRestore"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "SnapshotRestoreWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffSnapshotRestore(apiclt)
+	}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("SnapshotRestore_Watch").Inc()
+		defer ct.stats.Counter("SnapshotRestore_Watch").Dec()
+
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("SnapshotRestore_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
+
+				// SnapshotRestore object watcher
+				wt, werr := apicl.ClusterV1().SnapshotRestore().Watch(ctx, &opts)
+				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
+				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffSnapshotRestore(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("SnapshotRestore_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event in parallel
+						ct.handleSnapshotRestoreEventParallel(evt)
+					}
+				}
+				apicl.Close()
+			}
+
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
+
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+// WatchSnapshotRestore starts watch on SnapshotRestore object
+func (ct *ctrlerCtx) WatchSnapshotRestore(handler SnapshotRestoreHandler) error {
+	kind := "SnapshotRestore"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if ok {
+		return fmt.Errorf("SnapshotRestore watcher already exists")
+	}
+
+	// save handler
+	ct.Lock()
+	ct.handlers[kind] = handler
+	ct.Unlock()
+
+	// run SnapshotRestore watcher in a go routine
+	ct.runSnapshotRestoreWatcher()
+
+	return nil
+}
+
+// StopWatchSnapshotRestore stops watch on SnapshotRestore object
+func (ct *ctrlerCtx) StopWatchSnapshotRestore(handler SnapshotRestoreHandler) error {
+	kind := "SnapshotRestore"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("SnapshotRestore watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
+// SnapshotRestoreAPI returns
+type SnapshotRestoreAPI interface {
+	Create(obj *cluster.SnapshotRestore) error
+	CreateEvent(obj *cluster.SnapshotRestore) error
+	Update(obj *cluster.SnapshotRestore) error
+	Delete(obj *cluster.SnapshotRestore) error
+	Find(meta *api.ObjectMeta) (*SnapshotRestore, error)
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*SnapshotRestore, error)
+	Watch(handler SnapshotRestoreHandler) error
+	StopWatch(handler SnapshotRestoreHandler) error
+}
+
+// dummy struct that implements SnapshotRestoreAPI
+type snapshotrestoreAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates SnapshotRestore object
+func (api *snapshotrestoreAPI) Create(obj *cluster.SnapshotRestore) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
+		}
+		return err
+	}
+
+	return api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// CreateEvent creates SnapshotRestore object and synchronously triggers local event
+func (api *snapshotrestoreAPI) CreateEvent(obj *cluster.SnapshotRestore) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
+	}
+
+	return api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+}
+
+// Update triggers update on SnapshotRestore object
+func (api *snapshotrestoreAPI) Update(obj *cluster.SnapshotRestore) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
+		return err
+	}
+
+	return api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+}
+
+// Delete deletes SnapshotRestore object
+func (api *snapshotrestoreAPI) Delete(obj *cluster.SnapshotRestore) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SnapshotRestore().Delete(context.Background(), &obj.ObjectMeta)
+		return err
+	}
+
+	return api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *snapshotrestoreAPI) Find(meta *api.ObjectMeta) (*SnapshotRestore, error) {
+	// find the object
+	obj, err := api.ct.FindObject("SnapshotRestore", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *SnapshotRestore:
+		hobj := obj.(*SnapshotRestore)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all SnapshotRestore objects
+func (api *snapshotrestoreAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*SnapshotRestore, error) {
+	var objlist []*SnapshotRestore
+	objs, err := api.ct.List("SnapshotRestore", ctx, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *SnapshotRestore:
+			eobj := obj.(*SnapshotRestore)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for SnapshotRestore", tp)
+		}
+	}
+
+	return objlist, nil
+}
+
+// Watch sets up a event handlers for SnapshotRestore object
+func (api *snapshotrestoreAPI) Watch(handler SnapshotRestoreHandler) error {
+	api.ct.startWorkerPool("SnapshotRestore")
+	return api.ct.WatchSnapshotRestore(handler)
+}
+
+// StopWatch stop watch for Tenant SnapshotRestore object
+func (api *snapshotrestoreAPI) StopWatch(handler SnapshotRestoreHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["SnapshotRestore"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchSnapshotRestore(handler)
+}
+
+// SnapshotRestore returns SnapshotRestoreAPI
+func (ct *ctrlerCtx) SnapshotRestore() SnapshotRestoreAPI {
+	return &snapshotrestoreAPI{ct: ct}
+}

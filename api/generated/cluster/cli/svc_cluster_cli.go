@@ -455,6 +455,136 @@ func restPutVersion(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for Version object")
 }
 
+func restGetConfigurationSnapshot(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.ConfigurationSnapshot); ok {
+		nv, err := restcl.ClusterV1().ConfigurationSnapshot().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*cluster.ConfigurationSnapshotList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.ClusterV1().ConfigurationSnapshot().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteConfigurationSnapshot(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.ConfigurationSnapshot); ok {
+		nv, err := restcl.ClusterV1().ConfigurationSnapshot().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostConfigurationSnapshot(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.ConfigurationSnapshot); ok {
+		nv, err := restcl.ClusterV1().ConfigurationSnapshot().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutConfigurationSnapshot(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.ConfigurationSnapshot); ok {
+		nv, err := restcl.ClusterV1().ConfigurationSnapshot().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restGetSnapshotRestore(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.SnapshotRestore); ok {
+		nv, err := restcl.ClusterV1().SnapshotRestore().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*cluster.SnapshotRestoreList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.ClusterV1().SnapshotRestore().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteSnapshotRestore(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for SnapshotRestore object")
+}
+
+func restPostSnapshotRestore(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for SnapshotRestore object")
+}
+
+func restPutSnapshotRestore(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for SnapshotRestore object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -484,5 +614,12 @@ func init() {
 	cl.AddRestGetFunc("cluster.Tenant", "v1", restGetTenant)
 
 	cl.AddRestGetFunc("cluster.Version", "v1", restGetVersion)
+
+	cl.AddRestPostFunc("cluster.ConfigurationSnapshot", "v1", restPostConfigurationSnapshot)
+	cl.AddRestDeleteFunc("cluster.ConfigurationSnapshot", "v1", restDeleteConfigurationSnapshot)
+	cl.AddRestPutFunc("cluster.ConfigurationSnapshot", "v1", restPutConfigurationSnapshot)
+	cl.AddRestGetFunc("cluster.ConfigurationSnapshot", "v1", restGetConfigurationSnapshot)
+
+	cl.AddRestGetFunc("cluster.SnapshotRestore", "v1", restGetSnapshotRestore)
 
 }

@@ -2,6 +2,8 @@ package mocks
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -14,9 +16,15 @@ import (
 // FakeCache is mock implementation
 type FakeCache struct {
 	FakeKvStore
-	ListFilteredFn func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
-	StatFn         func(keys []string) []apiintf.ObjectStat
-	Kvconn         kvstore.Interface
+	ListFilteredFn    func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
+	StatFn            func(keys []string) []apiintf.ObjectStat
+	Kvconn            kvstore.Interface
+	StartSnapshotFn   func() uint64
+	RetSnapshotReader io.ReadCloser
+	RetSnapshotWriter apiintf.SnapshotWriter
+	StatKindFn        func(group string, kind string) ([]apiintf.ObjectStat, error)
+	SnapWriter        apiintf.SnapshotWriter
+	RollbackCalls     int
 }
 
 // ListFiltered is mock implementation
@@ -50,6 +58,14 @@ func (f *FakeCache) Stat(tx context.Context, keys []string) []apiintf.ObjectStat
 	return nil
 }
 
+// StatKind is mock implementation
+func (f *FakeCache) StatKind(group string, kind string) ([]apiintf.ObjectStat, error) {
+	if f.StatKindFn != nil {
+		return f.StatKindFn(group, kind)
+	}
+	return nil, fmt.Errorf("unimplemented")
+}
+
 // DebugAction is a mock implementation
 func (f *FakeCache) DebugAction(action string, params []string) string {
 	return ""
@@ -62,6 +78,35 @@ func (f *FakeCache) Clear() {
 // GetKvConn is mock implementation
 func (f *FakeCache) GetKvConn() kvstore.Interface {
 	return f.Kvconn
+}
+
+// StartSnapshot is a mock implementation
+func (f *FakeCache) StartSnapshot() uint64 {
+	if f.StartSnapshotFn != nil {
+		return f.StartSnapshotFn()
+	}
+	return 0
+}
+
+// DeleteSnapshot is a mock implementation
+func (f *FakeCache) DeleteSnapshot(uint64) error {
+	return nil
+}
+
+// SnapshotReader is a mock implementation
+func (f *FakeCache) SnapshotReader(uint64 uint64, include bool, kinds []string) (io.ReadCloser, error) {
+	return f.RetSnapshotReader, nil
+}
+
+// SnapshotWriter is a mock implementation
+func (f *FakeCache) SnapshotWriter(reader io.Reader) apiintf.SnapshotWriter {
+	return f.SnapWriter
+}
+
+// Rollback is a mock implementation
+func (f *FakeCache) Rollback(ctx context.Context, rev uint64, kvs kvstore.Interface) error {
+	f.RollbackCalls++
+	return nil
 }
 
 // FakeKvStore is mock implementation
@@ -224,6 +269,7 @@ type FakeStore struct {
 	Getfn                     func(key string) (runtime.Object, error)
 	Deletefn                  func(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error)
 	Listfn                    func(key string, opts api.ListWatchOptions) []runtime.Object
+	ListFromSnapshotFn        func(rev uint64, key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
 }
 
 // Set is mock implementation
@@ -284,9 +330,42 @@ func (f *FakeStore) Stat(keys []string) []apiintf.ObjectStat {
 	return nil
 }
 
+// StatAll is a mock implementation
+func (f *FakeStore) StatAll(prefix string) []apiintf.ObjectStat {
+	return nil
+}
+
 // Clear is mock implementation
 func (f *FakeStore) Clear() {
 	f.Flushes++
+}
+
+// GetFromSnapshot is a mock implementation
+func (f *FakeStore) GetFromSnapshot(rev uint64, key string) (runtime.Object, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// ListFromSnapshot is a mock implementation
+func (f *FakeStore) ListFromSnapshot(rev uint64, key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+	if f.ListFromSnapshotFn != nil {
+		return f.ListFromSnapshotFn(rev, key, kind, opts)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+// StartSnapshot is a mock implementation
+func (f *FakeStore) StartSnapshot() uint64 {
+	return 0
+}
+
+// DeleteSnapshot is a mock implementation
+func (f *FakeStore) DeleteSnapshot(uint64) error {
+	return nil
+}
+
+// ListSnapshotWithCB is a mock implementation
+func (f *FakeStore) ListSnapshotWithCB(pfix string, rev uint64, cbfunc func(key string, cur, revObj runtime.Object, deleted bool) error) error {
+	return nil
 }
 
 // Reset is mock implementation
@@ -381,6 +460,11 @@ func (f *FakeOverlay) Stat(tx context.Context, keys []string) []apiintf.ObjectSt
 	return nil
 }
 
+// StatKind is a mock implementation
+func (f *FakeOverlay) StatKind(group string, kind string) ([]apiintf.ObjectStat, error) {
+	return nil, fmt.Errorf("unimplemented")
+}
+
 // Start is a mock implementation
 func (f *FakeOverlay) Start() error { return nil }
 
@@ -460,6 +544,31 @@ func (f *FakeOverlay) NewWrappedTxn(ctx context.Context) kvstore.Txn {
 // DebugAction is a mock implementation
 func (f *FakeOverlay) DebugAction(action string, params []string) string {
 	return ""
+}
+
+// StartSnapshot is a mock implementation
+func (f *FakeOverlay) StartSnapshot() uint64 {
+	return 0
+}
+
+// DeleteSnapshot is a mock implementation
+func (f *FakeOverlay) DeleteSnapshot(uint64) error {
+	return nil
+}
+
+// SnapshotReader is a mock implementation
+func (f *FakeOverlay) SnapshotReader(uint64 uint64, include bool, kinds []string) (io.ReadCloser, error) {
+	return nil, nil
+}
+
+// SnapshotWriter is a mock implementation
+func (f *FakeOverlay) SnapshotWriter(reader io.Reader) apiintf.SnapshotWriter {
+	return nil
+}
+
+// Rollback is a mock implementation
+func (f *FakeOverlay) Rollback(ctx context.Context, rev uint64, kvs kvstore.Interface) error {
+	return nil
 }
 
 // FakeRequirement is a mock implementation

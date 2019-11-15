@@ -9,6 +9,7 @@
 | Buffer | /configs/staging/v1/buffers |
 | Certificate | /configs/security/v1/certificates |
 | Cluster | /configs/cluster/v1/cluster |
+| ConfigurationSnapshot | /configs/cluster/v1/config-snapshot |
 | DistributedServiceCard | /configs/cluster/v1/distributedservicecards |
 | Endpoint | /configs/workload/v1/endpoints |
 | EventPolicy | /configs/monitoring/v1/event-policy |
@@ -32,6 +33,7 @@
 | RolloutAction | /configs/rollout/v1/rolloutAction |
 | SecurityGroup | /configs/security/v1/security-groups |
 | Service | /configs/network/v1/services |
+| SnapshotRestore | /configs/cluster/v1/config-restore |
 | StatsPolicy | /configs/monitoring/v1/statsPolicy |
 | TechSupportRequest | /configs/monitoring/v1/techsupport |
 | Tenant | /configs/cluster/v1/tenants |

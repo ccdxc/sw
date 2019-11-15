@@ -45,35 +45,47 @@ type EndpointsClusterV1Client struct {
 
 	AuthBootstrapCompleteEndpoint            endpoint.Endpoint
 	AutoAddClusterEndpoint                   endpoint.Endpoint
+	AutoAddConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoAddDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoAddHostEndpoint                      endpoint.Endpoint
 	AutoAddNodeEndpoint                      endpoint.Endpoint
+	AutoAddSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoAddTenantEndpoint                    endpoint.Endpoint
 	AutoAddVersionEndpoint                   endpoint.Endpoint
 	AutoDeleteClusterEndpoint                endpoint.Endpoint
+	AutoDeleteConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoDeleteDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoDeleteHostEndpoint                   endpoint.Endpoint
 	AutoDeleteNodeEndpoint                   endpoint.Endpoint
+	AutoDeleteSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoDeleteTenantEndpoint                 endpoint.Endpoint
 	AutoDeleteVersionEndpoint                endpoint.Endpoint
 	AutoGetClusterEndpoint                   endpoint.Endpoint
+	AutoGetConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoGetDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoGetHostEndpoint                      endpoint.Endpoint
 	AutoGetNodeEndpoint                      endpoint.Endpoint
+	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
+	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
 	AutoListHostEndpoint                     endpoint.Endpoint
 	AutoListNodeEndpoint                     endpoint.Endpoint
+	AutoListSnapshotRestoreEndpoint          endpoint.Endpoint
 	AutoListTenantEndpoint                   endpoint.Endpoint
 	AutoListVersionEndpoint                  endpoint.Endpoint
 	AutoUpdateClusterEndpoint                endpoint.Endpoint
+	AutoUpdateConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoUpdateDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoUpdateHostEndpoint                   endpoint.Endpoint
 	AutoUpdateNodeEndpoint                   endpoint.Endpoint
+	AutoUpdateSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoUpdateTenantEndpoint                 endpoint.Endpoint
 	AutoUpdateVersionEndpoint                endpoint.Endpoint
+	RestoreEndpoint                          endpoint.Endpoint
+	SaveEndpoint                             endpoint.Endpoint
 	UpdateTLSConfigEndpoint                  endpoint.Endpoint
 }
 
@@ -86,42 +98,56 @@ type EndpointsClusterV1RestClient struct {
 
 	AuthBootstrapCompleteEndpoint            endpoint.Endpoint
 	AutoAddClusterEndpoint                   endpoint.Endpoint
+	AutoAddConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoAddDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoAddHostEndpoint                      endpoint.Endpoint
 	AutoAddNodeEndpoint                      endpoint.Endpoint
+	AutoAddSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoAddTenantEndpoint                    endpoint.Endpoint
 	AutoAddVersionEndpoint                   endpoint.Endpoint
 	AutoDeleteClusterEndpoint                endpoint.Endpoint
+	AutoDeleteConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoDeleteDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoDeleteHostEndpoint                   endpoint.Endpoint
 	AutoDeleteNodeEndpoint                   endpoint.Endpoint
+	AutoDeleteSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoDeleteTenantEndpoint                 endpoint.Endpoint
 	AutoDeleteVersionEndpoint                endpoint.Endpoint
 	AutoGetClusterEndpoint                   endpoint.Endpoint
+	AutoGetConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoGetDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoGetHostEndpoint                      endpoint.Endpoint
 	AutoGetNodeEndpoint                      endpoint.Endpoint
+	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
+	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
 	AutoListHostEndpoint                     endpoint.Endpoint
 	AutoListNodeEndpoint                     endpoint.Endpoint
+	AutoListSnapshotRestoreEndpoint          endpoint.Endpoint
 	AutoListTenantEndpoint                   endpoint.Endpoint
 	AutoListVersionEndpoint                  endpoint.Endpoint
 	AutoUpdateClusterEndpoint                endpoint.Endpoint
+	AutoUpdateConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoUpdateDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoUpdateHostEndpoint                   endpoint.Endpoint
 	AutoUpdateNodeEndpoint                   endpoint.Endpoint
+	AutoUpdateSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoUpdateTenantEndpoint                 endpoint.Endpoint
 	AutoUpdateVersionEndpoint                endpoint.Endpoint
 	AutoWatchClusterEndpoint                 endpoint.Endpoint
+	AutoWatchConfigurationSnapshotEndpoint   endpoint.Endpoint
 	AutoWatchDistributedServiceCardEndpoint  endpoint.Endpoint
 	AutoWatchHostEndpoint                    endpoint.Endpoint
 	AutoWatchNodeEndpoint                    endpoint.Endpoint
+	AutoWatchSnapshotRestoreEndpoint         endpoint.Endpoint
 	AutoWatchSvcClusterV1Endpoint            endpoint.Endpoint
 	AutoWatchTenantEndpoint                  endpoint.Endpoint
 	AutoWatchVersionEndpoint                 endpoint.Endpoint
+	RestoreEndpoint                          endpoint.Endpoint
+	SaveEndpoint                             endpoint.Endpoint
 	UpdateTLSConfigEndpoint                  endpoint.Endpoint
 }
 
@@ -134,35 +160,47 @@ type EndpointsClusterV1Server struct {
 
 	AuthBootstrapCompleteEndpoint            endpoint.Endpoint
 	AutoAddClusterEndpoint                   endpoint.Endpoint
+	AutoAddConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoAddDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoAddHostEndpoint                      endpoint.Endpoint
 	AutoAddNodeEndpoint                      endpoint.Endpoint
+	AutoAddSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoAddTenantEndpoint                    endpoint.Endpoint
 	AutoAddVersionEndpoint                   endpoint.Endpoint
 	AutoDeleteClusterEndpoint                endpoint.Endpoint
+	AutoDeleteConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoDeleteDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoDeleteHostEndpoint                   endpoint.Endpoint
 	AutoDeleteNodeEndpoint                   endpoint.Endpoint
+	AutoDeleteSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoDeleteTenantEndpoint                 endpoint.Endpoint
 	AutoDeleteVersionEndpoint                endpoint.Endpoint
 	AutoGetClusterEndpoint                   endpoint.Endpoint
+	AutoGetConfigurationSnapshotEndpoint     endpoint.Endpoint
 	AutoGetDistributedServiceCardEndpoint    endpoint.Endpoint
 	AutoGetHostEndpoint                      endpoint.Endpoint
 	AutoGetNodeEndpoint                      endpoint.Endpoint
+	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
+	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
 	AutoListHostEndpoint                     endpoint.Endpoint
 	AutoListNodeEndpoint                     endpoint.Endpoint
+	AutoListSnapshotRestoreEndpoint          endpoint.Endpoint
 	AutoListTenantEndpoint                   endpoint.Endpoint
 	AutoListVersionEndpoint                  endpoint.Endpoint
 	AutoUpdateClusterEndpoint                endpoint.Endpoint
+	AutoUpdateConfigurationSnapshotEndpoint  endpoint.Endpoint
 	AutoUpdateDistributedServiceCardEndpoint endpoint.Endpoint
 	AutoUpdateHostEndpoint                   endpoint.Endpoint
 	AutoUpdateNodeEndpoint                   endpoint.Endpoint
+	AutoUpdateSnapshotRestoreEndpoint        endpoint.Endpoint
 	AutoUpdateTenantEndpoint                 endpoint.Endpoint
 	AutoUpdateVersionEndpoint                endpoint.Endpoint
+	RestoreEndpoint                          endpoint.Endpoint
+	SaveEndpoint                             endpoint.Endpoint
 	UpdateTLSConfigEndpoint                  endpoint.Endpoint
 
 	watchHandlerCluster                func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -171,6 +209,8 @@ type EndpointsClusterV1Server struct {
 	watchHandlerDistributedServiceCard func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTenant                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerVersion                func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerConfigurationSnapshot  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerSnapshotRestore        func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AuthBootstrapComplete is endpoint for AuthBootstrapComplete
@@ -198,6 +238,20 @@ func (e EndpointsClusterV1Client) AutoAddCluster(ctx context.Context, in *Cluste
 
 type respClusterV1AutoAddCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoAddConfigurationSnapshot is endpoint for AutoAddConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoAddConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	resp, err := e.AutoAddConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1AutoAddConfigurationSnapshot struct {
+	V   ConfigurationSnapshot
 	Err error
 }
 
@@ -243,6 +297,20 @@ type respClusterV1AutoAddNode struct {
 	Err error
 }
 
+// AutoAddSnapshotRestore is endpoint for AutoAddSnapshotRestore
+func (e EndpointsClusterV1Client) AutoAddSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	resp, err := e.AutoAddSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1AutoAddSnapshotRestore struct {
+	V   SnapshotRestore
+	Err error
+}
+
 // AutoAddTenant is endpoint for AutoAddTenant
 func (e EndpointsClusterV1Client) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	resp, err := e.AutoAddTenantEndpoint(ctx, in)
@@ -282,6 +350,20 @@ func (e EndpointsClusterV1Client) AutoDeleteCluster(ctx context.Context, in *Clu
 
 type respClusterV1AutoDeleteCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoDeleteConfigurationSnapshot is endpoint for AutoDeleteConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoDeleteConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	resp, err := e.AutoDeleteConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1AutoDeleteConfigurationSnapshot struct {
+	V   ConfigurationSnapshot
 	Err error
 }
 
@@ -327,6 +409,20 @@ type respClusterV1AutoDeleteNode struct {
 	Err error
 }
 
+// AutoDeleteSnapshotRestore is endpoint for AutoDeleteSnapshotRestore
+func (e EndpointsClusterV1Client) AutoDeleteSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	resp, err := e.AutoDeleteSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1AutoDeleteSnapshotRestore struct {
+	V   SnapshotRestore
+	Err error
+}
+
 // AutoDeleteTenant is endpoint for AutoDeleteTenant
 func (e EndpointsClusterV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
@@ -366,6 +462,20 @@ func (e EndpointsClusterV1Client) AutoGetCluster(ctx context.Context, in *Cluste
 
 type respClusterV1AutoGetCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoGetConfigurationSnapshot is endpoint for AutoGetConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	resp, err := e.AutoGetConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1AutoGetConfigurationSnapshot struct {
+	V   ConfigurationSnapshot
 	Err error
 }
 
@@ -411,6 +521,20 @@ type respClusterV1AutoGetNode struct {
 	Err error
 }
 
+// AutoGetSnapshotRestore is endpoint for AutoGetSnapshotRestore
+func (e EndpointsClusterV1Client) AutoGetSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	resp, err := e.AutoGetSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1AutoGetSnapshotRestore struct {
+	V   SnapshotRestore
+	Err error
+}
+
 // AutoGetTenant is endpoint for AutoGetTenant
 func (e EndpointsClusterV1Client) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	resp, err := e.AutoGetTenantEndpoint(ctx, in)
@@ -450,6 +574,20 @@ func (e EndpointsClusterV1Client) AutoListCluster(ctx context.Context, in *api.L
 
 type respClusterV1AutoListCluster struct {
 	V   ClusterList
+	Err error
+}
+
+// AutoListConfigurationSnapshot is endpoint for AutoListConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoListConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions) (*ConfigurationSnapshotList, error) {
+	resp, err := e.AutoListConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshotList{}, err
+	}
+	return resp.(*ConfigurationSnapshotList), nil
+}
+
+type respClusterV1AutoListConfigurationSnapshot struct {
+	V   ConfigurationSnapshotList
 	Err error
 }
 
@@ -495,6 +633,20 @@ type respClusterV1AutoListNode struct {
 	Err error
 }
 
+// AutoListSnapshotRestore is endpoint for AutoListSnapshotRestore
+func (e EndpointsClusterV1Client) AutoListSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (*SnapshotRestoreList, error) {
+	resp, err := e.AutoListSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestoreList{}, err
+	}
+	return resp.(*SnapshotRestoreList), nil
+}
+
+type respClusterV1AutoListSnapshotRestore struct {
+	V   SnapshotRestoreList
+	Err error
+}
+
 // AutoListTenant is endpoint for AutoListTenant
 func (e EndpointsClusterV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (*TenantList, error) {
 	resp, err := e.AutoListTenantEndpoint(ctx, in)
@@ -534,6 +686,20 @@ func (e EndpointsClusterV1Client) AutoUpdateCluster(ctx context.Context, in *Clu
 
 type respClusterV1AutoUpdateCluster struct {
 	V   Cluster
+	Err error
+}
+
+// AutoUpdateConfigurationSnapshot is endpoint for AutoUpdateConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoUpdateConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	resp, err := e.AutoUpdateConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1AutoUpdateConfigurationSnapshot struct {
+	V   ConfigurationSnapshot
 	Err error
 }
 
@@ -579,6 +745,20 @@ type respClusterV1AutoUpdateNode struct {
 	Err error
 }
 
+// AutoUpdateSnapshotRestore is endpoint for AutoUpdateSnapshotRestore
+func (e EndpointsClusterV1Client) AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	resp, err := e.AutoUpdateSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1AutoUpdateSnapshotRestore struct {
+	V   SnapshotRestore
+	Err error
+}
+
 // AutoUpdateTenant is endpoint for AutoUpdateTenant
 func (e EndpointsClusterV1Client) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
@@ -604,6 +784,34 @@ func (e EndpointsClusterV1Client) AutoUpdateVersion(ctx context.Context, in *Ver
 
 type respClusterV1AutoUpdateVersion struct {
 	V   Version
+	Err error
+}
+
+// Restore is endpoint for Restore
+func (e EndpointsClusterV1Client) Restore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	resp, err := e.RestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1Restore struct {
+	V   SnapshotRestore
+	Err error
+}
+
+// Save is endpoint for Save
+func (e EndpointsClusterV1Client) Save(ctx context.Context, in *ConfigurationSnapshotRequest) (*ConfigurationSnapshot, error) {
+	resp, err := e.SaveEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1Save struct {
+	V   ConfigurationSnapshot
 	Err error
 }
 
@@ -655,6 +863,16 @@ func (e EndpointsClusterV1Client) AutoWatchVersion(ctx context.Context, in *api.
 	return e.Client.AutoWatchVersion(ctx, in)
 }
 
+// AutoWatchConfigurationSnapshot performs Watch for ConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoWatchConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchConfigurationSnapshotClient, error) {
+	return e.Client.AutoWatchConfigurationSnapshot(ctx, in)
+}
+
+// AutoWatchSnapshotRestore performs Watch for SnapshotRestore
+func (e EndpointsClusterV1Client) AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSnapshotRestoreClient, error) {
+	return e.Client.AutoWatchSnapshotRestore(ctx, in)
+}
+
 // AuthBootstrapComplete implementation on server Endpoint
 func (e EndpointsClusterV1Server) AuthBootstrapComplete(ctx context.Context, in ClusterAuthBootstrapRequest) (Cluster, error) {
 	resp, err := e.AuthBootstrapCompleteEndpoint(ctx, in)
@@ -697,6 +915,28 @@ func MakeClusterV1AutoAddClusterEndpoint(s ServiceClusterV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoAddCluster")(f)
+}
+
+// AutoAddConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoAddConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (ConfigurationSnapshot, error) {
+	resp, err := e.AutoAddConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1AutoAddConfigurationSnapshotEndpoint creates  AutoAddConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoAddConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ConfigurationSnapshot)
+		v, err := s.AutoAddConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoAddConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoAddConfigurationSnapshot")(f)
 }
 
 // AutoAddDistributedServiceCard implementation on server Endpoint
@@ -765,6 +1005,28 @@ func MakeClusterV1AutoAddNodeEndpoint(s ServiceClusterV1Server, logger log.Logge
 	return trace.ServerEndpoint("ClusterV1:AutoAddNode")(f)
 }
 
+// AutoAddSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoAddSnapshotRestore(ctx context.Context, in SnapshotRestore) (SnapshotRestore, error) {
+	resp, err := e.AutoAddSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1AutoAddSnapshotRestoreEndpoint creates  AutoAddSnapshotRestore endpoints for the service
+func MakeClusterV1AutoAddSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SnapshotRestore)
+		v, err := s.AutoAddSnapshotRestore(ctx, *req)
+		return respClusterV1AutoAddSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoAddSnapshotRestore")(f)
+}
+
 // AutoAddTenant implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoAddTenant(ctx context.Context, in Tenant) (Tenant, error) {
 	resp, err := e.AutoAddTenantEndpoint(ctx, in)
@@ -829,6 +1091,28 @@ func MakeClusterV1AutoDeleteClusterEndpoint(s ServiceClusterV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoDeleteCluster")(f)
+}
+
+// AutoDeleteConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoDeleteConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (ConfigurationSnapshot, error) {
+	resp, err := e.AutoDeleteConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1AutoDeleteConfigurationSnapshotEndpoint creates  AutoDeleteConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoDeleteConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ConfigurationSnapshot)
+		v, err := s.AutoDeleteConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoDeleteConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoDeleteConfigurationSnapshot")(f)
 }
 
 // AutoDeleteDistributedServiceCard implementation on server Endpoint
@@ -897,6 +1181,28 @@ func MakeClusterV1AutoDeleteNodeEndpoint(s ServiceClusterV1Server, logger log.Lo
 	return trace.ServerEndpoint("ClusterV1:AutoDeleteNode")(f)
 }
 
+// AutoDeleteSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoDeleteSnapshotRestore(ctx context.Context, in SnapshotRestore) (SnapshotRestore, error) {
+	resp, err := e.AutoDeleteSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1AutoDeleteSnapshotRestoreEndpoint creates  AutoDeleteSnapshotRestore endpoints for the service
+func MakeClusterV1AutoDeleteSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SnapshotRestore)
+		v, err := s.AutoDeleteSnapshotRestore(ctx, *req)
+		return respClusterV1AutoDeleteSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoDeleteSnapshotRestore")(f)
+}
+
 // AutoDeleteTenant implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoDeleteTenant(ctx context.Context, in Tenant) (Tenant, error) {
 	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
@@ -961,6 +1267,28 @@ func MakeClusterV1AutoGetClusterEndpoint(s ServiceClusterV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoGetCluster")(f)
+}
+
+// AutoGetConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoGetConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (ConfigurationSnapshot, error) {
+	resp, err := e.AutoGetConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1AutoGetConfigurationSnapshotEndpoint creates  AutoGetConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoGetConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ConfigurationSnapshot)
+		v, err := s.AutoGetConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoGetConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoGetConfigurationSnapshot")(f)
 }
 
 // AutoGetDistributedServiceCard implementation on server Endpoint
@@ -1029,6 +1357,28 @@ func MakeClusterV1AutoGetNodeEndpoint(s ServiceClusterV1Server, logger log.Logge
 	return trace.ServerEndpoint("ClusterV1:AutoGetNode")(f)
 }
 
+// AutoGetSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoGetSnapshotRestore(ctx context.Context, in SnapshotRestore) (SnapshotRestore, error) {
+	resp, err := e.AutoGetSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1AutoGetSnapshotRestoreEndpoint creates  AutoGetSnapshotRestore endpoints for the service
+func MakeClusterV1AutoGetSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SnapshotRestore)
+		v, err := s.AutoGetSnapshotRestore(ctx, *req)
+		return respClusterV1AutoGetSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoGetSnapshotRestore")(f)
+}
+
 // AutoGetTenant implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoGetTenant(ctx context.Context, in Tenant) (Tenant, error) {
 	resp, err := e.AutoGetTenantEndpoint(ctx, in)
@@ -1093,6 +1443,28 @@ func MakeClusterV1AutoListClusterEndpoint(s ServiceClusterV1Server, logger log.L
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoListCluster")(f)
+}
+
+// AutoListConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoListConfigurationSnapshot(ctx context.Context, in api.ListWatchOptions) (ConfigurationSnapshotList, error) {
+	resp, err := e.AutoListConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshotList{}, err
+	}
+	return *resp.(*ConfigurationSnapshotList), nil
+}
+
+// MakeClusterV1AutoListConfigurationSnapshotEndpoint creates  AutoListConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoListConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoListConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoListConfigurationSnapshot")(f)
 }
 
 // AutoListDistributedServiceCard implementation on server Endpoint
@@ -1161,6 +1533,28 @@ func MakeClusterV1AutoListNodeEndpoint(s ServiceClusterV1Server, logger log.Logg
 	return trace.ServerEndpoint("ClusterV1:AutoListNode")(f)
 }
 
+// AutoListSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoListSnapshotRestore(ctx context.Context, in api.ListWatchOptions) (SnapshotRestoreList, error) {
+	resp, err := e.AutoListSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestoreList{}, err
+	}
+	return *resp.(*SnapshotRestoreList), nil
+}
+
+// MakeClusterV1AutoListSnapshotRestoreEndpoint creates  AutoListSnapshotRestore endpoints for the service
+func MakeClusterV1AutoListSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListSnapshotRestore(ctx, *req)
+		return respClusterV1AutoListSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoListSnapshotRestore")(f)
+}
+
 // AutoListTenant implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (TenantList, error) {
 	resp, err := e.AutoListTenantEndpoint(ctx, in)
@@ -1225,6 +1619,28 @@ func MakeClusterV1AutoUpdateClusterEndpoint(s ServiceClusterV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateCluster")(f)
+}
+
+// AutoUpdateConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoUpdateConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (ConfigurationSnapshot, error) {
+	resp, err := e.AutoUpdateConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1AutoUpdateConfigurationSnapshotEndpoint creates  AutoUpdateConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoUpdateConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ConfigurationSnapshot)
+		v, err := s.AutoUpdateConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoUpdateConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoUpdateConfigurationSnapshot")(f)
 }
 
 // AutoUpdateDistributedServiceCard implementation on server Endpoint
@@ -1293,6 +1709,28 @@ func MakeClusterV1AutoUpdateNodeEndpoint(s ServiceClusterV1Server, logger log.Lo
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateNode")(f)
 }
 
+// AutoUpdateSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoUpdateSnapshotRestore(ctx context.Context, in SnapshotRestore) (SnapshotRestore, error) {
+	resp, err := e.AutoUpdateSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1AutoUpdateSnapshotRestoreEndpoint creates  AutoUpdateSnapshotRestore endpoints for the service
+func MakeClusterV1AutoUpdateSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SnapshotRestore)
+		v, err := s.AutoUpdateSnapshotRestore(ctx, *req)
+		return respClusterV1AutoUpdateSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoUpdateSnapshotRestore")(f)
+}
+
 // AutoUpdateTenant implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoUpdateTenant(ctx context.Context, in Tenant) (Tenant, error) {
 	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
@@ -1335,6 +1773,50 @@ func MakeClusterV1AutoUpdateVersionEndpoint(s ServiceClusterV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateVersion")(f)
+}
+
+// Restore implementation on server Endpoint
+func (e EndpointsClusterV1Server) Restore(ctx context.Context, in SnapshotRestore) (SnapshotRestore, error) {
+	resp, err := e.RestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1RestoreEndpoint creates  Restore endpoints for the service
+func MakeClusterV1RestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SnapshotRestore)
+		v, err := s.Restore(ctx, *req)
+		return respClusterV1Restore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:Restore")(f)
+}
+
+// Save implementation on server Endpoint
+func (e EndpointsClusterV1Server) Save(ctx context.Context, in ConfigurationSnapshotRequest) (ConfigurationSnapshot, error) {
+	resp, err := e.SaveEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1SaveEndpoint creates  Save endpoints for the service
+func MakeClusterV1SaveEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ConfigurationSnapshotRequest)
+		v, err := s.Save(ctx, *req)
+		return respClusterV1Save{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:Save")(f)
 }
 
 // UpdateTLSConfig implementation on server Endpoint
@@ -1449,6 +1931,32 @@ func MakeAutoWatchVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) f
 	}
 }
 
+// AutoWatchConfigurationSnapshot is the watch handler for ConfigurationSnapshot on the server side.
+func (e EndpointsClusterV1Server) AutoWatchConfigurationSnapshot(in *api.ListWatchOptions, stream ClusterV1_AutoWatchConfigurationSnapshotServer) error {
+	return e.watchHandlerConfigurationSnapshot(in, stream)
+}
+
+// MakeAutoWatchConfigurationSnapshotEndpoint creates the Watch endpoint
+func MakeAutoWatchConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(ClusterV1_AutoWatchConfigurationSnapshotServer)
+		return s.AutoWatchConfigurationSnapshot(options, wstream)
+	}
+}
+
+// AutoWatchSnapshotRestore is the watch handler for SnapshotRestore on the server side.
+func (e EndpointsClusterV1Server) AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSnapshotRestoreServer) error {
+	return e.watchHandlerSnapshotRestore(in, stream)
+}
+
+// MakeAutoWatchSnapshotRestoreEndpoint creates the Watch endpoint
+func MakeAutoWatchSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(ClusterV1_AutoWatchSnapshotRestoreServer)
+		return s.AutoWatchSnapshotRestore(options, wstream)
+	}
+}
+
 // MakeClusterV1ServerEndpoints creates server endpoints
 func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) EndpointsClusterV1Server {
 	return EndpointsClusterV1Server{
@@ -1456,35 +1964,47 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 
 		AuthBootstrapCompleteEndpoint:            MakeClusterV1AuthBootstrapCompleteEndpoint(s, logger),
 		AutoAddClusterEndpoint:                   MakeClusterV1AutoAddClusterEndpoint(s, logger),
+		AutoAddConfigurationSnapshotEndpoint:     MakeClusterV1AutoAddConfigurationSnapshotEndpoint(s, logger),
 		AutoAddDistributedServiceCardEndpoint:    MakeClusterV1AutoAddDistributedServiceCardEndpoint(s, logger),
 		AutoAddHostEndpoint:                      MakeClusterV1AutoAddHostEndpoint(s, logger),
 		AutoAddNodeEndpoint:                      MakeClusterV1AutoAddNodeEndpoint(s, logger),
+		AutoAddSnapshotRestoreEndpoint:           MakeClusterV1AutoAddSnapshotRestoreEndpoint(s, logger),
 		AutoAddTenantEndpoint:                    MakeClusterV1AutoAddTenantEndpoint(s, logger),
 		AutoAddVersionEndpoint:                   MakeClusterV1AutoAddVersionEndpoint(s, logger),
 		AutoDeleteClusterEndpoint:                MakeClusterV1AutoDeleteClusterEndpoint(s, logger),
+		AutoDeleteConfigurationSnapshotEndpoint:  MakeClusterV1AutoDeleteConfigurationSnapshotEndpoint(s, logger),
 		AutoDeleteDistributedServiceCardEndpoint: MakeClusterV1AutoDeleteDistributedServiceCardEndpoint(s, logger),
 		AutoDeleteHostEndpoint:                   MakeClusterV1AutoDeleteHostEndpoint(s, logger),
 		AutoDeleteNodeEndpoint:                   MakeClusterV1AutoDeleteNodeEndpoint(s, logger),
+		AutoDeleteSnapshotRestoreEndpoint:        MakeClusterV1AutoDeleteSnapshotRestoreEndpoint(s, logger),
 		AutoDeleteTenantEndpoint:                 MakeClusterV1AutoDeleteTenantEndpoint(s, logger),
 		AutoDeleteVersionEndpoint:                MakeClusterV1AutoDeleteVersionEndpoint(s, logger),
 		AutoGetClusterEndpoint:                   MakeClusterV1AutoGetClusterEndpoint(s, logger),
+		AutoGetConfigurationSnapshotEndpoint:     MakeClusterV1AutoGetConfigurationSnapshotEndpoint(s, logger),
 		AutoGetDistributedServiceCardEndpoint:    MakeClusterV1AutoGetDistributedServiceCardEndpoint(s, logger),
 		AutoGetHostEndpoint:                      MakeClusterV1AutoGetHostEndpoint(s, logger),
 		AutoGetNodeEndpoint:                      MakeClusterV1AutoGetNodeEndpoint(s, logger),
+		AutoGetSnapshotRestoreEndpoint:           MakeClusterV1AutoGetSnapshotRestoreEndpoint(s, logger),
 		AutoGetTenantEndpoint:                    MakeClusterV1AutoGetTenantEndpoint(s, logger),
 		AutoGetVersionEndpoint:                   MakeClusterV1AutoGetVersionEndpoint(s, logger),
 		AutoListClusterEndpoint:                  MakeClusterV1AutoListClusterEndpoint(s, logger),
+		AutoListConfigurationSnapshotEndpoint:    MakeClusterV1AutoListConfigurationSnapshotEndpoint(s, logger),
 		AutoListDistributedServiceCardEndpoint:   MakeClusterV1AutoListDistributedServiceCardEndpoint(s, logger),
 		AutoListHostEndpoint:                     MakeClusterV1AutoListHostEndpoint(s, logger),
 		AutoListNodeEndpoint:                     MakeClusterV1AutoListNodeEndpoint(s, logger),
+		AutoListSnapshotRestoreEndpoint:          MakeClusterV1AutoListSnapshotRestoreEndpoint(s, logger),
 		AutoListTenantEndpoint:                   MakeClusterV1AutoListTenantEndpoint(s, logger),
 		AutoListVersionEndpoint:                  MakeClusterV1AutoListVersionEndpoint(s, logger),
 		AutoUpdateClusterEndpoint:                MakeClusterV1AutoUpdateClusterEndpoint(s, logger),
+		AutoUpdateConfigurationSnapshotEndpoint:  MakeClusterV1AutoUpdateConfigurationSnapshotEndpoint(s, logger),
 		AutoUpdateDistributedServiceCardEndpoint: MakeClusterV1AutoUpdateDistributedServiceCardEndpoint(s, logger),
 		AutoUpdateHostEndpoint:                   MakeClusterV1AutoUpdateHostEndpoint(s, logger),
 		AutoUpdateNodeEndpoint:                   MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
+		AutoUpdateSnapshotRestoreEndpoint:        MakeClusterV1AutoUpdateSnapshotRestoreEndpoint(s, logger),
 		AutoUpdateTenantEndpoint:                 MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
 		AutoUpdateVersionEndpoint:                MakeClusterV1AutoUpdateVersionEndpoint(s, logger),
+		RestoreEndpoint:                          MakeClusterV1RestoreEndpoint(s, logger),
+		SaveEndpoint:                             MakeClusterV1SaveEndpoint(s, logger),
 		UpdateTLSConfigEndpoint:                  MakeClusterV1UpdateTLSConfigEndpoint(s, logger),
 
 		watchHandlerCluster:                MakeAutoWatchClusterEndpoint(s, logger),
@@ -1493,6 +2013,8 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 		watchHandlerDistributedServiceCard: MakeAutoWatchDistributedServiceCardEndpoint(s, logger),
 		watchHandlerTenant:                 MakeAutoWatchTenantEndpoint(s, logger),
 		watchHandlerVersion:                MakeAutoWatchVersionEndpoint(s, logger),
+		watchHandlerConfigurationSnapshot:  MakeAutoWatchConfigurationSnapshotEndpoint(s, logger),
+		watchHandlerSnapshotRestore:        MakeAutoWatchSnapshotRestoreEndpoint(s, logger),
 	}
 }
 
@@ -1552,6 +2074,19 @@ func (m loggingClusterV1MiddlewareClient) AutoAddCluster(ctx context.Context, in
 	resp, err = m.next.AutoAddCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoAddConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddConfigurationSnapshot(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoAddDistributedServiceCard(ctx context.Context, in *DistributedServiceCard) (resp *DistributedServiceCard, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1589,6 +2124,19 @@ func (m loggingClusterV1MiddlewareClient) AutoAddNode(ctx context.Context, in *N
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoAddSnapshotRestore(ctx context.Context, in *SnapshotRestore) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddSnapshotRestore(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoAddTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
@@ -1630,6 +2178,19 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteCluster(ctx context.Context,
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoDeleteConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteConfigurationSnapshot(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoDeleteDistributedServiceCard(ctx context.Context, in *DistributedServiceCard) (resp *DistributedServiceCard, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1667,6 +2228,19 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteNode(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoDeleteSnapshotRestore(ctx context.Context, in *SnapshotRestore) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteSnapshotRestore(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
@@ -1708,6 +2282,19 @@ func (m loggingClusterV1MiddlewareClient) AutoGetCluster(ctx context.Context, in
 	resp, err = m.next.AutoGetCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetConfigurationSnapshot(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoGetDistributedServiceCard(ctx context.Context, in *DistributedServiceCard) (resp *DistributedServiceCard, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1745,6 +2332,19 @@ func (m loggingClusterV1MiddlewareClient) AutoGetNode(ctx context.Context, in *N
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoGetSnapshotRestore(ctx context.Context, in *SnapshotRestore) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetSnapshotRestore(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoGetTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
@@ -1786,6 +2386,19 @@ func (m loggingClusterV1MiddlewareClient) AutoListCluster(ctx context.Context, i
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoListConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions) (resp *ConfigurationSnapshotList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListConfigurationSnapshot(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoListDistributedServiceCard(ctx context.Context, in *api.ListWatchOptions) (resp *DistributedServiceCardList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1823,6 +2436,19 @@ func (m loggingClusterV1MiddlewareClient) AutoListNode(ctx context.Context, in *
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoListSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (resp *SnapshotRestoreList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListSnapshotRestore(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (resp *TenantList, err error) {
@@ -1864,6 +2490,19 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateCluster(ctx context.Context,
 	resp, err = m.next.AutoUpdateCluster(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoUpdateConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateConfigurationSnapshot(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoUpdateDistributedServiceCard(ctx context.Context, in *DistributedServiceCard) (resp *DistributedServiceCard, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1903,6 +2542,19 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateNode(ctx context.Context, in
 	resp, err = m.next.AutoUpdateNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1927,6 +2579,32 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateVersion(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateVersion", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateVersion(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) Restore(ctx context.Context, in *SnapshotRestore) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "Restore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.Restore(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) Save(ctx context.Context, in *ConfigurationSnapshotRequest) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "Save", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.Save(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (resp *Cluster, err error) {
@@ -2035,6 +2713,32 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchVersion(ctx context.Context, 
 	resp, err = m.next.AutoWatchVersion(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoWatchConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchConfigurationSnapshotClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchConfigurationSnapshot(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchSnapshotRestoreClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSnapshotRestore(ctx, in)
+	return
+}
 
 func (m loggingClusterV1MiddlewareServer) AuthBootstrapComplete(ctx context.Context, in ClusterAuthBootstrapRequest) (resp Cluster, err error) {
 	defer func(begin time.Time) {
@@ -2060,6 +2764,19 @@ func (m loggingClusterV1MiddlewareServer) AutoAddCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoAddConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddConfigurationSnapshot(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoAddDistributedServiceCard(ctx context.Context, in DistributedServiceCard) (resp DistributedServiceCard, err error) {
@@ -2101,6 +2818,19 @@ func (m loggingClusterV1MiddlewareServer) AutoAddNode(ctx context.Context, in No
 	resp, err = m.next.AutoAddNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoAddSnapshotRestore(ctx context.Context, in SnapshotRestore) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoAddTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2138,6 +2868,19 @@ func (m loggingClusterV1MiddlewareServer) AutoDeleteCluster(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoDeleteConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteConfigurationSnapshot(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoDeleteDistributedServiceCard(ctx context.Context, in DistributedServiceCard) (resp DistributedServiceCard, err error) {
@@ -2179,6 +2922,19 @@ func (m loggingClusterV1MiddlewareServer) AutoDeleteNode(ctx context.Context, in
 	resp, err = m.next.AutoDeleteNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoDeleteSnapshotRestore(ctx context.Context, in SnapshotRestore) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoDeleteTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2216,6 +2972,19 @@ func (m loggingClusterV1MiddlewareServer) AutoGetCluster(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoGetConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetConfigurationSnapshot(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoGetDistributedServiceCard(ctx context.Context, in DistributedServiceCard) (resp DistributedServiceCard, err error) {
@@ -2257,6 +3026,19 @@ func (m loggingClusterV1MiddlewareServer) AutoGetNode(ctx context.Context, in No
 	resp, err = m.next.AutoGetNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoGetSnapshotRestore(ctx context.Context, in SnapshotRestore) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoGetTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2294,6 +3076,19 @@ func (m loggingClusterV1MiddlewareServer) AutoListCluster(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoListConfigurationSnapshot(ctx context.Context, in api.ListWatchOptions) (resp ConfigurationSnapshotList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListConfigurationSnapshot(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoListDistributedServiceCard(ctx context.Context, in api.ListWatchOptions) (resp DistributedServiceCardList, err error) {
@@ -2335,6 +3130,19 @@ func (m loggingClusterV1MiddlewareServer) AutoListNode(ctx context.Context, in a
 	resp, err = m.next.AutoListNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoListSnapshotRestore(ctx context.Context, in api.ListWatchOptions) (resp SnapshotRestoreList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (resp TenantList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2372,6 +3180,19 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateCluster(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoUpdateConfigurationSnapshot(ctx context.Context, in ConfigurationSnapshot) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateConfigurationSnapshot(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoUpdateDistributedServiceCard(ctx context.Context, in DistributedServiceCard) (resp DistributedServiceCard, err error) {
@@ -2413,6 +3234,19 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateNode(ctx context.Context, in
 	resp, err = m.next.AutoUpdateNode(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoUpdateSnapshotRestore(ctx context.Context, in SnapshotRestore) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSnapshotRestore(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2437,6 +3271,32 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateVersion(ctx context.Context,
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateVersion", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateVersion(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) Restore(ctx context.Context, in SnapshotRestore) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "Restore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.Restore(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) Save(ctx context.Context, in ConfigurationSnapshotRequest) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "Save", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.Save(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) UpdateTLSConfig(ctx context.Context, in UpdateTLSConfigRequest) (resp Cluster, err error) {
@@ -2545,6 +3405,32 @@ func (m loggingClusterV1MiddlewareServer) AutoWatchVersion(in *api.ListWatchOpti
 	err = m.next.AutoWatchVersion(in, stream)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoWatchConfigurationSnapshot(in *api.ListWatchOptions, stream ClusterV1_AutoWatchConfigurationSnapshotServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "ClusterV1", "method", "AutoWatchConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchConfigurationSnapshot(in, stream)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSnapshotRestoreServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "ClusterV1", "method", "AutoWatchSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSnapshotRestore(in, stream)
+	return
+}
 
 func (r *EndpointsClusterV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -2581,6 +3467,11 @@ func makeURIClusterV1AutoAddClusterCreateOper(in *Cluster) string {
 }
 
 //
+func makeURIClusterV1AutoAddConfigurationSnapshotCreateOper(in *ConfigurationSnapshot) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot")
+}
+
+//
 func makeURIClusterV1AutoAddDistributedServiceCardCreateOper(in *DistributedServiceCard) string {
 	return ""
 
@@ -2594,6 +3485,12 @@ func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
 //
 func makeURIClusterV1AutoAddNodeCreateOper(in *Node) string {
 	return fmt.Sprint("/configs/cluster/v1", "/nodes")
+}
+
+//
+func makeURIClusterV1AutoAddSnapshotRestoreCreateOper(in *SnapshotRestore) string {
+	return ""
+
 }
 
 //
@@ -2614,6 +3511,11 @@ func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
 }
 
 //
+func makeURIClusterV1AutoDeleteConfigurationSnapshotDeleteOper(in *ConfigurationSnapshot) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot")
+}
+
+//
 func makeURIClusterV1AutoDeleteDistributedServiceCardDeleteOper(in *DistributedServiceCard) string {
 	return fmt.Sprint("/configs/cluster/v1", "/distributedservicecards/", in.Name)
 }
@@ -2626,6 +3528,12 @@ func makeURIClusterV1AutoDeleteHostDeleteOper(in *Host) string {
 //
 func makeURIClusterV1AutoDeleteNodeDeleteOper(in *Node) string {
 	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoDeleteSnapshotRestoreDeleteOper(in *SnapshotRestore) string {
+	return ""
+
 }
 
 //
@@ -2645,6 +3553,11 @@ func makeURIClusterV1AutoGetClusterGetOper(in *Cluster) string {
 }
 
 //
+func makeURIClusterV1AutoGetConfigurationSnapshotGetOper(in *ConfigurationSnapshot) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot")
+}
+
+//
 func makeURIClusterV1AutoGetDistributedServiceCardGetOper(in *DistributedServiceCard) string {
 	return fmt.Sprint("/configs/cluster/v1", "/distributedservicecards/", in.Name)
 }
@@ -2660,6 +3573,11 @@ func makeURIClusterV1AutoGetNodeGetOper(in *Node) string {
 }
 
 //
+func makeURIClusterV1AutoGetSnapshotRestoreGetOper(in *SnapshotRestore) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-restore")
+}
+
+//
 func makeURIClusterV1AutoGetTenantGetOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
 }
@@ -2671,6 +3589,12 @@ func makeURIClusterV1AutoGetVersionGetOper(in *Version) string {
 
 //
 func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoListConfigurationSnapshotListOper(in *api.ListWatchOptions) string {
 	return ""
 
 }
@@ -2691,6 +3615,12 @@ func makeURIClusterV1AutoListNodeListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIClusterV1AutoListSnapshotRestoreListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoListTenantListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants")
 }
@@ -2707,6 +3637,11 @@ func makeURIClusterV1AutoUpdateClusterUpdateOper(in *Cluster) string {
 }
 
 //
+func makeURIClusterV1AutoUpdateConfigurationSnapshotUpdateOper(in *ConfigurationSnapshot) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot")
+}
+
+//
 func makeURIClusterV1AutoUpdateDistributedServiceCardUpdateOper(in *DistributedServiceCard) string {
 	return fmt.Sprint("/configs/cluster/v1", "/distributedservicecards/", in.Name)
 }
@@ -2719,6 +3654,12 @@ func makeURIClusterV1AutoUpdateHostUpdateOper(in *Host) string {
 //
 func makeURIClusterV1AutoUpdateNodeUpdateOper(in *Node) string {
 	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoUpdateSnapshotRestoreUpdateOper(in *SnapshotRestore) string {
+	return ""
+
 }
 
 //
@@ -2738,6 +3679,11 @@ func makeURIClusterV1AutoWatchClusterWatchOper(in *api.ListWatchOptions) string 
 }
 
 //
+func makeURIClusterV1AutoWatchConfigurationSnapshotWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/config-snapshot")
+}
+
+//
 func makeURIClusterV1AutoWatchDistributedServiceCardWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/watch/distributedservicecards")
 }
@@ -2750,6 +3696,12 @@ func makeURIClusterV1AutoWatchHostWatchOper(in *api.ListWatchOptions) string {
 //
 func makeURIClusterV1AutoWatchNodeWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/watch/nodes")
+}
+
+//
+func makeURIClusterV1AutoWatchSnapshotRestoreWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 //
@@ -2766,6 +3718,16 @@ func makeURIClusterV1AutoWatchTenantWatchOper(in *api.ListWatchOptions) string {
 //
 func makeURIClusterV1AutoWatchVersionWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/watch/version")
+}
+
+//
+func makeURIClusterV1RestoreCreateOper(in *SnapshotRestore) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-restore/restore")
+}
+
+//
+func makeURIClusterV1SaveCreateOper(in *ConfigurationSnapshotRequest) string {
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot/save")
 }
 
 //
@@ -3625,6 +4587,279 @@ func (r *EndpointsClusterV1RestClient) AutoWatchVersion(ctx context.Context, opt
 		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 	}()
 	return lw, nil
+}
+
+// AutoAddConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoAddConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	path := makeURIClusterV1AutoAddConfigurationSnapshotCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoAddConfigurationSnapshot(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), nil
+}
+
+// AutoUpdateConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoUpdateConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	path := makeURIClusterV1AutoUpdateConfigurationSnapshotUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoUpdateConfigurationSnapshot(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), err
+}
+
+// AutoGetConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	path := makeURIClusterV1AutoGetConfigurationSnapshotGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoGetConfigurationSnapshot(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), err
+}
+
+// AutoDeleteConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoDeleteConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	path := makeURIClusterV1AutoDeleteConfigurationSnapshotDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoDeleteConfigurationSnapshot(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), err
+}
+
+// AutoListConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoListConfigurationSnapshot(ctx context.Context, options *api.ListWatchOptions) (*ConfigurationSnapshotList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchConfigurationSnapshot CRUD method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoWatchConfigurationSnapshot(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchConfigurationSnapshotWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgConfigurationSnapshotWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+func (r *EndpointsClusterV1RestClient) SaveConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshotRequest) (*ConfigurationSnapshot, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIClusterV1SaveCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1Save(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), err
+}
+
+// AutoAddSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoAddSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoGetSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	path := makeURIClusterV1AutoGetSnapshotRestoreGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoGetSnapshotRestore(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*SnapshotRestore), err
+}
+
+// AutoDeleteSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoDeleteSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoListSnapshotRestore(ctx context.Context, options *api.ListWatchOptions) (*SnapshotRestoreList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchSnapshotRestore CRUD method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoWatchSnapshotRestore(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchSnapshotRestoreWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgSnapshotRestoreWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+func (r *EndpointsClusterV1RestClient) RestoreSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIClusterV1RestoreCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1Restore(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*SnapshotRestore), err
 }
 
 // MakeClusterV1RestClientEndpoints make REST client endpoints

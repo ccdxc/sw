@@ -1143,6 +1143,132 @@ func TestCommit(t *testing.T) {
 
 }
 
+func TestLargeBufferCommit(t *testing.T) {
+	fkv := &cachemocks.FakeKvStore{}
+	str := &cachemocks.FakeStore{}
+	// c := &cachemocks.FakeCache{fakeKvStore: fakeKvStore{}, kvconn: fkv}
+	fakeqs := &mocks2.FakeWatchPrefixes{}
+	c := &cache{
+		store:  str,
+		pool:   &connPool{},
+		queues: fakeqs,
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+	c.pool.AddToPool(fkv)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, mocks.NewFakeServer(), false)
+	txn := &cachemocks.FakeTxn{}
+	fkv.Txn = txn
+	ov := o.(*overlay)
+	ctx := context.TODO()
+	server := mocks.NewFakeServer()
+	service := mocks.NewFakeService().(*mocks.FakeService)
+	method := mocks.NewFakeMethod(false).(*mocks.FakeMethod)
+	service.AddMethod("TestMethod", method)
+	server.SvcMap["TestService"] = service
+	ov.server = server
+	var handleError error
+	obj1 := apitest.TestObj{}
+	obj1.Name = "testObj1"
+	obj1.Spec = "Spec 1"
+
+	retObj := &apitest.TestObj{}
+	retObj.Name = "testObj"
+	retObj.Spec = "return Object"
+	errorObjs := make(map[string]*handlerResp)
+	name2key := make(map[string]string)
+	handleCount := 0
+	handleFunc := func(hctx context.Context, i interface{}) (interface{}, error) {
+		handleCount++
+		r := i.(apitest.TestObj)
+		t.Logf("handler got obj %s", r.Name)
+		var verVer int64
+		dm := getDryRun(hctx)
+		if dm != nil {
+			verVer = dm.verVer
+		}
+		if v, ok := name2key[r.Name]; ok {
+			ovobj := ov.overlay[v]
+			ovobj.verVer = verVer
+		}
+		if v := errorObjs[r.Name]; v != nil {
+			if v.callFn != nil {
+				t.Logf("handler calling function for %s", r.Name)
+				return v.callFn(hctx)
+			}
+			t.Logf("handler returning error for %s", r.Name)
+			return v.obj, v.err
+		}
+
+		return retObj, handleError
+	}
+	method.HandleMethod = handleFunc
+
+	getObj := false
+	fkv.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		if getObj {
+			retObj.Clone(into)
+			return nil
+		}
+		return errors.New("Not Found")
+	}
+	var retErr []error
+	var errCount int
+	commitFn := func(ctx context.Context) (kvstore.TxnResponse, error) {
+		resp := kvstore.TxnResponse{}
+		resp.Succeeded = true
+		if len(retErr) == 0 {
+			return resp, nil
+		}
+		err := retErr[errCount%len(retErr)]
+		errCount++
+		return resp, err
+	}
+
+	getfn := func(key string) (runtime.Object, error) {
+		return nil, errors.New("Not Found")
+	}
+	str.Getfn = getfn
+	txn.Commitfn = commitFn
+	// insert multiple primary and multiple secondary into overlay
+	keys := [100]string{}
+	objs := [100]apitest.TestObj{}
+	for i := 0; i < 100; i++ {
+		keys[i] = fmt.Sprintf("/test/key%d", i)
+		objs[i] = apitest.TestObj{
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("testObj-%d", i),
+			},
+			Spec: fmt.Sprintf("spec for obj %d", i),
+		}
+		name2key[objs[i].Name] = keys[i]
+		if i%2 == 0 {
+			err := ov.CreatePrimary(ctx, "TestService", "TestMethod", fmt.Sprintf("/testURI/testobj%d", i), keys[i], &objs[i], &objs[i])
+			AssertOk(t, err, "expecting CreatePrimary to pass")
+		} else {
+			err := ov.Create(ctx, keys[i], &objs[i])
+			AssertOk(t, err, "expecting Create to pass")
+		}
+	}
+
+	ov.maxOvEntries = 4
+	// Verify Commit should pass
+	err := ov.Commit(ctx, nil)
+	AssertOk(t, err, "expecting Commit to pass")
+	Assert(t, len(txn.Ops) == 100, "expecgting 100 operations in the transaction got %v", len(txn.Ops))
+
+	// commit should pass with retry
+	ov.ephemeral = true
+	retErr = append(retErr, &kvstore.KVError{Code: kvstore.ErrCodeTxnFailed})
+	retErr = append(retErr, nil)
+	err = ov.Commit(ctx, nil)
+	AssertOk(t, err, "expecting Commit to pass")
+
+	Assert(t, len(ov.overlay) == 0, "expecting overlay to be cleaned up after commit")
+	DelOverlay("tenant1", "testGet")
+
+}
+
 func TestOverlayRestore(t *testing.T) {
 	fakeKv := &cachemocks.FakeKvStore{}
 	fserver := mocks.NewFakeServer()

@@ -160,6 +160,27 @@ func init() {
 		Desc:       "Module creation for diagnostics failed",
 		SuppressMM: true}
 
+	eventTypes[CONFIG_RESTORED] = &EventTypeAttributes{
+		EType:      CONFIG_RESTORED.String(),
+		Severity:   "info",
+		Category:   "cluster",
+		Desc:       "Configuration was restored",
+		SuppressMM: true}
+
+	eventTypes[CONFIG_RESTORE_ABORTED] = &EventTypeAttributes{
+		EType:      CONFIG_RESTORE_ABORTED.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Configuration restore operation was aborted",
+		SuppressMM: true}
+
+	eventTypes[CONFIG_RESTORE_FAILED] = &EventTypeAttributes{
+		EType:      CONFIG_RESTORE_FAILED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "Configuration restore operation failed",
+		SuppressMM: true}
+
 	eventTypes[DSC_ADMITTED] = &EventTypeAttributes{
 		EType:      DSC_ADMITTED.String(),
 		Severity:   "info",

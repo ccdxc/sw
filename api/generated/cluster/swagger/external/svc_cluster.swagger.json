@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Cluster API reference",
-    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster DistributedServiceCard Host Node Tenant Version ",
+    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster ConfigurationSnapshot DistributedServiceCard Host Node SnapshotRestore Tenant Version ",
     "version": "v1"
   },
   "schemes": [
@@ -399,6 +399,621 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterUpdateTLSConfigRequestCreate"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/config-restore": {
+      "get": {
+        "summary": "Get SnapshotRestore object",
+        "operationId": "GetSnapshotRestore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSnapshotRestore"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.path",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.start-time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status.end-time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status.backup-snapshot-path",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/config-restore/restore": {
+      "post": {
+        "operationId": "Restore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterSnapshotRestore"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterSnapshotRestoreCreate"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/config-snapshot": {
+      "get": {
+        "summary": "Get ConfigurationSnapshot object",
+        "operationId": "GetConfigurationSnapshot",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshot"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "destination.Type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "last-snapshot.dest-type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "last-snapshot.uri",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete ConfigurationSnapshot object",
+        "operationId": "DeleteConfigurationSnapshot",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshot"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "tags": [
+          "cluster/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create ConfigurationSnapshot object",
+        "operationId": "AddConfigurationSnapshot",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshot"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshotCreate"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      },
+      "put": {
+        "summary": "Update ConfigurationSnapshot object",
+        "operationId": "UpdateConfigurationSnapshot",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshot"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshotUpdate"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/config-snapshot/save": {
+      "post": {
+        "operationId": "Save",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshot"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterConfigurationSnapshotRequestCreate"
             }
           }
         ],
@@ -2910,6 +3525,173 @@
         ]
       }
     },
+    "/configs/cluster/v1/watch/config-snapshot": {
+      "get": {
+        "summary": "Watch ConfigurationSnapshot objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchConfigurationSnapshot",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/clusterAutoMsgConfigurationSnapshotWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
     "/configs/cluster/v1/watch/distributedservicecards": {
       "get": {
         "summary": "Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll",
@@ -3747,6 +4529,24 @@
     }
   },
   "definitions": {
+    "ConfigurationSnapshotStatusConfigSaveStatus": {
+      "type": "object",
+      "required": [
+        "dest-type"
+      ],
+      "properties": {
+        "dest-type": {
+          "type": "string",
+          "enum": [
+            "objectstore"
+          ],
+          "default": "objectstore"
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -4085,6 +4885,29 @@
         }
       }
     },
+    "clusterAutoMsgConfigurationSnapshotWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgConfigurationSnapshotWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgConfigurationSnapshotWatchHelper is a wrapper object for watch events for ConfigurationSnapshot objects"
+    },
+    "clusterAutoMsgConfigurationSnapshotWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/clusterConfigurationSnapshot"
+        }
+      }
+    },
     "clusterAutoMsgDistributedServiceCardWatchHelper": {
       "type": "object",
       "properties": {
@@ -4151,6 +4974,29 @@
         },
         "object": {
           "$ref": "#/definitions/clusterNode"
+        }
+      }
+    },
+    "clusterAutoMsgSnapshotRestoreWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgSnapshotRestoreWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgSnapshotRestoreWatchHelper is a wrapper object for watch events for SnapshotRestore objects"
+    },
+    "clusterAutoMsgSnapshotRestoreWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/clusterSnapshotRestore"
         }
       }
     },
@@ -4458,6 +5304,126 @@
       },
       "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
       "title": "--------------------------------- CLUSTER ---------------------------------------------"
+    },
+    "clusterConfigurationSnapshot": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterConfigurationSnapshotSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/clusterConfigurationSnapshotStatus"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterConfigurationSnapshotSpec"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterConfigurationSnapshot"
+          },
+          "title": "List of ConfigurationSnapshot objects"
+        }
+      },
+      "title": "ConfigurationSnapshotList is a container object for list of ConfigurationSnapshot objects"
+    },
+    "clusterConfigurationSnapshotRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotRequestCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotSpec": {
+      "type": "object",
+      "properties": {
+        "destination": {
+          "$ref": "#/definitions/clusterSnapshotDestination"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotStatus": {
+      "type": "object",
+      "properties": {
+        "last-snapshot": {
+          "$ref": "#/definitions/ConfigurationSnapshotStatusConfigSaveStatus"
+        }
+      }
+    },
+    "clusterConfigurationSnapshotUpdate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMetaUpdate"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterConfigurationSnapshotSpec"
+        }
+      }
     },
     "clusterDSCCondition": {
       "type": "object",
@@ -5199,6 +6165,118 @@
         }
       },
       "title": "QuorumStatus contains the current state of the quorum, including registered members and health"
+    },
+    "clusterSnapshotDestination": {
+      "type": "object",
+      "required": [
+        ""
+      ],
+      "properties": {
+        "Type": {
+          "type": "string",
+          "enum": [
+            "objectstore"
+          ],
+          "default": "objectstore"
+        }
+      },
+      "description": "Destination for saving the configuration snapshot."
+    },
+    "clusterSnapshotRestore": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterSnapshotRestoreSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/clusterSnapshotRestoreStatus"
+        }
+      }
+    },
+    "clusterSnapshotRestoreCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterSnapshotRestoreSpec"
+        }
+      }
+    },
+    "clusterSnapshotRestoreList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterSnapshotRestore"
+          },
+          "title": "List of SnapshotRestore objects"
+        }
+      },
+      "title": "SnapshotRestoreList is a container object for list of SnapshotRestore objects"
+    },
+    "clusterSnapshotRestoreSpec": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "clusterSnapshotRestoreStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "active",
+            "completed",
+            "failed"
+          ],
+          "default": "unknown"
+        },
+        "start-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "backup-snapshot-path": {
+          "type": "string"
+        }
+      }
     },
     "clusterStorageDeviceInfo": {
       "type": "object",

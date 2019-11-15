@@ -68,6 +68,57 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) GetObject() *Cluster {
 	return nil
 }
 
+// AutoMsgConfigurationSnapshotWatchHelper is a wrapper object for watch events for ConfigurationSnapshot objects
+type AutoMsgConfigurationSnapshotWatchHelper struct {
+	Events []*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Reset() {
+	*m = AutoMsgConfigurationSnapshotWatchHelper{}
+}
+func (m *AutoMsgConfigurationSnapshotWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgConfigurationSnapshotWatchHelper) ProtoMessage()    {}
+func (*AutoMsgConfigurationSnapshotWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{1}
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) GetEvents() []*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgConfigurationSnapshotWatchHelper_WatchEvent struct {
+	Type   string                 `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	Object *ConfigurationSnapshot `protobuf:"bytes,2,opt,name=Object" json:"object,omitempty"`
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Reset() {
+	*m = AutoMsgConfigurationSnapshotWatchHelper_WatchEvent{}
+}
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) ProtoMessage() {}
+func (*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{1, 0}
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) GetObject() *ConfigurationSnapshot {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 // AutoMsgDistributedServiceCardWatchHelper is a wrapper object for watch events for DistributedServiceCard objects
 type AutoMsgDistributedServiceCardWatchHelper struct {
 	Events []*AutoMsgDistributedServiceCardWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
@@ -79,7 +130,7 @@ func (m *AutoMsgDistributedServiceCardWatchHelper) Reset() {
 func (m *AutoMsgDistributedServiceCardWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgDistributedServiceCardWatchHelper) ProtoMessage()    {}
 func (*AutoMsgDistributedServiceCardWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{1}
+	return fileDescriptorSvcCluster, []int{2}
 }
 
 func (m *AutoMsgDistributedServiceCardWatchHelper) GetEvents() []*AutoMsgDistributedServiceCardWatchHelper_WatchEvent {
@@ -102,7 +153,7 @@ func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) String() string {
 }
 func (*AutoMsgDistributedServiceCardWatchHelper_WatchEvent) ProtoMessage() {}
 func (*AutoMsgDistributedServiceCardWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{1, 0}
+	return fileDescriptorSvcCluster, []int{2, 0}
 }
 
 func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) GetType() string {
@@ -127,7 +178,7 @@ type AutoMsgHostWatchHelper struct {
 func (m *AutoMsgHostWatchHelper) Reset()                    { *m = AutoMsgHostWatchHelper{} }
 func (m *AutoMsgHostWatchHelper) String() string            { return proto.CompactTextString(m) }
 func (*AutoMsgHostWatchHelper) ProtoMessage()               {}
-func (*AutoMsgHostWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{2} }
+func (*AutoMsgHostWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{3} }
 
 func (m *AutoMsgHostWatchHelper) GetEvents() []*AutoMsgHostWatchHelper_WatchEvent {
 	if m != nil {
@@ -145,7 +196,7 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) Reset()         { *m = AutoMsgHostWa
 func (m *AutoMsgHostWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgHostWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgHostWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{2, 0}
+	return fileDescriptorSvcCluster, []int{3, 0}
 }
 
 func (m *AutoMsgHostWatchHelper_WatchEvent) GetType() string {
@@ -170,7 +221,7 @@ type AutoMsgNodeWatchHelper struct {
 func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
 func (m *AutoMsgNodeWatchHelper) String() string            { return proto.CompactTextString(m) }
 func (*AutoMsgNodeWatchHelper) ProtoMessage()               {}
-func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{3} }
+func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{4} }
 
 func (m *AutoMsgNodeWatchHelper) GetEvents() []*AutoMsgNodeWatchHelper_WatchEvent {
 	if m != nil {
@@ -188,7 +239,7 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Reset()         { *m = AutoMsgNodeWa
 func (m *AutoMsgNodeWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgNodeWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgNodeWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{3, 0}
+	return fileDescriptorSvcCluster, []int{4, 0}
 }
 
 func (m *AutoMsgNodeWatchHelper_WatchEvent) GetType() string {
@@ -205,6 +256,55 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) GetObject() *Node {
 	return nil
 }
 
+// AutoMsgSnapshotRestoreWatchHelper is a wrapper object for watch events for SnapshotRestore objects
+type AutoMsgSnapshotRestoreWatchHelper struct {
+	Events []*AutoMsgSnapshotRestoreWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) Reset()         { *m = AutoMsgSnapshotRestoreWatchHelper{} }
+func (m *AutoMsgSnapshotRestoreWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgSnapshotRestoreWatchHelper) ProtoMessage()    {}
+func (*AutoMsgSnapshotRestoreWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{5}
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) GetEvents() []*AutoMsgSnapshotRestoreWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgSnapshotRestoreWatchHelper_WatchEvent struct {
+	Type   string           `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	Object *SnapshotRestore `protobuf:"bytes,2,opt,name=Object" json:"object,omitempty"`
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Reset() {
+	*m = AutoMsgSnapshotRestoreWatchHelper_WatchEvent{}
+}
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AutoMsgSnapshotRestoreWatchHelper_WatchEvent) ProtoMessage() {}
+func (*AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{5, 0}
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) GetObject() *SnapshotRestore {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 // AutoMsgTenantWatchHelper is a wrapper object for watch events for Tenant objects
 type AutoMsgTenantWatchHelper struct {
 	Events []*AutoMsgTenantWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
@@ -214,7 +314,7 @@ func (m *AutoMsgTenantWatchHelper) Reset()         { *m = AutoMsgTenantWatchHelp
 func (m *AutoMsgTenantWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgTenantWatchHelper) ProtoMessage()    {}
 func (*AutoMsgTenantWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{4}
+	return fileDescriptorSvcCluster, []int{6}
 }
 
 func (m *AutoMsgTenantWatchHelper) GetEvents() []*AutoMsgTenantWatchHelper_WatchEvent {
@@ -233,7 +333,7 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Reset()         { *m = AutoMsgTena
 func (m *AutoMsgTenantWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgTenantWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgTenantWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{4, 0}
+	return fileDescriptorSvcCluster, []int{6, 0}
 }
 
 func (m *AutoMsgTenantWatchHelper_WatchEvent) GetType() string {
@@ -259,7 +359,7 @@ func (m *AutoMsgVersionWatchHelper) Reset()         { *m = AutoMsgVersionWatchHe
 func (m *AutoMsgVersionWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgVersionWatchHelper) ProtoMessage()    {}
 func (*AutoMsgVersionWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{5}
+	return fileDescriptorSvcCluster, []int{7}
 }
 
 func (m *AutoMsgVersionWatchHelper) GetEvents() []*AutoMsgVersionWatchHelper_WatchEvent {
@@ -278,7 +378,7 @@ func (m *AutoMsgVersionWatchHelper_WatchEvent) Reset()         { *m = AutoMsgVer
 func (m *AutoMsgVersionWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgVersionWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgVersionWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{5, 0}
+	return fileDescriptorSvcCluster, []int{7, 0}
 }
 
 func (m *AutoMsgVersionWatchHelper_WatchEvent) GetType() string {
@@ -306,9 +406,31 @@ type ClusterList struct {
 func (m *ClusterList) Reset()                    { *m = ClusterList{} }
 func (m *ClusterList) String() string            { return proto.CompactTextString(m) }
 func (*ClusterList) ProtoMessage()               {}
-func (*ClusterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{6} }
+func (*ClusterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{8} }
 
 func (m *ClusterList) GetItems() []*Cluster {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// ConfigurationSnapshotList is a container object for list of ConfigurationSnapshot objects
+type ConfigurationSnapshotList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,json=list-meta,inline,embedded=ListMeta" json:"list-meta,inline"`
+	// List of ConfigurationSnapshot objects
+	Items []*ConfigurationSnapshot `protobuf:"bytes,4,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *ConfigurationSnapshotList) Reset()         { *m = ConfigurationSnapshotList{} }
+func (m *ConfigurationSnapshotList) String() string { return proto.CompactTextString(m) }
+func (*ConfigurationSnapshotList) ProtoMessage()    {}
+func (*ConfigurationSnapshotList) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcCluster, []int{9}
+}
+
+func (m *ConfigurationSnapshotList) GetItems() []*ConfigurationSnapshot {
 	if m != nil {
 		return m.Items
 	}
@@ -327,7 +449,7 @@ func (m *DistributedServiceCardList) Reset()         { *m = DistributedServiceCa
 func (m *DistributedServiceCardList) String() string { return proto.CompactTextString(m) }
 func (*DistributedServiceCardList) ProtoMessage()    {}
 func (*DistributedServiceCardList) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcCluster, []int{7}
+	return fileDescriptorSvcCluster, []int{10}
 }
 
 func (m *DistributedServiceCardList) GetItems() []*DistributedServiceCard {
@@ -348,7 +470,7 @@ type HostList struct {
 func (m *HostList) Reset()                    { *m = HostList{} }
 func (m *HostList) String() string            { return proto.CompactTextString(m) }
 func (*HostList) ProtoMessage()               {}
-func (*HostList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{8} }
+func (*HostList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{11} }
 
 func (m *HostList) GetItems() []*Host {
 	if m != nil {
@@ -368,9 +490,29 @@ type NodeList struct {
 func (m *NodeList) Reset()                    { *m = NodeList{} }
 func (m *NodeList) String() string            { return proto.CompactTextString(m) }
 func (*NodeList) ProtoMessage()               {}
-func (*NodeList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{9} }
+func (*NodeList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{12} }
 
 func (m *NodeList) GetItems() []*Node {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// SnapshotRestoreList is a container object for list of SnapshotRestore objects
+type SnapshotRestoreList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,json=list-meta,inline,embedded=ListMeta" json:"list-meta,inline"`
+	// List of SnapshotRestore objects
+	Items []*SnapshotRestore `protobuf:"bytes,4,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *SnapshotRestoreList) Reset()                    { *m = SnapshotRestoreList{} }
+func (m *SnapshotRestoreList) String() string            { return proto.CompactTextString(m) }
+func (*SnapshotRestoreList) ProtoMessage()               {}
+func (*SnapshotRestoreList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{13} }
+
+func (m *SnapshotRestoreList) GetItems() []*SnapshotRestore {
 	if m != nil {
 		return m.Items
 	}
@@ -388,7 +530,7 @@ type TenantList struct {
 func (m *TenantList) Reset()                    { *m = TenantList{} }
 func (m *TenantList) String() string            { return proto.CompactTextString(m) }
 func (*TenantList) ProtoMessage()               {}
-func (*TenantList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{10} }
+func (*TenantList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{14} }
 
 func (m *TenantList) GetItems() []*Tenant {
 	if m != nil {
@@ -408,7 +550,7 @@ type VersionList struct {
 func (m *VersionList) Reset()                    { *m = VersionList{} }
 func (m *VersionList) String() string            { return proto.CompactTextString(m) }
 func (*VersionList) ProtoMessage()               {}
-func (*VersionList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{11} }
+func (*VersionList) Descriptor() ([]byte, []int) { return fileDescriptorSvcCluster, []int{15} }
 
 func (m *VersionList) GetItems() []*Version {
 	if m != nil {
@@ -420,20 +562,26 @@ func (m *VersionList) GetItems() []*Version {
 func init() {
 	proto.RegisterType((*AutoMsgClusterWatchHelper)(nil), "cluster.AutoMsgClusterWatchHelper")
 	proto.RegisterType((*AutoMsgClusterWatchHelper_WatchEvent)(nil), "cluster.AutoMsgClusterWatchHelper.WatchEvent")
+	proto.RegisterType((*AutoMsgConfigurationSnapshotWatchHelper)(nil), "cluster.AutoMsgConfigurationSnapshotWatchHelper")
+	proto.RegisterType((*AutoMsgConfigurationSnapshotWatchHelper_WatchEvent)(nil), "cluster.AutoMsgConfigurationSnapshotWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgDistributedServiceCardWatchHelper)(nil), "cluster.AutoMsgDistributedServiceCardWatchHelper")
 	proto.RegisterType((*AutoMsgDistributedServiceCardWatchHelper_WatchEvent)(nil), "cluster.AutoMsgDistributedServiceCardWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgHostWatchHelper)(nil), "cluster.AutoMsgHostWatchHelper")
 	proto.RegisterType((*AutoMsgHostWatchHelper_WatchEvent)(nil), "cluster.AutoMsgHostWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgNodeWatchHelper)(nil), "cluster.AutoMsgNodeWatchHelper")
 	proto.RegisterType((*AutoMsgNodeWatchHelper_WatchEvent)(nil), "cluster.AutoMsgNodeWatchHelper.WatchEvent")
+	proto.RegisterType((*AutoMsgSnapshotRestoreWatchHelper)(nil), "cluster.AutoMsgSnapshotRestoreWatchHelper")
+	proto.RegisterType((*AutoMsgSnapshotRestoreWatchHelper_WatchEvent)(nil), "cluster.AutoMsgSnapshotRestoreWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgTenantWatchHelper)(nil), "cluster.AutoMsgTenantWatchHelper")
 	proto.RegisterType((*AutoMsgTenantWatchHelper_WatchEvent)(nil), "cluster.AutoMsgTenantWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgVersionWatchHelper)(nil), "cluster.AutoMsgVersionWatchHelper")
 	proto.RegisterType((*AutoMsgVersionWatchHelper_WatchEvent)(nil), "cluster.AutoMsgVersionWatchHelper.WatchEvent")
 	proto.RegisterType((*ClusterList)(nil), "cluster.ClusterList")
+	proto.RegisterType((*ConfigurationSnapshotList)(nil), "cluster.ConfigurationSnapshotList")
 	proto.RegisterType((*DistributedServiceCardList)(nil), "cluster.DistributedServiceCardList")
 	proto.RegisterType((*HostList)(nil), "cluster.HostList")
 	proto.RegisterType((*NodeList)(nil), "cluster.NodeList")
+	proto.RegisterType((*SnapshotRestoreList)(nil), "cluster.SnapshotRestoreList")
 	proto.RegisterType((*TenantList)(nil), "cluster.TenantList")
 	proto.RegisterType((*VersionList)(nil), "cluster.VersionList")
 }
@@ -452,77 +600,103 @@ type ClusterV1Client interface {
 	AuthBootstrapComplete(ctx context.Context, in *ClusterAuthBootstrapRequest, opts ...grpc.CallOption) (*Cluster, error)
 	// Create Cluster object
 	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Create ConfigurationSnapshot object
+	AutoAddConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error)
 	// Create DistributedServiceCard object
 	AutoAddDistributedServiceCard(ctx context.Context, in *DistributedServiceCard, opts ...grpc.CallOption) (*DistributedServiceCard, error)
 	// Create Host object
 	AutoAddHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	// Create Node object
 	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Create SnapshotRestore object
+	AutoAddSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error)
 	// Create Tenant object
 	AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	// Create Version object
 	AutoAddVersion(ctx context.Context, in *Version, opts ...grpc.CallOption) (*Version, error)
 	// Delete Cluster object
 	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Delete ConfigurationSnapshot object
+	AutoDeleteConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error)
 	// Delete DistributedServiceCard object
 	AutoDeleteDistributedServiceCard(ctx context.Context, in *DistributedServiceCard, opts ...grpc.CallOption) (*DistributedServiceCard, error)
 	// Delete Host object
 	AutoDeleteHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	// Delete Node object
 	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Delete SnapshotRestore object
+	AutoDeleteSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error)
 	// Delete Tenant object
 	AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	// Delete Version object
 	AutoDeleteVersion(ctx context.Context, in *Version, opts ...grpc.CallOption) (*Version, error)
 	// Get Cluster object
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Get ConfigurationSnapshot object
+	AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error)
 	// Get DistributedServiceCard object
 	AutoGetDistributedServiceCard(ctx context.Context, in *DistributedServiceCard, opts ...grpc.CallOption) (*DistributedServiceCard, error)
 	// Get Host object
 	AutoGetHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	// Get Node object
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Get SnapshotRestore object
+	AutoGetSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error)
 	// Get Tenant object
 	AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	// Get Version object
 	AutoGetVersion(ctx context.Context, in *Version, opts ...grpc.CallOption) (*Version, error)
 	// List Cluster objects
 	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error)
+	// List ConfigurationSnapshot objects
+	AutoListConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ConfigurationSnapshotList, error)
 	// List DistributedServiceCard objects
 	AutoListDistributedServiceCard(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*DistributedServiceCardList, error)
 	// List Host objects
 	AutoListHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*HostList, error)
 	// List Node objects
 	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error)
+	// List SnapshotRestore objects
+	AutoListSnapshotRestore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SnapshotRestoreList, error)
 	// List Tenant objects
 	AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TenantList, error)
 	// List Version objects
 	AutoListVersion(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*VersionList, error)
 	// Update Cluster object
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Update ConfigurationSnapshot object
+	AutoUpdateConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error)
 	// Update DistributedServiceCard object
 	AutoUpdateDistributedServiceCard(ctx context.Context, in *DistributedServiceCard, opts ...grpc.CallOption) (*DistributedServiceCard, error)
 	// Update Host object
 	AutoUpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	// Update Node object
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Update SnapshotRestore object
+	AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error)
 	// Update Tenant object
 	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
 	// Update Version object
 	AutoUpdateVersion(ctx context.Context, in *Version, opts ...grpc.CallOption) (*Version, error)
 	// Watch Cluster objects. Supports WebSockets or HTTP long poll
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchClusterClient, error)
+	// Watch ConfigurationSnapshot objects. Supports WebSockets or HTTP long poll
+	AutoWatchConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchConfigurationSnapshotClient, error)
 	// Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll
 	AutoWatchDistributedServiceCard(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchDistributedServiceCardClient, error)
 	// Watch Host objects. Supports WebSockets or HTTP long poll
 	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error)
 	// Watch Node objects. Supports WebSockets or HTTP long poll
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error)
+	// Watch SnapshotRestore objects. Supports WebSockets or HTTP long poll
+	AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSnapshotRestoreClient, error)
 	AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSvcClusterV1Client, error)
 	// Watch Tenant objects. Supports WebSockets or HTTP long poll
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error)
 	// Watch Version objects. Supports WebSockets or HTTP long poll
 	AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchVersionClient, error)
+	Restore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error)
+	Save(ctx context.Context, in *ConfigurationSnapshotRequest, opts ...grpc.CallOption) (*ConfigurationSnapshot, error)
 	UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest, opts ...grpc.CallOption) (*Cluster, error)
 }
 
@@ -546,6 +720,15 @@ func (c *clusterV1Client) AuthBootstrapComplete(ctx context.Context, in *Cluster
 func (c *clusterV1Client) AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoAddConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error) {
+	out := new(ConfigurationSnapshot)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddConfigurationSnapshot", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -579,6 +762,15 @@ func (c *clusterV1Client) AutoAddNode(ctx context.Context, in *Node, opts ...grp
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoAddSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error) {
+	out := new(SnapshotRestore)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddSnapshotRestore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
 	out := new(Tenant)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoAddTenant", in, out, c.cc, opts...)
@@ -600,6 +792,15 @@ func (c *clusterV1Client) AutoAddVersion(ctx context.Context, in *Version, opts 
 func (c *clusterV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoDeleteConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error) {
+	out := new(ConfigurationSnapshot)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteConfigurationSnapshot", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -633,6 +834,15 @@ func (c *clusterV1Client) AutoDeleteNode(ctx context.Context, in *Node, opts ...
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoDeleteSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error) {
+	out := new(SnapshotRestore)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteSnapshotRestore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
 	out := new(Tenant)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoDeleteTenant", in, out, c.cc, opts...)
@@ -654,6 +864,15 @@ func (c *clusterV1Client) AutoDeleteVersion(ctx context.Context, in *Version, op
 func (c *clusterV1Client) AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error) {
+	out := new(ConfigurationSnapshot)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetConfigurationSnapshot", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -687,6 +906,15 @@ func (c *clusterV1Client) AutoGetNode(ctx context.Context, in *Node, opts ...grp
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoGetSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error) {
+	out := new(SnapshotRestore)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetSnapshotRestore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
 	out := new(Tenant)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoGetTenant", in, out, c.cc, opts...)
@@ -708,6 +936,15 @@ func (c *clusterV1Client) AutoGetVersion(ctx context.Context, in *Version, opts 
 func (c *clusterV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error) {
 	out := new(ClusterList)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoListConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ConfigurationSnapshotList, error) {
+	out := new(ConfigurationSnapshotList)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListConfigurationSnapshot", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -741,6 +978,15 @@ func (c *clusterV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOpt
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoListSnapshotRestore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SnapshotRestoreList, error) {
+	out := new(SnapshotRestoreList)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListSnapshotRestore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TenantList, error) {
 	out := new(TenantList)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoListTenant", in, out, c.cc, opts...)
@@ -768,6 +1014,15 @@ func (c *clusterV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster, op
 	return out, nil
 }
 
+func (c *clusterV1Client) AutoUpdateConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot, opts ...grpc.CallOption) (*ConfigurationSnapshot, error) {
+	out := new(ConfigurationSnapshot)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateConfigurationSnapshot", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) AutoUpdateDistributedServiceCard(ctx context.Context, in *DistributedServiceCard, opts ...grpc.CallOption) (*DistributedServiceCard, error) {
 	out := new(DistributedServiceCard)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateDistributedServiceCard", in, out, c.cc, opts...)
@@ -789,6 +1044,15 @@ func (c *clusterV1Client) AutoUpdateHost(ctx context.Context, in *Host, opts ...
 func (c *clusterV1Client) AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error) {
+	out := new(SnapshotRestore)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/AutoUpdateSnapshotRestore", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -845,8 +1109,40 @@ func (x *clusterV1AutoWatchClusterClient) Recv() (*AutoMsgClusterWatchHelper, er
 	return m, nil
 }
 
+func (c *clusterV1Client) AutoWatchConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchConfigurationSnapshotClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[1], c.cc, "/cluster.ClusterV1/AutoWatchConfigurationSnapshot", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterV1AutoWatchConfigurationSnapshotClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterV1_AutoWatchConfigurationSnapshotClient interface {
+	Recv() (*AutoMsgConfigurationSnapshotWatchHelper, error)
+	grpc.ClientStream
+}
+
+type clusterV1AutoWatchConfigurationSnapshotClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterV1AutoWatchConfigurationSnapshotClient) Recv() (*AutoMsgConfigurationSnapshotWatchHelper, error) {
+	m := new(AutoMsgConfigurationSnapshotWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *clusterV1Client) AutoWatchDistributedServiceCard(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchDistributedServiceCardClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[1], c.cc, "/cluster.ClusterV1/AutoWatchDistributedServiceCard", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[2], c.cc, "/cluster.ClusterV1/AutoWatchDistributedServiceCard", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -878,7 +1174,7 @@ func (x *clusterV1AutoWatchDistributedServiceCardClient) Recv() (*AutoMsgDistrib
 }
 
 func (c *clusterV1Client) AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[2], c.cc, "/cluster.ClusterV1/AutoWatchHost", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[3], c.cc, "/cluster.ClusterV1/AutoWatchHost", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -910,7 +1206,7 @@ func (x *clusterV1AutoWatchHostClient) Recv() (*AutoMsgHostWatchHelper, error) {
 }
 
 func (c *clusterV1Client) AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[3], c.cc, "/cluster.ClusterV1/AutoWatchNode", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[4], c.cc, "/cluster.ClusterV1/AutoWatchNode", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -941,8 +1237,40 @@ func (x *clusterV1AutoWatchNodeClient) Recv() (*AutoMsgNodeWatchHelper, error) {
 	return m, nil
 }
 
+func (c *clusterV1Client) AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSnapshotRestoreClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[5], c.cc, "/cluster.ClusterV1/AutoWatchSnapshotRestore", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterV1AutoWatchSnapshotRestoreClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterV1_AutoWatchSnapshotRestoreClient interface {
+	Recv() (*AutoMsgSnapshotRestoreWatchHelper, error)
+	grpc.ClientStream
+}
+
+type clusterV1AutoWatchSnapshotRestoreClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterV1AutoWatchSnapshotRestoreClient) Recv() (*AutoMsgSnapshotRestoreWatchHelper, error) {
+	m := new(AutoMsgSnapshotRestoreWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *clusterV1Client) AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSvcClusterV1Client, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[4], c.cc, "/cluster.ClusterV1/AutoWatchSvcClusterV1", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[6], c.cc, "/cluster.ClusterV1/AutoWatchSvcClusterV1", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -974,7 +1302,7 @@ func (x *clusterV1AutoWatchSvcClusterV1Client) Recv() (*api.WatchEventList, erro
 }
 
 func (c *clusterV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[5], c.cc, "/cluster.ClusterV1/AutoWatchTenant", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[7], c.cc, "/cluster.ClusterV1/AutoWatchTenant", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1006,7 +1334,7 @@ func (x *clusterV1AutoWatchTenantClient) Recv() (*AutoMsgTenantWatchHelper, erro
 }
 
 func (c *clusterV1Client) AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchVersionClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[6], c.cc, "/cluster.ClusterV1/AutoWatchVersion", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterV1_serviceDesc.Streams[8], c.cc, "/cluster.ClusterV1/AutoWatchVersion", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1037,6 +1365,24 @@ func (x *clusterV1AutoWatchVersionClient) Recv() (*AutoMsgVersionWatchHelper, er
 	return m, nil
 }
 
+func (c *clusterV1Client) Restore(ctx context.Context, in *SnapshotRestore, opts ...grpc.CallOption) (*SnapshotRestore, error) {
+	out := new(SnapshotRestore)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/Restore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterV1Client) Save(ctx context.Context, in *ConfigurationSnapshotRequest, opts ...grpc.CallOption) (*ConfigurationSnapshot, error) {
+	out := new(ConfigurationSnapshot)
+	err := grpc.Invoke(ctx, "/cluster.ClusterV1/Save", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterV1Client) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cluster.ClusterV1/UpdateTLSConfig", in, out, c.cc, opts...)
@@ -1052,77 +1398,103 @@ type ClusterV1Server interface {
 	AuthBootstrapComplete(context.Context, *ClusterAuthBootstrapRequest) (*Cluster, error)
 	// Create Cluster object
 	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
+	// Create ConfigurationSnapshot object
+	AutoAddConfigurationSnapshot(context.Context, *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	// Create DistributedServiceCard object
 	AutoAddDistributedServiceCard(context.Context, *DistributedServiceCard) (*DistributedServiceCard, error)
 	// Create Host object
 	AutoAddHost(context.Context, *Host) (*Host, error)
 	// Create Node object
 	AutoAddNode(context.Context, *Node) (*Node, error)
+	// Create SnapshotRestore object
+	AutoAddSnapshotRestore(context.Context, *SnapshotRestore) (*SnapshotRestore, error)
 	// Create Tenant object
 	AutoAddTenant(context.Context, *Tenant) (*Tenant, error)
 	// Create Version object
 	AutoAddVersion(context.Context, *Version) (*Version, error)
 	// Delete Cluster object
 	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
+	// Delete ConfigurationSnapshot object
+	AutoDeleteConfigurationSnapshot(context.Context, *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	// Delete DistributedServiceCard object
 	AutoDeleteDistributedServiceCard(context.Context, *DistributedServiceCard) (*DistributedServiceCard, error)
 	// Delete Host object
 	AutoDeleteHost(context.Context, *Host) (*Host, error)
 	// Delete Node object
 	AutoDeleteNode(context.Context, *Node) (*Node, error)
+	// Delete SnapshotRestore object
+	AutoDeleteSnapshotRestore(context.Context, *SnapshotRestore) (*SnapshotRestore, error)
 	// Delete Tenant object
 	AutoDeleteTenant(context.Context, *Tenant) (*Tenant, error)
 	// Delete Version object
 	AutoDeleteVersion(context.Context, *Version) (*Version, error)
 	// Get Cluster object
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
+	// Get ConfigurationSnapshot object
+	AutoGetConfigurationSnapshot(context.Context, *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	// Get DistributedServiceCard object
 	AutoGetDistributedServiceCard(context.Context, *DistributedServiceCard) (*DistributedServiceCard, error)
 	// Get Host object
 	AutoGetHost(context.Context, *Host) (*Host, error)
 	// Get Node object
 	AutoGetNode(context.Context, *Node) (*Node, error)
+	// Get SnapshotRestore object
+	AutoGetSnapshotRestore(context.Context, *SnapshotRestore) (*SnapshotRestore, error)
 	// Get Tenant object
 	AutoGetTenant(context.Context, *Tenant) (*Tenant, error)
 	// Get Version object
 	AutoGetVersion(context.Context, *Version) (*Version, error)
 	// List Cluster objects
 	AutoListCluster(context.Context, *api.ListWatchOptions) (*ClusterList, error)
+	// List ConfigurationSnapshot objects
+	AutoListConfigurationSnapshot(context.Context, *api.ListWatchOptions) (*ConfigurationSnapshotList, error)
 	// List DistributedServiceCard objects
 	AutoListDistributedServiceCard(context.Context, *api.ListWatchOptions) (*DistributedServiceCardList, error)
 	// List Host objects
 	AutoListHost(context.Context, *api.ListWatchOptions) (*HostList, error)
 	// List Node objects
 	AutoListNode(context.Context, *api.ListWatchOptions) (*NodeList, error)
+	// List SnapshotRestore objects
+	AutoListSnapshotRestore(context.Context, *api.ListWatchOptions) (*SnapshotRestoreList, error)
 	// List Tenant objects
 	AutoListTenant(context.Context, *api.ListWatchOptions) (*TenantList, error)
 	// List Version objects
 	AutoListVersion(context.Context, *api.ListWatchOptions) (*VersionList, error)
 	// Update Cluster object
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
+	// Update ConfigurationSnapshot object
+	AutoUpdateConfigurationSnapshot(context.Context, *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	// Update DistributedServiceCard object
 	AutoUpdateDistributedServiceCard(context.Context, *DistributedServiceCard) (*DistributedServiceCard, error)
 	// Update Host object
 	AutoUpdateHost(context.Context, *Host) (*Host, error)
 	// Update Node object
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
+	// Update SnapshotRestore object
+	AutoUpdateSnapshotRestore(context.Context, *SnapshotRestore) (*SnapshotRestore, error)
 	// Update Tenant object
 	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
 	// Update Version object
 	AutoUpdateVersion(context.Context, *Version) (*Version, error)
 	// Watch Cluster objects. Supports WebSockets or HTTP long poll
 	AutoWatchCluster(*api.ListWatchOptions, ClusterV1_AutoWatchClusterServer) error
+	// Watch ConfigurationSnapshot objects. Supports WebSockets or HTTP long poll
+	AutoWatchConfigurationSnapshot(*api.ListWatchOptions, ClusterV1_AutoWatchConfigurationSnapshotServer) error
 	// Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll
 	AutoWatchDistributedServiceCard(*api.ListWatchOptions, ClusterV1_AutoWatchDistributedServiceCardServer) error
 	// Watch Host objects. Supports WebSockets or HTTP long poll
 	AutoWatchHost(*api.ListWatchOptions, ClusterV1_AutoWatchHostServer) error
 	// Watch Node objects. Supports WebSockets or HTTP long poll
 	AutoWatchNode(*api.ListWatchOptions, ClusterV1_AutoWatchNodeServer) error
+	// Watch SnapshotRestore objects. Supports WebSockets or HTTP long poll
+	AutoWatchSnapshotRestore(*api.ListWatchOptions, ClusterV1_AutoWatchSnapshotRestoreServer) error
 	AutoWatchSvcClusterV1(*api.ListWatchOptions, ClusterV1_AutoWatchSvcClusterV1Server) error
 	// Watch Tenant objects. Supports WebSockets or HTTP long poll
 	AutoWatchTenant(*api.ListWatchOptions, ClusterV1_AutoWatchTenantServer) error
 	// Watch Version objects. Supports WebSockets or HTTP long poll
 	AutoWatchVersion(*api.ListWatchOptions, ClusterV1_AutoWatchVersionServer) error
+	Restore(context.Context, *SnapshotRestore) (*SnapshotRestore, error)
+	Save(context.Context, *ConfigurationSnapshotRequest) (*ConfigurationSnapshot, error)
 	UpdateTLSConfig(context.Context, *UpdateTLSConfigRequest) (*Cluster, error)
 }
 
@@ -1162,6 +1534,24 @@ func _ClusterV1_AutoAddCluster_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoAddCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoAddConfigurationSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurationSnapshot)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoAddConfigurationSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoAddConfigurationSnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoAddConfigurationSnapshot(ctx, req.(*ConfigurationSnapshot))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1220,6 +1610,24 @@ func _ClusterV1_AutoAddNode_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoAddSnapshotRestore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SnapshotRestore)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoAddSnapshotRestore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoAddSnapshotRestore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoAddSnapshotRestore(ctx, req.(*SnapshotRestore))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoAddTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Tenant)
 	if err := dec(in); err != nil {
@@ -1270,6 +1678,24 @@ func _ClusterV1_AutoDeleteCluster_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoDeleteCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoDeleteConfigurationSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurationSnapshot)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoDeleteConfigurationSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoDeleteConfigurationSnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoDeleteConfigurationSnapshot(ctx, req.(*ConfigurationSnapshot))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1328,6 +1754,24 @@ func _ClusterV1_AutoDeleteNode_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoDeleteSnapshotRestore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SnapshotRestore)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoDeleteSnapshotRestore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoDeleteSnapshotRestore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoDeleteSnapshotRestore(ctx, req.(*SnapshotRestore))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoDeleteTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Tenant)
 	if err := dec(in); err != nil {
@@ -1378,6 +1822,24 @@ func _ClusterV1_AutoGetCluster_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoGetCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoGetConfigurationSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurationSnapshot)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoGetConfigurationSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoGetConfigurationSnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoGetConfigurationSnapshot(ctx, req.(*ConfigurationSnapshot))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1436,6 +1898,24 @@ func _ClusterV1_AutoGetNode_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoGetSnapshotRestore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SnapshotRestore)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoGetSnapshotRestore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoGetSnapshotRestore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoGetSnapshotRestore(ctx, req.(*SnapshotRestore))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoGetTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Tenant)
 	if err := dec(in); err != nil {
@@ -1486,6 +1966,24 @@ func _ClusterV1_AutoListCluster_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoListCluster(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoListConfigurationSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoListConfigurationSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoListConfigurationSnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoListConfigurationSnapshot(ctx, req.(*api.ListWatchOptions))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1544,6 +2042,24 @@ func _ClusterV1_AutoListNode_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoListSnapshotRestore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoListSnapshotRestore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoListSnapshotRestore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoListSnapshotRestore(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoListTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -1594,6 +2110,24 @@ func _ClusterV1_AutoUpdateCluster_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterV1Server).AutoUpdateCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_AutoUpdateConfigurationSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurationSnapshot)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoUpdateConfigurationSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoUpdateConfigurationSnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoUpdateConfigurationSnapshot(ctx, req.(*ConfigurationSnapshot))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1652,6 +2186,24 @@ func _ClusterV1_AutoUpdateNode_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterV1_AutoUpdateSnapshotRestore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SnapshotRestore)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).AutoUpdateSnapshotRestore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/AutoUpdateSnapshotRestore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).AutoUpdateSnapshotRestore(ctx, req.(*SnapshotRestore))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_AutoUpdateTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Tenant)
 	if err := dec(in); err != nil {
@@ -1706,6 +2258,27 @@ type clusterV1AutoWatchClusterServer struct {
 }
 
 func (x *clusterV1AutoWatchClusterServer) Send(m *AutoMsgClusterWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _ClusterV1_AutoWatchConfigurationSnapshot_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterV1Server).AutoWatchConfigurationSnapshot(m, &clusterV1AutoWatchConfigurationSnapshotServer{stream})
+}
+
+type ClusterV1_AutoWatchConfigurationSnapshotServer interface {
+	Send(*AutoMsgConfigurationSnapshotWatchHelper) error
+	grpc.ServerStream
+}
+
+type clusterV1AutoWatchConfigurationSnapshotServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterV1AutoWatchConfigurationSnapshotServer) Send(m *AutoMsgConfigurationSnapshotWatchHelper) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -1772,6 +2345,27 @@ func (x *clusterV1AutoWatchNodeServer) Send(m *AutoMsgNodeWatchHelper) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ClusterV1_AutoWatchSnapshotRestore_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterV1Server).AutoWatchSnapshotRestore(m, &clusterV1AutoWatchSnapshotRestoreServer{stream})
+}
+
+type ClusterV1_AutoWatchSnapshotRestoreServer interface {
+	Send(*AutoMsgSnapshotRestoreWatchHelper) error
+	grpc.ServerStream
+}
+
+type clusterV1AutoWatchSnapshotRestoreServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterV1AutoWatchSnapshotRestoreServer) Send(m *AutoMsgSnapshotRestoreWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _ClusterV1_AutoWatchSvcClusterV1_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ListWatchOptions)
 	if err := stream.RecvMsg(m); err != nil {
@@ -1835,6 +2429,42 @@ func (x *clusterV1AutoWatchVersionServer) Send(m *AutoMsgVersionWatchHelper) err
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ClusterV1_Restore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SnapshotRestore)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).Restore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/Restore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).Restore(ctx, req.(*SnapshotRestore))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterV1_Save_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurationSnapshotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterV1Server).Save(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cluster.ClusterV1/Save",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterV1Server).Save(ctx, req.(*ConfigurationSnapshotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterV1_UpdateTLSConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTLSConfigRequest)
 	if err := dec(in); err != nil {
@@ -1866,6 +2496,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoAddCluster_Handler,
 		},
 		{
+			MethodName: "AutoAddConfigurationSnapshot",
+			Handler:    _ClusterV1_AutoAddConfigurationSnapshot_Handler,
+		},
+		{
 			MethodName: "AutoAddDistributedServiceCard",
 			Handler:    _ClusterV1_AutoAddDistributedServiceCard_Handler,
 		},
@@ -1876,6 +2510,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoAddNode",
 			Handler:    _ClusterV1_AutoAddNode_Handler,
+		},
+		{
+			MethodName: "AutoAddSnapshotRestore",
+			Handler:    _ClusterV1_AutoAddSnapshotRestore_Handler,
 		},
 		{
 			MethodName: "AutoAddTenant",
@@ -1890,6 +2528,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoDeleteCluster_Handler,
 		},
 		{
+			MethodName: "AutoDeleteConfigurationSnapshot",
+			Handler:    _ClusterV1_AutoDeleteConfigurationSnapshot_Handler,
+		},
+		{
 			MethodName: "AutoDeleteDistributedServiceCard",
 			Handler:    _ClusterV1_AutoDeleteDistributedServiceCard_Handler,
 		},
@@ -1900,6 +2542,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoDeleteNode",
 			Handler:    _ClusterV1_AutoDeleteNode_Handler,
+		},
+		{
+			MethodName: "AutoDeleteSnapshotRestore",
+			Handler:    _ClusterV1_AutoDeleteSnapshotRestore_Handler,
 		},
 		{
 			MethodName: "AutoDeleteTenant",
@@ -1914,6 +2560,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoGetCluster_Handler,
 		},
 		{
+			MethodName: "AutoGetConfigurationSnapshot",
+			Handler:    _ClusterV1_AutoGetConfigurationSnapshot_Handler,
+		},
+		{
 			MethodName: "AutoGetDistributedServiceCard",
 			Handler:    _ClusterV1_AutoGetDistributedServiceCard_Handler,
 		},
@@ -1924,6 +2574,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoGetNode",
 			Handler:    _ClusterV1_AutoGetNode_Handler,
+		},
+		{
+			MethodName: "AutoGetSnapshotRestore",
+			Handler:    _ClusterV1_AutoGetSnapshotRestore_Handler,
 		},
 		{
 			MethodName: "AutoGetTenant",
@@ -1938,6 +2592,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoListCluster_Handler,
 		},
 		{
+			MethodName: "AutoListConfigurationSnapshot",
+			Handler:    _ClusterV1_AutoListConfigurationSnapshot_Handler,
+		},
+		{
 			MethodName: "AutoListDistributedServiceCard",
 			Handler:    _ClusterV1_AutoListDistributedServiceCard_Handler,
 		},
@@ -1948,6 +2606,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoListNode",
 			Handler:    _ClusterV1_AutoListNode_Handler,
+		},
+		{
+			MethodName: "AutoListSnapshotRestore",
+			Handler:    _ClusterV1_AutoListSnapshotRestore_Handler,
 		},
 		{
 			MethodName: "AutoListTenant",
@@ -1962,6 +2624,10 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoUpdateCluster_Handler,
 		},
 		{
+			MethodName: "AutoUpdateConfigurationSnapshot",
+			Handler:    _ClusterV1_AutoUpdateConfigurationSnapshot_Handler,
+		},
+		{
 			MethodName: "AutoUpdateDistributedServiceCard",
 			Handler:    _ClusterV1_AutoUpdateDistributedServiceCard_Handler,
 		},
@@ -1974,12 +2640,24 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterV1_AutoUpdateNode_Handler,
 		},
 		{
+			MethodName: "AutoUpdateSnapshotRestore",
+			Handler:    _ClusterV1_AutoUpdateSnapshotRestore_Handler,
+		},
+		{
 			MethodName: "AutoUpdateTenant",
 			Handler:    _ClusterV1_AutoUpdateTenant_Handler,
 		},
 		{
 			MethodName: "AutoUpdateVersion",
 			Handler:    _ClusterV1_AutoUpdateVersion_Handler,
+		},
+		{
+			MethodName: "Restore",
+			Handler:    _ClusterV1_Restore_Handler,
+		},
+		{
+			MethodName: "Save",
+			Handler:    _ClusterV1_Save_Handler,
 		},
 		{
 			MethodName: "UpdateTLSConfig",
@@ -1990,6 +2668,11 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchCluster",
 			Handler:       _ClusterV1_AutoWatchCluster_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchConfigurationSnapshot",
+			Handler:       _ClusterV1_AutoWatchConfigurationSnapshot_Handler,
 			ServerStreams: true,
 		},
 		{
@@ -2005,6 +2688,11 @@ var _ClusterV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchNode",
 			Handler:       _ClusterV1_AutoWatchNode_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchSnapshotRestore",
+			Handler:       _ClusterV1_AutoWatchSnapshotRestore_Handler,
 			ServerStreams: true,
 		},
 		{
@@ -2090,6 +2778,70 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 	return i, nil
 }
 
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
+		n2, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
 func (m *AutoMsgDistributedServiceCardWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2145,11 +2897,11 @@ func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) MarshalTo(dAtA []b
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n2, err := m.Object.MarshalTo(dAtA[i:])
+		n3, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n3
 	}
 	return i, nil
 }
@@ -2209,11 +2961,11 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) 
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n3, err := m.Object.MarshalTo(dAtA[i:])
+		n4, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	return i, nil
 }
@@ -2273,11 +3025,75 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) 
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n4, err := m.Object.MarshalTo(dAtA[i:])
+		n5, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
+		n6, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
 	}
 	return i, nil
 }
@@ -2337,11 +3153,11 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n5, err := m.Object.MarshalTo(dAtA[i:])
+		n7, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n7
 	}
 	return i, nil
 }
@@ -2401,11 +3217,11 @@ func (m *AutoMsgVersionWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcCluster(dAtA, i, uint64(m.Object.Size()))
-		n6, err := m.Object.MarshalTo(dAtA[i:])
+		n8, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n8
 	}
 	return i, nil
 }
@@ -2421,52 +3237,6 @@ func (m *ClusterList) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ClusterList) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
-	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
-	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n8
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *DistributedServiceCardList) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DistributedServiceCardList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2502,7 +3272,7 @@ func (m *DistributedServiceCardList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *HostList) Marshal() (dAtA []byte, err error) {
+func (m *ConfigurationSnapshotList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2512,7 +3282,7 @@ func (m *HostList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *HostList) MarshalTo(dAtA []byte) (int, error) {
+func (m *ConfigurationSnapshotList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2548,7 +3318,7 @@ func (m *HostList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *NodeList) Marshal() (dAtA []byte, err error) {
+func (m *DistributedServiceCardList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2558,7 +3328,7 @@ func (m *NodeList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *NodeList) MarshalTo(dAtA []byte) (int, error) {
+func (m *DistributedServiceCardList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2594,7 +3364,7 @@ func (m *NodeList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *TenantList) Marshal() (dAtA []byte, err error) {
+func (m *HostList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2604,7 +3374,7 @@ func (m *TenantList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TenantList) MarshalTo(dAtA []byte) (int, error) {
+func (m *HostList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2640,7 +3410,7 @@ func (m *TenantList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *VersionList) Marshal() (dAtA []byte, err error) {
+func (m *NodeList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -2650,7 +3420,7 @@ func (m *VersionList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *VersionList) MarshalTo(dAtA []byte) (int, error) {
+func (m *NodeList) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -2671,6 +3441,144 @@ func (m *VersionList) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n18
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *SnapshotRestoreList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotRestoreList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
+	n19, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n19
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
+	n20, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n20
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TenantList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TenantList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
+	n21, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n21
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
+	n22, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n22
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcCluster(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *VersionList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VersionList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.TypeMeta.Size()))
+	n23, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n23
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcCluster(dAtA, i, uint64(m.ListMeta.Size()))
+	n24, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n24
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -2708,6 +3616,32 @@ func (m *AutoMsgClusterWatchHelper) Size() (n int) {
 }
 
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -2799,6 +3733,32 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Size() (n int) {
 	return n
 }
 
+func (m *AutoMsgSnapshotRestoreWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcCluster(uint64(l))
+	}
+	return n
+}
+
 func (m *AutoMsgTenantWatchHelper) Size() (n int) {
 	var l int
 	_ = l
@@ -2867,6 +3827,22 @@ func (m *ClusterList) Size() (n int) {
 	return n
 }
 
+func (m *ConfigurationSnapshotList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *DistributedServiceCardList) Size() (n int) {
 	var l int
 	_ = l
@@ -2900,6 +3876,22 @@ func (m *HostList) Size() (n int) {
 }
 
 func (m *NodeList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcCluster(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcCluster(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SnapshotRestoreList) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -3127,6 +4119,199 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 			}
 			if m.Object == nil {
 				m.Object = &Cluster{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgConfigurationSnapshotWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgConfigurationSnapshotWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgConfigurationSnapshotWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgConfigurationSnapshotWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &ConfigurationSnapshot{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3732,6 +4917,199 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AutoMsgSnapshotRestoreWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSnapshotRestoreWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSnapshotRestoreWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgSnapshotRestoreWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSnapshotRestoreWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &SnapshotRestore{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *AutoMsgTenantWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4259,6 +5637,147 @@ func (m *ClusterList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *ConfigurationSnapshotList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConfigurationSnapshotList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConfigurationSnapshotList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &ConfigurationSnapshot{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *DistributedServiceCardList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4682,6 +6201,147 @@ func (m *NodeList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *SnapshotRestoreList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcCluster
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotRestoreList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotRestoreList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcCluster
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &SnapshotRestore{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcCluster(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcCluster
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *TenantList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -5072,111 +6732,140 @@ var (
 func init() { proto.RegisterFile("svc_cluster.proto", fileDescriptorSvcCluster) }
 
 var fileDescriptorSvcCluster = []byte{
-	// 1689 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcd, 0x6f, 0x13, 0x47,
-	0x1f, 0xce, 0x24, 0x21, 0x84, 0xc9, 0xf7, 0x40, 0xf2, 0x7a, 0xf7, 0xa5, 0x76, 0x58, 0x82, 0x48,
-	0x43, 0xe2, 0x75, 0xa0, 0xa5, 0x52, 0x40, 0x2a, 0x38, 0xd0, 0xa4, 0x2a, 0x10, 0x1a, 0x28, 0xb4,
-	0x55, 0x5b, 0xd8, 0xd8, 0x13, 0x67, 0x2b, 0x7b, 0x77, 0xeb, 0x1d, 0x07, 0xd1, 0x8f, 0x4b, 0x1d,
-	0xa4, 0x9e, 0x69, 0x2f, 0xed, 0xa5, 0x52, 0xa4, 0xf6, 0xc0, 0x31, 0xa7, 0x8a, 0x4b, 0x7b, 0x44,
-	0x3d, 0x21, 0x71, 0xa8, 0xca, 0xc1, 0xaa, 0x22, 0xaa, 0x56, 0xf9, 0x07, 0x7a, 0xad, 0xe6, 0x63,
-	0xed, 0xfd, 0xcc, 0xae, 0x2b, 0x81, 0xe0, 0x14, 0xef, 0x7a, 0x7e, 0xcf, 0xf3, 0x7b, 0xc6, 0xcf,
-	0x3c, 0xb3, 0x3b, 0x81, 0x23, 0xf6, 0x7a, 0xe1, 0x46, 0xa1, 0x5c, 0xb3, 0x09, 0xae, 0x66, 0xad,
-	0xaa, 0x49, 0x4c, 0xb4, 0x57, 0x5c, 0xca, 0x07, 0x4b, 0xa6, 0x59, 0x2a, 0x63, 0x55, 0xb3, 0x74,
-	0x55, 0x33, 0x0c, 0x93, 0x68, 0x44, 0x37, 0x0d, 0x9b, 0x0f, 0x93, 0xcf, 0x97, 0x74, 0xb2, 0x56,
-	0x5b, 0xc9, 0x16, 0xcc, 0x8a, 0x6a, 0x61, 0xc3, 0xd6, 0x8c, 0xa2, 0xa9, 0xda, 0xb7, 0xd4, 0x75,
-	0x6c, 0xe8, 0x05, 0xac, 0xd6, 0x88, 0x5e, 0xb6, 0x69, 0x69, 0x09, 0x1b, 0xee, 0x6a, 0x55, 0x37,
-	0x0a, 0xe5, 0x5a, 0x11, 0x3b, 0x30, 0x33, 0x2e, 0x98, 0x92, 0x59, 0x32, 0x55, 0x76, 0x7b, 0xa5,
-	0xb6, 0xca, 0xae, 0xd8, 0x05, 0xfb, 0x24, 0x86, 0x0f, 0x78, 0x7a, 0x95, 0x07, 0xed, 0x8a, 0x56,
-	0x25, 0x86, 0x5e, 0x10, 0xd7, 0xfd, 0x04, 0x1b, 0x9a, 0x41, 0xc4, 0xd5, 0x91, 0x88, 0x16, 0xa9,
-	0xa0, 0x0a, 0x26, 0x1a, 0x1f, 0xa6, 0xfc, 0x05, 0xa0, 0x74, 0xb6, 0x46, 0xcc, 0x8b, 0x76, 0x69,
-	0x9e, 0xa3, 0x5f, 0xd7, 0x48, 0x61, 0x6d, 0x11, 0x97, 0x2d, 0x5c, 0x45, 0x6f, 0xc3, 0x9e, 0xf3,
-	0xeb, 0xd8, 0x20, 0x76, 0x0a, 0x8c, 0x77, 0x4d, 0xf6, 0x1d, 0x9f, 0xc9, 0x3a, 0x2d, 0x44, 0xd6,
-	0x64, 0xd9, 0x67, 0x56, 0x95, 0x87, 0x3b, 0x8d, 0x4c, 0x0f, 0x66, 0x00, 0xcb, 0xe2, 0xaf, 0xbc,
-	0x0a, 0x61, 0x6b, 0x04, 0x1a, 0x87, 0xdd, 0x57, 0x6f, 0x5b, 0x38, 0x05, 0xc6, 0xc1, 0xe4, 0xbe,
-	0x3c, 0xda, 0x69, 0x64, 0x06, 0xc9, 0x6d, 0x0b, 0x4f, 0x9b, 0x15, 0x9d, 0xe0, 0x8a, 0x45, 0x6e,
-	0xa3, 0x93, 0xb0, 0x67, 0x69, 0xe5, 0x63, 0x5c, 0x20, 0xa9, 0xce, 0x71, 0x30, 0xd9, 0x77, 0x7c,
-	0xb8, 0xd9, 0x82, 0xe0, 0xce, 0x1f, 0xd8, 0x69, 0x64, 0x86, 0x4d, 0x36, 0xa6, 0x55, 0x37, 0x37,
-	0xf4, 0xf8, 0x8e, 0xd4, 0x77, 0x8b, 0x32, 0xad, 0xb1, 0xbe, 0x94, 0x6f, 0x3a, 0xe1, 0xa4, 0xe8,
-	0xfa, 0x9c, 0x6e, 0x93, 0xaa, 0xbe, 0x52, 0x23, 0xb8, 0x78, 0x05, 0x57, 0xd7, 0xf5, 0x02, 0x9e,
-	0xd7, 0xaa, 0x45, 0xb7, 0xf0, 0x9b, 0x3e, 0xe1, 0xa7, 0xfd, 0xc2, 0x63, 0x21, 0xe2, 0xe6, 0xa1,
-	0xd6, 0xe6, 0x3c, 0x9c, 0xf7, 0xcd, 0x43, 0xa6, 0xd9, 0x51, 0x78, 0x2b, 0x49, 0xa7, 0xa5, 0x01,
-	0xe0, 0x98, 0xd0, 0xb4, 0x68, 0xda, 0xc4, 0x3d, 0x09, 0x97, 0x7c, 0x93, 0x30, 0xe5, 0x9f, 0x04,
-	0x5f, 0x41, 0x9c, 0xe4, 0x42, 0x9b, 0x92, 0x4f, 0xf8, 0x24, 0x0f, 0x34, 0xf9, 0x29, 0xf1, 0x7f,
-	0x10, 0x78, 0xc9, 0x2c, 0xe2, 0xb6, 0x04, 0xfa, 0x0a, 0x9e, 0x9d, 0x40, 0x4a, 0x9c, 0x54, 0xe0,
-	0x13, 0x00, 0x53, 0xa2, 0xdf, 0xab, 0x2c, 0x01, 0xdc, 0x12, 0x2f, 0xfb, 0x24, 0x4e, 0xfb, 0x25,
-	0x06, 0x4a, 0xe2, 0x44, 0xe2, 0x36, 0x45, 0xbe, 0xea, 0x13, 0x39, 0xd4, 0xec, 0x80, 0x53, 0x27,
-	0x95, 0xe9, 0x4a, 0xaa, 0x6b, 0xb8, 0x6a, 0xeb, 0xa6, 0xd1, 0x56, 0x52, 0x05, 0x6b, 0x9e, 0x5d,
-	0x52, 0x09, 0xee, 0xa4, 0x4a, 0x7f, 0x07, 0xb0, 0x4f, 0x84, 0xdb, 0x05, 0xdd, 0x26, 0xe8, 0x24,
-	0x04, 0x57, 0x9b, 0x0e, 0xd1, 0x2c, 0x3d, 0x4b, 0x1b, 0xb9, 0x88, 0x89, 0x96, 0xdf, 0xff, 0xa0,
-	0x91, 0xe9, 0x78, 0xd8, 0xc8, 0x80, 0x9d, 0x46, 0x66, 0xef, 0xb4, 0x6e, 0x94, 0x75, 0x03, 0x2f,
-	0x3b, 0x1f, 0xd0, 0x12, 0xec, 0xa5, 0xf5, 0x74, 0x64, 0xaa, 0xcb, 0x55, 0xee, 0xdc, 0xcc, 0x1f,
-	0x74, 0x95, 0x0f, 0x97, 0x75, 0x9b, 0xcc, 0xd0, 0x9d, 0xc1, 0xc1, 0x09, 0xdc, 0x41, 0xb3, 0x70,
-	0xcf, 0x9b, 0x04, 0x57, 0xec, 0x54, 0x37, 0x9b, 0xe3, 0x60, 0x14, 0xef, 0xdb, 0x69, 0x64, 0xf6,
-	0x50, 0x5d, 0xf6, 0x32, 0xff, 0x33, 0x37, 0xf8, 0xf8, 0x8e, 0x04, 0x29, 0x90, 0xd0, 0xf6, 0x0f,
-	0x80, 0x72, 0x78, 0x60, 0x3d, 0x5f, 0x52, 0xcf, 0x78, 0xa5, 0xc6, 0xa6, 0x6d, 0xbc, 0xf2, 0x47,
-	0x00, 0xf6, 0xd2, 0xdc, 0x7a, 0xbe, 0x74, 0x66, 0xbd, 0x3a, 0x7d, 0x11, 0x9b, 0x4c, 0x15, 0x0d,
-	0xab, 0x17, 0x44, 0x15, 0xcb, 0xd5, 0x78, 0x55, 0xbf, 0x01, 0x08, 0x79, 0x3a, 0x3d, 0x5f, 0xba,
-	0x72, 0x5e, 0x5d, 0x81, 0x28, 0x8d, 0x57, 0x46, 0xb3, 0x45, 0xc4, 0xd1, 0x0b, 0x92, 0x2d, 0x4e,
-	0x78, 0xc6, 0x6a, 0x3b, 0xfe, 0xf3, 0x04, 0xdc, 0x27, 0x92, 0xe8, 0xda, 0x2c, 0xfa, 0x16, 0xc0,
-	0xd1, 0xb3, 0x35, 0xb2, 0x96, 0x37, 0x4d, 0x62, 0x93, 0xaa, 0x66, 0xcd, 0x9b, 0x15, 0xab, 0x8c,
-	0x09, 0x46, 0x13, 0xfe, 0xdc, 0xf2, 0x0c, 0x5b, 0xc6, 0x9f, 0xd4, 0xb0, 0x4d, 0xe4, 0x40, 0xba,
-	0x29, 0x8b, 0x5b, 0x1b, 0x52, 0x4f, 0xa1, 0x8a, 0x35, 0x82, 0x7f, 0xda, 0x90, 0xc0, 0x2f, 0x1b,
-	0x52, 0xc7, 0xaf, 0x1b, 0xd2, 0x5e, 0xf1, 0xf5, 0x97, 0x8f, 0x9e, 0x7c, 0xdd, 0x79, 0x04, 0x76,
-	0xcc, 0x81, 0x29, 0x25, 0xad, 0x8a, 0x5a, 0x35, 0xbc, 0x83, 0x45, 0x38, 0x48, 0xb7, 0xa5, 0xb3,
-	0xc5, 0xa2, 0x28, 0x46, 0x01, 0xb6, 0x10, 0x7e, 0x14, 0xe4, 0x47, 0x35, 0xf8, 0x92, 0x40, 0x0a,
-	0x0f, 0x26, 0x14, 0x97, 0x5c, 0x72, 0xdc, 0x80, 0x50, 0xda, 0x65, 0xd8, 0x27, 0x68, 0x69, 0x4e,
-	0x20, 0x6f, 0x6c, 0xc8, 0xde, 0x4b, 0xe5, 0x48, 0x10, 0x80, 0x4d, 0xd6, 0x00, 0x9f, 0xac, 0x1e,
-	0x75, 0xcd, 0xb4, 0x89, 0xed, 0xc2, 0xa4, 0xab, 0x14, 0x79, 0x17, 0xad, 0xec, 0xbd, 0x8c, 0xc7,
-	0x34, 0xcc, 0x22, 0xb6, 0xd1, 0xfb, 0x70, 0x40, 0x60, 0xf2, 0x15, 0x82, 0xfc, 0x4b, 0x46, 0xf6,
-	0xdf, 0x50, 0x8e, 0x46, 0x20, 0x0f, 0x71, 0xe4, 0x5e, 0x95, 0xbf, 0x66, 0xd9, 0xae, 0x1f, 0x51,
-	0x58, 0x14, 0x05, 0x4c, 0x2b, 0x07, 0xee, 0x84, 0xce, 0xe6, 0x5b, 0x70, 0x84, 0x22, 0x9d, 0xc3,
-	0xd4, 0x1c, 0x6d, 0x3b, 0xa2, 0xc8, 0xca, 0x9a, 0x60, 0x3f, 0x00, 0x38, 0xde, 0x42, 0x7b, 0x6a,
-	0xae, 0x78, 0x3d, 0x48, 0xcd, 0xa6, 0xe9, 0x28, 0xec, 0x98, 0xeb, 0x98, 0x3a, 0xa4, 0x16, 0x5b,
-	0x65, 0x36, 0x2f, 0x2b, 0x68, 0xd5, 0xa2, 0xad, 0x7e, 0xb6, 0x94, 0xbd, 0xa4, 0x55, 0xf0, 0x17,
-	0xe8, 0x43, 0x3e, 0x7d, 0xbc, 0xcd, 0x04, 0x2e, 0x9a, 0x89, 0x20, 0x1c, 0x65, 0x84, 0x43, 0xdc,
-	0x44, 0x11, 0xf0, 0x09, 0x0c, 0x15, 0x07, 0xcf, 0xfc, 0xd4, 0x82, 0xc7, 0x70, 0xb8, 0x05, 0x9f,
-	0xd8, 0x5b, 0x6a, 0x04, 0xc9, 0xff, 0x18, 0xc9, 0x88, 0x63, 0xad, 0x16, 0x8d, 0xc7, 0x19, 0x6d,
-	0xdb, 0xcc, 0xe7, 0x8c, 0xf7, 0xf8, 0x94, 0x2c, 0x60, 0xd2, 0x8e, 0xc7, 0x0e, 0x6f, 0x6d, 0x48,
-	0x5d, 0x25, 0x4c, 0x3c, 0x0d, 0x0f, 0xd2, 0x86, 0x51, 0xaf, 0x13, 0x73, 0xe8, 0x7b, 0xc0, 0x73,
-	0x68, 0x01, 0x93, 0xa7, 0xe6, 0xb8, 0xd3, 0x61, 0x8d, 0x30, 0xbb, 0xa1, 0x04, 0x76, 0xbb, 0xce,
-	0xd3, 0x65, 0x01, 0x93, 0x04, 0x5e, 0x9b, 0x0a, 0xa3, 0x62, 0x4e, 0x40, 0x01, 0xa3, 0xb5, 0x80,
-	0x13, 0xb8, 0x6c, 0x57, 0x60, 0x9f, 0xc5, 0x6e, 0xf0, 0xec, 0x5a, 0xc0, 0x24, 0xb1, 0xbf, 0xa6,
-	0xc3, 0xe0, 0x99, 0xb9, 0x50, 0x88, 0xb9, 0x5a, 0x7e, 0x68, 0xc7, 0x59, 0xbb, 0xfa, 0x61, 0x5d,
-	0x00, 0x5d, 0x86, 0x43, 0x14, 0x9a, 0x3e, 0x0d, 0x38, 0x5e, 0x1b, 0x6d, 0x3e, 0x1f, 0xb0, 0xb7,
-	0xaa, 0x25, 0x8b, 0x1d, 0x89, 0xc9, 0x07, 0xfc, 0x86, 0xa3, 0x23, 0x94, 0xe1, 0xad, 0x0d, 0xa9,
-	0x9b, 0x6e, 0xed, 0x4d, 0xf3, 0xde, 0x05, 0x30, 0xed, 0x40, 0x46, 0x58, 0x2c, 0x82, 0xe1, 0x70,
-	0x8c, 0xb1, 0x18, 0xe1, 0x2b, 0x7e, 0x42, 0x26, 0x2b, 0xcd, 0x64, 0xa5, 0xa2, 0xdc, 0x85, 0x3e,
-	0x80, 0xfd, 0x4e, 0x4f, 0xcc, 0x55, 0x11, 0x1d, 0x8c, 0x78, 0xdc, 0xc5, 0xf8, 0x94, 0x50, 0xbe,
-	0x7e, 0xc6, 0xe7, 0x6c, 0x88, 0x2e, 0x74, 0x66, 0xad, 0x58, 0x74, 0xe7, 0x41, 0x3c, 0x06, 0x9d,
-	0x6f, 0x8d, 0x2b, 0xfc, 0xd7, 0xa7, 0xe3, 0x85, 0xbf, 0x22, 0xf0, 0xf7, 0xfb, 0x5c, 0xc6, 0x18,
-	0x26, 0x42, 0x19, 0x1c, 0x1b, 0x38, 0x5b, 0xa4, 0xcb, 0x06, 0x8e, 0xc5, 0x62, 0x6d, 0xe0, 0x7a,
-	0x3a, 0x0d, 0xb1, 0xc1, 0x4d, 0x1e, 0x88, 0xef, 0x58, 0x45, 0xad, 0xbd, 0xad, 0x92, 0x6d, 0xeb,
-	0x35, 0x56, 0x16, 0xb2, 0xad, 0xcb, 0xad, 0x28, 0xfb, 0x51, 0xec, 0x9f, 0x9c, 0xe2, 0xa9, 0xa5,
-	0xd9, 0x99, 0x88, 0x7e, 0x26, 0x79, 0x3f, 0x09, 0x12, 0xed, 0x23, 0xfe, 0x03, 0xf2, 0x3e, 0x13,
-	0x84, 0x5a, 0x36, 0x82, 0x71, 0x8c, 0x33, 0x06, 0x82, 0xcd, 0x83, 0x9f, 0x20, 0xdb, 0x62, 0xf1,
-	0x7d, 0xf9, 0xb6, 0xca, 0xb7, 0x50, 0x8e, 0x9f, 0x38, 0xe2, 0x72, 0x11, 0x2c, 0x29, 0xce, 0x12,
-	0xbd, 0x87, 0x72, 0x9e, 0xb6, 0xf7, 0x50, 0x2f, 0x15, 0xfa, 0x9c, 0x37, 0xcd, 0xbc, 0x1b, 0x93,
-	0x6c, 0x4a, 0xfc, 0x61, 0xb9, 0x72, 0x6c, 0x6b, 0x43, 0xda, 0xc3, 0xce, 0x7e, 0x3c, 0x62, 0x0e,
-	0xb0, 0x75, 0x34, 0xa8, 0xb2, 0x6f, 0x1c, 0x67, 0xe6, 0x00, 0xba, 0x07, 0x60, 0xa6, 0x49, 0xdf,
-	0x5e, 0x0a, 0xce, 0xb6, 0x7d, 0x82, 0xad, 0x9c, 0x0a, 0x6f, 0x6e, 0x82, 0x35, 0x97, 0x16, 0xcd,
-	0x45, 0xd8, 0x34, 0x07, 0x10, 0xe1, 0xfb, 0x17, 0x47, 0xdc, 0x25, 0x1d, 0x33, 0x31, 0xc7, 0xca,
-	0xca, 0xcb, 0xe1, 0x7d, 0x20, 0xd6, 0x47, 0xbf, 0xe8, 0x83, 0x99, 0xd7, 0xc7, 0xba, 0x5b, 0x6a,
-	0x66, 0x62, 0xce, 0x7a, 0x93, 0xb1, 0x32, 0x4b, 0xe7, 0x00, 0x7a, 0x97, 0xbd, 0x6b, 0x72, 0xd6,
-	0x2b, 0xeb, 0x85, 0xd6, 0x5b, 0x68, 0x64, 0xa6, 0xd2, 0xdb, 0xad, 0xe3, 0x45, 0x96, 0x76, 0x23,
-	0x01, 0xc6, 0x1c, 0x40, 0x9f, 0xf2, 0x08, 0x65, 0x43, 0x77, 0xcf, 0xe9, 0x43, 0xb1, 0x47, 0xbb,
-	0xc9, 0xec, 0x26, 0x16, 0x50, 0x0e, 0x78, 0xcc, 0x1e, 0x93, 0xdf, 0x4a, 0xfc, 0x79, 0x6b, 0x32,
-	0x76, 0xf1, 0x04, 0x91, 0x03, 0xe8, 0x2b, 0x00, 0x87, 0x44, 0x38, 0x5c, 0xb8, 0x32, 0x6f, 0x1a,
-	0xab, 0x7a, 0xc9, 0x95, 0xbb, 0xbe, 0x6f, 0xa2, 0xdf, 0xda, 0xf3, 0xf1, 0x6f, 0xed, 0x19, 0xfe,
-	0x6a, 0x97, 0x6a, 0xbe, 0xb5, 0xfb, 0xc0, 0xe5, 0x3f, 0xbb, 0xee, 0xd6, 0xa5, 0xce, 0xf5, 0xd9,
-	0xef, 0xea, 0x92, 0xf3, 0x1f, 0xc2, 0xcd, 0x7a, 0x13, 0x63, 0xb3, 0x2e, 0x75, 0x53, 0xf7, 0xd0,
-	0xbf, 0xd4, 0xbb, 0x9b, 0x75, 0x69, 0x2c, 0x7c, 0x75, 0x6d, 0xd6, 0xa5, 0x1e, 0xfe, 0xab, 0xd0,
-	0x72, 0x31, 0x45, 0xf7, 0xea, 0x92, 0x0c, 0x1d, 0x2c, 0xd4, 0x65, 0xd5, 0x08, 0xa2, 0xcf, 0x57,
-	0x88, 0x4f, 0xd5, 0xbd, 0xba, 0x74, 0x0c, 0x32, 0x78, 0xd7, 0x57, 0xe2, 0xc9, 0x1e, 0x75, 0x5b,
-	0x74, 0x5d, 0xb1, 0x1d, 0xd2, 0x33, 0x9c, 0x2d, 0xb7, 0x84, 0xc3, 0x5f, 0x83, 0x11, 0xcd, 0x86,
-	0x01, 0x78, 0x4b, 0x67, 0xa0, 0x50, 0xc3, 0x47, 0xb1, 0xf1, 0xbb, 0x72, 0x8d, 0x42, 0x47, 0xb4,
-	0x5b, 0xe2, 0xfd, 0xba, 0xf4, 0x06, 0x72, 0x26, 0x40, 0x0e, 0x3f, 0xb4, 0x51, 0xfe, 0xbf, 0xcb,
-	0x59, 0xcd, 0x94, 0x53, 0x7c, 0xbf, 0x2e, 0x9d, 0x6a, 0x21, 0xf9, 0xdd, 0xa3, 0x8c, 0x85, 0x9b,
-	0xa6, 0x59, 0x9e, 0x1f, 0x7e, 0xb0, 0x9d, 0x06, 0x0f, 0xb7, 0xd3, 0xe0, 0x8f, 0xed, 0x34, 0xf8,
-	0x7b, 0x3b, 0xdd, 0x71, 0x19, 0xac, 0xf4, 0xb0, 0x7f, 0x94, 0x9e, 0xf8, 0x37, 0x00, 0x00, 0xff,
-	0xff, 0x07, 0xee, 0xe0, 0x2a, 0x2e, 0x1e, 0x00, 0x00,
+	// 2150 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0x4d, 0x6c, 0x1c, 0x49,
+	0xd9, 0x76, 0x39, 0x8e, 0x9d, 0x94, 0x13, 0xff, 0x54, 0x62, 0x67, 0xba, 0x3f, 0x7f, 0x33, 0x4e,
+	0x6f, 0xa2, 0x98, 0x49, 0x3c, 0x3d, 0x49, 0x76, 0x83, 0x48, 0x22, 0x76, 0xe3, 0x24, 0x38, 0x2b,
+	0x36, 0x3f, 0x38, 0x61, 0x97, 0x45, 0x40, 0xd2, 0x9e, 0xa9, 0x8c, 0x1b, 0x8d, 0xbb, 0x87, 0xe9,
+	0x1a, 0x2f, 0xe1, 0xe7, 0xc2, 0x78, 0xa5, 0x95, 0x38, 0xa0, 0x0d, 0x5c, 0x40, 0x48, 0x20, 0x4b,
+	0x70, 0xc8, 0x31, 0x27, 0x94, 0x13, 0xc7, 0x15, 0xa7, 0x95, 0x56, 0x08, 0xb1, 0x07, 0x0b, 0x45,
+	0x2b, 0x01, 0xbe, 0x23, 0x0e, 0x1c, 0x40, 0xf5, 0xd3, 0x33, 0xdd, 0xd5, 0xd5, 0x53, 0xdd, 0x10,
+	0xaf, 0xbc, 0x27, 0xcf, 0x74, 0xd7, 0xfb, 0xbe, 0xcf, 0xf3, 0x4e, 0x3d, 0xf5, 0x54, 0x77, 0x19,
+	0x4e, 0x07, 0x1b, 0xb5, 0xfb, 0xb5, 0x66, 0x27, 0x20, 0xb8, 0x5d, 0x69, 0xb5, 0x7d, 0xe2, 0xa3,
+	0x31, 0xf1, 0xd5, 0x9c, 0x6b, 0xf8, 0x7e, 0xa3, 0x89, 0x6d, 0xa7, 0xe5, 0xda, 0x8e, 0xe7, 0xf9,
+	0xc4, 0x21, 0xae, 0xef, 0x05, 0x7c, 0x98, 0x79, 0xbd, 0xe1, 0x92, 0xb5, 0xce, 0x6a, 0xa5, 0xe6,
+	0xaf, 0xdb, 0x2d, 0xec, 0x05, 0x8e, 0x57, 0xf7, 0xed, 0xe0, 0x1d, 0x7b, 0x03, 0x7b, 0x6e, 0x0d,
+	0xdb, 0x1d, 0xe2, 0x36, 0x03, 0x1a, 0xda, 0xc0, 0x5e, 0x34, 0xda, 0x76, 0xbd, 0x5a, 0xb3, 0x53,
+	0xc7, 0x61, 0x9a, 0xc5, 0x48, 0x9a, 0x86, 0xdf, 0xf0, 0x6d, 0x76, 0x79, 0xb5, 0xf3, 0x90, 0x7d,
+	0x63, 0x5f, 0xd8, 0x27, 0x31, 0xfc, 0x70, 0x0c, 0xab, 0x39, 0x11, 0xac, 0x3b, 0x6d, 0xe2, 0xb9,
+	0x35, 0xf1, 0xfd, 0x10, 0xc1, 0x9e, 0xe3, 0x91, 0xde, 0x5d, 0xcf, 0x69, 0x05, 0x6b, 0x7e, 0xf8,
+	0xfd, 0x64, 0x0a, 0x64, 0x4a, 0x70, 0x1d, 0x13, 0x87, 0x0f, 0xb3, 0xfe, 0x0a, 0xa0, 0x71, 0xa5,
+	0x43, 0xfc, 0x9b, 0x41, 0xe3, 0x2a, 0xaf, 0xf6, 0x96, 0x43, 0x6a, 0x6b, 0x37, 0x70, 0xb3, 0x85,
+	0xdb, 0xe8, 0x2b, 0x70, 0xf4, 0xfa, 0x06, 0xf6, 0x48, 0x50, 0x00, 0xf3, 0xfb, 0x16, 0xc6, 0xcf,
+	0x2d, 0x56, 0x42, 0x48, 0xa9, 0x31, 0x15, 0xf6, 0x99, 0x45, 0x2d, 0xc1, 0x9d, 0xed, 0xd2, 0x28,
+	0x66, 0x09, 0x56, 0xc4, 0x5f, 0xf3, 0x21, 0x84, 0xfd, 0x11, 0x68, 0x1e, 0x8e, 0xdc, 0x7b, 0xd4,
+	0xc2, 0x05, 0x30, 0x0f, 0x16, 0x0e, 0x2e, 0xa1, 0x9d, 0xed, 0xd2, 0x04, 0x79, 0xd4, 0xc2, 0x67,
+	0xfc, 0x75, 0x97, 0xe0, 0xf5, 0x16, 0x79, 0x84, 0x2e, 0xc0, 0xd1, 0xdb, 0xab, 0xdf, 0xc6, 0x35,
+	0x52, 0x18, 0x9e, 0x07, 0x0b, 0xe3, 0xe7, 0xa6, 0x7a, 0x10, 0x44, 0xed, 0xa5, 0xa3, 0x3b, 0xdb,
+	0xa5, 0x29, 0x9f, 0x8d, 0xe9, 0xc7, 0x5d, 0x9c, 0xfc, 0xf8, 0x5d, 0x63, 0xfc, 0x1d, 0x5a, 0x69,
+	0x8d, 0xe1, 0xb2, 0xde, 0x1f, 0x86, 0xa7, 0x42, 0xd4, 0xbe, 0xf7, 0xd0, 0x6d, 0x74, 0xda, 0xec,
+	0x57, 0xba, 0x2b, 0xfa, 0x16, 0xe5, 0x7d, 0x5f, 0xe2, 0x7d, 0x29, 0xc1, 0x5b, 0x93, 0x41, 0xd7,
+	0x05, 0x92, 0xb3, 0x0b, 0xd7, 0xa4, 0x2e, 0x14, 0xfb, 0x5d, 0x50, 0x21, 0xc9, 0xda, 0x93, 0x9f,
+	0x0d, 0xc3, 0x05, 0xc1, 0xe8, 0x9a, 0x1b, 0x90, 0xb6, 0xbb, 0xda, 0x21, 0xb8, 0x7e, 0x17, 0xb7,
+	0x37, 0xdc, 0x1a, 0xbe, 0xea, 0xb4, 0xeb, 0xd1, 0xa6, 0x3c, 0x90, 0x9a, 0x72, 0x59, 0x6e, 0x8a,
+	0x36, 0x85, 0xae, 0x2b, 0x9d, 0x9c, 0x5d, 0xb9, 0x2e, 0x75, 0xa5, 0xd4, 0x43, 0xa4, 0x86, 0x92,
+	0xb5, 0x2d, 0xdb, 0x00, 0xce, 0x0a, 0x4e, 0x37, 0xfc, 0x20, 0x36, 0x33, 0x6e, 0x49, 0x4d, 0x28,
+	0xcb, 0x4d, 0x90, 0x02, 0x74, 0x94, 0x6b, 0x39, 0x29, 0x9f, 0x97, 0x28, 0x1f, 0xee, 0xd5, 0xa7,
+	0x85, 0xff, 0x0b, 0x82, 0xb7, 0xfc, 0x3a, 0xce, 0x45, 0x50, 0x0a, 0xf8, 0xf4, 0x08, 0xd2, 0xc2,
+	0x59, 0x09, 0xfe, 0x1b, 0xc0, 0xe3, 0x02, 0x6f, 0xa8, 0x89, 0x15, 0x1c, 0x10, 0xbf, 0x1d, 0xe3,
+	0xfa, 0xb6, 0xc4, 0xf5, 0x15, 0x99, 0x6b, 0x7a, 0xac, 0x8e, 0xb6, 0x97, 0x93, 0xf6, 0x17, 0x25,
+	0xda, 0x85, 0x1e, 0x14, 0x09, 0x43, 0xd6, 0x0e, 0x7c, 0x02, 0x60, 0x41, 0xb0, 0xb8, 0xc7, 0x7c,
+	0x22, 0x4a, 0xfc, 0x8e, 0x44, 0xfc, 0x8c, 0x4c, 0x3c, 0x11, 0xa2, 0xe3, 0x8b, 0x73, 0xf2, 0x7d,
+	0x45, 0xe2, 0x3b, 0xd9, 0x43, 0xc0, 0x4b, 0x67, 0xa5, 0x19, 0xf1, 0xaf, 0x37, 0x71, 0x3b, 0x70,
+	0x7d, 0x2f, 0x97, 0x7f, 0x25, 0x63, 0x3e, 0x3d, 0xff, 0x12, 0xb5, 0xb3, 0x32, 0xfd, 0x33, 0x80,
+	0xe3, 0xc2, 0xf2, 0xde, 0x70, 0x03, 0x82, 0x2e, 0x40, 0x70, 0xaf, 0xa7, 0x11, 0xa7, 0xe5, 0x56,
+	0x28, 0x90, 0x9b, 0x98, 0x38, 0x4b, 0x47, 0x3e, 0xd8, 0x2e, 0x0d, 0x7d, 0xb8, 0x5d, 0x02, 0x3b,
+	0xdb, 0xa5, 0xb1, 0x33, 0xae, 0xd7, 0x74, 0x3d, 0xbc, 0x12, 0x7e, 0x40, 0xb7, 0xe1, 0x01, 0x1a,
+	0x4f, 0x47, 0x16, 0xf6, 0x45, 0xc2, 0xc3, 0x8b, 0x4b, 0x73, 0x91, 0xf0, 0xa9, 0xa6, 0x1b, 0x90,
+	0x45, 0xba, 0x5f, 0x08, 0xf3, 0x24, 0xae, 0xa0, 0xb3, 0x70, 0xff, 0xeb, 0x04, 0xaf, 0x07, 0x85,
+	0x11, 0xd6, 0xe3, 0xa4, 0x41, 0x1f, 0xdc, 0xd9, 0x2e, 0xed, 0xa7, 0xbc, 0x82, 0x15, 0xfe, 0xe7,
+	0xe2, 0xc4, 0xc7, 0xef, 0x1a, 0x90, 0x26, 0x12, 0xdc, 0xfe, 0x01, 0xa0, 0xa1, 0x34, 0xb2, 0xbd,
+	0xc5, 0xf4, 0xd5, 0x38, 0x53, 0x9d, 0x09, 0xeb, 0x79, 0xff, 0x13, 0x40, 0x53, 0x6d, 0x55, 0x7b,
+	0x8b, 0xf8, 0x6b, 0x71, 0xe2, 0x5a, 0x9f, 0xd5, 0x33, 0xff, 0x08, 0xc0, 0x03, 0xd4, 0xb1, 0xf6,
+	0x16, 0xcf, 0x4a, 0x9c, 0xa7, 0x64, 0xae, 0xd9, 0x58, 0x51, 0x9b, 0xfa, 0x8c, 0xb0, 0x62, 0x8e,
+	0xaa, 0x67, 0xf5, 0x77, 0x00, 0x8f, 0x48, 0x2e, 0xb4, 0xb7, 0x08, 0x7e, 0x21, 0x4e, 0x30, 0xdd,
+	0x3b, 0xf5, 0x5c, 0xff, 0x04, 0x20, 0xe4, 0x0e, 0xb4, 0xb7, 0x28, 0x56, 0xe3, 0x14, 0x13, 0x76,
+	0xa9, 0x67, 0x46, 0xfd, 0x43, 0x58, 0xce, 0x67, 0xc4, 0x3f, 0x42, 0x83, 0xd4, 0x72, 0x3b, 0xf7,
+	0xc7, 0x97, 0xe1, 0x41, 0xe1, 0x36, 0x6f, 0x9e, 0x45, 0x3f, 0x07, 0x70, 0xe6, 0x4a, 0x87, 0xac,
+	0x2d, 0xf9, 0x3e, 0x09, 0x48, 0xdb, 0x69, 0x5d, 0xf5, 0xd7, 0x5b, 0x4d, 0x4c, 0x30, 0x3a, 0x21,
+	0x7b, 0x53, 0x6c, 0xd8, 0x0a, 0xfe, 0x4e, 0x07, 0x07, 0xc4, 0x4c, 0x38, 0x98, 0x75, 0xe3, 0xe9,
+	0xa6, 0x31, 0x5a, 0x6b, 0x63, 0x87, 0xe0, 0xdf, 0x6d, 0x1a, 0xe0, 0xf7, 0x9b, 0xc6, 0xd0, 0x1f,
+	0x36, 0x8d, 0x31, 0x71, 0xfb, 0x47, 0x1f, 0x7d, 0xf2, 0xd3, 0xe1, 0x93, 0x70, 0xe8, 0x22, 0x28,
+	0x5b, 0x45, 0x5b, 0xc4, 0xda, 0x6a, 0x04, 0x37, 0xe0, 0x04, 0xdd, 0x7a, 0x5c, 0xa9, 0xd7, 0x45,
+	0x30, 0x4a, 0x54, 0x53, 0xd4, 0x47, 0xc9, 0xfa, 0xe8, 0x27, 0x00, 0xce, 0x85, 0xa9, 0x54, 0xf6,
+	0x83, 0x34, 0xf6, 0x64, 0x6a, 0xee, 0x5b, 0x76, 0xb2, 0x28, 0x63, 0x7a, 0x8c, 0x33, 0x9d, 0xb2,
+	0x6b, 0x2c, 0x6c, 0x31, 0x7c, 0xf1, 0x80, 0x3a, 0xf0, 0xff, 0x05, 0x20, 0xb5, 0x2d, 0x20, 0x9d,
+	0x6f, 0x98, 0xba, 0x01, 0xca, 0x46, 0xac, 0xc0, 0x71, 0x51, 0x96, 0xae, 0xd2, 0x28, 0xbe, 0x68,
+	0x9b, 0xf1, 0xaf, 0xd6, 0xc9, 0x14, 0x52, 0x87, 0x39, 0xa9, 0x51, 0x7b, 0xcd, 0x0f, 0x48, 0x10,
+	0xc9, 0x49, 0xd7, 0x48, 0x14, 0x5f, 0x32, 0xcd, 0xf8, 0x57, 0x7d, 0x4e, 0xcf, 0xaf, 0xe3, 0x00,
+	0x3d, 0xe0, 0xcf, 0x5c, 0x57, 0xea, 0x75, 0x69, 0x59, 0x42, 0xa9, 0x0b, 0x96, 0x99, 0x7a, 0x47,
+	0xd9, 0x89, 0xaf, 0xc3, 0xc3, 0xa2, 0x02, 0x5f, 0x15, 0x90, 0xbc, 0x4c, 0x98, 0xf2, 0x05, 0xeb,
+	0x54, 0x0a, 0xf6, 0x49, 0x8e, 0xfd, 0x80, 0xcd, 0x5f, 0x32, 0x05, 0x91, 0x89, 0x2b, 0x64, 0x89,
+	0x12, 0x42, 0x35, 0x13, 0x57, 0x94, 0x28, 0xbf, 0x0c, 0xa7, 0x69, 0xa6, 0x6b, 0x98, 0x0a, 0x22,
+	0xb7, 0x0a, 0xea, 0x2c, 0xac, 0x97, 0xec, 0x7d, 0x00, 0x4b, 0x91, 0x6c, 0xbb, 0x22, 0x84, 0x4a,
+	0xb2, 0x2e, 0xeb, 0xd1, 0x2c, 0x1c, 0xba, 0x38, 0x54, 0x4e, 0xea, 0xe0, 0x37, 0x00, 0xce, 0xf7,
+	0x31, 0xed, 0x9a, 0x16, 0x5e, 0x4d, 0x81, 0x75, 0x8a, 0xc1, 0x3a, 0x6e, 0xd7, 0xfb, 0x61, 0x01,
+	0x0f, 0xab, 0x39, 0xed, 0x7a, 0x60, 0x7f, 0xff, 0x76, 0xe5, 0x96, 0xb3, 0x8e, 0x7f, 0x88, 0xbe,
+	0xc9, 0x7f, 0x52, 0x0e, 0x33, 0x83, 0x76, 0x16, 0x53, 0x0a, 0xce, 0xb0, 0x82, 0x93, 0x5c, 0x3a,
+	0x29, 0xe9, 0x33, 0xc8, 0x48, 0x97, 0x9e, 0xa9, 0xa8, 0x9f, 0xbe, 0xc6, 0x1f, 0xfc, 0x78, 0xfa,
+	0x17, 0xa6, 0x28, 0x69, 0x7a, 0x61, 0x38, 0xd5, 0x2f, 0x92, 0x59, 0x54, 0x76, 0x0a, 0x93, 0x63,
+	0x8c, 0xc9, 0x74, 0xa8, 0xa9, 0x3e, 0x97, 0x98, 0x24, 0x72, 0xeb, 0x4b, 0xc2, 0xfc, 0x36, 0xef,
+	0xfb, 0x32, 0x26, 0x79, 0xc4, 0xf5, 0xd2, 0xd3, 0x4d, 0x63, 0x5f, 0x03, 0x93, 0x18, 0xe0, 0x09,
+	0x0a, 0x18, 0x1d, 0x08, 0x3d, 0x0d, 0xfd, 0x58, 0x78, 0x0e, 0xcd, 0xbd, 0x2b, 0x52, 0x3b, 0xad,
+	0x42, 0xc1, 0x74, 0x86, 0x92, 0x3a, 0xfb, 0x15, 0xe0, 0x86, 0xb3, 0x8c, 0xc9, 0xae, 0x89, 0xec,
+	0xb2, 0x0a, 0x10, 0x53, 0x18, 0xca, 0xa0, 0xb0, 0xb7, 0xb8, 0x8d, 0x2c, 0x63, 0x92, 0x41, 0x5e,
+	0x65, 0x55, 0x29, 0x36, 0xf9, 0x51, 0x42, 0x5b, 0xfd, 0xc4, 0x19, 0x84, 0x35, 0x30, 0xb1, 0xa4,
+	0xaa, 0xef, 0x72, 0x93, 0x5a, 0xc6, 0xe4, 0x45, 0x48, 0x6a, 0x60, 0x65, 0xf1, 0x73, 0xb6, 0x45,
+	0xfe, 0xfb, 0xdc, 0xbc, 0x96, 0x31, 0xc9, 0xac, 0xb3, 0x33, 0xaa, 0xf4, 0x4c, 0x64, 0x48, 0x21,
+	0xb2, 0xbe, 0x2e, 0xf2, 0x28, 0x6c, 0xa0, 0x2e, 0x36, 0x44, 0xa2, 0x3b, 0x70, 0x92, 0xa6, 0xa6,
+	0x5b, 0xe0, 0x50, 0x73, 0x33, 0xbd, 0x4d, 0x31, 0x7b, 0x5d, 0x74, 0xbb, 0xc5, 0x4e, 0x84, 0xcc,
+	0xa3, 0xb2, 0xf0, 0xe8, 0x08, 0x6b, 0xea, 0xe9, 0xa6, 0x31, 0x42, 0xf7, 0xb3, 0x3d, 0x11, 0x37,
+	0xf9, 0xd4, 0x66, 0x19, 0x95, 0x4a, 0x4b, 0xc9, 0x6f, 0x0d, 0x16, 0x58, 0x4a, 0xb5, 0xc7, 0x00,
+	0x16, 0xc3, 0x72, 0x29, 0x52, 0x4a, 0xa9, 0xf7, 0x92, 0x46, 0x40, 0xac, 0xe0, 0xcb, 0x72, 0x41,
+	0xd6, 0xc4, 0x22, 0x6b, 0x62, 0x21, 0x4d, 0x45, 0xe8, 0x1b, 0xf0, 0x50, 0x88, 0x89, 0xa9, 0x27,
+	0x05, 0xc1, 0x74, 0x4c, 0x45, 0xac, 0x9e, 0xa5, 0xac, 0x77, 0x88, 0xd5, 0x0b, 0x77, 0x78, 0x91,
+	0xec, 0x4c, 0x42, 0xda, 0xec, 0xe1, 0x73, 0xbd, 0x26, 0x7b, 0xb8, 0xd7, 0x3b, 0x16, 0x66, 0x97,
+	0x75, 0x94, 0x52, 0x68, 0x2e, 0x4d, 0x44, 0x29, 0x3f, 0xd9, 0x2a, 0x9f, 0xcd, 0xf4, 0xae, 0xd0,
+	0x4b, 0x4a, 0xe2, 0x23, 0x92, 0x6a, 0x58, 0xbe, 0x13, 0x4a, 0x0e, 0xe1, 0xb4, 0x0e, 0xf7, 0x7c,
+	0x91, 0x69, 0x1d, 0x4a, 0x46, 0x3b, 0xad, 0x23, 0x8f, 0x98, 0x0a, 0xd4, 0x0f, 0xb8, 0xd1, 0x7d,
+	0xb5, 0x55, 0x77, 0xf2, 0xed, 0xfd, 0xd8, 0x3e, 0xb5, 0xc3, 0xc2, 0x14, 0xfb, 0x54, 0xb3, 0x6f,
+	0x51, 0x8f, 0xc5, 0x86, 0x50, 0x94, 0xd8, 0xbd, 0x27, 0x23, 0x05, 0x18, 0xfe, 0x64, 0x64, 0x26,
+	0x9d, 0xea, 0xb7, 0x62, 0x47, 0xc8, 0x41, 0xed, 0x9a, 0x59, 0xbd, 0x96, 0x82, 0x6b, 0x81, 0xe3,
+	0xca, 0x60, 0x58, 0xdf, 0xe2, 0xb3, 0x8a, 0xe3, 0xcc, 0xe0, 0x59, 0x95, 0x94, 0x8a, 0xb3, 0xbc,
+	0x62, 0xc2, 0xb7, 0x62, 0xf9, 0x33, 0x58, 0x97, 0x36, 0xbf, 0x7a, 0x53, 0xc8, 0xf3, 0xbf, 0xb0,
+	0x4d, 0x61, 0x1c, 0x00, 0x7a, 0xc8, 0x37, 0x85, 0xbc, 0x48, 0x66, 0xb3, 0xaa, 0xa6, 0x50, 0x29,
+	0x70, 0x2a, 0xe9, 0xbb, 0x42, 0x5e, 0x27, 0xf7, 0xae, 0x50, 0x02, 0xfd, 0x03, 0x0e, 0x9a, 0xa9,
+	0x56, 0xe3, 0x51, 0x96, 0xfe, 0x94, 0x9f, 0x6d, 0xd4, 0xf6, 0xb3, 0xe3, 0x89, 0x18, 0x99, 0xa3,
+	0x6c, 0x05, 0x99, 0xb0, 0xd9, 0x9d, 0x50, 0x93, 0x55, 0x80, 0x7e, 0x2d, 0x0c, 0x86, 0x97, 0xcf,
+	0x63, 0x68, 0xd5, 0xbc, 0x47, 0xef, 0xd6, 0x79, 0x35, 0xb4, 0x39, 0x06, 0x6d, 0x36, 0x84, 0x16,
+	0x57, 0x68, 0x15, 0xa0, 0x27, 0x62, 0xe1, 0x60, 0xa9, 0xf2, 0x99, 0xe0, 0xd9, 0xdc, 0x27, 0xe1,
+	0xd6, 0x25, 0x35, 0xc8, 0x13, 0x0c, 0x64, 0x51, 0x80, 0x4c, 0x91, 0x6b, 0x15, 0x20, 0xc2, 0x37,
+	0x4b, 0x3c, 0xe3, 0x00, 0x73, 0x2c, 0x69, 0x8e, 0xa7, 0xad, 0xcf, 0xa9, 0x71, 0x20, 0x86, 0xe3,
+	0x90, 0xc0, 0xc1, 0x44, 0x2c, 0x55, 0x1d, 0x64, 0x9a, 0x25, 0xcd, 0x99, 0x71, 0xb6, 0xaa, 0x4c,
+	0xda, 0x55, 0x80, 0xda, 0xfc, 0x20, 0x93, 0xc5, 0x67, 0x34, 0xd3, 0x72, 0xf6, 0x83, 0x5c, 0x6b,
+	0x3a, 0x81, 0xa5, 0x0a, 0xd0, 0xd7, 0xd8, 0x1b, 0x44, 0x51, 0x73, 0xa3, 0xd6, 0x7f, 0xb7, 0x98,
+	0x6a, 0xb2, 0xf4, 0x72, 0xff, 0x60, 0x90, 0xd9, 0x9f, 0x32, 0xf3, 0xf7, 0xb8, 0xa7, 0xb2, 0xa1,
+	0x83, 0x8d, 0xfb, 0xb8, 0xf6, 0x50, 0x36, 0x9b, 0x0a, 0xc5, 0xba, 0x52, 0x05, 0xb1, 0x35, 0x40,
+	0x63, 0xe8, 0x96, 0xfe, 0xa4, 0x34, 0x5b, 0x75, 0xb1, 0x45, 0xae, 0x02, 0xf4, 0x1e, 0x80, 0x63,
+	0xff, 0xcb, 0x52, 0xfc, 0xba, 0xf2, 0x25, 0xec, 0xa4, 0x34, 0xac, 0xb7, 0xb5, 0x04, 0x65, 0xeb,
+	0x98, 0xf4, 0x8c, 0x61, 0x87, 0xcf, 0x1a, 0xbf, 0x04, 0x70, 0xe4, 0xae, 0xb3, 0x81, 0xd1, 0xc9,
+	0xc1, 0x4e, 0x1f, 0xbe, 0x11, 0xd6, 0x6d, 0x08, 0x6e, 0x2a, 0xa1, 0xcd, 0x28, 0x07, 0xf7, 0x16,
+	0x23, 0x50, 0xb6, 0x66, 0xe4, 0x75, 0xc8, 0x0e, 0x28, 0xaa, 0xf7, 0x00, 0x9c, 0x14, 0xee, 0xf2,
+	0xc6, 0x5d, 0x9e, 0x24, 0xb2, 0x3b, 0x90, 0xee, 0xa4, 0xbf, 0xb5, 0x5e, 0xd2, 0xbf, 0xb5, 0x2e,
+	0x71, 0x1c, 0x85, 0xde, 0x5b, 0x6b, 0x29, 0xb9, 0xf9, 0xaf, 0xfd, 0x8f, 0xbb, 0xc6, 0xf0, 0xc6,
+	0xd9, 0x5f, 0x74, 0x8d, 0xf0, 0x7f, 0xe5, 0xb6, 0xba, 0xbd, 0x1c, 0x5b, 0x5d, 0x63, 0x84, 0x6a,
+	0x9b, 0xfe, 0xa5, 0x2b, 0xcb, 0x56, 0xd7, 0x98, 0x55, 0xaf, 0x7d, 0x5b, 0x5d, 0x63, 0x94, 0xcf,
+	0x5f, 0x1a, 0x2e, 0x26, 0xd3, 0x56, 0x37, 0xa5, 0x47, 0x5b, 0xdd, 0xc4, 0xef, 0xfa, 0xa4, 0x6b,
+	0x98, 0x30, 0xac, 0x8b, 0xf6, 0xb5, 0x3a, 0x04, 0xd1, 0xc7, 0x32, 0xc4, 0x27, 0xe0, 0x93, 0xae,
+	0x31, 0x0b, 0xe5, 0x10, 0x36, 0xe0, 0x49, 0xd7, 0x38, 0x0d, 0x19, 0xc8, 0x48, 0x90, 0x78, 0x65,
+	0x82, 0x46, 0x5a, 0x74, 0xed, 0x64, 0x5b, 0xd4, 0x7e, 0xa2, 0xd3, 0x90, 0x71, 0xc9, 0x3a, 0xfc,
+	0xf3, 0x30, 0x85, 0xb2, 0x2a, 0x41, 0x3c, 0x74, 0x11, 0x8a, 0x9e, 0xf0, 0x51, 0x6c, 0xfc, 0xc0,
+	0x5a, 0x33, 0x30, 0x6c, 0x9d, 0x44, 0xfe, 0x02, 0x54, 0x37, 0x32, 0x95, 0x04, 0x8f, 0x7c, 0xd6,
+	0x35, 0xbe, 0x84, 0xc2, 0xa6, 0x9a, 0xea, 0x43, 0x13, 0xeb, 0xff, 0x06, 0x9c, 0x95, 0x94, 0xc3,
+	0xe0, 0x67, 0x5d, 0xe3, 0x52, 0x3f, 0x93, 0x3c, 0x7b, 0xad, 0x59, 0xf5, 0xa4, 0x8d, 0x86, 0xaf,
+	0x20, 0x35, 0x05, 0x73, 0x84, 0x6a, 0xc2, 0x9a, 0x1b, 0x24, 0xd0, 0xb2, 0x3a, 0xf4, 0x59, 0xd7,
+	0xb8, 0x9c, 0x98, 0x15, 0xe6, 0x98, 0x58, 0x05, 0x2c, 0xf9, 0x4e, 0x59, 0xbe, 0xb0, 0x34, 0xf5,
+	0xc1, 0xf3, 0x22, 0xf8, 0xf0, 0x79, 0x11, 0xfc, 0xe5, 0x79, 0x11, 0xfc, 0xed, 0x79, 0x71, 0xe8,
+	0x0e, 0x58, 0x1d, 0x65, 0xff, 0x38, 0x79, 0xfe, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5a, 0xd3,
+	0x13, 0xf5, 0x4e, 0x2a, 0x00, 0x00,
 }

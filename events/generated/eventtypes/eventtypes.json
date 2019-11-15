@@ -11,6 +11,21 @@
    "Desc": "Auto generated certificate is being used for API Gateway TLS"
   },
   {
+   "Name": "CONFIG_RESTORED",
+   "Severity": "info",
+   "Desc": "Configuration was restored"
+  },
+  {
+   "Name": "CONFIG_RESTORE_ABORTED",
+   "Severity": "warn",
+   "Desc": "Configuration restore operation was aborted"
+  },
+  {
+   "Name": "CONFIG_RESTORE_FAILED",
+   "Severity": "critical",
+   "Desc": "Configuration restore operation failed"
+  },
+  {
    "Name": "DSC_ADMITTED",
    "Severity": "info",
    "Desc": "DSC admitted to the cluster"

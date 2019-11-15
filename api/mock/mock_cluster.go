@@ -798,6 +798,284 @@ func (mr *MockClusterV1VersionInterfaceMockRecorder) Allowed(oper interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Allowed), oper)
 }
 
+// MockClusterV1ConfigurationSnapshotInterface is a mock of (cluster.ClusterV1ConfigurationSnapshotInterface)interface
+type MockClusterV1ConfigurationSnapshotInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder
+}
+
+// MockClusterV1ConfigurationSnapshotInterfaceMockRecorder is the mock recorder for MockClusterV1ConfigurationSnapshotInterface
+type MockClusterV1ConfigurationSnapshotInterfaceMockRecorder struct {
+	mock *MockClusterV1ConfigurationSnapshotInterface
+}
+
+// NewMockClusterV1ConfigurationSnapshotInterface creates a new mock instance
+func NewMockClusterV1ConfigurationSnapshotInterface(ctrl *gomock.Controller) *MockClusterV1ConfigurationSnapshotInterface {
+	mock := &MockClusterV1ConfigurationSnapshotInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1ConfigurationSnapshotInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClusterV1ConfigurationSnapshotInterface) EXPECT() *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Create(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Update(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) UpdateStatus(ctx context.Context, in *cluster.ConfigurationSnapshot) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Allowed), oper)
+}
+
+// Save mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Save(ctx context.Context, in *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Save", ctx, in)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Save indicates an expected call of Save
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Save(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Save), ctx, in)
+}
+
+// MockClusterV1SnapshotRestoreInterface is a mock of (cluster.ClusterV1SnapshotRestoreInterface)interface
+type MockClusterV1SnapshotRestoreInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1SnapshotRestoreInterfaceMockRecorder
+}
+
+// MockClusterV1SnapshotRestoreInterfaceMockRecorder is the mock recorder for MockClusterV1SnapshotRestoreInterface
+type MockClusterV1SnapshotRestoreInterfaceMockRecorder struct {
+	mock *MockClusterV1SnapshotRestoreInterface
+}
+
+// NewMockClusterV1SnapshotRestoreInterface creates a new mock instance
+func NewMockClusterV1SnapshotRestoreInterface(ctrl *gomock.Controller) *MockClusterV1SnapshotRestoreInterface {
+	mock := &MockClusterV1SnapshotRestoreInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1SnapshotRestoreInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClusterV1SnapshotRestoreInterface) EXPECT() *MockClusterV1SnapshotRestoreInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Create(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Update(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) UpdateStatus(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Allowed), oper)
+}
+
+// Restore mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Restore(ctx context.Context, in *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Restore", ctx, in)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Restore indicates an expected call of Restore
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Restore(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Restore", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Restore), ctx, in)
+}
+
 // MockClusterV1Interface is a mock of ClusterV1Interface interface
 type MockClusterV1Interface struct {
 	ctrl     *gomock.Controller
@@ -891,6 +1169,30 @@ func (m *MockClusterV1Interface) Version() cluster.ClusterV1VersionInterface {
 // Version indicates an expected call of Version
 func (mr *MockClusterV1InterfaceMockRecorder) Version() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockClusterV1Interface)(nil).Version))
+}
+
+// ConfigurationSnapshot mocks base method
+func (m *MockClusterV1Interface) ConfigurationSnapshot() cluster.ClusterV1ConfigurationSnapshotInterface {
+	ret := m.ctrl.Call(m, "ConfigurationSnapshot")
+	ret0, _ := ret[0].(cluster.ClusterV1ConfigurationSnapshotInterface)
+	return ret0
+}
+
+// ConfigurationSnapshot indicates an expected call of ConfigurationSnapshot
+func (mr *MockClusterV1InterfaceMockRecorder) ConfigurationSnapshot() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfigurationSnapshot", reflect.TypeOf((*MockClusterV1Interface)(nil).ConfigurationSnapshot))
+}
+
+// SnapshotRestore mocks base method
+func (m *MockClusterV1Interface) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
+	ret := m.ctrl.Call(m, "SnapshotRestore")
+	ret0, _ := ret[0].(cluster.ClusterV1SnapshotRestoreInterface)
+	return ret0
+}
+
+// SnapshotRestore indicates an expected call of SnapshotRestore
+func (mr *MockClusterV1InterfaceMockRecorder) SnapshotRestore() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotRestore", reflect.TypeOf((*MockClusterV1Interface)(nil).SnapshotRestore))
 }
 
 // Watch mocks base method

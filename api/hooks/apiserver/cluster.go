@@ -6,10 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
+	"google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -18,21 +21,33 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	objclient "github.com/pensando/sw/venice/utils/objstore/client"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type clusterHooks struct {
 	logger log.Logger
+
+	// only one restore operation is allowed at any point
+	restoreInProgressMu sync.Mutex
+	restoreInProgress   bool
+	oclnt               objclient.Client
 }
 
 // errInvalidTenantConfig returns error associated with invalid tenant
@@ -442,6 +457,28 @@ func (cl *clusterHooks) getClusterObject(ctx context.Context, kvs kvstore.Interf
 	return cur, nil
 }
 
+func (cl *clusterHooks) getRestoreObject(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	ic := cluster.SnapshotRestore{}
+	key := ic.MakeKey("cluster")
+	if err := kvs.Get(ctx, key, &ic); err != nil {
+		cl.logger.Errorf("Error getting Snapshot with key [%s] in API server getSnapshotObject response writer hook for create/update Snapshot", key)
+		return nil, err
+	}
+
+	return ic, nil
+}
+
+func (cl *clusterHooks) getSnapshotObject(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	ic := cluster.ConfigurationSnapshot{}
+	key := ic.MakeKey("cluster")
+	cur := cluster.ConfigurationSnapshot{}
+	if err := kvs.Get(ctx, key, &cur); err != nil {
+		cl.logger.Errorf("Error getting Snapshot with key [%s] in API server getSnapshotObject response writer hook for create/update Snapshot", key)
+		return nil, err
+	}
+	return cur, nil
+}
+
 // populateExistingTLSConfig is a pre-commit hook for cluster update operation to populate existing TLS certificate and key. It ignores certs and key passed in the cluster object.
 // User will need to use UpdateTLSConfig action on cluster object to update TLS config
 func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
@@ -457,6 +494,7 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 		cur := &cluster.Cluster{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			cl.logger.ErrorLog("method", "populateExistingTLSConfig",
+
 				"msg", fmt.Sprintf("error getting cluster with key [%s] in API server pre-commit hook for update cluster", key),
 				"error", err)
 			return r, true, err
@@ -538,6 +576,393 @@ func (cl *clusterHooks) setTLSConfig(ctx context.Context, kv kvstore.Interface, 
 	return *cluster, false, nil
 }
 
+func (cl *clusterHooks) getObjstoreClient() (objclient.Client, error) {
+	if cl.oclnt != nil {
+		return cl.oclnt, nil
+	}
+	apisrv := apisrvpkg.MustGetAPIServer()
+	resolvers := apisrv.GetResolvers()
+	rslvrs := resolver.New(&resolver.Config{Name: globals.APIServer, Servers: resolvers})
+
+	tlsp, err := rpckit.GetDefaultTLSProvider(globals.APIServer)
+	if err != nil {
+		return nil, fmt.Errorf("[%v]error getting tls provider", err)
+	}
+
+	tlsc, err := tlsp.GetClientTLSConfig(globals.APIServer)
+	if err != nil {
+		return nil, fmt.Errorf("[%v]error getting tls client", err)
+	}
+	tlsc.ServerName = globals.Vos
+
+	oclnt, err := objclient.NewClient(globals.DefaultTenant, objstore.Buckets_snapshots.String(), rslvrs, objclient.WithTLSConfig(tlsc))
+	if err != nil {
+		return nil, fmt.Errorf("[%v]creating objstore client", err)
+	}
+	return oclnt, nil
+}
+
+func (cl *clusterHooks) writeSnapshot(ctx context.Context, name string, client objclient.Client, meta map[string]string) (uint64, error) {
+	apisrvcache := apisrvpkg.GetAPIServerCache()
+
+	// Get object store config.
+	rev := apisrvcache.StartSnapshot()
+	if rev == apiintf.InvalidSnapShotHandle {
+		return 0, errors.New("could not start a config snapshot")
+	}
+
+	rdr, err := apisrvcache.SnapshotReader(rev, false, nil)
+	if err != nil {
+		return 0, fmt.Errorf("[%v] creating snapshot reade", err)
+	}
+	defer rdr.Close()
+
+	// XXX-TODO(sanjayt): Add metadata
+	written, err := client.PutObject(ctx, name, rdr, nil)
+	log.Infof("wrote [%d] bytes with error (%v)", written, err)
+	return rev, err
+}
+
+// performRestoreNow restores the configuration from a snapshot
+// Sequence is
+//  1. Validate there is no other restore in progress
+//      a. check in memorey mutex
+//      b. check object store, in case api server has restarted
+//  2. In the overlay
+//      a. Delete all existing objects [excluding exceptions like cluster, module and networkintf objects]
+//      b. read and apply objects in snapshot to overlay
+//  3. Commit the overlay
+//
+//  Error handling:
+//   - failures at or before 2 doesnt need much handling since the kvstore has not been touched
+//   - failure at 3 : try to recover from the backup snapshot (in memory cache)
+func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	cl.restoreInProgressMu.Lock()
+	if cl.restoreInProgress {
+		cl.restoreInProgressMu.Unlock()
+		log.Errorf("[config-restore] could not lock restoreMutex")
+		return i, false, errors.New("restore operation in progress, try again later")
+	}
+	cl.restoreInProgress = true
+	cl.restoreInProgressMu.Unlock()
+
+	defer func() {
+		cl.restoreInProgressMu.Lock()
+		cl.restoreInProgress = false
+		cl.restoreInProgressMu.Unlock()
+	}()
+
+	apiSrv := apisrvpkg.MustGetAPIServer()
+
+	fl := apiSrv.RuntimeFlags()
+	flags := fl.InternalParams
+	var sleepOnRestore int
+	var failSetObj, failPrep, failWrite, failCommit bool
+	var err error
+	if v, ok := flags["sleep-on-restore"]; ok {
+		in, err := strconv.ParseInt(v, 10, 32)
+		if err == nil {
+			sleepOnRestore = int(in)
+		}
+	}
+	if v, ok := flags["fail-set-obj"]; ok {
+		in, err := strconv.ParseBool(v)
+		if err == nil {
+			failSetObj = in
+		}
+	}
+	if v, ok := flags["fail-prep"]; ok {
+		in, err := strconv.ParseBool(v)
+		if err == nil {
+			failPrep = in
+		}
+	}
+	if v, ok := flags["fail-write"]; ok {
+		in, err := strconv.ParseBool(v)
+		if err == nil {
+			failWrite = in
+		}
+	}
+	if v, ok := flags["fail-commit"]; ok {
+		in, err := strconv.ParseBool(v)
+		if err == nil {
+			failCommit = in
+		}
+	}
+
+	// Validate Object
+	obj := i.(cluster.SnapshotRestore)
+	rstat := cluster.SnapshotRestore{}
+	rkey := rstat.MakeKey(string(apiclient.GroupCluster))
+
+	log.Infof("[config-restore] starting restore operation to snapshot [%v]", obj.Spec.SnapshotPath)
+
+	pctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvLargeBuffer, true)
+	dctx := apiutils.SetVar(context.Background(), apiutils.CtxKeyPersistDirectKV, true)
+	var backupRev uint64
+	found := false
+	backupName := ""
+
+	// Get Object store
+	oclnt, err := cl.getObjstoreClient()
+	if err != nil {
+		return i, false, err
+	}
+	rdr, err := oclnt.GetObject(ctx, obj.Spec.SnapshotPath)
+	if err != nil {
+		log.Errorf("Failed to retrieve sapshot, configuration unchanged (%s)", err)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to retrieve snapshot, Configuration unchanged", &obj)
+		return rstat, false, &api.Status{
+			Result:      api.StatusResult{Str: "failed to retrieve snapshot, Configuration unchanged"},
+			Message:     []string{fmt.Sprintf("%v", err)},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+	}
+	err = kvs.Get(ctx, rkey, &rstat)
+	if err == nil {
+		found = true
+		if rstat.Status.Status == cluster.SnapshotRestoreStatus_Active.String() {
+			log.Errorf("[config-restore] recovering from restore operation from previous lifetime.")
+			backupName = rstat.Status.BackupSnapshotPath
+		}
+		rstat.Spec = obj.Spec
+	}
+
+	if backupName == "" {
+		backupName = "backup" + time.Now().Format(time.RFC3339)
+		backupName = strings.Replace(backupName, " ", "_", -1)
+		backupName = strings.Replace(backupName, ":", "-", -1)
+		backupName = strings.Replace(backupName, "+", "", -1)
+		log.Infof("[config-restore] creating backup snapshot at %s", backupName)
+		meta := map[string]string{
+			"RequestName": rstat.Name,
+		}
+		backupRev, err = cl.writeSnapshot(ctx, backupName, oclnt, meta)
+		if err != nil || failSetObj {
+			log.Errorf("[config-restore] failed to create backup snapshot (%s)", err)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to create backup snapshot, Configuration unchanged", &obj)
+			return rstat, false, &api.Status{
+				Result:      api.StatusResult{Str: "failed to create backup snapshot, Configuration unchanged"},
+				Message:     []string{fmt.Sprintf("%v", err)},
+				Code:        int32(codes.FailedPrecondition),
+				IsTemporary: false,
+			}
+		}
+		obj.Clone(&rstat)
+	}
+
+	log.Infof("[config-restore] starting restore config restore operation to snapshot [%v]", obj.Spec.SnapshotPath)
+
+	// Lock the apiserver to stop processing any more API calls
+	ctrl := apiserver.Controls{MaintMode: true, MaintReason: "Configuration restore operation"}
+	apiSrv.SetRuntimeControls(ctrl)
+	defer func() {
+		ctrl := apiserver.Controls{MaintMode: false, MaintReason: ""}
+		apiSrv.SetRuntimeControls(ctrl)
+	}()
+
+	if sleepOnRestore > 0 {
+		time.Sleep(time.Duration(sleepOnRestore) * time.Second)
+	}
+
+	apisrvcache := apisrvpkg.GetAPIServerCache()
+	kinds := runtime.GetDefaultScheme().Kinds()
+
+	delFromCache := func(ictx context.Context, kvi kvstore.Interface) error {
+		for g, v := range kinds {
+			for _, k := range v {
+				if !apiutils.IsSavedKind(k) {
+					continue
+				}
+				stat, err := apisrvcache.StatKind(g, k)
+				if err != nil {
+					log.Errorf("[config-restore] failed to stat objects for [%v/%v](%v)", g, k, err)
+					return fmt.Errorf("failed to stat objects for [%v/%v](%v)", g, k, err)
+				}
+				log.Infof("[config-restore] deleting [%v/%v]", g, k)
+				for i := range stat {
+					kvi.Delete(dctx, stat[i].Key, nil)
+				}
+			}
+		}
+		return nil
+	}
+
+	rollback := func() *api.Status {
+		log.Infof("[config-restore] rollback called - getting to clean state")
+		var e1 error
+		if ov, ok := kvs.(apiintf.OverlayInterface); ok {
+			e1 = ov.ClearBuffer(ctx, nil)
+		}
+		if e1 == nil {
+			delFromCache(pctx, kvs)
+		}
+		log.Infof("[config-restore] attempting config rollback")
+		nctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvInitRestore, true)
+		if e1 == nil {
+			e1 = apisrvcache.Rollback(nctx, backupRev, kvs)
+			if e1 == nil {
+				_, e1 = txn.Commit(pctx)
+			}
+		}
+		if e1 != nil {
+			log.Errorf("[config-restore] could not rollback to backup revision (%s)", e1)
+			recorder.Event(eventtypes.CONFIG_RESTORE_FAILED, "configuration restore operation failed. Configuration could not be rolled back", &obj)
+			return &api.Status{
+				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration could not be rolled back"},
+				Message:     []string{fmt.Sprintf("%v", e1)},
+				Code:        int32(codes.Aborted),
+				IsTemporary: false,
+			}
+		}
+		log.Infof("[config-restore] rollback to rev [%v] succeeded", backupRev)
+		return nil
+
+	}
+	rstat.Status = cluster.SnapshotRestoreStatus{}
+	rstat.Status.Status = cluster.SnapshotRestoreStatus_Active.String()
+	rstat.Status.BackupSnapshotPath = backupName
+	ts, _ := types.TimestampProto(time.Now())
+	rstat.Status.StartTime = &api.Timestamp{Timestamp: *ts}
+	rstat.ObjectMeta.CreationTime = api.Timestamp{Timestamp: *ts}
+	rstat.ObjectMeta.ModTime = api.Timestamp{Timestamp: *ts}
+	rstat.SelfLink = rstat.MakeURI("configs", "v1", string(apiclient.GroupCluster))
+	rstat.UUID = uuid.NewV4().String()
+	rstat.Status.Status = cluster.SnapshotRestoreStatus_Active.String()
+	if found {
+		err = kvs.Update(dctx, rkey, &rstat)
+		if err != nil {
+			log.Errorf("[config-restore] failed to update restore object before applying snapshot(%s)", err)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, " failed to update restore object before applying snapshot, Configuration unchanged", &obj)
+			return rstat, false, &api.Status{
+				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
+				Message:     []string{"failed to write restore object before applying snapshot"},
+				Code:        int32(codes.FailedPrecondition),
+				IsTemporary: false,
+			}
+		}
+	} else {
+		err = kvs.Create(dctx, rkey, &rstat)
+		if err != nil {
+			log.Errorf("[config-restore] failed to create restore object before applying snapshot(%s)", err)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, " failed to create restore object before applying snapshot, Configuration unchanged", &obj)
+			return rstat, false, &api.Status{
+				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
+				Message:     []string{"failed to write restore object before applying snapshot"},
+				Code:        int32(codes.FailedPrecondition),
+				IsTemporary: false,
+			}
+		}
+	}
+
+	// Point of no return. Will need rollback.
+	err = delFromCache(pctx, kvs)
+	if err != nil || failPrep {
+		log.Errorf("[config-restore] failed Prep for restore (%v)", err)
+		status := rollback()
+		if status != nil {
+			return rstat, false, status
+		}
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed preparation for restore operation. Configuration unchanged", &obj)
+		return rstat, false, &api.Status{
+			Result:      api.StatusResult{Str: "failed preparation for restore operation. Configuration unchanged"},
+			Message:     []string{fmt.Sprintf("%v", err)},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+	}
+
+	log.Infof("[config-restore] starting write to overlay for snapshot [%v]", obj.Spec.SnapshotPath)
+	writer := apisrvcache.SnapshotWriter(rdr)
+	err = writer.Write(pctx, kvs)
+	if err != nil || failWrite {
+		log.Errorf("[config-restpore] applying snapshot failed (%s)", err)
+		status := rollback()
+		if status != nil {
+			return rstat, false, status
+		}
+		// This is not recoverable. Abort the restore.
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
+		retErr := api.Status{
+			Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
+			Message:     []string{err.Error()},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+		return rstat, false, &retErr
+	}
+
+	log.Infof("[config-restore] Committing Snapshot for restore [%v]", obj.Spec.SnapshotPath)
+	// Commit the buffer so any errors can be captured here.
+	//  The txn is a surrogate for the Ov, commit
+	_, err = txn.Commit(pctx)
+	if err != nil || failCommit {
+		log.Errorf("[config-restore] commit failed (%s), attempting rollback", err)
+		status := rollback()
+		if status != nil {
+			return rstat, false, status
+		}
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
+		return rstat, false, &api.Status{
+			Result:      api.StatusResult{Str: "configuration restore operation commit failed. Configuration was rolled back"},
+			Message:     []string{fmt.Sprintf("%v", err)},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+	}
+
+	rstat.Status.Status = cluster.SnapshotRestoreStatus_Completed.String()
+	ts, _ = types.TimestampProto(time.Now())
+	rstat.Status.EndTime = &api.Timestamp{Timestamp: *ts}
+	err = kvs.Update(dctx, rkey, &rstat)
+	if err != nil {
+		return rstat, false, fmt.Errorf("could not update the Restore Object")
+	}
+
+	if ov, ok := kvs.(apiintf.OverlayInterface); ok {
+		log.Infof("Clearing buffer before returning")
+		ov.ClearBuffer(ctx, nil)
+	}
+	log.Infof("Restore operation completed successfully for [%s][%v]", obj.Name, obj.Spec.SnapshotPath)
+	recorder.Event(eventtypes.CONFIG_RESTORED, fmt.Sprintf("configuration was restored to snapshot [%v]", obj.Name), &obj)
+	return rstat, false, nil
+}
+
+func (cl *clusterHooks) performSnapshotNow(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	req := i.(cluster.ConfigurationSnapshotRequest)
+	// Fetch the snapshot config from KVstoreapi/utils/apiutils.go
+	scfg := cluster.ConfigurationSnapshot{}
+	skey := scfg.MakeKey(string(apiclient.GroupCluster))
+
+	err := kvs.Get(ctx, skey, &scfg)
+	if err != nil {
+		return scfg, false, fmt.Errorf("could not get Sanpshot config (%s)", err)
+	}
+
+	if scfg.Spec.Destination.Type != cluster.SnapshotDestinationType_ObjectStore.String() {
+		return scfg, false, fmt.Errorf("only object store destination is supported")
+	}
+
+	oclnt, err := cl.getObjstoreClient()
+	if err != nil {
+		return i, false, err
+	}
+
+	meta := map[string]string{
+		"RequestName": req.Name,
+	}
+	name := "snapshot-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
+	_, err = cl.writeSnapshot(ctx, name, oclnt, meta)
+
+	scfg.Status.LastSnapshot = &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{
+		DestType: cluster.SnapshotDestinationType_ObjectStore.String(),
+		URI:      fmt.Sprintf("/objstore/v1/downloads/snapshots/%s", name),
+	}
+	err = txn.Update(skey, &scfg)
+	return scfg, false, err
+}
+
 func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
 	r.logger = logger.WithContext("Service", "ClusterHooks")
@@ -557,6 +982,8 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	// hook to implement update TLS Config action
 	svc.GetMethod("UpdateTLSConfig").WithPreCommitHook(r.setTLSConfig)
 	svc.GetMethod("UpdateTLSConfig").WithResponseWriter(r.getClusterObject)
+	svc.GetMethod("Save").WithPreCommitHook(r.performSnapshotNow).WithResponseWriter(r.getSnapshotObject)
+	svc.GetMethod("Restore").WithPreCommitHook(r.performRestoreNow).WithResponseWriter(r.getRestoreObject)
 	// Only allow default tenant in this release
 	svc.GetCrudService("Tenant", apiintf.CreateOper).GetRequestType().WithValidate(r.validateTenant)
 	// register hook to create default roles
@@ -568,6 +995,7 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultTelemetryPolicies)
+
 }
 
 func init() {

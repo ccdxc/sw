@@ -89,6 +89,32 @@ type ClusterV1VersionInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// ClusterV1ConfigurationSnapshotInterface exposes the CRUD methods for ConfigurationSnapshot
+type ClusterV1ConfigurationSnapshotInterface interface {
+	Create(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	Update(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	UpdateStatus(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*ConfigurationSnapshot, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*ConfigurationSnapshot, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*ConfigurationSnapshot, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+	Save(ctx context.Context, in *ConfigurationSnapshotRequest) (*ConfigurationSnapshot, error)
+}
+
+// ClusterV1SnapshotRestoreInterface exposes the CRUD methods for SnapshotRestore
+type ClusterV1SnapshotRestoreInterface interface {
+	Create(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error)
+	Update(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error)
+	UpdateStatus(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SnapshotRestore, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SnapshotRestore, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*SnapshotRestore, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+	Restore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error)
+}
+
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
@@ -97,5 +123,7 @@ type ClusterV1Interface interface {
 	DistributedServiceCard() ClusterV1DistributedServiceCardInterface
 	Tenant() ClusterV1TenantInterface
 	Version() ClusterV1VersionInterface
+	ConfigurationSnapshot() ClusterV1ConfigurationSnapshotInterface
+	SnapshotRestore() ClusterV1SnapshotRestoreInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

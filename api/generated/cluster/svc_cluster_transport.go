@@ -27,35 +27,47 @@ type grpcServerClusterV1 struct {
 
 	AuthBootstrapCompleteHdlr            grpctransport.Handler
 	AutoAddClusterHdlr                   grpctransport.Handler
+	AutoAddConfigurationSnapshotHdlr     grpctransport.Handler
 	AutoAddDistributedServiceCardHdlr    grpctransport.Handler
 	AutoAddHostHdlr                      grpctransport.Handler
 	AutoAddNodeHdlr                      grpctransport.Handler
+	AutoAddSnapshotRestoreHdlr           grpctransport.Handler
 	AutoAddTenantHdlr                    grpctransport.Handler
 	AutoAddVersionHdlr                   grpctransport.Handler
 	AutoDeleteClusterHdlr                grpctransport.Handler
+	AutoDeleteConfigurationSnapshotHdlr  grpctransport.Handler
 	AutoDeleteDistributedServiceCardHdlr grpctransport.Handler
 	AutoDeleteHostHdlr                   grpctransport.Handler
 	AutoDeleteNodeHdlr                   grpctransport.Handler
+	AutoDeleteSnapshotRestoreHdlr        grpctransport.Handler
 	AutoDeleteTenantHdlr                 grpctransport.Handler
 	AutoDeleteVersionHdlr                grpctransport.Handler
 	AutoGetClusterHdlr                   grpctransport.Handler
+	AutoGetConfigurationSnapshotHdlr     grpctransport.Handler
 	AutoGetDistributedServiceCardHdlr    grpctransport.Handler
 	AutoGetHostHdlr                      grpctransport.Handler
 	AutoGetNodeHdlr                      grpctransport.Handler
+	AutoGetSnapshotRestoreHdlr           grpctransport.Handler
 	AutoGetTenantHdlr                    grpctransport.Handler
 	AutoGetVersionHdlr                   grpctransport.Handler
 	AutoListClusterHdlr                  grpctransport.Handler
+	AutoListConfigurationSnapshotHdlr    grpctransport.Handler
 	AutoListDistributedServiceCardHdlr   grpctransport.Handler
 	AutoListHostHdlr                     grpctransport.Handler
 	AutoListNodeHdlr                     grpctransport.Handler
+	AutoListSnapshotRestoreHdlr          grpctransport.Handler
 	AutoListTenantHdlr                   grpctransport.Handler
 	AutoListVersionHdlr                  grpctransport.Handler
 	AutoUpdateClusterHdlr                grpctransport.Handler
+	AutoUpdateConfigurationSnapshotHdlr  grpctransport.Handler
 	AutoUpdateDistributedServiceCardHdlr grpctransport.Handler
 	AutoUpdateHostHdlr                   grpctransport.Handler
 	AutoUpdateNodeHdlr                   grpctransport.Handler
+	AutoUpdateSnapshotRestoreHdlr        grpctransport.Handler
 	AutoUpdateTenantHdlr                 grpctransport.Handler
 	AutoUpdateVersionHdlr                grpctransport.Handler
+	RestoreHdlr                          grpctransport.Handler
+	SaveHdlr                             grpctransport.Handler
 	UpdateTLSConfigHdlr                  grpctransport.Handler
 }
 
@@ -81,6 +93,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCluster", logger)))...,
 		),
 
+		AutoAddConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoAddConfigurationSnapshotEndpoint,
+			DecodeGrpcReqConfigurationSnapshot,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddConfigurationSnapshot", logger)))...,
+		),
+
 		AutoAddDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoAddDistributedServiceCardEndpoint,
 			DecodeGrpcReqDistributedServiceCard,
@@ -100,6 +119,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNode", logger)))...,
+		),
+
+		AutoAddSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoAddSnapshotRestoreEndpoint,
+			DecodeGrpcReqSnapshotRestore,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSnapshotRestore", logger)))...,
 		),
 
 		AutoAddTenantHdlr: grpctransport.NewServer(
@@ -123,6 +149,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCluster", logger)))...,
 		),
 
+		AutoDeleteConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteConfigurationSnapshotEndpoint,
+			DecodeGrpcReqConfigurationSnapshot,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteConfigurationSnapshot", logger)))...,
+		),
+
 		AutoDeleteDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteDistributedServiceCardEndpoint,
 			DecodeGrpcReqDistributedServiceCard,
@@ -142,6 +175,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNode", logger)))...,
+		),
+
+		AutoDeleteSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteSnapshotRestoreEndpoint,
+			DecodeGrpcReqSnapshotRestore,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSnapshotRestore", logger)))...,
 		),
 
 		AutoDeleteTenantHdlr: grpctransport.NewServer(
@@ -165,6 +205,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCluster", logger)))...,
 		),
 
+		AutoGetConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoGetConfigurationSnapshotEndpoint,
+			DecodeGrpcReqConfigurationSnapshot,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetConfigurationSnapshot", logger)))...,
+		),
+
 		AutoGetDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoGetDistributedServiceCardEndpoint,
 			DecodeGrpcReqDistributedServiceCard,
@@ -184,6 +231,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNode", logger)))...,
+		),
+
+		AutoGetSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoGetSnapshotRestoreEndpoint,
+			DecodeGrpcReqSnapshotRestore,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSnapshotRestore", logger)))...,
 		),
 
 		AutoGetTenantHdlr: grpctransport.NewServer(
@@ -207,6 +261,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCluster", logger)))...,
 		),
 
+		AutoListConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoListConfigurationSnapshotEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespConfigurationSnapshotList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListConfigurationSnapshot", logger)))...,
+		),
+
 		AutoListDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoListDistributedServiceCardEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -226,6 +287,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNodeList,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNode", logger)))...,
+		),
+
+		AutoListSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoListSnapshotRestoreEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespSnapshotRestoreList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSnapshotRestore", logger)))...,
 		),
 
 		AutoListTenantHdlr: grpctransport.NewServer(
@@ -249,6 +317,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCluster", logger)))...,
 		),
 
+		AutoUpdateConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateConfigurationSnapshotEndpoint,
+			DecodeGrpcReqConfigurationSnapshot,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateConfigurationSnapshot", logger)))...,
+		),
+
 		AutoUpdateDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateDistributedServiceCardEndpoint,
 			DecodeGrpcReqDistributedServiceCard,
@@ -270,6 +345,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNode", logger)))...,
 		),
 
+		AutoUpdateSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateSnapshotRestoreEndpoint,
+			DecodeGrpcReqSnapshotRestore,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSnapshotRestore", logger)))...,
+		),
+
 		AutoUpdateTenantHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTenantEndpoint,
 			DecodeGrpcReqTenant,
@@ -282,6 +364,20 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqVersion,
 			EncodeGrpcRespVersion,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVersion", logger)))...,
+		),
+
+		RestoreHdlr: grpctransport.NewServer(
+			endpoints.RestoreEndpoint,
+			DecodeGrpcReqSnapshotRestore,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Restore", logger)))...,
+		),
+
+		SaveHdlr: grpctransport.NewServer(
+			endpoints.SaveEndpoint,
+			DecodeGrpcReqConfigurationSnapshotRequest,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Save", logger)))...,
 		),
 
 		UpdateTLSConfigHdlr: grpctransport.NewServer(
@@ -325,6 +421,24 @@ func decodeHTTPrespClusterV1AutoAddCluster(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoAddConfigurationSnapshot(ctx oldcontext.Context, req *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.AutoAddConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoAddConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -383,6 +497,24 @@ func decodeHTTPrespClusterV1AutoAddNode(_ context.Context, r *http.Response) (in
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoAddSnapshotRestore(ctx oldcontext.Context, req *SnapshotRestore) (*SnapshotRestore, error) {
+	_, resp, err := s.AutoAddSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoAddSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoAddTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
 	_, resp, err := s.AutoAddTenantHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -433,6 +565,24 @@ func decodeHTTPrespClusterV1AutoDeleteCluster(_ context.Context, r *http.Respons
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoDeleteConfigurationSnapshot(ctx oldcontext.Context, req *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.AutoDeleteConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoDeleteConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -491,6 +641,24 @@ func decodeHTTPrespClusterV1AutoDeleteNode(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoDeleteSnapshotRestore(ctx oldcontext.Context, req *SnapshotRestore) (*SnapshotRestore, error) {
+	_, resp, err := s.AutoDeleteSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoDeleteSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
 	_, resp, err := s.AutoDeleteTenantHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -541,6 +709,24 @@ func decodeHTTPrespClusterV1AutoGetCluster(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoGetConfigurationSnapshot(ctx oldcontext.Context, req *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.AutoGetConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoGetConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -599,6 +785,24 @@ func decodeHTTPrespClusterV1AutoGetNode(_ context.Context, r *http.Response) (in
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoGetSnapshotRestore(ctx oldcontext.Context, req *SnapshotRestore) (*SnapshotRestore, error) {
+	_, resp, err := s.AutoGetSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoGetSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoGetTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
 	_, resp, err := s.AutoGetTenantHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -649,6 +853,24 @@ func decodeHTTPrespClusterV1AutoListCluster(_ context.Context, r *http.Response)
 		return nil, errorDecoder(r)
 	}
 	var resp ClusterList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoListConfigurationSnapshot(ctx oldcontext.Context, req *api.ListWatchOptions) (*ConfigurationSnapshotList, error) {
+	_, resp, err := s.AutoListConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoListConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoListConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshotList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -707,6 +929,24 @@ func decodeHTTPrespClusterV1AutoListNode(_ context.Context, r *http.Response) (i
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoListSnapshotRestore(ctx oldcontext.Context, req *api.ListWatchOptions) (*SnapshotRestoreList, error) {
+	_, resp, err := s.AutoListSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoListSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoListSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestoreList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListTenant(ctx oldcontext.Context, req *api.ListWatchOptions) (*TenantList, error) {
 	_, resp, err := s.AutoListTenantHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -757,6 +997,24 @@ func decodeHTTPrespClusterV1AutoUpdateCluster(_ context.Context, r *http.Respons
 		return nil, errorDecoder(r)
 	}
 	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoUpdateConfigurationSnapshot(ctx oldcontext.Context, req *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.AutoUpdateConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoUpdateConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -815,6 +1073,24 @@ func decodeHTTPrespClusterV1AutoUpdateNode(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoUpdateSnapshotRestore(ctx oldcontext.Context, req *SnapshotRestore) (*SnapshotRestore, error) {
+	_, resp, err := s.AutoUpdateSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoUpdateSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoUpdateTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
 	_, resp, err := s.AutoUpdateTenantHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -847,6 +1123,42 @@ func decodeHTTPrespClusterV1AutoUpdateVersion(_ context.Context, r *http.Respons
 		return nil, errorDecoder(r)
 	}
 	var resp Version
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) Restore(ctx oldcontext.Context, req *SnapshotRestore) (*SnapshotRestore, error) {
+	_, resp, err := s.RestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1Restore).V
+	return &r, resp.(respClusterV1Restore).Err
+}
+
+func decodeHTTPrespClusterV1Restore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) Save(ctx oldcontext.Context, req *ConfigurationSnapshotRequest) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.SaveHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1Save).V
+	return &r, resp.(respClusterV1Save).Err
+}
+
+func decodeHTTPrespClusterV1Save(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -897,6 +1209,14 @@ func (s *grpcServerClusterV1) AutoWatchVersion(in *api.ListWatchOptions, stream 
 	return s.Endpoints.AutoWatchVersion(in, stream)
 }
 
+func (s *grpcServerClusterV1) AutoWatchConfigurationSnapshot(in *api.ListWatchOptions, stream ClusterV1_AutoWatchConfigurationSnapshotServer) error {
+	return s.Endpoints.AutoWatchConfigurationSnapshot(in, stream)
+}
+
+func (s *grpcServerClusterV1) AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSnapshotRestoreServer) error {
+	return s.Endpoints.AutoWatchSnapshotRestore(in, stream)
+}
+
 func encodeHTTPClusterList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -928,6 +1248,40 @@ func EncodeGrpcRespClusterList(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespClusterList decodes the GRPC response
 func DecodeGrpcRespClusterList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPConfigurationSnapshotList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPConfigurationSnapshotList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ConfigurationSnapshotList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqConfigurationSnapshotList encodes GRPC request
+func EncodeGrpcReqConfigurationSnapshotList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ConfigurationSnapshotList)
+	return req, nil
+}
+
+// DecodeGrpcReqConfigurationSnapshotList decodes GRPC request
+func DecodeGrpcReqConfigurationSnapshotList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ConfigurationSnapshotList)
+	return req, nil
+}
+
+// EncodeGrpcRespConfigurationSnapshotList endodes the GRPC response
+func EncodeGrpcRespConfigurationSnapshotList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespConfigurationSnapshotList decodes the GRPC response
+func DecodeGrpcRespConfigurationSnapshotList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -1030,6 +1384,40 @@ func EncodeGrpcRespNodeList(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespNodeList decodes the GRPC response
 func DecodeGrpcRespNodeList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSnapshotRestoreList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSnapshotRestoreList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SnapshotRestoreList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSnapshotRestoreList encodes GRPC request
+func EncodeGrpcReqSnapshotRestoreList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SnapshotRestoreList)
+	return req, nil
+}
+
+// DecodeGrpcReqSnapshotRestoreList decodes GRPC request
+func DecodeGrpcReqSnapshotRestoreList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SnapshotRestoreList)
+	return req, nil
+}
+
+// EncodeGrpcRespSnapshotRestoreList endodes the GRPC response
+func EncodeGrpcRespSnapshotRestoreList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSnapshotRestoreList decodes the GRPC response
+func DecodeGrpcRespSnapshotRestoreList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

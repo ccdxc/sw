@@ -6,6 +6,10 @@
 
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
+export enum ConfigurationSnapshotStatusConfigSaveStatus_dest_type {
+    'objectstore' = "objectstore",
+}
+
 export enum ApiListWatchOptions_sort_order {
     'none' = "none",
     'by-name' = "by-name",
@@ -91,6 +95,17 @@ export enum ClusterQuorumMemberCondition_status {
     'unknown' = "unknown",
     'true' = "true",
     'false' = "false",
+}
+
+export enum ClusterSnapshotDestination_Type {
+    'objectstore' = "objectstore",
+}
+
+export enum ClusterSnapshotRestoreStatus_status {
+    'unknown' = "unknown",
+    'active' = "active",
+    'completed' = "completed",
+    'failed' = "failed",
 }
 
 
@@ -206,6 +221,7 @@ export class AllEnums {
         return AllEnums._instance;
     }
 
+    ConfigurationSnapshotStatusConfigSaveStatus_dest_type = ConfigurationSnapshotStatusConfigSaveStatus_dest_type;
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     ClusterClusterCondition_type = ClusterClusterCondition_type;
     ClusterClusterCondition_status = ClusterClusterCondition_status;
@@ -220,6 +236,8 @@ export class AllEnums {
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
     ClusterQuorumMemberCondition_type = ClusterQuorumMemberCondition_type;
     ClusterQuorumMemberCondition_status = ClusterQuorumMemberCondition_status;
+    ClusterSnapshotDestination_Type = ClusterSnapshotDestination_Type;
+    ClusterSnapshotRestoreStatus_status = ClusterSnapshotRestoreStatus_status;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     ClusterClusterCondition_type_uihint = ClusterClusterCondition_type_uihint;

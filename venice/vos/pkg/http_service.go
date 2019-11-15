@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	apiPrefix    = "/apis/v1"
-	uploadPath   = "/uploads/images/"
-	downloadPath = "/downloads/images/**"
+	apiPrefix           = "/apis/v1"
+	uploadImagesPath    = "/uploads/images/"
+	uploadSnapshotsPath = "/uploads/snapshots/"
+	downloadPath        = "/downloads/images/**"
 )
 
 type httpHandler struct {
@@ -41,10 +42,12 @@ func newHTTPHandler(instance *instance, client vos.BackendClient) (*httpHandler,
 
 func (h *httpHandler) start(ctx context.Context, port string, config *tls.Config) {
 	log.InfoLog("msg", "starting HTTP listener")
-	h.handler.Post(apiPrefix+uploadPath, h.uploadHandler)
 	h.handler.Get(apiPrefix+downloadPath, h.downloadHandler)
+	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadImagesPath)
+	h.handler.Post(apiPrefix+uploadImagesPath, h.uploadImagesHandler)
+	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadSnapshotsPath)
+	h.handler.Post(apiPrefix+uploadSnapshotsPath, h.uploadSnapshotsHandler)
 
-	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadPath)
 	done := make(chan error)
 	var ln net.Listener
 	var err error
@@ -76,7 +79,17 @@ func (h *httpHandler) start(ctx context.Context, port string, config *tls.Config
 }
 
 // ClusterCreateHandler handles the REST call for cluster creation.
-func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
+func (h *httpHandler) uploadImagesHandler(w http.ResponseWriter, req *http.Request) {
+	h.uploadHandler(w, req, objstore.Buckets_images.String())
+}
+
+// ClusterCreateHandler handles the REST call for cluster creation.
+func (h *httpHandler) uploadSnapshotsHandler(w http.ResponseWriter, req *http.Request) {
+	h.uploadHandler(w, req, objstore.Buckets_snapshots.String())
+}
+
+// uploadHandler handles all uploads proxy requests.
+func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request, nspace string) {
 	log.Infof("got Upload call")
 	if req.Method == "POST" {
 		req.ParseMultipartForm(32 << 20)
@@ -109,18 +122,19 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 
 		log.Infof("got meta in form  as [%+v]", meta)
 		// Check if we have the object
-		stat, err := h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
+		bucket := "default." + nspace
+		stat, err := h.client.StatObject(bucket, header.Filename, minio.StatObjectOptions{})
 		if err != nil {
 			meta[metaCreationTime] = fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano))
 		} else {
 			meta[metaCreationTime] = stat.Metadata.Get(metaPrefix + metaCreationTime)
 		}
-		errs := h.instance.RunPlugins(context.TODO(), "images", vos.PreOp, vos.Upload, nil, h.client)
+		errs := h.instance.RunPlugins(context.TODO(), nspace, vos.PreOp, vos.Upload, nil, h.client)
 		if errs != nil {
 			h.writeError(w, http.StatusPreconditionFailed, errs)
 			return
 		}
-		sz, err := h.client.PutObject("default.images", header.Filename, file, -1, minio.PutObjectOptions{UserMetadata: meta, ContentType: contentType})
+		sz, err := h.client.PutObject(bucket, header.Filename, file, -1, minio.PutObjectOptions{UserMetadata: meta, ContentType: contentType})
 		if err != nil {
 			log.Errorf("failed to write object (%s)", err)
 			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error writing object (%s)", err))
@@ -128,7 +142,7 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		in := objstore.Object{
 			TypeMeta:   api.TypeMeta{Kind: "Object"},
-			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: "images"},
+			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: nspace},
 			Spec:       objstore.ObjectSpec{ContentType: contentType},
 			Status: objstore.ObjectStatus{
 				Size_:  sz,
@@ -136,12 +150,12 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 			},
 		}
 		updateObjectMeta(&stat, &in.ObjectMeta)
-		stat, err = h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
+		stat, err = h.client.StatObject(bucket, header.Filename, minio.StatObjectOptions{})
 		if err != nil {
 			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error verifying image write (%s)", err))
 			return
 		}
-		errs = h.instance.RunPlugins(context.TODO(), "images", vos.PostOp, vos.Upload, &in, h.client)
+		errs = h.instance.RunPlugins(context.TODO(), nspace, vos.PostOp, vos.Upload, &in, h.client)
 		if errs != nil {
 			h.writeError(w, http.StatusInternalServerError, errs)
 			return
@@ -150,7 +164,7 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 
 		ret := objstore.Object{
 			TypeMeta:   api.TypeMeta{Kind: "Object"},
-			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: "images"},
+			ObjectMeta: api.ObjectMeta{Name: header.Filename, Namespace: nspace},
 			Spec:       objstore.ObjectSpec{ContentType: contentType},
 			Status: objstore.ObjectStatus{
 				Size_:  sz,

@@ -120,6 +120,23 @@ enum EventTypes {
                                          (desc)        = "Module creation for diagnostics failed",
                                          (suppress_mm) = true];
 
+    // ------------------------ Config Snapshot/Restore events ------------------------ //
+    CONFIG_RESTORED                 = 30 [(category)   = Cluster,
+                                         (severity)    = INFO,
+                                         (desc)        = "Configuration was restored",
+                                         (suppress_mm) = true];
+
+    CONFIG_RESTORE_ABORTED          = 31 [(category)   = Cluster,
+                                         (severity)    = WARN,
+                                         (desc)        = "Configuration restore operation was aborted",
+                                         (suppress_mm) = true];
+
+    CONFIG_RESTORE_FAILED           = 32 [(category)   = Cluster,
+                                         (severity)    = CRITICAL,
+                                         (desc)        = "Configuration restore operation failed",
+                                         (suppress_mm) = true];
+
+
     // -------------------------------- Host/DSC events -------------------------- //
     DSC_ADMITTED                    = 100 [(category)    = Cluster,
                                            (severity)    = INFO,

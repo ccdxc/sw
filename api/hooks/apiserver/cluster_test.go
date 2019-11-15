@@ -4,23 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-
-	"github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/venice/utils/objstore/client"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -699,7 +700,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		}
 		out, ok, err := clusterHooks.checkAuthBootstrapFlag(ctx, kvs, txn, clusterKey, test.oper, false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
-		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed [%v/%v]", test.name, test.err, err))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
 	}
 }
@@ -1224,4 +1225,288 @@ func TestValidateTenant(t *testing.T) {
 		t.Errorf("Expecting validate to succeed (%s)", errs)
 	}
 	a.Stop()
+}
+
+type fakeOclient struct {
+	written, read int64
+	retErr        error
+	puts          int
+}
+
+// PutObject is a mock client implementation
+func (m *fakeOclient) PutObject(ctx context.Context, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
+	m.puts++
+	return m.written, m.retErr
+
+}
+
+// PutObjectOfSize is a mock client implementation
+func (m *fakeOclient) PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error) {
+	return m.written, m.retErr
+}
+
+// PutStreamObject is a mock client implementation
+func (m *fakeOclient) PutStreamObject(ctx context.Context, objectName string, metaData map[string]string) (io.WriteCloser, error) {
+	return m, m.retErr
+}
+
+// GetObjectis a mock client implementation
+func (m *fakeOclient) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
+	return m, m.retErr
+}
+
+// GetStreamObjectAtOffset is a mock client implementation
+func (m *fakeOclient) GetStreamObjectAtOffset(ctx context.Context, objectName string, offset int) (io.ReadCloser, error) {
+	return m, nil
+}
+
+// StatObject is a mock client implementation
+func (m *fakeOclient) StatObject(objectName string) (*objstore.ObjectStats, error) {
+	return nil, nil
+}
+
+// ListObjects is a mock client implementation
+func (m *fakeOclient) ListObjects(prefix string) ([]string, error) {
+	return nil, nil
+}
+
+// RemoveObjects is a mock client implementation
+func (m *fakeOclient) RemoveObjects(prefix string) error {
+	return nil
+}
+
+// Read is a mock implementation
+func (m *fakeOclient) Read(p []byte) (n int, err error) {
+	return int(m.read), nil
+}
+
+// Close is a mock implementation
+func (m *fakeOclient) Close() error {
+	return nil
+}
+
+// Write is a mock implementation
+func (m *fakeOclient) Write(p []byte) (n int, err error) {
+	return int(m.written), nil
+}
+
+func TestPerformSnapShot(t *testing.T) {
+	txn := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+	fcache := mocks.FakeCache{}
+	apisrvpkg.SetAPIServerCache(&fcache)
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	oclnt := &fakeOclient{}
+	clusterHooks.oclnt = oclnt
+	scfg := cluster.ConfigurationSnapshot{
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{
+				Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+			},
+		},
+	}
+	var retErr error
+	getfn := func(ctx context.Context, key string, into runtime.Object) error {
+		sin := into.(*cluster.ConfigurationSnapshot)
+		*sin = scfg
+		return retErr
+	}
+	kvs.Getfn = getfn
+
+	var rev uint64
+	snapfn := func() uint64 {
+		return rev
+	}
+	rev = 10
+	fcache.StartSnapshotFn = snapfn
+	fcache.RetSnapshotReader = oclnt
+	req := cluster.ConfigurationSnapshotRequest{}
+	req.Name = "TestRequest"
+	clusterHooks.performSnapshotNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, oclnt.puts == 1, "expecting 1 put got %d", oclnt.puts)
+}
+
+type fakeSnapshotWriter struct {
+	calls int
+	wrErr error
+}
+
+func (f *fakeSnapshotWriter) Write(ctx context.Context, kvs kvstore.Interface) error {
+	return f.wrErr
+}
+
+func TestPerformRestore(t *testing.T) {
+	txn := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+	fov := &mocks.FakeOverlay{}
+	fcache := mocks.FakeCache{}
+	fov.Interface = &fcache
+	apisrvpkg.SetAPIServerCache(&fcache)
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	oclnt := &fakeOclient{}
+	clusterHooks.oclnt = oclnt
+
+	scfg := cluster.ConfigurationSnapshot{
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{
+				Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+			},
+		},
+	}
+	var retrest *cluster.SnapshotRestore
+	var retErr error
+	getfn := func(ctx context.Context, key string, into runtime.Object) error {
+		switch into.(type) {
+		case *cluster.SnapshotRestore:
+			if retrest == nil {
+				return errors.New("not found")
+			}
+			sin := into.(*cluster.SnapshotRestore)
+			*sin = *retrest
+		case *cluster.ConfigurationSnapshot:
+			sin := into.(*cluster.ConfigurationSnapshot)
+			*sin = scfg
+		}
+		return retErr
+	}
+	kvs.Getfn = getfn
+	var rev uint64
+	snapfn := func() uint64 {
+		return rev
+	}
+	statKFn := func(group string, kind string) ([]apiintf.ObjectStat, error) {
+		return []apiintf.ObjectStat{}, nil
+	}
+	fcache.StatKindFn = statKFn
+	rev = 10
+	fcache.StartSnapshotFn = snapfn
+	fcache.RetSnapshotReader = oclnt
+	swr := &fakeSnapshotWriter{}
+	fcache.SnapWriter = swr
+	req := cluster.SnapshotRestore{
+		Spec: cluster.SnapshotRestoreSpec{
+			SnapshotPath: "testSnapshotFile",
+		},
+	}
+
+	_, write, err := clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, !write, "expecting kvwrite to be false")
+	AssertOk(t, err, "Operation should succeed")
+
+	// set failure on getting snapshot object
+	oclnt.retErr = errors.New("not found")
+	_, write, err = clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, !write, "expecting kvwrite to be false")
+	Assert(t, err != nil, "Operation should fail")
+
+	// Set restore in progress
+	oclnt.retErr = nil
+	ret := cluster.SnapshotRestore{
+		Status: cluster.SnapshotRestoreStatus{
+			Status: cluster.SnapshotRestoreStatus_Active.String(),
+		},
+	}
+	retrest = &ret
+	_, write, err = clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, !write, "expecting kvwrite to be false")
+	Assert(t, err == nil, "Operation should succeed")
+
+	// Test Rollback
+	Assert(t, fcache.RollbackCalls == 0, "expecting rollbacks to be 0")
+	retrest = nil
+	txnError := errors.New("failed")
+	txn.Commitfn = func(ctx context.Context) (kvstore.TxnResponse, error) {
+		return kvstore.TxnResponse{}, txnError
+	}
+	_, write, err = clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, !write, "expecting kvwrite to be false")
+	Assert(t, err != nil, "Operation should Fail")
+	Assert(t, fcache.RollbackCalls == 1, "expecting 1 rollback call got %d", fcache.RollbackCalls)
+
+}
+
+func TestGetResposeWriters(t *testing.T) {
+	kvs := &mocks.FakeKvStore{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+
+	clObj := cluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		Spec: cluster.ClusterSpec{
+			VirtualIP: "10.1.1.1",
+		},
+	}
+
+	resObj := cluster.SnapshotRestore{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testRestore",
+		},
+		Spec: cluster.SnapshotRestoreSpec{
+			SnapshotPath: "/xyz",
+		},
+	}
+
+	snapObj := cluster.ConfigurationSnapshot{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testSnapshot",
+		},
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{
+				Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+			},
+		},
+	}
+
+	var retErr error
+	getfn := func(ctx context.Context, key string, into runtime.Object) error {
+		switch into.(type) {
+		case *cluster.SnapshotRestore:
+			sin := into.(*cluster.SnapshotRestore)
+			*sin = resObj
+		case *cluster.ConfigurationSnapshot:
+			sin := into.(*cluster.ConfigurationSnapshot)
+			*sin = snapObj
+		case *cluster.Cluster:
+			sin := into.(*cluster.Cluster)
+			*sin = clObj
+		}
+
+		return retErr
+	}
+	kvs.Getfn = getfn
+
+	cl := cluster.Cluster{}
+	rt := cluster.SnapshotRestore{}
+	sn := cluster.ConfigurationSnapshot{}
+	ret, err := clusterHooks.getClusterObject(ctx, kvs, "test", cl, cl, cl, apiintf.CreateOper)
+	AssertOk(t, err, "get should have succeeded")
+	Assert(t, reflect.DeepEqual(ret, clObj), "Objects do not match[%+v]/[%+v]", ret, clObj)
+
+	ret, err = clusterHooks.getRestoreObject(ctx, kvs, "test", rt, rt, rt, apiintf.CreateOper)
+	AssertOk(t, err, "get should have succeeded")
+	Assert(t, reflect.DeepEqual(ret, resObj), "Objects do not match[%+v]/[%+v]", ret, resObj)
+
+	ret, err = clusterHooks.getSnapshotObject(ctx, kvs, "test", sn, sn, sn, apiintf.CreateOper)
+	AssertOk(t, err, "get should have succeeded")
+	Assert(t, reflect.DeepEqual(ret, snapObj), "Objects do not match[%+v]/[%+v]", ret, snapObj)
+
 }

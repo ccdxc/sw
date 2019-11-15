@@ -68,7 +68,7 @@ func (n *Struct) FindFieldByJSONTag(in string) (Field, bool) {
 // GetType returns the reflect.Type for this type
 func (n *Struct) GetType() reflect.Type {
 	if n.GetTypeFn != nil {
-		n.GetTypeFn()
+		return n.GetTypeFn()
 	}
 	return nil
 }

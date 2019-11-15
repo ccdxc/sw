@@ -80,6 +80,9 @@ func (f *FakeServer) RuntimeFlags() apisrv.Flags {
 	return apisrv.Flags{}
 }
 
+// SetRuntimeControls sets the runtime controls for the server
+func (f *FakeServer) SetRuntimeControls(apisrv.Controls) {}
+
 // GetResolvers returns the list of resolvers known to API server for use by hooks that need to non-local work.
 //  returns nil on error
 func (f *FakeServer) GetResolvers() []string {

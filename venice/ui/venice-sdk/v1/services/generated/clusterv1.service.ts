@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterSnapshotRestore,ClusterSnapshotRestore,IClusterConfigurationSnapshot,ClusterConfigurationSnapshot,ClusterConfigurationSnapshotRequest,IClusterConfigurationSnapshotRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgConfigurationSnapshotWatchHelper,ClusterAutoMsgConfigurationSnapshotWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -85,6 +85,121 @@ export class Clusterv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new ClusterUpdateTLSConfigRequest(body))
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get SnapshotRestore object */
+  public GetSnapshotRestore(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-restore';
+    const opts = {
+      eventID: 'GetSnapshotRestore',
+      objType: 'ClusterSnapshotRestore',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public Restore(body: IClusterSnapshotRestore, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-restore/restore';
+    const opts = {
+      eventID: 'Restore',
+      objType: 'ClusterSnapshotRestore',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterSnapshotRestore(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get ConfigurationSnapshot object */
+  public GetConfigurationSnapshot(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot';
+    const opts = {
+      eventID: 'GetConfigurationSnapshot',
+      objType: 'ClusterConfigurationSnapshot',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete ConfigurationSnapshot object */
+  public DeleteConfigurationSnapshot(stagingID: string = ""):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot';
+    const opts = {
+      eventID: 'DeleteConfigurationSnapshot',
+      objType: 'ClusterConfigurationSnapshot',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create ConfigurationSnapshot object */
+  public AddConfigurationSnapshot(body: IClusterConfigurationSnapshot, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot';
+    const opts = {
+      eventID: 'AddConfigurationSnapshot',
+      objType: 'ClusterConfigurationSnapshot',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshot(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update ConfigurationSnapshot object */
+  public UpdateConfigurationSnapshot(body: IClusterConfigurationSnapshot, stagingID: string = "", previousVal: IClusterConfigurationSnapshot = null, trimObject: boolean = true):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot';
+    const opts = {
+      eventID: 'UpdateConfigurationSnapshot',
+      objType: 'ClusterConfigurationSnapshot',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshot(body), previousVal)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public Save(body: IClusterConfigurationSnapshotRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot/save';
+    const opts = {
+      eventID: 'Save',
+      objType: 'ClusterConfigurationSnapshot',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshotRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List DistributedServiceCard objects */
@@ -433,6 +548,21 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch ConfigurationSnapshot objects. Supports WebSockets or HTTP long poll */
+  public WatchConfigurationSnapshot(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgConfigurationSnapshotWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/config-snapshot';
+    const opts = {
+      eventID: 'WatchConfigurationSnapshot',
+      objType: 'ClusterAutoMsgConfigurationSnapshotWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgConfigurationSnapshotWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch DistributedServiceCard objects. Supports WebSockets or HTTP long poll */

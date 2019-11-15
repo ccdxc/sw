@@ -1,0 +1,103 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// Destination Type for saving the configuration snapshot.
+enum SnapshotDestinationType {
+    ObjectStore = 0;
+}
+
+// Destination for saving the configuration snapshot.
+message SnapshotDestination {
+    string Type = 1 [(venice.check) = "StrEnum(SnapshotDestinationType)"];
+}
+
+
+message ConfigurationSnapshotSpec {
+    SnapshotDestination Destination = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "destination,omitempty"];
+}
+
+message ConfigurationSnapshotStatus {
+    message ConfigSaveStatus {
+        string DestType = 1 [(venice.check) = "StrEnum(SnapshotDestinationType)", (gogoproto.jsontag) = "dest-type,"];
+        string URI = 2 [(gogoproto.jsontag) = "uri,omitempty"];
+    }
+    ConfigSaveStatus LastSnapshot = 1 [(gogoproto.jsontag) = "last-snapshot,omitempty"];
+}
+
+message ConfigurationSnapshot {
+    option (venice.objectPrefix) = {Singleton: "config-snapshot"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    ConfigurationSnapshotSpec Spec = 3 [(gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "spec,omitempty"];
+
+    ConfigurationSnapshotStatus Status = 4 [(gogoproto.nullable) = false,
+                                           (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message ConfigurationSnapshotRequest {
+    option (venice.objectPrefix) = {Singleton: "config-snapshot"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+}
+
+message SnapshotRestoreStatus {
+    enum RestoreStatus {
+        Unknown = 0;
+        Active = 1;
+        Completed = 2;
+        Failed = 3;
+    }
+    string Status           = 2  [(venice.check) = "StrEnum(SnapshotRestoreStatus.RestoreStatus)",
+                                 (gogoproto.jsontag) = "status,"];
+
+    api.Timestamp StartTime = 3 [(gogoproto.jsontag) = "start-time,"];
+
+    api.Timestamp EndTime   = 4 [(gogoproto.jsontag) = "end-time,"];
+
+    string BackupSnapshotPath   = 5 [(gogoproto.jsontag) = "backup-snapshot-path,"];
+}
+
+message SnapshotRestoreSpec {
+    string SnapshotPath = 1 [(gogoproto.jsontag) = "path,omitempty"];
+}
+
+message SnapshotRestore {
+    option (venice.objectPrefix) = {Singleton: "config-restore"};
+
+    api.TypeMeta T                  = 1 [(gogoproto.embed) = true,
+                                        (gogoproto.nullable) = false,
+                                        (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O                = 2 [(gogoproto.embed) = true,
+                                        (gogoproto.nullable) = false,
+                                        (gogoproto.jsontag) = "meta,omitempty"];
+
+    SnapshotRestoreSpec Spec        = 3 [(gogoproto.nullable) = false,
+                                        (gogoproto.jsontag) = "spec,omitempty"];
+    SnapshotRestoreStatus Status    = 4 [(gogoproto.nullable) = false,
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+}

@@ -30,6 +30,12 @@ const (
 	CtxKeyAPIGwBinStreamReq   = "CtxKeyAPIGwBinStreamReq"
 	CtxKeyAPISrvInitRestore   = "InitRestorePath"
 	CtxKeyGetPersistedKV      = "GetPersistedKV"
+	CtxKeyPersistDirectKV     = "CtxKeyPersistDirectKV"
+	CtxKeyAPISrvLargeBuffer   = "APISrvLargeBuffer"
+)
+
+var (
+	doNotSaveKinds = []string{"Cluster", "Module", "SnapshotRestore", "Node", "NetworkInterface"}
 )
 
 type requirementSetMarker struct {
@@ -181,6 +187,16 @@ func IsUserRequestCtx(ctx context.Context) bool {
 	return ctxutils.IsAPIGwCtx(ctx)
 }
 
+// IsSavedKind returns true if the kind is saved and restored else false
+func IsSavedKind(k string) bool {
+	for i := range doNotSaveKinds {
+		if k == doNotSaveKinds[i] {
+			return false
+		}
+	}
+	return true
+}
+
 type gnode struct {
 	up   []string
 	down []string
@@ -234,8 +250,9 @@ func (o *ObjRelMapper) init(s *runtime.Scheme, rels map[string][]apiintf.ObjRela
 	for k, v := range rels {
 		for _, v1 := range v {
 			if v1.Type == apiintf.NamedReference {
-				nodes[v1.To].up = append(nodes[v1.To].up, k)
-				nodes[k].down = append(nodes[k].down, v1.To)
+				to := strings.Replace(v1.To, "/", ".", 1)
+				nodes[to].up = append(nodes[to].up, k)
+				nodes[k].down = append(nodes[k].down, to)
 			}
 		}
 	}

@@ -693,6 +693,50 @@ func (act *ActionCtx) VeniceNodeGetCluster(vnc *VeniceNodeCollection) error {
 	return nil
 }
 
+// VeniceNodeCreateSnapshotConfig creates the default snapshot configuration on the cluster.
+func (act *ActionCtx) VeniceNodeCreateSnapshotConfig(vnc *VeniceNodeCollection) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
+	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
+	restcl, err := act.model.VeniceNodeRestClient(nodeURL)
+	if err != nil {
+		return err
+	}
+	return act.model.ConfigureSnapshot(restcl)
+}
+
+// VeniceNodeCreateSnapshotConfig creates the default snapshot configuration on the cluster.
+func (act *ActionCtx) VeniceNodeTakeSnapshot(vnc *VeniceNodeCollection) (string, error) {
+	if vnc.err != nil {
+		return "", vnc.err
+	}
+
+	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
+	restcl, err := act.model.VeniceNodeRestClient(nodeURL)
+	if err != nil {
+		return "", err
+	}
+
+	return act.model.TakeConfigSnapshot(restcl, "IotaTest")
+}
+
+// VeniceNodeCreateSnapshotConfig creates the default snapshot configuration on the cluster.
+func (act *ActionCtx) VeniceNodeRestoreConfig(vnc *VeniceNodeCollection, name string) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
+	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
+	restcl, err := act.model.VeniceNodeRestClient(nodeURL)
+	if err != nil {
+		return err
+	}
+
+	return act.model.RestoreConfig(restcl, name)
+}
+
 // FlapDataSwitchPorts flaps data ports
 func (act *ActionCtx) FlapDataSwitchPorts(ports *SwitchPortCollection, downTime time.Duration) error {
 	switchMsg := &iota.SwitchMsg{
@@ -871,7 +915,7 @@ func (act *ActionCtx) FlapMgmtLinkNaples(naples *NaplesCollection) error {
 //For now only fake naples
 func (act *ActionCtx) StartEventsGenOnNaples(naples *NaplesCollection, rate, count string) error {
 
-	//Start events.
+	// Start events.
 	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
 		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/gen_events -r %v -t %v -s \"scale-testing\"",
 			rate, count)
@@ -883,7 +927,7 @@ func (act *ActionCtx) StartEventsGenOnNaples(naples *NaplesCollection, rate, cou
 }
 
 // StopEventsGenOnNaples starts event loop on naples
-//For now only fake naples
+// For now only fake naples
 func (act *ActionCtx) StopEventsGenOnNaples(naples *NaplesCollection) error {
 
 	//stop events.
@@ -897,10 +941,10 @@ func (act *ActionCtx) StopEventsGenOnNaples(naples *NaplesCollection) error {
 }
 
 // StartFWLogGenOnNaples starts fwlog gen loop on naples
-//For now only fake naples
+// For now only fake naples
 func (act *ActionCtx) StartFWLogGenOnNaples(naples *NaplesCollection, rate, count string) error {
 
-	//Start events.
+	// Start events.
 	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
 		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/fwloggen -metrics -rate %v -num  %v",
 			rate, count)
@@ -912,10 +956,10 @@ func (act *ActionCtx) StartFWLogGenOnNaples(naples *NaplesCollection, rate, coun
 }
 
 // StopFWLogGenOnNaples stops fwlog gen on naples
-//For now only fake naples
+// For now only fake naples
 func (act *ActionCtx) StopFWLogGenOnNaples(naples *NaplesCollection) error {
 
-	//stop events.
+	// stop events.
 	act.model.ForEachFakeNaples(func(nc *NaplesCollection) error {
 		act.model.Action().RunFakeNaplesBackgroundCommand(nc,
 			"pkill -9 fwloggen")

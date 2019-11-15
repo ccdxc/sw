@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"io"
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +34,7 @@ import (
 
 var (
 	errorNotFound          = errors.New("object not found")
+	errorSnapshotNotFound  = errors.New("object snapshot not found")
 	errorNotCorrectRev     = errors.New("object revision mismatch")
 	errorRevBackpedals     = errors.New("revision backpedals")
 	errorCacheInactive     = errors.New("cache is inactive")
@@ -117,6 +120,237 @@ func newWatchServer(cancel context.CancelFunc) *watchServer {
 		ch:     make(chan *kvstore.WatchEvent),
 		cancel: cancel,
 	}
+}
+
+type snapshotReader struct {
+	sync.Mutex
+	snapRev  uint64
+	store    apiintf.Store
+	sch      *runtime.Scheme
+	kinds    map[string][]string
+	groups   []string
+	curGroup int
+	curType  int
+	curObjs  []runtime.Object
+	curBytes []byte
+	index    int
+	second   bool
+}
+type kindHeader struct {
+	Group string `json:"group"`
+	Kind  string `json:"kind"`
+}
+type kindSnapshot struct {
+	Header  kindHeader       `json:"header"`
+	Objects []runtime.Object `json:"objects"`
+}
+
+func (r *snapshotReader) Read(p []byte) (n int, err error) {
+	defer r.Unlock()
+	r.Lock()
+
+	defer func() {
+		log.Infof("returning [%v] (%v)", n, err)
+	}()
+	written := 0
+	total := len(p)
+	for written < total {
+		if r.curObjs == nil {
+
+			if r.curGroup >= len(r.groups) {
+				if r.second {
+					p = append(p, ']')
+					written++
+					r.second = false
+				}
+				return written, io.EOF
+			}
+			grp := r.groups[r.curGroup]
+			if r.curType >= len(r.kinds[grp]) {
+				r.curGroup++
+				r.curType = 0
+				continue
+			}
+
+			kind := r.kinds[grp][r.curType]
+			if !apiutils.IsSavedKind(kind) {
+				r.curType++
+				log.Infof("Skipping kind [%s][%s]", grp, kind)
+				continue
+			}
+			log.Infof("processing group[%v] kind [%v]", grp, kind)
+			lknd := r.sch.GetSchema(grp + "." + kind + "List")
+			if lknd == nil {
+				r.curType++
+				log.Infof("does not have List skipping [%s][%s]", grp, kind)
+				continue
+			}
+			tpe := lknd.GetType()
+			lobj := reflect.New(tpe).Interface()
+			mval := reflect.ValueOf(lobj).MethodByName("MakeKey")
+			if !mval.IsValid() {
+				log.Errorf("Object [%v] does not have MakeKey, skipping", lknd.Kind)
+				if r.curType != len(r.kinds[grp]) || r.curGroup != len(r.groups)-1 {
+					// If this is the last element
+					if r.curBytes[len(r.curBytes)-1] == ',' {
+						r.curBytes[len(r.curBytes)-1] = ' '
+					}
+				}
+				r.curType++
+				continue
+			}
+			pval := mval.Call([]reflect.Value{reflect.ValueOf(grp)})
+			prefix := pval[0].Interface().(string)
+			for strings.HasSuffix(prefix, "//") {
+				prefix = strings.TrimSuffix(prefix, "/")
+			}
+
+			robjs, err := r.store.ListFromSnapshot(r.snapRev, prefix, kind, api.ListWatchOptions{})
+			if err != nil {
+				log.Errorf("failed to list from snapshot for kind [%v](%s)", kind, err)
+				r.curType++
+				continue
+			}
+			log.Infof("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
+			r.curObjs = robjs
+			curBytes, err := json.MarshalIndent(kindSnapshot{Header: kindHeader{Group: grp, Kind: kind}, Objects: robjs}, "", "  ")
+			if err != nil {
+				log.Errorf("json encode of kind [%v] failed (%s)", kind, err)
+				return 0, err
+			}
+			r.curType++
+			if r.curType != len(r.kinds[grp]) || r.curGroup != len(r.groups)-1 {
+				curBytes = append(curBytes, ',')
+			}
+			if !r.second {
+				r.second = true
+				curBytes = append([]byte{'['}, curBytes...)
+			}
+			r.curBytes = curBytes
+			r.index = 0
+
+		}
+
+		start := 0
+		end := 0
+		buflen := total - written - 1
+		avail := len(r.curBytes) - r.index
+		if avail <= 0 {
+			continue
+		}
+		if buflen == 0 {
+			return written, nil
+		}
+		if buflen >= avail {
+			start = r.index
+			end = len(r.curBytes)
+		} else {
+			start = r.index
+			end = buflen
+			if end <= start {
+				return written, nil
+			}
+		}
+		p = append(p[:written], r.curBytes[start:end]...)
+		written = written + end - start
+		r.index = r.index + end - start
+		if r.index == len(r.curBytes) {
+			r.curObjs = nil
+		}
+		if written != len(p) {
+			continue
+		}
+	}
+	return written + 1, nil
+}
+
+func (r *snapshotReader) Close() error {
+	return nil
+}
+
+type snapshotWriter struct {
+	reader     io.Reader
+	kvs        kvstore.Interface
+	writeCount int
+}
+
+func (r *snapshotWriter) Write(ctx context.Context, kvs kvstore.Interface) error {
+	decoder := json.NewDecoder(r.reader)
+	var header kindHeader
+	schema := runtime.GetDefaultScheme()
+	var err error
+	var t json.Token
+
+	t, err = decoder.Token()
+	if err != nil {
+		log.Errorf("failed to read header token [%v](%s)", t, err)
+		return err
+	}
+
+	for decoder.More() {
+		// consume outer bracket
+		t, err = decoder.Token()
+		if err != nil {
+			log.Errorf("failed to read outer token [%v](%s)", t, err)
+			return err
+		}
+		// Get Header token
+		t, err = decoder.Token()
+		if err != nil {
+			log.Errorf("failed to read header token [%v](%s)", t, err)
+			return err
+		}
+		if t.(string) != "header" {
+			log.Errorf("unknown token read instead of header [%v]", t)
+			return err
+		}
+		err = decoder.Decode(&header)
+		if err != nil {
+			log.Errorf("failed to decode header (%s)", err)
+			return err
+		}
+		t, err = decoder.Token()
+		if err != nil {
+			log.Errorf("failed to read header token [%v]", t)
+			return err
+		}
+		if t.(string) != "objects" {
+			log.Errorf("unknown token read instead of header [%v]", t)
+			return err
+		}
+		sch := schema.GetSchema(header.Group + "." + header.Kind)
+
+		obj := reflect.MakeSlice(reflect.SliceOf(sch.GetType()), 0, 10).Interface()
+		obj1 := reflect.New(reflect.TypeOf(obj)).Interface()
+		err = decoder.Decode(obj1)
+		if err != nil {
+			log.Errorf("failed to decode list[%v/%v](%s)", header.Group, header.Kind, err)
+			return err
+		}
+		// Write the list to KV Store
+		sl := reflect.Indirect(reflect.ValueOf(obj1))
+		if sl.Kind() != reflect.Slice {
+			return fmt.Errorf("invalid kind restoring [%v/%v](%s)", header.Group, header.Kind, sl.Kind())
+		}
+		for i := 0; i < sl.Len(); i++ {
+			pobj := sl.Index(i).Addr().Interface()
+			m := reflect.ValueOf(pobj).MethodByName("MakeKey")
+			if !m.IsValid() {
+				log.Errorf("method not found [%v][%+v]", m, sl.Index(i))
+				continue
+			}
+			k := m.Call([]reflect.Value{reflect.ValueOf(header.Group)})
+			key := k[0].Interface().(string)
+			err := kvs.Create(ctx, key, pobj.(runtime.Object))
+			if err != nil {
+				log.Errorf("failed to the write object [%s/%s](%s)", header.Group, header.Kind, err)
+			}
+			r.writeCount++
+		}
+		t, err = decoder.Token()
+	}
+	log.Infof("snapshot writer wrote [%d] objects", r.writeCount)
+	return nil
 }
 
 // prefixWatcher is used to watch the backend for one prefix
@@ -567,6 +801,71 @@ func (c *cache) Clear() {
 	defer c.Unlock()
 	c.Lock()
 	c.clear()
+}
+
+// StartSnapshot starts a snapshot
+func (c *cache) StartSnapshot() uint64 {
+	defer c.Unlock()
+	c.Lock()
+	return c.store.StartSnapshot()
+}
+
+func (c *cache) DeleteSnapshot(in uint64) error {
+	defer c.Unlock()
+	c.Lock()
+	return c.store.DeleteSnapshot(in)
+}
+
+func (c *cache) SnapshotReader(in uint64, include bool, kinds []string) (io.ReadCloser, error) {
+	sch := runtime.GetDefaultScheme()
+	tps := sch.Kinds()
+	keys := make(map[string][]string)
+	grps := []string{}
+	log.Infof("got snapshot request - include[%v] kinds [%v]", include, kinds)
+	if include {
+		tgrp := make(map[string]bool)
+		for _, v := range kinds {
+			grp := sch.Kind2APIGroup(v)
+			tgrp[grp] = true
+			keys[grp] = append(keys[grp], v)
+		}
+		for k := range tgrp {
+			grps = append(grps, k)
+		}
+	} else {
+		for g, v := range tps {
+		skipKind:
+			for _, v1 := range v {
+				for _, k1 := range kinds {
+					if k1 == v1 {
+						continue skipKind
+					}
+				}
+				keys[g] = append(keys[g], v1)
+			}
+		}
+		for g, k := range keys {
+			if len(k) > 0 {
+				sort.Strings(keys[g])
+				grps = append(grps, g)
+			}
+		}
+	}
+	sort.Strings(grps)
+	return &snapshotReader{
+		snapRev: in,
+		store:   c.store,
+		sch:     sch,
+		kinds:   keys,
+		groups:  grps,
+	}, nil
+}
+
+func (c *cache) SnapshotWriter(reader io.Reader) apiintf.SnapshotWriter {
+	return &snapshotWriter{
+		reader: reader,
+		kvs:    c,
+	}
 }
 
 // getCbFunc is a helper func used to generate SuccessCbFunc for use with cache
@@ -1158,6 +1457,95 @@ func (c *cache) DebugAction(action string, params []string) string {
 	default:
 		return "unknown action"
 	}
+}
+
+func (c *cache) StatKind(group string, kind string) ([]apiintf.ObjectStat, error) {
+	sch := runtime.GetDefaultScheme()
+	lknd := sch.GetSchema(group + "." + kind)
+	if lknd == nil {
+		return nil, errors.New("unknown kind")
+	}
+	tpe := lknd.GetType()
+	lobj := reflect.New(tpe).Interface()
+	mval := reflect.ValueOf(lobj).MethodByName("MakeKey")
+	if !mval.IsValid() {
+		log.Errorf("Object [%v] does not have MakeKey, skipping", lknd.Kind)
+		return nil, nil
+	}
+	pval := mval.Call([]reflect.Value{reflect.ValueOf(group)})
+	prefix := pval[0].Interface().(string)
+	for strings.HasSuffix(prefix, "//") {
+		prefix = strings.TrimSuffix(prefix, "/")
+	}
+
+	l := c.store.StatAll(prefix)
+	return l, nil
+}
+
+type objdef struct {
+	key  string
+	obj  runtime.Object
+	oper kvstore.WatchEventType
+}
+
+func (c *cache) Rollback(ctx context.Context, rev uint64, kvs kvstore.Interface) error {
+	log.Infof("[config-restore] starting rollback")
+	if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
+		defer c.Unlock()
+		c.Lock()
+	}
+
+	var err error
+
+	// This is needed because we are iterating through the store and overlay accessing the store will deadlock
+	//  so overlay operations need to be done post the walk
+	ops := []objdef{}
+	handleFunc := func(key string, cur, revObj runtime.Object, deleted bool) error {
+		if apiutils.IsSavedKind(cur.GetObjectKind()) {
+			log.Infof("[config-restore] listing snapshot, key [%s], deleted[%v]", key, deleted)
+			switch {
+			// In snapshot but deleted from cache - create
+			case revObj != nil && deleted:
+				ops = append(ops, objdef{key, revObj, kvstore.Created})
+				return err
+				// In snapshot, in cache. - Update
+			case revObj != nil && !deleted:
+				ops = append(ops, objdef{key, revObj, kvstore.Updated})
+				return err
+				// Not in Snapshot, delete from cache - No action
+			case revObj == nil && deleted:
+				return nil
+				// pass
+				// Not in the snapshot, present in cache - Delete
+			case revObj == nil && !deleted:
+				ops = append(ops, objdef{key, revObj, kvstore.Deleted})
+				return err
+			}
+		}
+
+		return nil
+	}
+	e1 := c.store.ListSnapshotWithCB("/", rev, handleFunc)
+	if err != nil {
+		log.Errorf("rollback to rev [%d] failed kv operation (%s)", rev, err)
+		return errors.Wrap(err, "kv operation failed")
+	}
+	// Apply the ops
+	for i := range ops {
+		switch ops[i].oper {
+		case kvstore.Created:
+			err = kvs.Create(ctx, ops[i].key, ops[i].obj)
+		case kvstore.Updated:
+			err = kvs.Update(ctx, ops[i].key, ops[i].obj)
+		case kvstore.Deleted:
+			err = kvs.Delete(ctx, ops[i].key, nil)
+		}
+	}
+	if e1 != nil {
+		log.Errorf("rollback to rev [%d] failed (%s)", rev, err)
+		return errors.Wrap(e1, "rollback failed")
+	}
+	return nil
 }
 
 func (c *cache) getRefRequirements(ctx context.Context, key string, oper apiintf.APIOperType, obj runtime.Object) apiintf.Requirement {
