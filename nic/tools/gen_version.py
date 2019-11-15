@@ -24,7 +24,7 @@ version_dict    = {}
 # Generate version for nic
 #############################
 
-nic_version    = subprocess.run(['git', 'describe', '--dirty', '--always'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
+nic_version    = subprocess.run(['git', 'describe', '--tags', '--dirty', '--always'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 nic_build_time = subprocess.run(['date'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 nic_sha        = subprocess.run(['git', 'log', '-1', '--pretty=format:\'%H\''], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 
