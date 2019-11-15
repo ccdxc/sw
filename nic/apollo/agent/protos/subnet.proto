@@ -53,12 +53,16 @@ message SubnetSpec {
   // mapped to this subnet and traffic from workloads in this subnet will carry
   // this encap towards the fabric side
   types.Encap    FabricEncap           = 14;
-  /// when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
-  /// present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
-  /// HostIfIndex is the interface index of such VF/PF
+  // when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
+  // present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
+  // HostIfIndex is the interface index of such VF/PF
   uint32          HostIfIndex           = 15;
   // DHCP policy to be applied in this subnet
   uint32          DHCPPolicyId          = 16;
+  // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
+  // header or in the Traffic Class field of IPv6 outer header, this value will
+  // be written as-is (i.e., not interpreted) during encap time by the dataplane
+  uint32          ToS                   = 17;
 }
 
 // operational status of the subnet, if any

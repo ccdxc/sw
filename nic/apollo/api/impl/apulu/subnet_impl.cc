@@ -128,6 +128,8 @@ subnet_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program BD table in the egress pipe
     bd_data.action_id = BD_BD_INFO_ID;
     bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
+    // TODO: handle tos once p4 adds this field
+    //bd_data.tos = spec->tos;
     PDS_TRACE_DEBUG("Programming BD table at %u with vni %u",
                     hw_id_, bd_data.bd_info.vni);
     memcpy(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);

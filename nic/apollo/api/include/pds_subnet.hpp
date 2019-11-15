@@ -43,12 +43,15 @@ typedef struct pds_subnet_spec_s {
     /// PFs/VFs present, subnet can be attached to PF/VF
     pds_ifindex_t host_ifindex;
     pds_policy_key_t dhcp_policy;            ///< DHCP policy, if any
+    uint8_t tos;                             ///< type of service to be used
+                                             ///< in the outer header in
+                                             ///< encapped pkts
 } __PACK__ pds_subnet_spec_t;
 
 /// \brief Subnet status
 typedef struct pds_subnet_status_s {
-    uint16_t hw_id;                 ///< Hardware ID
-    mem_addr_t policy_base_addr;    ///< Policy base address
+    uint16_t hw_id;                 ///< hardware id
+    mem_addr_t policy_base_addr;    ///< policy base address
 } __PACK__ pds_subnet_status_t;
 
 /// \brief Subnet statistics
@@ -58,9 +61,9 @@ typedef struct pds_subnet_stats_s {
 
 /// \brief Subnet information
 typedef struct pds_subnet_info_s {
-    pds_subnet_spec_t spec;        ///< Specification
-    pds_subnet_status_t status;    ///< Status
-    pds_subnet_stats_t stats;      ///< Statistics
+    pds_subnet_spec_t spec;        ///< specification
+    pds_subnet_status_t status;    ///< status
+    pds_subnet_stats_t stats;      ///< statistics
 } __PACK__ pds_subnet_info_t;
 
 /// \brief Create subnet
