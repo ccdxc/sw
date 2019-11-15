@@ -1143,85 +1143,83 @@ typedef struct rqcb_s {
 } PACKED rqcb_t;
 
 typedef struct cqcb0_s {
-	uint64_t     pt_next_pa: 64;
-	uint64_t     phy_base_addr: 64;
+    uint64_t     pt_next_pa: 64;
+    uint64_t     pt_pa: 64;
 
-	uint32_t     pad: 14;
-	uint32_t     is_phy_addr: 1;
-	uint32_t     host_addr: 1;
-	uint32_t     pt_next_pg_index: 16;
-	uint32_t     pt_pg_index: 16;
+    uint32_t     pad: 14;
+    uint32_t     is_phy_addr: 1;
+    uint32_t     host_addr: 1;
+    uint32_t     pt_next_pg_index: 16;
+    uint32_t     pt_pg_index: 16;
 
-	uint32_t     cq_full: 1;
-	uint32_t     cq_full_hint: 1;
-	uint32_t     wakeup_ring_id:3;
-	uint32_t     wakeup_qid:24;
-	uint32_t     wakeup_qtype:3;
-	uint32_t     wakeup_lif:12;
+    uint32_t     cq_full: 1;
+    uint32_t     cq_full_hint: 1;
+    uint32_t     wakeup_ring_id:3;
+    uint32_t     wakeup_qid:24;
+    uint32_t     wakeup_qtype:3;
+    uint32_t     wakeup_lif:12;
 
-	uint32_t     color: 1;
-	uint32_t     wakeup_dpath:1;
-	uint32_t     sarm: 1;
-	uint32_t     arm: 1;
+    uint32_t     color: 1;
+    uint32_t     wakeup_dpath:1;
+    uint32_t     sarm: 1;
+    uint32_t     arm: 1;
 
-	uint32_t     eq_id: 24;
-	uint32_t     cq_id: 24;
+    uint32_t     eq_id: 24;
+    uint32_t     cq_id: 24;
 
-	uint32_t     ring_empty_sched_eval_done : 1;
-	uint32_t     log_num_wqes: 5;
-	uint32_t     log_wqe_size: 5;
-	uint32_t     log_cq_page_size: 5;
+    uint32_t     ring_empty_sched_eval_done : 1;
+    uint32_t     log_num_wqes: 5;
+    uint32_t     log_wqe_size: 5;
+    uint32_t     log_cq_page_size: 5;
 
-	uint32_t     pt_base_addr: 32;
+    uint32_t     pt_base_addr: 32;
 
-	uint32_t     proxy_s_pindex: 16;
+    uint32_t     proxy_s_pindex: 16;
 
-	uint32_t     proxy_pindex: 16;
-	
-	uint32_t     c_index2: 16;
-	uint32_t     p_index2: 16;
-	uint32_t     c_index1: 16;
-	uint32_t     p_index1: 16;
-	uint32_t     c_index0: 16;
-	uint32_t     p_index0: 16;
+    uint32_t     proxy_pindex: 16;
 
-	uint32_t     pid: 16;
-	uint32_t     host_rings: 4;
-	uint32_t     total_rings: 4;
-	uint32_t     eval_last: 8;
-	uint32_t     cos_selector: 8;
-	uint32_t     cosA: 4;
-	uint32_t     cosB: 4;
-	uint32_t     rsvd: 8;
-	uint32_t     pc: 8;  
+    uint32_t     c_index2: 16;
+    uint32_t     p_index2: 16;
+    uint32_t     c_index1: 16;
+    uint32_t     p_index1: 16;
+    uint32_t     c_index0: 16;
+    uint32_t     p_index0: 16;
+
+    uint32_t     pid: 16;
+    uint32_t     host_rings: 4;
+    uint32_t     total_rings: 4;
+    uint32_t     eval_last: 8;
+    uint32_t     cos_selector: 8;
+    uint32_t     cosA: 4;
+    uint32_t     cosB: 4;
+    uint32_t     rsvd: 8;
+    uint32_t     pc: 8;  
 } PACKED cqcb0_t;
 
 typedef struct eqcb0_s {    // 64 bytes
-	uint64_t     rsvd0;
-    uint64_t     rsvd1;
-    uint64_t     rsvd2;
-	uint64_t     int_assert_addr: 64;
-	uint32_t     rsvd3: 28;
-	uint32_t     color: 1;
-	uint32_t     int_enabled: 1;
-	uint32_t     log_wqe_size: 5;
-	uint32_t     log_num_wqes: 5;
-	uint32_t     eq_id: 24;
-	uint32_t     rsvd4: 32;
-	uint64_t     eqe_base_addr: 64;
+    uint64_t     rsvd2[3];
+    uint64_t     int_assert_addr: 64;
+    uint32_t     rsvd1: 28;
+    uint32_t     color: 1;
+    uint32_t     int_enabled: 1;
+    uint32_t     log_wqe_size: 5;
+    uint32_t     log_num_wqes: 5;
+    uint32_t     eq_id: 24;
+    uint32_t     rsvd0: 32;
+    uint64_t     eqe_base_addr: 64;
 
-	uint32_t     cindex: 16;
-	uint32_t     pindex: 16;
+    uint32_t     cindex: 16;
+    uint32_t     pindex: 16;
 
-	uint32_t     pid: 16;
-	uint32_t     host_rings: 4;
-	uint32_t     total_rings: 4;
-	uint32_t     eval_last: 8;
-	uint32_t     cos_selector: 8;
-	uint32_t     cosa: 4;
-	uint32_t     cosb: 4;
-	uint32_t     rsvd5: 8;
-	uint32_t     pc: 8;  
+    uint32_t     pid: 16;
+    uint32_t     host_rings: 4;
+    uint32_t     total_rings: 4;
+    uint32_t     eval_last: 8;
+    uint32_t     cos_selector: 8;
+    uint32_t     cosa: 4;
+    uint32_t     cosb: 4;
+    uint32_t     rsvd: 8;
+    uint32_t     pc: 8;  
 } PACKED eqcb0_t;
 
 #endif /*__RDMA_DEV_HPP__*/
