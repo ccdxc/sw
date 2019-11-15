@@ -572,6 +572,7 @@ func (it *veniceIntegSuite) updateResolver(serviceName, url string) {
 func (it *veniceIntegSuite) startCitadel() {
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
+	cfg.EnableKstore = false
 	nodeUUID := "citadel-node0"
 
 	httpURL := "localhost:" + globals.CitadelHTTPPort

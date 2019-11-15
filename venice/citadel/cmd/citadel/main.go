@@ -164,6 +164,7 @@ func main() {
 
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
+	cfg.EnableKstore = false
 	cfg.MetastoreType = store.KVStoreTypeEtcd
 	cfg.ResolverClient = resolver.New(&resolver.Config{Name: globals.Citadel, Servers: strings.Split(*resolverURLs, ",")})
 
