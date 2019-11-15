@@ -1965,7 +1965,7 @@ elif args.lif_stats is True:
     lif_stats = LifStats(bin_str)
     lif_stats.show()
 elif args.q_stats is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 0, 1024)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 0, 1024)
     show_slice(RdmaReqTxStats, bin_str, 256, 64)
     show_slice(RdmaReqRxStats, bin_str, 320, 64)
     show_slice(RdmaRespTxStats, bin_str, 512+256, 64)
