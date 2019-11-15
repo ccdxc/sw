@@ -302,7 +302,7 @@ header_type scratch_metadata_t {
         ticks                         : 64;
         delta                         : 64;
         size64                        : 64;
-        pad312                        : 312;
+        pad320                        : 320;
     }
 }
 

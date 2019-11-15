@@ -21,8 +21,7 @@ ticks_rollover:
 ticks_to_ns:
     mul             r2, r1[23:0], d.gettimeofday_d.multiplier
     mul             r3, r1[47:24], d.gettimeofday_d.multiplier
-    add             r2, r2, r3, 24
-    srl             r2, r2, d.gettimeofday_d.shift
+    add             r2, r2[63:31], r3[63:7]
     add.e           r1, r2, d.gettimeofday_d.time_in_ns
     phvwr.f         p.control_metadata_current_time_in_ns, r1
 

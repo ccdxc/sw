@@ -1,4 +1,4 @@
-action gettimeofday(time_in_ns, ticks, multiplier, shift, pad) {
+action gettimeofday(time_in_ns, ticks, multiplier, pad) {
     if (multiplier == 0) {
         // return;
     }
@@ -11,15 +11,14 @@ action gettimeofday(time_in_ns, ticks, multiplier, shift, pad) {
                      0xFFFFFFFFFFFF + (scratch_metadata.ticks - ticks));
     }
     modify_field(scratch_metadata.delta,
-                 (scratch_metadata.ticks * multiplier) >> scratch_metadata.size8);
+                 (scratch_metadata.ticks * multiplier) >> 31);
     modify_field(control_metadata.current_time_in_ns,
                  time_in_ns + scratch_metadata.delta);
 
     modify_field(scratch_metadata.size64, time_in_ns);
     modify_field(scratch_metadata.size64, ticks);
     modify_field(scratch_metadata.size64, multiplier);
-    modify_field(scratch_metadata.size8, shift);
-    modify_field(scratch_metadata.pad312, pad);
+    modify_field(scratch_metadata.pad320, pad);
 }
 
 @pragma stage 2
