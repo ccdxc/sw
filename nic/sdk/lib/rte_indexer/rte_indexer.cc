@@ -113,7 +113,6 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
 
     if (thread_safe_) {
         SDK_ASSERT(!SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE));
-        SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&slock_) == 0), false);
     }
 
     if (size_) {
@@ -173,10 +172,6 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
     }
     SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %u usage %u",
                       (void *)INDEXER, this->curr_slab_, this->curr_index_, usage_);
-    if (thread_safe_) {
-        SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), false);
-    }
-
     if (rs != SDK_RET_OK)
         return false;
     return true;

@@ -757,6 +757,29 @@ TEST_F(rte_indexer_test, test_skip_zero) {
     ASSERT_TRUE(rs == SDK_RET_OK);
     usage = ind->usage();
     ASSERT_TRUE(usage == 0);
+
+    ind = rte_indexer::factory(1024, true, true);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 0);
+
+    i = 0;
+    rs = ind->alloc(i);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
+
+    // Allocate indexes
+    rs  = ind->alloc_block(&i, 1023);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 1023);
+
+    // Free index
+    rs = ind->free(0, 1024);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 0);
+
     rte_indexer::destroy(ind);
 }
 
