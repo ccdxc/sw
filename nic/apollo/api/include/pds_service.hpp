@@ -25,9 +25,8 @@
 /// \brief  service mapping specification
 typedef struct pds_svc_mapping_spec_s {
     pds_svc_mapping_key_t key;      ///< service mapping key
-    pds_vpc_key_t vpc;              ///< VPC of the backend
-    ip_addr_t backend_ip;           ///< IP address of the backend
-    uint16_t svc_port;              ///< backend's L4 port
+    ip_addr_t vip;                  ///< Virtual IP (VIP) of the service
+    uint16_t svc_port;              ///< L4 service port
     ip_addr_t backend_provider_ip;  ///< backend's provider IP
 } __PACK__ pds_svc_mapping_spec_t;
 

@@ -18,17 +18,16 @@
 inline std::ostream&
 operator<<(std::ostream& os, const pds_svc_mapping_key_t *key) {
     os << " vpc: " << key->vpc.id
-       << " vip: " << key->vip
-       << " svc port: " << key->svc_port;
+       << " backend ip: " << key->backend_ip
+       << " backend port: " << key->backend_port;
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_svc_mapping_spec_t *spec) {
     os << &spec->key
-       << " backend vpc: " << spec->vpc.id
-       << " backend ip: " << spec->backend_ip
-       << " backend svc port " << spec->svc_port
+       << " vip: " << spec->vip
+       << " svc port " << spec->svc_port
        << " backend provider ip " << spec->backend_provider_ip;
     return os;
 }

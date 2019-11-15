@@ -632,16 +632,16 @@ public:
            (ip1.addr.v6_addr.addr64[1] == ip2.addr.v6_addr.addr64[1])))
 
     void add_svc_mapping(pds_svc_mapping_spec_t *svc_spec) {
-        uint32_t vpc = svc_spec->vpc.id;
-        uint32_t af = svc_spec->key.vip.af;
+        uint32_t vpc = svc_spec->key.vpc.id;
+        uint32_t af = svc_spec->vip.af;
         uint32_t lid;
 
         if (af == IP_AF_IPV4) {
             for (lid = 0; lid < epdb[vpc].v4_lcount; lid++) {
                 if (IPCOMP(epdb[vpc].v4_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
-                    epdb[vpc].v4_locals[lid].service_ip = svc_spec->key.vip;
-                    epdb[vpc].v4_locals[lid].service_port = svc_spec->key.svc_port;
-                    epdb[vpc].v4_locals[lid].lb_port = svc_spec->svc_port;
+                    epdb[vpc].v4_locals[lid].service_ip = svc_spec->vip;
+                    epdb[vpc].v4_locals[lid].service_port = svc_spec->svc_port;
+                    epdb[vpc].v4_locals[lid].lb_port = svc_spec->key.backend_port;
                     break;
                 }
             }
@@ -649,9 +649,9 @@ public:
         } else {
             for (lid = 0; lid < epdb[vpc].v6_lcount; lid++) {
                 if (IPCOMP(epdb[vpc].v6_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
-                    epdb[vpc].v6_locals[lid].service_ip = svc_spec->key.vip;
-                    epdb[vpc].v6_locals[lid].service_port = svc_spec->key.svc_port;
-                    epdb[vpc].v6_locals[lid].lb_port = svc_spec->svc_port;
+                    epdb[vpc].v6_locals[lid].service_ip = svc_spec->vip;
+                    epdb[vpc].v6_locals[lid].service_port = svc_spec->svc_port;
+                    epdb[vpc].v6_locals[lid].lb_port = svc_spec->key.backend_port;
                     break;
                 }
                 assert(lid < epdb[vpc].v6_lcount);

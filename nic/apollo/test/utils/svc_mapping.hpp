@@ -20,16 +20,17 @@ public:
     // Constructor
     svc_mapping_feeder() { };
     svc_mapping_feeder(const svc_mapping_feeder& feeder) {
-        init(feeder.spec.key.vpc.id, ipaddr2str(&feeder.spec.key.vip),
-             feeder.spec.key.svc_port, feeder.spec.vpc.id,
-             ipaddr2str(&feeder.spec.backend_ip), feeder.spec.svc_port,
+        init(ipaddr2str(&feeder.spec.vip),
+             feeder.spec.svc_port, feeder.spec.key.vpc.id,
+             ipaddr2str(&feeder.spec.key.backend_ip),
+             feeder.spec.key.backend_port,
              ipaddr2str(&feeder.spec.backend_provider_ip), feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
-    void init(int vpc_id, std::string vip_str, uint16_t svc_port,
+    void init(std::string vip_str, uint16_t svc_port,
               int backend_vpc_id, std::string backend_ip,
-              uint16_t backend_svc_port, std::string backend_pip,
+              uint16_t backend_port, std::string backend_pip,
               uint32_t num_svc_mapping=100);
 
     // Iterate helper routines

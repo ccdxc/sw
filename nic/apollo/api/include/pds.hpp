@@ -222,15 +222,15 @@ typedef struct pds_policer_key_s {
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {
-    pds_vpc_key_t vpc;    ///< VPC this service is in
-    ip_addr_t vip;        ///< Virtual IP (VIP) of the service
-    uint16_t svc_port;    ///< L4 service port
+    pds_vpc_key_t vpc;       ///< VPC of the backend
+    ip_addr_t backend_ip;    ///< IP address of the backend
+    uint16_t backend_port;   ///< backend's L4 port
 
     // operator== is required to compare keys in case of hash collision
     /// compare operator
     bool operator==(const struct pds_svc_mapping_key_s &p) const {
-        return (vpc.id == p.vpc.id) && (svc_port == p.svc_port) &&
-            (!memcmp(&vip, &p.vip, sizeof(ip_addr_t)));
+        return (vpc.id == p.vpc.id) && (backend_port == p.backend_port) &&
+            (!memcmp(&backend_ip, &p.backend_ip, sizeof(ip_addr_t)));
     }
 } __PACK__ pds_svc_mapping_key_t;
 

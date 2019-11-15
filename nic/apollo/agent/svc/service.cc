@@ -49,8 +49,8 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.vpc.id = request.key().vpcid();
-        key.svc_port = request.key().svcport();
-        ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
+        key.backend_port = request.key().backendport();
+        ipaddr_proto_spec_to_api_spec(&key.backend_ip, request.key().backendip());
         pds_service_proto_to_api_spec(api_spec, request);
         hooks::svc_mapping_create(api_spec);
         ret = core::service_create(&key, api_spec, bctxt);
@@ -115,8 +115,8 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.vpc.id = request.key().vpcid();
-        key.svc_port = request.key().svcport();
-        ipaddr_proto_spec_to_api_spec(&key.vip, request.key().ipaddr());
+        key.backend_port = request.key().backendport();
+        ipaddr_proto_spec_to_api_spec(&key.backend_ip, request.key().backendip());
         pds_service_proto_to_api_spec(api_spec, request);
         ret = core::service_update(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -171,8 +171,8 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->key_size(); i++) {
         key.vpc.id = proto_req->key(i).vpcid();
-        key.svc_port = proto_req->key(i).svcport();
-        ipaddr_proto_spec_to_api_spec(&key.vip, proto_req->key(i).ipaddr());
+        key.backend_port = proto_req->key(i).backendport();
+        ipaddr_proto_spec_to_api_spec(&key.backend_ip, proto_req->key(i).backendip());
         ret = core::service_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -214,8 +214,8 @@ SvcImpl::SvcMappingGet(ServerContext *context,
     }
     for (int i = 0; i < proto_req->key_size(); i++) {
         key.vpc.id = proto_req->key(i).vpcid();
-        key.svc_port = proto_req->key(i).svcport();
-        ipaddr_proto_spec_to_api_spec(&key.vip, proto_req->key(i).ipaddr());
+        key.backend_port = proto_req->key(i).backendport();
+        ipaddr_proto_spec_to_api_spec(&key.backend_ip, proto_req->key(i).backendip());
         ret = core::service_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {

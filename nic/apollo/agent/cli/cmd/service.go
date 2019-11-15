@@ -78,23 +78,22 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printServiceHeader() {
-	hdrLine := strings.Repeat("-", 80)
+	hdrLine := strings.Repeat("-", 85)
 	fmt.Printf("\n")
-	fmt.Printf("SvcVPCId   - Service VPC ID               SvcIP     - Service IP address\n")
-	fmt.Printf("SvcPort    - Service port number          BkndVPCId - Backend VPC ID\n")
-	fmt.Printf("BkndIP     - Backend private IP address   BkndPort  - Backend port number\n")
-	fmt.Printf("ProviderIP - Provider IP address\n")
+	fmt.Printf("BkndVPCId - Backend VPC ID                BkndIP     - Backend private IP address\n")
+	fmt.Printf("BkndPort  - Backend port number           SvcIP     - Service IP address\n")
+	fmt.Printf("SvcPort    - Service port number          ProviderIP - Provider IP address\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-16s%-8s%-10s%-16s%-9s%-15s\n", "SvcVPCId", "SvcIP", "SvcPort", "BkndVPCId", "BkndIP", "BkndPort", "ProviderIP")
+	fmt.Printf("%-10s%-16s%-9s%-16s%-9s%-15s\n", "BkndVPCId", "BkndIP", "BkndPort", "SvcIP", "SvcPort", "ProviderIP")
 	fmt.Println(hdrLine)
 }
 
 func printService(svc *pds.SvcMapping) {
 	spec := svc.GetSpec()
 	key := spec.GetKey()
-	fmt.Printf("%-6d%-16s%-8d%-10d%-16s%-8d%-15s\n",
-		key.GetVPCId(), utils.IPAddrToStr(key.GetIPAddr()),
-		key.GetSvcPort(), spec.GetVPCId(),
-		utils.IPAddrToStr(spec.GetPrivateIP()),
-		spec.GetPort(), utils.IPAddrToStr(spec.GetProviderIP()))
+	fmt.Printf("%-10d%-16s%-9d%-16s%-9d%-15s\n",
+		key.GetVPCId(), utils.IPAddrToStr(key.GetBackendIP()),
+		key.GetBackendPort(),
+		utils.IPAddrToStr(spec.GetIPAddr()),
+		spec.GetSvcPort(), utils.IPAddrToStr(spec.GetProviderIP()))
 }

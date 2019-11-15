@@ -1218,16 +1218,15 @@ pds_service_api_spec_to_proto (pds::SvcMappingSpec *proto_spec,
 
     auto proto_key = proto_spec->mutable_key();
     proto_key->set_vpcid(api_spec->key.vpc.id);
-    proto_key->set_svcport(api_spec->key.svc_port);
+    proto_key->set_backendport(api_spec->key.backend_port);
     ipaddr_api_spec_to_proto_spec(
-                proto_key->mutable_ipaddr(), &api_spec->key.vip);
+                proto_key->mutable_backendip(), &api_spec->key.backend_ip);
     ipaddr_api_spec_to_proto_spec(
-                proto_spec->mutable_privateip(), &api_spec->backend_ip);
+                proto_spec->mutable_ipaddr(), &api_spec->vip);
     ipaddr_api_spec_to_proto_spec(
                 proto_spec->mutable_providerip(),
                 &api_spec->backend_provider_ip);
-    proto_spec->set_vpcid(api_spec->vpc.id);
-    proto_spec->set_port(api_spec->svc_port);
+    proto_spec->set_svcport(api_spec->svc_port);
 }
 
 // populate proto buf status from service API status
@@ -1266,15 +1265,14 @@ pds_service_proto_to_api_spec (pds_svc_mapping_spec_t *api_spec,
                                const pds::SvcMappingSpec &proto_spec)
 {
     api_spec->key.vpc.id = proto_spec.key().vpcid();
-    api_spec->key.svc_port = proto_spec.key().svcport();
-    ipaddr_proto_spec_to_api_spec(&api_spec->key.vip,
-                                  proto_spec.key().ipaddr());
-    ipaddr_proto_spec_to_api_spec(&api_spec->backend_ip,
-                                  proto_spec.privateip());
+    api_spec->key.backend_port = proto_spec.key().backendport();
+    ipaddr_proto_spec_to_api_spec(&api_spec->key.backend_ip,
+                                  proto_spec.key().backendip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->vip,
+                                  proto_spec.ipaddr());
     ipaddr_proto_spec_to_api_spec(&api_spec->backend_provider_ip,
                                   proto_spec.providerip());
-    api_spec->svc_port = proto_spec.port();
-    api_spec->vpc.id = proto_spec.vpcid();
+    api_spec->svc_port = proto_spec.svcport();
 }
 
 static inline port_fec_type_t

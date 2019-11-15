@@ -99,14 +99,13 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     service_mapping_swkey_t svc_mapping_key = { 0 };
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    vpc = vpc_db()->find(&spec->key.vpc);
 
     // reserve an entry in SERVICE_MAPPING with (VIP, provider IP, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     PDS_IMPL_PROVIDER_VPC_HW_ID,
                                     &spec->backend_provider_ip,
-                                    &spec->key.vip,
-                                    spec->key.svc_port);
+                                    &spec->vip,
+                                    spec->svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
@@ -128,11 +127,11 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     }
 
     // reserve an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
-    vpc = vpc_db()->find(&spec->vpc);
+    vpc = vpc_db()->find(&spec->key.vpc);
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &spec->backend_ip,
-                                    (ip_addr_t *)NULL, spec->svc_port);
+                                    vpc->hw_id(), &spec->key.backend_ip,
+                                    (ip_addr_t *)NULL, spec->key.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
@@ -180,25 +179,25 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     service_mapping_swkey_t svc_mapping_key;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    dip_vpc = vpc_db()->find(&spec->vpc);
-    PDS_TRACE_DEBUG("Programming svc mapping (vpc %u, vip %s, port %u, "
+    dip_vpc = vpc_db()->find(&spec->key.vpc);
+    PDS_TRACE_DEBUG("Programming svc mapping (vip %s, port %u, "
                     "provider IP %s) -> (vpc %u, dip %s, port %u)",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.vip),
-                    spec->key.svc_port, ipaddr2str(&spec->backend_provider_ip),
-                    spec->vpc.id, ipaddr2str(&spec->backend_ip),
-                    spec->svc_port);
+                    ipaddr2str(&spec->vip), spec->svc_port,
+                    ipaddr2str(&spec->backend_provider_ip),
+                    spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                    spec->key.backend_port);
 
     // add NAT entry with DIP in the data
-    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->backend_ip);
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.backend_ip);
     ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_dip_nat_hdl_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add DIP NAT entry for mapping (vpc %u, vip %s,"
+        PDS_TRACE_ERR("Failed to add DIP NAT entry for mapping (vip %s,"
                       " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
-                      "err %u", spec->key.vpc.id, ipaddr2str(&spec->key.vip),
-                      spec->key.svc_port,
+                      "err %u", ipaddr2str(&spec->vip),
+                      spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
-                      spec->svc_port, ret);
+                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port, ret);
         return ret;
     }
 
@@ -206,11 +205,11 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     PDS_IMPL_PROVIDER_VPC_HW_ID,
                                     &spec->backend_provider_ip,
-                                    &spec->key.vip,
-                                    spec->key.svc_port);
+                                    &spec->vip,
+                                    spec->svc_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_dip_nat_hdl_,
-                                   spec->svc_port);
+                                   spec->key.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
@@ -218,36 +217,34 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, vip %s, port %u, "
+        PDS_TRACE_ERR("Failed to add svc mapping (vip %s, port %u, "
                       "provider IP %s) -> (vpc %u, dip %s, port %u), err %u",
-                      spec->key.vpc.id, ipaddr2str(&spec->key.vip),
-                      spec->key.svc_port,
+                      ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
-                      spec->svc_port, ret);
+                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port, ret);
         return ret;
     }
 
     // add NAT entry with VIP in the data
-    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.vip);
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->vip);
     ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_vip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add VIP NAT entry for mapping (vpc %u, vip %s,"
                       " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
-                      "err %u", spec->key.vpc.id, ipaddr2str(&spec->key.vip),
-                      spec->key.svc_port,
+                      "err %u", ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
-                      spec->svc_port, ret);
+                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port, ret);
         return ret;
     }
     // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    dip_vpc->hw_id(), &spec->backend_ip,
-                                    (ip_addr_t *)NULL, spec->svc_port);
+                                    dip_vpc->hw_id(), &spec->key.backend_ip,
+                                    (ip_addr_t *)NULL, spec->key.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_vip_nat_hdl_,
-                                   spec->key.svc_port);
+                                   spec->svc_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
@@ -255,10 +252,10 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, backend-ip %s, "
-                      "port %u) --> (vpc %u, vip %s, port %u), err %u",
-                      spec->vpc.id, ipaddr2str(&spec->backend_ip),
-                      spec->svc_port, spec->key.vpc.id,
-                      ipaddr2str(&spec->key.vip), spec->key.svc_port, ret);
+                      "port %u) --> (vip %s, port %u), err %u",
+                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port,
+                      ipaddr2str(&spec->vip), spec->svc_port, ret);
         return ret;
     }
     return SDK_RET_OK;

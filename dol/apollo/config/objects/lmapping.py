@@ -103,20 +103,20 @@ class LocalMappingObject(base.ConfigObjectBase):
         grpcmsg = service_pb2.SvcMappingRequest()
         grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
-        spec.Key.VPCId = self.SubstrateVPCId
-        utils.GetRpcIPAddr(self.SvcIPAddr, spec.Key.IPAddr)
-        spec.Key.SvcPort = self.SvcPort
-        spec.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, spec.PrivateIP)
+        spec.Key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, spec.Key.BackendIP)
+        spec.Key.BackendPort = self.LBPort
+        utils.GetRpcIPAddr(self.SvcIPAddr, spec.IPAddr)
+        spec.SvcPort = self.SvcPort
         utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIP)
-        spec.Port = self.LBPort
         return grpcmsg
 
     def GetGrpcSvcMappingReadMessage(self):
         grpcmsg = service_pb2.SvcMappingRequest()
         key = grpcmsg.Id.add()
         key.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.SvcIPAddr, key.IPAddr)
+        utils.GetRpcIPAddr(self.IPAddr, key.BackendIP)
+        key.Port = self.LBPort
         return grpcmsg
 
 

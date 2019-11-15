@@ -21,24 +21,23 @@ service Svc {
 
 // SvcKey uniquely identifies a service
 message SvcKey {
-  // virtual private cloud where service is exposed
-  uint32 VPCId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // service IP (aka. VIP)
-  types.IPAddress IPAddr = 2;
-  // L4 port where service is hosted
-  uint32 SvcPort         = 3;
+  // virtual private cloud where the backend is running
+  uint32          VPCId       = 1;
+  // overlay/private IP of the backend serving the (VIP, port), i.e., DIP
+  // NOTE: this must be one of the local IP mappings
+  types.IPAddress BackendIP   = 2;
+  // L4 port on the DIP, in case port rewrite needs to be performed
+  uint32          BackendPort = 3 [(gogoproto.moretags) = "meta:range:1-65535"];
 }
 
 // service mapping specification
 message SvcMappingSpec {
   // key to identify the service
-  SvcKey          Key        = 1;
-  // virtual private cloud where the backend is running
-  uint32 VPCId               = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // overlay/private IP of the backend serving the (VIP, port), i.e., DIP
-  types.IPAddress PrivateIP  = 3;
-  // L4 port on the DIP, in case port rewrite needs to be performed
-  uint32          Port       = 4;
+  SvcKey          Key        = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // service IP (aka. VIP)
+  types.IPAddress IPAddr     = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // L4 port where service is hosted
+  uint32          SvcPort    = 4 [(gogoproto.moretags) = "meta:mandatory, meta:range:1-65535"];
   // provider/substrate IP corresponding to the overlay IP of the backend
   types.IPAddress ProviderIP = 5;
 }

@@ -186,19 +186,17 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
-                    // VIP is always in public/substrate/infra vpc
-                    svc_mapping.key.vpc.id = num_vpcs + 1;
-                    svc_mapping.key.vip.af = IP_AF_IPV4;
-                    svc_mapping.key.vip.addr.v4_addr =
-                        v4_vip_pfx->addr.addr.v4_addr + key_ip_offset++;
-                    svc_mapping.key.svc_port = TEST_APP_VIP_PORT;
-                    svc_mapping.vpc.id = i;
+                    svc_mapping.key.vpc.id = i;
                     // backend IP is one of the local IP mappings
-                    svc_mapping.backend_ip.af = IP_AF_IPV4;
-                    svc_mapping.backend_ip.addr.v4_addr =
+                    svc_mapping.key.backend_ip.af = IP_AF_IPV4;
+                    svc_mapping.key.backend_ip.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                             (((k - 1) * num_ip_per_vnic) + l);
-                    svc_mapping.svc_port = TEST_APP_DIP_PORT;
+                    svc_mapping.key.backend_port = TEST_APP_DIP_PORT;
+                    svc_mapping.vip.af = IP_AF_IPV4;
+                    svc_mapping.vip.addr.v4_addr =
+                        v4_vip_pfx->addr.addr.v4_addr + key_ip_offset++;
+                    svc_mapping.svc_port = TEST_APP_VIP_PORT;
                     svc_mapping.backend_provider_ip.af = IP_AF_IPV4;
                     svc_mapping.backend_provider_ip.addr.v4_addr =
                         v4_provider_pfx->addr.addr.v4_addr + ip_offset;
@@ -209,16 +207,16 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                                             i, rv);
                     if (g_test_params.dual_stack) {
                         svc_v6_mapping = svc_mapping;
-                        svc_v6_mapping.key.vip.af = IP_AF_IPV6;
-                        svc_v6_mapping.key.vip.addr.v6_addr =
-                            v6_vip_pfx->addr.addr.v6_addr;
-                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.key.vip.addr.v6_addr,
-                                                       svc_mapping.key.vip.addr.v4_addr);
-                        svc_v6_mapping.backend_ip.af = IP_AF_IPV6;
-                        svc_v6_mapping.backend_ip.addr.v6_addr =
+                        svc_v6_mapping.key.backend_ip.af = IP_AF_IPV6;
+                        svc_v6_mapping.key.backend_ip.addr.v6_addr =
                             g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
-                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.backend_ip.addr.v6_addr,
-                                                        svc_mapping.backend_ip.addr.v4_addr);
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.key.backend_ip.addr.v6_addr,
+                                                        svc_mapping.key.backend_ip.addr.v4_addr);
+                        svc_v6_mapping.vip.af = IP_AF_IPV6;
+                        svc_v6_mapping.vip.addr.v6_addr =
+                            v6_vip_pfx->addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(svc_v6_mapping.vip.addr.v6_addr,
+                                                       svc_mapping.vip.addr.v4_addr);
                         if (false && (i == TEST_APP_S1_SLB_IN_OUT)) {
                             svc_v6_mapping.backend_provider_ip.af = IP_AF_IPV6;
                             svc_v6_mapping.backend_provider_ip.addr.v6_addr =
