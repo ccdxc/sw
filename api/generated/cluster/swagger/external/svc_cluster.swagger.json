@@ -4470,12 +4470,14 @@
           "type": "string",
           "enum": [
             "healthy",
-            "nic_health_unknown"
+            "nic_health_unknown",
+            "reboot_needed"
           ],
           "default": "healthy",
           "x-ui-hints": {
             "healthy": "Healthy",
-            "nic_health_unknown": "Not Reachable"
+            "nic_health_unknown": "Not Reachable",
+            "reboot_needed": "Reboot needed"
           },
           "title": "Type indicates a certain NIC condition"
         },

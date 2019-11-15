@@ -371,6 +371,16 @@ func (n *NMD) UpdateNaplesHealth() []cmd.DSCCondition {
 		},
 	}
 
+	if n.rebootNeeded {
+		needsRebootCondition := cmd.DSCCondition{
+			Type:               cmd.DSCCondition_REBOOT_NEEDED.String(),
+			Status:             cmd.ConditionStatus_TRUE.String(),
+			LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
+		}
+
+		Conditions = append(Conditions, needsRebootCondition)
+	}
+
 	return Conditions
 }
 

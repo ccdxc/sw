@@ -31,6 +31,7 @@ export enum ClusterClusterCondition_status {
 export enum ClusterDSCCondition_type {
     'healthy' = "healthy",
     'nic_health_unknown' = "nic_health_unknown",
+    'reboot_needed' = "reboot_needed",
 }
 
 export enum ClusterDSCCondition_status {
@@ -118,6 +119,7 @@ export enum ClusterClusterCondition_status_uihint {
 export enum ClusterDSCCondition_type_uihint {
     'healthy' = "Healthy",
     'nic_health_unknown' = "Not Reachable",
+    'reboot_needed' = "Reboot needed",
 }
 
 export enum ClusterDSCCondition_status_uihint {

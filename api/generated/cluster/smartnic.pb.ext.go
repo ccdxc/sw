@@ -32,16 +32,19 @@ var _ listerwatcher.WatcherClient
 var DSCCondition_ConditionType_normal = map[string]string{
 	"healthy":            "healthy",
 	"nic_health_unknown": "nic_health_unknown",
+	"reboot_needed":      "reboot_needed",
 }
 
 var DSCCondition_ConditionType_vname = map[int32]string{
 	0: "healthy",
 	1: "nic_health_unknown",
+	2: "reboot_needed",
 }
 
 var DSCCondition_ConditionType_vvalue = map[string]int32{
 	"healthy":            0,
 	"nic_health_unknown": 1,
+	"reboot_needed":      2,
 }
 
 func (x DSCCondition_ConditionType) String() string {

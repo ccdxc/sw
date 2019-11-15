@@ -180,6 +180,8 @@ message DSCCondition {
         HEALTHY             = 0; // NIC is healthy
         // ui-hint: Not Reachable
         NIC_HEALTH_UNKNOWN  = 1; // NIC is not reachable from Venice cluster
+	// ui-hint: Reboot needed
+	REBOOT_NEEDED = 2; // NIC requires reboot, either because of disruptive firmware upgrade or mode change
     }
 
     // Type indicates a certain NIC condition
