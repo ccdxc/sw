@@ -280,7 +280,7 @@ func main() {
 	lConfig := &log.Config{
 		Module:      globals.EvtsProxy,
 		Format:      log.JSONFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
 		LogToStdout: *logToStdoutFlag,
