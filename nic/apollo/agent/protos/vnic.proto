@@ -64,6 +64,12 @@ message VnicSpec {
   uint32          TxPolicerId           = 18;
   // policer to be applied on the traffic going to vnic
   uint32          RxPolicerId           = 19;
+  // if a vnic is not marked as primary, DHCP offer sent to such vnics
+  // will not have gateway IP, hostname options filled in the DHCP offer
+  bool            Primary               = 20;
+  // hostname of the vnic to be returned in the DHCP offer when DHCP policy
+  // is enabled on the vnic's subnet
+  string          HostName              = 21;
 }
 
 // operational status of Vnic, if any

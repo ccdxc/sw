@@ -862,6 +862,13 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     uint32_t msid;
 
     api_spec->key.id = proto_spec.vnicid();
+    if (proto_spec.hostname().empty()) {
+        api_spec->hostname[0] = '\0';
+    } else {
+        strncpy(api_spec->hostname, proto_spec.hostname().c_str(),
+                PDS_MAX_HOST_NAME);
+         api_spec->hostname[PDS_MAX_HOST_NAME] = '\0';
+    }
     api_spec->vpc.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
@@ -928,6 +935,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
         api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
     }
     api_spec->host_ifindex = proto_spec.hostifindex();
+    api_spec->primary = proto_spec.primary();
     return SDK_RET_OK;
 }
 
@@ -940,6 +948,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
         return;
     }
     proto_spec->set_vnicid(api_spec->key.id);
+    proto_spec->set_hostname(api_spec->hostname);
     proto_spec->set_vpcid(api_spec->vpc.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
     pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
@@ -980,6 +989,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
         proto_spec->set_egv6securitypolicyid(i, api_spec->egr_v6_policy[i].id);
     }
     proto_spec->set_hostifindex(api_spec->host_ifindex);
+    proto_spec->set_primary(api_spec->primary);
 }
 
 // populate proto buf status from vnic API status

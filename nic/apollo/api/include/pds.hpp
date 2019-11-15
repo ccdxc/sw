@@ -26,6 +26,8 @@
 #define PDS_POLICY_ID_INVALID         0x0    ///< invalid policy id
 #define PDS_PORT_INVALID              0xFF   ///< invalid port#
 
+#define PDS_MAX_HOST_NAME             128
+
 // Basic PDS data types
 typedef uint64_t    pds_batch_ctxt_t;          ///< opaque batch context
 typedef uint32_t    pds_vpc_id_t;              ///< vpc id

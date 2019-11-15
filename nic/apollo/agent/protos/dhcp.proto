@@ -93,21 +93,23 @@ message DHCPRelayAgentDeleteResponse {
 // DHCPPolicySpec captures the DHCP configuration per subnet
 message DHCPPolicySpec {
   // unique key/identifier of the DHCP policy
-  uint32          Id          = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address of the (local) DHCP server, this IP address will be
   // used to respond to the DHCP requests from the workloads and is used as
   // the DHCP server identifier
-  types.IPAddress ServerIP    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress ServerIP     = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // MTU to be supplied by the DHCP server to its clients, if non-zero
-  uint32          MTU         = 3;
+  uint32          MTU          = 3;
   // IP address of the subnet's gateway sent in DHCP offer
-  types.IPAddress GatewayIP   = 4;
+  types.IPAddress GatewayIP    = 4;
   // IP address of the DNS server sent in DHCP offer
-  types.IPAddress DNSServerIP = 5;
+  types.IPAddress DNSServerIP  = 5;
   // IP address of the NTP server sent in DHCP offer
-  types.IPAddress NTPServerIP = 6;
+  types.IPAddress NTPServerIP  = 6;
   // client's Fully Qualified Domain Name (FQDN)
-  string          DomainName  = 7;
+  string          DomainName   = 7;
+  // DHCP lease timoeout in seconds
+  uint32          LeaseTimeout = 8 [(gogoproto.moretags) = "default=3600"];
 }
 
 // operational status of a DHCP policy, if any
