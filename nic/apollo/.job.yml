@@ -237,4 +237,4 @@ image:
   work_dir: "/sw/nic"
 
 logfiles:
-  - /usr/src/github.com/pensando/sw/nic/nic_sanity_logs.tar.gz
+  - /sw/nic/nic_sanity_logs.tar.gz
