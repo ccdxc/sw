@@ -1,0 +1,16 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+targets:
+  linkmgr-25Gb:
+    commands: ["sh", "-c", "make linkmgr-25Gb"]
+    owners: ["email:to-be-change@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+     - build-iris-arm
+

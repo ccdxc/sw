@@ -126,6 +126,8 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/linux:
     labels: ["daily"]
+  iota/test/standalone/regression/linkmgr:
+    labels: ["daily"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:

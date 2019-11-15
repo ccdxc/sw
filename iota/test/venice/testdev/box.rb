@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.33"
+from "registry.test.pensando.io:5000/pensando/nic:1.37"
 
 # docker in docker
 copy "tools/test-build/dind", "/dind"
