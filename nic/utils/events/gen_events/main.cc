@@ -38,8 +38,7 @@ eventtypes::EventTypes get_random_event_type()
 
     while (!valid) {
         rand_evt_type = rand() % 5 + static_cast<int>(eventtypes::SERVICE_STARTED);
-        if (rand_evt_type == static_cast<int>(eventtypes::SERVICE_UNRESPONSIVE) ||
-            rand_evt_type == static_cast<int>(eventtypes::NAPLES_SERVICE_STOPPED)) {
+        if (rand_evt_type == static_cast<int>(eventtypes::SERVICE_UNRESPONSIVE) || rand_evt_type == static_cast<int>(eventtypes::NAPLES_SERVICE_STOPPED)) {
             continue;
         }
         valid = eventtypes::EventTypes_IsValid(rand_evt_type);
@@ -73,42 +72,49 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
 // all the events generated. It will be easy to verify the events using this substr.
 int record_events(events_recorder* recorder, int rps, int total_events, int percent_crit_events, char* message_substr)
 {
+    // number of events to be recorded
     int num_critical_events_to_be_recorded = (percent_crit_events / 100.0) * total_events;
+    int num_non_critical_events_to_be_recorded = total_events - num_critical_events_to_be_recorded;
 
     // number of critical events to be recorded per iteration
     int num_critical_events_per_iteration = (percent_crit_events / 100.0) * rps;
-    num_critical_events_per_iteration = (num_critical_events_per_iteration > 0) ? round((percent_crit_events / 100.0) *
-    rps): num_critical_events_per_iteration;
+
+    // number of non-critical events to be recorded per iteration
+    int num_non_critical_events_per_iteration = rps - num_critical_events_per_iteration;
+
+    num_critical_events_per_iteration = (num_critical_events_per_iteration > 0) ? round((percent_crit_events / 100.0) * rps) : num_critical_events_per_iteration;
 
     int raise_critical_event_over_every_ith_iteration = 0;
     if (num_critical_events_per_iteration == 0) {
         // raise critical event for every (percent_crit_events * rps)th iteration
-        raise_critical_event_over_every_ith_iteration = (rps/((percent_crit_events / 100.0) * rps))/rps;
+        raise_critical_event_over_every_ith_iteration = (rps / ((percent_crit_events / 100.0) * rps)) / rps;
     }
 
-    logger->info("total critical_events to be recorded: {}, num critical events per iteration: {}, raise critical event over every ith iteration: {}",
-        num_critical_events_to_be_recorded, num_critical_events_per_iteration,
-        raise_critical_event_over_every_ith_iteration);
-
-    int num_non_critical_events_per_iteration = rps - num_critical_events_per_iteration;
+    logger->info("total events to be recorded, critical: {}, non-critical: {},  num critical events per iteration: {}, "
+                 "raise critical event over every ith iteration: {}",
+        num_critical_events_to_be_recorded, num_non_critical_events_to_be_recorded,
+        num_critical_events_per_iteration, raise_critical_event_over_every_ith_iteration);
 
     int time_to_sleep = 1000000 / rps;
     int num_events_recorded = 0;
     int iteration = 1;
-    while (num_events_recorded < total_events) {
+    while (num_events_recorded < total_events || num_non_critical_events_to_be_recorded > 0 || num_critical_events_to_be_recorded > 0) {
         // raise non-critical events
-        for (int i = 0; i < num_non_critical_events_per_iteration; i++) {
-            char rand_str[10];
-            gen_random_str(rand_str, 10);
-            std::string evt_message = message_substr + std::string("-") + std::to_string(i + num_events_recorded) + std::string(" ") + rand_str;
-            int ret_val = record_event(recorder, get_random_event_type(), evt_message.c_str());
-            if (ret_val != 0) {
-                return ret_val;
-            }
+        if (num_non_critical_events_to_be_recorded > 0) {
+            for (int i = 0; i < num_non_critical_events_per_iteration; i++) {
+                char rand_str[10];
+                gen_random_str(rand_str, 10);
+                std::string evt_message = message_substr + std::string("-") + std::to_string(i + num_events_recorded) + std::string(" ") + rand_str;
+                int ret_val = record_event(recorder, get_random_event_type(), evt_message.c_str());
+                if (ret_val != 0) {
+                    return ret_val;
+                }
 
-            usleep(time_to_sleep);
+                usleep(time_to_sleep);
+            }
+            num_events_recorded += num_non_critical_events_per_iteration;
+            num_non_critical_events_to_be_recorded -= num_non_critical_events_per_iteration;
         }
-        num_events_recorded += num_non_critical_events_per_iteration;
 
         // raise critical events
         if (num_critical_events_to_be_recorded > 0) {
@@ -126,18 +132,16 @@ int record_events(events_recorder* recorder, int rps, int total_events, int perc
                 num_critical_events_to_be_recorded -= num_critical_events_per_iteration;
             }
             else {
-                if (raise_critical_event_over_every_ith_iteration != 0 &&
-                    iteration % raise_critical_event_over_every_ith_iteration == 0)
-                    {
-                        std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
-                        int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
-                        if (ret_val != 0) {
-                            return ret_val;
-                        }
-                        usleep(time_to_sleep);
-                        num_events_recorded += 1;
-                        num_critical_events_to_be_recorded -= 1;
+                if (raise_critical_event_over_every_ith_iteration != 0 && iteration % raise_critical_event_over_every_ith_iteration == 0) {
+                    std::string evt_message = message_substr + std::string(" - alert - ") + get_random_alert_str();
+                    int ret_val = record_event(recorder, eventtypes::NAPLES_SERVICE_STOPPED, evt_message.c_str());
+                    if (ret_val != 0) {
+                        return ret_val;
                     }
+                    usleep(time_to_sleep);
+                    num_events_recorded += 1;
+                    num_critical_events_to_be_recorded -= 1;
+                }
             }
         }
 
