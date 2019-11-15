@@ -117,6 +117,8 @@ uint64_t g_dmaco1 = 0x001234567890ULL;
 uint32_t g_vni1 = 0xABCDEF;
 uint32_t g_dipo1 = 0x0C0C0101;
 
+uint32_t g_dip3 = 0x0A0A0A0A;
+
 mpartition *g_mempartition;
 
 class sort_mpu_programs_compare {
@@ -584,6 +586,19 @@ mappings_init (void)
     mapping_info->nexthop_id = g_nexthop_id2;
     mapping_info->egress_bd_id = g_bd_id1;
     memcpy(mapping_info->dmaci, &g_smac1, 6);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip3, 4);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+    mapping_info->nexthop_id = g_tunnel_id1;
+    mapping_info->egress_bd_id = g_egress_bd_id1;
+    memcpy(mapping_info->dmaci, &g_dmaci1, 6);
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 

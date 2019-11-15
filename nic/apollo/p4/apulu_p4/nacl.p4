@@ -20,7 +20,6 @@ action nacl_redirect(nexthop_type, nexthop_id, copp_policer_id) {
 }
 
 action nacl_flow_miss(nexthop_type, nexthop_id, copp_policer_id) {
-    modify_field(p4i_i2e.mapping_bypass, TRUE);
     modify_field(p4i_i2e.nexthop_type, nexthop_type);
     modify_field(p4i_i2e.nexthop_id, nexthop_id);
     modify_field(p4i_i2e.session_id, -1);

@@ -53,7 +53,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
-arm_hdr_str = '006e000202ed41f250eb1123000000374b00010000000000000000000000'
+arm_hdr_str = '006e000202ed41f250eb1123000000374b0001000000000000000001EF04'
 p4_to_arm_header = codecs.decode(arm_hdr_str, 'hex')
 opkt = p4_to_arm_header / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \

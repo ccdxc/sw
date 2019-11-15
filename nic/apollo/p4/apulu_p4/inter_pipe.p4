@@ -201,12 +201,12 @@ action egress_to_rxdma() {
 
 action egress_recirc() {
     add_header(egress_recirc);
+    modify_field(egress_recirc.p4_to_arm_valid, p4e_to_arm.valid);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
 }
 
 action p4e_inter_pipe() {
     remove_header(capri_txdma_intrinsic);
-    remove_header(txdma_to_p4e);
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     } else {
@@ -219,6 +219,7 @@ action p4e_inter_pipe() {
     }
 
     remove_header(p4e_i2e);
+    remove_header(txdma_to_p4e);
     remove_header(egress_recirc);
     if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
         egress_to_rxdma();

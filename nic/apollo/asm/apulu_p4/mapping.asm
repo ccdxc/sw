@@ -15,8 +15,14 @@ mapping_info:
     seq             c7, k.p4e_i2e_nexthop_type, NEXTHOP_TYPE_VPC
     phvwr.c7        p.p4e_i2e_vpc_id, k.p4e_i2e_mapping_lkp_id
 
-    bbeq            k.p4e_i2e_mapping_bypass, TRUE, mapping_miss
+    bbeq            k.p4e_i2e_mapping_bypass, TRUE, mapping_done
     phvwr           p.rewrite_metadata_nexthop_type, k.p4e_i2e_nexthop_type
+
+    seq             c7, k.p4e_to_arm_valid, TRUE
+    seq.c7          c7, k.txdma_to_p4e_nexthop_type, NEXTHOP_TYPE_VPC
+    bcf             [c7], mapping_done
+    phvwrpair.c7    p.p4e_to_arm_nexthop_id, k.txdma_to_p4e_nexthop_id, \
+                        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
 
     bbne            d.mapping_info_d.entry_valid, TRUE, mapping_miss
     // Set bit 31 for overflow hash lookup to work
@@ -69,16 +75,26 @@ mapping_info:
     bcf             [c1&c2], mapping_hash_hit
     add             r2, r2, d.mapping_info_d.more_hints
 mapping_miss:
+    seq             c7, k.p4e_to_arm_valid, TRUE
+    phvwrpair.c7    p.p4e_to_arm_nexthop_id, k.txdma_to_p4e_nexthop_id, \
+                        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
+
+mapping_done:
     phvwr.e         p.egress_recirc_mapping_done, TRUE
     nop
 
 mapping_hit:
-    seq             c1, d.mapping_info_d.nexthop_valid, TRUE
-    phvwr.c1        p.rewrite_metadata_nexthop_type, d.mapping_info_d.nexthop_type
-    phvwr.c1        p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
     phvwr           p.vnic_metadata_egress_bd_id, d.mapping_info_d.egress_bd_id
-    phvwr.e         p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
-    phvwr.f         p.egress_recirc_mapping_done, TRUE
+    bbne            d.mapping_info_d.nexthop_valid, TRUE, mapping_done
+    phvwr           p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
+    phvwr           p.egress_recirc_mapping_done, TRUE
+    seq             c7, k.p4e_to_arm_valid, TRUE
+    phvwr.!c7.e     p.rewrite_metadata_nexthop_type, \
+                        d.mapping_info_d.nexthop_type
+    phvwr.!c7.f     p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
+    phvwrpair.c7.e  p.p4e_to_arm_nexthop_id, d.mapping_info_d.nexthop_id, \
+                        p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    nop
 
 mapping_hash_hit:
     phvwr.e         p.egress_recirc_mapping_ohash, r2

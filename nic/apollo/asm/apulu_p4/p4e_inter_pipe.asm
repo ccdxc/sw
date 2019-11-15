@@ -9,13 +9,16 @@ struct phv_                 p;
 %%
 
 p4e_inter_pipe:
-    phvwr           p.{txdma_to_p4e_valid,capri_txdma_intrinsic_valid}, 0
+    phvwr           p.capri_txdma_intrinsic_valid, 0
     sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
     phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq
     seq             c1, k.egress_recirc_mapping_done, FALSE
     bcf             [c1], egress_recirc
-    phvwr.!c1       p.p4e_i2e_valid, FALSE
+    phvwrmi.!c1     p.{p4e_i2e_valid, \
+                        p4e_to_arm_valid, \
+                        txdma_to_p4e_valid, \
+                        egress_recirc_valid}, 0x0, 0xB
     seq             c1, k.capri_intrinsic_tm_oport, TM_PORT_DMA
     nop.!c1.e
 
@@ -73,6 +76,7 @@ egress_to_rxdma_ipv4:
                         CLASSIC_NIC_PKT_TYPE_IPV4
 
 egress_recirc:
+    phvwr           p.egress_recirc_p4_to_arm_valid, k.p4e_to_arm_valid
     phvwr.e         p.egress_recirc_valid, TRUE
     phvwr.f         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
 

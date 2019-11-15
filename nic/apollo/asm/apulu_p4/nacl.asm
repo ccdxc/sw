@@ -25,7 +25,6 @@ nacl_redirect:
 
 .align
 nacl_flow_miss:
-    phvwr           p.p4i_i2e_mapping_bypass, TRUE
     phvwr           p.p4i_i2e_session_id, -1
     phvwr           p.p4i_i2e_nexthop_type, d.u.nacl_flow_miss_d.nexthop_type
     phvwr           p.p4i_i2e_copp_policer_id, \

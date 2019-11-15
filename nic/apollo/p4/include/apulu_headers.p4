@@ -79,7 +79,8 @@ header_type apulu_ingress_recirc_header_t {
 header_type apulu_egress_recirc_header_t {
     fields {
         mapping_ohash   : 32;
-        pad1            : 7;
+        pad1            : 6;
+        p4_to_arm_valid : 1;
         mapping_done    : 1;
     }
 }

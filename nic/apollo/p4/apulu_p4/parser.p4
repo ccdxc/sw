@@ -371,12 +371,20 @@ parser parse_egress_to_egress {
 @pragma xgress egress
 parser parse_egress_recirc_header {
     extract(egress_recirc);
-    return parse_egress;
+    return select(egress_recirc.p4_to_arm_valid) {
+        1 : parse_txdma_to_arm;
+        default : parse_egress;
+    }
 }
 
 @pragma xgress egress
 parser parse_txdma_to_egress {
     extract(capri_txdma_intrinsic);
+    return parse_txdma_to_arm;
+}
+
+@pragma xgress egress
+parser parse_txdma_to_arm {
     extract(txdma_to_p4e);
     extract(p4e_to_arm);
     return parse_egress;
@@ -533,10 +541,11 @@ parser deparse_egress {
     extract(p4e_to_p4plus_classic_nic);
     extract(p4e_to_p4plus_classic_nic_ip);
 
-    extract(p4e_to_arm);
-
-    // below are headers used in case of egress-to-egress recirc
+    // egress-to-egress recirc
     extract(egress_recirc);
+
+    extract(txdma_to_p4e);
+    extract(p4e_to_arm);
     extract(p4e_i2e);
 
     // layer 0
