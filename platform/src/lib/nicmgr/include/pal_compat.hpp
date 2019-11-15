@@ -63,6 +63,27 @@ static inline uint64_t READ_REG64(uint64_t addr)
     } \
 }
 
+// used by dpdk driver to get the lifid and and devcmd regions
+static inline void WRITE_DEVINFO(const char *fname, uint64_t pa, uint32_t lif)
+{
+    char buf[256];
+    FILE *fp;
+    const char *cfg_path = std::getenv("HAL_CONFIG_PATH");
+    static int devices = 0;
+
+    if (cfg_path) {
+        snprintf(buf, sizeof(buf), "%s/gen/device_info.txt", cfg_path);
+        if ((fp = fopen(buf, devices == 0 ? "w" : "a+")) != NULL) {
+            if (devices == 0) {
+                fprintf(fp, "Name BarAddr LifNum\n");
+            }
+            fprintf(fp, "%s 0x%lx %u\n", fname, pa, lif);
+            fclose(fp);
+            devices++;
+        }
+    }
+}
+
 #else
 
 #include "nic/sdk/platform/pal/include/pal.h"
@@ -88,6 +109,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
         MEM_SET(pa, 0, sz, 0); \
     } \
 }
+#define WRITE_DEVINFO(fname, pa, lif) { }
 
 #endif
 
