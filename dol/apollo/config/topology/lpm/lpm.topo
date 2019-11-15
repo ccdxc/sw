@@ -15,12 +15,23 @@ uplink:
         mode    : switch
         status  : UP
 
+interface:
+    host:
+        lif         : ref://store/specs/id=LIF_ETH
+
 device:
-    ipaddress   : None
-    gateway     : None
-    macaddress  : macaddr/0002.0100.0001
-    encap       : vxlan
+    mode        : host # bitw (default), host
+    stack       : ipv4 # ipv4 (default), ipv6
+    bridging    : false # false (default), true
+    learning    : false # false (default), true
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    encap       : vxlan # vxlan or mplsodup
     tunnel      :
+        - count : 16
+          type  : underlay
+        - count : 16
+          type  : underlay-ecmp
         - count : 16
           type  : internet-gateway
           nat   : true
@@ -28,6 +39,12 @@ device:
           type  : internet-gateway
         - count : 32
           type  : workload
+        # artemis
+        - count : 2
+          type  : service
+        - count : 1
+          type  : service
+          remote : true
 
 vpc:
     - stack  : dual
@@ -44,16 +61,16 @@ vpc:
               - '0.0.0.0\0'
            v6routes:
               - '0::\0'
-      nexthop:
-             - type: base
-               count : 1
+      #nexthop:
+      #       - type: base
+      #         count : 1
       policy:
         - type : specific
           policytype : default
           direction : bidir
 
     - stack  : dual
-      count : 2
+      count : 1
       type  : tenant
       subnet:
         - count     : 25              # should be same as total routetbl
@@ -69,21 +86,21 @@ vpc:
               - type : specific
                 policytype : default
                 direction : bidir
-      meter:
-        - count: 1
-          auto_fill: False
-          rule:
-            - type: PDS_METER_TYPE_ACCOUNTING
-              priority: 1
-              num_prefixes: 0
-              v4base: '66.0.0.0\24'
-              v6base: '2002::\120'
-              v4prefixes:
-                - '0.0.0.0\0'
-              v6prefixes:
-                - '0::\0'
+      #meter:
+      #  - count: 1
+      #    auto_fill: False
+      #    rule:
+      #      - type: PDS_METER_TYPE_ACCOUNTING
+      #        priority: 1
+      #        num_prefixes: 0
+      #        v4base: '66.0.0.0\24'
+      #        v6base: '2002::\120'
+      #        v4prefixes:
+      #          - '0.0.0.0\0'
+      #        v6prefixes:
+      #          - '0::\0'
       nexthop:
-             - type: base
+             - type: overlay
                count : 25
       routetbl:
              - type: specific # route table with disjoint routes

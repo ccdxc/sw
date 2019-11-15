@@ -1,0 +1,118 @@
+# Test Spec for positive LPM cases
+selectors:
+    root: ref://store/templates/id=ROUTE
+    maxlimits: 2
+    flow: filter://SourceGuard=False
+    route: filter://any
+
+packets:
+    - packet:
+        id          : IN_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                hlim    : 64
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : EXP_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : ref://testcase/config/route/TunIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            mpls:
+                label   : ref://testcase/config/route/TUNNEL/EncapValue
+                ttl     : 0
+                s       : 1
+            vxlan:
+                vni     : ref://testcase/config/route/TUNNEL/EncapValue
+            ipv4:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+            ipv6:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+
+
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+        
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Delete
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : ReadAfterDelete
+
+            packets:
+                - packet:
+                    #object  : None
+                    # Currently, deleting a route table does NOT cleanup HW
+                    # and corresponding vnic also does not get updated.
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport
+
+    - step:
+        trigger:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Create
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/hostport
+
+        expect:
+            configs:
+                - object    : ref://testcase/config/route
+                  method    : Read
+
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
+                    port    : ref://testcase/config/switchport

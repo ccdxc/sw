@@ -1,0 +1,97 @@
+# Feature LPM Modules List
+feature:
+    id          : lpm
+    sub         : negative
+    package     : test.lpm
+    module      : lpm
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_NO_ROUTE
+        spec    : lpm_negative.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=empty
+
+    - module:
+        name    : IPV4_BLACKHOLE_ROUTE
+        spec    : lpm_negative.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=blackhole
+
+    - module:
+        name    : IPV4_HOST_RIGHT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : right
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=only_host
+
+    - module:
+        name    : IPV4_HOST_LEFT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : left
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=only_host
+
+    - module:
+        name    : IPV4_DISJOINT_RIGHT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : right
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=disjoint
+
+    - module:
+        name    : IPV4_DISJOINT_LEFT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : left
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=disjoint
+
+    - module:
+        name    : IPV6_NO_ROUTE
+        spec    : lpm_negative.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=empty
+
+    - module:
+        name    : IPV6_BLACKHOLE_ROUTE
+        spec    : lpm_negative.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=blackhole
+
+    - module:
+        name    : IPV6_HOST_RIGHT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : right
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=only_host
+
+    - module:
+        name    : IPV6_HOST_LEFT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : left
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=only_host
+
+    - module:
+        name    : IPV6_DISJOINT_RIGHT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : right
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=disjoint
+
+    - module:
+        name    : IPV6_DISJOINT_LEFT_INVALID_IP
+        spec    : lpm_negative.testspec
+        args    :
+            - prefix : left
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=disjoint

@@ -1,0 +1,42 @@
+# Test Spec for negative LPM cases
+selectors:
+    root: ref://store/templates/id=ROUTE
+    maxlimits: 2
+    flow: filter://SourceGuard=False
+    route: filter://HasDefaultRoute=False
+
+packets:
+    - packet:
+        id          : IN_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                hlim    : 64
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : None
+            port    : ref://testcase/config/switchport

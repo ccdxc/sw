@@ -1,0 +1,94 @@
+# Feature right and left overlap LPM Modules List
+feature:
+    id          : lpm
+    sub         : v4_overlap
+    package     : test.lpm
+    module      : lpm
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap
+
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE_LAST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : last
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap
+
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE_FIRST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : first
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE_FIRST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : first
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE_LAST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : last
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap
+
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap
+
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE_FIRST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : first
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap
+
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE_LAST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : last
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap
+
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap_with_default
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap_with_default
+
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap_with_default
+

@@ -1,25 +1,13 @@
 # Feature LPM Modules List
 feature:
     id          : lpm
-    sub         : ipv4
+    sub         : v4_adjacent
     package     : test.lpm
     module      : lpm
     enable      : True
     ignore      : False
 
 modules:
-    - module:
-        name    : IPV4_DEFAULT_ROUTE
-        spec    : lpm.testspec
-        iterate :
-            - route : filter://AddrFamily=IPV4,RouteType=only_default
-
-    - module:
-        name    : IPV4_HOST_ROUTE
-        spec    : lpm.testspec
-        iterate :
-            - route : filter://AddrFamily=IPV4,RouteType=only_host
-
     - module:
         name    : IPV4_ADJACENT_ROUTE
         spec    : lpm.testspec

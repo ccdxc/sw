@@ -1,0 +1,65 @@
+# Feature LPM Modules List
+feature:
+    id          : lpm
+    sub         : full_overlap
+    package     : test.lpm
+    module      : lpm
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_FIRST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : first
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_LAST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : last
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX_FIRST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : first
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX_LAST_HOST
+        spec    : lpm.testspec
+        args    :
+            - prefix : last
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_with_default
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max_with_default
