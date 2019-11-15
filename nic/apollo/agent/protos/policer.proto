@@ -34,14 +34,24 @@ message BytePolicerSpec {
   uint64 Burst          = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
+// traffic direction in which policer is applied
+// INGRESS/EGRESS is w.r.t vnic (i.e., traffic leaving vnic is marked as
+// EGRESS and traffic going to vnic is marked as INGRESS
+enum PolicerDir {
+  POLICER_DIR_NONE    = 0;
+  POLICER_DIR_INGRESS = 1;
+  POLICER_DIR_EGRESS  = 2;
+}
+
 // policer specification
 message PolicerSpec {
   // unique policer id
-  uint32                 Id      = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32              Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  PolicerDir          Direction  = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // policer is one byte policer or packet policer
   oneof policer {
-    PacketPolicerSpec PPSPolicer = 2;
-    BytePolicerSpec   BPSPolicer = 3;
+    PacketPolicerSpec PPSPolicer = 3;
+    BytePolicerSpec   BPSPolicer = 4;
   }
 }
 

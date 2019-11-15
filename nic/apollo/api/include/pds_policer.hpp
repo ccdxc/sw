@@ -17,7 +17,10 @@
 /// \defgroup PDS_POLICER Policer API
 /// @{
 
-#define PDS_POLICER_ID_INVALID 0     ///< invalid policer id
+#define PDS_POLICER_ID_INVALID    0     ///< invalid policer id
+#define PDS_MAX_TX_POLICER        1024
+#define PDS_MAX_RX_POLICER        1024
+#define PDS_MAX_POLICER           (PDS_MAX_TX_POLICER + PDS_MAX_RX_POLICER)
 
 /// \brief policer type
 typedef enum pds_policer_type_e {
@@ -26,10 +29,20 @@ typedef enum pds_policer_type_e {
     PDS_POLICER_TYPE_BPS  = 2,    ///< bytes/second policer
 } pds_policer_type_t;
 
+/// \brief direction of the traffic the policer is applied on
+typedef enum pds_policer_dir_e {
+    PDS_POLICER_DIR_NONE    = 0,
+    /// INGRESS is w.r.t vnic, policer is applied on traffic sent towards vnic
+    PDS_POLICER_DIR_INGRESS = 1,
+    /// EGRESS is w.r.t vnic, policer is applied on traffic sent from vnic
+    PDS_POLICER_DIR_EGRESS  = 2,
+} pds_policer_dir_t;
+
 /// \brief policer specification
 typedef struct pds_policer_spec_s {
     pds_policer_key_t key;          ///< policer's unique key
     pds_policer_type_t type;        ///< type of the policer
+    pds_policer_dir_t dir;          ///< traffic direction policer is applied on
     union {
         struct {
             uint32_t pps;           ///< packets per second threshold

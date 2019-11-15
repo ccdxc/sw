@@ -26,7 +26,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
 
     // instantiate P4 tables for bookkeeping
     p4pd_table_properties_get(P4TBL_ID_TUNNEL, &tinfo);
-    tep_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, false);
+    tep_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
     SDK_ASSERT(tep_idxr_ != NULL);
 }
 

@@ -56,7 +56,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 
     // NAT table bookkeeping (reserve 0th entry for no xlation)
     p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
-    nat_tbl_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    nat_tbl_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(nat_tbl_idxr_ != NULL);
 
     // create a slab for mapping impl entries

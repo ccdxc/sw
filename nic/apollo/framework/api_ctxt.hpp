@@ -29,6 +29,7 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 
 namespace api {
 
@@ -66,6 +67,7 @@ typedef union api_params_u {
     pds_nexthop_spec_t           nexthop_spec;
     pds_nexthop_group_key_t      nexthop_group_key;
     pds_nexthop_group_spec_t     nexthop_group_spec;
+    pds_policer_spec_t           policer_spec;
 } api_params_t;
 
 /// \brief Per API context maintained by framework while processing

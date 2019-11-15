@@ -62,9 +62,7 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in] api_op    API operation
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief          free h/w resources used by this object, if any
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -75,9 +73,7 @@ public:
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -104,9 +100,7 @@ public:
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
-                                        api_op_t api_op) override {
-        return SDK_RET_OK;
-    }
+                                        api_op_t api_op) override;
 
     /// \brief          add given policer to the database
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -127,13 +121,6 @@ public:
     /// \brief          initiate delay deletion of this object
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t delay_delete(void) override;
-
-    /// \brief          add all objects that may be affected if this object is
-    ///                 updated to framework's object dependency list
-    /// \param[in]      obj_ctxt    transient state associated with this API
-    ///                             processing
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          read config
     /// \param[in]      key pointer to the key object
@@ -164,6 +151,10 @@ public:
     /// \return         key/id of the policer
     pds_policer_key_t key(void) const { return key_; }
 
+    /// \brief    return the traffic direction in which policer is applied
+    /// \return   direction in which policer is enforced
+    pds_policer_dir_t dir(void) const { return dir_; }
+
     /// \brief     return impl instance of this policer object
     /// \return    impl instance of the policer object
     impl_base *impl(void) { return impl_; }
@@ -182,6 +173,7 @@ private:
 
 private:
     pds_policer_key_t key_;        ///< policer key
+    pds_policer_dir_t dir_;       ///< policer enforcement direction
     ht_ctxt_t ht_ctxt_;            ///< hash table context
 
     // P4 datapath specific state

@@ -123,7 +123,9 @@ message PortRange {
   uint32 PortHigh = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
 }
 
-// type of the direction in which policy is enforced
+// direction in which policy is enforced
+// INGRESS/EGRESS is w.r.t vnic (i.e., traffic leaving vnic is marked as
+// EGRESS and traffic going to vnic is marked as INGRESS
 enum RuleDir {
   RULE_DIR_NONE    = 0;
   RULE_DIR_INGRESS = 1;

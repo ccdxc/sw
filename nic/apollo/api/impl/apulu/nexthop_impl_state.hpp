@@ -43,7 +43,7 @@ private:
     friend class nexthop_impl;   // nexthop_impl is friend of nexthop_impl_state
 
 private:
-    // directmap table for nexthops
+    // indexer for nexthops
     rte_indexer *nh_idxr_;
 };
 

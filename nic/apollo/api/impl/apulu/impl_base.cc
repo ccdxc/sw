@@ -24,6 +24,8 @@
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
+#include "nic/apollo/api/impl/apulu/policer_impl.hpp"
+#include "nic/apollo/api/impl/apulu/service_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -103,6 +105,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group_impl::factory((pds_nexthop_group_spec_t *)args);
 
+    case IMPL_OBJ_ID_POLICER:
+        return policer_impl::factory((pds_policer_spec_t *)args);
+
     default:
         break;
     }
@@ -179,6 +184,12 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group_impl::destroy((nexthop_group_impl *)impl);
+
+    case IMPL_OBJ_ID_SVC_MAPPING:
+        return svc_mapping_impl::destroy((svc_mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_POLICER:
+        return policer_impl::destroy((policer_impl *)impl);
 
     default:
         break;

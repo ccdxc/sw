@@ -19,7 +19,6 @@ namespace api {
 /// \@{
 
 vpc_state::vpc_state() {
-    // TODO: need to tune multi-threading related params later
     vpc_ht_ = ht::factory(PDS_MAX_VPC >> 1,
                           vpc_entry::vpc_key_func_get,
                           vpc_entry::key_size());

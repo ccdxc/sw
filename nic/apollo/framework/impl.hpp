@@ -34,6 +34,7 @@ typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_VPC_PEER,
     IMPL_OBJ_ID_NEXTHOP,
     IMPL_OBJ_ID_NEXTHOP_GROUP,
+    IMPL_OBJ_ID_POLICER,
 } impl_obj_id_t;
 
 // These are for read_hw apis

@@ -44,6 +44,7 @@ pds_impl_state::init(pds_state *state) {
     impl_state_[PDS_IMPL_STATE_NEXTHOP_GROUP] =
         new nexthop_group_impl_state(state);
     impl_state_[PDS_IMPL_STATE_SVC_MAPPING] = new svc_mapping_impl_state(state);
+    impl_state_[PDS_IMPL_STATE_POLICER] = new policer_impl_state(state);
     return SDK_RET_OK;
 }
 

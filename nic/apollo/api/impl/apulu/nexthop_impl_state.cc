@@ -26,14 +26,13 @@ nexthop_impl_state::nexthop_impl_state(pds_state *state) {
 
     p4pd_global_table_properties_get(P4TBL_ID_NEXTHOP, &tinfo);
     // create indexer and reserve system default blackhole/drop nexthop entry
-    nh_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    nh_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(nh_idxr_ != NULL);
 }
 
 nexthop_impl_state::~nexthop_impl_state() {
     rte_indexer::destroy(nh_idxr_);
 }
-
 
 /// \@}    // end of PDS_NEXTHOP_IMPL_STATE
 

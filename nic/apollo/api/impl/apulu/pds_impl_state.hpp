@@ -27,6 +27,7 @@
 #include "nic/apollo/api/impl/apulu/nexthop_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/service_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/policer_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -57,6 +58,7 @@ enum {
     PDS_IMPL_STATE_NEXTHOP,
     PDS_IMPL_STATE_NEXTHOP_GROUP,
     PDS_IMPL_STATE_SVC_MAPPING,
+    PDS_IMPL_STATE_POLICER,
     PDS_IMPL_STATE_MAX,
 };
 
@@ -113,6 +115,9 @@ public:
     }
     svc_mapping_impl_state *svc_mapping_impl_db(void) const {
         return (svc_mapping_impl_state *)impl_state_[PDS_IMPL_STATE_SVC_MAPPING];
+    }
+    policer_impl_state *policer_impl_db(void) const {
+        return (policer_impl_state *)impl_state_[PDS_IMPL_STATE_POLICER];
     }
 
 private:
@@ -203,6 +208,12 @@ static inline svc_mapping_impl_state *
 svc_mapping_impl_db (void)
 {
     return g_pds_impl_state.svc_mapping_impl_db();
+}
+
+static inline policer_impl_state *
+policer_impl_db (void)
+{
+    return g_pds_impl_state.policer_impl_db();
 }
 
 /// \@}

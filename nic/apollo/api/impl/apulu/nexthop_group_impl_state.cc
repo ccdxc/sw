@@ -26,7 +26,7 @@ nexthop_group_impl_state::nexthop_group_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
     p4pd_global_table_properties_get(P4TBL_ID_ECMP, &tinfo);
-    nhgroup_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    nhgroup_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(nhgroup_idxr_ != NULL);
 }
 

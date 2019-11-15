@@ -100,6 +100,10 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         nexthop_group::destroy((nexthop_group *)elem);
         break;
 
+    case PDS_SLAB_ID_POLICER:
+        policer::destroy((policer *)elem);
+        break;
+
     default:
         PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);

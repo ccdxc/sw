@@ -25,8 +25,10 @@
 
 /// \brief    rule direction
 typedef enum rule_dir_e {
-    RULE_DIR_INGRESS = 0,    ///< Ingress direction
-    RULE_DIR_EGRESS  = 1,    ///< Egress direction
+    /// INGRESS is w.r.t vnic, policy is applied on traffic sent towards vnic
+    RULE_DIR_INGRESS = 0,
+    /// EGRESS is w.r.t vnic, policy is applied on traffic sent from vnic
+    RULE_DIR_EGRESS  = 1,
 } rule_dir_t;
 
 /// \brief type of the IP field used in rule match
