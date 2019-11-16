@@ -69,6 +69,7 @@
             "txq_count" : 32,
             "adminq_count" : 1,
             "intr_count" : 66,
+            "cmb_size" : 1,
             "pcie" : {
                 "port" : 0,
                 "total_vfs" : 2,
@@ -88,8 +89,7 @@
                 "pte_count" : 8388608,
                 "prefetch_count" : 0,
                 "key_count" : 262144,
-                "ah_count" : 8192,
-                "barmap_size" : 1
+                "ah_count" : 8192
             }
         },
         {
@@ -101,6 +101,7 @@
             "txq_count" : 32,
             "adminq_count" : 1,
             "intr_count" : 66,
+            "cmb_size" : 1,
             "pcie" : {
                 "port" : 0,
                 "total_vfs" : 2,
@@ -120,8 +121,7 @@
                 "pte_count" : 8388608,
                 "prefetch_count" : 0,
                 "key_count" : 262144,
-                "ah_count" : 8192,
-                "barmap_size" : 1
+                "ah_count" : 8192
             }
         },
         {

@@ -1127,6 +1127,9 @@ EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
     if (cmd->ver == 1) {
         ident->version = 1;
         ident->features |= IONIC_QIDENT_F_EQ;
+    } else if (cmd->ver == 2) {
+        ident->version = 2;
+        ident->features |= (IONIC_QIDENT_F_EQ | IONIC_QIDENT_F_CMB);
     } else {
         ident->version = 0;
     }
@@ -1146,7 +1149,7 @@ EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
     memset(ident, 0, sizeof(union q_identity));
 
     ident->supported = 0x7;
-    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG | IONIC_QIDENT_F_EQ;
+    ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
     ident->desc_sz = sizeof(struct txq_desc);
     ident->comp_sz = sizeof(struct txq_comp);
 
@@ -1158,6 +1161,12 @@ EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
     } else if (cmd->ver == 2) {
         ident->version = 2;
         ident->features |= IONIC_QIDENT_F_EQ;
+        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
+        ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
+    } else if (cmd->ver == 3) {
+        ident->version = 3;
+        ident->features |= (IONIC_QIDENT_F_EQ | IONIC_QIDENT_F_CMB);
         ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
@@ -1311,7 +1320,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: "
         "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {} "
-        "intr_index {} flags {}{}{}{}{}",
+        "intr_index {} flags {}{}{}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1327,6 +1336,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
         (cmd->flags & IONIC_QINIT_F_EQ) ? 'Q' : '-',
         (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
+        (cmd->flags & IONIC_QINIT_F_CMB) ? 'C': '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1334,7 +1344,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver > 2) {
+    if (cmd->ver > 3) {
         NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
@@ -1376,9 +1386,23 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
-        NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
-        return (IONIC_RC_EINVAL);
+    if ((cmd->ver < 2) && (cmd->flags & IONIC_QINIT_F_CMB)) {
+        NIC_LOG_ERR("{}: bad ver {} invalid flag IONIC_QINIT_F_CMB",
+            hal_lif_info_.name, cmd->ver);
+        return (IONIC_RC_ENOSUPP);
+    }
+
+    if ((cmd->ver > 1) && (cmd->flags & IONIC_QINIT_F_CMB)) {
+        if ((cmd->ring_base + (1 << cmd->ring_size)) > res->cmb_mem_size) {
+            NIC_LOG_ERR("{}: bad ring base {:#x} size {}", hal_lif_info_.name,
+                cmd->ring_base, cmd->ring_size);
+            return (IONIC_RC_EINVAL);
+        }
+    } else {
+        if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
+            NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+            return (IONIC_RC_EINVAL);
+        }
     }
 
     if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
@@ -1436,7 +1460,10 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->host_dev) {
         qstate.tx.q.cfg.host_queue = 1;
-        qstate.tx.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
+        if (cmd->flags & IONIC_QINIT_F_CMB)
+            qstate.tx.ring_base = res->cmb_mem_addr + cmd->ring_base;
+        else
+            qstate.tx.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
         qstate.tx.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
         if (cmd->flags & IONIC_QINIT_F_SG) {
             qstate.tx.sg_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->sg_ring_base);
@@ -1481,7 +1508,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: "
         "type {} ver {} index {} cos {} "
         "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
-        " intr_index {} flags {}{}{}{}{}",
+        " intr_index {} flags {}{}{}{}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
@@ -1497,6 +1524,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
         (cmd->flags & IONIC_QINIT_F_EQ) ? 'Q' : '-',
         (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
+        (cmd->flags & IONIC_QINIT_F_CMB) ? 'C': '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1504,7 +1532,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ver > 1) {
+    if (cmd->ver > 2) {
         NIC_LOG_ERR("{}: bad ver {}", hal_lif_info_.name, cmd->ver);
         return (IONIC_RC_ENOSUPP);
     }
@@ -1546,14 +1574,23 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
-        NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
-        return (IONIC_RC_EINVAL);
+    if ((cmd->ver < 2) && (cmd->flags & IONIC_QINIT_F_CMB)) {
+        NIC_LOG_ERR("{}: bad ver {} invalid flag IONIC_QINIT_F_CMB",
+            hal_lif_info_.name, cmd->ver);
+        return (IONIC_RC_ENOSUPP);
     }
 
-    if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
-        NIC_LOG_ERR("{}: bad cq ring base {:#x}", hal_lif_info_.name, cmd->cq_ring_base);
-        return (IONIC_RC_EINVAL);
+    if ((cmd->ver > 1) && (cmd->flags & IONIC_QINIT_F_CMB)) {
+        if ((cmd->ring_base + (1 << cmd->ring_size)) > res->cmb_mem_size) {
+            NIC_LOG_ERR("{}: bad ring base {:#x} size {}", hal_lif_info_.name,
+                cmd->ring_base, cmd->ring_size);
+            return (IONIC_RC_EINVAL);
+        }
+    } else {
+        if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
+            NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+            return (IONIC_RC_EINVAL);
+        }
     }
 
     if ((cmd->flags & IONIC_QINIT_F_SG) &&
@@ -1598,7 +1635,10 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->host_dev) {
         qstate.q.cfg.host_queue = 1;
-        qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
+        if (cmd->flags & IONIC_QINIT_F_CMB)
+            qstate.ring_base = res->cmb_mem_addr + cmd->ring_base;
+        else
+            qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
         qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
         if (cmd->flags & IONIC_QINIT_F_SG)
             qstate.sg_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->sg_ring_base);
@@ -2479,10 +2519,11 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
     to_hexstr(rss_key, RSS_HASH_KEY_SIZE, rss_key_str);
     to_hexstr(rss_indir, RSS_IND_TBL_SIZE, rss_ind_str);
 
-    NIC_LOG_DEBUG("{}: {}: rss type {:#x} key {} table {}",
+    NIC_LOG_DEBUG("{}: {}: rss type {:#x} addr {:#x} key {} table {}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
-        rss_type, rss_key_str, rss_ind_str);
+        rss_type, cmd->rss.addr,
+        rss_key_str, rss_ind_str);
 
     // Validate indirection table entries
     for (int i = 0; i < RSS_IND_TBL_SIZE; i++) {

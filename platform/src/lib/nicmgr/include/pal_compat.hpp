@@ -20,6 +20,7 @@ static inline uint8_t *MEM_MAP(uint64_t pa, uint32_t sz, uint32_t flags)
     return vaddr;
 }
 #define MEM_UNMAP(va)            free(va)
+#define MEM_PTOV(pa)
 
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write
@@ -90,6 +91,7 @@ static inline void WRITE_DEVINFO(const char *fname, uint64_t pa, uint32_t lif)
 
 #define MEM_MAP         pal_mem_map
 #define MEM_UNMAP       pal_mem_unmap
+#define MEM_PTOV        pal_mem_ptov
 
 #define READ_MEM        pal_mem_rd
 #define WRITE_MEM       pal_mem_wr

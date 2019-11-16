@@ -188,9 +188,13 @@ Eth::Eth(devapi *dev_api,
     }
 
     // Allocate CMB region
-    if (spec->enable_rdma && spec->barmap_size) {
+    if (spec->barmap_size) {
         dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
-        assert (dev_resources.cmb_mem_size <= (8 * 1024 * 1024));
+        if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
+            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name,
+                dev_resources.cmb_mem_size);
+            throw;
+        }
 
         err = pd->rdma_mem_bar_reserve(dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
         if (err) {
@@ -397,10 +401,15 @@ Eth::Eth(devapi *dev_api,
         WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
     }
+
     // Allocate CMB region
-    if (spec->enable_rdma && spec->barmap_size) {
+    if (spec->barmap_size) {
         dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
-        assert (dev_resources.cmb_mem_size <= (8 * 1024 * 1024));
+        if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
+            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name,
+                dev_resources.cmb_mem_size);
+            throw;
+        }
 
         dev_resources.cmb_mem_addr = pd->rdma_mem_bar_alloc(dev_resources.cmb_mem_size);
         assert (dev_resources.cmb_mem_addr != 0);
@@ -552,8 +561,10 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
         vf_spec->mac_addr = 0;
         // limit 1 lif per VF
         vf_spec->lif_count = 1;
-        // XXX no rdma on VFs for now
+        // TODO: no rdma on VFs for now
         vf_spec->enable_rdma = 0;
+        // TODO: no cmb bar for now
+        vf_spec->barmap_size = 0;
         dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
         dev_obj->SetType(type);
         eth_devs.push_back(dev_obj);
@@ -599,6 +610,7 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     eth_spec->eq_count = val.get<uint64_t>("eq_count", 0);
     eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
     eth_spec->intr_count = val.get<uint64_t>("intr_count");
+    eth_spec->barmap_size = val.get<uint16_t>("cmb_size", 0);
 
     if (val.get_optional<string>("rdma")) {
         eth_spec->enable_rdma = true;
@@ -613,7 +625,6 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
         eth_spec->prefetch_count = val.get<uint64_t>("rdma.prefetch_count");
         eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
-        eth_spec->barmap_size = 1;
     }
 
     if (val.get_optional<string>("network")) {
@@ -819,6 +830,7 @@ Eth::CreateHostDevice()
     pres.pfres.npids = spec->rdma_pid_count;
     pres.pfres.cmbpa = dev_resources.cmb_mem_addr;
     pres.pfres.cmbsz = dev_resources.cmb_mem_size;
+    pres.pfres.cmbprefetch = 1;
     pres.pfres.rompa = dev_resources.rom_mem_addr;
     pres.pfres.romsz = dev_resources.rom_mem_size;
     pres.pfres.totalvfs = spec->pcie_total_vfs;

@@ -522,6 +522,7 @@ union q_identity {
 #define IONIC_QIDENT_F_CQ	0x01	/* queue has completion ring */
 #define IONIC_QIDENT_F_SG	0x02	/* queue has scatter/gather ring */
 #define IONIC_QIDENT_F_EQ	0x04	/* queue can use event queue */
+#define IONIC_QIDENT_F_CMB	0x08	/* queue is in cmb bar */
 		__le64  features;
 		__le16  desc_sz;
 		__le16  comp_sz;
@@ -578,7 +579,8 @@ struct q_init_cmd {
 #define IONIC_QINIT_F_ENA	0x02	/* Enable the queue */
 #define IONIC_QINIT_F_SG	0x04	/* Enable scatter/gather on the queue */
 #define IONIC_QINIT_F_EQ	0x08	/* Enable event queue */
-#define IONIC_QINIT_F_DEBUG 0x80	/* Enable queue debugging */
+#define IONIC_QINIT_F_CMB	0x10	/* Enable cmb-based queue */
+#define IONIC_QINIT_F_DEBUG	0x80	/* Enable queue debugging */
 	u8     cos;
 	u8     ring_size;
 	__le64 ring_base;
