@@ -5,10 +5,15 @@
 /// \file
 /// This file contains common message headers, types etc. that are global across
 /// threads and processes
+/// WARNING: this must be a C file, not C++
 //----------------------------------------------------------------------------
 
 #ifndef __CORE_MSG_HPP__
 #define __CORE_MSG_HPP__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "nic/apollo/framework/api.h"
 #include "nic/apollo/framework/api.hpp"
@@ -69,6 +74,8 @@ typedef struct pds_nat_port_block_cfg_msg_s {
 typedef struct pds_cfg_msg_s {
     /// API operation
     api_op_t op;
+    /// API object id
+    obj_id_t obj_id;
     /// msg contents
     union {
         pds_vnic_cfg_msg_t vnic;
@@ -85,5 +92,9 @@ typedef struct pds_msg_s {
     pds_msg_id_t   id;         ///< unique id of the msg
     uint8_t        data[0];    ///< msg type + id specific data
 } pds_msg_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif    // __CORE_MSG_HPP__

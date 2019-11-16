@@ -6,13 +6,14 @@
 /// \file
 /// This file defines basic types for API processing
 /// WARNING: this must be a C file, not C++
-///
 //----------------------------------------------------------------------------
 
 #ifndef __FRAMEWORK_API_H__
 #define __FRAMEWORK_API_H__
 
-#include "nic/apollo/api/include/pds.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /// \brief API operation
 typedef enum api_op_e {
@@ -46,5 +47,9 @@ typedef enum obj_id_e {
     OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
     OBJ_ID_MAX,
 } obj_id_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif    // __FRAMEWORK_API_HPP__
