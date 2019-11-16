@@ -61,6 +61,8 @@ third-party/nist-cavp/*testvectors
 third-party/avago/x86_64/
 third-party/libz/
 third-party/libxml2/
+third-party/liblzma/
+third-party/libicuuc/
 third-party/liblmdb/
 third-party/rocksdb/
 sdk/third-party/avago/include/

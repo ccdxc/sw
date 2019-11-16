@@ -37,6 +37,8 @@ nic/third-party/gflags/aarch64/*
 
 nic/third-party/libz/*
 nic/third-party/libxml2/*
+nic/third-party/liblzma/*
+nic/third-party/libicuuc/*
 nic/third-party/rocksdb/*
 
 nic/third-party/liblmdb/*
