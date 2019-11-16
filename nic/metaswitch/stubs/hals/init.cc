@@ -3,22 +3,25 @@
 // Main entry point for the Pensando Distributed Services Agent (PDSA)
 //---------------------------------------------------------------
 
-#include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/metaswitch/pdsa_stub_init.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 
-unsigned int g_node_a_ip;
-unsigned int g_node_b_ip;
-unsigned int g_node_a_ac_ip;
-unsigned int g_node_b_ac_ip;
-unsigned int g_evpn_if_index;
-
-int main(void)
+namespace pdsa_stub{
+int init ()
 {
-    if(!pdsa_stub_mgmt_init()) {
-        return 1; 
+    if(!pdsa_stub::state_init()) {
+        return -1;
+    }
+    if(!pdsa_stub::hal_init()) {
+        goto error;
     }
 
-    pdsa_stub::init();
     return 0;
+
+error:
+    pdsa_stub::state_destroy();
+    pdsa_stub::hal_deinit();
+    return -1;
+}
 }

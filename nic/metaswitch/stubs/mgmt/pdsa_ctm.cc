@@ -86,7 +86,7 @@ pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
     NBB_TRC_EXIT();
 }
 
-NBB_VOID 
+static NBB_VOID
 pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 {
     NBB_TRC_ENTRY ("pdsa_ctm_rcv_transaction_done");
@@ -255,7 +255,6 @@ pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
     // Fill in the correlator
     mib_msg->correlator.handle = correlator;
 
-
 EXIT_LABEL:
 
     *mib = mib_msg;
@@ -288,6 +287,19 @@ pdsa_ctm_send_row_update_common (pdsa_config_t          *conf,
     // Send the Row Update request to CSS
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
 
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_ctm_rcv_ips (NBB_IPS *ips NBB_CCXT NBB_CXT)
+{
+    NBB_TRC_ENTRY ("pdsa_ctm_rcv_ips");
+
+    NBB_ASSERT_NUM_EQ (ips->ips_type, IPS_ATG_CPI_TRANSACTION_DONE);
+
+    NBB_TRC_FLOW ((NBB_FORMAT "Received IPS_ATG_CPI_TRANSACTION_DONE"));
+    pdsa_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
 
     NBB_TRC_EXIT();
     return;

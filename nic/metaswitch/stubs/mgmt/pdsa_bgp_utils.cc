@@ -446,8 +446,8 @@ pdsa_test_row_update_bgp_rm (pdsa_config_t *conf)
     conf->i3_index          = 1;
     conf->restart_supported = AMB_TRUE;
     conf->local_as          = 1;
-    conf->admin_status      = AMB_FALSE;
-    conf->router_id         = 0xAC110009;
+    conf->admin_status      = AMB_BGP_ADMIN_STATUS_UP;
+    conf->router_id         = NODE_A_IP;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_rm); 
@@ -467,7 +467,7 @@ pdsa_test_row_update_bgp_nm (pdsa_config_t *conf)
     conf->data_len      = sizeof (AMB_BGP_NM_ENT);
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
-    conf->admin_status  = AMB_BGP_ADMIN_STATUS_DOWN;
+    conf->admin_status  = AMB_BGP_ADMIN_STATUS_UP;
     conf->sck_index     = 1;
     conf->rm_index      = 1;
 
@@ -505,9 +505,6 @@ pdsa_test_row_update_bgp_rm_afi_safi (pdsa_config_t *conf)
 NBB_VOID
 pdsa_test_row_update_bgp_nm_listen (pdsa_config_t *conf)
 {
-    // Local variables
-    ip_addr_t           ip_addr;
-
     NBB_TRC_ENTRY ("pdsa_test_row_update_bgp_nm_listen");
 
     // Set params
@@ -517,7 +514,7 @@ pdsa_test_row_update_bgp_nm_listen (pdsa_config_t *conf)
     conf->sck_index     = 1;
     conf->admin_status  = AMB_BGP_ADMIN_STATUS_UP;
     conf->row_status    = AMB_ROW_ACTIVE;
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110009,  &ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_nm_listen); 
@@ -572,8 +569,8 @@ pdsa_test_row_update_bgp_peer (pdsa_config_t *conf)
     conf->local_nm              = 1;
     conf->config_passive        = AMB_FALSE;
     conf->admin_status          = AMB_BGP_ADMIN_STATUS_UP;
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110009,  &conf->ip_addr);
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110013,  &conf->remote_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_B_IP,  &conf->remote_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_peer); 
@@ -599,8 +596,8 @@ pdsa_test_row_update_bgp_peer_afi_safi (pdsa_config_t *conf,
     conf->local_addr_scope_id   = 0;
     conf->afi                   = afi;
     conf->safi                  = safi;
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110009,  &conf->ip_addr);
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110013,  &conf->remote_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_B_IP,  &conf->remote_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_peer_afi_safi); 

@@ -60,7 +60,7 @@ pdsa_test_init ()
 
     // limInterfaceCfgTable - NODE_A_EVPN_IF_INDEX
     pdsa_test_row_update_lim_if_cfg (&conf,
-                                     1,
+                                     EVPN_IF_INDEX,
                                      AMB_TRUE,
                                      AMB_TRISTATE_TRUE,
                                      AMB_TRISTATE_TRUE,
@@ -85,8 +85,8 @@ pdsa_test_init ()
     // l2fMacIpCfgTable
     pdsa_test_row_update_l2f_mac_ip_cfg(&conf);
     
-     //smiEntTable TODO:
-   // pdsa_test_row_update_smi (&conf);
+    //smiEntTable
+    pdsa_test_row_update_smi (&conf);
 
     // ftmEntTable
     pdsa_test_row_update_ftm (&conf);
@@ -187,7 +187,7 @@ pdsa_test_init ()
    // bgpRmAfiSafiTable
    pdsa_test_row_update_bgp_rm_afi_safi (&conf);
 
-    // bgpNmListenTable TODO:
+    // bgpNmListenTable
     pdsa_test_row_update_bgp_nm_listen (&conf);
     
     // bgpRmAfmJoinTable - AMB_BGP_AFI_IPV4

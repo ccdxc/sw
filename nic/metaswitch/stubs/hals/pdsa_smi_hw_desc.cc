@@ -96,7 +96,13 @@ bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
         // TODO: This needs to be changed to use L3 interface name
         // And also if linux interface name for the uplink is not fixed then 
         // need a way to derive dynamically here or in the FT-Stub
+
+#ifdef SIM
+        std::string if_name = "eth";
+#else
         std::string if_name = "inb_mnic";
+#endif
+
         if_name += std::to_string(port-1);
         strncpy (temp_port.id.if_name, if_name.c_str(), AMB_LIM_NAME_MAX_LEN);
 
@@ -108,12 +114,12 @@ bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
             // Need to fetch it later in LI stub when LIM interface is created
             ATG_SET_ZERO_MAC(mac_address);
             SDK_TRACE_DEBUG ("Could not find Linux interface %s. Using dummy MAC", 
-                             port);
+                             if_name);
             mac_address[5] = port;
         }
 
         SDK_TRACE_INFO ("Metaswitch SMI port add id=%d name=%s ifindex=0x%x MAC=%s", 
-                        port, if_name, ifindex, macaddr2str(mac_address));
+                        port, if_name.c_str(), ifindex, macaddr2str(mac_address));
 
         port_config.push_back(temp_port);
     }

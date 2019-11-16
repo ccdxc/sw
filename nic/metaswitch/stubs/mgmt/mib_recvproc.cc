@@ -75,8 +75,8 @@ NBB_VOID sms_receive_proc(NBB_IPS *ips,
       /***********************************************************************/
       /* IPS from N-BASE                                                     */
       /***********************************************************************/
-      NBB_TRC_FLOW((NBB_FORMAT "Received IPS_ATG_CPI_TRANSACTION_DONE"));
-      pdsa_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
+      NBB_TRC_FLOW((NBB_FORMAT "CPI_TO_USER_Q"));
+      pdsa_ctm_rcv_ips (ips NBB_CCXT);
       NBB_FREE_BUFFER(ips);
       break;
 

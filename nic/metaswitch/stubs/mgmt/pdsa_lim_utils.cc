@@ -57,7 +57,7 @@ pdsa_fill_amb_lim_interface_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_IF_CFG_IPV6_FWD);
 
         data->forwarding_mode = conf->forwarding_mode;
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_IF_STUS_FWD_MODE);
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_IF_CFG_FWD_MODE);
     }
 
     NBB_TRC_EXIT ();
@@ -371,10 +371,10 @@ pdsa_test_row_update_lim_if_addr (pdsa_config_t *conf)
     conf->data_len      = sizeof (AMB_LIM_L3_IF_ADDR);
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
-    conf->if_index      = 1;
+    conf->if_index      = EVPN_IF_INDEX;
     conf->prefix_len    = 24;
     
-    pdsa_convert_long_to_pdsa_ipv4_addr (0xAC110009, &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP, &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_lim_l3_if_addr); 

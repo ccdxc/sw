@@ -33,6 +33,13 @@ pdsa_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pdsa_config_t *conf)
     data->row_status = conf->row_status;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_ROW_STATUS);
 
+    pdsa_convert_ip_addr_to_amb_ip_addr (conf->ip_addr,
+                                         &data->local_router_address_type,
+                                         &data->local_router_addr_len,
+                                         data->local_router_addr);
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_LCL_RTR_ADR_TY);
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_LCL_RTR_ADDR);
+
     NBB_TRC_EXIT ();
     return;
 }
@@ -299,6 +306,8 @@ pdsa_test_row_update_evpn (pdsa_config_t *conf)
     conf->data_len      = sizeof (AMB_EVPN_ENT);
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
+
+    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP, &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_ent); 

@@ -10,12 +10,14 @@
 #include "nic/metaswitch/stubs/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 
 
 extern api_test::pdsa_test_params_t g_test_params;
 
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) {
-    return 0;
+    return 100;
 }
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
@@ -290,7 +292,23 @@ sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
     return SDK_RET_OK;
 }
 
+namespace sdk {
+namespace lib {
+catalog* catalog::factory(std::string catalog_file_path,
+                          std::string catalog_file_name,
+                          platform_type_t platform)
+{
+    static catalog g_ctlg_;
+    g_ctlg_.catalog_db_.num_fp_ports = 1;
+    return &g_ctlg_;
+}
+catalog::~catalog() {};
+}
+}
+
 sdk_ret_t pds_init(pds_init_params_s *params) {
+    static sdk::lib::catalog* ctlg = sdk::lib::catalog::factory();
+    api::g_pds_state.set_catalog(ctlg);
     return SDK_RET_OK;
 }
 

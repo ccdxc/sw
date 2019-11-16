@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
 
 namespace pdsa_stub {
 
@@ -22,8 +23,12 @@ constexpr size_t VRF_PREF_LEN = 4;
 static inline unsigned long 
 vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 {
-    assert(len > VRF_PREF_LEN);
-    return strtol(((const char*)vrfname)+VRF_PREF_LEN, nullptr, 10);
+    if (len == 0) return 0;
+    auto vrf_id = strtol(((const char*)vrfname), nullptr, 10);
+    if (vrf_id == 0) {
+        throw Error("Invalid VRF Name from Metaswitch");
+    }
+    return vrf_id;
 }
 
 static inline void 

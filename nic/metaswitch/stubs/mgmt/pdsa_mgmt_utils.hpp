@@ -20,6 +20,17 @@ extern "C" {
 #include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
 
+extern unsigned int g_node_a_ip;
+extern unsigned int g_node_b_ip;
+extern unsigned int g_node_a_ac_ip;
+extern unsigned int g_node_b_ac_ip;
+extern unsigned int g_evpn_if_index;
+
+#define NODE_A_IP       g_node_a_ip
+#define NODE_B_IP       g_node_b_ip
+#define NODE_A_AC_IP    g_node_a_ac_ip
+#define NODE_B_AC_IP    g_node_b_ac_ip
+#define EVPN_IF_INDEX   g_evpn_if_index
 
 NBB_VOID  pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 
                                                NBB_LONG      *type, 
