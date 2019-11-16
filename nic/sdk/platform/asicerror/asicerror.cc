@@ -76,7 +76,7 @@ traverse_interrupts (intr_reg_t &reg)
 
     for(int i=0; i < field_count; i++) {
         if (reg.id == 35 || reg.id == 16) {
-            if (i == 13 || i ==14) {
+            if (i == 11 || i ==12) {
                 continue;
             }
         }
