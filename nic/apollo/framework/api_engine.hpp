@@ -17,7 +17,7 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -326,5 +326,7 @@ api_engine *api_engine_get(void);
 /// \@}
 
 }    // namespace api
+
+using api::obj_ctxt_t;
 
 #endif    // __FRAMEWORK_API_ENGINE_HPP__

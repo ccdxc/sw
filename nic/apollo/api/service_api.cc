@@ -9,15 +9,16 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
 
 static sdk_ret_t
-pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                             pds_svc_mapping_key_t *key,
                             pds_svc_mapping_spec_t *spec)
 {
@@ -28,9 +29,9 @@ pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_SVC_MAPPING, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_SVC_MAPPING, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->svc_mapping_key = *key;
         } else {
             api_ctxt->api_params->svc_mapping_spec = *spec;
@@ -59,7 +60,7 @@ sdk_ret_t
 pds_svc_mapping_create (_In_ pds_svc_mapping_spec_t *spec,
                         _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_svc_mapping_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_svc_mapping_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -85,12 +86,12 @@ sdk_ret_t
 pds_svc_mapping_update (_In_ pds_svc_mapping_spec_t *spec,
                         _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_svc_mapping_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
+    return pds_svc_mapping_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
 pds_svc_mapping_delete (_In_ pds_svc_mapping_key_t *key,
                         _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_svc_mapping_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_svc_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

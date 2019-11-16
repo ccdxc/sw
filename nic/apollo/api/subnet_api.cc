@@ -8,16 +8,17 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 
 static sdk::sdk_ret_t
-pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_subnet_key_t *key, pds_subnet_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -27,9 +28,9 @@ pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
 
     // allocate API context
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_SUBNET, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_SUBNET, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->subnet_key = *key;
         } else {
             api_ctxt->api_params->subnet_spec = *spec;
@@ -84,7 +85,7 @@ pds_subnet_entry_find (pds_subnet_key_t *key)
 sdk::sdk_ret_t
 pds_subnet_create (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_subnet_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_subnet_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk::sdk_ret_t
@@ -126,11 +127,11 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
 sdk::sdk_ret_t
 pds_subnet_update (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_subnet_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
+    return pds_subnet_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk::sdk_ret_t
 pds_subnet_delete (_In_ pds_subnet_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_subnet_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_subnet_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

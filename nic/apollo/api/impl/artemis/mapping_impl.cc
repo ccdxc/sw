@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"

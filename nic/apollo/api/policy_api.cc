@@ -6,9 +6,10 @@
  * @brief   policy API handling
  */
 
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -21,7 +22,7 @@
  * @{
  */
 static sdk_ret_t
-pds_policy_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_policy_key_t *key, pds_policy_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -31,9 +32,9 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_POLICY, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_POLICY, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->policy_key = *key;
         } else {
             api_ctxt->api_params->policy_spec = *spec;
@@ -62,7 +63,7 @@ pds_policy_entry_find (pds_policy_key_t *key)
 sdk_ret_t
 pds_policy_create (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_policy_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_policy_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 /**
@@ -74,7 +75,7 @@ pds_policy_create (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 sdk_ret_t
 pds_policy_update (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_policy_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
+    return pds_policy_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 /**
@@ -86,7 +87,7 @@ pds_policy_update (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 sdk_ret_t
 pds_policy_delete (_In_ pds_policy_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_policy_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_policy_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }
 
 sdk_ret_t

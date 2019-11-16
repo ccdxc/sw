@@ -8,16 +8,17 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/vpc_state.hpp"
 
 static sdk_ret_t
-pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                     pds_vpc_key_t *key, pds_vpc_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -28,9 +29,9 @@ pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
     }
 
     // allocate API context
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_VPC, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_VPC, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->vpc_key = *key;
         } else {
             api_ctxt->api_params->vpc_spec = *spec;
@@ -78,7 +79,7 @@ pds_vpc_entry_find (pds_vpc_key_t *key)
 sdk_ret_t
 pds_vpc_create (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_vpc_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_vpc_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -119,18 +120,18 @@ pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
 sdk_ret_t
 pds_vpc_update (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_vpc_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
+    return pds_vpc_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
 pds_vpc_delete (_In_ pds_vpc_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_vpc_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_vpc_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }
 
 static sdk_ret_t
 pds_vpc_peer_api_handle (pds_batch_ctxt_t bctxt,
-                         api::api_op_t op, pds_vpc_peer_key_t *key,
+                         api_op_t op, pds_vpc_peer_key_t *key,
                          pds_vpc_peer_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -140,9 +141,9 @@ pds_vpc_peer_api_handle (pds_batch_ctxt_t bctxt,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_VPC_PEER, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_VPC_PEER, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->vpc_peer_key = *key;
         } else {
             api_ctxt->api_params->vpc_peer_spec = *spec;
@@ -193,7 +194,7 @@ sdk_ret_t
 pds_vpc_peer_create (_In_ pds_vpc_peer_spec_t *spec,
                      _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_vpc_peer_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_vpc_peer_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -229,11 +230,11 @@ sdk_ret_t
 pds_vpc_peer_update (_In_ pds_vpc_peer_spec_t *spec,
                      _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_vpc_peer_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec));
+    return (pds_vpc_peer_api_handle(bctxt, API_OP_UPDATE, NULL, spec));
 }
 
 sdk_ret_t
 pds_vpc_peer_delete (_In_ pds_vpc_peer_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
-    return (pds_vpc_peer_api_handle(bctxt, api::API_OP_DELETE, key, NULL));
+    return (pds_vpc_peer_api_handle(bctxt, API_OP_DELETE, key, NULL));
 }

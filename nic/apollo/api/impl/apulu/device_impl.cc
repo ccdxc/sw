@@ -14,6 +14,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"

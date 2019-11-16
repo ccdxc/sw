@@ -11,6 +11,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/meter.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
@@ -189,15 +190,15 @@ meter_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                         api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
-    case api::API_OP_CREATE:
-    case api::API_OP_DELETE:
+    case API_OP_CREATE:
+    case API_OP_DELETE:
         // for meter create, there is no stage 0 programming
         // for meter delete, since all objects (e.g., vnics, subnets)
         // referring to this meter are already modified to point
         // to other meter table(s) or deleted (agent is expected to
         // ensure this), there is no need to program any tables during
         // activation stage
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
         // affected objects like affected vpc, subnet and vnic objects
         // are in the dependent object list by now and will be reprogrammed
     default:

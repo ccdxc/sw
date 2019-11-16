@@ -8,15 +8,16 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/mirror.hpp"
 
 static sdk_ret_t
-pds_mirror_session_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_mirror_session_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                                pds_mirror_session_key_t *key,
                                pds_mirror_session_spec_t *spec)
 {
@@ -27,9 +28,9 @@ pds_mirror_session_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_MIRROR_SESSION, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_MIRROR_SESSION, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->mirror_session_key = *key;
         } else {
             api_ctxt->api_params->mirror_session_spec = *spec;
@@ -56,7 +57,7 @@ sdk_ret_t
 pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec,
                            _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_mirror_session_api_handle(bctxt, api::API_OP_CREATE, NULL, spec);
+    return pds_mirror_session_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
@@ -80,12 +81,12 @@ sdk_ret_t
 pds_mirror_session_update (_In_ pds_mirror_session_spec_t *spec,
                            _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_mirror_session_api_handle(bctxt, api::API_OP_UPDATE, NULL, spec);
+    return pds_mirror_session_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
 pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key,
                            _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_mirror_session_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_mirror_session_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

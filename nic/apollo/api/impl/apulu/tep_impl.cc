@@ -12,6 +12,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
@@ -139,17 +140,17 @@ tep_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     pds_tep_spec_t *spec;
 
     switch (api_op) {
-    case api::API_OP_CREATE:
+    case API_OP_CREATE:
         spec = &obj_ctxt->api_params->tep_spec;
         ret = activate_create_(epoch, (tep_entry *)api_obj, spec);
         break;
 
-    case api::API_OP_DELETE:
+    case API_OP_DELETE:
         // spec is not available for DELETE operations
         ret = activate_delete_(epoch, (tep_entry *)api_obj);
         break;
 
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;
         break;

@@ -9,16 +9,17 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 
 static sdk_ret_t
-pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                         pds_mapping_key_t *key, pds_mapping_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -28,9 +29,9 @@ pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
         return rv;
     }
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_MAPPING, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_MAPPING, op);
     if (likely(api_ctxt != NULL)) {
-        if (op == api::API_OP_DELETE) {
+        if (op == API_OP_DELETE) {
             api_ctxt->api_params->mapping_key = *key;
         } else {
             api_ctxt->api_params->mapping_spec = *spec;
@@ -149,7 +150,7 @@ pds_local_mapping_create (_In_ pds_local_mapping_spec_t *local_spec,
     pds_mapping_spec_t spec;
 
     pds_local_spec_to_mapping_spec(&spec, local_spec);
-    return pds_mapping_api_handle(bctxt, api::API_OP_CREATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_CREATE, NULL, &spec);
 }
 
 sdk_ret_t
@@ -163,7 +164,7 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
         return SDK_RET_INVALID_ARG;
     }
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);
-    return pds_mapping_api_handle(bctxt, api::API_OP_CREATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_CREATE, NULL, &spec);
 }
 
 //----------------------------------------------------------------------------
@@ -225,7 +226,7 @@ pds_local_mapping_update (_In_ pds_local_mapping_spec_t *local_spec,
     pds_mapping_spec_t spec;
 
     pds_local_spec_to_mapping_spec(&spec, local_spec);
-    return pds_mapping_api_handle(bctxt, api::API_OP_UPDATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_UPDATE, NULL, &spec);
 }
 
 sdk_ret_t
@@ -235,7 +236,7 @@ pds_remote_mapping_update (_In_ pds_remote_mapping_spec_t *remote_spec,
     pds_mapping_spec_t spec;
 
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);
-    return pds_mapping_api_handle(bctxt, api::API_OP_UPDATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_UPDATE, NULL, &spec);
 }
 
 //----------------------------------------------------------------------------
@@ -246,12 +247,12 @@ sdk_ret_t
 pds_local_mapping_delete (_In_ pds_mapping_key_t *key,
                           _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_mapping_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }
 
 sdk_ret_t
 pds_remote_mapping_delete (_In_ pds_mapping_key_t *key,
                            _In_ pds_batch_ctxt_t bctxt)
 {
-    return pds_mapping_api_handle(bctxt, api::API_OP_DELETE, key, NULL);
+    return pds_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

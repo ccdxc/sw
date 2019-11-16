@@ -9,7 +9,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {

@@ -9,22 +9,23 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 
 static inline sdk_ret_t
-pds_device_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
+pds_device_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_device_spec_t *spec)
 {
     api_ctxt_t *api_ctxt;
 
-    api_ctxt = api::api_ctxt_alloc(api::OBJ_ID_DEVICE, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_DEVICE, op);
     if (likely(api_ctxt != NULL)) {
-        if (op != api::API_OP_DELETE) {
+        if (op != API_OP_DELETE) {
             api_ctxt->api_params->device_spec = *spec;
         }
         return process_api(bctxt, api_ctxt);
@@ -35,19 +36,19 @@ pds_device_api_handle (pds_batch_ctxt_t bctxt, api::api_op_t op,
 sdk_ret_t
 pds_device_create (pds_device_spec_t *device, pds_batch_ctxt_t bctxt)
 {
-    return pds_device_api_handle(bctxt, api::API_OP_CREATE, device);
+    return pds_device_api_handle(bctxt, API_OP_CREATE, device);
 }
 
 sdk_ret_t
 pds_device_update (pds_device_spec_t *device, pds_batch_ctxt_t bctxt)
 {
-    return pds_device_api_handle(bctxt, api::API_OP_UPDATE, device);
+    return pds_device_api_handle(bctxt, API_OP_UPDATE, device);
 }
 
 sdk_ret_t
 pds_device_delete (pds_batch_ctxt_t bctxt)
 {
-    return pds_device_api_handle(bctxt, api::API_OP_DELETE, NULL);
+    return pds_device_api_handle(bctxt, API_OP_DELETE, NULL);
 }
 
 static inline void

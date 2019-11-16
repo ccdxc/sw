@@ -11,6 +11,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/impl/apollo/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
@@ -130,18 +131,18 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                                   api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
-    case api::API_OP_CREATE:
+    case API_OP_CREATE:
         // for security policy create, there is no stage 0 programming
         break;
 
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
         // need to walk all vnics AND subnets to see which of them are using
         // this policy table and then walk all the vnics that are part of the
         // vpcs and subnets and write new epoch data
         return SDK_RET_ERR;
         break;
 
-    case api::API_OP_DELETE:
+    case API_OP_DELETE:
         // same as update but every entry written will have invalid bit set
         //return SDK_RET_ERR;
         break;

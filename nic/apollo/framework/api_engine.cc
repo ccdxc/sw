@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -18,7 +19,6 @@
 
 namespace api {
 
-static slab *g_api_params_slab_ = NULL;
 static slab *g_api_ctxt_slab_ = NULL;
 static slab *g_api_msg_slab_ = NULL;
 
@@ -29,14 +29,8 @@ static pds_epoch_t    g_current_epoch_ = PDS_EPOCH_INVALID;
 static thread_local api_engine    g_api_engine;
 
 api_engine *
-api_engine_get(void) {
+api_engine_get (void) {
     return &g_api_engine;
-}
-
-slab *
-api_params_slab (void)
-{
-    return g_api_params_slab_;
 }
 
 slab *
@@ -822,9 +816,7 @@ api_engine::batch_abort_(void) {
 sdk_ret_t
 api_engine_init (void)
 {
-    g_api_params_slab_ =
-        slab::factory("api-params", PDS_SLAB_ID_API_PARAMS,
-                      sizeof(api_params_t), 512, true, true, true, NULL);
+    api_params_init();
     g_api_ctxt_slab_ =
         slab::factory("api-ctxt", PDS_SLAB_ID_API_CTXT,
                       sizeof(api_ctxt_t), 512, true, true, true, NULL);

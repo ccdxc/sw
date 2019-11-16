@@ -11,6 +11,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
@@ -202,15 +203,15 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                               api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
-    case api::API_OP_CREATE:
-    case api::API_OP_DELETE:
+    case API_OP_CREATE:
+    case API_OP_DELETE:
         // for route table create, there is no stage 0 programming
         // for route table delete, since all objects (e.g., subnets)
         // referring to this route table are already modified to point
         // to other routing table(s) or deleted (agent is expected to
         // ensure this), there is no need to program any tables during
         // activation stage
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
         // affected objects like affected vpc, subnet and vnic objects
         // are in the dependent object list by now and will be reprogrammed
     default:

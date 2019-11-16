@@ -11,8 +11,12 @@
 #ifndef __FRAMEWORK_API_MSG_HPP__
 #define __FRAMEWORK_API_MSG_HPP__
 
+#include <vector>
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+
+using std::vector;
 
 namespace api {
 

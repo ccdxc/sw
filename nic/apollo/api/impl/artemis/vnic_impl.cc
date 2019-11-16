@@ -13,6 +13,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
@@ -485,17 +486,17 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     pds_vnic_spec_t    *spec;
 
     switch (api_op) {
-    case api::API_OP_CREATE:
+    case API_OP_CREATE:
         spec = &obj_ctxt->api_params->vnic_spec;
         ret = activate_vnic_create_(epoch, (vnic_entry *)api_obj, spec);
         break;
 
-    case api::API_OP_DELETE:
+    case API_OP_DELETE:
         // spec is not available for DELETE operations
         ret = activate_vnic_delete_(epoch, (vnic_entry *)api_obj);
         break;
 
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;
         break;

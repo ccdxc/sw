@@ -12,6 +12,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
@@ -283,17 +284,17 @@ subnet_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     pds_subnet_spec_t *spec;
 
     switch (api_op) {
-    case api::API_OP_CREATE:
+    case API_OP_CREATE:
         spec = &obj_ctxt->api_params->subnet_spec;
         ret = activate_create_(epoch, (subnet_entry *)api_obj, spec);
         break;
 
-    case api::API_OP_DELETE:
+    case API_OP_DELETE:
         // spec is not available for DELETE operations
         ret = activate_delete_(epoch, (subnet_entry *)api_obj);
         break;
 
-    case api::API_OP_UPDATE:
+    case API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;
         break;
