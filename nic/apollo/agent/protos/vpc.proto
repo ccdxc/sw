@@ -34,28 +34,24 @@ message VPCSpec {
   uint32         Id               = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the VPC
   VPCType        Type             = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // IPv4 prefix of this VPC
-  types.IPv4Prefix V4Prefix       = 3 [(gogoproto.moretags) = "meta:mandatory"];
-  // IPv6 prefix of this VPC
-  types.IPv6Prefix V6Prefix       = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used and this route table is
   // inherited by the subnets under this VPC, if they are created with no route
   // table explicitly
-  uint32         V4RouteTableId   = 5;
+  uint32         V4RouteTableId   = 3;
   // identifier of the IPv6 route table to be used, if any and this route table
   // is inherited by the subnets under this VPC, if they are created with no
   // route table explicitly
-  uint32         V6RouteTableId   = 6;
+  uint32         V6RouteTableId   = 4;
   // Virtual Router (VR) MAC address, any packets originated or routed in this
   // VPC carry this MAC as source MAC
-  uint64         VirtualRouterMac = 7;
+  uint64         VirtualRouterMac = 5;
   // encapped traffic coming with the specified encap from fabric side will be
   // mapped to this VPC
-  types.Encap    FabricEncap      = 8;
+  types.Encap    FabricEncap      = 6;
   // IPv6 prefix/IP to be used to NAT the IPv4 traffic destined to reach a
   // service in IPv6 only network/service (all VNICs in this VPC will use this
   // prefix to get their IPv4 traffic (S)NAT-ed in the outbound direction)
-  types.IPv6Prefix Nat46Prefix    = 9;
+  types.IPv6Prefix Nat46Prefix    = 7;
 }
 
 // operational status of a VPC, if any

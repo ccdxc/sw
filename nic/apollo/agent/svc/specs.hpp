@@ -2706,9 +2706,6 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
     } else if (type == pds::VPC_TYPE_SUBSTRATE) {
         api_spec->type = PDS_VPC_TYPE_SUBSTRATE;
     }
-    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
-    ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->v6_prefix,
-                                         proto_spec.v6prefix());
     ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->nat46_prefix,
                                          proto_spec.nat46prefix());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
@@ -2731,10 +2728,6 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     } else if (api_spec->type == PDS_VPC_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
-    ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(),
-                                   &api_spec->v4_prefix);
-    ippfx_api_spec_to_ipv6pfx_proto_spec(proto_spec->mutable_v6prefix(),
-                                         &api_spec->v6_prefix);
     ippfx_api_spec_to_ipv6pfx_proto_spec(proto_spec->mutable_nat46prefix(),
                                          &api_spec->nat46_prefix);
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),

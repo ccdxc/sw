@@ -95,20 +95,17 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 func printVPCHeader() {
 	hdrLine := strings.Repeat("-", 124)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-10s%-18s%-18s%-10s%-10s%-20s%-14s%-18s\n",
-		"ID", "Type", "IPv4Prefix",
-		"IPv6Prefix", "V4RtTblId", "V6RtTblId",
-		"VRMac", "FabricEncap", "NAT46Prefix")
+	fmt.Printf("%-6s%-10s%-10s%-10s%-20s%-14s%-18s\n",
+		"ID", "Type", "V4RtTblId", "V6RtTblId",
+		"VR MAC", "FabricEncap", "NAT46Prefix")
 	fmt.Println(hdrLine)
 }
 
 func printVPC(vpc *pds.VPC) {
 	spec := vpc.GetSpec()
-	fmt.Printf("%-6d%-10s%-18s%-18s%-10d%-10d%-20s%-14s%-18s\n",
+	fmt.Printf("%-6d%-10s%-10d%-10d%-20s%-14s%-18s\n",
 		spec.GetId(),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
-		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
-		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		spec.GetV4RouteTableId(), spec.GetV6RouteTableId(),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		utils.EncapToString(spec.GetFabricEncap()),

@@ -101,7 +101,7 @@ func printSubnetHeader() {
     fmt.Printf("ToS - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-6s%-10s%-20s%-20s%-16s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s%-3s\n",
-		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VRouterIPv4", "VRouterIPv6", "VRouterMAC", "V4RtTblID",
+		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VR IPv4", "VR IPv6", "VR MAC", "V4RtTblID",
 		"V6RtTblID", "IngV4SGID", "IngV6SGID", "EgV4SGID", "EgV6SGID", "ToS")
 	fmt.Println(hdrLine)
 }

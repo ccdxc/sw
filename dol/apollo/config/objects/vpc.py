@@ -159,8 +159,6 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
-        utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
-        utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
