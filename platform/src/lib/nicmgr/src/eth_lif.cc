@@ -155,6 +155,8 @@ EthLif::EthLif(Eth *dev,
     hal_lif_info_.type = (lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
+    hal_lif_info_.tx_sched_table_offset = INVALID_INDEXER_INDEX;
+    hal_lif_info_.tx_sched_num_table_entries = 0;
     // For debugging: by default enables rdma sniffer on all host ifs
 #if 0
     if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {

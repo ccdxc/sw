@@ -57,7 +57,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     pds_lif_spec_t spec = { 0 };
 
     // program tx scheduler
-    //lif_program_tx_scheduler_(info);
+    lif_program_tx_scheduler_(info);
 
     spec.key = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
@@ -379,18 +379,22 @@ devapi_impl::lif_program_tx_scheduler_(lif_info_t *info) {
 
     apd_lif.lif_id = info->lif_id;
     apd_lif.hw_lif_id = info->lif_id;
-    apd_lif.tx_sched_table_offset = INVALID_INDEXER_INDEX;
-    apd_lif.tx_sched_num_table_entries = 0;
     apd_lif.total_qcount = lif_get_qcount_(info);
     apd_lif.cos_bmp = lif_get_cos_bmp_(info);
 
-    // allocate tx-scheduler resource
+
+    // allocate tx-scheduler resource, or use existing allocation
+    apd_lif.tx_sched_table_offset = info->tx_sched_table_offset;
+    apd_lif.tx_sched_num_table_entries = info->tx_sched_num_table_entries;
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_alloc(&apd_lif);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to alloc tx sched. lif %lu. err %d",
                       info->lif_id, ret);
         return ret;
     }
+    // save allocation in lif info
+    info->tx_sched_table_offset = apd_lif.tx_sched_table_offset;
+    info->tx_sched_num_table_entries = apd_lif.tx_sched_num_table_entries;
 
     // program tx scheduler and policer
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_program(&apd_lif);
