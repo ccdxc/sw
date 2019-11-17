@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/table/sltcam/sltcam.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -42,6 +43,7 @@ public:
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     sltcam *nacl_tbl(void) { return nacl_tbl_; }
+    rte_indexer *copp_tbl(void) { return copp_idxr_; }
 
     friend class apulu_impl;            ///< friend of apulu_impl_state
 
@@ -49,6 +51,7 @@ private:
     sltcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
     sltcam *nacl_tbl_;                  ///< NACL tcam table
+    rte_indexer *copp_idxr_;            ///< indexer for CoPP table
     handle_t ing_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];
     handle_t egr_drop_stats_tbl_hdls_[P4E_DROP_REASON_MAX + 1];
 };

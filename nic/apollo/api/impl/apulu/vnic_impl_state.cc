@@ -21,10 +21,12 @@ namespace impl {
 /// @{
 
 vnic_impl_state::vnic_impl_state(pds_state *state) {
-    sdk_table_factory_params_t    table_params;
+    p4pd_table_properties_t tinfo;
+    sdk_table_factory_params_t table_params;
 
     // allocate indexer for vnic hw id allocation and reserve 0th entry
-    vnic_idxr_ = rte_indexer::factory(PDS_MAX_VNIC, true, true);
+    p4pd_global_table_properties_get(P4TBL_ID_VNIC_TX_STATS, &tinfo);
+    vnic_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(vnic_idxr_ != NULL);
 
     // create a slab for vnic impl entries

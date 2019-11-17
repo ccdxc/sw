@@ -14,6 +14,8 @@
 #include "nic/apollo/api/impl/apulu/apulu_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
+using sdk::table::sdk_table_factory_params_t;
+
 namespace api {
 namespace impl {
 
@@ -22,7 +24,8 @@ namespace impl {
 /// \@{
 
 apulu_impl_state::apulu_impl_state(pds_state *state) {
-    sdk::table::sdk_table_factory_params_t table_params;
+    p4pd_table_properties_t tinfo;
+    sdk_table_factory_params_t table_params;
 
     memset(&table_params, 0, sizeof(table_params));
     table_params.table_id = P4TBL_ID_P4I_DROP_STATS;
@@ -41,12 +44,18 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     table_params.entry_trace_en = false;
     nacl_tbl_ = sltcam::factory(&table_params);
     SDK_ASSERT(nacl_tbl() != NULL);
+
+    // bookkeeping for CoPP table
+    p4pd_global_table_properties_get(P4TBL_ID_COPP, &tinfo);
+    copp_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
+    SDK_ASSERT(copp_idxr_ != NULL);
 }
 
 apulu_impl_state::~apulu_impl_state() {
-    sltcam::destroy(ingress_drop_stats_tbl());
-    sltcam::destroy(egress_drop_stats_tbl());
-    sltcam::destroy(nacl_tbl());
+    sltcam::destroy(ingress_drop_stats_tbl_);
+    sltcam::destroy(egress_drop_stats_tbl_);
+    sltcam::destroy(nacl_tbl_);
+    rte_indexer::destroy(copp_idxr_);
 }
 
 /// \@}
