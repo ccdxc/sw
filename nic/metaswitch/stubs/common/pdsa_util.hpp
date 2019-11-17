@@ -49,6 +49,30 @@ convert_ipaddr_ms_to_pdsa (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
     memcpy (&(out_ip->addr), &(in_ip.address), in_ip.length);
 }
 
+static inline void 
+convert_ipaddr_pdsa_to_ms (const ip_addr_t&   in_ip, 
+                           ATG_INET_ADDRESS*  out_ip) 
+{
+    switch (in_ip.af)
+    {
+        case IP_AF_IPV4:
+            out_ip->type = AMB_INETWK_ADDR_TYPE_IPV4;
+            out_ip->length = AMB_MAX_IPV4_ADDR_LEN;
+            break;
+
+        case IP_AF_IPV6:
+            out_ip->type = AMB_INETWK_ADDR_TYPE_IPV6;
+            out_ip->length = AMB_MAX_IPV6_ADDR_LEN;
+            break;
+
+        default:
+            out_ip->type = out_ip->length = 0;
+            return;
+    }
+
+    NBB_MEMCPY (&(out_ip->address), &(in_ip.addr), out_ip->length);
+    return;
+}
 // Wrapper struct to use MAC as key in STL
 struct mac_addr_wr_t {
     mac_addr_t m_mac;

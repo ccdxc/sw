@@ -12,7 +12,6 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-
 #include <nbase.h>
 extern "C"
 {
@@ -37,6 +36,7 @@ private:
         ip_addr_t    tep_ip;
         ip_addr_t    src_ip;
         pds_nexthop_group_id_t hal_uecmp_idx; 
+        std::string  tep_ip_str;
     };
 
     struct store_info_t {
@@ -65,6 +65,7 @@ private:
         ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd->vxlan_settings.source_ip;
         pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
         NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd->id.hw_correlator);
+        ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
     }
 
     void fetch_store_info_(pdsa_stub::state_t* state) {
@@ -92,7 +93,7 @@ private:
     }
 
     pds_tep_spec_t make_pds_tep_spec_(void) {
-        pds_tep_spec_t spec;
+        pds_tep_spec_t spec = {0};
         auto& tep_prop = store_info_.tep_obj->properties();
         spec.key = make_pds_tep_key_();
         spec.remote_ip = tep_prop.tep_ip;
@@ -105,12 +106,12 @@ private:
     }
 
     pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void) {
-        pds_nexthop_group_spec_t spec;
+        pds_nexthop_group_spec_t spec = {0};
         auto& tep_prop = store_info_.tep_obj->properties();
         spec.key = make_pds_nhgroup_key_();
         spec.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
         spec.num_nexthops = 1;
-        spec.nexthops[0].key.id = 0; // Unused for NHs pointing to TEPs
+        spec.nexthops[0].key.id = 1; // Unused for NHs pointing to TEPs
         spec.nexthops[0].type = PDS_NH_TYPE_OVERLAY;
         // Use the TEP MS IfIndex as the TEP Index
         spec.nexthops[0].tep.id = tep_prop.hal_tep_idx;

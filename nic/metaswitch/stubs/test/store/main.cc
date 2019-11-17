@@ -8,11 +8,11 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/test/utils/base.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include <gtest/gtest.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <netpacket/packet.h>

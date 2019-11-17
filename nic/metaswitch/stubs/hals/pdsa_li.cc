@@ -48,10 +48,14 @@ NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_t
     try {
         pdsa_stub::li_vxlan_tnl vxtnl;
         if (vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd)) {
+#if 0 // TODO: wait for async support from MS
             return ATG_ASYNC_COMPLETION;
+#else
+            return ATG_OK;
+#endif
         }
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed ", e.what());
+        SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
         return ATG_UNSUCCESSFUL;
     }
     return ATG_OK;
@@ -65,7 +69,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex)
         // TODO: Need to change this API to include the IPS 
         // TODO: For now send synchronous response to MS for deletes
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed ", e.what());
+        SDK_TRACE_ERR ("Vxlan Tunnel Delete processing failed %s", e.what());
         return ATG_UNSUCCESSFUL;
     }
     return ATG_OK;

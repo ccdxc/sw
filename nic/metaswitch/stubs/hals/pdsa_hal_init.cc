@@ -11,13 +11,25 @@
 namespace pdsa_stub {
 
 void
-hal_callback (uint64_t cookie)
+hal_callback (bool status, uint64_t cookie)
 {
     std::unique_ptr<cookie_t> cookie_ptr ((cookie_t*) cookie);
 
+    if (!status) {
+        SDK_TRACE_ERR("Async PDS Batch failure for %s", cookie_ptr->str.c_str()); 
+        return;
+    }
+
+    SDK_TRACE_DEBUG("Async PDS Batch success for %s", cookie_ptr->str.c_str()); 
+
     auto state_ctxt = pdsa_stub::state_t::thread_context();
-    for (auto& cookie_obj: cookie_ptr->objs) {
-        cookie_obj->update_store (state_ctxt.state(), cookie_ptr->op_delete); 
+    for (auto& obj_uptr: cookie_ptr->objs) {
+        obj_uptr->update_store (state_ctxt.state(), cookie_ptr->op_delete); 
+        // For create/update operations the underlying obj is saved in store
+        // and should not be freed when cookie is freed
+        if (!cookie_ptr->op_delete) {
+            obj_uptr.release();
+        }
     }
 
     if (cookie_ptr->ips == nullptr) {return;}

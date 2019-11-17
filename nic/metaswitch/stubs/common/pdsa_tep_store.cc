@@ -50,8 +50,8 @@ void tep_obj_t::update_store (state_t* state, bool op_delete)
 {
     if (!op_delete) {
         state->tep_store().add_upd(this->key(), this);
-        SDK_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %ld, \
-                         hal_uecmp_idx_ %ld, hal_oecmp_idx_ %ld", 
+        SDK_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %ld, "
+                         "hal_uecmp_idx_ %ld, hal_oecmp_idx_ %ld", 
                          ipaddr2str(&prop_.tep_ip), prop_.hal_tep_idx, 
                          prop_.hal_uecmp_idx, prop_.hal_oecmp_idx);
     } else { 

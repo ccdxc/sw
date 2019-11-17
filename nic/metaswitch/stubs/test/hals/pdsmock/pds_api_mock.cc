@@ -1,4 +1,11 @@
-#include  <stdio.h>
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
+
+#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock.hpp"
+#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock_validate.hpp"
+
+#include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
@@ -7,20 +14,82 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/metaswitch/stubs/test/utils/base.hpp"
 #include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/apollo/test/utils/nexthop_group.hpp"
+
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
 
+#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 
-extern api_test::pdsa_test_params_t g_test_params;
+#include  <stdio.h>
 
-pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) {
-    return 100;
+
+pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
+{
+    auto pds_mock = dynamic_cast<pdsa_test::pds_mock_t*>(pdsa_test::test_params()->test_output);
+    if (pds_mock == nullptr) {
+        // Not running in mock test mode - return dummy
+        return ((uint64_t) new pdsa_test::pds_mock_t);
+    }
+    pds_mock->cookie = (void*) batch_params->cookie;
+    return ((pds_batch_ctxt_t) pds_mock);
 }
 
-sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
+sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) 
+{
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    int count = 0;
+    auto& pds_ret_status =  pds_mock->pds_ret_status;
+
+    if (pds_mock->mock_pds_batch_commit_fail_) {
+        return SDK_RET_ERR;
+    }
+    if (pds_mock->expected_pds.size() != pds_mock->rcvd_pds.size()) {
+        std::cout << "Batch size mismatch - Expected: "
+                  << pds_mock->expected_pds.size() << " Received:" 
+                  << pds_mock->rcvd_pds.size()  << std::endl;
+        pds_ret_status = false;
+        return SDK_RET_OK;
+    }
+    for (auto& expected_pds: pds_mock->expected_pds) {
+        auto& rcvd_pds = pds_mock->rcvd_pds[count];
+        if (expected_pds.op != rcvd_pds.op) {
+            std::cout << "Op Mismatch - Expected: " << expected_pds.op 
+                      << "  Received: " << rcvd_pds.op << std::endl;
+            pds_ret_status = false;
+            return SDK_RET_OK;
+        }
+        switch (expected_pds.obj_id) {
+        case OBJ_ID_TEP: 
+        {
+            if (!pdsa_test::pds_tep_mock_validate (expected_pds, rcvd_pds)) {
+                pds_ret_status = false;
+                return SDK_RET_OK;
+            }
+            break;
+        }
+        case OBJ_ID_NEXTHOP_GROUP:
+        {
+            if (!pdsa_test::pds_nhgroup_mock_validate (expected_pds, rcvd_pds)) {
+                pds_ret_status = false;
+                return SDK_RET_OK;
+            }
+            break;
+        }
+        default:
+            break;
+        }
+        ++count;
+    }
+    if (pds_mock->mock_pds_batch_async_fail_) {
+        pds_ret_status = false;
+        return SDK_RET_OK;
+    }
+    pds_ret_status = true;
     return SDK_RET_OK;
 }
 
@@ -94,33 +163,20 @@ sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *key,
 
 sdk_ret_t pds_nexthop_create(pds_nexthop_spec_s *spec,
                              pds_batch_ctxt_t bctxt) {
-    printf("In mock nhcreate\n");
-    if (!g_test_params.nh.spec_compare(spec)) {
-        return SDK_RET_ERR;
-    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_nexthop_read(pds_nexthop_key_t *key, pds_nexthop_info_t *info) {
-    if (!g_test_params.nh.key_compare(key)) {
-        return SDK_RET_ERR;
-    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_nexthop_update(pds_nexthop_spec_s *spec,
                              pds_batch_ctxt_t bctxt) {
-    if (!g_test_params.nh.spec_compare(spec)) {
-        return SDK_RET_ERR;
-    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key,
                              pds_batch_ctxt_t bctxt) {
-    if (!g_test_params.nh.key_compare(key)) {
-        return SDK_RET_ERR;
-    }
     return SDK_RET_OK;
 }
 
@@ -146,6 +202,9 @@ sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key,
 
 sdk_ret_t pds_tep_create(pds_tep_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_CREATE);
+    pds_mock->rcvd_pds.back().tep = *spec;
     return SDK_RET_OK;
 }
 
@@ -155,11 +214,20 @@ sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info) {
 
 sdk_ret_t pds_tep_update(pds_tep_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_UPDATE);
+    pds_mock->rcvd_pds.back().tep = *spec;
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_tep_delete(pds_tep_key_t *key,
                          pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_DELETE);
+    pds_mock->rcvd_pds.back().tep.key = *key;
     return SDK_RET_OK;
 }
 
@@ -269,21 +337,36 @@ sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_s *spec,
 
 sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_s *spec,
                                    pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_NEXTHOP_GROUP, API_OP_CREATE);
+    pds_mock->rcvd_pds.back().nhgroup = *spec;
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_group_read(pds_nexthop_group_key_t *key,
+sdk_ret_t pds_nexthop_group_read(pds_nexthop_key_t *key, 
                                  pds_nexthop_group_info_t *info) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_s *spec,
                                    pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_NEXTHOP_GROUP, API_OP_UPDATE);
+    pds_mock->rcvd_pds.back().nhgroup = *spec;
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
                                    pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_NEXTHOP_GROUP, API_OP_DELETE);
+    pds_mock->rcvd_pds.back().nhgroup.key = *key;
     return SDK_RET_OK;
 }
 
@@ -303,8 +386,8 @@ catalog* catalog::factory(std::string catalog_file_path,
     return &g_ctlg_;
 }
 catalog::~catalog() {};
-}
-}
+} // End namespace lib
+} // End namespace sdk
 
 sdk_ret_t pds_init(pds_init_params_s *params) {
     static sdk::lib::catalog* ctlg = sdk::lib::catalog::factory();

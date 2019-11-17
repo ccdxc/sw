@@ -94,7 +94,8 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
-        throw Error {"VxlanAddUpdate PDS Batch Start failed"};
+        throw Error("PDS Batch Start failed for TEP " 
+                    + ips_info_.tep_ip_str);
     }
     bctxt_guard_.set (bctxt);
 
@@ -113,22 +114,20 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
             ret = pds_tep_update(&tep_spec, bctxt);
         }
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error {"PDS Tep Create failed"};
+            throw Error("PDS Tep Create failed for TEP " 
+                        + ips_info_.tep_ip_str);
         }
 
         auto nhgroup_spec = make_pds_nhgroup_spec_();
-#if 0 // TODO: API unavailable
         if (op_create_) {
             ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
         } else {
             ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
         }
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error {"PDS ECMP Create failed"};
+            throw Error("PDS ECMP Create failed for TEP "
+                        + ips_info_.tep_ip_str);
         }
-#else
-        nhgroup_spec = nhgroup_spec;
-#endif
     }
     return bctxt_guard_;
 }
@@ -138,13 +137,10 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
 {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
 
-    // Alloc new cookie and cache IPS
-    cookie_uptr_.reset (new cookie_t);
-    cookie_uptr_->ips = (NBB_IPS*) vxlan_tnl_add_upd;
-
     parse_ips_info_(vxlan_tnl_add_upd);
-
-    auto tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
+    // Alloc new cookie and cache IPS
+    cookie_uptr_.reset (new cookie_t("Add-Update TEP "+ips_info_.tep_ip_str));
+    cookie_uptr_->ips = (NBB_IPS*) vxlan_tnl_add_upd;
 
     { // Enter thread-safe context to access/modify global state
     auto state_ctxt = pdsa_stub::state_t::thread_context();
@@ -153,7 +149,7 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
 
     if (store_info_.tep_obj != nullptr) {
         // Update Tunnel
-        SDK_TRACE_INFO ("TEP %s: Update IPS", tep_ip_str);
+        SDK_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
             return false;
@@ -161,7 +157,7 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
         pds_bctxt_guard = make_batch_pds_spec_(); 
     } else {
         // Create Tunnel
-        SDK_TRACE_INFO ("TEP %s: Create IPS", tep_ip_str);
+        SDK_TRACE_INFO ("TEP %s: Create IPS", ips_info_.tep_ip_str.c_str());
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
         pds_bctxt_guard = make_batch_pds_spec_(); 
@@ -175,9 +171,14 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
       // Do Not access/modify global state after this
 
     // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
-    cookie_uptr_.release();
-    pds_batch_commit(pds_bctxt_guard.release());
-    SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", tep_ip_str);
+    auto cookie = cookie_uptr_.release();
+    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+        delete cookie;
+        throw Error("Batch commit failed for Add-Update TEP " 
+                    + ips_info_.tep_ip_str);
+    }
+    SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
+                     ips_info_.tep_ip_str.c_str());
     return true;
 }
 
@@ -186,11 +187,6 @@ li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex)
 {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
-    char* tep_ip_str;
-
-    // Alloc new cookie without IPS (sync response to MS)
-    cookie_uptr_.reset (new cookie_t);
-    cookie_uptr_->op_delete = true;
 
     ips_info_.if_index = tnl_ifindex;
     { // Enter thread-safe context to access/modify global state
@@ -202,8 +198,13 @@ li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex)
         // No change
         return ATG_OK;
     }
-    tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
-    SDK_TRACE_INFO ("TEP %s: Delete IPS", tep_ip_str);
+    ips_info_.tep_ip_str = ipaddr2str(&store_info_.tep_obj->properties().tep_ip);
+    SDK_TRACE_INFO ("TEP %s: Delete IPS", ips_info_.tep_ip_str.c_str());
+
+    // Alloc new cookie without IPS (sync response to MS)
+    cookie_uptr_.reset (new cookie_t("Delete TEP " + ips_info_.tep_ip_str));
+    cookie_uptr_->op_delete = true;
+
     // Delete Tunnel
     cache_obj_in_cookie_for_delete_op_(); 
     pds_bctxt_guard = make_batch_pds_spec_ (); 
@@ -216,9 +217,13 @@ li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex)
       // Do Not access/modify global state after this
 
     // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
-    cookie_uptr_.release();
-    pds_batch_commit(pds_bctxt_guard.release());
-    SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", tep_ip_str);
+    auto cookie = cookie_uptr_.release();
+    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+        delete cookie;
+        throw Error("Batch commit failed for delete TEP " + ips_info_.tep_ip_str);
+    }
+    SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
+                     ips_info_.tep_ip_str.c_str());
     return true;
 }
 
