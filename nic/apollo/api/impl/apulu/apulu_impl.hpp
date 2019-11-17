@@ -32,6 +32,12 @@
 // reserved NAT h/w id
 #define PDS_IMPL_RSVD_NAT_HW_ID                0
 
+// policer refresh interval in micro seconds
+#define PDS_POLICER_DEFAULT_REFRESH_INTERVAL   250
+
+// max policer token per interval
+#define PDS_POLICER_MAX_TOKENS_PER_INTERVAL    ((1ull << 39) -1 )
+
 namespace api {
 namespace impl {
 

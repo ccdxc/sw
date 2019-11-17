@@ -10,14 +10,15 @@
 
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/p4/common/defines.h"
-#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 namespace api {
 namespace impl {
@@ -25,6 +26,46 @@ namespace impl {
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
 /// \ingroup PDS_LIF
 /// \@{
+
+#define copp_info    action_u.copp_copp
+static inline sdk_ret_t
+program_copp_entry_ (sdk::policer_t *policer, uint16_t idx)
+{
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    uint64_t rate_tokens = 0;
+    uint64_t burst_tokens = 0;
+    copp_actiondata_t copp_data = { 0 };
+
+    copp_data.action_id = COPP_COPP_ID;
+    if (policer->rate) {
+        copp_data.copp_info.entry_valid = 1;
+        if (policer->type == sdk::POLICER_TYPE_PPS) {
+            copp_data.copp_info.pkt_rate = 1;
+        }
+        ret = policer_to_token_rate(policer,
+                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,
+                                    &rate_tokens, &burst_tokens);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        memcpy(copp_data.copp_info.burst, &burst_tokens,
+               std::min(sizeof(copp_data.copp_info.burst),
+                        sizeof(burst_tokens)));
+        memcpy(copp_data.copp_info.rate, &rate_tokens,
+               std::min(sizeof(copp_data.copp_info.rate), sizeof(rate_tokens)));
+        memcpy(copp_data.copp_info.tbkt, &burst_tokens,
+               std::min(sizeof(copp_data.copp_info.tbkt),
+               sizeof(burst_tokens)));
+    }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_COPP, idx,
+                                       NULL, NULL, &copp_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to write to copp table at idx %u", idx);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+#undef copp_info
 
 lif_impl *
 lif_impl::factory(pds_lif_spec_t *spec) {
@@ -356,6 +397,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
+    sdk::policer_t policer;
     nacl_swkey_t key = { 0 };
     static uint32_t dplif = 0;
     nacl_swkey_mask_t mask = { 0 };
@@ -386,6 +428,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // allocate and program copp table entry for flow miss
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = { sdk::POLICER_TYPE_PPS, 300000, 30000 };
+    program_copp_entry_(&policer, idx);
+
     // flow miss packet coming back from txdma to s/w datapath
     // lif (i.e., dpdk/vpp lif)
     key.control_metadata_flow_miss = 1;
@@ -393,6 +441,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_FLOW_MISS_ID;
     data.nacl_flow_miss_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_flow_miss_action.nexthop_id = nh_idx_;
+    data.nacl_flow_miss_action.copp_policer_id = idx;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());

@@ -43,7 +43,7 @@ public:
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     sltcam *nacl_tbl(void) { return nacl_tbl_; }
-    rte_indexer *copp_tbl(void) { return copp_idxr_; }
+    rte_indexer *copp_idxr(void) { return copp_idxr_; }
 
     friend class apulu_impl;            ///< friend of apulu_impl_state
 
