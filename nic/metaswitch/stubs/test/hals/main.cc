@@ -13,7 +13,10 @@
 #include "nic/metaswitch/pdsa_stub_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "iostream"
+#include "boost/property_tree/ptree.hpp"
 
+#define EVPN_CONFIG_FILE_PATH  "/sw/nic/metaswitch/config/"
+using boost::property_tree::ptree;
 using namespace std;
 
 api_test::pdsa_test_params_t g_test_params;
@@ -52,19 +55,39 @@ unsigned int g_evpn_if_index;
 int
 main (int argc, char **argv)
 {
-    if (argc != 6)
+    ptree       pt;
+    std::string value;
+    std::string cfg_file;
+    std::string cfg_path = EVPN_CONFIG_FILE_PATH;
+
+    if (argc != 2)
     {
         cout << "Error! Invalid Command Line Arguments. Usage:\n";
-        cout << "pdsa_binary Local-IP Remote-IP Local-AC-IP Remote-AC-IP If-Index\n";
-        cout << "IP Addresses in A.B.C.D Format. If-Index in Hex\n";
+        cout << "pdsa-binary <json config file name>\n";
         return 0;
     }
 
-    g_node_a_ip     = inet_network (argv[1]); // NODE A IP Address
-    g_node_b_ip     = inet_network (argv[2]); // NODE B IP Address
-    g_node_a_ac_ip  = inet_network (argv[3]); // NODE A AC IP
-    g_node_b_ac_ip  = inet_network (argv[4]); // NODE B AC IP
-    g_evpn_if_index = strtol (argv[5], NULL, 0); // If Index
+    // Get config file
+    cfg_file = cfg_path + argv[1];
+    std::ifstream json_cfg (cfg_file.c_str());
+    if (!json_cfg)
+    {
+        cout << "File Error! Cannot open configuration file " <<cfg_file<<endl;
+        return -1;
+    }
+
+    //read config
+    read_json (json_cfg, pt);
+    value           = pt.get <std::string>("local.ip","");
+    g_node_a_ip     = inet_network (value.c_str());
+    value           = pt.get <std::string>("local.ac-ip","");
+    g_node_a_ac_ip  = inet_network (value.c_str());
+    value           = pt.get <std::string>("remote.ip","");
+    g_node_b_ip     = inet_network (value.c_str());
+    value           = pt.get <std::string>("remote.ac-ip","");
+    g_node_b_ac_ip  = inet_network (value.c_str());
+    value           = pt.get <std::string>("if-index","");
+    g_evpn_if_index = strtol (value.c_str(),NULL, 0);
 
     pds_init(NULL);
     if(!pdsa_stub_mgmt_init()) {
