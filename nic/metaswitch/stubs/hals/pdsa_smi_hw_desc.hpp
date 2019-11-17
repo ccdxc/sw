@@ -7,11 +7,7 @@
 #define PDSA_SMI_HPP_INCLUDED
 
 #include <ntl_mac_pool.hpp>
-
-#include <smi_c_includes.hpp>
-#include <smi.h>
 #include <hw_desc/smi_hw_desc.hpp>
-
 #include <vector>
 
 namespace pdsa_stub

@@ -1,16 +1,27 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-export MS_ROOT = $(TOPDIR)/nic/third-party/metaswitch
-export GMK_TARGETOS = linuxmt64
-export MODE = debug
-export MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)/$(MODE)
-
-export MS_COMPILATION_SWITCH = \
-        LINUX_MT_NBASE \
+MODE = debug
+MS_ROOT = $(TOPDIR)/nic/third-party/metaswitch
+MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)/$(MODE)
+MS_COMPILATION_SWITCH = \
         NBB_64BIT_TYPES_NATIVE \
         NBB_64_BIT_POINTERS
 
-export MS_INCLPATH = \
+ifeq ($(ARCH),aarch64)
+    GMK_TARGETOS = aarch64
+    MS_COMPILATION_SWITCH += LINUX_NBASE
+    MS_LIB_DIR += \
+	-Wl,-rpath,$(TOPDIR)/nic/third-party/libxml2/$(GMK_TARGETOS)/lib \
+        -Wl,-rpath,$(TOPDIR)/nic/third-party/libz/$(GMK_TARGETOS)/lib \
+        -Wl,-rpath,$(TOPDIR)/nic/third-party/liblzma/$(GMK_TARGETOS)/lib \
+        -Wl,-rpath,$(TOPDIR)/nic/third-party/libicuuc/$(GMK_TARGETOS)/lib
+else
+    GMK_TARGETOS = linuxmt64
+    MS_COMPILATION_SWITCH += LINUX_MT_NBASE
+endif
+
+
+MS_INCLPATH = \
         code/comn/intface        \
         code/comn/custom         \
         code/comn                \
@@ -38,16 +49,4 @@ export MS_INCLPATH = \
 	code/comn/worker         \
 	output/$(GMK_TARGETOS)
 
-export MS_LD_LIBS = \
-        dcgeolocn dcamx dchm dci3dl dcadll dctpl dchals dcjoinxcpi \
-        dcftm dcjoinropi dclim dcjoinbdii dcjoinlapi dcjointci \
-        dcjointpi dcjoinsmi dci3filter dcysscam dcyssdef dcpcepsl \
-        dcsmi dcsck dcipl dccpfl dcnrm dcjoinnbpi dcl2radv dcnar \
-        dcjoinnari dcevpn dcbdpl dcraid dcbgp dcqaql dcamh \
-        dcqcft dcla dcl2 dcli dcjoinfri dcfrl dcjoinlipi \
-        dcqcrt dccipr dcqrml dcl2rdisc dcpsm dcjoinbfdi \
-        dcjoinnhpi dcjoini3 dcjoinnri dcjoinpri dcjoinari \
-        dcjointpqi dcl2f dcjoinbdpi dcjoinmai dcjoinmmi \
-        dcmal dcbasewo dcfte dchasl dcai3 dccss dccssu \
-        dcamb dcsm dchaf dcamkl dcnbase dcregex   \
-        pthread rt stdc++
+MS_LD_LIBS = dcsmi si
