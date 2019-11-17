@@ -24,7 +24,8 @@ pal_get_lock_fd(const pal_lock_id_t lock_id)
     assert(lock_id < LOCK_LAST);
 
     if (!locks[lock_id].in_use) {
-        locks[lock_id].fd = open(locks[lock_id].filename, O_CREAT | O_RDWR);
+        locks[lock_id].fd = open(locks[lock_id].filename,
+                                 O_CREAT | O_RDWR, 0666);
         locks[lock_id].in_use = 1;
     }
 

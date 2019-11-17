@@ -88,7 +88,7 @@ stlp_fbe(const pcie_stlp_t *stlp)
 {
     static const u_int8_t betab[4] = { 0xf, 0xe, 0xc, 0x8 };
 
-    if (stlp->size <= 4) {
+    if (stlp_dw(stlp) <= 1) {
         u_int8_t fbe = (1 << stlp->size) - 1;
         return fbe << (stlp->addr & 0x3);
     }
@@ -100,8 +100,8 @@ stlp_lbe(const pcie_stlp_t *stlp)
 {
     static const u_int8_t betab[4] = { 0xf, 0x8, 0xc, 0xe };
 
-    /* size <=4 all encoded in fbe, no lbe bits */
-    if (stlp->size <= 4) return 0;
+    /* ndw == 1 all encoded in fbe, no lbe bits */
+    if (stlp_dw(stlp) <= 1) return 0;
 
     return betab[(stlp->addr + stlp->size) & 0x3];
 }
@@ -229,9 +229,14 @@ encode_cmn_hdr(const pcie_stlp_t *stlp, const u_int8_t type, void *rtlp)
     } else if (ndw == 0x400) {
         /* 0x400 dw encoded as len=0 */
         ndw = 0;
+    } else if (ndw > 0x400) {
+        /* can't encode > 0x400 */
+        pcietlp_set_error("encode_cmn_hdr: ndw %d > 0x400", ndw);
+        return;
     }
     hdr->len_lo = ndw;
     hdr->len_hi = ndw >> 8;
+    hdr->reqid = htobe16(stlp->reqid);
     hdr->tag = stlp->tag;
     hdr->t8 = stlp->tag >> 8;
     hdr->t9 = stlp->tag >> 9;
@@ -261,6 +266,7 @@ decode_cmn_hdr(pcie_stlp_t *stlp, const void *rtlp)
     /* addr start depends on first First Byte Enable bit position.*/
     stlp->addr = ffbe ? ffbe - 1 : 0;
 
+    stlp->reqid = be16toh(hdr->reqid);
     stlp->tag = (hdr->t9 << 9) | (hdr->t8 << 8) | hdr->tag;
 }
 
@@ -407,9 +413,6 @@ encode_memrd(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
         return pcietlp_set_error("memrd: rtlpsz want %d got %ld",
                                  tlpsz, rtlpsz);
     }
-    if (stlp->size > 8) {
-        return pcietlp_set_error("memrd: size %d > 8", stlp->size);
-    }
 
     encode_mem32_hdr(stlp, PCIE_TLP_TYPE_MEMRD, rtlp);
     encode_data(stlp, rtlp + 12);
@@ -442,6 +445,7 @@ encode_memwr(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
                                  tlpsz, rtlpsz);
     }
     if (stlp->size > 8) {
+        /* stlp data is only 8 bytes */
         return pcietlp_set_error("memwr: size %d > 8", stlp->size);
     }
 
@@ -484,9 +488,6 @@ encode_memrd64(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
         return pcietlp_set_error("memrd64: rtlpsz want %d got %ld",
                                  tlpsz, rtlpsz);
     }
-    if (stlp->size > 8) {
-        return pcietlp_set_error("memrd64: size %d > 8", stlp->size);
-    }
 
     encode_mem64_hdr(stlp, PCIE_TLP_TYPE_MEMRD64, rtlp);
     return tlpsz;
@@ -518,6 +519,7 @@ encode_memwr64(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
                                  tlpsz, rtlpsz);
     }
     if (stlp->size > 8) {
+        /* stlp data is only 8 bytes */
         return pcietlp_set_error("memwr64: size %d > 8", stlp->size);
     }
 
@@ -560,8 +562,8 @@ encode_iord(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
         return pcietlp_set_error("iord: rtlpsz want %d got %ld",
                                  tlpsz, rtlpsz);
     }
-    if (stlp->size > 8) {
-        return pcietlp_set_error("iord: size %d > 8", stlp->size);
+    if (stlp->size > 4) {
+        return pcietlp_set_error("iord: size %d > 4", stlp->size);
     }
 
     encode_mem32_hdr(stlp, PCIE_TLP_TYPE_IORD, rtlp);
@@ -593,8 +595,8 @@ encode_iowr(const pcie_stlp_t *stlp, void *rtlp, const size_t rtlpsz)
         return pcietlp_set_error("iowr: rtlpsz want %d got %ld",
                                  tlpsz, rtlpsz);
     }
-    if (stlp->size > 8) {
-        return pcietlp_set_error("iowr: size %d > 8", stlp->size);
+    if (stlp->size > 4) {
+        return pcietlp_set_error("iowr: size %d > 4", stlp->size);
     }
 
     encode_mem32_hdr(stlp, PCIE_TLP_TYPE_IOWR, rtlp);

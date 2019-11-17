@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIETLP_H__
@@ -37,8 +37,9 @@ typedef enum pcie_stlp_type_e {
 
 typedef struct pcie_stlp_s {
     u_int8_t type;              /* tlp type PCIE_STLP_* */
-    u_int16_t bdf;              /* bus,dev,fun of request */
+    u_int16_t reqid;            /* requester id */
     u_int16_t tag;              /* tag of request */
+    u_int16_t bdf;              /* bus,dev,fun of request */
     u_int16_t size;             /* size of request */
     u_int64_t addr;             /* address */
     u_int64_t data;             /* payload data */
