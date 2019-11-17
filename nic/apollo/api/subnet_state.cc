@@ -21,7 +21,7 @@ subnet_state::subnet_state() {
         ht::factory(PDS_MAX_SUBNET >> 1, subnet_entry::subnet_key_func_get,
                     subnet_entry::key_size());
     SDK_ASSERT(subnet_ht_ != NULL);
-    // we should accomodate one extra subnet of type provider/substrate/internet
+    // we should accomodate one extra subnet of type provider/underlay/internet
     subnet_idxr_ = indexer::factory(PDS_MAX_SUBNET + 1);
     SDK_ASSERT(subnet_idxr() != NULL);
     subnet_slab_ = slab::factory("subnet", PDS_SLAB_ID_SUBNET,

@@ -453,7 +453,7 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     vnic_mapping_data.action_id = VNIC_MAPPING_VNIC_MAPPING_INFO_ID;
     vnic_mapping_data.mapping_info_action.epoch = epoch;
     vnic_mapping_data.mapping_info_action.vnic_id = hw_id_;
-    if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
+    if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
         vnic_mapping_data.mapping_info_action.vpc_id =
             PDS_IMPL_PUBLIC_VPC_HW_ID;
     } else {

@@ -2703,8 +2703,8 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
     type = proto_spec.type();
     if (type == pds::VPC_TYPE_TENANT) {
         api_spec->type = PDS_VPC_TYPE_TENANT;
-    } else if (type == pds::VPC_TYPE_SUBSTRATE) {
-        api_spec->type = PDS_VPC_TYPE_SUBSTRATE;
+    } else if (type == pds::VPC_TYPE_UNDERLAY) {
+        api_spec->type = PDS_VPC_TYPE_UNDERLAY;
     }
     ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->nat46_prefix,
                                          proto_spec.nat46prefix());
@@ -2725,8 +2725,8 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     proto_spec->set_id(api_spec->key.id);
     if (api_spec->type == PDS_VPC_TYPE_TENANT) {
         proto_spec->set_type(pds::VPC_TYPE_TENANT);
-    } else if (api_spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
+    } else if (api_spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     }
     ippfx_api_spec_to_ipv6pfx_proto_spec(proto_spec->mutable_nat46prefix(),
                                          &api_spec->nat46_prefix);

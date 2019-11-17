@@ -15,7 +15,7 @@ class ApolloConfigStore:
         self.nexthops = ObjectDatabase()
         self.nexthopgroups = ObjectDatabase()
         self.device = None
-        self.substrate_vpc = None
+        self.underlay_vpc = None
         # Batch client
         self.batchClient = None
         self.hostport = None
@@ -55,24 +55,24 @@ class ApolloConfigStore:
     def GetSwitchPort(self):
         return self.switchport
 
-    def SetSubstrateVPC(self, obj):
-        self.substrate_vpc = obj
+    def SetUnderlayVPC(self, obj):
+        self.underlay_vpc = obj
 
-    def GetSubstrateVPCId(self):
-        if self.substrate_vpc:
-            return self.substrate_vpc.VPCId
+    def GetUnderlayVPCId(self):
+        if self.underlay_vpc:
+            return self.underlay_vpc.VPCId
         else:
             return -1
 
     def GetProviderIPAddr(self, count):
-        if self.substrate_vpc:
-            return self.substrate_vpc.GetProviderIPAddr(count)
+        if self.underlay_vpc:
+            return self.underlay_vpc.GetProviderIPAddr(count)
         else:
             return None,-1
 
     def GetSvcMapping(self, ipversion):
-        if self.substrate_vpc:
-            return self.substrate_vpc.GetSvcMapping(ipversion)
+        if self.underlay_vpc:
+            return self.underlay_vpc.GetSvcMapping(ipversion)
         else:
             return None,-1
 

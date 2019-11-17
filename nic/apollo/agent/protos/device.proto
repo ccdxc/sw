@@ -34,11 +34,11 @@ enum DeviceOperMode {
 
 // device configuration
 message DeviceSpec {
-  // local IP address in the substrate (i.e. MyTEP IP)
+  // local IP address in the underlay (i.e. MyTEP IP)
   types.IPAddress IPAddr      = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // system MAC
   uint64          MACAddr     = 2;
-  // IP address of the gateway in the substrate
+  // IP address of the gateway in the underlay
   types.IPAddress GatewayIP   = 3;
   // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
   DeviceProfile   Profile     = 4;

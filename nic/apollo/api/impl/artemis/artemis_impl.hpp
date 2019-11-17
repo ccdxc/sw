@@ -20,7 +20,7 @@
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID           0
 // vpc hw id for Internet traffic
 #define PDS_IMPL_PUBLIC_VPC_HW_ID                    0
-// vpc hw id for provider (infra/substrate) vpc
+// vpc hw id for provider (infra/underlay) vpc
 #define PDS_IMPL_PROVIDER_VPC_HW_ID                  0
 // vpc hw id (unused) for remote 4to6 tunnel
 #define PDS_IMPL_SERVICE_TUNNEL_VPC_HW_ID            0

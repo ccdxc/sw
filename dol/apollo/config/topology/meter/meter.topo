@@ -39,7 +39,7 @@ vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6
       count : 1
-      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
       subnet :
          - count : 1
            v4prefixlen : 24

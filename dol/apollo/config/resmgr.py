@@ -84,9 +84,9 @@ TepMacAllocator = objects.TemplateFieldObject("macstep/0065.0000.0001/0000.0000.
 # TCP/UDP ports for flow and service mapping. Right now keeping it in resmgr.
 TransportSrcPort   = 100 # For VNET packets
 TransportDstPort   = 200 # For VNET packets
-TransportSvcPort   = 400 # For VIP, Substrate tcp/udp port
+TransportSvcPort   = 400 # For VIP, Underlay tcp/udp port
 TransportSrcLBPort = 101 # Local backend service port, 101 mapped to 400
-# Public IP adddress in the substrate VC
+# Public IP adddress in the underlay VC
 SvcMappingPublicIpV4AddressAllocator = ipaddress.IPv4Network('150.0.0.0/16').hosts()
 SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
 # -------------------------------------------------------------------

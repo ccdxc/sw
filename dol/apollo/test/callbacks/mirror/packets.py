@@ -20,9 +20,9 @@ def GetSPANPortID(testcase, args):
     if mirrorObj.SpanType == 'RSPAN':
         return utils.GetPortIDfromInterface(mirrorObj.Interface)
     elif mirrorObj.SpanType == 'ERSPAN':
-        # substrate vpc, return switchport
+        # underlay vpc, return switchport
         spanvpc = vpc.client.GetVpcObject(mirrorObj.VPCId)
-        if spanvpc.IsSubstrateVPC():
+        if spanvpc.IsUnderlayVPC():
             return utils.PortTypes.SWITCH
         # TODO: tenant vpc support post impl & p4 support
         # tenant vpc and local mapping, return hostport
@@ -58,9 +58,9 @@ def GetERSPANDstMac(testcase, packet, args=None):
     mirrorObj = __get_mirror_object(testcase, args)
     if not mirrorObj or mirrorObj.SpanType != 'ERSPAN':
         return "00:00:00:00:00:00"
-    # substrate vpc, return TEP MAC
+    # underlay vpc, return TEP MAC
     spanvpc = vpc.client.GetVpcObject(mirrorObj.VPCId)
-    if spanvpc.IsSubstrateVPC():
+    if spanvpc.IsUnderlayVPC():
         return "00:02:0b:0a:0d:0e"
     # TODO: tenant vpc support post impl & p4 support
     # tenant vpc and local mapping, return localmapping/VNIC/MACAddr

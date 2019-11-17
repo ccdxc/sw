@@ -54,7 +54,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         # different rules will be applied
         self.AppPort = resmgr.TransportSrcPort
         self.LBPort = resmgr.TransportSrcLBPort
-        self.SubstrateVPCId = Store.GetSubstrateVPCId()
+        self.UnderlayVPCId = Store.GetUnderlayVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.Show()

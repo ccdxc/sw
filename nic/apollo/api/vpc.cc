@@ -20,7 +20,6 @@
 namespace api {
 
 vpc_entry::vpc_entry() {
-    // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     type_ = PDS_VPC_TYPE_NONE;
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
     v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
@@ -43,7 +42,6 @@ vpc_entry::factory(pds_vpc_spec_t *spec) {
 }
 
 vpc_entry::~vpc_entry() {
-    // SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -60,10 +58,7 @@ sdk_ret_t
 vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_spec_t *spec = &api_ctxt->api_params->vpc_spec;
 
-    PDS_TRACE_DEBUG("Initializing vpc %u, type %u, v4 pfx %s, v6 pfx %s, "
-                    "nat46 prefix %s", spec->key.id, spec->type,
-                    ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
-                    ippfx2str(&spec->nat46_prefix));
+    PDS_TRACE_VERBOSE("Initializing vpc %u, type %u", spec->key.id, spec->type);
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
     type_ = spec->type;
     fabric_encap_ = spec->fabric_encap;
@@ -155,7 +150,7 @@ sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        PDS_TRACE_DEBUG("Activating vpc %u config", key_.id);
+        PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
         return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;

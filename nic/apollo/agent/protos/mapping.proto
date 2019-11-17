@@ -65,7 +65,7 @@ message MappingSpec {
   uint32              VnicId         = 7;
   // public IP, if overlay IP has corresponding public IP
   types.IPAddress     PublicIP       = 8;
-  // provider/substrate IP corresponding to the overlay IP, if any
+  // provider/underlay IP corresponding to the overlay IP, if any
   types.IPAddress     ProviderIp     = 9;
   // service tag for this IP mapping, if exists. service tag can be used
   // in defining security policies

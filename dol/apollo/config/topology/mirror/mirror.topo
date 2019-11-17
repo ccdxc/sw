@@ -63,7 +63,7 @@ mirror:
       interface  : 285343745
       vlanid     : 60
 
-    # ERSPAN session to substrate vpc with truncate
+    # ERSPAN session to underlay vpc with truncate
     - spantype   : 'ERSPAN'
       snaplen    : 1
       dscp       : 0
@@ -72,7 +72,7 @@ mirror:
       # TODO: Check why srcip is configurable. Until then hardcoding device ip
       srcip      : '172.16.0.1'
 
-    # ERSPAN session to substrate vpc without truncate
+    # ERSPAN session to underlay vpc without truncate
     - spantype   : 'ERSPAN'
       snaplen    : 4294967295
       dscp       : 0
@@ -82,8 +82,8 @@ mirror:
 
 vpc:
     - stack  : dual # dual, ipv4 , ipv6
-      count : 1 # only one substrate vpc
-      type  : substrate
+      count : 1 # only one underlay vpc
+      type  : underlay
 
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual

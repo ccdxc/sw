@@ -173,11 +173,11 @@ private:
     }
 
 private:
-    ///< physical IP (aka. MyTEP IP) in substrate
+    ///< physical IP (aka. MyTEP IP) in underlay
     ip_addr_t ip_addr_;
     ///< MyTEP mac address
     mac_addr_t mac_addr_;
-    ///< IPv4 addres of default gw in substrate
+    ///< IPv4 addres of default gw in underlay
     ip_addr_t gw_ip_addr_;
     ///< operational mode of the device
     pds_device_oper_mode_t oper_mode_;

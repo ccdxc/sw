@@ -30,8 +30,8 @@ vpc_impl *
 vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
 
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        // substrate traffic doesn't come encapped, so no need to
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        // underlay traffic doesn't come encapped, so no need to
         // program TEP1_RX table
         return NULL;
     }

@@ -145,7 +145,7 @@ public:
     pds_vpc_key_t key(void) const { return key_; }
 
     /// \brief  return the type of VPC
-    /// \return PDS_VPC_TYPE_SUBSTRATE or PDS_VPC_TYPE_TENANT
+    /// \return PDS_VPC_TYPE_UNDERLAY or PDS_VPC_TYPE_TENANT
     pds_vpc_type_t type(void) const { return type_; }
 
     /// \brief  return the fabric encap of this VPC

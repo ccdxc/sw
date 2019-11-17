@@ -85,7 +85,7 @@ tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
-// TODO: we should simply be generating ARP request in the substrate in this API
+// TODO: we should simply be generating ARP request in the underlay in this API
 //       and come back and do this h/w programming later, but until that control
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 sdk_ret_t

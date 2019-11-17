@@ -19,7 +19,7 @@
 
 #define TESTAPP_METER_NUM_PREFIXES                         16
 #define TESTAPP_SWITCH_VNIC_VLAN                           128
-#define TESTAPP_SUBSTRATE_VNID                             0x6666
+#define TESTAPP_UNDERLAY_VNID                              0x6666
 #define TESTAPP_MAX_SERVICE_TEP                            64
 #define TESTAPP_MAX_REMOTE_SERVICE_TEP                     64
 #define TEST_APP_VIP_PORT                                  32

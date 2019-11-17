@@ -639,7 +639,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
     sdk_ret_t rv;
     pds_vpc_spec_t pds_vpc;
     pds_subnet_spec_t pds_subnet;
-    uint64_t substrate_vr_mac = 0x0000DEADBADEUL;
+    uint64_t underlay_vr_mac = 0x0000DEADBADEUL;
 
     SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
@@ -663,21 +663,21 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
     }
 
     if (artemis()) {
-        // create infra/substrate/provider VPC
+        // create infra/underlay/provider VPC
         memset(&pds_vpc, 0, sizeof(pds_vpc));
-        pds_vpc.type = PDS_VPC_TYPE_SUBSTRATE;
+        pds_vpc.type = PDS_VPC_TYPE_UNDERLAY;
         pds_vpc.key.id = num_vpcs + 1;
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        pds_vpc.fabric_encap.val.vnid = TESTAPP_SUBSTRATE_VNID;
+        pds_vpc.fabric_encap.val.vnid = TESTAPP_UNDERLAY_VNID;
         rv = create_vpc(&pds_vpc);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create vpc %u failed, rv %u", num_vpcs + 1, rv);
-        // create a subnet under infra/substrate/provider VPC
+        // create a subnet under infra/underlay/provider VPC
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
         pds_subnet.v4_vr_ip = g_test_params.device_gw_ip.addr.v4_addr;
         pds_subnet.vpc.id = num_vpcs + 1;
-        MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, substrate_vr_mac);
+        MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, underlay_vr_mac);
         rv = create_subnet(&pds_subnet);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create subnet %u failed, ret %u",

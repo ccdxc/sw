@@ -12,9 +12,9 @@ static inline sdk_ret_t
 vpc_create_validate (pds_vpc_spec_t *spec)
 {
     switch (spec->type) {
-    case PDS_VPC_TYPE_SUBSTRATE:
-        if (agent_state::state()->substrate_vpc_id() != PDS_VPC_ID_INVALID) {
-            PDS_TRACE_ERR("Failed to create vpc {}, only one subtrate vpc "
+    case PDS_VPC_TYPE_UNDERLAY:
+        if (agent_state::state()->underlay_vpc_id() != PDS_VPC_ID_INVALID) {
+            PDS_TRACE_ERR("Failed to create vpc {}, only one underlay vpc "
                           "allowed", spec->key.id);
             return SDK_RET_ENTRY_EXISTS;
         }
@@ -53,8 +53,8 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to add vpc {} to db, err {}", spec->key.id, ret);
         return ret;
     }
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        agent_state::state()->substrate_vpc_id_set(spec->key.id);
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        agent_state::state()->underlay_vpc_id_set(spec->key.id);
     }
     return SDK_RET_OK;
 }
@@ -105,12 +105,9 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         return ret;
     }
 
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        agent_state::state()->substrate_vpc_id_reset();
-    }
-
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        agent_state::state()->substrate_vpc_id_set(spec->key.id);
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        agent_state::state()->underlay_vpc_id_reset();
+        agent_state::state()->underlay_vpc_id_set(spec->key.id);
     }
 
     return SDK_RET_OK;
@@ -132,8 +129,8 @@ vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
             return ret;
         }
     }
-    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
-        agent_state::state()->substrate_vpc_id_reset();
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        agent_state::state()->underlay_vpc_id_reset();
     }
     if (agent_state::state()->del_from_vpc_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete vpc {} from db", key->id);

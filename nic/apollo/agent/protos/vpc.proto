@@ -23,9 +23,9 @@ service VPCSvc {
 
 // type of the virtual private cloud
 enum VPCType {
-  VPC_TYPE_NONE      = 0;
-  VPC_TYPE_TENANT    = 1;
-  VPC_TYPE_SUBSTRATE = 2;
+  VPC_TYPE_NONE     = 0;
+  VPC_TYPE_UNDERLAY = 1;
+  VPC_TYPE_TENANT   = 2;
 }
 
 // VPCSpec captures VPC configuration

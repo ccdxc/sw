@@ -171,7 +171,7 @@ private:
 
 private:
     /// \NOTE: the mac address for this TEP will be learnt in the datapath from
-    ///        ARP traffic in the substrate, but we don't need to store it in
+    ///        ARP traffic in the underlay, but we don't need to store it in
     ///        s/w, we will directly refresh the TEP_TX table
     pds_tep_key_t  key_;        ///< TEP key
     pds_tep_type_t type_;       ///< TEP type

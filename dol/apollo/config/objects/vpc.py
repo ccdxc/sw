@@ -32,8 +32,8 @@ class VpcObject(base.ConfigObjectBase):
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
         self.Nat46_pfx = None
-        if spec.type == 'substrate':
-            self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
+        if spec.type == 'underlay':
+            self.Type = vpc_pb2.VPC_TYPE_UNDERLAY
             self.IPPrefix[0] = resmgr.ProviderIpV6Network
             self.IPPrefix[1] = resmgr.ProviderIpV4Network
             # Reserve one SVC port
@@ -68,8 +68,8 @@ class VpcObject(base.ConfigObjectBase):
 
         ############### CHILDREN OBJECT GENERATION
 
-        if not utils.IsPipelineArtemis() and self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
-            # Nothing to be done for substrate vpc
+        if not utils.IsPipelineArtemis() and self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
+            # Nothing to be done for underlay vpc
             return
 
         # Generate NextHop configuration
@@ -123,7 +123,7 @@ class VpcObject(base.ConfigObjectBase):
                (self.VPCId, self.Type, self.PfxSel)
 
     def GetProviderIPAddr(self, count):
-        assert self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE
+        assert self.Type == vpc_pb2.VPC_TYPE_UNDERLAY
         if self.Stack == 'dual':
             paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
         else:
@@ -134,7 +134,7 @@ class VpcObject(base.ConfigObjectBase):
             return next(resmgr.ProviderIpV4AddressAllocator), 'IPV4'
 
     def GetSvcMapping(self, ipversion):
-        assert self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE
+        assert self.Type == vpc_pb2.VPC_TYPE_UNDERLAY
 
         def __alloc():
             self.SvcMappingIPAddr[0] = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
@@ -171,15 +171,15 @@ class VpcObject(base.ConfigObjectBase):
         logger.info("- Prefix:%s" %self.IPPrefix)
         return
 
-    def IsSubstrateVPC(self):
-        if self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
+    def IsUnderlayVPC(self):
+        if self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
             return True
         return False
 
 class VpcObjectClient:
     def __init__(self):
         self.__objs = dict()
-        self.__substrate_vpcid = -1
+        self.__underlay_vpcid = -1
         return
 
     def Objects(self):
@@ -213,8 +213,8 @@ class VpcObjectClient:
                         continue
                 obj = VpcObject(p, c, p.count)
                 self.__objs.update({obj.VPCId: obj})
-                if obj.IsSubstrateVPC():
-                    Store.SetSubstrateVPC(obj)
+                if obj.IsUnderlayVPC():
+                    Store.SetUnderlayVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)

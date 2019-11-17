@@ -23,7 +23,7 @@ vpc_state::vpc_state() {
                           vpc_entry::vpc_key_func_get,
                           vpc_entry::key_size());
     SDK_ASSERT(vpc_ht_ != NULL);
-    // we should accomodate one extra vpc of type provider/substrate/internet
+    // we should accomodate one extra vpc of type provider/underlay/internet
     // and any other reserved vpcs (like service tunnel vpc etc.)
     vpc_idxr_ = indexer::factory(PDS_MAX_VPC + 2);
     SDK_ASSERT(vpc_idxr_ != NULL);

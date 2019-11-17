@@ -38,7 +38,7 @@ message SvcMappingSpec {
   types.IPAddress IPAddr     = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // L4 port where service is hosted
   uint32          SvcPort    = 4 [(gogoproto.moretags) = "meta:mandatory, meta:range:1-65535"];
-  // provider/substrate IP corresponding to the overlay IP of the backend
+  // provider/underlay IP corresponding to the overlay IP of the backend
   types.IPAddress ProviderIP = 5;
 }
 

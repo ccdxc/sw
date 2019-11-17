@@ -126,8 +126,8 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         mirror_data.action_id = MIRROR_ERSPAN_ID;
         vpc = vpc_db()->find(&spec->erspan_spec.vpc);
 
-        // if the vpc is substrate VPC, dst IP must be a known TEP
-        if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
+        // if the vpc is underlay VPC, dst IP must be a known TEP
+        if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
             tep_key.id = spec->erspan_spec.tep.id;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
                 PDS_TRACE_ERR("Unknown TEP IP %u", tep_key.id);
@@ -161,7 +161,7 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                     spec->erspan_spec.encap.val.vlan_tag;
             } else {
                 mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_1;
-                // substrate VLAN tag is 0, hence outer VLAN is 0 when going on the
+                // underlay VLAN tag is 0, hence outer VLAN is 0 when going on the
                 // network (both MPLSoUDP and VxLAN cases) port towards the remote
                 // mapping
                 mirror_data.erspan_action.ctag = 0;

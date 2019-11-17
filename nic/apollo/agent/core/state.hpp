@@ -97,8 +97,8 @@ public:
     policy_db_t *policy_map(void) { return policy_map_; }
     nh_db_t *nh_map(void) { return nh_map_; }
     nh_group_db_t *nh_group_map(void) { return nh_group_map_; }
-    pds_vpc_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
-    void substrate_vpc_id_set(pds_vpc_id_t id) { substrate_vpc_id_ = id; }
+    pds_vpc_id_t underlay_vpc_id(void) { return underlay_vpc_id_; }
+    void underlay_vpc_id_set(pds_vpc_id_t id) { underlay_vpc_id_ = id; }
     mirror_session_db_t *mirror_session_map(void) {
         return mirror_session_map_;
     }
@@ -157,7 +157,7 @@ private:
     tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
     vpc_peer_db_t *vpc_peer_map_;
-    pds_vpc_id_t substrate_vpc_id_;
+    pds_vpc_id_t underlay_vpc_id_;
     subnet_db_t *subnet_map_;
     service_db_t *service_map_;
     vnic_db_t *vnic_map_;
@@ -234,7 +234,7 @@ public:
     sdk_ret_t vnic_db_walk(vnic_walk_cb_t cb, void *ctxt);
     bool del_from_vnic_db(pds_vnic_key_t *key);
     slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
-    
+
     slab_ptr_t if_slab(void) const { return cfg_db_->if_slab(); }
 
     pds_meter_spec_t *find_in_meter_db(pds_meter_key_t *key);
@@ -267,12 +267,12 @@ public:
     sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
     slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
 
-    pds_vpc_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
-    void substrate_vpc_id_set(pds_vpc_id_t id) {
-        return cfg_db_->substrate_vpc_id_set(id);
+    pds_vpc_id_t underlay_vpc_id(void) { return cfg_db_->underlay_vpc_id(); }
+    void underlay_vpc_id_set(pds_vpc_id_t id) {
+        return cfg_db_->underlay_vpc_id_set(id);
     }
-    void substrate_vpc_id_reset(void) {
-        return cfg_db_->substrate_vpc_id_set(PDS_VPC_ID_INVALID);
+    void underlay_vpc_id_reset(void) {
+        return cfg_db_->underlay_vpc_id_set(PDS_VPC_ID_INVALID);
     }
 
     pds_mirror_session_spec_t *find_in_mirror_session_db(pds_mirror_session_key_t *key);

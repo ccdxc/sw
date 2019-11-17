@@ -49,7 +49,7 @@ device:
 vpc:
     - stack  : dual
       count : 1
-      type  : substrate  # This VPC is applicable only for ARTEMIS pipeline.
+      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
       subnet :
          - count : 1
            v4prefixlen : 24
