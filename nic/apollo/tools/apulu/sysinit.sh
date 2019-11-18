@@ -42,10 +42,8 @@ echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys
 PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr &
 
 # bring up oob
-sleep 2
-echo "Bringing up OOB/Inband/Internal-Management IFs ..."
+echo "Bringing up internal mnic interfaces ..."
 $NIC_DIR/tools/bringup_mgmt_ifs.sh &> /var/log/pensando/mgmt_if.log
-
 
 # start cronjobs
 nice crond -c /nic/conf/apollo/crontabs

@@ -9,7 +9,7 @@
 
     "mnic_dev" : [
         {
-            "name" : "oob_mnic0",
+            "name" : "oob0",
             "dev_uuid" : 11,
             "type": "oob_mgmt",
             "lif_count" : 1,
@@ -23,7 +23,7 @@
             }
         },
         {
-            "name" : "inb_mnic0",
+            "name" : "dsc0",
             "dev_uuid" : 12,
             "type": "inband_mgmt",
             "lif_count" : 1,
@@ -37,7 +37,7 @@
             }
         },
         {
-            "name" : "inb_mnic1",
+            "name" : "dsc1",
             "dev_uuid" : 13,
             "type": "inband_mgmt",
             "lif_count" : 1,

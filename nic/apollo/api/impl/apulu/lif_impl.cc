@@ -147,7 +147,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "oob_mnic%u", oob_lif++);
+    snprintf(name_, SDK_MAX_NAME_LEN, "oob%u", oob_lif++);
     PDS_TRACE_DEBUG("Creating oob lif %s, key %u", name_, key_);
     // TODO: fix this once block indexer starts working
     // allocate required nexthops
@@ -155,7 +155,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for oob "
-                      "lif %u, err %u", key_, ret);
+                      "lif %s id %u, err %u", name_, key_, ret);
         return ret;
     }
 
@@ -275,14 +275,14 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "inb_mnic%u", inb_lif++);
+    snprintf(name_, SDK_MAX_NAME_LEN, "dsc%u", inb_lif++);
     PDS_TRACE_DEBUG("Creating inband lif %s, key %u", name_, key_);
     // allocate required nexthops
     //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for inband "
-                      "lif %u, err %u", key_, ret);
+                      "lif %s, id %u, err %u", name_, key_, ret);
         return ret;
     }
 
@@ -411,7 +411,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entry for flow miss, "
-                      "lif %u, err %u", key_, ret);
+                      "lif %s, id %u, err %u", name_, key_, ret);
         return ret;
     }
 
