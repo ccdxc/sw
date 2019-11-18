@@ -7,6 +7,7 @@
 #include "lib/slab/slab.hpp"
 #include "lib/ht/ht.hpp"
 #include "lib/table/directmap/directmap.hpp"
+#include "lib/table/sldirectmap/sldirectmap.hpp"
 #include "lib/table/hash/hash.hpp"
 #include "lib/table/tcam/tcam.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"

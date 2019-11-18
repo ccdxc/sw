@@ -5,6 +5,7 @@
 #include "gen/proto/table.pb.h"
 #include "nic/hal/pd/iris/debug/table_pd.hpp"
 #include "nic/hal/svc/table_svc.hpp"
+#include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 
 using table::TableMetadataResponseMsg;
 
@@ -17,30 +18,60 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     hal_ret_t ret = HAL_RET_OK;
     pd_table_metadata_get_args_t *args = pd_func_args->pd_table_metadata_get;
     directmap *dm = NULL;
+    sldirectmap *sldm = NULL;
     tcam *tm = NULL;
     sdk::table::hash *h = NULL;
+    sdk::table::sdk_table_api_stats_t api_stats = { 0 };
     Met *met = NULL;
     TableMetadataResponseMsg *rsp_msg = args->rsp;
 
-    // DirectMap
     for (int i = P4TBL_ID_INDEX_MIN; i <= P4TBL_ID_INDEX_MAX; i++) {
-        dm = g_hal_state_pd->dm_table(i);
-        if (dm == NULL) {
-            continue;
+        // SLDirectMap
+        if (i == P4TBL_ID_SESSION_STATE || i == P4TBL_ID_FLOW_INFO ||
+            i == P4TBL_ID_FLOW_STATS) {
+
+            sldm = (sldirectmap *) g_hal_state_pd->dm_table(i);
+            if (sldm == NULL) {
+                continue;
+            }
+            auto table_meta = rsp_msg->add_table_meta();
+            table_meta->set_table_id(i);
+            table_meta->set_kind(table::TABLE_INDEX);
+            table_meta->set_table_name(sldm->name());
+
+            auto dm_meta = table_meta->mutable_index_meta();
+
+            sldm->stats_get(&api_stats);
+
+            dm_meta->set_capacity(sldm->capacity());
+            dm_meta->set_usage(sldm->inuse());
+            dm_meta->set_num_inserts(api_stats.insert);
+            dm_meta->set_num_insert_failures(api_stats.insert_fail);
+            dm_meta->set_num_updates(api_stats.update);
+            dm_meta->set_num_update_failures(api_stats.update_fail);
+            dm_meta->set_num_deletes(api_stats.remove);
+            dm_meta->set_num_delete_failures(api_stats.remove_fail);
+        } else {
+            //DirectMap
+            dm = g_hal_state_pd->dm_table(i);
+            if (dm == NULL) {
+                 continue;
+             }
+            auto table_meta = rsp_msg->add_table_meta();
+            table_meta->set_table_id(i);
+            table_meta->set_kind(table::TABLE_INDEX);
+            table_meta->set_table_name(dm->name());
+
+            auto dm_meta = table_meta->mutable_index_meta();
+            dm_meta->set_capacity(dm->capacity());
+            dm_meta->set_usage(dm->num_entries_in_use());
+            dm_meta->set_num_inserts(dm->num_inserts());
+            dm_meta->set_num_insert_failures(dm->num_insert_errors());
+            dm_meta->set_num_updates(dm->num_updates());
+            dm_meta->set_num_update_failures(dm->num_update_errors());
+            dm_meta->set_num_deletes(dm->num_deletes());
+            dm_meta->set_num_delete_failures(dm->num_delete_errors());
         }
-        auto table_meta = rsp_msg->add_table_meta();
-        table_meta->set_table_id(i);
-        table_meta->set_kind(table::TABLE_INDEX);
-        table_meta->set_table_name(dm->name());
-        auto dm_meta = table_meta->mutable_index_meta();
-        dm_meta->set_capacity(dm->capacity());
-        dm_meta->set_usage(dm->num_entries_in_use());
-        dm_meta->set_num_inserts(dm->num_inserts());
-        dm_meta->set_num_insert_failures(dm->num_insert_errors());
-        dm_meta->set_num_updates(dm->num_updates());
-        dm_meta->set_num_update_failures(dm->num_update_errors());
-        dm_meta->set_num_deletes(dm->num_deletes());
-        dm_meta->set_num_delete_failures(dm->num_delete_errors());
     }
 
     // DirectMap - RXDMA
@@ -214,15 +245,52 @@ bool pd_table_directmap_entry(uint32_t index, void *data, const void *cb_data)
     return TRUE;
 }
 
+void pd_table_sldirectmap_entry(sdk::table::sdk_table_api_params_t *params)
+{
+    char buff[4096] = {0};
+    sldirectmap_entry_cb_t *cb = (sldirectmap_entry_cb_t *)params->cbdata;
+    sldirectmap *sldm = cb->sldm;
+    TableIndexMsg *msg = cb->msg;
+    TableIndexEntry *entry = msg->add_index_entry();
+
+    sldm->entry_to_str(params->actiondata, params->handle.pindex(), buff, sizeof(buff));
+
+    HAL_TRACE_DEBUG("Entry: {}", buff);
+
+    entry->set_index(params->handle.pindex());
+    entry->set_entry(buff);
+}
+
 hal_ret_t
 pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    directmap_entry_cb_t cb = {0};
     TableIndexMsg *msg = rsp->mutable_index_table();
 
     HAL_TRACE_DEBUG("Entry: {}", table_id);
 
+    //SLDirectmap tables
+    if (table_id == P4TBL_ID_SESSION_STATE || table_id == P4TBL_ID_FLOW_INFO ||
+        table_id == P4TBL_ID_FLOW_STATS) {
+        sldirectmap_entry_cb_t sldm_cb = {0};
+        sdk::table::sdk_table_api_params_t params = {0};
+
+        sldm_cb.sldm  = (sldirectmap *) g_hal_state_pd->dm_table(table_id);
+        sldm_cb.msg   = msg;
+
+        params.cbdata = &sldm_cb;
+        params.itercb = pd_table_sldirectmap_entry;
+
+	sldm_cb.sldm->iterate(&params);
+
+	HAL_TRACE_DEBUG("Exit: {}", table_id);
+
+	return ret;
+    }
+
+    directmap_entry_cb_t cb = {0};
+
+    //Directmap tables
     if (table_id >= P4TBL_ID_INDEX_MIN && table_id <= P4TBL_ID_INDEX_MAX) {
         cb.dm = g_hal_state_pd->dm_table(table_id);
     } else if (table_id >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX) {

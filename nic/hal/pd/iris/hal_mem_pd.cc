@@ -698,8 +698,8 @@ hal_state_pd::~hal_state_pd()
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid <= P4TBL_ID_INDEX_MAX; tid++) {
-            if (dm_tables_[tid]) {
-                directmap::destroy(dm_tables_[tid]);
+            if (dm_tables_[tid-P4TBL_ID_INDEX_MIN]) {
+                directmap::destroy(dm_tables_[tid-P4TBL_ID_INDEX_MIN]);
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, dm_tables_);
@@ -708,8 +708,8 @@ hal_state_pd::~hal_state_pd()
     if (hash_tcam_tables_) {
         for (tid = P4TBL_ID_HASH_OTCAM_MIN;
              tid <= P4TBL_ID_HASH_OTCAM_MAX; tid++) {
-            if (hash_tcam_tables_[tid]) {
-                sdk_hash::destroy(hash_tcam_tables_[tid]);
+            if (hash_tcam_tables_[tid-P4TBL_ID_HASH_OTCAM_MIN]) {
+                sdk_hash::destroy(hash_tcam_tables_[tid-P4TBL_ID_HASH_OTCAM_MIN]);
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, hash_tcam_tables_);
@@ -717,8 +717,8 @@ hal_state_pd::~hal_state_pd()
 
     if (tcam_tables_) {
         for (tid = P4TBL_ID_TCAM_MIN; tid <= P4TBL_ID_TCAM_MAX; tid++) {
-            if (tcam_tables_[tid]) {
-                tcam::destroy(tcam_tables_[tid]);
+            if (tcam_tables_[tid-P4TBL_ID_TCAM_MIN]) {
+                tcam::destroy(tcam_tables_[tid-P4TBL_ID_TCAM_MIN]);
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, tcam_tables_);

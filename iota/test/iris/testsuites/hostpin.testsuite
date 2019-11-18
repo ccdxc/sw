@@ -49,7 +49,6 @@ testbundles:
         - linktest/linktest.testbundle
         - mnic/mnic_hostpin.testbundle
         - mnic/mnic_hostpin_naples_only.testbundle
-        - cruds/cruds.testbundle
         - penctl/penctl_hostpin.testbundle
         - post_diag/post_diag.testbundle
         - tcp_proxy/tcp_proxy.testbundle

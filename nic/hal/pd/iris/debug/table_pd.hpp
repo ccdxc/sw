@@ -11,6 +11,11 @@ typedef struct directmap_entry_cb_s {
     TableIndexMsg *msg;
 } directmap_entry_cb_t;
 
+typedef struct sldirectmap_entry_cb_s {
+    sldirectmap *sldm;
+    TableIndexMsg *msg;
+} sldirectmap_entry_cb_t;
+
 typedef struct tcam_entry_cb_s {
     tcam *tcam_table;
     TableTcamMsg *msg;
