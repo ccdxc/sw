@@ -104,7 +104,7 @@ var _ = Describe("elastic cluster test", func() {
 	It("Elasticsearch node(s) failure test", func() {
 		minMasters := ts.tu.NumQuorumNodes/2 + 1
 
-		// elastic search should be in healthy (GREEN, 95.0 shards) state
+		// elastic search should be in healthy (GREEN, 90.0 shards) state
 		checkElasticClusterHealth(esClient, searchAllQuery)
 
 		// remove node one after other to a tolerable limit. GREEN/YELLOW
@@ -163,7 +163,7 @@ var _ = Describe("elastic cluster test", func() {
 		ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nodeName))
 		mr.AddServiceInstance(resolverServiceInstances[nodeName])
 
-		// elastic search should be in healthy (GREEN, 95.0 shards) state after adding all the nodes back
+		// elastic search should be in healthy (GREEN, 90.0 shards) state after adding all the nodes back
 		checkElasticClusterHealth(esClient, searchAllQuery)
 	})
 
@@ -178,7 +178,7 @@ var _ = Describe("elastic cluster test", func() {
 			Failed     int
 		}
 
-		// elastic search should be in healthy (GREEN, 95.0 shards) state
+		// elastic search should be in healthy (GREEN, 90.0 shards) state
 		checkElasticClusterHealth(esClient, searchAllQuery)
 
 		eventsIndex := elastic.GetIndex(globals.Events, globals.DefaultTenant)
@@ -252,7 +252,7 @@ var _ = Describe("elastic cluster test", func() {
 			return nil
 		}, 120, 1).Should(BeNil(), "failed to find index stats")
 
-		// elastic search should be in healthy (GREEN, 95.0 shards) state
+		// elastic search should be in healthy (GREEN, 90.0 shards) state
 		checkElasticClusterHealth(esClient, searchAllQuery)
 	})
 
@@ -299,10 +299,16 @@ func checkElasticClusterHealth(esClient elastic.ESClient, query es.Query) {
 		}
 		// TODO:
 		// Actually, ActiveShardsPercentAsNumber should be 100.0. Since some shards become unassigned/unallocated during
-		// the test while removing maximum number of nodes from the cluster. We are temporarily checking for 95% availability here.
+		// the test while removing maximum number of nodes from the cluster. We are temporarily checking for 90% availability here.
 		// unassigned/unallocated shards should be re-tried manually by submitting a command to elastic.
-		if ts.tu.NumQuorumNodes >= 3 && res.ActiveShardsPercentAsNumber < 95.0 {
-			return fmt.Errorf("expected >= `95.0` active shards, got: %v", res.ActiveShardsPercentAsNumber)
+		if ts.tu.NumQuorumNodes >= 3 && res.ActiveShardsPercentAsNumber < 90.0 {
+			cmd := fmt.Sprintf("wget -O- --no-check-certificate --private-key=/var/lib/pensando/pki/shared/elastic"+
+				"-client-auth/key.pem  --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
+				"pem https://%s:9200/_cat/shards", ts.tu.VeniceNodeIPs[0])
+			shardsOut := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], cmd)
+
+			return fmt.Errorf("expected >= `90.0` active shards, got: %v, shards: %s",
+				res.ActiveShardsPercentAsNumber, shardsOut)
 		}
 		if ts.tu.NumQuorumNodes >= 3 && !(res.Status == "green" || res.Status == "yellow") {
 			return fmt.Errorf("expected `green/yellow` status, got: %v", res.Status)
@@ -313,5 +319,5 @@ func checkElasticClusterHealth(esClient elastic.ESClient, query es.Query) {
 			return fmt.Errorf("search query failed")
 		}
 		return nil
-	}, 60, 1).Should(BeNil(), "elastic cluster is not in healthy state")
+	}, 120, 1).Should(BeNil(), "elastic cluster is not in healthy state")
 }
