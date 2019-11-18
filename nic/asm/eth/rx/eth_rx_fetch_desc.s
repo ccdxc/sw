@@ -84,7 +84,12 @@ eth_rx_cq_entry:
   add             r7, d.{cq_ring_base}.dx, r7
   phvwr           p.eth_rx_t0_s2s_cq_desc_addr, r7
 
-  // Update completion descriptor
+  // Save interrupt information
+  seq             c7, d.intr_enable, 1
+  phvwr.c7        p.eth_rx_global_do_intr, d.intr_enable
+  phvwr.c7        p.eth_rx_t0_s2s_intr_index, d.{intr_index_or_eq_addr}.dx
+
+  // Update the completion descriptor
   phvwr           p.cq_desc_comp_index, _r_ci.hx
   phvwr           p.cq_desc_color, _r_color
 
@@ -92,10 +97,6 @@ eth_rx_cq_entry:
 
   // Save data for next stages
   phvwr           p.{eth_rx_global_host_queue...eth_rx_global_cpu_queue}, d.{host_queue...cpu_queue}
-  seq             c7, d.eq_enable, 1
-  phvwr.!c7       p.eth_rx_global_do_intr, d.intr_enable
-  phvwr.!c7       p.eth_rx_t0_s2s_intr_index, d.{intr_index_or_eq_addr}.dx
-  phvwri          p.eq_desc_intr_data, 0x01000000
 
   // Setup Descriptor read for next stage
   ori             _r_tbl_valid, _r_tbl_valid, TABLE_VALID_0

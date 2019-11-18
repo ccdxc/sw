@@ -25,13 +25,10 @@ struct rx_table_s4_t1_eth_rx_sg_d d;
 
 .align
 eth_rx_sg_start:
-  // LOAD_STATS(_r_stats)
-
   bcf             [c2 | c3 | c7], eth_rx_sg_addr_error
-  nop
 
   // Load DMA command pointer
-  add             _r_index, r0, k.eth_rx_global_dma_cur_index
+  add             _r_index, r0, k.eth_rx_global_dma_cur_index   // BD slot
 
   // Load current SG status
   add             _r_rem_sg, r0, k.eth_rx_t1_s2s_rem_sg_elems
@@ -102,31 +99,25 @@ eth_rx_sg_continue:
   nop
 
 eth_rx_sg_next:   // Continue SG in next stage
+  // Calculate the address of next sges
+  mfspr           r7, spr_tbladdr
+  add             r7, r7, 1, LG2_RX_SG_MAX_READ_SIZE
+  phvwr           p.common_te0_phv_table_addr, r7
 
+  // Save state
+  phvwrpair.e     p.eth_rx_t1_s2s_rem_pkt_bytes, _r_rem_bytes, p.eth_rx_t1_s2s_rem_sg_elems, _r_rem_sg
+
+  // Save DMA command pointer
+  phvwr.f         p.eth_rx_global_dma_cur_index, _r_index
+
+eth_rx_sg_done:   // We are done with SG
   // Did we run out of sg elements?
   seq             c1, _r_rem_sg, r0
+  // Do we still have bytes left?
   sne             c2, _r_rem_bytes, r0
   setcf           c3, [c1 & c2]
   bcf             [c3], eth_rx_sg_data_error
   nop
-
-  // Calculate the next SG descriptor address
-  add             _r_addr, k.eth_rx_global_sg_desc_addr, 1, LG2_RX_SG_MAX_READ_SIZE
-
-  // Update the remaining number of pky bytes & SG descriptor address
-  phvwr           p.eth_rx_global_sg_desc_addr, _r_addr
-  phvwr           p.eth_rx_t1_s2s_rem_sg_elems, _r_rem_sg
-  phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_rem_bytes
-
-  // Save DMA command pointer
-  phvwr           p.eth_rx_global_dma_cur_index, _r_index
-
-  // Launch sg action
-  phvwr.e         p.common_te1_phv_table_addr, _r_addr
-  phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
-
-eth_rx_sg_done:   // We are done with SG
-  //SAVE_STATS(_r_stats)
 
   // Update completion descriptor
   sub             r7, k.eth_rx_t1_s2s_sg_max_elems, _r_rem_sg
@@ -145,20 +136,22 @@ eth_rx_sg_done:   // We are done with SG
   phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_rx_sg_addr_error:
+  //LOAD_STATS(_r_stats)
   //SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+  //SAVE_STATS(_r_stats)
 
   b               eth_rx_sg_error
   phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_sg_data_error:
+  //LOAD_STATS(_r_stats)
   //SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+  //SAVE_STATS(_r_stats)
 
   b               eth_rx_sg_error
   phvwr           p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
 
 eth_rx_sg_error:
-  //SAVE_STATS(_r_stats)
-
   // Reset the DMA command stack to discard existing DMA commands
   addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
