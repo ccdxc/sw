@@ -196,7 +196,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 }
 
 // processInterfaceEvent handles Interface event
-func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor, ostream *InterfaceOStream) {
+func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, reactor InterfaceReactor, ostream *InterfaceOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processInterfaceDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processInterfaceDynamic(evt api.EventType,
 
 	client.lockObject(interfaceEvt.Interface.GetObjectKind(), interfaceEvt.Interface.ObjectMeta)
 
-	client.processInterfaceEvent(interfaceEvt, reactor, nil)
+	err := client.processInterfaceEvent(interfaceEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

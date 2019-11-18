@@ -196,7 +196,7 @@ func (client *NimbusClient) diffSecurityGroups(objList *netproto.SecurityGroupLi
 }
 
 // processSecurityGroupEvent handles SecurityGroup event
-func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroupEvent, reactor SecurityGroupReactor, ostream *SecurityGroupOStream) {
+func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroupEvent, reactor SecurityGroupReactor, ostream *SecurityGroupOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processSecurityGroupEvent(evt netproto.SecurityGroup
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processSecurityGroupDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processSecurityGroupDynamic(evt api.EventType,
 
 	client.lockObject(securitygroupEvt.SecurityGroup.GetObjectKind(), securitygroupEvt.SecurityGroup.ObjectMeta)
 
-	client.processSecurityGroupEvent(securitygroupEvt, reactor, nil)
+	err := client.processSecurityGroupEvent(securitygroupEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

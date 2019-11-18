@@ -196,7 +196,7 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 }
 
 // processSecurityProfileEvent handles SecurityProfile event
-func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor, ostream *SecurityProfileOStream) {
+func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent, reactor SecurityProfileReactor, ostream *SecurityProfileOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processSecurityProfileDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processSecurityProfileDynamic(evt api.EventType,
 
 	client.lockObject(securityprofileEvt.SecurityProfile.GetObjectKind(), securityprofileEvt.SecurityProfile.ObjectMeta)
 
-	client.processSecurityProfileEvent(securityprofileEvt, reactor, nil)
+	err := client.processSecurityProfileEvent(securityprofileEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

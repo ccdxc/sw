@@ -196,7 +196,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 }
 
 // processNetworkSecurityPolicyEvent handles NetworkSecurityPolicy event
-func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.NetworkSecurityPolicyEvent, reactor NetworkSecurityPolicyReactor, ostream *NetworkSecurityPolicyOStream) {
+func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.NetworkSecurityPolicyEvent, reactor NetworkSecurityPolicyReactor, ostream *NetworkSecurityPolicyOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processNetworkSecurityPolicyDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processNetworkSecurityPolicyDynamic(evt api.EventTyp
 
 	client.lockObject(networksecuritypolicyEvt.NetworkSecurityPolicy.GetObjectKind(), networksecuritypolicyEvt.NetworkSecurityPolicy.ObjectMeta)
 
-	client.processNetworkSecurityPolicyEvent(networksecuritypolicyEvt, reactor, nil)
+	err := client.processNetworkSecurityPolicyEvent(networksecuritypolicyEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

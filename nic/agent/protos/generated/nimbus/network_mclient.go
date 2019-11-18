@@ -196,7 +196,7 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 }
 
 // processNetworkEvent handles Network event
-func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor, ostream *NetworkOStream) {
+func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, reactor NetworkReactor, ostream *NetworkOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processNetworkDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processNetworkDynamic(evt api.EventType,
 
 	client.lockObject(networkEvt.Network.GetObjectKind(), networkEvt.Network.ObjectMeta)
 
-	client.processNetworkEvent(networkEvt, reactor, nil)
+	err := client.processNetworkEvent(networkEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

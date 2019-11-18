@@ -90,7 +90,7 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 	}
 	client.Unlock()
 }
-// watchEndpointRecvLoop receives from stream and write it to a channel
+// watchAggWatchRecvLoop receives from stream and write it to a channel
 func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
@@ -101,7 +101,7 @@ func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_Wa
 		// receive from stream
 		objList, err := stream.Recv()
 		if err != nil {
-			log.Errorf("Error receiving from watch channel. Exiting Endpoint watch. Err: %v", err)
+			log.Errorf("Error receiving from watch channel. Exiting Agg watch. Err: %v", err)
 			return
 		}
 		for _, evt := range objList.AggObjectEvents {
@@ -157,6 +157,70 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 
 }
 
+{{range $key, $value := $manifest}}
+// diff{{$value.Object}}sDynamic diffs local state with controller state
+func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$value.Object}}List, reactor {{$value.Object}}Reactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.{{$value.Object}})
+	for _, obj := range objList.{{$value.Object}}s {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.List{{$value.Object}}()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.{{$value.Object}}Event{
+					EventType: api.EventType_DeleteEvent,
+					{{$value.Object}}:  *lobj,
+				}
+				log.Infof("diff{{$value.Object}}s(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.{{$value.Object}}.GetObjectKind(), evt.{{$value.Object}}.ObjectMeta)
+				client.process{{$value.Object}}Event(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.{{$value.Object}}s {
+		evt := netproto.{{$value.Object}}Event{
+			EventType: api.EventType_UpdateEvent,
+			{{$value.Object}}:  *obj,
+		}
+		client.lockObject(evt.{{$value.Object}}.GetObjectKind(), evt.{{$value.Object}}.ObjectMeta)
+		err := client.process{{$value.Object}}Event(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "{{$value.Object}}", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+{{end}}
+
+
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
 func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
@@ -170,22 +234,24 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 	listOrderObjects := []*listObject{}
 
 	addToListOrder := func(kind string, obj *types.DynamicAny) {
-		var msg interface{}
 		for _, lobj := range listOrderObjects {
 			if lobj.kind == kind {
 				switch kind {
-				case "App":
-					msglist := lobj.objects.(*netproto.AppList)
-					msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
+				{{range $key, $value := $manifest}}
+				case "{{$value.Object}}":
+					msglist := lobj.objects.(*netproto.{{$value.Object}}List)
+					msglist.{{$value.Object}}s = append(msglist.{{$value.Object}}s, obj.Message.(*netproto.{{$value.Object}}))
 					return
+				{{end}}
 				}
 			}
 		}
 		//This kind not added, create a new one
-		listObj := &listObject{kind: kind, objects: []interface{}{msg}}
+		listObj := &listObject{kind: kind}
 		switch kind {
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
+			listObj.objects = &netproto.{{$value.Object}}List{}
 			msglist := listObj.objects.(*netproto.{{$value.Object}}List)
 			msglist.{{$value.Object}}s = append(msglist.{{$value.Object}}s, obj.Message.(*netproto.{{$value.Object}}))
 		{{end}}
@@ -207,7 +273,7 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 		switch lobj.kind {
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
-			client.diff{{$value.Object}}s(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), nil)
+			client.diff{{$value.Object}}sDynamic(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), ostream)
 		{{end}}
 		}
 	}
@@ -295,6 +361,33 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 				return nil
 			}
 			evtWork(evt)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
+					return nil
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+
+			// get a list of objects
+			objList, err := aggRPCClient.ListObjects(ctx, &aggKinds)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Aggregate list. Err: %v", err)
+					return err
+				}
+			} else {
+				// perform a diff of the states
+				client.diffAggWatchObjects(objList, reactor, ostream)
+			}
 		}
 	}
 }

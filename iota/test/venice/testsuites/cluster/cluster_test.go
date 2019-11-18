@@ -13,17 +13,35 @@ import (
 )
 
 var _ = Describe("venice cluster tests", func() {
+	var (
+		configSnapShot string
+	)
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
+		Expect(ts.model.Action().VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
+		ss, err := ts.model.Action().VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
+		Expect(err).To(BeNil())
+		configSnapShot = ss
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		name := string(configSnapShot[strings.LastIndex(configSnapShot, "/")+1:])
+		Expect(ts.model.Action().VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
 	})
 
 	Context("tags:type=basic;datapath=true;duration=long Basic cluster tests", func() {
+
+		It("tags:sanity=true should be able to save and restore configuration", func() {
+			Expect(ts.model.Action().VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
+			ss, err := ts.model.Action().VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
+			Expect(err).To(BeNil())
+			name := string(ss[strings.LastIndex(ss, "/")+1:])
+			Expect(ts.model.Action().VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
+		})
+
 		It("tags:sanity=true Venice Leader shutdown should not affect the cluster", func() {
 
 			naples := ts.model.Naples()
@@ -475,14 +493,6 @@ var _ = Describe("venice cluster tests", func() {
 
 			}) */
 
-
-		It("should be able to save and restore configuration", func() {
-			Expect(ts.model.Action().VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
-			ss, err := ts.model.Action().VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
-			Expect(err).To(BeNil())
-			name := string(ss[strings.LastIndex(ss, "/")+1:])
-			Expect(ts.model.Action().VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
-		})
 	})
 
 })

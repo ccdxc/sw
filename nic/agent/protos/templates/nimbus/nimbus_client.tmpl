@@ -213,7 +213,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 }
 
 // process{{$crudObject}}Event handles {{$crudObject}} event
-func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObject}}Event, reactor {{$crudObject}}Reactor, ostream *{{$crudObject}}OStream) {
+func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObject}}Event, reactor {{$crudObject}}Reactor, ostream *{{$crudObject}}OStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -268,7 +268,7 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -294,12 +294,14 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2 * iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) process{{$crudObject}}Dynamic(evt api.EventType,
@@ -316,11 +318,11 @@ func (client *NimbusClient) process{{$crudObject}}Dynamic(evt api.EventType,
 
 	client.lockObject({{lower $crudObject}}Evt.{{$crudObject}}.GetObjectKind(), {{lower $crudObject}}Evt.{{$crudObject}}.ObjectMeta)
 
-	client.process{{$crudObject}}Event({{lower $crudObject}}Evt, reactor, nil)
+	err := client.process{{$crudObject}}Event({{lower $crudObject}}Evt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }
 
 

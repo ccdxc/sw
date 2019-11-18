@@ -196,7 +196,7 @@ func (client *NimbusClient) diffTenants(objList *netproto.TenantList, reactor Te
 }
 
 // processTenantEvent handles Tenant event
-func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor, ostream *TenantOStream) {
+func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor TenantReactor, ostream *TenantOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processTenantEvent(evt netproto.TenantEvent, reactor
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processTenantDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processTenantDynamic(evt api.EventType,
 
 	client.lockObject(tenantEvt.Tenant.GetObjectKind(), tenantEvt.Tenant.ObjectMeta)
 
-	client.processTenantEvent(tenantEvt, reactor, nil)
+	err := client.processTenantEvent(tenantEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

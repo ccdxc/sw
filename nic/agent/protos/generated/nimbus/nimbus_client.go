@@ -89,7 +89,7 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 	client.Unlock()
 }
 
-// watchEndpointRecvLoop receives from stream and write it to a channel
+// watchAggWatchRecvLoop receives from stream and write it to a channel
 func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
@@ -100,7 +100,7 @@ func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_Wa
 		// receive from stream
 		objList, err := stream.Recv()
 		if err != nil {
-			log.Errorf("Error receiving from watch channel. Exiting Endpoint watch. Err: %v", err)
+			log.Errorf("Error receiving from watch channel. Exiting Agg watch. Err: %v", err)
 			return
 		}
 		for _, evt := range objList.AggObjectEvents {
@@ -179,6 +179,555 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 
 }
 
+// diffAppsDynamic diffs local state with controller state
+func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor AppReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.App)
+	for _, obj := range objList.Apps {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListApp()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.AppEvent{
+					EventType: api.EventType_DeleteEvent,
+					App:       *lobj,
+				}
+				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
+				client.processAppEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Apps {
+		evt := netproto.AppEvent{
+			EventType: api.EventType_UpdateEvent,
+			App:       *obj,
+		}
+		client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
+		err := client.processAppEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "App", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffEndpointsDynamic diffs local state with controller state
+func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList, reactor EndpointReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Endpoint)
+	for _, obj := range objList.Endpoints {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListEndpoint()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.EndpointEvent{
+					EventType: api.EventType_DeleteEvent,
+					Endpoint:  *lobj,
+				}
+				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
+				client.processEndpointEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Endpoints {
+		evt := netproto.EndpointEvent{
+			EventType: api.EventType_UpdateEvent,
+			Endpoint:  *obj,
+		}
+		client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
+		err := client.processEndpointEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffInterfacesDynamic diffs local state with controller state
+func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceList, reactor InterfaceReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Interface)
+	for _, obj := range objList.Interfaces {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListInterface()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.InterfaceEvent{
+					EventType: api.EventType_DeleteEvent,
+					Interface: *lobj,
+				}
+				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+				client.processInterfaceEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Interfaces {
+		evt := netproto.InterfaceEvent{
+			EventType: api.EventType_UpdateEvent,
+			Interface: *obj,
+		}
+		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+		err := client.processInterfaceEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffNamespacesDynamic diffs local state with controller state
+func (client *NimbusClient) diffNamespacesDynamic(objList *netproto.NamespaceList, reactor NamespaceReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Namespace)
+	for _, obj := range objList.Namespaces {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListNamespace()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.NamespaceEvent{
+					EventType: api.EventType_DeleteEvent,
+					Namespace: *lobj,
+				}
+				log.Infof("diffNamespaces(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
+				client.processNamespaceEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Namespaces {
+		evt := netproto.NamespaceEvent{
+			EventType: api.EventType_UpdateEvent,
+			Namespace: *obj,
+		}
+		client.lockObject(evt.Namespace.GetObjectKind(), evt.Namespace.ObjectMeta)
+		err := client.processNamespaceEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Namespace", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffNetworksDynamic diffs local state with controller state
+func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, reactor NetworkReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Network)
+	for _, obj := range objList.Networks {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListNetwork()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.NetworkEvent{
+					EventType: api.EventType_DeleteEvent,
+					Network:   *lobj,
+				}
+				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
+				client.processNetworkEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Networks {
+		evt := netproto.NetworkEvent{
+			EventType: api.EventType_UpdateEvent,
+			Network:   *obj,
+		}
+		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
+		err := client.processNetworkEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Network", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffNetworkSecurityPolicysDynamic diffs local state with controller state
+func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.NetworkSecurityPolicyList, reactor NetworkSecurityPolicyReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.NetworkSecurityPolicy)
+	for _, obj := range objList.NetworkSecurityPolicys {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListNetworkSecurityPolicy()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.NetworkSecurityPolicyEvent{
+					EventType:             api.EventType_DeleteEvent,
+					NetworkSecurityPolicy: *lobj,
+				}
+				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+				client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.NetworkSecurityPolicys {
+		evt := netproto.NetworkSecurityPolicyEvent{
+			EventType:             api.EventType_UpdateEvent,
+			NetworkSecurityPolicy: *obj,
+		}
+		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+		err := client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffSecurityGroupsDynamic diffs local state with controller state
+func (client *NimbusClient) diffSecurityGroupsDynamic(objList *netproto.SecurityGroupList, reactor SecurityGroupReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.SecurityGroup)
+	for _, obj := range objList.SecurityGroups {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListSecurityGroup()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.SecurityGroupEvent{
+					EventType:     api.EventType_DeleteEvent,
+					SecurityGroup: *lobj,
+				}
+				log.Infof("diffSecurityGroups(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
+				client.processSecurityGroupEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.SecurityGroups {
+		evt := netproto.SecurityGroupEvent{
+			EventType:     api.EventType_UpdateEvent,
+			SecurityGroup: *obj,
+		}
+		client.lockObject(evt.SecurityGroup.GetObjectKind(), evt.SecurityGroup.ObjectMeta)
+		err := client.processSecurityGroupEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "SecurityGroup", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffSecurityProfilesDynamic diffs local state with controller state
+func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.SecurityProfile)
+	for _, obj := range objList.SecurityProfiles {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListSecurityProfile()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.SecurityProfileEvent{
+					EventType:       api.EventType_DeleteEvent,
+					SecurityProfile: *lobj,
+				}
+				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
+				client.processSecurityProfileEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.SecurityProfiles {
+		evt := netproto.SecurityProfileEvent{
+			EventType:       api.EventType_UpdateEvent,
+			SecurityProfile: *obj,
+		}
+		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
+		err := client.processSecurityProfileEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "SecurityProfile", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffTenantsDynamic diffs local state with controller state
+func (client *NimbusClient) diffTenantsDynamic(objList *netproto.TenantList, reactor TenantReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Tenant)
+	for _, obj := range objList.Tenants {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListTenant()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.TenantEvent{
+					EventType: api.EventType_DeleteEvent,
+					Tenant:    *lobj,
+				}
+				log.Infof("diffTenants(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
+				client.processTenantEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Tenants {
+		evt := netproto.TenantEvent{
+			EventType: api.EventType_UpdateEvent,
+			Tenant:    *obj,
+		}
+		client.lockObject(evt.Tenant.GetObjectKind(), evt.Tenant.ObjectMeta)
+		err := client.processTenantEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Tenant", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
 func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
@@ -192,54 +741,104 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 	listOrderObjects := []*listObject{}
 
 	addToListOrder := func(kind string, obj *types.DynamicAny) {
-		var msg interface{}
 		for _, lobj := range listOrderObjects {
 			if lobj.kind == kind {
 				switch kind {
+
 				case "App":
 					msglist := lobj.objects.(*netproto.AppList)
 					msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
 					return
+
+				case "Endpoint":
+					msglist := lobj.objects.(*netproto.EndpointList)
+					msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
+					return
+
+				case "Interface":
+					msglist := lobj.objects.(*netproto.InterfaceList)
+					msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
+					return
+
+				case "Namespace":
+					msglist := lobj.objects.(*netproto.NamespaceList)
+					msglist.Namespaces = append(msglist.Namespaces, obj.Message.(*netproto.Namespace))
+					return
+
+				case "Network":
+					msglist := lobj.objects.(*netproto.NetworkList)
+					msglist.Networks = append(msglist.Networks, obj.Message.(*netproto.Network))
+					return
+
+				case "NetworkSecurityPolicy":
+					msglist := lobj.objects.(*netproto.NetworkSecurityPolicyList)
+					msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
+					return
+
+				case "SecurityGroup":
+					msglist := lobj.objects.(*netproto.SecurityGroupList)
+					msglist.SecurityGroups = append(msglist.SecurityGroups, obj.Message.(*netproto.SecurityGroup))
+					return
+
+				case "SecurityProfile":
+					msglist := lobj.objects.(*netproto.SecurityProfileList)
+					msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
+					return
+
+				case "Tenant":
+					msglist := lobj.objects.(*netproto.TenantList)
+					msglist.Tenants = append(msglist.Tenants, obj.Message.(*netproto.Tenant))
+					return
+
 				}
 			}
 		}
 		//This kind not added, create a new one
-		listObj := &listObject{kind: kind, objects: []interface{}{msg}}
+		listObj := &listObject{kind: kind}
 		switch kind {
 
 		case "App":
+			listObj.objects = &netproto.AppList{}
 			msglist := listObj.objects.(*netproto.AppList)
 			msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
 
 		case "Endpoint":
+			listObj.objects = &netproto.EndpointList{}
 			msglist := listObj.objects.(*netproto.EndpointList)
 			msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
 
 		case "Interface":
+			listObj.objects = &netproto.InterfaceList{}
 			msglist := listObj.objects.(*netproto.InterfaceList)
 			msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
 
 		case "Namespace":
+			listObj.objects = &netproto.NamespaceList{}
 			msglist := listObj.objects.(*netproto.NamespaceList)
 			msglist.Namespaces = append(msglist.Namespaces, obj.Message.(*netproto.Namespace))
 
 		case "Network":
+			listObj.objects = &netproto.NetworkList{}
 			msglist := listObj.objects.(*netproto.NetworkList)
 			msglist.Networks = append(msglist.Networks, obj.Message.(*netproto.Network))
 
 		case "NetworkSecurityPolicy":
+			listObj.objects = &netproto.NetworkSecurityPolicyList{}
 			msglist := listObj.objects.(*netproto.NetworkSecurityPolicyList)
 			msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
 
 		case "SecurityGroup":
+			listObj.objects = &netproto.SecurityGroupList{}
 			msglist := listObj.objects.(*netproto.SecurityGroupList)
 			msglist.SecurityGroups = append(msglist.SecurityGroups, obj.Message.(*netproto.SecurityGroup))
 
 		case "SecurityProfile":
+			listObj.objects = &netproto.SecurityProfileList{}
 			msglist := listObj.objects.(*netproto.SecurityProfileList)
 			msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
 
 		case "Tenant":
+			listObj.objects = &netproto.TenantList{}
 			msglist := listObj.objects.(*netproto.TenantList)
 			msglist.Tenants = append(msglist.Tenants, obj.Message.(*netproto.Tenant))
 
@@ -260,31 +859,31 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 		switch lobj.kind {
 
 		case "App":
-			client.diffApps(lobj.objects.(*netproto.AppList), reactor.(AppReactor), nil)
+			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream)
 
 		case "Endpoint":
-			client.diffEndpoints(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), nil)
+			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream)
 
 		case "Interface":
-			client.diffInterfaces(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), nil)
+			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream)
 
 		case "Namespace":
-			client.diffNamespaces(lobj.objects.(*netproto.NamespaceList), reactor.(NamespaceReactor), nil)
+			client.diffNamespacesDynamic(lobj.objects.(*netproto.NamespaceList), reactor.(NamespaceReactor), ostream)
 
 		case "Network":
-			client.diffNetworks(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), nil)
+			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream)
 
 		case "NetworkSecurityPolicy":
-			client.diffNetworkSecurityPolicys(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), nil)
+			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream)
 
 		case "SecurityGroup":
-			client.diffSecurityGroups(lobj.objects.(*netproto.SecurityGroupList), reactor.(SecurityGroupReactor), nil)
+			client.diffSecurityGroupsDynamic(lobj.objects.(*netproto.SecurityGroupList), reactor.(SecurityGroupReactor), ostream)
 
 		case "SecurityProfile":
-			client.diffSecurityProfiles(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), nil)
+			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream)
 
 		case "Tenant":
-			client.diffTenants(lobj.objects.(*netproto.TenantList), reactor.(TenantReactor), nil)
+			client.diffTenantsDynamic(lobj.objects.(*netproto.TenantList), reactor.(TenantReactor), ostream)
 
 		}
 	}
@@ -412,6 +1011,33 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 				return nil
 			}
 			evtWork(evt)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("NetworkSecurityPolicy Watch channel closed. Exisint NetworkSecurityPolicyWatch")
+					return nil
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+
+			// get a list of objects
+			objList, err := aggRPCClient.ListObjects(ctx, &aggKinds)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Aggregate list. Err: %v", err)
+					return err
+				}
+			} else {
+				// perform a diff of the states
+				client.diffAggWatchObjects(objList, reactor, ostream)
+			}
 		}
 	}
 }

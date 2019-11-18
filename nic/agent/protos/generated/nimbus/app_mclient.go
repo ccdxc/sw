@@ -196,7 +196,7 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 }
 
 // processAppEvent handles App event
-func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor, ostream *AppOStream) {
+func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppReactor, ostream *AppOStream) error {
 	var err error
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -251,7 +251,7 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 		}
 
 		if ostream == nil {
-			return
+			return err
 		}
 		// send oper status and return if there is no error
 		if err == nil {
@@ -277,12 +277,14 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 			}
 			ostream.Unlock()
 
-			return
+			return err
 		}
 
 		// else, retry after some time, with backoff
 		time.Sleep(time.Second * time.Duration(2*iter))
 	}
+
+	return nil
 }
 
 func (client *NimbusClient) processAppDynamic(evt api.EventType,
@@ -299,9 +301,9 @@ func (client *NimbusClient) processAppDynamic(evt api.EventType,
 
 	client.lockObject(appEvt.App.GetObjectKind(), appEvt.App.ObjectMeta)
 
-	client.processAppEvent(appEvt, reactor, nil)
+	err := client.processAppEvent(appEvt, reactor, nil)
 	modificationTime, _ := types.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
-	return nil
+	return err
 }

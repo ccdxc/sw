@@ -738,10 +738,12 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 
 	//Now just update the policies
 
+	ag.evtMap["NetworkSecurityPolicy"].update = 0
 	err = updatePolicies(stateMgr, 0, 3)
 	AssertOk(t, err, "Error updating security policies")
 
 	time.Sleep(20 * time.Millisecond)
+	fmt.Printf("Update %v\n", ag.evtMap["NetworkSecurityPolicy"])
 	Assert(t, ag.evtMap["NetworkSecurityPolicy"].update == 3, "Update successful")
 
 	time.Sleep(2 * time.Second)

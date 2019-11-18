@@ -196,8 +196,41 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 }
 
 func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
-	//No need for implemebtation
-	return &netproto.AggObjectList{}, nil
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	aggKey := strings.Join(kinds.Kinds, "-")
+	objList := &netproto.AggObjectList{}
+	// walk all associated kinds objects
+	for _, kind := range kinds.Kinds {
+
+		addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta) {
+			aggObj := &netproto.AggObject{Kind: kind, Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			eh.updateSentObjStatus(aggKey, nodeID, kind, api.EventType_UpdateEvent, meta)
+			objList.Objects = append(objList.Objects, aggObj)
+		}
+
+		switch kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+		{{end}}
+		}
+	}
+
+	return objList, nil
 }
 
 func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
@@ -237,8 +270,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating {{$value.Object}} oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "{{$value.Object}}StatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.{{$value.Object}}).GetObjectMeta())
 			{{end}}

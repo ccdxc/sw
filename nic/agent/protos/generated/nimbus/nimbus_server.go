@@ -194,8 +194,161 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 }
 
 func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
-	//No need for implemebtation
-	return &netproto.AggObjectList{}, nil
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
+	aggKey := strings.Join(kinds.Kinds, "-")
+	objList := &netproto.AggObjectList{}
+	// walk all associated kinds objects
+	for _, kind := range kinds.Kinds {
+
+		addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta) {
+			aggObj := &netproto.AggObject{Kind: kind, Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			eh.updateSentObjStatus(aggKey, nodeID, kind, api.EventType_UpdateEvent, meta)
+			objList.Objects = append(objList.Objects, aggObj)
+		}
+
+		switch kind {
+
+		case "App":
+			objlist, err := eh.server.ListApps(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Endpoint":
+			objlist, err := eh.server.ListEndpoints(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Interface":
+			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Namespace":
+			objlist, err := eh.server.ListNamespaces(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Network":
+			objlist, err := eh.server.ListNetworks(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "NetworkSecurityPolicy":
+			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "SecurityGroup":
+			objlist, err := eh.server.ListSecurityGroups(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "SecurityProfile":
+			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Tenant":
+			objlist, err := eh.server.ListTenants(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		}
+	}
+
+	return objList, nil
 }
 
 func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
@@ -235,8 +388,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating App oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "AppStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.App).GetObjectMeta())
 
@@ -247,8 +398,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating Endpoint oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "EndpointStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
 
@@ -259,8 +408,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating Interface oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "InterfaceStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
 
@@ -271,8 +418,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating Namespace oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "NamespaceStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Namespace).GetObjectMeta())
 
@@ -283,8 +428,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating Network oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "NetworkStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Network).GetObjectMeta())
 
@@ -295,8 +438,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating NetworkSecurityPolicy oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "NetworkSecurityPolicyStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
 
@@ -307,8 +448,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "SecurityGroupStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityGroup).GetObjectMeta())
 
@@ -319,8 +458,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating SecurityProfile oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "SecurityProfileStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
 
@@ -331,8 +468,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					if err != nil {
 						log.Errorf("Error updating Tenant oper state. Err: %v", err)
 					}
-				} else {
-					log.Errorf("Object oper update not implemented for type %v", "TenantStatusReactor")
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Tenant).GetObjectMeta())
 
