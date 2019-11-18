@@ -18,6 +18,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         super().__init__()
         self.SetBaseClassAttr()
 
+        self.__is_public = getattr(spec, 'public', False)
         ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
         self.MappingId = next(resmgr.LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
@@ -28,7 +29,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         if ipversion == utils.IP_VERSION_6:
             self.AddrFamily = 'IPV6'
             self.IPAddr = parent.SUBNET.AllocIPv6Address();
-            if (hasattr(spec, 'public')):
+            if self.__is_public:
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
             if parent.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
@@ -36,7 +37,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
-            if (hasattr(spec, 'public')):
+            if self.__is_public:
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute

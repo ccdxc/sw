@@ -79,6 +79,8 @@ class SubnetObject(base.ConfigObjectBase):
         ids = [self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId]
         ids += [self.IngV6SecurityPolicyId, self.EgV6SecurityPolicyId]
         for policyid in ids:
+            if policyid is 0:
+                continue
             policyobj = policy.client.GetPolicyObject(policyid)
             if policyobj.PolicyType == 'default':
                 #TODO: move this to policy.py

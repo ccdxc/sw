@@ -9,8 +9,7 @@ packets:
         id          : FROM_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromPolicy
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr

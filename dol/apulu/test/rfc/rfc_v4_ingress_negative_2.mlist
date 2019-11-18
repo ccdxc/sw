@@ -1,0 +1,34 @@
+# Apulu RFC IPv4 Ingress modules list for disjoint policy
+feature:
+    id          : rfc
+    sub         : ipv4_ingress_negative_2
+    package     : test.rfc
+    module      : rfc
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : DUP_RULE
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule
+
+    - module:
+        name    : DUP_RULE_DIFF_PRIO
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_prio
+
+    - module:
+        name    : DUP_RULE_DIFF_ACTION
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_act
+
+    - module:
+        name    : DUP_RULE_DIFF_PRIO_ACT
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=dup_rule_diff_prio_act

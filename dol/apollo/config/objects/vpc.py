@@ -176,6 +176,9 @@ class VpcObject(base.ConfigObjectBase):
             return True
         return False
 
+    def IsV6Stack(self):
+        return utils.IsV6Stack(self.Stack)
+
 class VpcObjectClient:
     def __init__(self):
         self.__objs = dict()
