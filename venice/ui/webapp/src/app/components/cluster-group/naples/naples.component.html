@@ -18,126 +18,114 @@
       </ng-container>
     </div>
   </div>
-  <div fxFlex class="naples-table-container">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
-  </div>
+
+  <app-tableviewedit fxFlex="auto" fxLayout="column" class="naples-table-container"
+                     [data]="dataObjects" [cols]="cols"
+                     [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
+                     [runDoCheck]="true"
+                     [dataKey]="'meta.name'"
+                     [sortOrder]="-1"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [enableCheckbox]="true">
+  </app-tableviewedit>
 </app-pagebody>
 
-<ng-template #DataTable>
-  <app-lazyrender [data]="filteredNaples" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
-    <p-table #naplesTable
-             class="global-primeng-table-lazyload" [columns]="cols" [reorderableColumns]="true"
-             dataKey="meta.name" [responsive]="true"
-             sortField="meta.mod-time" [sortOrder]='-1'
-             [(selection)]="selectedNaples"
-             [resizableColumns]="true">
-      <!-- Table Caption -->
-      <ng-template pTemplate="caption">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
-            <app-tableheader title="Distributed Services Cards" [total]="filteredNaples.length"
-                             [icon]="naplesIcon">
-            </app-tableheader>
-
-            <div fxFlex="none" fxLayoutAlign="start center">
-              <!-- TABLE FUNCTION ICONS HERE -->
-              <mat-icon class="naples-add-label-button"
-                        *ngIf="selectedNaples.length>0"
-                        [matTooltip]="'Add labels to selected DSC'"
-                        (click)="editLabels()">label</mat-icon>
-              <app-labeleditor
-                               [metadata]="labelEditorMetaData"
-                               [inLabelEditMode]="inLabelEditMode"
-                               (saveEmitter)="handleEditSave($event)"
-                               (cancelEmitter)="handleEditCancel($event)"
-                               [objects]="selectedNaples"
-                               [nameKey]="'spec.id'">
-              </app-labeleditor>
-            </div>
-          </div>
-          <div fxLayout="row">
-            <app-advanced-search #advancedSearchComponent
-                                 [formArray]="fieldFormArray" [cols]="advSearchCols"
-                                 [customQueryOptions]="customQueryOptions"
-                                 (cancelEmitter)="onCancelSearch($event)"
-                                 (searchEmitter)="getDistributedServiceCards()"
-                                 kind="DistributedServiceCard"
-                                 fxFlex="grow">
-            </app-advanced-search>
-          </div>
+<ng-template #captionTemplate let-count="count">
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+      <app-tableheader fxFlex="auto" fxLayout="row" title="Distributed Services Cards"
+                       [total]="count"
+                       [tableMenuItems]="tableMenuItems"
+                       [icon]="naplesIcon" [enableColumnSelect]="true"
+                       [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+        <div fxFlex="none" fxLayoutAlign="start center">
+          <!-- LABEL EDITOR-->
+          <mat-icon class="naples-add-label-button"
+                    *ngIf="this.tableContainer.selectedDataObjects.length>0"
+                    [matTooltip]="'Add labels to selected DSC'"
+                    (click)="editLabels()">label</mat-icon>
+          <app-labeleditor
+                           [metadata]="labelEditorMetaData"
+                           [inLabelEditMode]="inLabelEditMode"
+                           (saveEmitter)="handleEditSave($event)"
+                           (cancelEmitter)="handleEditCancel($event)"
+                           [objects]="this.tableContainer.selectedDataObjects"
+                           [nameKey]="'spec.id'">
+          </app-labeleditor>
         </div>
-      </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th style="width: 3em">
-            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-          </th>
-          <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''"
-              pReorderableColumn
-              [class]="col.class">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-            </app-sorticon>
-          </th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData>
-        <tr>
-          <td style="text-overflow: clip">
-            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
-          </td>
-          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'spec.id'">
-              <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>
-            </div>
-            <div *ngSwitchCase="'meta.mod-time'">
-              {{rowData.meta['mod-time'] | PrettyDate }}
-            </div>
-            <div *ngSwitchCase="'meta.creation-time'">
-              {{rowData.meta['creation-time'] | PrettyDate }}
-            </div>
-            <div *ngSwitchCase="'status.DSCVersion'">
-              {{rowData.status["DSCVersion"]}}
-            </div>
-            <div *ngSwitchCase="'status.host'">
-              <a routerLink="/cluster/hosts"> {{rowData.status["host"]}}</a>
-            </div>
-            <div *ngSwitchCase="'status.admission-phase'"
-                 [matTooltip]="rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ?  rowData.status['adm-phase-reason'] : ''">
-              {{displayColumn(rowData, col)}}
-              <mat-icon *ngIf="rowData.status['admission-phase'] === 'REJECTED'" fxFlex="nogrow"
-                        [inline]="true"
-                        class="global-alert-warning-icon naples-row-icon">error</mat-icon>
-              <mat-icon *ngIf="rowData.status['admission-phase'] === 'PENDING'" fxFlex="nogrow"
-                        [inline]="true"
-                        class="global-alert-info-icon naples-row-icon">notifications</mat-icon>
-            </div>
-            <div *ngSwitchCase="'status.conditions'"
-                 [matTooltip]="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData) ? displayReasons(rowData) : ''">
-              {{displayCondition(rowData)}}
-              <mat-icon *ngIf="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData)" fxFlex="nogrow"
-                        [inline]="true"
-                        class="global-alert-critical-icon naples-bad-indicator-icon ">error
-              </mat-icon>
-            </div>
-            <div *ngSwitchCase="'workloads'">
-              <div *ngFor="let w of rowData['associatedWorkloads'] let i=index"
-                   class="naples-workloads-div">
-                <ng-container *roleGuard="'workloadworkload_read'">
-                  <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
-                     [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
-                  <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
-                     [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
-                </ng-container>
-              </div>
-            </div>
-            <ng-container *ngSwitchDefault>
-              {{displayColumn(rowData, col)}}
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </app-lazyrender>
+      </app-tableheader>
+    </div>
+    <div fxLayout="row">
+      <app-advanced-search #advancedSearchComponent
+                           [formArray]="fieldFormArray" [cols]="advSearchCols"
+                           [customQueryOptions]="customQueryOptions"
+                           (cancelEmitter)="onCancelSearch($event)"
+                           (searchEmitter)="getDistributedServiceCards()"
+                           kind="DistributedServiceCard"
+                           fxFlex="grow">
+      </app-advanced-search>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container>
+    <ng-container [ngSwitch]="col.field">
+      <ng-container *ngSwitchCase="'spec.id'">
+        <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>
+      </ng-container>
+      <ng-container *ngSwitchCase="'meta.mod-time'">
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </ng-container>
+      <ng-container *ngSwitchCase="'meta.creation-time'">
+        {{rowData.meta['creation-time'] | PrettyDate }}
+      </ng-container>
+      <ng-container *ngSwitchCase="'status.DSCVersion'">
+        {{rowData.status["DSCVersion"]}}
+      </ng-container>
+      <ng-container *ngSwitchCase="'status.host'">
+        <a routerLink="/cluster/hosts"> {{rowData.status["host"]}}</a>
+      </ng-container>
+      <ng-container *ngSwitchCase="'status.admission-phase'">
+        <div
+             [matTooltip]="rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ?  rowData.status['adm-phase-reason'] : ''">
+          {{displayColumn(rowData, col)}}
+        </div>
+        <mat-icon *ngIf="rowData.status['admission-phase'] === 'REJECTED'" fxFlex="nogrow"
+                  [inline]="true"
+                  class="global-alert-warning-icon naples-row-icon">error</mat-icon>
+        <mat-icon *ngIf="rowData.status['admission-phase'] === 'PENDING'" fxFlex="nogrow"
+                  [inline]="true"
+                  class="global-alert-info-icon naples-row-icon">notifications</mat-icon>
+      </ng-container>
+      <ng-container *ngSwitchCase="'meta.labels'">
+        {{formatLabels(rowData.meta.labels)}}
+      </ng-container>
+      <ng-container *ngSwitchCase="'status.conditions'">
+        <div
+             [matTooltip]="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData) ? displayReasons(rowData) : ''">
+          {{displayCondition(rowData)}}
+          <mat-icon *ngIf="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData)" fxFlex="nogrow"
+                    [inline]="true"
+                    class="global-alert-critical-icon naples-bad-indicator-icon ">error
+          </mat-icon>
+        </div>
+      </ng-container>
+      <ng-container *ngSwitchCase="'workloads'">
+        <div *ngFor="let w of rowData['associatedWorkloads'] let i=index"
+             class="naples-workloads-div">
+          <ng-container *roleGuard="'workloadworkload_read'">
+            <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
+               [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+            <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
+               [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
+          </ng-container>
+        </div>
+      </ng-container>
+      <ng-container *ngSwitchDefault>
+        {{displayColumn(rowData, col)}}
+      </ng-container>
+    </ng-container>
+  </ng-container>
 </ng-template>

@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component, DebugElement } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, tick, fakeAsync, discardPeriodicTasks, flush } from '@angular/core/testing';
 import { MatIconRegistry } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -145,8 +145,10 @@ describe('NaplesComponent', () => {
     );
   });
 
-  it('should populate table', () => {
+  it('should populate table', <any>fakeAsync(() => {
     TestingUtility.setAllPermissions();
+    fixture.detectChanges();
+    tick(20000);
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
@@ -168,7 +170,10 @@ describe('NaplesComponent', () => {
         }
       }
     }, '', true);
-  });
+    fixture.destroy();
+    discardPeriodicTasks();
+    flush();
+  }));
 
   describe('RBAC', () => {
     it('no permission', () => {

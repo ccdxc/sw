@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { FormArray } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -17,7 +17,7 @@ import { MetricsPollingQuery, MetricsqueryService, TelemetryPollingMetricQueries
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IClusterDistributedServiceCard, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
@@ -25,6 +25,10 @@ import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesConditionValues } from '.';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
+
 
 @Component({
   selector: 'app-naples',
@@ -43,15 +47,14 @@ import { NaplesConditionValues } from '.';
  * The matching naples objects are added to this.filteredNaples which is used to render the table.
  */
 
-export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy {
+export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
+
   public static  NAPLES_FIELD_WORKLOADS: string  = 'associatedWorkloads';
 
-  @ViewChild('naplesTable') naplesTurboTable: Table;
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-  filteredNaples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-  selectedNaples: ClusterDistributedServiceCard[] = [];
+  dataObjects: ReadonlyArray<ClusterDistributedServiceCard> = [];
   inLabelEditMode: boolean = false;
   labelEditorMetaData: LabelEditorMetadataModel;
 
@@ -69,17 +72,19 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   workloads: ReadonlyArray<WorkloadWorkload> = [];
   maxWorkloadsPerRow: number = 10;
 
+  isTabComponent: boolean = false;
   cols: TableCol[] = [
-    { field: 'spec.id', header: 'Name', class: 'naples-column-date', sortable: true },
-    { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-id-name', sortable: true },
-    { field: 'status.DSCVersion', header: 'Version', class: 'naples-column-version', sortable: true },
-    { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
-    { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
-    { field: 'status.conditions', header: 'Condition', class: 'naples-column-condition', sortable: true, localSearch: true},
-    { field: 'status.host', header: 'Host', class: 'naples-column-host', sortable: true},
-    { field: 'workloads', header: 'Workloads', class: 'naples-column-workloads', sortable: false, localSearch: true },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
+    { field: 'spec.id', header: 'Name', class: '', sortable: true, width: 10 },
+    { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
+    { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: 3 },
+    { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: 15 },
+    { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: 5 },
+    { field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10},
+    { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10},
+    { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7},
+    { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 10 },
+    { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: 10 },
+    { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: 10 },
   ];
 
   advSearchCols: TableCol[] = [];
@@ -137,17 +142,33 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   cancelSearch: boolean = false;
 
+  disableTableWhenRowExpanded: boolean = false;
+  exportFilename: string = 'Venice-DistributedServiceCards';
+
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
     protected searchService: SearchService,
     protected workloadService: WorkloadService,
+    protected cdr: ChangeDetectorRef,
+    protected uiconfigsService: UIConfigsService
   ) {
-    super(controllerService);
+    super(controllerService, cdr, uiconfigsService);
   }
 
+  deleteRecord(object: ClusterDistributedServiceCard): Observable<{ body: IClusterDistributedServiceCard | IApiStatus | Error; statusCode: number; }> {
+    throw new Error('Method not implemented.');
+  }
+  generateDeleteConfirmMsg(object: ClusterDistributedServiceCard): string {
+    throw new Error('Method not implemented.');
+  }
+  generateDeleteSuccessMsg(object: ClusterDistributedServiceCard): string {
+    throw new Error('Method not implemented.');
+  }
+  setDefaultToolbar(): void {
+  }
 
-  ngOnInit() {
+  postNgInit(): void {
     this.buildAdvSearchCols();
     this.getWorkloads();
     this.getNaples();
@@ -161,7 +182,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
   buildAdvSearchCols() {
    this.advSearchCols =  this.cols.filter( (col: TableCol) => {
-       return (col.field !== 'workloads'); // TODO: don't add workloads in advanced-search
+       return (col.field !== 'workloads' && col.field !== 'meta.labels'); // TODO: don't add workloads and labels in advanced-search
    });
   }
 
@@ -180,18 +201,14 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.subscriptions.push(subscription);
   }
 
-  updateSelectedNaples() {
-    const tempMap = new Map<string, ClusterDistributedServiceCard>();
-    for (const obj of this.naples) {
-      tempMap[obj.meta.name] = obj;
+  formatLabels(labelObj) {
+    const labels = [];
+    if (labelObj != null) {
+      Object.keys(labelObj).forEach((key) => {
+        labels.push(key + ': ' + labelObj[key]);
+      });
     }
-    const updatedSelectedObjects: ClusterDistributedServiceCard[] = [];
-    for (const selObj of this.selectedNaples) {
-      if (selObj.meta.name in tempMap) {
-        updatedSelectedObjects.push(tempMap[selObj.meta.name]);
-      }
-    }
-    this.selectedNaples = updatedSelectedObjects;
+    return labels.join(', ');
   }
 
   provideCustomOptions() {
@@ -227,7 +244,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this._clearDSCMaps();
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    this.filteredNaples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    this.dataObjects = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
@@ -251,9 +268,6 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
                 break;
           }
           naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
-        }
-        if (this.selectedNaples.length > 0) {
-          this.updateSelectedNaples();
         }
         this.searchObject['status.conditions'] = this.conditionNaplesMap;
       },
@@ -462,8 +476,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
    * @param field Field by which to sort data
    * @param order Sort order (ascending = 1/descending = -1)
    */
-  getDistributedServiceCards(field = this.naplesTurboTable.sortField,
-    order = this.naplesTurboTable.sortOrder) {
+  getDistributedServiceCards(field = this.tableContainer.sortField,
+    order = this.tableContainer.sortOrder) {
     const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxSearchRecords);
     const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
     if (localSearchResult.err) {
@@ -477,8 +491,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           this._callSearchRESTAPI(searchSearchRequest, localSearchResult.searchRes);
     } else {
         // This case executed when only local search is required
-        this.filteredNaples = this.generateFilteredNaples(localSearchResult.searchRes);
-        if (this.filteredNaples.length === 0) {
+        this.dataObjects = this.generateFilteredNaples(localSearchResult.searchRes);
+        if (this.dataObjects.length === 0) {
           this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
         }
     }
@@ -533,7 +547,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           remoteSearchResult.push(entries[k].meta.name);
         }
         const searchResult = this.advancedSearchComponent.generateAggregateResults(remoteSearchResult, localSearchResult);
-        this.filteredNaples = this.generateFilteredNaples(searchResult);
+        this.dataObjects = this.generateFilteredNaples(searchResult);
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to get naples', error);
