@@ -180,9 +180,11 @@ control input_properties {
     if ((control_metadata.rx_packet == TRUE) and
         (control_metadata.to_device_ip == TRUE) and
         (vxlan_1.valid == TRUE)) {
+        apply(key_tunneled);
         apply(vni);
         apply(vni_otcam);
-        apply(key_tunneled);
+        apply(service_mapping);
+        apply(service_mapping_otcam);
     } else {
         apply(vlan);
     }

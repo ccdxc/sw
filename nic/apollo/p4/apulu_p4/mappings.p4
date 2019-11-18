@@ -130,6 +130,39 @@ table local_mapping_ohash {
     size : LOCAL_MAPPING_OHASH_TABLE_SIZE;
 }
 
+/******************************************************************************/
+/* Service mapping table                                                      */
+/******************************************************************************/
+action service_mapping_info(xlate_id) {
+    // if hardware register indicates hit, take the results
+    modify_field(p4i_to_arm.service_xlate_id, xlate_id);
+}
+
+@pragma stage 5
+table service_mapping {
+    reads {
+        key_metadata.dst    : exact;
+        key_metadata.dport  : exact;
+    }
+    actions {
+        service_mapping_info;
+    }
+    size : SERVICE_MAPPING_TABLE_SIZE;
+}
+
+@pragma stage 5
+@pragma overflow_table service_mapping
+table service_mapping_otcam {
+    reads {
+        key_metadata.dst    : ternary;
+        key_metadata.dport  : ternary;
+    }
+    actions {
+        service_mapping_info;
+    }
+    size : SERVICE_MAPPING_OTCAM_TABLE_SIZE;
+}
+
 control local_mapping {
     if (ingress_recirc.valid == FALSE) {
         apply(local_mapping);

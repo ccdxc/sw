@@ -57,7 +57,7 @@ ingress_to_rxdma:
 
     or              r1, r0, k.ctag_1_valid, \
                         APULU_CPU_FLAGS_VLAN_VALID_BIT_POS
-    or              r1, r0, k.ipv4_1_valid, \
+    or              r1, r1, k.ipv4_1_valid, \
                         APULU_CPU_FLAGS_IPV4_1_VALID_BIT_POS
     or              r1, r1, k.ipv6_1_valid, \
                         APULU_CPU_FLAGS_IPV6_1_VALID_BIT_POS

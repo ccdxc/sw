@@ -7,6 +7,33 @@ import codecs
 sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
 from infra.penscapy.penscapy import *
+from scapy.packet import *
+
+class P4ToARM(Packet):
+    name = "P4ToARM"
+    fields_desc = [
+            ShortField("packet_len", 0),
+            FlagsField("flags", 0, 16,
+                ["VLAN", "IPv4", "IPv6", "InnerEth", "InnerIPv4", "InnerIPv6"]),
+            ShortField("ingress_bd_id", 0),
+            IntField("flow_hash", 0),
+            ByteField("l2_1_offset", 0),
+            ByteField("l3_1_offset", 0),
+            ByteField("l4_1_offset", 0),
+            ByteField("l2_2_offset", 0),
+            ByteField("l3_2_offset", 0),
+            ByteField("l4_2_offset", 0),
+            ByteField("payload_offset", 0),
+            ShortField("lif", 0),
+            ShortField("egress_bd_id", 0),
+            ShortField("service_xlate_id", 0),
+            ShortField("mapping_xlate_id", 0),
+            ShortField("tx_meter_id", 0),
+            ShortField("nexthop_id", 0),
+            BitField("pad", 0, 5),
+            BitEnumField("nexthop_type", 0, 2,
+                {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
+            BitField("drop", 0, 1) ]
 
 def dump_pkt(pkt, sname):
     print('uint8_t %s[] = {' % sname)
@@ -18,7 +45,6 @@ def dump_pkt(pkt, sname):
 ###############################################################################
 # begin golden/apulu.cc
 ###############################################################################
-
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
 ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
@@ -52,10 +78,10 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
-
-arm_hdr_str = '006e000202ed41f250eb1123000000374b0001000000000000000001EF04'
-p4_to_arm_header = codecs.decode(arm_hdr_str, 'hex')
-opkt = p4_to_arm_header / \
+opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
+               flow_hash=0x41f250eb, l2_1_offset=0x11, l3_1_offset=0x23, \
+               l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
+               nexthop_id=0x1ef, nexthop_type='Tunnel') / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
