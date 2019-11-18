@@ -159,6 +159,9 @@ func genDocs() {
 }
 
 func cliPreRunInit(cmd *cobra.Command, args []string) error {
+	if cmd.Flags().Changed("version") {
+		return nil
+	}
 	err := pickNetwork(cmd, args)
 	if err != nil {
 		return err
