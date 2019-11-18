@@ -63,7 +63,12 @@ typedef struct pds_vnic_spec_s {
     pds_policer_key_t tx_policer;
     /// Rx policer, if any
     pds_policer_key_t rx_policer;
+    /// only primary vnic's will get hostname and gateway IP in the
+    /// DHCP offer from local DHCP proxy
     bool primary;
+    /// max_sessions is the maximum number of sessions from/to this vnic, if set
+    /// session limit is not enforced, if this value is set to 0
+    uint32_t max_sessions;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

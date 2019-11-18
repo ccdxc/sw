@@ -936,6 +936,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->host_ifindex = proto_spec.hostifindex();
     api_spec->primary = proto_spec.primary();
+    api_spec->max_sessions = proto_spec.maxsessions();
     return SDK_RET_OK;
 }
 
@@ -990,6 +991,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     }
     proto_spec->set_hostifindex(api_spec->host_ifindex);
     proto_spec->set_primary(api_spec->primary);
+    proto_spec->set_maxsessions(api_spec->max_sessions);
 }
 
 // populate proto buf status from vnic API status
