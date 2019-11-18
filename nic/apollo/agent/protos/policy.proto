@@ -27,9 +27,9 @@ service SecurityPolicySvc {
 
 // Security rule action is one of the below
 enum SecurityRuleAction {
-  SECURITY_RULE_ACTION_NONE   = 0;
-  SECURITY_RULE_ACTION_ALLOW  = 1;
-  SECURITY_RULE_ACTION_DENY   = 2;
+  SECURITY_RULE_ACTION_NONE  = 0;
+  SECURITY_RULE_ACTION_ALLOW = 1;
+  SECURITY_RULE_ACTION_DENY  = 2;
 }
 
 // SecurityRule is a single rule in the security policy
@@ -40,9 +40,9 @@ message SecurityRule {
   // rule match criteria
   types.RuleMatch    Match    = 2;
   // priority of this rule (lower the numeric value, higher the priority is)
-  uint32             Priority = 3;
+  uint32             Priority = 3 [(gogoproto.moretags) = "meta:range:0-1022"];
   // action to take when this rule is matched
-  SecurityRuleAction Action   = 4;
+  SecurityRuleAction Action   = 4 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // security policy configuration
@@ -117,34 +117,40 @@ message SecurityPolicyDeleteResponse {
 // 2. if no object is created, indicated default values will be used
 message SecurityProfileSpec {
   // unique identifier of security profile
-  uint32 Id                  = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32             Id                  = 1 [(gogoproto.moretags) = "meta:mandatory"];
 
   // ConnTrackEn, if set to true, will enable full connection tracking
-  bool   ConnTrackEn         = 2 [(gogoproto.moretags) = "meta:default=false"];
+  bool               ConnTrackEn         = 2 [(gogoproto.moretags) = "meta:default=false"];
+
+  // DefaultFWAction is the action taken by the firewall when SG policies are
+  // configured on vnic but no rule is hit. Similarly, when NACLs are configured
+  // on a subnet and no rule is hit, this action is taken by the firewall
+  // if this attribute is not set, by default "allow" action is assumed
+  SecurityRuleAction DefaultFWAction     = 3 [(gogoproto.moretags) = "meta:default=SECURITY_RULE_ACTION_ALLOW"];
 
   // timeouts for established sessions per TCP/UDP/ICMP and other protocols
-  uint32 TCPIdleTimeout      = 3 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=600"];
-  uint32 UDPIdleTimeout      = 4 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=120"];
-  uint32 ICMPIdleTimeout     = 5 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=15"];
-  uint32 OtherIdleTimeout    = 6 [(gogoproto.moretags) = "meta:range:30-86400, meta:default=90"];
+  uint32             TCPIdleTimeout      = 4 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=600"];
+  uint32             UDPIdleTimeout      = 5 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=120"];
+  uint32             ICMPIdleTimeout     = 6 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=15"];
+  uint32             OtherIdleTimeout    = 7 [(gogoproto.moretags) = "meta:range:30-86400, meta:default=90"];
 
   // TCP specific timeouts
   // TCPCnxnSetupTimeout is the maximum allowed time since first SYN seen to
   // 3-way handshake completion, session gets cleaned up if 3-way handshake is
   // not completed and session moves to ESTABLISHED state by then
-  uint32 TCPCnxnSetupTimeout = 7 [(gogoproto.moretags) = "meta:range:1-60, meta:default=10"];
+  uint32             TCPCnxnSetupTimeout = 8 [(gogoproto.moretags) = "meta:range:1-60, meta:default=10"];
   // TCPHalfCloseTimeout is the maximum allowed time since first FIN seen to
   // 3/4way close, session gets cleaned up if this timer elapses.
-  uint32 TCPHalfCloseTimeout = 8 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=120"];
+  uint32             TCPHalfCloseTimeout = 9 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=120"];
   // TCPCloseTimeout is wait time since FIN is seen from *both* sides (or RST)
   // before cleaning up the session
-  uint32 TCPCloseTimeout     = 9 [(gogoproto.moretags) = "meta:range:1-300, meta:default=15"];
+  uint32             TCPCloseTimeout     = 10 [(gogoproto.moretags) = "meta:range:1-300, meta:default=15"];
 
   // timeouts applicable to sessions installed with drop action
-  uint32 TCPDropTimeout      = 10 [(gogoproto.moretags) = "meta:range:1-300, meta:default=90"];
-  uint32 UDPDropTimeout      = 11 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=60"];
-  uint32 ICMPDropTimeout     = 12 [(gogoproto.moretags) = "meta:range:1-300, meta:default=30"];
-  uint32 OtherDropTimeout    = 13 [(gogoproto.moretags) = "meta:range:1-300, meta:default=60"];
+  uint32             TCPDropTimeout      = 11 [(gogoproto.moretags) = "meta:range:1-300, meta:default=90"];
+  uint32             UDPDropTimeout      = 12 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=60"];
+  uint32             ICMPDropTimeout     = 13 [(gogoproto.moretags) = "meta:range:1-300, meta:default=30"];
+  uint32             OtherDropTimeout    = 14 [(gogoproto.moretags) = "meta:range:1-300, meta:default=60"];
 }
 
 // operational status of security profile, if any
