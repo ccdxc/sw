@@ -5,15 +5,12 @@ import random
 from scapy.all import *
 
 from infra.common.logging import logger
-from infra.common.glopts import GlobalOptions as GlobalOptions
 import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
-
-from infra.common.glopts import GlobalOptions
 
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')

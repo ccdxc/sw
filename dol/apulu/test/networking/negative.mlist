@@ -23,12 +23,14 @@ modules:
     - module:
          name    : L2_IPV4_TCP_QTAG_INVCSUM
          spec    : local2remote_csum_invalid.testspec
+         enable  : False
          iterate :
              - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
     - module:
          name    : L2_IPV6_TCP_QTAG_INVCSUM
          spec    : local2remote_csum_invalid.testspec
+         enable  : False
          iterate :
              - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 

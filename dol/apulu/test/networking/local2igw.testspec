@@ -1,7 +1,7 @@
 # Test Spec
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 5
+    maxlimits: 1
     flow: filter://SourceGuard=False
     route: filter://VPCPeeringEnabled=False,HasBlackHoleRoute=False
 

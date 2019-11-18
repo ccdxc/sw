@@ -4,8 +4,8 @@ feature:
     sub         : local2local
     package     : test.networking
     module      : networking
-    enable      : True
-    ignore      : False
+    enable      : False
+    ignore      : True
 
 modules:
 

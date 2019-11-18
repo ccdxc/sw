@@ -450,19 +450,20 @@ jobd/apulu/gtest_2: ${JOBD_PREREQS}
 .PHONY: jobd/dol/apulu/vxlan
 jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking --dryrun
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking
 
 .PHONY: jobd/dol/apulu/rfc
 jobd/dol/apulu/rfc: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_egress_adjacent --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_egress_overlap_1 --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_egress_overlap_2 --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_egress_overlap_3 --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_egress_negative_1 --dry
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_egress_negative_2 --dry
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_egress_adjacent
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_egress_overlap_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_egress_overlap_2
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_egress_overlap_3
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_egress_negative_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_egress_negative_2
 
 .PHONY: jobd/dol/apulu/lpm
-jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
+jobd/dol/apulu/lpm: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_adjacent --feature lpm --sub v4_adjacent --dryrun
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap --feature lpm --sub v4_overlap --dryrun
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap --feature lpm --sub v4_full_overlap --dryrun
