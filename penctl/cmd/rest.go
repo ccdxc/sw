@@ -225,7 +225,7 @@ func restGet(url string) ([]byte, error) {
 		if verbose {
 			fmt.Println(getResp.Status + " " + url)
 		}
-		return nil, errors.New(url + " not found")
+		return nil, errors.New(url + " not found. Please make sure dsc is reachable and provide token file if dsc is part of cluster.")
 	}
 	if verbose {
 		fmt.Println("Status: ", getResp.Status)
