@@ -286,10 +286,10 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         tparams.handle = mapping_public_ip_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&tparams);
     }
-    if (to_public_ip_nat_idx_ != 0xFFFF) {
+    if (to_public_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
         mapping_impl_db()->nat_tbl_idxr()->free(to_public_ip_nat_idx_);
     }
-    if (to_overlay_ip_nat_idx_) {
+    if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
         mapping_impl_db()->nat_tbl_idxr()->free(to_overlay_ip_nat_idx_);
     }
     return SDK_RET_OK;

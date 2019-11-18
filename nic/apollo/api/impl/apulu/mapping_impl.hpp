@@ -20,6 +20,7 @@
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
+#include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::handle_t;
@@ -153,8 +154,8 @@ public:
 private:
     /// \brief constructor
     mapping_impl() {
-        to_public_ip_nat_idx_ = 0xFFFF;
-        to_overlay_ip_nat_idx_ = 0xFFFF;
+        to_public_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+        to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
         local_mapping_overlay_ip_hdl_ = handle_t::null();
         local_mapping_public_ip_hdl_ = handle_t::null();
         mapping_hdl_ = handle_t::null();
