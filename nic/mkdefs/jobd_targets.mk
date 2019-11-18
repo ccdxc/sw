@@ -464,6 +464,6 @@ jobd/dol/apulu/rfc: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apulu/lpm
 jobd/dol/apulu/lpm: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_adjacent --feature lpm --sub v4_adjacent --dryrun
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap --feature lpm --sub v4_overlap --dryrun
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap --feature lpm --sub v4_full_overlap --dryrun
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_adjacent --feature lpm --sub v4_adjacent
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap --feature lpm --sub v4_overlap
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap --feature lpm --sub v4_full_overlap
