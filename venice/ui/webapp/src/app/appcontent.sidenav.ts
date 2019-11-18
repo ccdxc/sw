@@ -234,6 +234,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'material-icons',
           matIconName: 'cloud_upload',
         },
+        roleGuard: UIRolePermissions.rolloutrollout_read,
         link: ['/admin', 'upgrade']
       },
       {
@@ -243,6 +244,15 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: UIRolePermissions.monitoringtechsupportrequest_read,
         link: ['/admin', 'techsupport']
+      },
+      {
+        label: 'Snapshots',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'restore',
+        },
+        roleGuard: UIRolePermissions.objstorebucket_read,
+        link: ['/admin', 'snapshots']
       },
     ]
   },

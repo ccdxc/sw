@@ -1,0 +1,109 @@
+<app-pagebody class="snapshots" header="Configuration Snapshots" [icon]="bodyicon">
+  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel"
+                       *roleGuard="'objstoreobject_create'"
+                       [expanded]="isThereBackgroudFileUpload()">
+    <mat-expansion-panel-header class="snapshots-expansionpanel-header">
+      <mat-panel-title class="snapshots-summary-panel-header">
+        Upload Snapshot File
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <div class="snapshots-summary-panel-content">
+      <div class="snapshots-fileupload-info-div">
+        <span *ngIf="!isThereBackgroudFileUpload()">Maximum file size is 10G.
+        </span>
+        <span class="snapshots-fileupload-progress-span" *ngIf="fileUploadProgress">
+          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded.  Uploading file takes some time. ': ''}}
+          {{fileUploadProgress >=100 ? ' Saving file': ''}}
+        </span>
+        <mat-icon matTooltip="Cancel File Upload" class="global-table-action-icon"
+                  *ngIf="isThereBackgroudFileUpload()"
+                  (click)="onCancelUpload()">delete</mat-icon>
+      </div>
+      <p-fileUpload name="file" url="/objstore/v1/uploads/snapshots/" (onUpload)="onUpload($event)"
+                    *ngIf="!isThereBackgroudFileUpload()" (onError)="onError($event)"
+                    (onBeforeSend)="onBeforeSend($event)"
+                    maxFileSize="1000000000000" (onClear)="onCancelUpload()"
+                    (onRemove)="onFileRemove($event)"
+                    (onSelect)="onFileSelect($event)" [showUploadButton]="showUploadButton"
+                    (onProgress)="onUploadProgress($event)">
+        <ng-template pTemplate="content">
+          <ul *ngIf="uploadedFiles.length">
+            <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
+          </ul>
+        </ng-template>
+      </p-fileUpload>
+    </div>
+  </mat-expansion-panel>
+
+  <app-tableviewedit fxLayout="column" class="snapshots-widget" [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
+                     [virtualRowHeight]="50"
+                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate" [enableCheckbox]="false"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+
+</app-pagebody>
+
+
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Configurations" [total]="count" fxFlex="auto" fxLayout="row"
+                   [tableMenuItems]="tableMenuItems"
+                   [enableColumnSelect]="true" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'meta.name'">
+      <div class="snapshots-url">
+        <a class="snapshots-download-file-link" (click)="$event.stopPropagation()"
+           href="{{rowData['downloadurl']}}"
+           [matTooltip]="'Download snapshot config file'">{{rowData?.meta.name}}</a>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      <div [innerHTML]="displayColumn(rowData, col)">
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div
+       class="global-column-action-icon-container  global-column-action-icon-container-newsnapshot_{{rowData.meta.name}}"
+       fxLayout="row" fxLayoutGap="5px" *ngIf="showDeleteIcon(rowData)">
+    <mat-icon matTooltip="Restore config" *roleGuard="'clustersnapshotrestore_create'"
+              class="global-table-action-icon"
+              (click)="onRestoreSnapshotClick($event, rowData)">restore
+    </mat-icon>
+    <mat-icon *roleGuard="'objstorebucket_delete'" matTooltip="Delete config"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-col="col">
+  <ng-container *ngIf="rowData['techsupportdownload'] != null">
+    <div fxLayout="row">
+      <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
+        <a class="snapshots-download-file-link" href="{{v.url}}"
+           [matTooltip]="'Download NIC files ' + v.name ">{{v.name}}</a>
+      </div>
+    </div>
+
+    <div fxLayout="row">
+      <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
+        <a class="snapshots-download-file-link" href="{{v.url}}"
+           [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>

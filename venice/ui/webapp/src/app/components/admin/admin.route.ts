@@ -43,6 +43,15 @@ const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'snapshots',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/admin/snapshots/snapshots.module#SnapshotsModule'
+      }
+    ]
+  },
 ];
 
 @NgModule({

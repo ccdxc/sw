@@ -81,7 +81,6 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   }
 
   postNgInit() {
-    console.log(this.notAdmittedCount);
     if (!this.isInline) {
       this.processNaples();
     }
