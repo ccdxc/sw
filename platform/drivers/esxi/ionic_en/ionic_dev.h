@@ -281,7 +281,6 @@ void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
 void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa);
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
                   void *cb_arg);
-void ionic_q_rewind(struct queue *q, struct desc_info *start);
 unsigned int ionic_q_space_avail(struct queue *q);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,

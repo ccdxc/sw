@@ -251,6 +251,9 @@ ionic_adminq_check_err(struct lif *lif,
 			     status_str,
 			     ctx->comp.comp.status,
 			     (is_timeout ? "(timeout)" : ""));
+                if (is_timeout) {
+                        ionic_adminq_flush(lif);
+                }
 		return status;
 	}
 

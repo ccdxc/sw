@@ -7,6 +7,28 @@
 
 extern struct ionic_driver ionic_driver;
 
+void ionic_init_devinfo(struct ionic *ionic)
+{
+        struct ionic_dev *idev = &ionic->en_dev.idev;
+
+        idev->dev_info.asic_type = ionic_readb_raw((vmk_VA)&idev->dev_info_regs->asic_type);
+        idev->dev_info.asic_rev = ionic_readb_raw((vmk_VA)&idev->dev_info_regs->asic_rev);
+
+        vmk_Memcpy(idev->dev_info.fw_version,
+                   idev->dev_info_regs->fw_version,
+                   IONIC_DEVINFO_FWVERS_BUFLEN);
+
+        vmk_Memcpy(idev->dev_info.serial_num,
+                   idev->dev_info_regs->serial_num,
+                   IONIC_DEVINFO_SERIAL_BUFLEN);
+
+        idev->dev_info.fw_version[IONIC_DEVINFO_FWVERS_BUFLEN] = 0;
+        idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
+
+        ionic_en_info("fw_version %s", idev->dev_info.fw_version);
+}
+
+
 VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
 {
         VMK_ReturnStatus status;
@@ -15,11 +37,18 @@ VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
         struct ionic_dev *idev = &ionic->en_dev.idev;
         u32 sig;
 
-        /* BAR0 resources
-         */
-
-        if (num_bars < 1 || bar->len != BAR0_SIZE)
+        /* BAR0 dev_cmd and interrupts */
+        if (num_bars < 1) {
+                ionic_en_err("No bars found, aborting");
                 return VMK_BAD_ADDR_RANGE;
+        }
+
+        if (bar->len < BAR0_SIZE) {
+                ionic_en_err("Resource bar size %lu too small, aborting",
+                             bar->len);
+                return VMK_BAD_ADDR_RANGE;
+        }
+
 
         idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
         idev->dev_cmd_regs = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
@@ -32,18 +61,20 @@ VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
             return VMK_BAD_ADDR_RANGE;
         }
 
-        /* BAR1 resources
-         */
+        ionic_init_devinfo(ionic);
+
+        /* BAR1: doorbells */
 
         bar++;
-        if (num_bars < 2)
+        if (num_bars < 2) {
+                ionic_en_err("Doorbell bar missing, aborting");
                 return VMK_BAD_ADDR_RANGE;
+        }
 
         idev->db_pages = bar->vaddr;
         idev->phy_db_pages = bar->bus_addr;
 
-        /* BAR2 resources
-        */
+        /* BAR2: optional controller memory mapping */
 
         status = ionic_mutex_create("ionic_cmb_mutex",
                                     ionic_driver.module_id,
@@ -664,6 +695,11 @@ void ionic_q_service(struct queue *q, struct cq_info *cq_info,
                      unsigned int stop_index)
 {
         struct desc_info *desc_info;
+
+        /* check for empty queue */
+        if (q->tail->index == q->head->index) {
+                return;
+        }
 
         do {
                 desc_info = q->tail;

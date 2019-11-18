@@ -320,6 +320,7 @@ void ionic_rx_empty(struct queue *q)
                         desc->len = 0;
                         desc->addr = 0;
                 }
+                cur->cb_arg = NULL;
                 cur = cur->next;
         }
 }
@@ -903,10 +904,10 @@ ionic_tx(struct queue *q,
                 return status;
         }
 
-        ionic_q_post(q, is_last_pkt, ionic_tx_clean, pkt);
-
         stats->pkts++;
         stats->bytes += ctx->frame_len;
+
+        ionic_q_post(q, is_last_pkt, ionic_tx_clean, pkt);
 
         return status;
 }

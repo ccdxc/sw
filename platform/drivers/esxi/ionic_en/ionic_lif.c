@@ -1497,7 +1497,7 @@ tx_qcq_alloc_err:
                 ionic_qcq_free(lif, lif->txqcqs[i-1]);
         }
 
-        if (lif->ionic->nnqs_per_lif) {
+        if (lif->notifyqcq) {
                 ionic_qcq_free(lif, lif->notifyqcq);
         }
 
@@ -2757,14 +2757,14 @@ try_again:
                                                      INTR_CTRL_REGS_MAX);
         if (!ionic->intrs.bit_vector) {
                 ionic_en_err("vmk_BitVectorAlloc() failed, "
-                          "status: VMK_NO_MEMORY");
+                             "status: VMK_NO_MEMORY");
                 status = VMK_NO_MEMORY;
                 goto intrs_bit_vector_err;
         }
 
         ionic_en_info("neqs_per_lif: %d, ntxqs_per_lif: %d, "
-                   "nrxqs_per_lif: %d, nintrs: %d, nlifs: %d", neqs_per_lif,
-                   ntxqs_per_lif, nrxqs_per_lif, nintrs, nlifs);
+                      "nrxqs_per_lif: %d, nintrs: %d, nlifs: %d", neqs_per_lif,
+                      ntxqs_per_lif, nrxqs_per_lif, nintrs, nlifs);
 
         priv_data->is_lifs_size_compl = VMK_TRUE;
         return status;

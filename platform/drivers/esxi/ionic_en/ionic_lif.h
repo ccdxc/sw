@@ -102,9 +102,7 @@ struct deferred {
 #define LIF_NAME_MAX_SZ         (32)
 struct lif {
         char name[LIF_NAME_MAX_SZ];
-//        struct list_head list;
         vmk_ListLinks list;
-//        struct net_device *netdev;
         struct ionic_en_uplink_handle *uplink_handle;
         struct ionic *ionic;
         bool registered;
@@ -215,9 +213,12 @@ VMK_ReturnStatus
 ionic_vlan_rx_kill_vid(struct lif *lif,
                        u16 vid);
 
+void
+ionic_adminq_flush(struct lif *lif);
+
 VMK_ReturnStatus
 ionic_lif_rss_config(struct lif *lif, const u16 types,
-        const u8 *key, const u32 *indir);
+                     const u8 *key, const u32 *indir);
 
 VMK_ReturnStatus
 ionic_lif_set_uplink_info(struct lif *lif);
