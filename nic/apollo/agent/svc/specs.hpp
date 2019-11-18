@@ -31,6 +31,8 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
+#include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -51,6 +53,8 @@
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/svc/interface.hpp"
+#include "nic/apollo/agent/svc/nat.hpp"
+#include "nic/apollo/agent/svc/dhcp.hpp"
 #include "gen/proto/types.pb.h"
 
 using sdk::asic::pd::port_queue_credit_t;
@@ -91,6 +95,42 @@ ippfx_proto_spec_to_api_spec (ip_prefix_t *ip_pfx,
         return SDK_RET_INVALID_ARG;
     } else {
         ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
+    }
+    return sdk::SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+ippfx_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
+                                const types::IPPrefix& in_ippfx)
+{
+    ip_prefix_t ippfx;
+    ip_addr_t lo_addr;
+    ip_addr_t hi_addr;
+    
+    ippfx_proto_spec_to_api_spec(&ippfx, in_ippfx);
+    ip_prefix_ip_low(&ippfx, &lo_addr);
+    ip_prefix_ip_high(&ippfx, &hi_addr);
+
+    if (ippfx.addr.af == IP_AF_IPV4) {
+        ip_range->af = IP_AF_IPV4;
+        ip_range->ip_lo.v4_addr = lo_addr.addr.v4_addr;
+        ip_range->ip_hi.v4_addr = hi_addr.addr.v4_addr;
+    } else {
+        ip_range->af = IP_AF_IPV6;
+        memcpy(&ip_range->ip_lo.v6_addr, &lo_addr.addr.v6_addr, sizeof(ipv6_addr_t));
+        memcpy(&ip_range->ip_hi.v6_addr, &hi_addr.addr.v6_addr, sizeof(ipv6_addr_t));
+    }
+    return sdk::SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+ipsubnet_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
+                                   const types::IPSubnet& in_ipsubnet)
+{
+    if (in_ipsubnet.has_ipv4subnet()) {
+        return ippfx_proto_spec_to_ipvx_range(ip_range, in_ipsubnet.ipv4subnet());
+    } else if (in_ipsubnet.has_ipv6subnet()) {
+        return ippfx_proto_spec_to_ipvx_range(ip_range, in_ipsubnet.ipv6subnet());
     }
     return sdk::SDK_RET_OK;
 }
@@ -196,6 +236,20 @@ ippfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
 {
     out_ippfx->set_len(in_ippfx->len);
     ipaddr_api_spec_to_proto_spec(out_ippfx->mutable_addr(), &in_ippfx->addr);
+    return sdk::SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+ippfx_api_spec_to_subnet_proto_spec (types::IPSubnet *out_subnet,
+                                     const ip_prefix_t *in_ippfx)
+{
+    if (in_ippfx->addr.af == IP_AF_IPV4) {
+        ippfx_api_spec_to_proto_spec(out_subnet->mutable_ipv4subnet(),
+                                     in_ippfx);
+    } else if (in_ippfx->addr.af == IP_AF_IPV6) {
+        ippfx_api_spec_to_proto_spec(out_subnet->mutable_ipv6subnet(),
+                                     in_ippfx);
+    }
     return sdk::SDK_RET_OK;
 }
 
@@ -1980,6 +2034,125 @@ pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
     pds_nh_group_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_nh_group_api_status_to_proto(proto_status, &api_info->status);
     pds_nh_group_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_dhcp_relay_agent_proto_to_api_spec (pds_dhcp_relay_agent_spec_t *api_spec,
+                                        const pds::DHCPRelayAgentSpec &proto_spec)
+{
+    api_spec->id = proto_spec.id();
+    api_spec->vpc.id = proto_spec.vpcid();
+    ipaddr_proto_spec_to_api_spec(&api_spec->server_ip, proto_spec.serverip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->agent_ip, proto_spec.agentip());
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_dhcp_relay_agent_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
+                                        const pds_dhcp_relay_agent_spec_t *api_spec)
+{
+    proto_spec->set_id(api_spec->id);
+    proto_spec->set_vpcid(api_spec->vpc.id);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_serverip(),
+                                  &api_spec->server_ip);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_agentip(),
+                                  &api_spec->agent_ip);
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_dhcp_relay_agent_api_status_to_proto (pds::DHCPRelayAgentStatus *proto_status,
+                                          const pds_dhcp_relay_agent_status_t *api_status)
+{
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_dhcp_relay_agent_api_stats_to_proto (pds::DHCPRelayAgentStats *proto_stats,
+                                         const pds_dhcp_relay_agent_stats_t *api_stats)
+{
+    return SDK_RET_OK;
+}
+
+// populate proto buf from route table API info
+static inline void
+pds_dhcp_relay_agent_api_info_to_proto (const pds_dhcp_relay_agent_info_t *api_info,
+                                        void *ctxt)
+{
+    pds::DHCPRelayAgentGetResponse *proto_rsp = (pds::DHCPRelayAgentGetResponse *)ctxt;
+    auto dhcp = proto_rsp->add_response();
+    pds::DHCPRelayAgentSpec *proto_spec = dhcp->mutable_spec();
+    pds::DHCPRelayAgentStatus *proto_status = dhcp->mutable_status();
+    pds::DHCPRelayAgentStats *proto_stats = dhcp->mutable_stats();
+
+    pds_dhcp_relay_agent_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_dhcp_relay_agent_api_status_to_proto(proto_status, &api_info->status);
+    pds_dhcp_relay_agent_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
+                                      const pds::NatPortBlockSpec &proto_spec)
+{
+    api_spec->id = proto_spec.id();
+    api_spec->vpc.id = proto_spec.vpcid();
+    api_spec->ip_proto = proto_spec.protocol();
+    if (proto_spec.nataddress().has_prefix()) {
+        ipsubnet_proto_spec_to_ipvx_range(&api_spec->nat_ip_range,
+                                          proto_spec.nataddress().prefix());
+    } else if (proto_spec.nataddress().has_range()) {
+        iprange_proto_spec_to_api_spec(&api_spec->nat_ip_range,
+                                       proto_spec.nataddress().range());
+    }
+    api_spec->nat_port_range.port_lo = proto_spec.ports().portlow();
+    api_spec->nat_port_range.port_hi = proto_spec.ports().porthigh();
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_nat_port_block_api_spec_to_proto (pds::NatPortBlockSpec *proto_spec,
+                                      const pds_nat_port_block_spec_t *api_spec)
+{
+    proto_spec->set_id(api_spec->id);
+    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_protocol(api_spec->ip_proto);
+    auto range_spec = proto_spec->mutable_nataddress()->mutable_range();
+    iprange_api_spec_to_proto_spec(range_spec, &api_spec->nat_ip_range);
+    proto_spec->mutable_ports()->set_portlow(api_spec->nat_port_range.port_lo);
+    proto_spec->mutable_ports()->set_porthigh(api_spec->nat_port_range.port_hi);
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_nat_port_block_api_status_to_proto (pds::NatPortBlockStatus *proto_status,
+                                        const pds_nat_port_block_status_t *api_status)
+{
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_nat_port_block_api_stats_to_proto (pds::NatPortBlockStats *proto_stats,
+                                       const pds_nat_port_block_stats_t *api_stats)
+{
+    proto_stats->set_inusecount(api_stats->in_use_count);
+    proto_stats->set_sessioncount(api_stats->session_count);
+    return SDK_RET_OK;
+}
+
+// populate proto buf from route table API info
+static inline void
+pds_nat_port_block_api_info_to_proto (const pds_nat_port_block_info_t *api_info,
+                                        void *ctxt)
+{
+    pds::NatPortBlockGetResponse *proto_rsp = (pds::NatPortBlockGetResponse *)ctxt;
+    auto dhcp = proto_rsp->add_response();
+    pds::NatPortBlockSpec *proto_spec = dhcp->mutable_spec();
+    pds::NatPortBlockStatus *proto_status = dhcp->mutable_status();
+    pds::NatPortBlockStats *proto_stats = dhcp->mutable_stats();
+
+    pds_nat_port_block_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_nat_port_block_api_status_to_proto(proto_status, &api_info->status);
+    pds_nat_port_block_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
 static inline sdk_ret_t

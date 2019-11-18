@@ -16,7 +16,7 @@ service NatSvc {
   rpc NatPolicyGet (NatPolicyGetRequest) returns (NatPolicyGetResponse) {}
   rpc NatPolicyDelete (NatPolicyDeleteRequest) returns (NatPolicyDeleteResponse) {}
   rpc NatPortBlockCreate (NatPortBlockRequest) returns (NatPortBlockResponse) {}
-  rpc NatPortBlockDelete (NatPortBlockDeleteRequest) returns (NatPortBlockResponse) {}
+  rpc NatPortBlockDelete (NatPortBlockDeleteRequest) returns (NatPortBlockDeleteResponse) {}
   rpc NatPortBlockPolicyGet (NatPortBlockGetRequest) returns (NatPortBlockGetResponse) {}
 }
 

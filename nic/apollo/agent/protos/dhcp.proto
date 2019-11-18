@@ -16,6 +16,10 @@ service DHCPSvc {
   rpc DHCPRelayAgentUpdate (DHCPRelayAgentRequest) returns (DHCPRelayAgentResponse) {}
   rpc DHCPRelayAgentGet (DHCPRelayAgentGetRequest) returns (DHCPRelayAgentGetResponse) {}
   rpc DHCPRelayAgentDelete (DHCPRelayAgentDeleteRequest) returns (DHCPRelayAgentDeleteResponse) {}
+  rpc DHCPPolicyCreate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
+  rpc DHCPPolicyUpdate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
+  rpc DHCPPolicyGet (DHCPPolicyGetRequest) returns (DHCPPolicyGetResponse) {}
+  rpc DHCPPolicyDelete (DHCPPolicyDeleteRequest) returns (DHCPPolicyDeleteResponse) {}
 }
 
 // DHCPRelayAgentSpec captures DHCP relay agent configuration
