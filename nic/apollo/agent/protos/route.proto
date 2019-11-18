@@ -33,28 +33,39 @@ message NATNexthop {
 
 // route object
 message Route {
+  // IP prefix
   types.IPPrefix      Prefix         = 1;
+  // priority of the route
+  // NOTE:
+  // 1. priority value must be non-zero
+  // 2. lower the numerical value, higher the priority
+  // 3. a route table MUST have either all the routes with priority set or no
+  //    priority set on all the routes
+  // 4. if no priority value is set (i.e. 0) then route priority is computed as
+  //    128 - <prefix length>, so longer prefixes will have higher precedence
+  //    over shorter ones giving regular LPM semantics
+  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:1-65535"];
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
-      types.IPAddress NextHop        = 2;
+      types.IPAddress NextHop        = 3;
       // nexthop for this route
-      uint32          NexthopId      = 3;
+      uint32          NexthopId      = 4;
       // ECMP nexthop for this route
-      uint32          NexthopGroupId = 4;
+      uint32          NexthopGroupId = 5;
       // peer VPC in case of VPC peering
-      uint32          VPCId          = 5;
+      uint32          VPCId          = 6;
       // Tunnel this prefix is pointing to
-      uint32          TunnelId       = 6;
+      uint32          TunnelId       = 7;
       // vnic this prefix is pointing to
-      uint32          VnicId         = 7;
+      uint32          VnicId         = 8;
       // NAT nexthop
-      NATNexthop      NatNexthop     = 8;
+      NATNexthop      NatNexthop     = 9;
   }
   // if Meter is on, when traffic from a vnic hist the route and
   // vnic's meter id (if configured) will be used to account
   // packet & byte count
-  bool                Meter          = 9;
+  bool                Meter          = 10;
 }
 
 // route table specification

@@ -22,13 +22,22 @@
 /// @{
 
 // TODO: should be same as PDS_MAX_SUBNET
-#define PDS_MAX_ROUTE_TABLE            1024   ///< Maximum route tables
-#define PDS_MAX_ROUTE_PER_TABLE        1023   ///< Maximum routes per table
+#define PDS_MAX_ROUTE_TABLE            1024   ///< maximum route tables
+#define PDS_MAX_ROUTE_PER_TABLE        1023   ///< maximum routes per table
 
 /// \brief route
 typedef struct pds_route_s {
-    ip_prefix_t              prefix;      ///< prefix
-    pds_nh_type_t            nh_type;     ///< nexthop type
+    ip_prefix_t                 prefix;   ///< prefix
+    pds_nh_type_t               nh_type;  ///< nexthop type
+    // NOTE:
+    // 1. priority value must be non-zero
+    // 2. lower the numerical value, higher the priority
+    // 3. a route table MUST have either all the routes with priority set or no
+    //    priority set on all the routes
+    // 4. if no priority value is set (i.e. 0) then route priority is computed
+    //    as 128 - <prefix length>, so longer prefixes will have higher
+    //    precedence over shorter ones giving regular LPM semantics
+    uint32_t                    prio;     ///< priority of the route
     union {
         // PDS_NH_TYPE_OVERLAY specific data
         pds_tep_key_t           tep;      ///< nexthop TEP

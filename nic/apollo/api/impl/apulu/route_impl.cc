@@ -139,7 +139,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
-        rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
+        if (!rtable->routes[i].prio) {
+            rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
+        }
         switch (spec->routes[i].nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
