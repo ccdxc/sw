@@ -131,13 +131,17 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-        status = vmk_NetPollRxPktQueue(qcq->netpoll,
-                                       pkt);
-        if (status != VMK_OK) {
-                ionic_en_err("vmk_NetPollRxPktQueue() failed, status: %s",
-                          vmk_StatusToString(status));
+        if (VMK_LIKELY(qcq->is_netpoll_enabled)) {
+                status = vmk_NetPollRxPktQueue(qcq->netpoll,
+                                               pkt);
+                if (status != VMK_OK) {
+                        ionic_en_err("vmk_NetPollRxPktQueue() failed, status: %s",
+                                  vmk_StatusToString(status));
+                        ionic_en_pkt_release(pkt, NULL);
+                        VMK_ASSERT(0);
+                }
+        } else {
                 ionic_en_pkt_release(pkt, NULL);
-                VMK_ASSERT(0);
         }
 }
 
