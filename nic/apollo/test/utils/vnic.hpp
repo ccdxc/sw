@@ -70,6 +70,10 @@ API_READ(vnic);
 API_UPDATE(vnic);
 API_DELETE(vnic);
 
+// Misc function prototypes
+void sample_vnic_setup(pds_batch_ctxt_t bctxt);
+void sample_vnic_teardown(pds_batch_ctxt_t bctxt);
+
 } // namespace api_test
 
 #endif // __TEST_UTILS_VNIC_HPP__

@@ -8,7 +8,26 @@
 
 namespace api_test {
 
-pds_nh_type_t g_rt_def_nh_type = apollo() ? PDS_NH_TYPE_OVERLAY : PDS_NH_TYPE_IP;
+pds_nh_type_t nhtype_supported[] = {
+    PDS_NH_TYPE_OVERLAY,
+    PDS_NH_TYPE_PEER_VPC,
+#ifdef ARTEMIS
+    PDS_NH_TYPE_IP,
+#endif
+#ifdef APULU
+    PDS_NH_TYPE_OVERLAY_ECMP,
+    PDS_NH_TYPE_VNIC,
+    PDS_NH_TYPE_NAT,
+#endif
+};
+
+pds_nh_type_t g_rt_def_nh_type = (apulu() || apollo()) ? PDS_NH_TYPE_OVERLAY
+                                                         : PDS_NH_TYPE_IP;
+
+uint8_t get_num_supported_types (void)
+{
+    return sizeof(nhtype_supported)/sizeof(nhtype_supported[0]);
+}
 
 //----------------------------------------------------------------------------
 // Route table feeder class routines
@@ -16,110 +35,116 @@ pds_nh_type_t g_rt_def_nh_type = apollo() ? PDS_NH_TYPE_OVERLAY : PDS_NH_TYPE_IP
 
 void
 route_table_feeder::init(std::string base_route_pfx_str,
-                         std::string base_nh_ip_str, uint8_t af,
-                         uint32_t num_routes, uint32_t num_route_tables,
-                         uint32_t id, pds_nh_type_t nh_type,
-                         pds_vpc_id_t peer_vpc_id,
-                         pds_nexthop_id_t base_nh_id) {
-    uint32_t nh_offset = 2, nh_offset_max = PDS_MAX_TEP - 1;
-    uint32_t nh_id_offset = 0, nh_id_offset_max = PDS_MAX_NEXTHOP - 1;
-    ip_prefix_t base_route_pfx;
-    ip_addr_t route_addr, base_nh_ip;
-
-    extract_ip_pfx(base_route_pfx_str.c_str(), &base_route_pfx);
-    extract_ip_addr(base_nh_ip_str.c_str(), &base_nh_ip);
-    memset(routes, 0, sizeof(route_util) * (PDS_MAX_ROUTE_PER_TABLE + 1));
-    this->id = id;
-    this->af = af;
-    this->base_route_pfx = base_route_pfx;
-    this->base_nh_ip = base_nh_ip;
-    this->base_nh_id = base_nh_id;
-    this->peer_vpc_id = peer_vpc_id;
-    this->nh_type = nh_type;
+                         uint8_t af, uint32_t num_routes,
+                         uint32_t num_route_tables,
+                         uint32_t id) {
+    spec.key.id = id;
+    spec.af = af;
+    spec.num_routes = num_routes;
+    this->base_route_pfx_str = base_route_pfx_str;
     this->num_obj = num_route_tables;
-    this->num_routes = num_routes;
-    for (uint32_t i = 0; i < this->num_routes; ++i) {
-        this->routes[i].ip_pfx = base_route_pfx;
-        this->routes[i].nh_type = nh_type;
-        switch (nh_type) {
-        case PDS_NH_TYPE_IP:
-            this->routes[i].nh.id = base_nh_id + nh_id_offset;
-            nh_id_offset += 1;
-            if (nh_id_offset > nh_id_offset_max) {
-                nh_id_offset %= nh_id_offset_max;
-            }
-            break;
-        case PDS_NH_TYPE_OVERLAY:
-            this->routes[i].nh_id = nh_offset;
-            this->routes[i].nh_ip.addr.v4_addr =
-                base_nh_ip.addr.v4_addr + nh_offset;
-            nh_offset += 1;
-            if (nh_offset > nh_offset_max) {
-                nh_offset %= nh_offset_max;
-                nh_offset += 1;
-            }
-            break;
-        case PDS_NH_TYPE_PEER_VPC:
-            this->routes[i].peer_vpc_id = peer_vpc_id;
-            break;
-        default:
-            break;
-        }
-        ip_prefix_ip_next(&base_route_pfx, &route_addr);
-        base_route_pfx.addr = route_addr;
-    }
 }
 
 void
 route_table_feeder::iter_next(int width) {
-    id += width;
+    spec.key.id += width;
     cur_iter_pos++;
 }
 
 void
 route_table_feeder::key_build(pds_route_table_key_t *key) const {
     memset(key, 0, sizeof(pds_route_table_key_t));
-    key->id = this->id;
+    key->id = this->spec.key.id;
 }
 
 void
 route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
-    memset(spec, 0, sizeof(pds_route_table_spec_t));
-    this->key_build(&spec->key);
+    ip_prefix_t route_pfx;
+    ip_addr_t route_addr;
+    uint32_t num_routes_per_type, route_index;
+    uint32_t num_types;
 
-    spec->af = this->af;
-    spec->num_routes = this->num_routes;
-    spec->routes = (pds_route_t *)calloc(spec->num_routes, sizeof(pds_route_t));
-    for (uint32_t i = 0; i < this->num_routes; ++i) {
-        spec->routes[i].prefix = this->routes[i].ip_pfx;
-        spec->routes[i].nh_type = this->routes[i].nh_type;
-        switch (this->routes[i].nh_type) {
-        case PDS_NH_TYPE_IP:
-            spec->routes[i].nh = this->routes[i].nh;
-            break;
-        case PDS_NH_TYPE_OVERLAY:
-            spec->routes[i].tep.id = this->routes[i].nh_id;
-            break;
-        case PDS_NH_TYPE_PEER_VPC:
-            spec->routes[i].vpc.id = this->routes[i].peer_vpc_id;
-            break;
-        case PDS_NH_TYPE_BLACKHOLE:
-        default:
-            break;
+    extract_ip_pfx(base_route_pfx_str.c_str(), &route_pfx);
+
+    this->key_build(&spec->key);
+    spec->af = this->spec.af;
+    spec->num_routes = this->spec.num_routes;
+    if (spec->num_routes) {
+        spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                      (spec->num_routes * sizeof(pds_route_t)));
+    }
+    num_types = get_num_supported_types();
+    num_routes_per_type = spec->num_routes/num_types;
+
+    route_index = 0;
+    for (uint32_t i = 0; i < num_types; i++) { 
+        for (uint32_t j = 0; j < num_routes_per_type; j++) {
+            spec->routes[route_index].prefix = route_pfx;
+            fill_spec(nhtype_supported[i], spec, route_index);
+            ip_prefix_ip_next(&route_pfx, &route_addr);
+            route_pfx.addr = route_addr;
+            route_index++;
         }
+    }
+    while (route_index < spec->num_routes) {
+        spec->routes[route_index].prefix = route_pfx;
+        fill_spec(g_rt_def_nh_type, spec, route_index);
+        ip_prefix_ip_next(&route_pfx, &route_addr);
+        route_pfx.addr = route_addr;
+        route_index++;
+    }
+}
+
+void
+route_table_feeder::fill_spec(pds_nh_type_t type,
+                              pds_route_table_spec_t *spec,
+                              uint32_t index) const {
+    uint32_t num = 0;
+    uint32_t base_id = 1;
+    uint32_t base_tep_id = 2;
+
+    spec->routes[index].nh_type = type;
+    switch (type) {
+    case PDS_NH_TYPE_OVERLAY:
+        num = (index % PDS_MAX_TEP);
+        spec->routes[index].tep.id = base_tep_id + num;
+        break;
+    case PDS_NH_TYPE_OVERLAY_ECMP:
+        num = (index % PDS_MAX_NEXTHOP_GROUP);
+        spec->routes[index].nh_group.id = base_id + num;
+        break;
+    case PDS_NH_TYPE_PEER_VPC:
+        num = (index % PDS_MAX_VPC);
+        spec->routes[index].vpc.id = base_id + num;
+        break;
+    case PDS_NH_TYPE_VNIC:
+        num = (index % PDS_MAX_VNIC);
+        spec->routes[index].vnic.id = base_id + num;
+        break;
+    case PDS_NH_TYPE_IP:
+        num = (index % PDS_MAX_NEXTHOP);
+        spec->routes[index].nh.id = base_id + num;
+        break;
+    case PDS_NH_TYPE_NAT:
+        spec->routes[index].nat.src_nat = NAT_TYPE_STATIC;
+        spec->routes[index].nat.dst_nat = NAT_TYPE_STATIC;
+        break;
+    case PDS_NH_TYPE_BLACKHOLE:
+    default:
+        break;
     }
 }
 
 bool
 route_table_feeder::key_compare(const pds_route_table_key_t *key) const {
-    if (key->id != id)
+    if (key->id != spec.key.id)
         return false;
     return true;
 }
 
 bool
 route_table_feeder::spec_compare(const pds_route_table_spec_t *spec) const {
-    if (spec->af != af)
+    if (spec->af != this->spec.af)
         return false;
     if (spec->num_routes != 0)
         return false;
@@ -134,18 +159,18 @@ route_table_feeder::spec_compare(const pds_route_table_spec_t *spec) const {
 static route_table_feeder k_route_table_feeder;
 
 void sample_route_table_setup(
-    pds_batch_ctxt_t bctxt, ip_prefix_t base_route_pfx, ip_addr_t base_nh_ip,
-    uint8_t af, uint32_t num_routes, uint32_t num_route_tables, uint32_t id) {
+    pds_batch_ctxt_t bctxt, ip_prefix_t base_route_pfx, uint8_t af,
+    uint32_t num_routes, uint32_t num_route_tables, uint32_t id) {
     // setup and teardown parameters should be in sync
     k_route_table_feeder.init(ippfx2str(&base_route_pfx),
-                              ipaddr2str(&base_nh_ip), af, num_routes,
+                              af, num_routes,
                               num_route_tables, id);
     many_create(bctxt, k_route_table_feeder);
 }
 
 void sample_route_table_teardown(pds_batch_ctxt_t bctxt, uint32_t id,
                                  uint32_t num_route_tables) {
-    k_route_table_feeder.init("0.0.0.0/0", "0.0.0.0", IP_AF_IPV4,
+    k_route_table_feeder.init("0.0.0.0/0", IP_AF_IPV4,
                               PDS_MAX_ROUTE_PER_TABLE, num_route_tables, id);
     many_delete(bctxt, k_route_table_feeder);
 }

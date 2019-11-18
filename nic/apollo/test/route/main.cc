@@ -10,8 +10,15 @@
 
 #include "nic/apollo/test/utils/nexthop.hpp"
 #include "nic/apollo/test/utils/route.hpp"
+#include "nic/apollo/test/utils/device.hpp"
+#include "nic/apollo/test/utils/policy.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
+#include "nic/apollo/test/utils/subnet.hpp"
+#include "nic/apollo/test/utils/vnic.hpp"
+#include "nic/apollo/test/utils/if.hpp"
+#include "nic/apollo/test/utils/nexthop.hpp"
+#include "nic/apollo/test/utils/nexthop_group.hpp"
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
@@ -19,9 +26,7 @@ namespace api_test {
 static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
-static constexpr pds_vpc_id_t k_vpc_id = 1;
 
-static const std::string k_base_nh_ip = "30.30.30.1";
 static const std::string k_base_v4_pfx = "100.100.100.1/21";
 static const std::string k_base_v6_pfx = "100:100:100:1:1::1/65";
 
@@ -39,10 +44,20 @@ protected:
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
+        sample1_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
         if (apollo()) {
             // create max TEPs which can be used as NHs for routes
             sample_tep_setup(bctxt);
+        } else if (apulu()) {
+            // device and security policy config required for vnic
+            sample_device_setup(bctxt);
+            sample_policy_setup(bctxt);
+            sample_if_setup(bctxt);
+            sample_nexthop_setup(bctxt);
+            sample_nexthop_group_setup(bctxt);
+            sample_tep_setup(bctxt);
+            sample_subnet_setup(bctxt);
+            sample_vnic_setup(bctxt);
         } else {
             // create max NHs which can be used as NHs for routes
             sample_nexthop_setup(bctxt);
@@ -53,10 +68,19 @@ protected:
         pds_batch_ctxt_t bctxt = batch_start();
         if (apollo()) {
             sample_tep_teardown(bctxt);
+        } else if (apulu()) {
+            sample_vnic_teardown(bctxt);
+            sample_subnet_teardown(bctxt);
+            sample_tep_teardown(bctxt);
+            sample_nexthop_group_teardown(bctxt);
+            sample_nexthop_teardown(bctxt);
+            sample_if_teardown(bctxt);
+            sample_policy_teardown(bctxt);
+            sample_device_teardown(bctxt);
         } else {
             sample_nexthop_teardown(bctxt);
         }
-        sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
+        sample1_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
@@ -76,19 +100,19 @@ TEST_F(route_test, v4v6_route_table_workflow_1) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
 }
@@ -99,19 +123,19 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
     workflow_2<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
     workflow_2<route_table_feeder>(feeder);
 }
@@ -121,34 +145,34 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
 TEST_F(route_test, v4v6_route_table_workflow_3) {
     route_table_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 0, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4, 0, 50, 201);
-    feeder3.init("150.100.100.1/21", k_base_nh_ip, IP_AF_IPV4, 0, 50, 301);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4, 0, 50, 101);
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4, 0, 50, 201);
+    feeder3.init("150.100.100.1/21", IP_AF_IPV4, 0, 50, 301);
     // test v4 route tables with zero routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 0, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
+    feeder2.init("125:100:100:1:1::0/65",
                  IP_AF_IPV6, 0, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", k_base_nh_ip,
+    feeder3.init("150:100:100:1:1::0/65",
                  IP_AF_IPV6, 0, 50, 351);
     // test v6 route tables with zero routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 201);
-    feeder3.init("150.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder3.init("150.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 301);
     // test v4 route tables with max routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 351);
     // test v6 route tables with max routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
@@ -160,19 +184,19 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
     workflow_4<route_table_feeder>(feeder);
 }
@@ -182,34 +206,34 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
 TEST_F(route_test, v4v6_route_table_workflow_5) {
     route_table_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 0, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4, 0, 50, 201);
-    feeder3.init("150.100.100.1/21", k_base_nh_ip, IP_AF_IPV4, 0, 50, 301);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4, 0, 50, 101);
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4, 0, 50, 201);
+    feeder3.init("150.100.100.1/21", IP_AF_IPV4, 0, 50, 301);
     // test v4 route tables with zero routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 0, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
+    feeder2.init("125:100:100:1:1::0/65",
                  IP_AF_IPV6, 0, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", k_base_nh_ip,
+    feeder3.init("150:100:100:1:1::0/65",
                  IP_AF_IPV6, 0, 50, 351);
     // test v6 route tables with zero routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 201);
-    feeder3.init("150.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder3.init("150.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 301);
     // test v4 route tables with max routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 351);
     // test v6 route tables with max routes
     workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
@@ -220,23 +244,21 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
 TEST_F(route_test, v4v6_route_table_workflow_6) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, k_max_v4_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
-                  k_max_v4_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4, 512,
+                  k_max_v4_route_table);
+    feeder1B.init(k_base_v4_pfx, IP_AF_IPV4, 100,
                   k_max_v4_route_table);
     workflow_6<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
-                  k_max_v6_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                  k_max_v6_route_table);
+    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
                   k_max_v6_route_table);
     workflow_6<route_table_feeder>(feeder1, feeder1A, feeder1B);
 }
@@ -246,23 +268,21 @@ TEST_F(route_test, v4v6_route_table_workflow_6) {
 TEST_F(route_test, v4v6_route_table_workflow_7) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, k_max_v4_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
-                  k_max_v4_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4, 512,
+                  k_max_v4_route_table);
+    feeder1B.init(k_base_v4_pfx, IP_AF_IPV4, 100,
                   k_max_v4_route_table);
     workflow_7<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
-                  k_max_v6_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                  k_max_v6_route_table);
+    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
                   k_max_v6_route_table);
     workflow_7<route_table_feeder>(feeder1, feeder1A, feeder1B);
 }
@@ -272,23 +292,21 @@ TEST_F(route_test, v4v6_route_table_workflow_7) {
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, k_max_v4_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
-                  k_max_v4_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4, 512,
+                  k_max_v4_route_table);
+    feeder1B.init(k_base_v4_pfx, IP_AF_IPV4, 100,
                   k_max_v4_route_table);
     workflow_8<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
-                  k_max_v6_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    // feeder1B =  feeder1A with TEP routes but less scale
-    feeder1B.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 100,
+    // feeder1A,1B = feeder1 with less routes per table
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                  k_max_v6_route_table);
+    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
                   k_max_v6_route_table);
     workflow_8<route_table_feeder>(feeder1, feeder1A, feeder1B);
 }
@@ -298,18 +316,16 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
 TEST_F(route_test, v4v6_route_table_workflow_9) {
     route_table_feeder feeder1, feeder1A;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, k_max_v4_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, k_max_route_per_tbl,
-                  k_max_v4_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4, 512,
+                  k_max_v4_route_table);
     workflow_9<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A =  feeder1 with vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, k_max_route_per_tbl,
-                  k_max_v6_route_table, 1, PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                  k_max_v6_route_table);
     workflow_9<route_table_feeder>(feeder1, feeder1A);
 }
 
@@ -318,41 +334,32 @@ TEST_F(route_test, v4v6_route_table_workflow_9) {
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_10) {
     route_table_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip,
-                 IP_AF_IPV4, k_max_route_per_tbl, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip,
-                 IP_AF_IPV4, k_max_route_per_tbl, 50, 201);
-    // feeder2A =  feeder2 with vpc peering routes
-    feeder2A.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
-                  k_max_route_per_tbl, 50, 201,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder3.init("150.100.100.1/21", k_base_nh_ip,
-                 IP_AF_IPV4, k_max_route_per_tbl, 50, 301);
-    // feeder3A =  feeder3 with vpc peering routes
-    feeder3A.init("150.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
-                  k_max_route_per_tbl, 50, 301,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder4.init("175.100.100.1/21", k_base_nh_ip,
-                 IP_AF_IPV4, k_max_route_per_tbl, 50, 401);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
+                 k_max_route_per_tbl, 50, 101);
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4,
+                 512, 50, 201);
+    feeder2A.init("125.100.100.1/21", IP_AF_IPV4,
+                  k_max_route_per_tbl, 50, 201);
+    feeder3.init("150.100.100.1/21", IP_AF_IPV4,
+                 k_max_route_per_tbl, 50, 301);
+    feeder3A.init("150.100.100.1/21", IP_AF_IPV4,
+                  512, 50, 301);
+    feeder4.init("175.100.100.1/21", IP_AF_IPV4,
+                 k_max_route_per_tbl, 50, 401);
     workflow_10<route_table_feeder>(
                 feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip,
-                 IP_AF_IPV6, k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip,
-                 IP_AF_IPV6, k_max_route_per_tbl, 50, 251);
-    // feeder2A =  feeder2 with vpc peering routes
-    feeder2A.init("125:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
-                  k_max_route_per_tbl, 50, 251,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder3.init("150:100:100:1:1::0/65", k_base_nh_ip,
-                 IP_AF_IPV6, k_max_route_per_tbl, 50, 351);
-    // feeder3A =  feeder3 with vpc peering routes
-    feeder3A.init("150:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
-                  k_max_route_per_tbl, 50, 351,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder4.init("175:100:100:1:1::0/65", k_base_nh_ip,
-                 IP_AF_IPV6, k_max_route_per_tbl, 50, 451);
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 50, 151);
+    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                 k_max_route_per_tbl, 50, 251);
+    feeder2A.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                  512, 50, 251);
+    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                 k_max_route_per_tbl, 50, 351);
+    feeder3A.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                  512, 50, 351);
+    feeder4.init("175:100:100:1:1::0/65", IP_AF_IPV6,
+                 k_max_route_per_tbl, 50, 451);
     workflow_10<route_table_feeder>(
                 feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
 }
@@ -363,19 +370,19 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
     workflow_neg_1<route_table_feeder>(feeder);
 }
@@ -385,23 +392,23 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     route_table_feeder feeder;
 
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table+2);
     // test MAX+1 v4 route tables with zero routes
     // using max + 2 as max+1 is reserved to handle update
     workflow_neg_2<route_table_feeder>(feeder);
 
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table+2);
     // test MAX+1 v6 route tables with zero routes
     workflow_neg_2<route_table_feeder>(feeder);
 
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table+2);
     // test MAX+1 v4 route tables with max routes
     workflow_neg_2<route_table_feeder>(feeder);
 
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table+2);
     // test MAX+1 v6 route tables with max routes
     workflow_neg_2<route_table_feeder>(feeder);
@@ -432,19 +439,19 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
-    feeder.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
     workflow_neg_3<route_table_feeder>(feeder);
 }
@@ -454,26 +461,26 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
     route_table_feeder feeder1, feeder2;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 0, 40, 100);
-    feeder2.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4, 0, 40, 300);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4, 0, 40, 100);
+    feeder2.init(k_base_v4_pfx, IP_AF_IPV4, 0, 40, 300);
     // test v4 route tables with zero routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 0, 40, 150);
-    feeder2.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6, 0, 40, 350);
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 150);
+    feeder2.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 350);
     // test v6 route tables with zero routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 40, 100);
-    feeder2.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder2.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 40, 300);
     // test v4 route tables with max routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 40, 150);
-    feeder2.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder2.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 40, 350);
     // test v6 route tables with max routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
@@ -484,19 +491,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
     route_table_feeder feeder1, feeder1A;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4);
-    // feeder1A = feeder1 updated to vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
-                  k_max_route_per_tbl, k_max_v4_route_table, 1,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4);
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4,
+                  512, k_max_v4_route_table);
     // test max route tables with addition of max routes
     workflow_neg_5<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6);
-    // feeder1A = feeder1 updated to vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
-                  k_max_route_per_tbl, k_max_v6_route_table, 1,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                  512, k_max_v6_route_table);
     // test max route tables with addition of max routes
     workflow_neg_5<route_table_feeder>(feeder1, feeder1A);
 }
@@ -507,19 +510,15 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
     route_table_feeder feeder1, feeder1A;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4);
-    // feeder1A = feeder1 updated to vpc peering routes
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
-                  k_max_route_per_tbl, k_max_v4_route_table, 1,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4);
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4,
+                  512, k_max_v4_route_table);
     // test max route tables with addition of max routes
     workflow_neg_6<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6);
-    // feeder1A = feeder1 updated to vpc peering routes
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
-                  k_max_route_per_tbl, k_max_v6_route_table, 1,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                  512, k_max_v6_route_table);
     // test max route tables with addition of max routes
     workflow_neg_6<route_table_feeder>(feeder1, feeder1A);
 }
@@ -529,21 +528,19 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
     route_table_feeder feeder1, feeder1A, feeder2;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
-    feeder1A.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
-                  k_max_route_per_tbl, 50, 101,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder1A.init(k_base_v4_pfx, IP_AF_IPV4,
+                  512, 50, 101);
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 201);
     workflow_neg_7<route_table_feeder>(feeder1, feeder1A, feeder2);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 151);
-    feeder1A.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
-                  k_max_route_per_tbl, 50, 151,
-                  PDS_NH_TYPE_PEER_VPC, k_vpc_id);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                  512, 50, 151);
+    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 251);
     workflow_neg_7<route_table_feeder>(feeder1, feeder1A, feeder2);
 }
@@ -553,15 +550,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
 TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
     route_table_feeder feeder1, feeder2;
 
-    feeder1.init(k_base_v4_pfx, k_base_nh_ip, IP_AF_IPV4,
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
-    feeder2.init("125.100.100.1/21", k_base_nh_ip, IP_AF_IPV4,
+    feeder2.init("125.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 201);
     workflow_neg_8<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, k_base_nh_ip, IP_AF_IPV6,
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", k_base_nh_ip, IP_AF_IPV6,
+    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 251);
     workflow_neg_8<route_table_feeder>(feeder1, feeder2);
 }

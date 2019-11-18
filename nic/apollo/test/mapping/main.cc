@@ -44,7 +44,6 @@ std::string g_vnic_cidr_v4("5.5.0.2/16");
 std::string g_subnet_cidr_v4("5.5.0.0/16");
 std::string g_public_ip_v4("192.168.0.2/16");
 std::string g_tep_cidr_v4("1.0.0.1");
-std::string g_rt_cidr_v4("1.0.0.1");
 std::string vnic_test_ip = "5.5.0.0";
 std::string tep_test_ip = "1.0.0.1";
 std::string remote_test_ip = "5.5.0.10";
@@ -80,16 +79,13 @@ protected:
         pds_batch_params_t batch_params = {0};
         std::string subnet_cidr = api_test::g_subnet_cidr_v4;
         std::string nr_cidr = "100.0.0.1/16";
-        ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
+        ip_prefix_t ip_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
 
         vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
         extract_ip_pfx((char *)subnet_cidr.c_str(), &ip_pfx);
-        extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
         extract_ip_pfx((char *)nr_cidr.c_str(), &nr_pfx);
-
-        rt_addr = rt_pfx.addr;
 
         pds_batch_ctxt_t bctxt = batch_start();
         sample_device_setup(bctxt);
@@ -103,9 +99,7 @@ protected:
         sample_tep_setup(bctxt, g_tep_id, api_test::g_tep_cidr_v4, num_teps);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             sample_route_table_setup(
-                bctxt, nr_pfx, rt_addr, IP_AF_IPV4, 1, 1, rt_id_v4+idx);
-            ip_prefix_ip_next(&rt_pfx, &rt_addr);
-            rt_pfx.addr = rt_addr;
+                bctxt, nr_pfx, IP_AF_IPV4, 1, 1, rt_id_v4+idx);
 
             ip_prefix_ip_next(&nr_pfx, &nr_addr);
             nr_pfx.addr = nr_addr;

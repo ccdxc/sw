@@ -44,7 +44,7 @@ inline std::ostream&
 operator<<(std::ostream& os, const pds_route_table_spec_t *spec) {
     os << &spec->key
        << " af: " << +spec->af
-       << " num routes: " << spec->num_routes << std::endl;
+       << " num routes: " << spec->num_routes;
     for (uint32_t i = 0; i < spec->num_routes; i++) {
         os << &spec->routes[i];
     }

@@ -195,4 +195,18 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     return true;
 }
 
+static vnic_feeder k_vnic_feeder;
+
+void sample_vnic_setup(pds_batch_ctxt_t bctxt) {
+    // setup and teardown parameters should be in sync
+    k_vnic_feeder.init(1);
+    many_create(bctxt, k_vnic_feeder);
+}
+
+void sample_vnic_teardown(pds_batch_ctxt_t bctxt) {
+    // setup and teardown parameters should be in sync
+    k_vnic_feeder.init(1);
+    many_delete(bctxt, k_vnic_feeder);
+}
+
 } // namespace api_test
