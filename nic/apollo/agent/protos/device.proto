@@ -66,22 +66,22 @@ message DeviceStatus {
 
 // stats of the device, if any
 message DeviceStatsEntry {
-    string Name  = 1;
-    uint64 Count = 2;
+  string Name  = 1;
+  uint64 Count = 2;
 }
 
 message DeviceStats {
-    repeated DeviceStatsEntry Ingress = 1;
-    repeated DeviceStatsEntry Egress  = 2;
+  repeated DeviceStatsEntry Ingress = 1;
+  repeated DeviceStatsEntry Egress  = 2;
 }
 
 // device object
 message Device {
   meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  DeviceSpec   Spec      = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  DeviceStatus Status    = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  DeviceStats  Stats     = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+  DeviceSpec    Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  DeviceStatus  Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  DeviceStats   Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // device create and update request

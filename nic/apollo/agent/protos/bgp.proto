@@ -36,9 +36,9 @@ service BGP {
 // Global configuration for BGP
 message BGPGlobalSpec {
   // Local 4-byte (32-bit) AS number
-  uint32  LocalASN = 1 [(gogoproto.moretags) = "mandatory"];
+  uint32  LocalASN = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // VRF id for this bgp instance
-  uint32  VRFId    = 2 [(gogoproto.moretags) = "mandatory"];
+  uint32  VRFId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // Router ID for this bgp instance
   fixed32 RouterId = 3;
 }
@@ -64,9 +64,9 @@ message BGPResponse {
 // BGP Peer configurations
 message BGPPeerSpec {
   // Local 4-byte (32-bit) AS number
-  uint32             LocalASN    = 1 [(gogoproto.moretags) = "mandatory"];
+  uint32             LocalASN    = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // VRF id for this bgp instance
-  uint32             VRFId       = 2 [(gogoproto.moretags) = "mandatory"];
+  uint32             VRFId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // Whether BGP peer is enabled ? If peer is not enabled then
   // local router must not initiate connections to the neighbor
   // and must not respond to TCP connections attempts from
@@ -77,11 +77,11 @@ message BGPPeerSpec {
   // Remote 4-byte (32-bit) AS number
   uint32             RemoteASN   = 5;
   // Send regular community attributes to neighbor
-  bool               SendComm    = 6 [(gogoproto.moretags) = "default=false"];
+  bool               SendComm    = 6 [(gogoproto.moretags) = "meta:default=false"];
   // Send extended community attributes to neighbor
-  bool               SendExtComm = 7 [(gogoproto.moretags) = "default=false"];
+  bool               SendExtComm = 7 [(gogoproto.moretags) = "meta:default=false"];
   // Peer is a route reflector client
-  bool               RRClient    = 8 [(gogoproto.moretags) = "default=false"];
+  bool               RRClient    = 8 [(gogoproto.moretags) = "meta:default=false"];
   // Update source address for peering
   types.Address      UpdateSrc   = 9;
   // BGP timers
@@ -103,10 +103,10 @@ message BGPPeerAf {
 // BGP timers configuration
 message BGPTimers {
   // BGP session connect-retry timer in seconds
-  uint32 ConnectRetry = 1 [(gogoproto.moretags) = "range:1-65535"];
+  uint32 ConnectRetry = 1 [(gogoproto.moretags) = "meta:range:1-65535"];
   // BGP session holdtime timer in seconds
-  uint32 HoldTime     = 2 [(gogoproto.moretags) = "range:0-0, 3-65535"];
+  uint32 HoldTime     = 2 [(gogoproto.moretags) = "meta:range:0-0, 3-65535"];
   // BGP session keepalive timer in seconds
-  uint32 KeepAlive    = 3 [(gogoproto.moretags) = "range:0-65535"];
+  uint32 KeepAlive    = 3 [(gogoproto.moretags) = "meta:range:0-65535"];
 }
 

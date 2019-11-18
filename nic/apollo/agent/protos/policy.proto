@@ -12,10 +12,17 @@ import "meta/meta.proto";
 import "types.proto";
 
 service SecurityPolicySvc {
+  // security policy configuration
   rpc SecurityPolicyCreate (SecurityPolicyRequest) returns (SecurityPolicyResponse) {}
   rpc SecurityPolicyUpdate (SecurityPolicyRequest) returns (SecurityPolicyResponse) {}
   rpc SecurityPolicyGet (SecurityPolicyGetRequest) returns (SecurityPolicyGetResponse) {}
   rpc SecurityPolicyDelete (SecurityPolicyDeleteRequest) returns (SecurityPolicyDeleteResponse) {}
+
+  // security profile configuration
+  rpc SecurityProfileCreate (SecurityProfileRequest) returns (SecurityProfileResponse) {}
+  rpc SecurityProfileUpdate (SecurityProfileRequest) returns (SecurityProfileResponse) {}
+  rpc SecurityProfileGet (SecurityProfileGetRequest) returns (SecurityProfileGetResponse) {}
+  rpc SecurityProfileDelete (SecurityProfileDeleteRequest) returns (SecurityProfileDeleteResponse) {}
 }
 
 // Security rule action is one of the below
@@ -76,7 +83,7 @@ message SecurityPolicyRequest {
 
 // security policy create and update response
 message SecurityPolicyResponse {
-  types.ApiStatus ApiStatus = 1;
+  types.ApiStatus               ApiStatus = 1;
   repeated SecurityPolicyStatus Response  = 2;
 }
 
@@ -100,5 +107,95 @@ message SecurityPolicyDeleteRequest {
 
 // security policy delete response
 message SecurityPolicyDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
+}
+
+// security profile configuration
+// NOTE:
+// 1. currently security profile object is global and only a singleton object,
+//    any attempt to create multiple objects will be treated as an error
+// 2. if no object is created, indicated default values will be used
+message SecurityProfileSpec {
+  // unique identifier of security profile
+  uint32 Id                  = 1 [(gogoproto.moretags) = "meta:mandatory"];
+
+  // ConnTrackEn, if set to true, will enable full connection tracking
+  bool   ConnTrackEn         = 2 [(gogoproto.moretags) = "meta:default=false"];
+
+  // timeouts for established sessions per TCP/UDP/ICMP and other protocols
+  uint32 TCPIdleTimeout      = 3 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=600"];
+  uint32 UDPIdleTimeout      = 4 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=120"];
+  uint32 ICMPIdleTimeout     = 5 [(gogoproto.moretags) = "meta:range:5-86400, meta:default=15"];
+  uint32 OtherIdleTimeout    = 6 [(gogoproto.moretags) = "meta:range:30-86400, meta:default=90"];
+
+  // TCP specific timeouts
+  // TCPCnxnSetupTimeout is the maximum allowed time since first SYN seen to
+  // 3-way handshake completion, session gets cleaned up if 3-way handshake is
+  // not completed and session moves to ESTABLISHED state by then
+  uint32 TCPCnxnSetupTimeout = 7 [(gogoproto.moretags) = "meta:range:1-60, meta:default=10"];
+  // TCPHalfCloseTimeout is the maximum allowed time since first FIN seen to
+  // 3/4way close, session gets cleaned up if this timer elapses.
+  uint32 TCPHalfCloseTimeout = 8 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=120"];
+  // TCPCloseTimeout is wait time since FIN is seen from *both* sides (or RST)
+  // before cleaning up the session
+  uint32 TCPCloseTimeout     = 9 [(gogoproto.moretags) = "meta:range:1-300, meta:default=15"];
+
+  // timeouts applicable to sessions installed with drop action
+  uint32 TCPDropTimeout      = 10 [(gogoproto.moretags) = "meta:range:1-300, meta:default=90"];
+  uint32 UDPDropTimeout      = 11 [(gogoproto.moretags) = "meta:range:1-172800, meta:default=60"];
+  uint32 ICMPDropTimeout     = 12 [(gogoproto.moretags) = "meta:range:1-300, meta:default=30"];
+  uint32 OtherDropTimeout    = 13 [(gogoproto.moretags) = "meta:range:1-300, meta:default=60"];
+}
+
+// operational status of security profile, if any
+message SecurityProfileStatus {
+}
+
+// stats of security profile, if any
+message SecurityProfileStats {
+}
+
+// security profile object
+message SecurityProfile {
+  meta.TypeMeta         TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta          ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  SecurityProfileSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  SecurityProfileStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  SecurityProfileStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// security profile create and update request
+message SecurityProfileRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt              BatchCtxt = 1;
+  repeated SecurityProfileSpec Request   = 2;
+}
+
+// security profile create and update response
+message SecurityProfileResponse {
+  types.ApiStatus                ApiStatus = 1;
+  repeated SecurityProfileStatus Response  = 2;
+}
+
+// security profile get request
+message SecurityProfileGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// security profile get response
+message SecurityProfileGetResponse {
+  types.ApiStatus          ApiStatus = 1;
+  repeated SecurityProfile Response  = 2;
+}
+
+// security profile delete request
+message SecurityProfileDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  repeated uint32 Id        = 2;
+}
+
+// security profile delete response
+message SecurityProfileDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
 }
