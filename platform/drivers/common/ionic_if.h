@@ -2474,6 +2474,9 @@ union dev_cmd {
 	struct port_getattr_cmd port_getattr;
 	struct port_setattr_cmd port_setattr;
 
+	struct ionic_vf_setattr_cmd vf_setattr;
+	struct ionic_vf_getattr_cmd vf_getattr;
+
 	struct lif_identify_cmd lif_identify;
 	struct lif_init_cmd lif_init;
 	struct lif_reset_cmd lif_reset;
@@ -2504,6 +2507,9 @@ union dev_cmd_comp {
 	struct port_reset_comp port_reset;
 	struct port_getattr_comp port_getattr;
 	struct port_setattr_comp port_setattr;
+
+	struct ionic_vf_setattr_comp vf_setattr;
+	struct ionic_vf_getattr_comp vf_getattr;
 
 	struct lif_identify_comp lif_identify;
 	struct lif_init_comp lif_init;
@@ -2590,8 +2596,6 @@ union adminq_cmd {
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_add_cmd rx_filter_add;
 	struct rx_filter_del_cmd rx_filter_del;
-	struct ionic_vf_setattr_cmd vf_setattr;
-	struct ionic_vf_getattr_cmd vf_getattr;
 	struct rdma_reset_cmd rdma_reset;
 	struct rdma_queue_cmd rdma_queue;
 	struct fw_download_cmd fw_download;
@@ -2605,8 +2609,6 @@ union adminq_comp {
 	struct q_init_comp q_init;
 	struct lif_setattr_comp lif_setattr;
 	struct lif_getattr_comp lif_getattr;
-	struct ionic_vf_setattr_comp vf_setattr;
-	struct ionic_vf_getattr_comp vf_getattr;
 	struct rx_filter_add_comp rx_filter_add;
 	struct fw_control_comp fw_control;
 };

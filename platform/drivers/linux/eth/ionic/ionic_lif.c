@@ -2152,116 +2152,66 @@ static int ionic_get_vf_config(struct net_device *netdev,
 	return 0;
 }
 
-static int ionic_set_vf_config(struct net_device *netdev, int vf,
-			       enum ionic_vf_attr attr, u8 *data)
-{
-	struct ionic_lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.vf_setattr = {
-			.opcode = CMD_OPCODE_VF_SETATTR,
-			.vf_index = vf,
-			.attr = attr,
-		},
-	};
-	int err;
-
-	if (vf >= ionic->num_vfs)
-		return -EINVAL;
-
-	switch (attr) {
-	case IONIC_VF_ATTR_SPOOFCHK:
-		ctx.cmd.vf_setattr.spoofchk = *data;
-		netdev_dbg(netdev, "%s: vf %d spoof %d\n",
-			   __func__, vf, *data);
-		break;
-	case IONIC_VF_ATTR_TRUST:
-		ctx.cmd.vf_setattr.trust = *data;
-		netdev_dbg(netdev, "%s: vf %d trust %d\n",
-			   __func__, vf, *data);
-		break;
-	case IONIC_VF_ATTR_LINKSTATE:
-		ctx.cmd.vf_setattr.linkstate = *data;
-		netdev_dbg(netdev, "%s: vf %d linkstate %d\n",
-			   __func__, vf, *data);
-		break;
-	case IONIC_VF_ATTR_MAC:
-		ether_addr_copy(ctx.cmd.vf_setattr.macaddr, data);
-		netdev_dbg(netdev, "%s: vf %d macaddr %pM\n",
-			   __func__, vf, data);
-		break;
-	case IONIC_VF_ATTR_VLAN:
-		ctx.cmd.vf_setattr.vlanid = cpu_to_le16(*(u16 *)data);
-		netdev_dbg(netdev, "%s: vf %d vlan %d\n",
-			   __func__, vf, *(u16 *)data);
-		break;
-	case IONIC_VF_ATTR_RATE:
-		ctx.cmd.vf_setattr.maxrate = cpu_to_le32(*(u32 *)data);
-		netdev_dbg(netdev, "%s: vf %d maxrate %d\n",
-			   __func__, vf, *(u32 *)data);
-		break;
-	case IONIC_VF_ATTR_STATSADDR:
-		ctx.cmd.vf_setattr.stats_pa = cpu_to_le64(*(u64 *)data);
-		netdev_dbg(netdev, "%s: vf %d stats_pa 0x%08llx\n",
-			   __func__, vf, *(u64 *)data);
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	err = ionic_adminq_post_wait(lif, &ctx);
-	return err;
-}
-
 static int ionic_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
+
 	if (!(is_zero_ether_addr(mac) || is_valid_ether_addr(mac)))
 		return -EINVAL;
 
-	return ionic_set_vf_config(netdev, vf, IONIC_VF_ATTR_MAC, mac);
+	return ionic_set_vf_config(lif->ionic, vf,
+				   IONIC_VF_ATTR_MAC, mac);
 }
 
 static int ionic_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan,
 			     u8 qos, __be16 proto)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
+
 	if (vlan > 4095 || qos > 7)
 		return -EINVAL;
 
 	if (proto != htons(ETH_P_8021Q))
 		return -EPROTONOSUPPORT;
 
-	return ionic_set_vf_config(netdev, vf,
+	return ionic_set_vf_config(lif->ionic, vf,
 				   IONIC_VF_ATTR_VLAN, (u8 *)&vlan);
 }
 
 static int ionic_set_vf_rate(struct net_device *netdev, int vf,
 			     int tx_min, int tx_max)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
+
 	/* setting the min just seems silly */
 	if (tx_min)
 		return -EINVAL;
 
-	return ionic_set_vf_config(netdev, vf,
+	return ionic_set_vf_config(lif->ionic, vf,
 				   IONIC_VF_ATTR_RATE, (u8 *)&tx_max);
 }
 
 static int ionic_set_vf_spoofchk(struct net_device *netdev, int vf, bool set)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data = set;  /* convert to u8 for config */
 
-	return ionic_set_vf_config(netdev, vf, IONIC_VF_ATTR_SPOOFCHK, &data);
+	return ionic_set_vf_config(lif->ionic, vf,
+				   IONIC_VF_ATTR_SPOOFCHK, &data);
 }
 
 static int ionic_set_vf_trust(struct net_device *netdev, int vf, bool set)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data = set;  /* convert to u8 for config */
 
-	return ionic_set_vf_config(netdev, vf, IONIC_VF_ATTR_TRUST, &data);
+	return ionic_set_vf_config(lif->ionic, vf,
+				   IONIC_VF_ATTR_TRUST, &data);
 }
 
 static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 {
+	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data;
 
 	switch (set) {
@@ -2276,7 +2226,8 @@ static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 		break;
 	}
 
-	return ionic_set_vf_config(netdev, vf, IONIC_VF_ATTR_TRUST, &data);
+	return ionic_set_vf_config(lif->ionic, vf,
+				   IONIC_VF_ATTR_TRUST, &data);
 }
 
 static int ionic_get_vf_stats(struct net_device *netdev, int vf,
