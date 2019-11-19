@@ -365,3 +365,39 @@ int pnso_test_sysfs_read_ctl(void)
 {
 	return osal_atomic_exchange(&ctl_state, CTL_STATE_READ);
 }
+
+/* These functions are only supported on FreeBSD for now.  Stub them. */
+
+bool pnso_test_sysfs_is_fd(const char *devname, int *fdnum)
+{
+	*fdnum = -1;
+	return false;
+}
+
+uint32_t pnso_test_sysfs_write_fd(int fdnum, uint32_t offset,
+		const uint8_t *src, uint32_t size, uint32_t *gen_id)
+{
+	*gen_id = 0;
+	return 0;
+}
+
+uint32_t pnso_test_sysfs_read_fd(int fdnum, uint32_t offset, uint8_t *dst,
+				 uint32_t size, uint32_t *gen_id)
+{
+	*gen_id = 0;
+	return 0;
+}
+
+int pnso_test_sysfs_get_fd_data(int fdnum,
+				struct pnso_flat_buffer *flat_buf,
+				uint32_t *gen_id)
+{
+	*gen_id = 0;
+	return -1;
+}
+
+uint32_t pnso_test_sysfs_get_fd_len(int fdnum, uint32_t *gen_id)
+{
+	*gen_id = 0;
+	return 0;
+}

@@ -28,6 +28,7 @@ enum {
 
 #define MAX_INPUT_BUF_LEN (2 * 1024 * 1024)
 #define MAX_OUTPUT_BUF_LEN (64 * 1024)
+#define MAX_CPDC_OUTPUT_BUF_LEN (60 * 1024)
 #define DEFAULT_BUF_COUNT 16
 #define DEFAULT_BLOCK_SIZE 4096
 #define MAX_INPUT_BUF_COUNT 1024
@@ -82,8 +83,8 @@ static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
 			return MAX_OUTPUT_BUF_LEN;
 		} else if (uncompressed_size) {
 			return uncompressed_size;
-		} else if ((input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
-			return MAX_OUTPUT_BUF_LEN;
+		} else if ((input_len * MAX_COMPRESSION_FACTOR > MAX_CPDC_OUTPUT_BUF_LEN)) {
+			return MAX_CPDC_OUTPUT_BUF_LEN;
 		} else {
 			/* Cannot deduce */
 			return 0;
@@ -113,6 +114,7 @@ static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
 
 struct buffer_context {
 	bool initialized;
+	uint32_t seed;
 	uint32_t svc_chain_idx;
 	uint32_t uncompressed_sz;
 	uint32_t buf_alloc_sz;
@@ -208,10 +210,11 @@ union callback_context {
 struct batch_context {
 	const struct test_desc *desc;
 	struct testcase_context *test_ctx;
-	bool initialized;
 	uint64_t first_req_id;
 	uint32_t batch_id;
 	uint32_t worker_id;
+	uint16_t sync_mode;
+	bool initialized;
 	union callback_context cb_ctx;
 	osal_atomic_int_t cb_count;
 	pnso_error_t req_rc;
@@ -406,6 +409,9 @@ struct test_node_file {
 	uint32_t alloc_size;
 	uint32_t block_size;
 	uint32_t uncompressed_size;
+	uint32_t input_seed;
+	int sysfs_fd;
+	uint32_t sysfs_gen_id;
 	char filename[TEST_MAX_FULL_PATH_LEN+1];
 
 	struct pnso_buffer_list *buflist;

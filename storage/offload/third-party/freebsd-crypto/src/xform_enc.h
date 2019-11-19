@@ -54,6 +54,7 @@ struct enc_xform {
 	int (*setkey) (uint8_t **, uint8_t *, int len);
 	void (*zerokey) (uint8_t **);
 	void (*reinit) (caddr_t, uint8_t *);
+	void (*reinit2) (caddr_t, uint8_t *);
 	/*
 	 * Encrypt/decrypt 1+ blocks of input -- total size is 'len' bytes.
 	 * Len is guaranteed to be a multiple of the defined 'blocksize'.

@@ -67,6 +67,7 @@ static	void aes_xts_encrypt(caddr_t, uint8_t *);
 static	void aes_xts_decrypt(caddr_t, uint8_t *);
 static	void aes_xts_zerokey(uint8_t **);
 static	void aes_xts_reinit(caddr_t, uint8_t *);
+static	void aes_xts_reinit2(caddr_t, uint8_t *);
 
 /* Encryption instances */
 struct enc_xform enc_xform_aes_xts = {
@@ -76,7 +77,8 @@ struct enc_xform enc_xform_aes_xts = {
 	aes_xts_decrypt,
 	aes_xts_setkey,
 	aes_xts_zerokey,
-	aes_xts_reinit
+	aes_xts_reinit,
+	aes_xts_reinit2,
 };
 
 /*
@@ -100,6 +102,36 @@ aes_xts_reinit(caddr_t key, uint8_t *iv)
 	}
 	/* Last 64 bits of IV are always zero */
 	bzero(ctx->tweak + AES_XTS_IVSIZE, AES_XTS_IVSIZE);
+
+	rijndael_encrypt(&ctx->key2, ctx->tweak, ctx->tweak);
+}
+
+/*
+ * Encryption wrapper routines.
+ */
+static void
+aes_xts_reinit2(caddr_t key, uint8_t *iv)
+{
+	struct aes_xts_ctx *ctx = (struct aes_xts_ctx *)key;
+	uint64_t blocknum;
+	unsigned int i;
+
+	/*
+	 * Prepare tweak as E_k2(IV). IV is specified as LE representation
+	 * of a 64-bit block number which we allow to be passed in directly.
+	 */
+	bcopy(iv, &blocknum, AES_XTS_IVSIZE);
+	for (i = 0; i < AES_XTS_IVSIZE; i++) {
+		ctx->tweak[i] = blocknum & 0xff;
+		blocknum >>= 8;
+	}
+
+	/* 2nd blocknum for full 16 byte iv */
+	bcopy(iv + AES_XTS_IVSIZE, &blocknum, AES_XTS_IVSIZE);
+	for (i = 0; i < AES_XTS_IVSIZE; i++) {
+		ctx->tweak[AES_XTS_IVSIZE + i] = blocknum & 0xff;
+		blocknum >>= 8;
+	}
 
 	rijndael_encrypt(&ctx->key2, ctx->tweak, ctx->tweak);
 }

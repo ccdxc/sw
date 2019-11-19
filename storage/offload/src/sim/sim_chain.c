@@ -500,6 +500,13 @@ static pnso_error_t svc_exec_decompress_lzrw1a(struct sim_svc_ctx *ctx,
 {
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
 
+	if (ctx->status.u.dst.sgl) {
+		dst_len = sim_buflist_len(ctx->status.u.dst.sgl);
+		if (dst_len > ctx->sess->scratch.data_sz) {
+			dst_len = ctx->sess->scratch.data_sz;
+		}
+	}
+
 #ifdef LZR_MODEL
 	lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, ctx->sess->scratch.cmd,
 			(uint8_t *) ctx->input.buf + hdr_len, data_len,
@@ -525,6 +532,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	uint32_t hdr_len = 0;
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
 	uint32_t chksum = 0;
+	uint32_t *pchksum = NULL;
 
 	/* Lookup compression header format */
 	if ((ctx->cmd.u.cp_desc.flags & PNSO_CP_DFLAG_INSERT_HEADER) &&
@@ -536,6 +544,10 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 			goto cp_error;
 		}
 		hdr_len = hdr_fmt->total_hdr_sz;
+		if (hdr_fmt->type_mask & (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM)) {
+			/* Instruct compressor to generate checksum */
+			pchksum = &chksum;
+		}
 	}
 	if (hdr_len >= dst_len) {
 		/* super large cp header format, shouldn't happen */
@@ -556,7 +568,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		rc = svc_exec_noop(ctx, opaque);
 		break;
 	case PNSO_COMPRESSION_TYPE_LZRW1A:
-		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len, &chksum);
+		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len, pchksum);
 		if (rc != PNSO_OK) {
 			goto cp_error;
 		}
@@ -610,6 +622,7 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 	uint32_t hdr_algo_type = 0;
 	uint32_t pnso_algo_type = 0;
 	uint32_t chksum = 0;
+	uint32_t *pchksum = NULL;
 
 	ctx->is_chksum_present = 0;
 
@@ -645,6 +658,7 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 			if (hdr_fmt->type_mask &
 			    (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM)) {
 				ctx->is_chksum_present = 1;
+				pchksum = &chksum;
 			}
 		}
 	}
@@ -664,7 +678,7 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 		rc = svc_exec_decompress_lzrw1a(ctx, hdr_len,
 						hdr_data_len ? hdr_data_len :
 						ctx->input.len,
-						&chksum);
+						pchksum);
 		break;
 	default:
 		svc_exec_noop(ctx, opaque);

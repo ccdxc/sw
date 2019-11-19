@@ -4,7 +4,7 @@ svc_chains:
       #description: "Encrypt+Decrypt chaining"
       input:
         random: 25263
-        random_len: 0
+        random_len: '$1block'
         len: '$1block'
         output_file : 'origin.bin'
       ops:

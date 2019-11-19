@@ -6,6 +6,7 @@ global_params:
   per_core_qdepth: 512
   cpu_mask: 1
   block_size: '$1block'
+  #flags: 'abort_on_fail'
 cp_hdr_formats:
   - format:
       idx: 1

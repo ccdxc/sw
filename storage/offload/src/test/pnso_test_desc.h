@@ -92,6 +92,7 @@ static inline uint32_t test_count_ancestor_nodes(const struct test_node *node)
 }
 
 #define TEST_CRYPTO_MAX_KEY_LEN 128
+#define TEST_CRYPTO_IV_DATA_LEN 16
 
 struct test_crypto_key {
 	struct test_node node;
@@ -113,8 +114,9 @@ struct test_crypto_key {
 #define TEST_RESERVED_CORE_COUNT 2 /* 1 for ctl, 1 for user terminal */
 #define TEST_MIN_OSAL_CORE_COUNT (1 + TEST_RESERVED_CORE_COUNT)
 #define TEST_MAX_CORE_COUNT 32
-#define TEST_MAX_BATCH_CONCURRENCY 128
 #define TEST_MAX_BATCH_DEPTH 512
+#define TEST_MAX_BATCH_CONCURRENCY TEST_MAX_BATCH_DEPTH
+#define TEST_DEFAULT_BATCH_CONCURRENCY 128
 
 enum {
 	FILE_FORMAT_RANDOM,
@@ -127,15 +129,30 @@ struct test_blob {
 	uint8_t *data;
 };
 
+enum {
+	RANGE_TYPE_NONE,
+	RANGE_TYPE_SEQ,
+	RANGE_TYPE_RAND,
+	RANGE_TYPE_MAX
+};
+
+struct test_range {
+	uint32_t start;
+	uint32_t stop;
+	uint32_t step;
+	uint32_t count;
+	uint16_t type;
+};
+
 struct test_input_desc {
 	uint16_t format; /* FILE_FORMAT_* */
 	uint32_t offset;
-	uint32_t len;
+	struct test_range len_range;
 	uint32_t min_block_size;
 	uint32_t max_block_size;
 	uint32_t block_count;
 	uint32_t random_seed;
-	uint32_t random_len;
+	struct test_range random_len_range;
 	//char pattern[TEST_MAX_PATTERN_LEN];
 	struct test_blob pattern;
 	char pathname[TEST_MAX_PATH_LEN];
@@ -167,6 +184,7 @@ struct test_svc_chain {
 	char name[TEST_MAX_NAME_LEN];
 	struct test_input_desc input;
 	uint32_t num_services;
+	uint16_t sync_mode;
 	uint16_t batch_weight;
 	//struct pnso_service svcs[PNSO_SVC_TYPE_MAX];
 	struct test_node_list svcs;
@@ -211,10 +229,13 @@ static inline bool validation_is_per_req(uint16_t type)
 enum {
 	COMPARE_TYPE_EQ, /* default */
 	COMPARE_TYPE_NE,
+	COMPARE_TYPE_EZ, /* equal or zero */
 	COMPARE_TYPE_LT,
 	COMPARE_TYPE_LE,
+	COMPARE_TYPE_LZ, /* less than or zero */
 	COMPARE_TYPE_GT,
 	COMPARE_TYPE_GE,
+	COMPARE_TYPE_GZ, /* greater than or zero */
 
 	/* Must be last */
 	COMPARE_TYPE_MAX
@@ -276,6 +297,7 @@ struct test_cp_hdr_mapping {
 };
 
 enum {
+	SYNC_MODE_AUTO,
 	SYNC_MODE_SYNC,
 	SYNC_MODE_ASYNC,
 	SYNC_MODE_POLL,
@@ -284,6 +306,8 @@ enum {
 	/* Must be last */
 	SYNC_MODE_MAX
 };
+
+#define GLOBAL_FLAG_ABORT_ON_FAIL 0x0001
 
 struct test_testcase {
 	struct test_node node;
@@ -314,6 +338,7 @@ struct test_desc {
 	uint64_t cpu_mask;
 	uint64_t limit_rate;
 	uint32_t status_interval;
+	uint32_t flags;
 	char output_file_prefix[TEST_MAX_FILE_PREFIX_LEN];
 	char output_file_suffix[TEST_MAX_FILE_PREFIX_LEN];
 	bool store_output_files;

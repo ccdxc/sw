@@ -61,7 +61,8 @@ static struct test_desc default_desc = {
 		.block_size = 4096 },
 	.output_file_prefix = "sim_",
 	.output_file_suffix = ".bin",
-	.cpu_mask = 1
+	.cpu_mask = 1,
+	.flags = 0
 };
 
 /* testcase defaults */
@@ -70,7 +71,7 @@ static struct test_testcase default_testcase = {
 	.repeat = 1,
 	.batch_depth = 0,
 	.batch_concurrency = 0,
-	.sync_mode = SYNC_MODE_SYNC,
+	.sync_mode = SYNC_MODE_AUTO,
 	.svc_chain_count = 0,
 	.req_validations = { NULL, NULL },
 	.batch_validations = { NULL, NULL },
@@ -319,8 +320,8 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 	if (svc_chain->input.offset) {
 		PNSO_LOG("      offset %u\n", svc_chain->input.offset);
 	}
-	if (svc_chain->input.len) {
-		PNSO_LOG("      length %u\n", svc_chain->input.len);
+	if (svc_chain->input.len_range.type) {
+		PNSO_LOG("      length %u\n", svc_chain->input.len_range.start);
 	}
 	if (svc_chain->input.pattern.data) {
 		PNSO_LOG("      pattern %s\n", svc_chain->input.pattern.data);
@@ -449,14 +450,18 @@ void test_dump_desc(struct test_desc *desc)
 	}
 }
 
-static void dump_yaml_event(yaml_event_t *event)
-{
-	static int indent_level = 0;
-	char indent[80];
+#define PNSO_TEST_MAX_STACK_DEPTH 15
 
-	if (indent_level) {
-		memset(indent, ' ', indent_level);
-	}
+static void dump_yaml_event(yaml_event_t *event, int indent_level)
+{
+	char indent[PNSO_TEST_MAX_STACK_DEPTH + 1];
+
+	if (indent_level >= sizeof(indent))
+		indent_level = sizeof(indent) - 1;
+	else if (indent_level <= 0)
+		indent_level = 1;
+
+	memset(indent, ' ', indent_level);
 	indent[indent_level] = '\0';
 
 	switch (event->type) {
@@ -471,10 +476,8 @@ static void dump_yaml_event(yaml_event_t *event)
 		break;
 	case YAML_DOCUMENT_START_EVENT:
 		PNSO_LOG_TRACE("%sYAML DOCUMENT_START event\n", indent);
-		indent_level++;
 		break;
 	case YAML_DOCUMENT_END_EVENT:
-		indent[--indent_level] = '\0';
 		PNSO_LOG_TRACE("%sYAML DOCUMENT_END event\n", indent);
 		break;
 	case YAML_ALIAS_EVENT:
@@ -493,10 +496,8 @@ static void dump_yaml_event(yaml_event_t *event)
 			      indent,
 			      event->data.sequence_start.anchor,
 			      event->data.sequence_start.tag);
-		indent_level++;
 		break;
 	case YAML_SEQUENCE_END_EVENT:
-		indent[--indent_level] = '\0';
 		PNSO_LOG_TRACE("%sYAML SEQUENCE_END event\n", indent);
 		break;
 	case YAML_MAPPING_START_EVENT:
@@ -504,10 +505,8 @@ static void dump_yaml_event(yaml_event_t *event)
 			      indent,
 			      event->data.mapping_start.anchor,
 			      event->data.mapping_start.tag);
-		indent_level++;
 		break;
 	case YAML_MAPPING_END_EVENT:
-		indent[--indent_level] = '\0';
 		PNSO_LOG_TRACE("%sYAML MAPPING_END event\n", indent);
 		break;
 	default:
@@ -518,8 +517,11 @@ static void dump_yaml_event(yaml_event_t *event)
 
 static const char *parse_csv_next(const char *str, size_t *len)
 {
-	static const char delimiters[] = " \t\r\n,;";
+	static const char delimiters[] = " \t\r\n,;()";
 	size_t offset;
+
+	if (!str || !(*str))
+		return NULL;
 
 	/* Skip past delimiters */
 	offset = strspn(str, delimiters);
@@ -578,6 +580,17 @@ struct svc_param_desc {
 	{ #name, sizeof(#name)-1, 0, COMPARE_TYPE_##name }
 #define RANDOM_SEED_DESC(name) \
 	{ #name, sizeof(#name)-1, 0, RANDOM_SEED_##name }
+#define GLOBAL_FLAG_DESC(name) \
+	{ #name, sizeof(#name)-1, 0, GLOBAL_FLAG_##name }
+    
+
+/* Keep alphabetized */
+static struct svc_param_desc g_global_flags_map[] = {
+	GLOBAL_FLAG_DESC(ABORT_ON_FAIL),
+
+	/* Must be last */
+	{ NULL, 0, 0, 0 }
+};
 
 /* Keep alphabetized */
 static struct svc_param_desc g_dflag_map[] = {
@@ -631,6 +644,7 @@ static struct svc_param_desc g_cp_hdr_field_map[] = {
 /* Keep alphabetized */
 static struct svc_param_desc g_sync_mode_map[] = {
 	SYNC_MODE_DESC(ASYNC),
+	SYNC_MODE_DESC(AUTO),
 	SYNC_MODE_DESC(POLL),
 	SYNC_MODE_DESC(SIM),
 	SYNC_MODE_DESC(SYNC),
@@ -642,10 +656,13 @@ static struct svc_param_desc g_sync_mode_map[] = {
 /* Keep alphabetized */
 static struct svc_param_desc g_cmp_type_map[] = {
 	CMP_TYPE_DESC(EQ),
+	CMP_TYPE_DESC(EZ),
 	CMP_TYPE_DESC(GE),
 	CMP_TYPE_DESC(GT),
+	CMP_TYPE_DESC(GZ),
 	CMP_TYPE_DESC(LE),
 	CMP_TYPE_DESC(LT),
+	CMP_TYPE_DESC(LZ),
 	CMP_TYPE_DESC(NE),
 
 	/* Must be last */
@@ -830,7 +847,7 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 		field = param; \
 		return PNSO_OK; \
 	} \
-	PNSO_LOG_ERROR("Invalid value for %s\n", #fname); \
+	PNSO_LOG_ERROR("Invalid value %s for %s\n", val, #fname); \
 	return EINVAL; \
 }
 
@@ -848,7 +865,58 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 		ext; \
 		return PNSO_OK; \
 	} \
-	PNSO_LOG_ERROR("Invalid value for %s\n", #fname); \
+	PNSO_LOG_ERROR("Invalid value %s for %s\n", val, #fname); \
+	return EINVAL; \
+}
+
+#define FUNC_SET_RANGED_INT(fname, field, min, max) \
+static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
+			  const char *val) \
+{ \
+	uint32_t start = 0, stop = 0, step = 1; \
+	const char *search_str = val; \
+	size_t len; \
+	uint16_t range_type = RANGE_TYPE_NONE; \
+ \
+	ALIAS_SWAP(root, val); \
+	PNSO_LOG_TRACE("Calling %s(%s)\n", #fname, val ? val : ""); \
+	if (*val == 'r') { \
+		len = 0; \
+		if (safe_strncmp(val, "range(", 6) == 0) { \
+			range_type = RANGE_TYPE_SEQ; \
+			len = 6; \
+		} else if (safe_strncmp(val, "random(", 7) == 0) {	\
+			range_type = RANGE_TYPE_RAND; \
+			len = 7; \
+		} else { \
+			PNSO_LOG_ERROR("Invalid value expression %s for %s\n", val, #fname); \
+			return EINVAL; \
+		} \
+		if ((search_str = parse_csv_next(val+len, &len)) != NULL) { \
+			start = safe_strtoll(search_str); \
+			if ((search_str = parse_csv_next(search_str+len, &len)) != NULL) { \
+				stop = safe_strtoll(search_str); \
+				if ((search_str = parse_csv_next(search_str+len, &len)) != NULL) { \
+					step = safe_strtoll(search_str); \
+				} \
+			} \
+		} \
+	} else { \
+		range_type = RANGE_TYPE_SEQ; \
+		start = safe_strtoll(val); \
+		stop = start; \
+	} \
+	if (start >= (min) && stop <= (max) && start <= stop && \
+	    step >= 1 && step <= (1 + stop - start)) { \
+		(field)->type = range_type; \
+		(field)->start = start; \
+		(field)->stop = stop; \
+		(field)->step = step; \
+		(field)->count = (step + (stop - start)) / step; \
+		return PNSO_OK; \
+	} \
+	PNSO_LOG_ERROR("Invalid value %s for %s, start %u stop %u step %u\n", \
+		       val, #fname, start, stop, step); \
 	return EINVAL; \
 }
 
@@ -981,11 +1049,13 @@ FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
 		TEST_MAX_NAME_LEN)
 FUNC_SET_INT(test_set_svc_chain_batch_weight, ((struct test_svc_chain *)parent)->batch_weight, 1, TEST_MAX_BATCH_DEPTH)
+FUNC_SET_PARAM(test_set_svc_chain_sync_mode, ((struct test_svc_chain *)parent)->sync_mode,
+	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
 FUNC_SET_PARAM(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed,
 		g_random_seed_map, 0, 0, UINT_MAX)
-FUNC_SET_INT(test_set_input_random_len, ((struct test_svc_chain *)parent)->input.random_len, 0, TEST_MAX_RANDOM_LEN)
+FUNC_SET_RANGED_INT(test_set_input_random_len, &((struct test_svc_chain *)parent)->input.random_len_range, 1, TEST_MAX_RANDOM_LEN)
 FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 0, UINT_MAX)
-FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, UINT_MAX)
+FUNC_SET_RANGED_INT(test_set_input_len, &((struct test_svc_chain *)parent)->input.len_range, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.min_block_size, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_max_block, ((struct test_svc_chain *)parent)->input.max_block_size, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_block_count, ((struct test_svc_chain *)parent)->input.block_count, 0, 1024)
@@ -1242,8 +1312,15 @@ static pnso_error_t test_set_crypto_iv_data(struct test_desc *root,
 
 	/* Parse hex data */
 	len = (strlen(val)/2) + 1;
+	if (len < TEST_CRYPTO_IV_DATA_LEN)
+		len = TEST_CRYPTO_IV_DATA_LEN;
 	/* TODO: reduce alignment to 64 once aligned alloc works */
 	svc->u.crypto.iv_data = (uint8_t*) TEST_ALLOC_ALIGNED(4096, len);
+	if (!svc->u.crypto.iv_data) {
+		PNSO_LOG_ERROR("Failed to allocate %u bytes for crypto iv_data\n", len);
+		return ENOMEM;
+	}
+	memset(svc->u.crypto.iv_data, 0, len);
 	err = parse_hex(val, svc->u.crypto.iv_data, &len);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Invalid hex data for crypto iv_data\n");
@@ -1413,6 +1490,29 @@ static pnso_error_t test_set_op_algo_type(struct test_desc *root,
 	default:
 		err = EINVAL;
 		break;
+	}
+
+	return err;
+}
+
+static pnso_error_t test_set_global_flags(struct test_desc *root,
+				   struct test_node *parent, const char *val)
+{
+	pnso_error_t err;
+	uint32_t flags = 0;
+
+	ALIAS_SWAP(root, val);
+
+	if (!val) {
+		/* No-op */
+		return PNSO_OK;
+	}
+
+	err = lookup_svc_param_csv_flags(g_global_flags_map,
+					 val, 0, &flags);
+	if (err == PNSO_OK) {
+		/* Copy the flags to root */
+		root->flags = flags;
 	}
 
 	return err;
@@ -1831,6 +1931,7 @@ CHILD_NODE_DESC(global_params, status_interval,    NULL, test_set_status_interva
 CHILD_NODE_DESC(global_params, output_file_prefix, NULL, test_set_outfile_prefix, NULL) \
 CHILD_NODE_DESC(global_params, output_file_suffix, NULL, test_set_outfile_suffix, NULL) \
 CHILD_NODE_DESC(global_params, store_output_files, NULL, test_set_store_output_files, NULL) \
+CHILD_NODE_DESC(global_params, flags,              NULL, test_set_global_flags, NULL) \
 \
 CHILD_NODE_DESC(crypto_keys, key, test_create_crypto_key, NULL, NULL) \
 CHILD_NODE_DESC(crypto_keys_key, idx,  NULL, test_set_idx, NULL) \
@@ -1841,6 +1942,7 @@ CHILD_NODE_DESC(svc_chains, svc_chain, test_create_svc_chain, NULL, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain, idx,          NULL, test_set_idx, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain, name,         NULL, test_set_svc_chain_name, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain, batch_weight, NULL, test_set_svc_chain_batch_weight, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, mode,    NULL, test_set_svc_chain_sync_mode, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain, input,        NULL, NULL, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain, ops,          NULL, NULL, NULL) \
 \
@@ -2205,7 +2307,7 @@ static pnso_error_t parse_yaml_scalar2(yaml_parser_t *parser,
 static pnso_error_t parse_yaml_event_loop(yaml_parser_t *parser, yaml_event_type_t stop_event,
 					  struct test_desc *root, struct test_node *parent,
 					  struct test_yaml_node_desc *parent_yaml_desc,
-					  int *stream_done)
+					  int *stream_done, int stack_depth)
 {
 	pnso_error_t err = PNSO_OK;
 	yaml_event_t events[2];
@@ -2214,6 +2316,13 @@ static pnso_error_t parse_yaml_event_loop(yaml_parser_t *parser, yaml_event_type
 	struct test_node *new_parent = parent;
 	int event_idx = 0;
 	int block_done = 0;
+
+	if (stack_depth > PNSO_TEST_MAX_STACK_DEPTH) {
+		PNSO_LOG_ERROR("Failed to parse YAML input, depth %d too high.\n",
+			       stack_depth);
+		err = EINVAL;
+		goto done;
+	}
 
 	/* Loop through events until hitting some stop condition */
 	while (!*stream_done && !block_done) {
@@ -2225,7 +2334,9 @@ static pnso_error_t parse_yaml_event_loop(yaml_parser_t *parser, yaml_event_type
 			goto done;
 		}
 		event_idx = !event_idx;
-		dump_yaml_event(event);
+		if (OSAL_LOG_ON(OSAL_LOG_LEVEL_DEBUG)) {
+			dump_yaml_event(event, stack_depth);
+		}
 
 		/* Check for stop condition */
 		if (event->type == stop_event) {
@@ -2257,14 +2368,18 @@ static pnso_error_t parse_yaml_event_loop(yaml_parser_t *parser, yaml_event_type
 			err = parse_yaml_event_loop(parser,
 						    YAML_MAPPING_END_EVENT,
 						    root, new_parent,
-						    new_parent_yaml_desc, stream_done);
+						    new_parent_yaml_desc,
+						    stream_done,
+						    stack_depth + 1);
 			break;
 
 		case YAML_SEQUENCE_START_EVENT:
 			err = parse_yaml_event_loop(parser,
 						    YAML_SEQUENCE_END_EVENT,
 						    root, new_parent,
-						    new_parent_yaml_desc, stream_done);
+						    new_parent_yaml_desc,
+						    stream_done,
+						    stack_depth + 1);
 			break;
 
 		default:
@@ -2338,7 +2453,7 @@ pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 	/* Extract fields and allocate private struct */
 	stream_done = 0;
 	err = parse_yaml_event_loop(&parser, YAML_STREAM_END_EVENT, desc,
-				    &desc->node, NULL, &stream_done);
+				    &desc->node, NULL, &stream_done, 1);
 	if (err) {
 		goto error;
 	}

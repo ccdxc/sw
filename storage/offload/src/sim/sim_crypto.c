@@ -142,7 +142,7 @@ pnso_error_t algo_encrypt_aes_xts(void *scratch, uint8_t *key1, uint8_t *key2,
 	rijndael_set_key(&cipher_ctx->key1, key1, key_sz);
 	rijndael_set_key(&cipher_ctx->key2, key2, key_sz);
 
-	enc_xform_aes_xts.reinit((caddr_t)cipher_ctx, iv);
+	enc_xform_aes_xts.reinit2((caddr_t)cipher_ctx, iv);
 
 	/* Assumes data_sz is a multiple of AES_XTS_BLOCKSIZE */
 	for (i = 0; i < data_sz; i += AES_XTS_BLOCKSIZE) {
@@ -165,7 +165,7 @@ pnso_error_t algo_decrypt_aes_xts(void *scratch, uint8_t *key1, uint8_t *key2,
 	rijndael_set_key(&cipher_ctx->key1, key1, key_sz);
 	rijndael_set_key(&cipher_ctx->key2, key2, key_sz);
 
-	enc_xform_aes_xts.reinit((caddr_t)cipher_ctx, iv);
+	enc_xform_aes_xts.reinit2((caddr_t)cipher_ctx, iv);
 
 	/* Assumes data_sz is a multiple of AES_XTS_BLOCKSIZE */
 	for (i = 0; i < data_sz; i += AES_XTS_BLOCKSIZE) {
