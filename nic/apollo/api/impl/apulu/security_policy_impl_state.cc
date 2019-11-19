@@ -66,19 +66,11 @@ security_policy_impl_state::~security_policy_impl_state() {
 
 sdk_ret_t
 security_policy_impl_state::table_transaction_begin(void) {
-    //egr_v4_idxr_->txn_start();
-    //ing_v4_idxr_->txn_start();
-    //egr_v6_idxr_->txn_start();
-    //ing_v6_idxr_->txn_start();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 security_policy_impl_state::table_transaction_end(void) {
-    //egr_v4_idxr_->txn_end();
-    //ing_v4_idxr_->txn_end();
-    //egr_v6_idxr_->txn_end();
-    //ing_v6_idxr_->txn_end();
     return SDK_RET_OK;
 }
 

@@ -65,6 +65,18 @@ apulu_impl_state::~apulu_impl_state() {
     rte_indexer::destroy(nat_idxr_);
 }
 
+sdk_ret_t
+apulu_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
+    pds_table_stats_t stats;
+    p4pd_table_properties_t tinfo;
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4TBL_ID_NACL, &tinfo);
+    stats.table_name = tinfo.tablename;
+    nacl_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
+}
+
 /// \@}
 
 }    // namespace impl

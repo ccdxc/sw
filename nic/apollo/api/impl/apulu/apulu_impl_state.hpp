@@ -39,6 +39,12 @@ public:
     /// \brief destructor
     ~apulu_impl_state();
 
+    /// \brief     API to get table stats
+    /// \param[in] cb   callback to be called on stats
+    /// \param[in] ctxt opaque ctxt passed to the callback
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
+
     /// \brief accessors
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }

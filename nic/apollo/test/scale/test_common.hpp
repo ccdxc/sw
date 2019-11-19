@@ -142,6 +142,7 @@ typedef struct test_params_s {
     };
     // service mapping
     struct {
+        uint32_t num_svc_mappings;
         ip_prefix_t v4_vip_pfx;
         ip_prefix_t v6_vip_pfx;
     };
@@ -392,6 +393,7 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 // so skip the first 2 IPs
                 test_params->num_nh -= 2;
             } else if (kind == "svc-mappings") {
+                test_params->num_svc_mappings = 0;
                 pfxstr = obj.second.get<std::string>("v4-vip-prefix");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(),
                                    &test_params->v4_vip_pfx) == 0);

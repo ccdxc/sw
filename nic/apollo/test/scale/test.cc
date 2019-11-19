@@ -173,10 +173,12 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_vnics, uint32_t num_ip_per_vnic,
                      ip_prefix_t *v4_vip_pfx, ip_prefix_t *v6_vip_pfx,
                      ip_prefix_t *v4_provider_pfx,
-                     ip_prefix_t *v6_provider_pfx)
+                     ip_prefix_t *v6_provider_pfx,
+                     uint32_t num_svc_mappings)
 {
     sdk_ret_t rv;
     uint32_t ip_offset = 0;
+    uint32_t num_mappings = 0;
     uint32_t key_ip_offset = 0;
     pds_svc_mapping_spec_t svc_mapping;
     pds_svc_mapping_spec_t svc_v6_mapping;
@@ -234,10 +236,19 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                                                 "create v6 svc mapping failed, vpc %u, rv %u",
                                                 i, rv);
                     }
+                    if (num_svc_mappings) {
+                        num_mappings++;
+                        if (num_mappings >= num_svc_mappings) {
+                            goto done;
+                        }
+                    }
                 }
             }
         }
     }
+
+done:
+
     // push leftover objects
     rv = create_svc_mapping(NULL);
     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
@@ -1640,20 +1651,19 @@ create_objects (void)
         return ret;
     }
 
-    if (!apulu()) {
-        // create service mappings
-        if (artemis()) {
-            ret = create_svc_mappings(g_test_params.num_vpcs,
-                                      g_test_params.num_subnets,
-                                      g_test_params.num_vnics,
-                                      g_test_params.num_ip_per_vnic,
-                                      &g_test_params.v4_vip_pfx,
-                                      &g_test_params.v6_vip_pfx,
-                                      &g_test_params.provider_pfx,
-                                      &g_test_params.v6_provider_pfx);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
+    // create service mappings
+    if (apulu() || artemis()) {
+        ret = create_svc_mappings(g_test_params.num_vpcs,
+                                  g_test_params.num_subnets,
+                                  g_test_params.num_vnics,
+                                  g_test_params.num_ip_per_vnic,
+                                  &g_test_params.v4_vip_pfx,
+                                  &g_test_params.v6_vip_pfx,
+                                  &g_test_params.provider_pfx,
+                                  &g_test_params.v6_provider_pfx,
+                                  g_test_params.num_svc_mappings);
+        if (ret != SDK_RET_OK) {
+            return ret;
         }
     }
 

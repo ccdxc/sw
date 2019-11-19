@@ -519,6 +519,7 @@ apulu_impl::table_transaction_begin(void) {
     mapping_impl_db()->table_transaction_begin();
     route_table_impl_db()->table_transaction_begin();
     security_policy_impl_db()->table_transaction_begin();
+    svc_mapping_impl_db()->table_transaction_begin();
     return SDK_RET_OK;
 }
 
@@ -530,12 +531,15 @@ apulu_impl::table_transaction_end(void) {
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
     security_policy_impl_db()->table_transaction_end();
+    svc_mapping_impl_db()->table_transaction_end();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 apulu_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     mapping_impl_db()->table_stats(cb, ctxt);
+    svc_mapping_impl_db()->table_stats(cb, ctxt);
+    apulu_impl_db()->table_stats(cb, ctxt);
     return SDK_RET_OK;
 }
 

@@ -51,6 +51,11 @@
             "v6-nat-prefix": "2020::/96"
         },
         {
+            "kind" : "svc-mappings",
+            "v4-vip-prefix" : "5.0.0.0/8",
+            "v6-vip-prefix" : "2022::/96"
+        },
+        {
             "kind" : "mirror",
             "enable" : "false",
             "rspan" : "4",

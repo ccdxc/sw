@@ -96,6 +96,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_SECURITY_POLICY:
         return security_policy_impl::factory((pds_policy_spec_t *)args);
 
+    case IMPL_OBJ_ID_SVC_MAPPING:
+        return svc_mapping_impl::factory((pds_svc_mapping_spec_t *)args);
+
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::factory((pds_mirror_session_spec_t *)args);
 
@@ -120,6 +123,9 @@ impl_base::build(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_MAPPING:
         return mapping_impl::build((pds_mapping_key_t *)args);
 
+    case IMPL_OBJ_ID_SVC_MAPPING:
+        return svc_mapping_impl::build((pds_svc_mapping_key_t *)args);
+
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::build((pds_mirror_session_key_t *)args);
 
@@ -134,6 +140,10 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
     switch(obj_id) {
     case IMPL_OBJ_ID_MAPPING:
         mapping_impl::soft_delete((mapping_impl *)impl);
+        break;
+
+    case IMPL_OBJ_ID_SVC_MAPPING:
+        svc_mapping_impl::soft_delete((svc_mapping_impl *)impl);
         break;
 
     case IMPL_OBJ_ID_MIRROR_SESSION:

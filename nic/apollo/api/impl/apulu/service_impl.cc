@@ -34,13 +34,14 @@ namespace impl {
 #define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, dip, dip_port)         \
 {                                                                              \
     memset((key), 0, sizeof(*(key)));                                          \
-    (key)->key_metadata_dport = (dip_port);                                    \
+    (key)->vnic_metadata_vpc_id = vpc_hw_id;                                   \
     if ((dip)->af == IP_AF_IPV6) {                                             \
         sdk::lib::memrev((key)->key_metadata_dst,                              \
                          (dip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);            \
     } else {                                                                   \
         memcpy((key)->key_metadata_dst, &(dip)->addr.v4_addr, IP4_ADDR8_LEN);  \
     }                                                                          \
+    (key)->key_metadata_dport = (dip_port);                                    \
 }
 
 #define svc_mapping_action action_u.service_mapping_service_mapping_info
