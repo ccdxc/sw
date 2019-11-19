@@ -126,11 +126,30 @@ error:
 
 sdk_ret_t
 svc_mapping_impl::nuke_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams = { 0 };
+
+    if (to_vip_handle_.valid()) {
+        tparams.handle = to_vip_handle_;
+        svc_mapping_impl_db()->svc_mapping_tbl()->remove(&tparams);
+    }
+    if (to_vip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
+        apulu_impl_db()->nat_idxr()->free(to_vip_nat_idx_);
+    }
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 svc_mapping_impl::release_resources(api_base *api_obj) {
+    sdk_table_api_params_t tparams = { 0 };
+
+    if (to_vip_handle_.valid()) {
+        tparams.handle = to_vip_handle_;
+        svc_mapping_impl_db()->svc_mapping_tbl()->release(&tparams);
+    }
+
+    if (to_vip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
+        apulu_impl_db()->nat_idxr()->free(to_vip_nat_idx_);
+    }
     return SDK_RET_OK;
 }
 
@@ -189,7 +208,7 @@ svc_mapping_impl::activate_create_(pds_epoch_t epoch, svc_mapping *mapping,
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add (PIP %s, PIP port %u) -> "
-                      "(VIP %s, svc port %u) xlation SERVICE_MAPPING table, "
+                      "(VIP %s, svc port %u) xlation in SERVICE_MAPPING table, "
                       "err %u", ipaddr2str(&spec->key.backend_ip),
                       spec->key.backend_port, ipaddr2str(&spec->vip),
                       spec->svc_port, ret);
@@ -202,7 +221,32 @@ sdk_ret_t
 svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
                                    pds_svc_mapping_key_t *key,
                                    svc_mapping *mapping) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    sdk_table_api_params_t tparams;
+    service_mapping_swkey_t svc_mapping_key;
+    service_mapping_actiondata_t svc_mapping_data;
+
+    // update the service mapping xlation idx to PDS_IMPL_RSVD_NAT_HW_ID to
+    // disable NAT
+    vpc = vpc_db()->find(&key->vpc);
+    PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
+                                    vpc->hw_id(), &key->backend_ip,
+                                    key->backend_port);
+    PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, PDS_IMPL_RSVD_NAT_HW_ID);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
+                                   &svc_mapping_data,
+                                   SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->update(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to deactivate (PIP %s, PIP port %u) -> "
+                      "(VIP, svc port) xlation in SERVICE_MAPPING table, "
+                      "err %u", ipaddr2str(&key->backend_ip),
+                      key->backend_port, ret);
+        return ret;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
