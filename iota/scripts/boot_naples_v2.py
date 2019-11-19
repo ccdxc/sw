@@ -969,6 +969,8 @@ class EsxHostManagement(HostManagement):
 
 def AtExitCleanup():
     global naples
+    try: naples.SendlineExpect("/nic/tools/fwupdate -l", "#")
+    except: print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
     naples.Close()
 
 
