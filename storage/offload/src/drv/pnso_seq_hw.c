@@ -1006,6 +1006,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	hw_setup_cp_hdr_update(svc_info, cp_desc, chain_params);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+	chain_params->ccp_comp_buf_addr = svc_info->si_dst_sgl.sgl->cs_addr_0;
 
 	fill_cpdc_seq_status_desc(chain_params, seq_info->sqi_status_desc);
 	PPRINT_CPDC_CHAIN_PARAMS(chain_params);
