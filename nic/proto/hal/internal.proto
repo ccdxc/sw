@@ -101,6 +101,9 @@ service Internal {
 
   // Test send fin
   rpc TestSendFinReq (TestSendFinRequestMsg) returns (TestSendFinResponseMsg) {}
+  
+  // Test clock sync
+  rpc TestClockSyncReq (TestClockSyncRequestMsg) returns (TestClockSyncResponseMsg) {}
  
   rpc FlowHashGet (FlowHashGetRequestMsg) returns (FlowHashGetResponseMsg) {}
 }
@@ -1871,6 +1874,22 @@ message TestSendFinResponseMsg {
 }
 
 message TestSendFinResponse {
+  types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+// Debug test to force sync clock
+message TestClockSyncRequestMsg {
+  repeated TestClockSyncRequest  request = 1;
+}
+
+message TestClockSyncRequest {
+}
+
+message TestClockSyncResponseMsg {
+  repeated TestClockSyncResponse response = 1;
+}
+
+message TestClockSyncResponse {
   types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 

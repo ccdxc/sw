@@ -25,6 +25,7 @@ using boost::property_tree::ptree;
 #define DEFAULT_CATALOG_PATH    "/nic/conf/"
 // TODO only applicable for Capri
 #define MGMT_BASE_PORT     9
+#define MAX_CLOCK_FREQ     2
 
 typedef enum card_id_e {
     CARD_ID_NAPLES100,
@@ -114,6 +115,11 @@ typedef struct aacs_info_s {
     uint32_t                 server_port;                       // aacs server port
 } aacs_info_t;
 
+typedef struct catalog_clock_info_s {
+    uint16_t      clock_freq;           // Asic Clock freq
+    uint32_t      clock_multiplier;     // Multiplier based on the clock frequency
+} catalog_clock_info_t;
+
 typedef struct catalog_s {
     std::string                catalog_file;                          // catalog file name with absolute path
     card_id_t                  card_id;                               // card id for the board
@@ -155,6 +161,8 @@ typedef struct catalog_s {
     serdes_info_t              serdes[MAX_SERDES]
                                      [MAX_PORT_SPEEDS]
                                      [sdk::types::CABLE_TYPE_MAX];
+    uint8_t                    num_clock_info;                        // number of clock multipliers
+    catalog_clock_info_t       clock_info[MAX_CLOCK_FREQ];            // Clock info for P4 adjustments
 } catalog_t;
 
 class catalog {
@@ -285,6 +293,11 @@ public:
                                    uint32_t port_speed,
                                    uint32_t cable_type);
 
+    uint32_t num_clock_info(void) const { return catalog_db_.num_clock_info; }
+    uint32_t clock_get_multiplier(uint16_t freq);
+
+    
+
 private:
     catalog_t    catalog_db_;   // whole catalog database
 
@@ -365,6 +378,8 @@ private:
     card_id_t catalog_board_type_to_sdk_card_id(std::string card_id);
     void logical_port_to_asic_port(uint32_t logical_port,
                                    uint32_t *asic, uint32_t *asic_port);
+    // populate clock info for different frequencies
+    sdk_ret_t populate_clock_info(ptree &prop_tree);
 };
 
 }    // namespace lib

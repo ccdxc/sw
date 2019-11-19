@@ -384,6 +384,23 @@ catalog::populate_mac_profiles(ptree &prop_tree)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+catalog::populate_clock_info (ptree &prop_tree)
+{
+    uint8_t  num_freq = 0;
+
+    catalog_db_.num_clock_info = prop_tree.get<uint32_t>("num_clock_info", 0); 
+    for (ptree::value_type &clock_info : prop_tree.get_child("clock_info")) {
+         if (num_freq < MAX_CLOCK_FREQ) {
+             catalog_db_.clock_info[num_freq].clock_freq = clock_info.second.get<uint16_t>("freq", 0);
+             catalog_db_.clock_info[num_freq].clock_multiplier = clock_info.second.get<uint16_t>("multiplier", 0);
+             num_freq += 1;
+          }
+    }
+
+    return SDK_RET_OK;
+}
+
 uint32_t
 catalog::serdes_index_get(uint32_t sbus_addr)
 {
@@ -623,6 +640,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     populate_pcie(prop_tree);
 
     populate_serdes(dirname((char*)catalog_file.c_str()), prop_tree);
+
+    populate_clock_info(prop_tree);
 
     return SDK_RET_OK;
 }
@@ -1016,6 +1035,15 @@ catalog::tm_port_to_ifindex(uint32_t tm_port) {
         }
     }
     return ifindex;
+}
+
+uint32_t
+catalog::clock_get_multiplier(uint16_t freq) {
+    for (uint8_t idx=0; idx<MAX_CLOCK_FREQ; idx++) {
+         if (freq == catalog_db_.clock_info[idx].clock_freq)
+             return catalog_db_.clock_info[idx].clock_multiplier;
+    }
+    return 0;
 }
 
 }    // namespace lib

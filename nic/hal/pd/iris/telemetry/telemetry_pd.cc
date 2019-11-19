@@ -154,6 +154,15 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
         return HAL_RET_INVALID_ARG;
     }
 
+    // Do clock sync to P4 to make sure we have the latest time
+    // Note that this is only needed once after NTPD is started in 
+    // Naples. Today we dont have a notification from NMD to HAL on
+    // that so we want to sync during mirror session create. This will
+    // ensure clock delta to be written to P4 when we get decommisioned
+    // from one venice and admitted to other.
+    if (likely(is_platform_type_hw()))
+        pd_clock_trigger_sync(pd_func_args);
+
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 

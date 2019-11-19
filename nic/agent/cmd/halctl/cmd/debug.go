@@ -155,6 +155,14 @@ var testSendFinDebugCmd = &cobra.Command{
 	Run:    testSendFinDebugCmdHandler,
 }
 
+var testClockSyncDebugCmd = &cobra.Command{
+	Use:    "clock-sync",
+	Short:  "test trigger clock sync",
+	Long:   "test trigger clock sync",
+	Hidden: true,
+	Run:    testClockSyncDebugCmdHandler,
+}
+
 var platLlcDebugCmd = &cobra.Command{
 	Use:   "llc-cache-setup",
 	Short: "debug platform llc-cache-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
@@ -201,6 +209,7 @@ func init() {
 	showCmd.AddCommand(traceShowCmd)
 	showCmd.AddCommand(regShowCmd)
 	testDebugCmd.AddCommand(testSendFinDebugCmd)
+	testDebugCmd.AddCommand(testClockSyncDebugCmd)
 
 	// debug platform llc-cache-setup
 	platDebugCmd.AddCommand(platLlcDebugCmd)
@@ -1068,6 +1077,37 @@ func testSendFinDebugCmdHandler(cmd *cobra.Command, args []string) {
 	respMsg, err := client.TestSendFinReq(context.Background(), reqMsg)
 	if err != nil {
 		fmt.Printf("Test send FIN request failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		}
+	}
+}
+
+func testClockSyncDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewInternalClient(c)
+
+	req := &halproto.TestClockSyncRequest{}
+
+	reqMsg := &halproto.TestClockSyncRequestMsg{
+		Request: []*halproto.TestClockSyncRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.TestClockSyncReq(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Test Clock Sync request failed. %v\n", err)
 		return
 	}
 

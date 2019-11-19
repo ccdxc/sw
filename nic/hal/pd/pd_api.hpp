@@ -3092,6 +3092,9 @@ typedef struct pd_clock_detail_get_args_s {
     uint8_t    clock_op;
 } __PACK__ pd_clock_detail_get_args_t;
 
+typedef struct pd_clock_trigger_sync_args_s {
+} __PACK__ pd_clock_trigger_sync_args_t;
+
 // packet buffer
 typedef struct pd_packet_buffer_update_args_s {
     bool       pause;
@@ -3591,7 +3594,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_TCP_RINGS_POLL,           333, "PD_FUNC_ID_TCP_RINGS_POLL")\
     ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
     ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
-    ENTRY(PD_FUNC_ID_MAX,                      336, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
+    ENTRY(PD_FUNC_ID_MAX,                      337, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3987,6 +3991,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_conv_sw_clock_to_hw_clock);
         PD_UNION_ARGS_FIELD(pd_clock_delta_comp);
         PD_UNION_ARGS_FIELD(pd_clock_detail_get);
+        PD_UNION_ARGS_FIELD(pd_clock_trigger_sync);
 
         // packet buffer
         PD_UNION_ARGS_FIELD(pd_packet_buffer_update);
@@ -4489,6 +4494,7 @@ PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
 PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 PD_FUNCP_TYPEDEF(pd_clock_detail_get);
+PD_FUNCP_TYPEDEF(pd_clock_trigger_sync);
 
 //packet buffer
 PD_FUNCP_TYPEDEF(pd_packet_buffer_update);

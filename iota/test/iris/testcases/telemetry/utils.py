@@ -12,6 +12,7 @@ from scapy import packet
 from scapy.all import Ether
 import glob
 import iota.harness.api as api
+from datetime import datetime
 
 global uplink_vlan
 uplink_vlan = 0
@@ -71,28 +72,64 @@ def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", coun
 def GetVerifJsonFromPolicyJson(policy_json):
     return policy_json.replace("_policy", "_verif")
 
+def VerifyVlan():
+    result = api.types.status.SUCCESS
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    mirrorscapy = dir_path + '/' + "mirror.pcap"
+    api.Logger.info("File Name: %s" % (mirrorscapy))
+    pkts = rdpcap(mirrorscapy)
+    spanpktsfound = False
+    for pkt in pkts:
+        if pkt.haslayer('GRE'):
+            spanpktsfound = True
+            inner=Ether(pkt['Raw'].load[20:])
+            if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
+                result = api.types.status.FAILURE
+            elif (inner.haslayer('Dot1Q') and inner['Dot1Q'].vlan != uplink_vlan):
+                result = api.types.status.FAILURE
+                api.Logger.info("Vlan id: %s" % (inner['Dot1Q'].vlan))
+    if spanpktsfound == False:
+       result = api.types.status.FAILURE
+    return result
+
+def VerifyTimeStamp(command):
+    result = api.types.status.SUCCESS
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    mirrorscapy = dir_path + '/' + "mirror.pcap"
+    api.Logger.info("File Name: %s" % (mirrorscapy))
+    pkts = rdpcap(mirrorscapy)
+    spanpktsfound = False
+    for pkt in pkts:
+        if pkt.haslayer('GRE'):
+            spanpktsfound = True
+            # Read raw bytes to interpret time
+            p1 = pkt['Raw'].load[4:8]
+            p2 = pkt['Raw'].load[16:20]
+            p3 = (int.from_bytes(p2, byteorder='big', signed=False) << 32) | (int.from_bytes(p1, byteorder='big', signed=False))
+            api.Logger.info("Timestamp from the packet: %s" % (p3)) 
+            pkttime=p3/1000000000
+            pkttimestamp = datetime.fromtimestamp(pkttime)
+            if g_time > pkttimestamp:
+               tdelta = g_time-pkttimestamp
+            else:
+               tdelta = pkttimestamp-g_time
+            if (tdelta.seconds != 0 or tdelta.days != 0):
+                result = api.types.status.FAILURE
+            api.Logger.info("Timestamp delta: %s" %(tdelta))
+    if spanpktsfound == False:
+       result = api.types.status.FAILURE
+    return result
+
 def VerifyCmd(cmd, action, feature):
     api.PrintCommandResults(cmd)
     result = api.types.status.SUCCESS
     if 'tcpdump' in cmd.command:
         if feature == 'mirror':
             if 'pcap' in cmd.command:
-                dir_path = os.path.dirname(os.path.realpath(__file__))
-                mirrorscapy = dir_path + '/' + "mirror.pcap"
-                api.Logger.info("File Name: %s" % (mirrorscapy))
-                pkts = rdpcap(mirrorscapy)
-                spanpktsfound = False
-                for pkt in pkts:
-                    if pkt.haslayer('GRE'):
-                       spanpktsfound = True
-                    inner=Ether(pkt['Raw'].load[12:])
-                    if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
-                        result = api.types.status.FAILURE
-                    elif (inner.haslayer('Dot1Q') and inner['Dot1Q'].vlan != uplink_vlan):
-                        result = api.types.status.FAILURE
-                        api.Logger.info("Vlan id: %s" % (inner['Dot1Q'].vlan))
-                if spanpktsfound == False:
-                    result = api.types.status.FAILURE
+                if VerifyVlan() == api.types.status.FAILURE:
+                      result = api.types.status.FAILURE
+                if VerifyTimeStamp(cmd) == api.types.status.FAILURE:
+                      result = api.types.status.FAILURE
         elif feature == 'flowmon':
             matchObj = re.search( r'(.*)2055: UDP, length(.*)', cmd.stdout, 0)
             if matchObj is None:
@@ -111,6 +148,7 @@ def GetDestPort(port):
 def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, action, feature):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
+    global g_time
     
     # Add the ping commands from collector to source and dest workload
     # to avoid flooding on the vswitch
@@ -132,6 +170,8 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
+    g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
+    api.Logger.info("Current Global time {}".format(g_time))
 
     trig_resp = api.Trigger(req)
     if feature == 'flowmon':

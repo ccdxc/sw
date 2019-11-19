@@ -178,6 +178,9 @@ hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
 hal_ret_t flow_hash_get(internal::FlowHashGetRequest& req,
                         internal::FlowHashGetResponseMsg *rsp);
 
+hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
+                          internal::TestClockSyncResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

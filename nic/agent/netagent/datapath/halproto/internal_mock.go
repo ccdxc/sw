@@ -1873,6 +1873,24 @@ func (mr *MockInternalClientMockRecorder) TestSendFinReq(ctx, in interface{}, op
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalClient)(nil).TestSendFinReq), varargs...)
 }
 
+// TestClockSyncReq mocks base method
+func (m *MockInternalClient) TestClockSyncReq(ctx context.Context, in *TestClockSyncRequestMsg, opts ...grpc.CallOption) (*TestClockSyncResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TestClockSyncReq", varargs...)
+	ret0, _ := ret[0].(*TestClockSyncResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestClockSyncReq indicates an expected call of TestClockSyncReq
+func (mr *MockInternalClientMockRecorder) TestClockSyncReq(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestClockSyncReq", reflect.TypeOf((*MockInternalClient)(nil).TestClockSyncReq), varargs...)
+}
+
 // FlowHashGet mocks base method
 func (m *MockInternalClient) FlowHashGet(ctx context.Context, in *FlowHashGetRequestMsg, opts ...grpc.CallOption) (*FlowHashGetResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -2653,6 +2671,19 @@ func (m *MockInternalServer) TestSendFinReq(arg0 context.Context, arg1 *TestSend
 // TestSendFinReq indicates an expected call of TestSendFinReq
 func (mr *MockInternalServerMockRecorder) TestSendFinReq(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalServer)(nil).TestSendFinReq), arg0, arg1)
+}
+
+// TestClockSyncReq mocks base method
+func (m *MockInternalServer) TestClockSyncReq(arg0 context.Context, arg1 *TestClockSyncRequestMsg) (*TestClockSyncResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TestClockSyncReq", arg0, arg1)
+	ret0, _ := ret[0].(*TestClockSyncResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestClockSyncReq indicates an expected call of TestClockSyncReq
+func (mr *MockInternalServerMockRecorder) TestClockSyncReq(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestClockSyncReq", reflect.TypeOf((*MockInternalServer)(nil).TestClockSyncReq), arg0, arg1)
 }
 
 // FlowHashGet mocks base method

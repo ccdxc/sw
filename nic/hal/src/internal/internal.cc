@@ -168,4 +168,17 @@ hal_ret_t flow_hash_get(internal::FlowHashGetRequest& req,
     return (session_flow_hash_get(req, rsp));
 }
 
+hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
+                          internal::TestClockSyncResponse *rsp)
+{
+    pd::pd_func_args_t             pd_func_args = {0};
+    pd::pd_clock_trigger_sync_args_t clock_args;
+
+    HAL_TRACE_DEBUG("Calling Clock trigger sync");
+    pd_func_args.pd_clock_trigger_sync = &clock_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CLOCK_TRIGGER_SYNC, &pd_func_args);
+
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

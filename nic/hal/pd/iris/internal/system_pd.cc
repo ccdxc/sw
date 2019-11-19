@@ -12,19 +12,32 @@
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
+#include "gen/p4gen/p4/include/p4pd.h"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace hal {
 namespace pd {
 
-double g_clock_adjustment = 0;
+static double g_clock_adjustment = 0;
 thread_local void *t_clock_delta_timer = NULL;
 thread_local void *t_clock_rollover_timer = NULL;
+static clock_gettimeofday_t *g_hbm_clockaddr = NULL;
+static uint64_t g_clock_freq = 0;
+static struct clock_table_info_s {
+    uint8_t cache;
+    uint16_t entry_width;
+    sdk::types::mem_addr_t start_addr;
+    uint64_t multiplier;
+} g_clock_table_info;
 
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL     (60 * TIME_MSECS_PER_MIN)
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS  (HAL_TIMER_ID_CLOCK_SYNC_INTVL * TIME_NSECS_PER_MSEC)
-#define CLOCK_FREQ                     (sdk::asic::pd::asic_pd_clock_freq_get() * 1000000) // Freq in MHz
+#define CLOCK_FREQ                     (g_clock_freq * 1000000) // Freq in MHz
 #define HW_CLOCK_TICK_TO_NS(x)         (x * g_clock_adjustment)
 #define NS_TO_HW_CLOCK_TICK(x)         (x / g_clock_adjustment)
+#define CLOCK_WIDTH                    8
+#define CAPRI_CLOCK_FREQ                     833
 
 static hal_ret_t
 pd_system_drop_stats_set (int id, drop_stats_actiondata_t *data)
@@ -751,6 +764,15 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("Clock delta op: {}", g_hal_state_pd->clock_delta_op());
     g_hal_state_pd->set_clock_delta(delta_ns);
 
+    clock_gettime(CLOCK_REALTIME, &sw_ts);
+    sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
+    
+    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache, 0, 
+                                 g_clock_table_info.entry_width, g_clock_table_info.start_addr);
+    bzero(g_hbm_clockaddr, sizeof(clock_gettimeofday_t));
+    sdk::lib::memrev(g_hbm_clockaddr->time_in_ns, (uint8_t *)&sw_ns, CLOCK_WIDTH);
+    sdk::lib::memrev(g_hbm_clockaddr->ticks, (uint8_t *)&hw_tick, CLOCK_WIDTH);
+    sdk::lib::memrev(g_hbm_clockaddr->multiplier, (uint8_t *)&g_clock_table_info.multiplier, CLOCK_WIDTH);
 }
 
 //------------------------------------------------------------------------------
@@ -759,14 +781,44 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 {
+    p4pd_table_properties_t tinfo;
+    sdk::types::mem_addr_t start_addr, vaddr;
+
+    // This is to sync P4 clock to 
+    // linux clock. We dont need this in SIM
+    if (!is_platform_type_hw())
+        return HAL_RET_OK;
+
     // pd_clock_delta_comp_args_t *args = pd_func_args->pd_clock_delta_comp;
     // wait until the periodic thread is ready
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
-    g_clock_adjustment = ((double)(((double)1)/CLOCK_FREQ))*TIME_NSECS_PER_SEC;
-    printf("Freq: %d Adjustment: %lf\n", CLOCK_FREQ, g_clock_adjustment);
+    // Get the clock frequence
+    g_clock_freq = sdk::asic::pd::asic_pd_clock_freq_get();
+
+    // Get the base memory address of P4 clock table
+    start_addr = get_mem_addr(CAPRI_HBM_REG_CLOCK_GETTIMEOFDAY);
+    SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
+
+    // Fill in the table details for cache invalidate
+    p4pd_table_properties_get(P4TBL_ID_CLOCK, &tinfo);
+    g_clock_table_info.cache = tinfo.cache;
+    g_clock_table_info.entry_width = tinfo.hbm_layout.entry_width;
+    g_clock_table_info.start_addr = tinfo.base_mem_pa;
+
+    // Get the virtual address mapping
+    sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
+    SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+    g_hbm_clockaddr = (clock_gettimeofday_t *)vaddr;
+
+    //Compute the clock adjustment based on the frequency to 1 decimal point
+    g_clock_adjustment = floor(10.0 * ((double)(((double)1)/CLOCK_FREQ))*TIME_NSECS_PER_SEC)/10.0;
+    g_clock_table_info.multiplier = g_hal_state->catalog()->clock_get_multiplier(g_clock_freq);
+    HAL_TRACE_DEBUG("g_clock_freq: {} Multiplier: {}", g_clock_freq, g_clock_table_info.multiplier);
+    printf("Freq: %lu Adjustment: %lf\n", CLOCK_FREQ, g_clock_adjustment);
+
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     t_clock_delta_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
@@ -776,6 +828,17 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     if (!t_clock_delta_timer) {
         return HAL_RET_ERR;
     }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Trigger clock frequency computation from CLI
+//------------------------------------------------------------------------------
+hal_ret_t
+pd_clock_trigger_sync (pd_func_args_t *pd_func_args)
+{
+    clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
+
     return HAL_RET_OK;
 }
 

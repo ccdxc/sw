@@ -454,6 +454,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
     PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
     PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DETAIL_GET, pd_clock_detail_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_TRIGGER_SYNC, pd_clock_trigger_sync);
 
     // packet buffer
     PD_FUNC_LOAD(PD_FUNC_ID_PACKET_BUFFER_UPDATE, pd_packet_buffer_update);

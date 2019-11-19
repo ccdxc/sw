@@ -665,6 +665,10 @@ It has these top-level messages:
 	TestSendFinRequest
 	TestSendFinResponseMsg
 	TestSendFinResponse
+	TestClockSyncRequestMsg
+	TestClockSyncRequest
+	TestClockSyncResponseMsg
+	TestClockSyncResponse
 	FlowHashGetResponseMsg
 	FlowHashGetResponse
 	FlowHashGetRequest
