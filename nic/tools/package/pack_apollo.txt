@@ -1,5 +1,5 @@
 nic/conf/init_bins                                                /nic/conf/init_bins/
-nic/conf/$PIPELINE/$PIPELINE.json                                 /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
 nic/conf/$PIPELINE/8g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/8g/
@@ -192,7 +192,7 @@ nic/build/$ARCH/$PIPELINE/bin/penctl                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
 
 # platform config files
-nic/sysmgr/src/$PIPELINE.json                                     /nic/conf/sysmgr.json
+nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
