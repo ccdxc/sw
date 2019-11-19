@@ -670,6 +670,11 @@ error:
 }
 
 sdk_ret_t
+lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 lif_impl::create(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
 
@@ -692,6 +697,8 @@ lif_impl::create(pds_lif_spec_t *spec) {
     case sdk::platform::LIF_TYPE_HOST:
         ret = create_host_lif_(spec);
         break;
+    case sdk::platform::LIF_TYPE_LEARN:
+        ret = create_learn_lif_(spec);
     default:
         return SDK_RET_INVALID_ARG;
     }
