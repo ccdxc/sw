@@ -94,7 +94,7 @@ type RolloutAPI interface {
 	GetPrimaryMAC() string
 	RegisterROCtrlClient(RolloutCtrlAPI) error
 	CreateUpdateDSCRollout(sro *protos.DSCRollout) error
-	DeleteDSCRollout(sro *protos.DSCRollout) error
+	DeleteDSCRollout() error
 }
 
 // UpgMgrAPI is used by NMD for calling upgmgr in naples

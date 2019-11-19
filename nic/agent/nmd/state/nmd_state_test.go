@@ -1142,7 +1142,7 @@ func TestNaplesRollout(t *testing.T) {
 	// Finally a delete of Smartnic Rollout object should succeed
 	t.Log("Delete VeniceRollout")
 
-	err = nm.DeleteDSCRollout(&sro)
+	err = nm.DeleteDSCRollout()
 	Assert(t, (err == nil), "DeleteDSCRollout Failed")
 
 }

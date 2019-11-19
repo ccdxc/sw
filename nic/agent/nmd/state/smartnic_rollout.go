@@ -29,15 +29,20 @@ func (n *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
 	return nil
 }
 
-// DeleteDSCRollout as requested by Rollout Controller
-func (n *NMD) DeleteDSCRollout(sro *protos.DSCRollout) error {
-	n.Lock()
-	defer n.Unlock()
+func (n *NMD) deleteDSCRollout() error {
 	n.ro.ObjectMeta.Tenant = ""
 	n.ro.OpStatus = []protos.DSCOpStatus{}
 	n.updateOps([]protos.DSCOpSpec{})
 	n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCNoOp})
 	return nil
+}
+
+// DeleteDSCRollout as requested by Rollout Controller
+func (n *NMD) DeleteDSCRollout() error {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.deleteDSCRollout()
 }
 
 // GetDSCRolloutStatus returns RolloutStatus
@@ -144,7 +149,7 @@ func (n *NMD) IssueInProgressOp() {
 			n.issueNextPendingOp()
 		*/
 		log.Infof("Deleting in progress op. Looks like we rebooted in the middle of upgrade.")
-		n.DeleteDSCRollout(&protos.DSCRollout{})
+		n.deleteDSCRollout()
 	}
 }
 

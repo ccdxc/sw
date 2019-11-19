@@ -545,7 +545,7 @@ func (n *NMD) NaplesRolloutDeleteHandler(r *http.Request) (interface{}, error) {
 	ioutil.ReadAll(r.Body)
 
 	log.Infof("Naples Rollout Delete Request")
-	err := n.DeleteDSCRollout(&roprotos.DSCRollout{})
+	err := n.DeleteDSCRollout()
 
 	if err != nil {
 		resp.ErrorMsg = err.Error()

@@ -255,7 +255,7 @@ func (client *RoClient) runDSCRolloutWatcher(ctx context.Context) {
 			case api.EventType_DeleteEvent:
 
 				// delete the nic
-				err = client.nmd.DeleteDSCRollout(&evt.DSCRollout)
+				err = client.nmd.DeleteDSCRollout()
 				if err != nil {
 					log.Errorf("Error deleting the smartNIC {%+v}. Err: %v", evt, err)
 				}
