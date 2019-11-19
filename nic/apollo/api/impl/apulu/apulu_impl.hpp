@@ -92,7 +92,7 @@ namespace impl {
         memcpy((data)->nat_action.ip, &(xlate_ip)->addr.v4_addr,             \
                IP4_ADDR8_LEN);                                               \
     }                                                                        \
-    /* (data)->port = (xlate_port); */                                       \
+    (data)->nat_action.port = (xlate_port);                                  \
 }
 
 static inline void

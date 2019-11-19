@@ -506,7 +506,6 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
     vpc_entry *vpc;
     subnet_entry *subnet;
 
-    spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
     PDS_TRACE_DEBUG("Activating mapping (vpc %u, ip %s), subnet %u, tep %u, "

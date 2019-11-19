@@ -126,23 +126,43 @@ public:
 private:
     /// \brief  constructor
     svc_mapping_impl() {
-        to_dip_nat_hdl_ = PDS_IMPL_RSVD_NAT_HW_ID;
-        to_vip_nat_hdl_ = PDS_IMPL_RSVD_NAT_HW_ID;
-        vip_to_dip_handle_ = handle_t::null();
-        dip_to_vip_handle_ = handle_t::null();
+        to_vip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+        to_vip_handle_ = handle_t::null();
     }
 
     /// \brief  destructor
     ~svc_mapping_impl() {}
 
+    /// \brief     program and activate service mapping related tables during
+    ///            create by enabling stage0 tables corresponding to the
+    ///            new epoch
+    /// \param[in] epoch       epoch being activated
+    /// \param[in] mapping     service mapping instance
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \param[in] spec        service mapping configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_create_(pds_epoch_t epoch,
+                                       svc_mapping *mapping,
+                                       obj_ctxt_t *obj_ctxt,
+                                       pds_svc_mapping_spec_t *spec);
+
+    /// \brief     program and activate service mapping related tables during
+    ///            delete by enabling stage0 tables corresponding to the
+    ///            new epoch
+    /// \param[in] epoch       epoch being activated
+    /// \param[in] key         key identifying the mapping
+    /// \param[in] mapping     service mapping instance
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_delete_(pds_epoch_t epoch,
+                                       pds_svc_mapping_key_t *key,
+                                       svc_mapping* mapping);
+
 private:
     // handles or indices to NAT/NAT2 table(s)
-    uint32_t    to_dip_nat_hdl_;
-    uint32_t    to_vip_nat_hdl_;
+    uint32_t    to_vip_nat_idx_;
 
     // handles to SERVICE_MAPPING table
-    handle_t    vip_to_dip_handle_;
-    handle_t    dip_to_vip_handle_;
+    handle_t    to_vip_handle_;
 };
 
 /// @}
