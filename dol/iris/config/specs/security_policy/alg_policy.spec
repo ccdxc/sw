@@ -50,5 +50,4 @@ policies:
                 svcs:
                     - svc:
                         proto    : 0
-                        dst_port : 0
 

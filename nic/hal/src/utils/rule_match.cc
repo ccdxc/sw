@@ -656,14 +656,14 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
     } else {
         rule->field[IP_DST].empty = ACL_DEF_EMPTY;
     }
-    if (sp_entry && (sp_entry->port_range.port_lo || sp_entry->port_range.port_hi)) {
+    if (sp_entry && !IS_ANY_PORT(sp_entry->port_range.port_lo, sp_entry->port_range.port_hi)) {
         rule->field[PORT_SRC].value.u32 = sp_entry->port_range.port_lo;
         rule->field[PORT_SRC].mask_range.u32 = sp_entry->port_range.port_hi;
     } else {
         rule->field[PORT_SRC].empty = ACL_DEF_EMPTY;
     }
      
-    if (dp_entry && (dp_entry->port_range.port_lo || dp_entry->port_range.port_hi)) {
+    if (dp_entry && !IS_ANY_PORT(dp_entry->port_range.port_lo , dp_entry->port_range.port_hi)) {
         rule->field[PORT_DST].value.u32 = dp_entry->port_range.port_lo;
         rule->field[PORT_DST].mask_range.u32 = dp_entry->port_range.port_hi;
     } else {
@@ -912,6 +912,10 @@ rule_match_rule_add (const acl_ctx_t  **acl_ctx,
     rule_data_t          *rule_data = NULL;
     rule_cfg_t           *rule_cfg = NULL;
     rule_ctr_t           *rule_ctr = NULL;
+    dst_port_new.port_range.port_lo = INVALID_TCP_UDP_PORT;
+    dst_port_new.port_range.port_hi = INVALID_TCP_UDP_PORT;
+    src_port_new.port_range.port_lo = INVALID_TCP_UDP_PORT;
+    src_port_new.port_range.port_hi = INVALID_TCP_UDP_PORT;
 
     rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
     if (rule_cfg == NULL) {

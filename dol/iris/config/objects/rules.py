@@ -9,7 +9,7 @@ class SvcObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
         self.proto = spec.proto
-        self.dst_port =  getattr(spec, 'dst_port',0)
+        self.dst_port =  getattr(spec, 'dst_port',-1)
         self.icmp_msg_type = getattr(spec, 'icmp_type', 0)
         self.alg = getattr(spec, 'alg',"NONE")
         return
@@ -21,10 +21,11 @@ class SvcObject(base.ConfigObjectBase):
         if proto_str in ('IPPROTO_ICMP', 'IPPROTO_ICMPV6'):
             req_spec.match.app_match.icmp_info.icmp_type = self.icmp_msg_type
         else:
-            app_match = req_spec.match.app_match
-            dst_port_range = app_match.port_info.dst_port_range.add()
-            dst_port_range.port_low = self.dst_port
-            dst_port_range.port_high= self.dst_port
+            if self.dst_port != -1:
+                app_match = req_spec.match.app_match
+                dst_port_range = app_match.port_info.dst_port_range.add()
+                dst_port_range.port_low = self.dst_port
+                dst_port_range.port_high= self.dst_port
 
         if self.alg is not "None":
             app_data = req_spec.action.app_data;

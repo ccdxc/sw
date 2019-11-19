@@ -77,7 +77,8 @@ struct ipv4_tuple {
     HAL_TRACE_DEBUG("key to acl: key->proto: {}, key->ip_src: {}, key->ip_dst: {}, key->mac_src: {}, key->mac_dst: {}, key->ethertype: {}," \
     "key->port_src: {}, key->port_dst: {}, key->icmp_type: {}, key->icmp_code: {}", key->proto, key->ip_src, key->ip_dst, key->mac_src, key->mac_dst, key->key_ethertype, key->port_src, key->port_dst, key->icmp_type, key->icmp_code);
     
-
+#define INVALID_TCP_UDP_PORT        65536
+#define IS_ANY_PORT(lo, hi)                 ((lo == INVALID_TCP_UDP_PORT) && (hi == INVALID_TCP_UDP_PORT))
 
 enum {
     PROTO = 0, IP_SRC, IP_DST, MAC_SRC, MAC_DST, ETHERTYPE, PORT_SRC, PORT_DST, SRC_SG, DST_SG, ICMP_TYPE, ICMP_CODE,
