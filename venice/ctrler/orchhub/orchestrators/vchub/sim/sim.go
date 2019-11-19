@@ -22,6 +22,7 @@ import (
 type Datacenter struct {
 	obj       *simulator.Datacenter
 	client    *vim25.Client
+	dvsMap    map[string]*DVS
 	hostMap   map[string]*Host
 	datastore datastore
 }
@@ -35,6 +36,19 @@ type datastore struct {
 // Host contains info of a simulator host instance
 type Host struct {
 	obj *simulator.HostSystem
+}
+
+// DVS contains info of a simulator distributed virtual switch instance
+// This struct is not expected to be parallely accessed
+type DVS struct {
+	client       *vim25.Client
+	obj          *simulator.DistributedVirtualSwitch
+	portgroupMap map[string]*Portgroup
+}
+
+// Portgroup contains info of a simulator distributed virtual portgroup instance
+type Portgroup struct {
+	obj *simulator.DistributedVirtualPortgroup
 }
 
 // Config specifies configuration for a VcSim instance
@@ -122,6 +136,7 @@ func (v *VcSim) AddDC(name string) (*Datacenter, error) {
 	entry := &Datacenter{
 		obj:     dc,
 		client:  v.client,
+		dvsMap:  make(map[string]*DVS),
 		hostMap: make(map[string]*Host),
 		datastore: datastore{
 			name: datastoreName,
@@ -131,6 +146,87 @@ func (v *VcSim) AddDC(name string) (*Datacenter, error) {
 	v.dcMap[name] = entry
 
 	return entry, nil
+}
+
+// GetDVS returns the distributed virtual switch by name
+func (v *Datacenter) GetDVS(name string) (*DVS, bool) {
+	entry, ok := v.dvsMap[name]
+	return entry, ok
+}
+
+// AddDVS adds a distributed virtual switch to the DC
+func (v *Datacenter) AddDVS(dvsCreateSpec *types.DVSCreateSpec) (*DVS, error) {
+	ctx := context.Background()
+
+	dc := object.NewDatacenter(v.client, v.obj.Reference())
+	folders, err := dc.Folders(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := folders.NetworkFolder.CreateDVS(ctx, *dvsCreateSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	err = task.Wait(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	dvss := simulator.Map.All("DistributedVirtualSwitch")
+	for _, dvs := range dvss {
+		if dvs.Entity().Name == dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name {
+			ret := &DVS{
+				client:       v.client,
+				obj:          dvs.(*simulator.DistributedVirtualSwitch),
+				portgroupMap: make(map[string]*Portgroup),
+			}
+			return ret, nil
+		}
+	}
+
+	return nil, fmt.Errorf("DVS create was successful but couldn't be found in inventory")
+}
+
+// GetPortgroup returns the distributed virtual portgroup by name
+// This is not thread-safe
+func (v *DVS) GetPortgroup(name string) (*Portgroup, bool) {
+	entry, ok := v.portgroupMap[name]
+	return entry, ok
+}
+
+// AddPortgroup adds one or multiple distributed virtual portgroups to DVS
+// This is not thread-safe
+func (v *DVS) AddPortgroup(pgConfigSpec []types.DVPortgroupConfigSpec) ([]Portgroup, error) {
+	// We need to count the uplink portgroup as well
+	numPortgroup := len(pgConfigSpec) + 1
+	ret := make([]Portgroup, numPortgroup)
+	ctx := context.Background()
+
+	dvs := object.NewDistributedVirtualSwitch(v.client, v.obj.Reference())
+
+	task, err := dvs.AddPortgroup(ctx, pgConfigSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = task.WaitForResult(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pgs := simulator.Map.All("DistributedVirtualPortgroup")
+	i := 0
+	for _, pg := range pgs {
+		if v.portgroupMap[pg.Entity().Name] == nil {
+			ret[i].obj = pg.(*simulator.DistributedVirtualPortgroup)
+			v.portgroupMap[pg.Entity().Name] = &ret[i]
+			i++
+		}
+	}
+
+	return ret, nil
 }
 
 // AddHost adds a host to the DC

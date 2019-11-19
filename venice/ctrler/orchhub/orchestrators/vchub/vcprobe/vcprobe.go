@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/types"
@@ -34,6 +35,7 @@ type vcInst struct {
 	vcURL  *url.URL
 	VcID   string
 	cancel context.CancelFunc
+	finder *find.Finder
 	ctx    context.Context
 	Log    log.Logger
 	wg     *sync.WaitGroup
@@ -50,6 +52,7 @@ type VCProbe struct {
 	tp         *tagsProbe
 	stateMgr   *statemgr.Statemgr
 	orchConfig *orchestration.Orchestrator
+	dvsMap     map[string]*PenDVS
 }
 
 // NewVCProbe returns a new instance of VCProbe
@@ -73,6 +76,7 @@ func NewVCProbe(orchConfig *orchestration.Orchestrator, hOutbox chan<- defs.Prob
 		outbox:     hOutbox,
 		inbox:      inbox,
 		stateMgr:   stateMgr,
+		dvsMap:     make(map[string]*PenDVS),
 	}
 	// Check we have correct permissions when we connect.
 }
@@ -123,6 +127,7 @@ func (v *VCProbe) run() {
 	}
 
 	v.client = c
+	v.finder = find.NewFinder(v.client.Client, true)
 	v.viewMgr = view.NewManager(v.client.Client)
 	v.newTagsProbe(v.ctx)
 

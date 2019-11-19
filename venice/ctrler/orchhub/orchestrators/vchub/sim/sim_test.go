@@ -35,6 +35,43 @@ func TestList(t *testing.T) {
 	_, err = dc.AddVM("testVM", "host1")
 	AssertOk(t, err, "failed to create vm")
 
+	var dvsCreateSpec types.DVSCreateSpec
+	var dvsConfigSpec types.DVSConfigSpec
+	dvsConfigSpec.GetDVSConfigSpec().Name = "dvs1"
+	dvsConfigSpec.GetDVSConfigSpec().NumStandalonePorts = 512
+	dvsConfigSpec.GetDVSConfigSpec().MaxPorts = 4096
+	dvsCreateSpec.ConfigSpec = &types.VMwareDVSConfigSpec{
+		DVSConfigSpec: dvsConfigSpec,
+	}
+	dvs, err := dc.AddDVS(&dvsCreateSpec)
+	AssertOk(t, err, "failed to create DVS")
+
+	pgConfigSpec0 := []types.DVPortgroupConfigSpec{
+		types.DVPortgroupConfigSpec{
+			Name:     "pg1",
+			NumPorts: 10,
+		},
+		types.DVPortgroupConfigSpec{
+			Name:     "pg2",
+			NumPorts: 10,
+		},
+	}
+	_, err = dvs.AddPortgroup(pgConfigSpec0)
+	AssertOk(t, err, "failed to add portgroup")
+
+	pgConfigSpec1 := []types.DVPortgroupConfigSpec{
+		types.DVPortgroupConfigSpec{
+			Name:     "pg3",
+			NumPorts: 10,
+		},
+		types.DVPortgroupConfigSpec{
+			Name:     "pg4",
+			NumPorts: 10,
+		},
+	}
+	_, err = dvs.AddPortgroup(pgConfigSpec1)
+	AssertOk(t, err, "failed to add portgroup")
+
 	ctx := context.Background()
 
 	u := s.GetURL()
@@ -82,6 +119,26 @@ func TestList(t *testing.T) {
 	getKind(t, c, "VirtualMachine", []string{"name"}, &vms)
 	AssertEquals(t, 1, len(vms), "Recieved incorrect amount of dcs")
 	AssertEquals(t, "testVM", vms[0].Name, "VM had incorrect name")
+
+	// Check DVSs, TODO: Now we just create one DVS and check the first one, need to cover multi DVSs cases
+	var dvss []mo.DistributedVirtualSwitch
+	getKind(t, c, "DistributedVirtualSwitch", []string{"name", "summary"}, &dvss)
+	AssertEquals(t, "dvs1", dvss[0].Name, "DVS had incorrect name")
+	AssertEquals(t, int32(512), dvss[0].Summary.NumPorts, "DVS had incorrect number of ports")
+
+	var pgs []mo.DistributedVirtualPortgroup
+	getKind(t, c, "DistributedVirtualPortgroup", []string{"name", "config"}, &pgs)
+	AssertEquals(t, len(pgConfigSpec0)+len(pgConfigSpec1)+1, len(pgs), "Recieved incorrect amount of portgroups")
+	// Skip pgs[0] since it's uplink portgroup that created by default
+	AssertEquals(t, "pg1", pgs[1].Name, "Portgroup had incorrect name")
+	AssertEquals(t, int32(10), pgs[1].Config.NumPorts, "Portgroup had incorrect number of ports")
+	AssertEquals(t, "pg2", pgs[2].Name, "Portgroup had incorrect name")
+	AssertEquals(t, int32(10), pgs[2].Config.NumPorts, "Portgroup had incorrect number of ports")
+
+	AssertEquals(t, "pg3", pgs[3].Name, "Portgroup had incorrect name")
+	AssertEquals(t, int32(10), pgs[3].Config.NumPorts, "Portgroup had incorrect number of ports")
+	AssertEquals(t, "pg4", pgs[4].Name, "Portgroup had incorrect name")
+	AssertEquals(t, int32(10), pgs[4].Config.NumPorts, "Portgroup had incorrect number of ports")
 }
 
 func getKind(t *testing.T, client *govmomi.Client, kind string, props []string, dst interface{}) {
