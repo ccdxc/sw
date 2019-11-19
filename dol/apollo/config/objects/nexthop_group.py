@@ -21,12 +21,12 @@ class NexthopGroupObject(base.ConfigObjectBase):
         self.GID('NexthopGroup%d'%self.Id)
         self.NumNexthops = spec.count
         self.Nexthops = {}
+        self.DualEcmp = utils.IsDualEcmp(spec)
+        self.Type = None
         if spec.type == 'overlay':
-            self.__type = nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP
+            self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP
         elif spec.type == 'underlay':
-            self.__type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
-        for i in range(self.NumNexthops):
-            self.Nexthops[i] = nexthop.client.GetNexthopObject(i+1)
+            self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
         self.Show()
         return
 
@@ -46,6 +46,14 @@ class NexthopGroupObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("NexthopGroup object:", self)
         logger.info("- %s" % repr(self))
+        type = ""
+        if self.Type == nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+            type = "OVERLAY ECMP"
+        else:
+            type = "UNDERLAY ECMP"
+        logger.info("- Type %s" % type)
+        if self.DualEcmp:
+            logger.info("- Dual ecmp")
         return
 
     def SetBaseClassAttr(self):
@@ -59,12 +67,22 @@ class NexthopGroupObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
-        spec.Type = self.__type
+        spec.Type = self.Type
         for i in range(self.NumNexthops):
             nhspec = spec.Members.add()
             nexthop_obj = self.Nexthops[i]
             nexthop_obj.FillSpec(nhspec)
         return
+
+    def IsUnderlay(self):
+        if self.Type == nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
+            return True
+        return False
+
+    def IsOverlay(self):
+        if self.Type == nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+            return True
+        return False
 
 class NexthopGroupObjectClient:
     def __init__(self):
@@ -97,6 +115,23 @@ class NexthopGroupObjectClient:
             return
         Store.SetNexthopgroups(nh_groups)
         resmgr.CreateUnderlayNhGroupAllocator()
+        resmgr.CreateOverlayNhGroupAllocator()
+        resmgr.CreateDualEcmpNhGroupAllocator()
+
+    def AssociateObjects(self):
+        logger.info("Filling nexthops")
+        nh_groups = self.Objects()
+        for nhg in nh_groups:
+            logger.info("NexthopGroup%d - %d nexthops" % (nhg.Id, nhg.NumNexthops))
+            for i in range(nhg.NumNexthops):
+                if nhg.Type == nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
+                    nhg.Nexthops[i] = resmgr.UnderlayNHAllocator.rrnext()
+                elif nhg.Type == nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+                    if nhg.DualEcmp is True:
+                        nhg.Nexthops[i] = resmgr.DualEcmpNhAllocator.rrnext()
+                    else:
+                        nhg.Nexthops[i] = resmgr.OverlayNHAllocator.rrnext()
+                logger.info("   Nexthop%d" % (nhg.Nexthops[i].NexthopId))
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         if not self.__supported:

@@ -467,6 +467,9 @@ def IsNatSupported():
         return True
     return False
 
+def IsDualEcmp(spec):
+    return getattr(spec, 'dual-ecmp', False)
+
 def GetDefaultDeviceMode():
     if IsPipelineApulu():
         return 'host'

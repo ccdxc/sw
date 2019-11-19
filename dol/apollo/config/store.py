@@ -126,6 +126,12 @@ class ApolloConfigStore:
                 if tun.IsUnderlayEcmp(): tunnels.append(tun)
         return tunnels
 
+    def GetOverlayTunnels(self):
+        tunnels = []
+        for tun in self.tunnels.GetAllInList():
+            if tun.IsOverlay(): tunnels.append(tun)
+        return tunnels
+
     def GetUnderlayNexthops(self, ecmp=False):
         nhops = []
         for nh in self.nexthops.GetAllInList():
@@ -135,10 +141,35 @@ class ApolloConfigStore:
                 if nh.IsUnderlayEcmp(): nhops.append(nh)
         return nhops
 
-    def GetUnderlayNexthopGroups(self):
+    def GetUnderlayNhGroups(self):
         nhgs = []
         for nhg in self.nexthopgroups.GetAllInList():
-            nhgs.append(nhg)
+            if nhg.IsUnderlay():
+                nhgs.append(nhg)
+        return nhgs
+
+    def GetOverlayNexthops(self, ecmp=False):
+        nhops = []
+        for nh in self.nexthops.GetAllInList():
+            if nh.IsOverlay(): nhops.append(nh)
+        return nhops
+
+    def GetDualEcmpNexthops(self):
+        nhops = []
+        for nh in self.nexthops.GetAllInList():
+            if nh.IsOverlay() and nh.DualEcmp: nhops.append(nh)
+        return nhops
+
+    def GetOverlayNhGroups(self):
+        nhgs = []
+        for nhg in self.nexthopgroups.GetAllInList():
+            if nhg.IsOverlay(): nhgs.append(nhg)
+        return nhgs
+
+    def GetDualEcmpNhGroups(self):
+        nhgs = []
+        for nhg in self.nexthopgroups.GetAllInList():
+            if nhg.IsOverlay() and nhg.DualEcmp: nhgs.append(nhg)
         return nhgs
 
     def GetTrunkingUplinks(self):

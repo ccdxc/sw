@@ -24,6 +24,7 @@ class NexthopObject(base.ConfigObjectBase):
         self.GID('Nexthop%d'%self.NexthopId)
         self.VPC = parent
         nh_type = getattr(spec, 'type', 'ip')
+        self.DualEcmp = utils.IsDualEcmp(spec)
         if nh_type == 'ip':
             self.__type = utils.NhType.IP
             self.PfxSel = parent.PfxSel
@@ -38,7 +39,9 @@ class NexthopObject(base.ConfigObjectBase):
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
             self.__type = utils.NhType.OVERLAY
-            self.TunnelId = 1 # TODO use iterator from tunnel
+            if self.DualEcmp:
+                self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
+            self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
         else:
             self.__type = utils.NhType.NONE
         self.Show()
@@ -56,8 +59,11 @@ class NexthopObject(base.ConfigObjectBase):
             nh_str = "TunnelId:%d" % (self.TunnelId)
         else:
             nh_str = ""
-        return "NexthopID:%d|Type:%s|%s" %\
-               (self.NexthopId, self.__type, nh_str)
+        ecmp_str = ""
+        if self.DualEcmp:
+            ecmp_str = ", Dual ecmp"
+        return "NexthopID:%d|Type:%s|%s%s" %\
+               (self.NexthopId, self.__type, nh_str, ecmp_str)
 
     def Show(self):
         logger.info("Nexthop object:", self)
@@ -101,6 +107,16 @@ class NexthopObject(base.ConfigObjectBase):
             return True
         return False
 
+    def IsOverlay(self):
+        if self.__type == utils.NhType.OVERLAY:
+            return True
+        return False
+
+    def IsOverlayEcmp(self):
+        if self.__type == utils.NhType.OVERLAY_ECMP:
+            return True
+        return False
+
 class NexthopObjectClient:
     def __init__(self):
         def __isObjSupported():
@@ -109,6 +125,7 @@ class NexthopObjectClient:
             return False
 
         self.__objs = dict()
+        self.__underlay_objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -144,6 +161,8 @@ class NexthopObjectClient:
     def AssociateObjects(self):
         Store.SetNexthops(self.Objects())
         resmgr.CreateUnderlayNHAllocator()
+        resmgr.CreateOverlayNHAllocator()
+        resmgr.CreateDualEcmpNhAllocator()
         tunnel.client.AssociateObjects()
 
     def GenerateObjects(self, parent, vpc_spec_obj):
@@ -151,7 +170,7 @@ class NexthopObjectClient:
             return
 
         def __isNhFeatureSupported(nh_type):
-            if nh_type == 'underlay':# or nh_type == 'underlay-ecmp':
+            if nh_type == 'underlay' or nh_type == 'overlay':
                 return utils.IsPipelineApulu()
             return not utils.IsPipelineApulu()
 
@@ -174,6 +193,8 @@ class NexthopObjectClient:
             for c in range(nh_spec_obj.count):
                 obj = NexthopObject(parent, nh_spec_obj)
                 self.__objs.update({obj.NexthopId: obj})
+                if nh_type == "underlay":
+                    self.__underlay_objs.update({obj.NexthopId: obj})
                 if isV4Stack:
                     self.__v4objs[vpcid].append(obj)
                 if isV6Stack:
@@ -187,7 +208,10 @@ class NexthopObjectClient:
 
     def CreateObjects(self):
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
+        if utils.IsPipelineApulu():
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs.values()))
+        else:
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
         return
 

@@ -94,11 +94,15 @@ SvcTunAllocator = None
 RemoteSvcTunAllocator = None
 UnderlayTunAllocator = None
 UnderlayECMPTunAllocator = None
+OverlayNhGroupAllocator = None
 RemoteSvcTunIPv4Addr = ipaddress.IPv4Network('30.0.0.0/24').hosts()
 
 #Apulu specific configs
 UnderlayNHAllocator = None
+OverlayNHAllocator = None
+DualEcmpNhAllocator = None
 UnderlayNhGroupAllocator = None
+DualEcmpNhGroupAllocator = None
 DeviceMacAllocator = objects.TemplateFieldObject("macstep/0002.0100.0000/0000.0000.0001")
 
 #TODO: read from PDS header files & init
@@ -190,11 +194,35 @@ def CreateUnderlayNHAllocator():
     if len(objs) != 0:
         UnderlayNHAllocator = utils.rrobiniter(objs)
 
+def CreateOverlayNHAllocator():
+    global OverlayNHAllocator
+    objs = Store.GetOverlayNexthops()
+    if len(objs) != 0:
+        OverlayNHAllocator = utils.rrobiniter(objs)
+
+def CreateDualEcmpNhAllocator():
+    global DualEcmpNhAllocator
+    objs = Store.GetDualEcmpNexthops()
+    if len(objs) != 0:
+        DualEcmpNhAllocator = utils.rrobiniter(objs)
+
 def CreateUnderlayNhGroupAllocator():
     global UnderlayNhGroupAllocator
-    objs = Store.GetUnderlayNexthopGroups()
+    objs = Store.GetUnderlayNhGroups()
     if len(objs) != 0:
         UnderlayNhGroupAllocator = utils.rrobiniter(objs)
+
+def CreateOverlayNhGroupAllocator():
+    global OverlayNhGroupAllocator
+    objs = Store.GetOverlayNhGroups()
+    if len(objs) != 0:
+        OverlayNhGroupAllocator = utils.rrobiniter(objs)
+
+def CreateDualEcmpNhGroupAllocator():
+    global DualEcmpNhGroupAllocator
+    objs = Store.GetDualEcmpNhGroups()
+    if len(objs) != 0:
+        DualEcmpNhGroupAllocator = utils.rrobiniter(objs)
 
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():

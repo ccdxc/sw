@@ -11,6 +11,7 @@ import apollo.config.objects.base as base
 import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
+import apollo.config.objects.tunnel as tunnel
 from apollo.config.objects.nexthop import client as NhClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 import apollo.config.objects.nexthop_group as nexthop_group
@@ -225,6 +226,9 @@ class VpcObjectClient:
             # Associate Nexthop objects
             NhGroupClient.CreateAllocator()
             NhClient.AssociateObjects()
+            NhGroupClient.AssociateObjects()
+            tunnel.client.FillUnderlayNhGroups()
+            route.client.FillNhGroups()
             VnicClient.AssociateObjects()
         return
 

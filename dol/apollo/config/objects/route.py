@@ -19,7 +19,7 @@ import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
 
 class RouteObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid):
+    def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
         super().__init__()
         self.SetBaseClassAttr()
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
@@ -34,6 +34,8 @@ class RouteObject(base.ConfigObjectBase):
         self.GID('RouteTable%d' %self.RouteTblId)
         self.routes = routes
         self.TUNNEL = tunobj
+        self.NhGroup = None
+        self.DualEcmp = utils.IsDualEcmp(spec)
         if self.TUNNEL:
             self.TunnelId = self.TUNNEL.Id
             self.TunIPAddr = tunobj.RemoteIPAddr
@@ -47,17 +49,18 @@ class RouteObject(base.ConfigObjectBase):
         self.PeerVPCId = vpcpeerid
         self.AppPort = resmgr.TransportDstPort
         ##########################################################################
-        self._derive_oper_info()
+        self._derive_oper_info(spec)
         self.Show()
         return
 
-    def _derive_oper_info(self):
+    def _derive_oper_info(self, spec):
         # operational info useful for testspec
         routetype = self.RouteType
         self.HasDefaultRoute = True if 'default' in routetype else False
         self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
         self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
         self.HasNexthop = True if self.NEXTHOP else False
+        self.TepType = getattr(spec, 'teptype', None)
         self.HasServiceTunnel = False
         if utils.IsPipelineArtemis():
             if self.TUNNEL and self.TUNNEL.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
@@ -67,9 +70,12 @@ class RouteObject(base.ConfigObjectBase):
         elif self.VPCPeeringEnabled:
             self.NextHopType = "vpcpeer"
         else:
-            if utils.IsPipelineArtemis() and\
+            if utils.IsPipelineArtemis() and \
                self.HasServiceTunnel == False and self.HasNexthop:
                 self.NextHopType = "nh"
+            elif utils.IsPipelineApulu() and \
+                self.TepType == "overlay-ecmp":
+                self.NextHopType = "nhg"
             else:
                 self.NextHopType = "tep"
         return
@@ -86,7 +92,15 @@ class RouteObject(base.ConfigObjectBase):
                     %(self.HasDefaultRoute, self.HasBlackHoleRoute))
         logger.info("- VPCPeering:%s Peer Vpc%d" %(self.VPCPeeringEnabled, self.PeerVPCId))
         logger.info("- NH : Nexthop%d|Type:%s" %(self.NexthopId, self.NextHopType))
-        logger.info("- TEP: Tunnel%d|IP:%s" %(self.TunnelId, self.TunIP))
+        if utils.IsPipelineApulu():
+            logger.info("- Tep type:%s" % (self.TepType))
+            if self.DualEcmp:
+                logger.info("- Dual ecmp:%s" % (self.DualEcmp))
+        if self.TUNNEL:
+            logger.info("- TEP: Tunnel%d|IP:%s" %(self.TunnelId, self.TunIP))
+        elif self.NhGroup:
+            logger.info("- TEP: None")
+            logger.info("- NexthopGroup%d" % (self.NhGroup.Id))
         for route in self.routes:
             logger.info(" -- %s" % str(route))
         return
@@ -103,6 +117,7 @@ class RouteObject(base.ConfigObjectBase):
         return
 
     def PopulateSpec(self, grpcmsg):
+        print("PopulateSpec ", self.RouteTblId, self.TepType, self.NextHopType)
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
@@ -115,6 +130,8 @@ class RouteObject(base.ConfigObjectBase):
                 rtspec.TunnelId = self.TunnelId
             elif self.NextHopType == "nh":
                 rtspec.NexthopId = self.NexthopId
+            elif self.NextHopType == "nhg":
+                rtspec.NexthopGroupId = self.NexthopGroupId
         return
 
     def ValidateSpec(self, spec):
@@ -155,6 +172,9 @@ class RouteObjectClient:
                 if "underlay-ecmp" == teptype:
                     return resmgr.UnderlayECMPTunAllocator.rrnext()
                 return resmgr.UnderlayTunAllocator.rrnext()
+            if "overlay-ecmp" in teptype:
+                # Fill NhGroup later
+                return None
         if nat is False:
             return resmgr.RemoteInternetNonNatTunAllocator.rrnext()
         else:
@@ -207,9 +227,21 @@ class RouteObjectClient:
             return self.__v6iter[vpcid].rrnext().RouteTblId
         return 0
 
+    def FillNhGroups(self):
+        for robj in client.Objects():
+            if "overlay-ecmp" in robj.TepType:
+                if robj.DualEcmp is True:
+                    robj.NhGroup = resmgr.DualEcmpNhGroupAllocator.rrnext()
+                else:
+                    robj.NhGroup = resmgr.OverlayNhGroupAllocator.rrnext()
+                robj.NexthopGroupId = robj.NhGroup.Id
+                logger.info("Filling NexthopGroup%d in RouteTable%d" % \
+                    (robj.NhGroup.Id, robj.RouteTblId))
+
     def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
         if not self.__supported:
             return
+
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
@@ -245,13 +277,13 @@ class RouteObjectClient:
                 return (ip)
             return
 
-        def __add_v4routetable(v4routes, routetype):
-            obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid)
+        def __add_v4routetable(v4routes, routetype, spec):
+            obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid, spec)
             self.__v4objs[vpcid].update({obj.RouteTblId: obj})
             self.__objs.update({obj.RouteTblId: obj})
 
-        def __add_v6routetable(v6routes, routetype):
-            obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid)
+        def __add_v6routetable(v6routes, routetype, spec):
+            obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid, spec)
             self.__v6objs[vpcid].update({obj.RouteTblId: obj})
             self.__objs.update({obj.RouteTblId: obj})
 
@@ -262,19 +294,19 @@ class RouteObjectClient:
                     routes.append(ipaddress.ip_network(route.replace('\\', '/')))
             return routes
 
-        def __add_user_specified_routetable(routetablespec, routetype):
+        def __add_user_specified_routetable(spec, routetype):
             if isV4Stack:
-                __add_v4routetable(__get_user_specified_routes(routetablespec.v4routes), routetype)
+                __add_v4routetable(__get_user_specified_routes(spec.v4routes), routetype, spec)
 
             if isV6Stack:
-                __add_v6routetable(__get_user_specified_routes(routetablespec.v6routes), routetype)
+                __add_v6routetable(__get_user_specified_routes(spec.v6routes), routetype, spec)
 
         def __get_valid_route_count_per_route_table(count):
             if count > resmgr.MAX_ROUTES_PER_ROUTE_TBL:
                 return resmgr.MAX_ROUTES_PER_ROUTE_TBL
             return count
 
-        def __get_nat_teptype_from_spec(routetablespec):
+        def __get_nat_teptype_from_spec(routetbl_spec_obj):
             nat = getattr(routetbl_spec_obj, 'nat', False)
             teptype = getattr(routetbl_spec_obj, 'teptype', None)
             return nat, teptype
@@ -306,21 +338,21 @@ class RouteObjectClient:
                 if 'adjacent' in routetype:
                     if isV4Stack:
                         routes = user_specified_v4routes + __get_adjacent_routes(v4base, v4routecount)
-                        __add_v4routetable(routes, routetype)
+                        __add_v4routetable(routes, routetype, routetbl_spec_obj)
                         v4base = utils.GetNextSubnet(routes[-1])
                     if isV6Stack:
                         routes = user_specified_v6routes + __get_adjacent_routes(v6base, v6routecount)
-                        __add_v6routetable(routes, routetype)
+                        __add_v6routetable(routes, routetype, routetbl_spec_obj)
                         v6base = utils.GetNextSubnet(routes[-1])
 
                 elif 'overlap' in routetype:
                     if isV4Stack:
                         routes = user_specified_v4routes + __get_overlap(routetbl_spec_obj.v4base, v4base, v4routecount)
-                        __add_v4routetable(routes, routetype)
+                        __add_v4routetable(routes, routetype, routetbl_spec_obj)
                         v4base = utils.GetNextSubnet(routes[-1])
                     if isV6Stack:
                         routes = user_specified_v6routes + __get_overlap(routetbl_spec_obj.v6base, v6base, v6routecount)
-                        __add_v6routetable(routes, routetype)
+                        __add_v6routetable(routes, routetype, routetbl_spec_obj)
                         v6base = utils.GetNextSubnet(routes[-1])
 
         if self.__v6objs[vpcid]:

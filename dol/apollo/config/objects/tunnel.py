@@ -165,17 +165,23 @@ class TunnelObjectClient:
         return True, ""
 
     def AssociateObjects(self):
-        logger.info("Associating Tunnel Objects")
+        logger.info("Filling nexthops")
         for tun in self.Objects():
             if tun.IsUnderlay():
                 tun.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
                 logger.info("Tunnel%d - Nexthop%d" %
                             (tun.Id, tun.NEXTHOP.NexthopId))
-            elif tun.IsUnderlayEcmp():
+        return
+
+    def FillUnderlayNhGroups(self):
+        logger.info("Filling nexthop groups")
+        for tun in self.Objects():
+            if tun.IsUnderlayEcmp():
                 tun.NEXTHOPGROUP = resmgr.UnderlayNhGroupAllocator.rrnext()
                 logger.info("Tunnel%d - NexthopGroup%d" %
                             (tun.Id, tun.NEXTHOPGROUP.Id))
         return
+
 
     def GenerateObjects(self, parent, tunnelspec):
         def __isTunFeatureSupported(tunnel_type):
