@@ -728,7 +728,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
         hp_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, hal_if);
     }
 
-    ret = l2seg_pd_inp_prop_info(cl_l2seg, hp_l2seg, upd_flags,
+    ret = l2seg_pd_inp_prop_info(cl_l2seg, hp_l2seg, hal_if, upd_flags,
                                  nwsec_prof,
                                  num_prom_lifs,
                                  prom_enic_if,
@@ -802,12 +802,14 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
                     inp_prop.dst_lport, inp_prop.nic_mode,
                     l2seg->single_wire_mgmt);
 
+#if 0
     if ((is_forwarding_mode_host_pinned()) &&
         (hal::l2seg_get_pinned_uplink(l2seg) != hal::if_get_hal_handle(hal_if))) {
         inp_prop.allow_flood = 0;
     } else {
         inp_prop.allow_flood = 1;
     }
+#endif
 
     if (!is_native) {
         enc_type = l2seg_get_wire_encap_type(l2seg);
@@ -2009,7 +2011,8 @@ get_clear_prom_repl (l2seg_t *l2seg, uint32_t num_prom_lifs,
 
 
 hal_ret_t
-l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
+l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if, 
+                       uint32_t upd_flags,
                        nwsec_profile_t *nwsec_prof,
                        uint32_t num_prom_lifs,
                        if_t *prom_enic_if,
@@ -2038,6 +2041,11 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+        if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
+            inp_prop.allow_flood = 0;
+        } else {
+            inp_prop.allow_flood = 1;
+        }
     } else if (cl_l2seg) {
         inp_prop.nic_mode = get_nic_mode(cl_l2seg);
         inp_prop.vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
@@ -2055,6 +2063,7 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+        inp_prop.allow_flood = 1;
     } else {
         inp_prop.nic_mode = get_nic_mode(hp_l2seg);
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
@@ -2072,6 +2081,11 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
         get_clear_prom_repl(hp_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+        if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
+            inp_prop.allow_flood = 0;
+        } else {
+            inp_prop.allow_flood = 1;
+        }
     }
     inp_prop.l4_profile_idx = nwsec_prof ?
         nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;

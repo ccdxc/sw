@@ -139,7 +139,8 @@ hal_ret_t l2seg_pd_copy_inp_prop_tbl_idx (l2seg_t *l2seg,
                                           uint32_t up_ifpc_id);
 l2seg_t *l2seg_pd_get_shared_mgmt_l2seg(l2seg_t *l2seg, 
                                         if_t *hal_if);
-hal_ret_t l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, uint32_t upd_flags,
+hal_ret_t l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, 
+                                 if_t *hal_if, uint32_t upd_flags,
                                  nwsec_profile_t *nwsec_prof,
                                  uint32_t num_prom_lifs,
                                  if_t *prom_enic_if,
