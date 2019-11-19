@@ -63,18 +63,19 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     // instantiate the logger
     utils::logger::init();
 
-    // initialize pciemgr
-    if (platform_is_hw(state->platform_type())) {
-        PDS_TRACE_INFO("initializing pciemgr");
-        pciemgr = new class pciemgr("nicmgrd",
-                                    curr_thread->ev_loop());
-        pciemgr->initialize();
-    }
-
+    // initialize device manager
     PDS_TRACE_INFO("Initializing device manager ...");
     g_devmgr = new DeviceManager(config_file, fwd_mode, state->platform_type(),
                                curr_thread->ev_loop());
     g_devmgr->LoadConfig(config_file);
+
+    // initialize pciemgr
+    if (platform_is_hw(state->platform_type())) {
+        PDS_TRACE_INFO("initializing pciemgr");
+        pciemgr = new class pciemgr("nicmgrd", g_devmgr->pcie_evhandler,
+                                    curr_thread->ev_loop());
+        pciemgr->initialize();
+    }
 
     if (pciemgr) {
         pciemgr->finalize();

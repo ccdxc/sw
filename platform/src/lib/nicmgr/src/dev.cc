@@ -72,6 +72,83 @@ oprom_type_to_str(OpromType type)
     }
 }
 
+/*
+ * DeviceManger's pcie event handlers
+ */
+
+void
+DevPcieEvHandler::memrd(const int port,
+                          const uint32_t lif,
+                          const pciehdev_memrw_notify_t *n)
+{
+    NIC_LOG_INFO("memrd: port {} lif {}\n"
+            "    bar {} baraddr {:#x} baroffset {:#x} "
+            "size {} localpa {:#x} data {:#x}",
+            port, lif,
+            n->cfgidx, n->baraddr, n->baroffset,
+            n->size, n->localpa, n->data);
+}
+
+void
+DevPcieEvHandler::memwr(const int port,
+                          const uint32_t lif,
+                          const pciehdev_memrw_notify_t *n)
+{
+    NIC_LOG_INFO("memwr: port {} lif {}\n"
+            "    bar {} baraddr {:#x} baroffset {:#x} "
+            "size {} localpa {:#x} data {:#x}",
+            port, lif,
+            n->cfgidx, n->baraddr, n->baroffset,
+            n->size, n->localpa, n->data);
+}
+
+void
+DevPcieEvHandler::hostup(const int port)
+{
+    NIC_LOG_INFO("hostup: port {}", port);
+}
+
+void
+DevPcieEvHandler::hostdn(const int port) {
+    NIC_LOG_INFO("hostdn: port {}", port);
+}
+
+void
+DevPcieEvHandler::sriov_numvfs(const int port,
+                                 const uint32_t lif,
+                                 const uint16_t numvfs)
+{
+    NIC_LOG_INFO("sriov_numvfs: port {} lif {} numvfs {}",
+            port, lif, numvfs);
+}
+
+void
+DevPcieEvHandler::reset(const int port,
+                          uint32_t rsttype,
+                          const uint32_t lifb,
+                          const uint32_t lifc)
+{
+    DeviceManager *devmgr;
+    Eth *eth_dev;
+
+    NIC_LOG_DEBUG("reset: port {} rsttype {} lifb {} lifc {}",
+                 port, rsttype, lifb, lifc);
+
+    devmgr = DeviceManager::GetInstance();
+    if (devmgr == NULL) {
+        NIC_LOG_ERR("{}: Devmgr instance not found", __func__);
+        return;
+    }
+
+    eth_dev = devmgr->GetEthDeviceByLif(lifb);
+    if (eth_dev == NULL) {
+        NIC_LOG_ERR("{}: No Eth device found for lif {}", __func__, lifb);
+        return;
+    }
+
+    eth_dev->PcieResetEventHandler(rsttype);
+}
+
 DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
                             sdk::platform::platform_type_t platform, EV_P)
 {
@@ -440,6 +517,22 @@ Device *
 DeviceManager::GetDevice(std::string name)
 {
     return devices[name];
+}
+
+Eth *
+DeviceManager::GetEthDeviceByLif(uint32_t lif_id)
+{
+    for (auto it = devices.begin(); it != devices.end(); it++ ) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            if (eth_dev->IsDevLif(lif_id)) {
+                return eth_dev;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 void

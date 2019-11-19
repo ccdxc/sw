@@ -569,7 +569,7 @@ EthLif::FreeUpMacVlanFilters()
 }
 
 status_code_t
-EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
+EthLif::Reset()
 {
     uint64_t addr;
 

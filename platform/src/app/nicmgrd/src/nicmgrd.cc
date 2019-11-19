@@ -106,11 +106,12 @@ loop(void)
 
     NIC_LOG_INFO("Upgrade mode: {}", fw_mode);
 
-    if (platform_is_hw(platform))
-        pciemgr = new class pciemgr("nicmgrd", EV_DEFAULT);
-
     devmgr = new DeviceManager(config_file, fwd_mode, platform);
     devmgr->SetUpgradeMode(fw_mode);
+
+    if (platform_is_hw(platform))
+        pciemgr = new class pciemgr("nicmgrd", devmgr->pcie_evhandler,
+                                    EV_DEFAULT);
 
     if (pciemgr) {
         if (fw_mode == FW_MODE_NORMAL_BOOT)

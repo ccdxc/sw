@@ -18,6 +18,8 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "devapi_types.hpp"
 #include "pd_client.hpp"
@@ -69,6 +71,20 @@ typedef struct uplink_s {
 class PdClient;
 class AdminQ;
 
+class DevPcieEvHandler : public pciemgr::evhandler {
+public:
+    void memrd(const int port,
+               const uint32_t lif, const pciehdev_memrw_notify_t *n);
+    void memwr(const int port,
+               const uint32_t lif, const pciehdev_memrw_notify_t *n);
+    void hostup(const int port);
+    void hostdn(const int port);
+    void sriov_numvfs(const int port,
+                      const uint32_t lif, const uint16_t numvfs);
+    void reset(const int port,
+               uint32_t rsttype, const uint32_t lifb, const uint32_t lifc);
+};
+
 /**
  * Device Manager
  */
@@ -82,12 +98,15 @@ public:
     static DeviceManager *GetInstance() { return instance; }
 
     Device *GetDevice(std::string name);
+    Eth *GetEthDeviceByLif(uint32_t lif_id);
+
     void DeleteDevice(std::string name);
 
     void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void DelphiMountEventHandler(bool mounted);
+    void DeviceResetEventHandler();
 
     void CreateUplinkVRFs();
     void SetHalClient(devapi *dev_api);
@@ -107,6 +126,7 @@ public:
     devapi *DevApi(void) { return dev_api; }
     void swm_update(bool enable,
                     uint32_t port_num, uint32_t vlan, mac_t mac);
+    DevPcieEvHandler pcie_evhandler;
 private:
     static DeviceManager *instance;
 

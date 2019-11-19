@@ -879,6 +879,19 @@ Eth::CreateHostDevice()
     return true;
 }
 
+/**
+ * DevcmdRegsReset - Clears the dev_cmd_regs region
+ */
+void
+Eth::DevcmdRegsReset()
+{
+    memset((uint8_t *)devcmd, 0, sizeof(union dev_cmd_regs));
+#ifndef __aarch64__
+    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd,
+              sizeof(union dev_cmd_regs), 0);
+#endif
+}
+
 void
 Eth::DevcmdPoll(void *obj)
 {
@@ -1131,7 +1144,7 @@ Eth::_CmdInit(void *req, void *req_data, void *resp, void *resp_data)
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         eth_lif = it->second;
-        status = eth_lif->Reset(req, req_data, resp, resp_data);
+        status = eth_lif->Reset();
         if (status != IONIC_RC_SUCCESS) {
             NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
             return (status);
@@ -1146,22 +1159,11 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct dev_reset_cmd *cmd = (struct dev_reset_cmd *)req;
     status_code_t status;
-    EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+    status = Reset();
 
-    intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
-
-    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        eth_lif = it->second;
-        status = eth_lif->Reset(req, req_data, resp, resp_data);
-        if (status != IONIC_RC_SUCCESS) {
-            NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
-            return (status);
-        }
-    }
-
-    return (IONIC_RC_SUCCESS);
+    return (status);
 }
 
 status_code_t
@@ -1774,7 +1776,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
         evutil_timer_stop(EV_A_ &stats_timer);
     }
 
-    ret = eth_lif->Reset(req, req_data, resp, resp_data);
+    ret = eth_lif->Reset();
     if (ret != IONIC_RC_SUCCESS) {
         NIC_LOG_DEBUG("{}: LIF reset failed !", spec->name);
     }
@@ -1976,6 +1978,57 @@ Eth::XcvrEventHandler(port_status_t *evd)
     }
 }
 
+void
+Eth::PcieResetEventHandler(uint32_t rsttype)
+{
+    const char *rsttype_str;
+    status_code_t status;
+
+    switch (rsttype) {
+        case PCIEHDEV_RSTTYPE_BUS:
+            rsttype_str = "BUS Reset";
+            break;
+        case PCIEHDEV_RSTTYPE_FLR:
+            rsttype_str = "FLR Reset";
+            break;
+        case PCIEHDEV_RSTTYPE_VF:
+            rsttype_str = "VF Reset";
+            break;
+        default:
+            NIC_LOG_ERR("{}: received invalid reset type {}", spec->name,
+                    rsttype);
+            return;
+    }
+
+    NIC_LOG_INFO("{}: received {}", spec->name, rsttype_str);
+
+    DevcmdRegsReset();
+    status = Reset();
+    if (status != IONIC_RC_SUCCESS) {
+        NIC_LOG_ERR("{}: {} failed", spec->name, rsttype_str);
+    }
+}
+
+status_code_t
+Eth::Reset()
+{
+    status_code_t status;
+    EthLif *eth_lif = NULL;
+
+    intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
+
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        eth_lif = it->second;
+        status = eth_lif->Reset();
+        if (status != IONIC_RC_SUCCESS) {
+            NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
+            //TODO: Handle lif reset fail
+        }
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
 bool
 Eth::IsDevQuiesced()
 {
@@ -2003,6 +2056,16 @@ bool Eth::IsDevReset()
     NIC_LOG_DEBUG("{}: Device is not in reset state yet! active_lif_ref_cnt: {}",
             spec->name, active_lif_ref_cnt);
     return false;
+}
+
+bool
+Eth::IsDevLif(uint32_t lif_id)
+{
+    if (lif_map.find(lif_id) == lif_map.end()) {
+        return false;
+    }
+
+    return true;
 }
 
 int

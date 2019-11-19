@@ -107,7 +107,7 @@ public:
            EV_P);
 
     status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t Reset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t Reset();
     bool EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         struct edmaq_ctx *ctx);
 
@@ -130,7 +130,6 @@ public:
     uint32_t GetActiveQRefCnt() { return active_q_ref_cnt; }
 
     bool IsLifQuiesced() { return ( (state == LIF_STATE_UP) ? false:true); }
-
     EV_P;
 
 private:

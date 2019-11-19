@@ -144,6 +144,8 @@ public:
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
+    status_code_t Reset();
+    void PcieResetEventHandler(uint32_t rsttype);
 
     void SetHalClient(devapi *dapi);
 
@@ -154,6 +156,8 @@ public:
 
     bool IsDevQuiesced();
     bool IsDevReset();
+    bool IsDevLif(uint32_t lif_id);
+
     int SendFWDownEvent();
     void GetEthDevInfo(struct EthDevInfo *dev_info);
 
@@ -201,6 +205,8 @@ private:
     bool CreateLocalDevice();
     //
     bool LoadOprom();
+
+    void DevcmdRegsReset();
 
     //Lif ref cnt
     uint32_t active_lif_ref_cnt;
