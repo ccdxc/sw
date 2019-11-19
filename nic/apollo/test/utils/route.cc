@@ -17,7 +17,6 @@ pds_nh_type_t nhtype_supported[] = {
 #ifdef APULU
     PDS_NH_TYPE_OVERLAY_ECMP,
     PDS_NH_TYPE_VNIC,
-    PDS_NH_TYPE_NAT,
 #endif
 };
 
@@ -77,7 +76,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     num_routes_per_type = spec->num_routes/num_types;
 
     route_index = 0;
-    for (uint32_t i = 0; i < num_types; i++) { 
+    for (uint32_t i = 0; i < num_types; i++) {
         for (uint32_t j = 0; j < num_routes_per_type; j++) {
             spec->routes[route_index].prefix = route_pfx;
             fill_spec(nhtype_supported[i], spec, route_index);
@@ -124,10 +123,6 @@ route_table_feeder::fill_spec(pds_nh_type_t type,
     case PDS_NH_TYPE_IP:
         num = (index % PDS_MAX_NEXTHOP);
         spec->routes[index].nh.id = base_id + num;
-        break;
-    case PDS_NH_TYPE_NAT:
-        spec->routes[index].nat.src_nat = NAT_TYPE_STATIC;
-        spec->routes[index].nat.dst_nat = NAT_TYPE_STATIC;
         break;
     case PDS_NH_TYPE_BLACKHOLE:
     default:

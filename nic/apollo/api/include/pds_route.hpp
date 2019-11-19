@@ -29,29 +29,33 @@
 typedef struct pds_route_s {
     ip_prefix_t                 prefix;   ///< prefix
     pds_nh_type_t               nh_type;  ///< nexthop type
-    // NOTE:
-    // 1. priority value must be non-zero
-    // 2. lower the numerical value, higher the priority
-    // 3. a route table MUST have either all the routes with priority set or no
-    //    priority set on all the routes
-    // 4. if no priority value is set (i.e. 0) then route priority is computed
-    //    as 128 - <prefix length>, so longer prefixes will have higher
-    //    precedence over shorter ones giving regular LPM semantics
+    /// NOTE:
+    /// 1. priority value must be non-zero
+    /// 2. lower the numerical value, higher the priority
+    /// 3. a route table MUST have either all the routes with priority set or no
+    ///    priority set on all the routes
+    /// 4. if no priority value is set (i.e. 0) then route priority is computed
+    ///    as 128 - <prefix length>, so longer prefixes will have higher
+    ///    precedence over shorter ones giving regular LPM semantics
     uint32_t                    prio;     ///< priority of the route
     union {
-        // PDS_NH_TYPE_OVERLAY specific data
+        /// PDS_NH_TYPE_OVERLAY specific data
         pds_tep_key_t           tep;      ///< nexthop TEP
-        // PDS_NH_TYPE_PDS_NH_TYPE_OVERLAY_ECMP specific data
+        /// PDS_NH_TYPE_PDS_NH_TYPE_OVERLAY_ECMP specific data
         pds_nexthop_group_key_t nh_group; ///< ECMP group
-        // PDS_NH_TYPE_PEER_VPC specific data
+        /// PDS_NH_TYPE_PEER_VPC specific data
         pds_vpc_key_t           vpc;      ///< peer vpc id
-        // one of the possible nexthop types
+        /// one of the possible nexthop types
         pds_nexthop_key_t       nh;       ///< nexthop key
-        // PDS_NH_TYPE_VNIC specific data
+        /// PDS_NH_TYPE_VNIC specific data
         pds_vnic_key_t          vnic;     ///< vnic nexthop
-        // PDS_NH_TYPE_NAT specific data
-        pds_nat_action_t        nat;      ///< NAT action
     };
+    /// NAT action, if any
+    /// if NATAction is set, source and/or destination NAT will be performed on
+    /// the packet and if destination NAT is performed, another route lookup
+    /// will be done in the same route table with the post-NAT destination IP
+    /// address being rewritten
+    pds_nat_action_t        nat;          ///< NAT action
 } __PACK__ pds_route_t;
 
 /// \brief route table configuration

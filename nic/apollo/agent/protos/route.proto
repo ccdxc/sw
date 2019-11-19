@@ -18,7 +18,7 @@ service RouteSvc {
   rpc RouteTableDelete (RouteTableDeleteRequest) returns (RouteTableDeleteResponse) {}
 }
 
-message NATNexthop {
+message NATAction {
   // if SrcNatAction is set to NAT_ACTION_STATIC, floating IP of the
   // local IP mapping is used to NAT the source IP or else (NAT IP, NAT port)
   // are dynamically allocated in s/w datapath
@@ -59,9 +59,12 @@ message Route {
       uint32          TunnelId       = 7;
       // vnic this prefix is pointing to
       uint32          VnicId         = 8;
-      // NAT nexthop
-      NATNexthop      NatNexthop     = 9;
   }
+  // if NATAction is set, source and/or destination NAT will be performed on
+  // the packet and if destination NAT is performed, another route lookup
+  // will be done in the same route table with the post-NAT destination IP
+  // address being rewritten
+  NATAction           NatAction      = 9;
   // if Meter is on, when traffic from a vnic hist the route and
   // vnic's meter id (if configured) will be used to account
   // packet & byte count

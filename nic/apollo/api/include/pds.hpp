@@ -121,16 +121,15 @@ pds_encap2str (const pds_encap_t *encap)
 
 /// \brief NAT type
 typedef enum pds_nat_type_e {
-    NAT_TYPE_NONE         = 0,
-    NAT_TYPE_STATIC       = 1,
-    NAT_TYPE_DYNAMIC_ADDR = 2,
-    NAT_TYPE_DYNAMIC_NAPT = 3,
+    PDS_NAT_TYPE_NONE         = 0,
+    PDS_NAT_TYPE_STATIC       = 1,
+    PDS_NAT_TYPE_DYNAMIC_NAPT = 2,
 } pds_nat_type_t;
 
 /// \brief NAT action
 typedef struct pds_nat_action_s {
-    pds_nat_type_t src_nat;
-    pds_nat_type_t dst_nat;
+    pds_nat_type_t src_nat_type;
+    ip_addr_t      dst_nat_ip;
 } pds_nat_action_t;
 
 /// \brief    VPC key

@@ -204,6 +204,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid);
             break;
 
+#if 0
         case PDS_NH_TYPE_NAT:
             rtable->routes[i].nhid =
                 PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_NAT,
@@ -214,6 +215,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
             break;
+#endif
 
         case PDS_NH_TYPE_VNIC:
             vnic = vnic_db()->find(&spec->routes[i].vnic);

@@ -106,7 +106,7 @@ ippfx_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
     ip_prefix_t ippfx;
     ip_addr_t lo_addr;
     ip_addr_t hi_addr;
-    
+
     ippfx_proto_spec_to_api_spec(&ippfx, in_ippfx);
     ip_prefix_ip_low(&ippfx, &lo_addr);
     ip_prefix_ip_high(&ippfx, &hi_addr);
@@ -2216,8 +2216,29 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
             api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
             break;
         }
+        if (proto_route.has_nataction()) {
+            auto nat_action = proto_route.nataction();
+            switch (nat_action.srcnataction()) {
+            case types::NAT_ACTION_STATIC:
+                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_STATIC;
+                break;
+            case types::NAT_ACTION_NAPT:
+                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_DYNAMIC_NAPT;
+                break;
+            case types::NAT_ACTION_NONE:
+            default:
+                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NONE;
+                break;
+            }
+            if (nat_action.has_dstnatip()) {
+                ipaddr_proto_spec_to_api_spec(
+                    &api_spec->routes[i].nat.dst_nat_ip, nat_action.dstnatip());
+            } else {
+                memset(&api_spec->routes[i].nat.dst_nat_ip, 0,
+                       sizeof(api_spec->routes[i].nat.dst_nat_ip));
+            }
+        }
     }
-
     return SDK_RET_OK;
 }
 
@@ -2262,6 +2283,23 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         default:
             // blackhole nexthop
             break;
+        }
+        switch (api_spec->routes[i].nat.src_nat_type) {
+        case PDS_NAT_TYPE_STATIC:
+            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_STATIC);
+            break;
+        case PDS_NAT_TYPE_DYNAMIC_NAPT:
+            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NAPT);
+            break;
+        case PDS_NAT_TYPE_NONE:
+        default:
+            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NONE);
+            break;
+        }
+        if (!ip_addr_is_zero(&api_spec->routes[i].nat.dst_nat_ip)) {
+            ipaddr_api_spec_to_proto_spec(
+                route->mutable_nataction()->mutable_dstnatip(),
+                &api_spec->routes[i].nat.dst_nat_ip);
         }
     }
     return;
