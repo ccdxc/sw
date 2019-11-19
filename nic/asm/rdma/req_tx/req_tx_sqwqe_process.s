@@ -467,6 +467,10 @@ frpmr_second_pass:
     //overloading base_va to pass dma_address in 2nd pass
     phvwr       CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, base_va), d.{frpmr.dma_src_address}.dx
     phvwr       CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, num_pt_entries), d.{frpmr.num_pt_entries}
+
+    phvwr       CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, base_va), d.{frpmr.dma_src_address}.dx
+    phvwr       CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, num_pt_entries), d.{frpmr.num_pt_entries}
+
     b           load_frpmr_sqlkey
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, lkey_state_update), 1 //BD-slot
 
