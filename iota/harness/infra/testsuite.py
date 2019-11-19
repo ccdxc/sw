@@ -2,6 +2,7 @@
 import atexit
 import json
 import pdb
+import re
 import time
 import traceback
 
@@ -14,12 +15,12 @@ import iota.harness.infra.testbundle as testbundle
 import iota.harness.infra.testcase as testcase
 import iota.harness.infra.topology as topology
 import iota.harness.infra.logcollector as logcollector
+import iota.harness.infra.core_collector as core_collector
 import iota.harness.infra.utils.utils as utils
 import iota.harness.infra.utils.timeprofiler as timeprofiler
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
-
 
 class TestSuite:
     def __init__(self, spec):
@@ -265,6 +266,13 @@ class TestSuite:
     def IsSkipped(self):
         return self.__skip
 
+    def CollectCores(self):
+        try:
+            destCoreDir = "corefiles/{0}".format(re.sub('[\W]+','_',self.Name()))
+            core_collector.CollectCores(GlobalOptions.testbed_json, destCoreDir, "vm", "vm")
+        except:
+            Logger.debug("failed to collect cores. error was {0}".format(traceback.format_exc()))
+
     def Main(self):
         if self.__skip:
             Logger.debug("Skipping Testsuite: %s due to filters." % self.Name())
@@ -272,6 +280,7 @@ class TestSuite:
 
         atexit.register(logcollector.CollectLogs)
         atexit.register(logcollector.CollectTechSupport,(self.Name()))
+        atexit.register(self.CollectCores)
 
         # Start the testsuite timer
         self.__timer.Start()

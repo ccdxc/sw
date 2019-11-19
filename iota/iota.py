@@ -1,11 +1,13 @@
 #! /usr/bin/python3
-import sys
+import atexit
 import os
 import pdb
-import atexit
+import re
 import signal
 import socket
-
+import subprocess
+import sys
+import traceback
 
 topdir = os.path.dirname(sys.argv[0]) + '/../'
 topdir = os.path.abspath(topdir)
@@ -85,12 +87,34 @@ def __start_server():
     gl_srv_process.Start()
     return
 
+def packageCoresDirectory():
+    Logger.debug("checking for cores in corefiles/")
+    if not os.path.exists("corefiles"):
+        Logger.debug("no corefiles directory found")
+    else:
+        try:
+            files = subprocess.check_output('find corefiles/ -type f -name "*.tgz"', shell=True)
+            files = str(files.decode("utf-8"))
+            if not files:
+                Logger.debug("no corefiles found")
+                return
+            files = re.sub('[\s]+',' ',files)
+            cmd = "tar -zcf all_corefiles.tgz {0}".format(files)
+            msg = "create main corefile tgz with {0}".format(cmd)
+            print(msg)
+            Logger.debug(msg)
+            subprocess.check_call(cmd, stderr=subprocess.PIPE, shell=True)
+            subprocess.check_call("rm -f {0}".format(files), shell=True)
+        except:
+            Logger.debug("failed to process corefiles directory. error was: {0}".format(traceback.format_exc()))
+
 def __exit_cleanup():
     global gl_srv_process
     Logger.debug("ATEXIT: Stopping IOTA Server")
     #gl_srv_process.Stop()
     if glopts.GlobalOptions.dryrun or glopts.GlobalOptions.skip_logs:
         return
+    packageCoresDirectory()
     Logger.info("Saving logs to iota_sanity_logs.tar.gz")
     os.system("%s/iota/scripts/savelogs.sh %s" % (topdir, topdir))
     return
