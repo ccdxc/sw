@@ -49,6 +49,13 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
      (mac_addr)[0] = (mac_uint64 >> 40) & 0xFF;                           \
 }
 
+#define MAC_ADDR_COPY(mac_addr_dst, mac_addr_src)                         \
+{                                                                         \
+     ((uint16_t *)mac_addr_dst)[0] = ((uint16_t *)mac_addr_src)[0];       \
+     ((uint16_t *)mac_addr_dst)[1] = ((uint16_t *)mac_addr_src)[1];       \
+     ((uint16_t *)mac_addr_dst)[2] = ((uint16_t *)mac_addr_src)[2];       \
+}
+
 #define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[0] & 0x1)
 
 static inline void

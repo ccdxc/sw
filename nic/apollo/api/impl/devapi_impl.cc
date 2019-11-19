@@ -63,14 +63,16 @@ devapi_impl::lif_create(lif_info_t *info) {
     spec.pinned_ifidx = info->pinned_uplink_port_num;
     spec.type = info->type;
     spec.vlan_strip_en = info->vlan_strip_en;
+    MAC_ADDR_COPY(spec.mac, info->mac);
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
     }
     ret = lif->create(&spec);
     if (ret == SDK_RET_OK) {
-        PDS_TRACE_DEBUG("Programmed lif %u %s %u",
-                        info->lif_id, info->name, info->type);
+        PDS_TRACE_DEBUG("Programmed lif %u %s %u %s",
+                        info->lif_id, info->name, info->type,
+                        macaddr2str(info->mac));
         lif_impl_db()->insert(lif);
     }
     return ret;

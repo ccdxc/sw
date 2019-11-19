@@ -30,6 +30,7 @@ namespace psp {
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #endif
 
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
@@ -50,24 +51,6 @@ using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
 #define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
-
-// ----------------------------------------------------------------------------
-// Mac address to string
-// ----------------------------------------------------------------------------
-char *
-macaddr2str (mac_t mac_addr)
-{
-    static char       macaddr_str[4][20];
-    static uint8_t    macaddr_str_next = 0;
-    char              *buf;
-    uint8_t           *mac_byte = (uint8_t *)&mac_addr;
-
-    buf = macaddr_str[macaddr_str_next++ & 0x3];
-    snprintf(buf, 20, "%02x:%02x:%02x:%02x:%02x:%02x",
-             mac_byte[5], mac_byte[4], mac_byte[3],
-             mac_byte[2], mac_byte[1], mac_byte[0]);
-    return buf;
-}
 
 sdk::lib::indexer *EthLif::fltr_allocator = sdk::lib::indexer::factory(4096);
 
@@ -157,6 +140,7 @@ EthLif::EthLif(Eth *dev,
     hal_lif_info_.enable_rdma = spec->enable_rdma;
     hal_lif_info_.tx_sched_table_offset = INVALID_INDEXER_INDEX;
     hal_lif_info_.tx_sched_num_table_entries = 0;
+    MAC_UINT64_TO_ADDR(hal_lif_info_.mac, spec->mac_addr);
     // For debugging: by default enables rdma sniffer on all host ifs
 #if 0
     if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {
@@ -224,7 +208,7 @@ EthLif::EthLif(Eth *dev,
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}",
                  spec->name,
                  hal_lif_info_.lif_id,
-                 macaddr2str(spec->mac_addr),
+                 mac2str(spec->mac_addr),
                  spec->uplink_port_num);
 
     // Stats
@@ -1994,7 +1978,7 @@ EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
             mac_addr = be64toh(spec->mac_addr) >> (8 * sizeof(spec->mac_addr) - 8 * sizeof(uint8_t[6]));
             memcpy((uint8_t *)comp->mac, (uint8_t *)&mac_addr, sizeof(comp->mac));
             NIC_LOG_DEBUG("{}: station mac address {}", hal_lif_info_.name,
-                macaddr2str(mac_addr));
+                mac2str(mac_addr));
             break;
         case IONIC_LIF_ATTR_FEATURES:
             break;
@@ -2343,12 +2327,12 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         mac_addr = be64toh(mac_addr) >> (8 * sizeof(mac_addr) - 8 * sizeof(cmd->mac.addr));
 
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_MAC mac {}",
-            hal_lif_info_.name, macaddr2str(mac_addr));
+            hal_lif_info_.name, mac2str(mac_addr));
 
         ret = dev_api->lif_add_mac(hal_lif_info_.lif_id, mac_addr);
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Mac:{} ret: {}",
-                         hal_lif_info_.name, macaddr2str(mac_addr), ret);
+                         hal_lif_info_.name, mac2str(mac_addr), ret);
             if (ret == sdk::SDK_RET_ENTRY_EXISTS)
                 return (IONIC_RC_EEXIST);
             else
@@ -2388,13 +2372,13 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         vlan = cmd->mac_vlan.vlan;
 
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
-                      hal_lif_info_.name, macaddr2str(mac_addr), vlan);
+                      hal_lif_info_.name, mac2str(mac_addr), vlan);
 
         ret = dev_api->lif_add_macvlan(hal_lif_info_.lif_id,
                                        mac_addr, vlan);
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Mac-Vlan:{}-{}. ret: {}", hal_lif_info_.name,
-                         macaddr2str(mac_addr), vlan, ret);
+                         mac2str(mac_addr), vlan, ret);
             if (ret == sdk::SDK_RET_ENTRY_EXISTS)
                 return (IONIC_RC_EEXIST);
             else
@@ -2437,7 +2421,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         mac_addr = mac_addrs[cmd->filter_id];
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC mac {}",
                       hal_lif_info_.name,
-                      macaddr2str(mac_addr));
+                      mac2str(mac_addr));
         ret = dev_api->lif_del_mac(hal_lif_info_.lif_id, mac_addr);
         mac_addrs.erase(cmd->filter_id);
     } else if (vlans.find(cmd->filter_id) != vlans.end()) {
@@ -2451,7 +2435,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         mac_addr = std::get<0>(mac_vlan);
         vlan = std::get<1>(mac_vlan);
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
-                     hal_lif_info_.name, macaddr2str(mac_addr), vlan);
+                     hal_lif_info_.name, mac2str(mac_addr), vlan);
         ret = dev_api->lif_del_macvlan(hal_lif_info_.lif_id, mac_addr, vlan);
         mac_vlans.erase(cmd->filter_id);
     } else {
