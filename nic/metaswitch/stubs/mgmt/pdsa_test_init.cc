@@ -2,16 +2,24 @@
 // Purpose: Temporary init sequence for metaswitch 
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 
 NBB_VOID
 pdsa_test_init ()
 {
     // Local variables
     NBB_ULONG       test_correlator = 0x100;
-    pdsa_config_t   conf;
+    pdsa_config_t   conf = {0};
 
     NBB_TRC_ENTRY ("pdsa_test_init");
-    NBB_MEMSET (&conf, 0, sizeof (pdsa_config_t));
+    
+    // TODO: Temporary init code to parse json config file
+    if (parse_json_config(&conf) < 0) {
+        fprintf(stderr, "parse_json_config error!\n");
+        exit(1);
+    }
 
     /***************************************************************************/
     /* Get the lock for the SHARED LOCAL data.                                 */
@@ -60,7 +68,7 @@ pdsa_test_init ()
 
     // limInterfaceCfgTable - NODE_A_EVPN_IF_INDEX
     pdsa_test_row_update_lim_if_cfg (&conf,
-                                     EVPN_IF_INDEX,
+                                     conf.g_evpn_if_index,
                                      AMB_TRUE,
                                      AMB_TRISTATE_TRUE,
                                      AMB_TRISTATE_TRUE,

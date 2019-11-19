@@ -2,6 +2,7 @@
 // Purpose: Helper APIs for metaswitch LIM stub programming 
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "lim_mgmt_if.h"
 
 // Fill limInterfaceCfgTable: AMB_LIM_IF_CFG
@@ -371,10 +372,10 @@ pdsa_test_row_update_lim_if_addr (pdsa_config_t *conf)
     conf->data_len      = sizeof (AMB_LIM_L3_IF_ADDR);
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
-    conf->if_index      = EVPN_IF_INDEX;
+    conf->if_index      = conf->g_evpn_if_index;
     conf->prefix_len    = 24;
     
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP, &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_lim_l3_if_addr); 

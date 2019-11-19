@@ -158,7 +158,7 @@ pdsa_test_row_update_l2f_mac_ip_cfg (pdsa_config_t *conf)
     conf->bd_sub_index  = 0;
     conf->if_index      = 7;
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_AC_IP, &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ac_ip, &conf->ip_addr);
     NBB_MEMCPY (conf->mac_address, mac_addr, AMB_MAC_ADDR_LEN);
 
     // Convert to row_update and send

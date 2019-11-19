@@ -80,6 +80,12 @@ typedef struct pdsa_config_s {
     NBB_BYTE    route_distinguisher[AMB_EVPN_EXT_COMM_LENGTH];
     ip_addr_t   ip_addr;
     ip_addr_t   remote_addr;
+    // TODO: Temporary for init purpose
+    unsigned int g_node_a_ip;
+    unsigned int g_node_b_ip;
+    unsigned int g_node_a_ac_ip;
+    unsigned int g_node_b_ac_ip;
+    unsigned int g_evpn_if_index;
 }__PACK__ pdsa_config_t;
 
 #endif /*__PDSA_CONFIG_HPP__*/

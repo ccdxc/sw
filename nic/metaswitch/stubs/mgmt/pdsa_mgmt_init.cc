@@ -13,7 +13,8 @@ using namespace std;
 
 extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
 
-void nbase_init()
+static void
+nbase_init()
 {
     NBB_BOOL nbase_init = FALSE;
 

@@ -2,6 +2,7 @@
 //Purpose: Helper APIs for metaswitch BGP-RM/NM components
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "qb0mib.h"
 
 // Fill bgpRmEntTable: AMB_BGP_RM_ENT
@@ -447,7 +448,7 @@ pdsa_test_row_update_bgp_rm (pdsa_config_t *conf)
     conf->restart_supported = AMB_TRUE;
     conf->local_as          = 1;
     conf->admin_status      = AMB_BGP_ADMIN_STATUS_UP;
-    conf->router_id         = NODE_A_IP;
+    conf->router_id         = conf->g_node_a_ip;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_rm); 
@@ -514,7 +515,7 @@ pdsa_test_row_update_bgp_nm_listen (pdsa_config_t *conf)
     conf->sck_index     = 1;
     conf->admin_status  = AMB_BGP_ADMIN_STATUS_UP;
     conf->row_status    = AMB_ROW_ACTIVE;
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip,  &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_nm_listen); 
@@ -569,8 +570,8 @@ pdsa_test_row_update_bgp_peer (pdsa_config_t *conf)
     conf->local_nm              = 1;
     conf->config_passive        = AMB_FALSE;
     conf->admin_status          = AMB_BGP_ADMIN_STATUS_UP;
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_B_IP,  &conf->remote_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip,  &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_b_ip,  &conf->remote_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_peer); 
@@ -596,8 +597,8 @@ pdsa_test_row_update_bgp_peer_afi_safi (pdsa_config_t *conf,
     conf->local_addr_scope_id   = 0;
     conf->afi                   = afi;
     conf->safi                  = safi;
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP,  &conf->ip_addr);
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_B_IP,  &conf->remote_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip,  &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_b_ip,  &conf->remote_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_peer_afi_safi); 

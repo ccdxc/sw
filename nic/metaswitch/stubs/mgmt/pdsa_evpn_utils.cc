@@ -307,7 +307,7 @@ pdsa_test_row_update_evpn (pdsa_config_t *conf)
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (NODE_A_IP, &conf->ip_addr);
+    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_ent); 

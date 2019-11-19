@@ -3,7 +3,7 @@
 // Mock stub init 
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/pdsa_stub_init.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 
 namespace pdsa_stub {
 int init() 

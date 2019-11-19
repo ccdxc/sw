@@ -12,17 +12,11 @@
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
-#include "nic/metaswitch/pdsa_stub_init.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/test/utils/base.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <iostream>
 #include <fstream>
-
-#define EVPN_CONFIG_FILE_PATH  "/sw/nic/metaswitch/config/"
-using boost::property_tree::ptree;
-using namespace std;
 
 /*------- Test class hierarchy and dependencies -----
  *
@@ -109,56 +103,13 @@ TEST_F(pdsa_hals_test, vxlan_test) {
 // Entry point
 //----------------------------------------------------------------------------
 
-unsigned int g_node_a_ip;
-unsigned int g_node_b_ip;
-unsigned int g_node_a_ac_ip;
-unsigned int g_node_b_ac_ip;
-unsigned int g_evpn_if_index;
-
 int
 main (int argc, char **argv)
 {
-    ptree       pt;
-    std::string value;
-    std::string cfg_file;
-    std::string cfg_path = EVPN_CONFIG_FILE_PATH;
-
-    if (argc != 1 && argc != 2)
-    {
-        cout << "Error! Invalid Command Line Arguments. Usage:\n";
-        cout << "pdsa-binary <json config file name>\n";
-        return 0;
-    }
-
+    // Call the mock pds init
+    pds_init(nullptr);
+    // This will start nbase
     pdsa_stub::init();
-    if (argc == 2) {
-        // Get config file
-        cfg_file = cfg_path + argv[1];
-        std::ifstream json_cfg (cfg_file.c_str());
-        if (!json_cfg)
-        {
-            cout << "File Error! Cannot open configuration file " <<cfg_file<<endl;
-            return -1;
-        }
-
-        //read config
-        read_json (json_cfg, pt);
-        value           = pt.get <std::string>("local.ip","");
-        g_node_a_ip     = inet_network (value.c_str());
-        value           = pt.get <std::string>("local.ac-ip","");
-        g_node_a_ac_ip  = inet_network (value.c_str());
-        value           = pt.get <std::string>("remote.ip","");
-        g_node_b_ip     = inet_network (value.c_str());
-        value           = pt.get <std::string>("remote.ac-ip","");
-        g_node_b_ac_ip  = inet_network (value.c_str());
-        value           = pt.get <std::string>("if-index","");
-        g_evpn_if_index = strtol (value.c_str(),NULL, 0);
-
-        pds_init(nullptr);
-        if(!pdsa_stub_mgmt_init()) {
-            return -1;
-        }
-    }
 
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);
