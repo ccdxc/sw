@@ -363,7 +363,6 @@ compress_poll(struct service_info *svc_info)
 
 	volatile struct cpdc_status_desc *status_desc;
 	volatile uint64_t *cp_pad_cpl_addr;
-	uint64_t start_ts, cur_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -391,8 +390,6 @@ compress_poll(struct service_info *svc_info)
 	}
 
 	cp_pad_cpl_addr = cpdc_cp_pad_cpl_addr_get(status_desc);
-	cur_ts = osal_get_clock_nsec();
-	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
 		/* poll on padding opaque tag updated by P4+ */
 		if (*cp_pad_cpl_addr == CPDC_PAD_STATUS_DATA) {
@@ -400,7 +397,7 @@ compress_poll(struct service_info *svc_info)
 			break;
 		}
 
-		if (svc_poll_expiry_check(start_ts, cur_ts)) {
+		if (svc_poll_expiry_check(svc_info)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("cp/pad poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),
@@ -424,7 +421,6 @@ compress_poll(struct service_info *svc_info)
 		}
 
 		osal_yield();
-		cur_ts = osal_get_clock_nsec();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);

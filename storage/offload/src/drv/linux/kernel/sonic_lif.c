@@ -65,6 +65,8 @@ sonic_lif_reset(struct lif *lif);
 
 static void
 sonic_lif_per_core_resource_pre_reset(struct per_core_resource *res);
+static void
+sonic_lif_per_core_resource_reset(struct per_core_resource *res);
 
 static void sonic_lif_reset_ctl_work(struct lif *lif,
 				     enum reset_ctl_state ctl_state);
@@ -144,6 +146,14 @@ sonic_lif_deferred_dequeue(struct deferred *def,
 	spin_unlock_bh(&def->lock);
 }
 
+/* Stop reset_ctl state machine.
+ * No recovery possible until module reload.
+ */
+static void sonic_lif_reset_ctl_stop(struct lif *lif)
+{
+	atomic_set(&lif->reset_ctl.state, RESET_CTL_ST_SHUTDOWN);
+}
+
 static void sonic_lif_deferred_cancel(struct lif *lif)
 {
 	struct deferred *def = &lif->deferred;
@@ -151,6 +161,7 @@ static void sonic_lif_deferred_cancel(struct lif *lif)
 	struct deferred_work *w_next;
 
 	if (def->wq) {
+		sonic_lif_reset_ctl_stop(lif);
 		cancel_delayed_work_sync(&def->dwork);
 		spin_lock_bh(&def->lock);
 		list_for_each_entry_safe(w, w_next, &def->list, list) {
@@ -1027,7 +1038,8 @@ static const struct ctl_state reset_ctl_state_machine[RESET_CTL_ST_MAX] = {
 	[RESET_CTL_ST_IDLE] = { "IDLE", RESET_CTL_ST_REINIT, RESET_CTL_ST_PRE_RESET },
 	[RESET_CTL_ST_PRE_RESET] = { "PRE_RESET", RESET_CTL_ST_IDLE, RESET_CTL_ST_RESET },
 	[RESET_CTL_ST_RESET] = { "RESET", RESET_CTL_ST_PRE_RESET, RESET_CTL_ST_REINIT },
-	[RESET_CTL_ST_REINIT] = { "REINIT", RESET_CTL_ST_RESET, RESET_CTL_ST_IDLE }
+	[RESET_CTL_ST_REINIT] = { "REINIT", RESET_CTL_ST_RESET, RESET_CTL_ST_IDLE },
+	[RESET_CTL_ST_SHUTDOWN] = { "SHUTDOWN", RESET_CTL_ST_SHUTDOWN, RESET_CTL_ST_IDLE }
 };
 
 /* Transition state atomically */
@@ -1073,6 +1085,12 @@ static void sonic_lif_reset_ctl_work(struct lif *lif,
 {
 	int state;
 	int err = 0;
+
+	if (sonic_get_lif() != lif) {
+		OSAL_LOG_WARN("invalid LIF during reset_ctl state %u", ctl_state);
+		return;
+	}
+
 
 	state = atomic_read(&lif->reset_ctl.state);
 	if (ctl_state >= RESET_CTL_ST_MAX || state != ctl_state) {
@@ -1154,7 +1172,9 @@ int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg)
 	atomic_set(&lif->reset_ctl.suspect_info_count, 0);
 
 	err = sonic_lif_hang_notify(lif);
-	OSAL_LOG_DEBUG("ran sonic_lif_hang_notify");
+	OSAL_LOG_DEBUG("ran sonic_lif_hang_notify, err %d", err);
+	if (err)
+		return err;
 
 	/* Allow small amount of time for pending notify msgs */
 	msleep(500);
@@ -1208,8 +1228,16 @@ bool sonic_lif_reset_addr_is_suspect(struct lif *lif, void *addr)
 int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg)
 {
 	int err;
+	uint32_t i;
+	struct per_core_resource *res;
 
 	err = sonic_lif_reset(lif);
+	if (err)
+		return err;
+
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_lif_per_core_resource_reset(res);
+	}
 
 	return err;
 }
@@ -1225,6 +1253,13 @@ int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg)
 			(osal_get_clock_nsec() - lif->reset_ctl.work.timestamp) /
 			(uint64_t) OSAL_NSEC_PER_MSEC);
 	return err;
+}
+
+int sonic_lif_reset_ctl_shutdown(struct lif *lif, void *cb_arg)
+{
+	OSAL_LOG_NOTICE("LIF reset_ctl shutdown");
+
+	return 0;
 }
 
 bool sonic_lif_reset_ctl_pending(struct lif *lif)
@@ -1258,6 +1293,11 @@ sonic_sysctl_stat_handler(SYSCTL_HANDLER_ARGS)
 	uint32_t i;
 	struct per_core_resource *res;
 
+	if (sonic_get_lif() != lif) {
+		OSAL_LOG_DEBUG("invalid LIF in sonic stat handler");
+		return ENOENT;
+	}
+
 	LIF_FOR_EACH_PC_RES(lif, i, res) {
 		stat_val += PNSO_STAT_READ_BY_ID(&res->api_stats, stat_id);
 	}
@@ -1269,9 +1309,16 @@ static int
 sonic_sysctl_lif_reset_handler(SYSCTL_HANDLER_ARGS)
 {
 	struct lif *lif = oidp->oid_arg1;
-	struct device *dev = lif->sonic->dev;
+	struct device *dev;
 	int err;
-	int8_t reset_sense = lif->reset_ctl.sense;
+	int8_t reset_sense;
+
+	if (sonic_get_lif() != lif) {
+		OSAL_LOG_WARN("invalid LIF in sonic reset handler");
+		return ENOENT;
+	}
+	dev = lif->sonic->dev;
+	reset_sense = lif->reset_ctl.sense;
 
 	err = sysctl_handle_8(oidp, &reset_sense, 0, req);
 	if (err) {
@@ -1325,6 +1372,8 @@ static int sonic_sysctl_init(struct lif *lif)
 				     sonic_lif_reset_ctl_reset, lif);
 	sonic_lif_reset_ctl_register(lif, RESET_CTL_ST_REINIT,
 				     sonic_lif_reset_ctl_reinit, lif);
+	sonic_lif_reset_ctl_register(lif, RESET_CTL_ST_SHUTDOWN,
+				     sonic_lif_reset_ctl_shutdown, lif);
 
 	return 0;
 }
@@ -1401,6 +1450,12 @@ static void sonic_ev_intr_deinit(struct per_core_resource *res)
 }
 
 static void sonic_lif_per_core_resource_pre_reset(struct per_core_resource *res)
+{
+	/* Nothing to do, for now */
+	return;
+}
+
+static void sonic_lif_per_core_resource_reset(struct per_core_resource *res)
 {
 	if (!res)
 		return;

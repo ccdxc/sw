@@ -128,11 +128,7 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 
 bool buffer_list_iter_more_data(struct buffer_list_iter *iter);
 
-uint64_t
-svc_poll_expiry_start(const struct service_info *svc_info,
-		      uint64_t cur_ts);
-
-bool svc_poll_expiry_check(uint64_t start_ts, uint64_t cur_ts);
+bool svc_poll_expiry_check(struct service_info *svc_info);
 
 pnso_error_t
 svc_seq_desc_setup(struct service_info *svc_info,
@@ -201,12 +197,15 @@ pnso_lif_reset_ctl_start(void)
 }
 
 static inline int
-pnso_lif_reset_ctl_pre_reset_cb(struct lif *lif, void *cb_arg)
+pnso_lif_reset_ctl_reset_cb(struct lif *lif, void *cb_arg)
 {
 	int err;
 
-	err = sonic_lif_reset_ctl_pre_reset(lif, cb_arg);
-	pnso_pre_reset();
+	err = sonic_lif_reset_ctl_reset(lif, cb_arg);
+	if (err)
+		return err;
+
+	pnso_lif_reset(lif);
 
 	return err;
 }

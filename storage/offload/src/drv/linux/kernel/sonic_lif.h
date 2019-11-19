@@ -68,6 +68,7 @@ enum reset_ctl_state {
 	RESET_CTL_ST_PRE_RESET,
 	RESET_CTL_ST_RESET,
 	RESET_CTL_ST_REINIT,
+	RESET_CTL_ST_SHUTDOWN,
 
 	RESET_CTL_ST_MAX /* must be last */
 };
@@ -176,6 +177,7 @@ int sonic_lif_reset_ctl_start(struct lif *lif);
 int sonic_lif_reset_ctl_pre_reset(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_reset(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_reinit(struct lif *lif, void *cb_arg);
+int sonic_lif_reset_ctl_shutdown(struct lif *lif, void *cb_arg);
 int sonic_lif_reset_ctl_end(struct lif *lif, void *cb_arg);
 bool sonic_lif_reset_ctl_pending(struct lif *lif);
 bool sonic_lif_reset_addr_is_suspect(struct lif *lif, void *addr);

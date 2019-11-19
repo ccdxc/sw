@@ -499,7 +499,6 @@ crypto_poll(struct service_info *svc_info)
 
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
-	uint64_t start_ts, cur_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -523,15 +522,12 @@ crypto_poll(struct service_info *svc_info)
 	cpl_data = chn_service_type_is_decrypt(svc_info) ?
 		   CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
-	/* sync-mode ... */
-	cur_ts = osal_get_clock_nsec();
-	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		if (svc_poll_expiry_check(start_ts, cur_ts)) {
+		if (svc_poll_expiry_check(svc_info)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
 					svc_get_type_str(svc_info->si_type),
@@ -553,7 +549,6 @@ crypto_poll(struct service_info *svc_info)
 		}
 
 		osal_yield();
-		cur_ts = osal_get_clock_nsec();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);

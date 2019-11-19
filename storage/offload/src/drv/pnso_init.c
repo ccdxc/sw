@@ -38,7 +38,7 @@ pc_res_init(struct pc_res_init_params *pc_init,
 static void
 pc_res_deinit(struct per_core_resource *pcr);
 static void
-pc_res_pre_reset(struct per_core_resource *pcr);
+pc_res_reset(struct per_core_resource *pcr);
 
 static pnso_error_t
 pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
@@ -157,8 +157,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	}
 
 	/* Register callbacks for LIF reset */
-	pnso_lif_reset_ctl_register(RESET_CTL_ST_PRE_RESET,
-				    pnso_lif_reset_ctl_pre_reset_cb,
+	pnso_lif_reset_ctl_register(RESET_CTL_ST_RESET,
+				    pnso_lif_reset_ctl_reset_cb,
 				    NULL);
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
@@ -271,9 +271,8 @@ pnso_deinit(void)
 }
 
 void
-pnso_pre_reset(void)
+pnso_lif_reset(struct lif *lif)
 {
-	struct lif			*lif = sonic_get_lif();
 	struct per_core_resource	*pcr;
 	uint32_t			num_pc_res;
 	uint32_t			i;
@@ -285,7 +284,7 @@ pnso_pre_reset(void)
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		pc_res_pre_reset(pcr);
+		pc_res_reset(pcr);
 	}
 }
 
@@ -352,7 +351,7 @@ pc_res_deinit(struct per_core_resource *pcr)
 }
 
 static void
-pc_res_pre_reset(struct per_core_resource *pcr)
+pc_res_reset(struct per_core_resource *pcr)
 {
 	sonic_reserve_exclusive_per_core_res(pcr);
 

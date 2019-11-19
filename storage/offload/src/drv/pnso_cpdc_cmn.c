@@ -21,12 +21,10 @@
 #include "pnso_seq.h"
 
 pnso_error_t
-cpdc_poll(const struct service_info *svc_info,
+cpdc_poll(struct service_info *svc_info,
 		volatile struct cpdc_status_desc *status_desc)
 {
 	pnso_error_t err;
-
-	uint64_t start_ts, cur_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -34,14 +32,12 @@ cpdc_poll(const struct service_info *svc_info,
 		status_desc =
 			(struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
-	cur_ts = osal_get_clock_nsec();
-	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		if (svc_poll_expiry_check(start_ts, cur_ts)) {
+		if (svc_poll_expiry_check(svc_info)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),
@@ -63,7 +59,6 @@ cpdc_poll(const struct service_info *svc_info,
 		}
 
 		osal_yield();
-		cur_ts = osal_get_clock_nsec();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);
