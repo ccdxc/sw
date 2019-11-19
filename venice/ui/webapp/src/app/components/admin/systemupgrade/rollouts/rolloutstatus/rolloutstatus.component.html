@@ -25,9 +25,13 @@
             {{selectedRollout?.spec["scheduled-start-time"] | PrettyDate }}</div>
         </div>
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label">Last Modified: </div>
-          <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.meta["mod-time"] | PrettyDate }}</div>
+          <div class="rolloutstatus-summary-panel-content-label"> Scheduled End Time: </div>
+          <div class="rolloutstatus-summary-panel-content-value"
+               *ngIf="selectedRollout?.spec['scheduled-end-time']">
+            {{selectedRollout?.spec["scheduled-end-time"] | PrettyDate }}</div>
+          <div class="rolloutstatus-summary-panel-content-value"
+               *ngIf="!selectedRollout?.spec['scheduled-end-time']">
+            Run until task completed </div>
         </div>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
@@ -35,6 +39,11 @@
           <div class="rolloutstatus-summary-panel-content-label"> Version: </div>
           <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.version }}
           </div>
+        </div>
+        <div fxFlex="50" fxLayout="row">
+          <div class="rolloutstatus-summary-panel-content-label">Last Modified: </div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.meta["mod-time"] | PrettyDate }}</div>
         </div>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
@@ -52,6 +61,14 @@
       <!-- If rollout does not involve Distributed Services Cards, we don't want to display rollout NIC configures -->
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
+          <div class="rolloutstatus-summary-panel-content-label"> Continuously retry failed DSCs:
+          </div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.spec.retry }}</div>
+        </div>
+      </div>
+      <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
+        <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Max DSC Updated In Parallel:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
@@ -64,6 +81,7 @@
             {{selectedRollout?.spec["max-nic-failures-before-abort"] }}</div>
         </div>
       </div>
+
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Upgrade DSCs by Label?:

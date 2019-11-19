@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Input, Output, OnChanges, SimpleChanges, ViewChildren, QueryList, ChangeDetectorRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray, ValidatorFn, FormGroup } from '@angular/forms';
 import { BaseComponent } from '@components/base/base.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
@@ -13,6 +13,7 @@ import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { required } from '@sdk/v1/utils/validators';
 import { Utility } from '@common/Utility';
+import { Checkbox } from 'primeng/checkbox';
 import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
 import { RolloutUtil } from '../RolloutUtil';
 import { SearchExpression } from '@app/components/search/index.ts';
@@ -69,6 +70,7 @@ export class RolloutOrder {
   encapsulation: ViewEncapsulation.None,
 })
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
+  @ViewChild('checkboxSetDuration') checkboxSetDuration: Checkbox;
   orders: RolloutOrder[] = [];
   repeaterList: RepeaterItem[] = [];
   newRollout: RolloutRollout;
@@ -86,6 +88,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   minDate: Date;
 
+  validationMessage: string = null;
+
   @Input() isInline: boolean = false;
   @Input() selectedRolloutData: IRolloutRollout;
   @Input() existingRollouts: RolloutRollout[] = [];
@@ -94,6 +98,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   rolloutNowcheck: boolean = false;
+  rolloutDurationcheck: boolean = false;
+
   versiondescription: string = '';
 
   bodyicon: any = {
@@ -132,7 +138,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     // to prevent app-repeater from stuttering
     this.repeaterAnimationEnabled = false;
     setTimeout(() => {
-    this.repeaterAnimationEnabled = true;
+      this.repeaterAnimationEnabled = true;
     }, 500);
   }
 
@@ -203,11 +209,16 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (!this.isInline) {  // create mode
       this.newRollout = new RolloutRollout();
       this.newRollout.kind = 'rollout';
-      const today = new Date().getTime() + 300 * 1000; // VS-331 set default time. Now + 5 min
-      this.newRollout.spec['scheduled-start-time'] = new Date(today);
-      this.newRollout.setFormGroupValuesToBeModelValues();
+      const startTime = this.computeDefaultStartTime();
+      this.newRollout.spec['scheduled-start-time'] = new Date(startTime);
+      const endTime = startTime + 1800 * 1000; // set default 30 minutes rollout duration.
+      this.newRollout.spec['scheduled-end-time'] = null; // new Date(endTime);
       this.newRollout.$formGroup.get(['spec', 'suspend']).disable();
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).disable();
+      this.newRollout.$formGroup.get(['spec', 'retry']).setValue(false);
+      this.newRollout.$formGroup.get(['spec', 'retry']).disable();
+      this.newRollout.setFormGroupValuesToBeModelValues();
     } else {   // edit mode
       const myrollout: IRolloutRollout = Utility.getLodash().cloneDeep(this.selectedRolloutData);
       myrollout.spec['scheduled-start-time'] = new Date(myrollout.spec['scheduled-start-time']);
@@ -228,6 +239,24 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     }
   }
 
+  computeDefaultStartTime(): number {
+    const startTime = new Date().getTime() + 300 * 1000; // VS-331 set default time. Now + 5 min
+    return startTime;
+  }
+
+  computeDefaultEndTime() {
+    if (!this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value) {
+      // when end-time is not set, we compute the end-time
+      const startTime = (this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value) ? this.computeDefaultStartTime() : this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value;
+      const endTime = this.computeDefaultEndTimeByStartTime(startTime);
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).setValue(new Date(endTime));
+    }
+  }
+
+  computeDefaultEndTimeByStartTime(startTime: number): number {
+    return startTime + 1800 * 1000; // set default 30 minutes rollout duration.
+  }
+
 
   ngAfterViewInit() {
     if (!this.isInline) {
@@ -239,6 +268,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         {
           cssClass: 'global-button-primary newrollout-toolbar-button',
           text: 'SAVE ROLLOUT',
+          genTooltip: () => this.getTooltip(),
           callback: () => {
             this.addRollout();
           },
@@ -254,6 +284,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       ];
       this.controllerService.setToolbarData(newToolbarData);
     }
+  }
+
+  getTooltip(): string {
+    return Utility.isEmpty(this.validationMessage) ? 'Ready to save rollout' : this.validationMessage;
   }
 
   isRolloutScheduleTimeValid(): ValidatorFn {
@@ -278,42 +312,110 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return this.orders.map(x => x.data);
   }
 
+  /**
+   * Input validation logic
+   * 1. meta.name is required
+   * 2. spec.version is required
+   * 3. if DSC retry is checked, both end-time and max-failure inputs are required
+   * 4. check DSC constraints
+   * 5. start-time < end-time and the duration should reasonable.
+   *
+   */
   isAllInputsValidated(): boolean {
-    if (this.newRollout.$formGroup['dsc-must-match-constraint'] && this.countMatchedNICs() !== 0) {
+    this.validationMessage = null;
+    if (!this.newRollout || !this.newRollout.$formGroup) {
       return false;
     }
-    if (!this.newRollout || !this.newRollout.$formGroup) {
+    if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
+      this.validationMessage = 'Rollout name is required.';
+      return false;
+    }
+    if (this.newRollout.$formGroup['dsc-must-match-constraint'] && this.countMatchedNICs() !== 0) {
+      this.validationMessage = 'No matching DSCs were found for the given constraints.';
+      return false;
+    }
+    if (!this.isRetryEndTimeValueCorrect()) {
+      this.validationMessage = 'An end time is required when "retry failed DSCs" is true.';
       return false;
     }
     if (this.newRollout.$formGroup.get(['spec', 'dsc-must-match-constraint']).value) {
 
       const orders = this.getOrderConstraints();
-      for ( let ix = 0; ix < orders.length; ix++) {
+      for (let ix = 0; ix < orders.length; ix++) {
         const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders[ix].value);
-        if  (repeaterSearchExpression.length === 0) {
+        if (repeaterSearchExpression.length === 0) {
+          this.validationMessage = 'An end time is required when "retry failed DSCs" is true.';
           return false;
         } else {
           for (let i = 0; i < repeaterSearchExpression.length; i++) {
-            if (Utility.isEmpty(repeaterSearchExpression[i].key ) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
+            if (Utility.isEmpty(repeaterSearchExpression[i].key) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
+              this.validationMessage = 'DSC constraint has input errors';
               return false;
             }
           }
         }
       }
     }
-    if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
+    if (!this.isStartTimeEndTimeValuesCorrect()) {
+      this.validationMessage = 'Start time should be less than end time. Check inputs ';
+      return false;
+    }
+    const diff = this.computeDuration();
+    if (diff !== null && diff < 30) {
+      this.validationMessage = 'Rollout duration should be at least 30 minutes.';
       return false;
     }
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'version']).value)) {
+      this.validationMessage = 'Must select rollout version';
       return false;
-    }
-    if (!this.rolloutNowcheck) {
-      if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value)) {
-        return false;
-      }
     }
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newRollout.$formGroup);
     return hasFormGroupError === null;
+  }
+
+  isRetryEndTimeValueCorrect(): boolean {
+    if (this.selectedRolloutNicNodeTypes !== RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
+      // if rollout type is  both-Venice+DSC or DSC only and spec.retry is true, user must specify rollout.spec.end-time
+      if (this.newRollout.$formGroup.get(['spec', 'retry']).value) {
+        if (!this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * When user does not specify rollout duration, end-time input is not required.
+   * Otherwise, we have to make sure end-time is higher than start-time.
+   */
+  isStartTimeEndTimeValuesCorrect(): boolean {
+    if (!this.rolloutDurationcheck) {
+      if (this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value &&
+        this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value >= this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value) {
+        return false;
+      }
+    } else {
+      if (this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value &&
+        this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value &&
+        this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value >= this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  computeDuration(): number {
+    if (this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value &&
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value) {
+      const startTime = this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value;
+      const entTime = this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value;
+      const moment = Utility.getMomentJS();
+      const diff = moment(entTime).diff(moment(startTime), 'minutes');
+      return diff;
+    } else {
+      return null;
+    }
   }
 
   // Example:
@@ -327,6 +429,17 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     return SearchUtil.convertFormArrayToSearchExpression(orderValue.requirements, addMetatag);
   }
 
+  onRolloutDurationCheckChange(checked) {
+    this.rolloutDurationcheck = checked;
+    if (checked) {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).enable();
+      this.computeDefaultEndTime();
+    } else {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).disable();
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).setValue(null);
+    }
+  }
+
   onRolloutNowChange(checked) {
     this.rolloutNowcheck = checked;
     if (checked) {
@@ -334,6 +447,56 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     } else {
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
     }
+  }
+
+  /**
+   * This API serves HTML template
+   * @param checked
+   *
+   * If user check RETRY checkbox, we want user to enter end-time
+   */
+  onRolloutDSCRetryChange(checked) {
+    if (checked) {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).enable();
+      this.rolloutDurationcheck = true;
+      this.computeDefaultEndTime();
+      if (this.checkboxSetDuration) {
+        this.checkboxSetDuration.checked = true;  // set the Duration-check to UI checked state.
+        this.checkboxSetDuration.disabled = true;
+     }
+    } else {
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
+    }
+  }
+
+  /**
+   * This API serves HTML template
+   * Data flow logic:
+   * In UI, display “Max allowed DSCs Failures” before “retry” box.
+   * Retry can only be enabled when “Max allowed DSCs Failures” is non-zero, if “Max Allowed DSCs Failures” is 0, grey out the “retry” box.
+   * If “retry” is enabled and user then changes the max allowed DSCs failures to 0, grey out “retry” box again
+   * @param $event
+   */
+  onMaxAllowDSCFailureChange($event) {
+    if (!!(this.newRollout.$formGroup.get(['spec', 'max-nic-failures-before-abort']).value)) {  // max-nic-failures-before-abort > 0
+      this.newRollout.$formGroup.get(['spec', 'retry']).enable();
+    } else {
+      this.newRollout.$formGroup.get(['spec', 'retry']).setValue(false);
+      this.newRollout.$formGroup.get(['spec', 'retry']).disable();
+    }
+  }
+
+  /**
+   * This API serves html template
+   * When DSC.retry is selected, disable rollout duration checkbox.
+   */
+  isToDisableDurationCheckbox(): boolean {
+    if (this.selectedRolloutNicNodeTypes !== RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
+      if (!!this.newRollout.$formGroup.get(['spec', 'retry']).value) {
+        return true;
+      }
+    }
+    return false;
   }
 
   ngOnDestroy() {
@@ -436,6 +599,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       rollout.spec['dsc-must-match-constraint'] = true;
       rollout.spec['dscs-only'] = false;
       rollout.spec['max-parallel'] = null; // 	VS-769. When rollout is Venice-only, there max-parallel does not apply
+      rollout.spec.retry = false;
     } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY) {
       rollout.spec['dscs-only'] = true;
       this.setSpecOrderConstrains(rollout);
@@ -466,10 +630,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (rollout.spec['dsc-must-match-constraint']) {
       const orderConstraints = [];
       const orders = this.getOrderConstraints();
-      for ( let ix = 0; ix < orders.length; ix++) {
+      for (let ix = 0; ix < orders.length; ix++) {
         const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders[ix].value); // Some Naples will be updated.
         const requirements = labelsSelectorCriteria;
-        const obj = { 'requirements' : requirements};
+        const obj = { 'requirements': requirements };
         orderConstraints.push(obj);
       }
       rollout.spec['order-constraints'] = orderConstraints;
@@ -689,10 +853,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.setOrderSummary(index);
       this.buildDuplicationMap();
       const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(this.orders[index].data.value);
-      if ( repeaterSearchExpression.length > 0 ) {
+      if (repeaterSearchExpression.length > 0) {
         this.orders[index].incomplete = false;
         for (let i = 0; i < repeaterSearchExpression.length; i++) {
-          if (Utility.isEmpty(repeaterSearchExpression[i].key ) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
+          if (Utility.isEmpty(repeaterSearchExpression[i].key) || Utility.isEmpty(repeaterSearchExpression[i].values)) {
             this.orders[index].incomplete = true;
           }
         }
@@ -783,9 +947,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   duplicateMatchTooltip(index) {
     let msg = 'Has common matches with Order';
     msg += this.orders[index].duplicatesWith.length > 1 ? 's ' : ' ';
-    const arr = this.orders[index].duplicatesWith.map( (value) => {
+    const arr = this.orders[index].duplicatesWith.map((value) => {
       return value + 1;
-    } );
+    });
     msg += arr.join(', ');
     return msg;
   }
@@ -796,7 +960,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       const order = this.orders[ix];
       this.orders[ix].duplicatesWith = [];
       for (const match of order.matchedDistributedServiceCards) {
-        if ( !(match in this.duplicateMatchMap) ) {
+        if (!(match in this.duplicateMatchMap)) {
           this.duplicateMatchMap[match] = [ix];
         } else {
           this.orders[ix].duplicatesWith = this.orders[ix].duplicatesWith.concat([...this.duplicateMatchMap[match]]);
@@ -804,7 +968,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         }
       }
       // sort and get unique
-      this.orders[ix].duplicatesWith = this.orders[ix].duplicatesWith.sort().filter(function(el, i, a) {return i === a.indexOf(el); });
+      this.orders[ix].duplicatesWith = this.orders[ix].duplicatesWith.sort().filter(function (el, i, a) { return i === a.indexOf(el); });
     }
   }
 }

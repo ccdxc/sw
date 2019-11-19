@@ -203,3 +203,11 @@ $vertical-gutter: 5px;
 .newrollout-order-template.newrollout-hide-primeng-panel .newrollout-select-panel {
   display: none;
 }
+
+.newrollout .label.newrollout-schedulenow-text.ui-chkbox-label.ui-label-disabled {
+  opacity: 0.5;
+}
+
+.newrollout .newrollout-schedulenow-text.ui-label-disabled {
+  opacity: 0.5;
+}

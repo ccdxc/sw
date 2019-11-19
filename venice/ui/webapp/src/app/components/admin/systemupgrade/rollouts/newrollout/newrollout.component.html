@@ -41,18 +41,35 @@
               </div>
               <div fxFlex></div>
               <div fxFlex="auto" fxLayout="row">
-                <div fxFlex="nogrow" class="newrollout-text">Schedule *:</div>
+                <!--  <div fxFlex="nogrow" class="newrollout-text">Duration:</div>
+                <input fxFlex="200px" formControlName="duration" appErrorTooltip class="newrollout-input-common"
+                  matspellcheck="false" type="text" pInputText placeholder="Until completion"> -->
+                <div fxFlex="nogrow" class="newrollout-text">Start Time *:</div>
                 <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
                             formControlName="scheduled-start-time"
                             appendTo="body" [showIcon]="true" [minDate]="minDate"
                             styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
                 </p-calendar>
                 <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
-                            [value]="rolloutNowcheck" label="Schedule Now"
-                            labelStyleClass="newrollout-schedulenow-text"
+                            [value]="rolloutNowcheck"
+                            label="Schedule Now" labelStyleClass="newrollout-schedulenow-text"
+                            [matTooltip]="'When unchecked, rollout will run until finish.'"
                             (onChange)="onRolloutNowChange($event)"></p-checkbox>
               </div>
-
+              <div fxFlex="auto" fxLayout="row">
+                <div fxFlex="nogrow" class="newrollout-text">End Time:</div>
+                <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
+                            formControlName="scheduled-end-time"
+                            appendTo="body" [showIcon]="true" [minDate]="minDate"
+                            styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
+                </p-calendar>
+                <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                            [disabled]="isToDisableDurationCheckbox()"
+                            [value]="rolloutDurationcheck" #checkboxSetDuration
+                            label="Specify rollout duration"
+                            labelStyleClass="newrollout-schedulenow-text"
+                            (onChange)="onRolloutDurationCheckChange($event)"></p-checkbox>
+              </div>
               <div fxFlex></div>
               <div fxFlex="auto" fxLayout="row">
                 <div fxFlex="nogrow" class="newrollout-text">Strategy:</div>
@@ -89,8 +106,14 @@
                   <input fxFlex="200px" formControlName="max-nic-failures-before-abort"
                          appErrorTooltip
                          class="newrollout-input-common" matspellcheck="false" type="number"
-                         pInputText
+                         pInputText (change)="onMaxAllowDSCFailureChange($event)"
                          placeholder="Max DSC Failures Allowed." min='1' max='2000'>
+                  <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                              formControlName="retry"
+                              label="Continuously retry failed DSCs."
+                              [matTooltip]="'To enable, set Max Allowed DSCs Failure greater than 0. '"
+                              labelStyleClass="newrollout-schedulenow-text"
+                              (onChange)="onRolloutDSCRetryChange($event)"></p-checkbox>
 
                 </div>
 
@@ -99,7 +122,8 @@
                      class="newrollout-NicConstraints-div" fxLayout="row">
                   <mat-slide-toggle formControlName="dsc-must-match-constraint" fxFlex='30px'
                                     class="newrollout-toggle newrollout-fieldtitle"
-                                    (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
+                                    (change)="onNICsConstraintsChange($event)">
+                  </mat-slide-toggle>
                   <div fxFlex="nogrow" class="newrollout-text">Upgrade DSCs by labels</div>
                 </div>
                 <div *ngIf="!enableUpgradeByLabel()" fxFlex="auto"
@@ -108,10 +132,10 @@
                     DSCs with labels found.</div>
                 </div>
                 <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="column"
-                     *ngIf="isToShowNicOrderDiv()" formArrayName="order-constraints">
-                  <app-orderedlist [dataArray]="orders"
-                                   (itemClick)="toggleOrderState($event)" [template]="orderTemplate"
-                                   (orderChange)="onOrderChange()">
+                     *ngIf="isToShowNicOrderDiv()"
+                     formArrayName="order-constraints">
+                  <app-orderedlist [dataArray]="orders" (itemClick)="toggleOrderState($event)"
+                                   [template]="orderTemplate" (orderChange)="onOrderChange()">
                   </app-orderedlist>
                   <!-- #linespace -->
                   <div fxFlex="10px"></div>
@@ -150,11 +174,9 @@
 </ng-template>
 
 <ng-template #orderTemplate let-data="data" let-index="index" let-inEdit="inEdit">
-  <div fxFlex="auto" fxLayout="column"
-       fxLayoutAlign="center none" class="newrollout-order-template"
+  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="center none" class="newrollout-order-template"
        [ngClass]="{'newrollout-hide-primeng-panel': !orders[index].inEdit}">
-    <div class="newrollout-order-header" fxLayout="row"
-         fxLayoutAlign="none center">
+    <div class="newrollout-order-header" fxLayout="row" fxLayoutAlign="none center">
       <div fxLayout="row" fxLayoutAlign="none center">
         <b>Order</b>
       </div>
@@ -164,24 +186,20 @@
       <div fxFlex fxLayoutAlign="end center">
         <div>
           <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
-                    *ngIf="!orders[index].inEdit" [matTooltip]="'Edit'"
-                    (click)="makeOrderEditable(index, $event)"
+                    *ngIf="!orders[index].inEdit"
+                    [matTooltip]="'Edit'" (click)="makeOrderEditable(index, $event)"
                     fxFlex="nogrow">edit
           </mat-icon>
           <mat-icon class="newrollout-order-buttons newrollout-order-hoverbuttons"
                     [matTooltip]="'Delete'"
-                    (click)="deleteOrder(index)"
-                    fxFlex="nogrow">delete
+                    (click)="deleteOrder(index)" fxFlex="nogrow">delete
           </mat-icon>
-          <mat-icon class="global-alert-warning-icon"
-                    *ngIf="orders[index].incomplete"
+          <mat-icon class="global-alert-warning-icon" *ngIf="orders[index].incomplete"
                     [matTooltip]="'Empty Order'"
                     fxFlex="nogrow">error
           </mat-icon>
-          <mat-icon class="global-alert-info-icon"
-                    *ngIf="orders[index].duplicatesWith.length>0"
-                    [matTooltip]="duplicateMatchTooltip(index)"
-                    fxFlex="nogrow">notifications
+          <mat-icon class="global-alert-info-icon" *ngIf="orders[index].duplicatesWith.length>0"
+                    [matTooltip]="duplicateMatchTooltip(index)" fxFlex="nogrow">notifications
           </mat-icon>
         </div>
         <div fxFlex="5px"></div>
@@ -194,14 +212,12 @@
     <div [@.disabled]="!repeaterAnimationEnabled">
       <!-- Not using the default slideInOut as animation has issues with drag/drop
         After dragging and dropping an element into a different spot, angular seems to be adding an element and removing it instantly. This causes an entrance animation to play when a deletion animation should be playing instead -->
-      <div *ngIf="orders[index].inEdit" [@slideInOutLeave]
-           (click)="$event.stopPropagation();">
+      <div *ngIf="orders[index].inEdit" [@slideInOutLeave] (click)="$event.stopPropagation();">
         <app-repeater #repeaters [data]="orderConstraintslabelData"
                       [buildKeyPlaceholder]="buildKeyPlaceholder"
                       [buildValuePlaceholder]="buildValuePlaceholder"
                       [panelStyleClass]="'newrollout-select-panel'"
-                      [formArray]="data.controls.requirements"
-                      [enableMultiSelectFilter]="true"
+                      [formArray]="data.controls.requirements" [enableMultiSelectFilter]="true"
                       [enableMultiSelectAll]="true"
                       (repeaterValues)="repeaterValueChange(index)">
         </app-repeater>
