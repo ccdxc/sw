@@ -34,6 +34,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/test/utils"
@@ -44,6 +45,7 @@ import (
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/objstore/memclient"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -2372,8 +2374,8 @@ func TestStaging(t *testing.T) {
 			t.Fatalf("failed to Clear staging buffer %s", err)
 		}
 		cust := customers[0]
-		for i := 0; i <= 1024; i++ {
-			cust.Name = fmt.Sprintf("cust-%d", i)
+		for i := 0; i < 4096; i++ {
+			cust.Name = fmt.Sprintf("custOvOps-%d", i)
 			_, err := stagecl.BookstoreV1().Customer().Create(ctx, &cust)
 			if err != nil {
 				t.Fatalf("Create of customer [%d] failed (%s)", i, err)
@@ -2385,9 +2387,32 @@ func TestStaging(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Create of customer should have failed")
 		}
-		_, err = restcl.StagingV1().Buffer().Clear(ctx, &in)
+
+		_, err = stagecl.BookstoreV1().Customer().Get(ctx, &cust.ObjectMeta)
+		if err == nil {
+			t.Fatalf("should not be able to get the customer")
+		}
+
+		// We should be able to commit the buffer
+		caction := staging.CommitAction{}
+		caction.Name = bufName
+		caction.Tenant = tenantName
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
 		if err != nil {
-			t.Fatalf("failed to Clear staging buffer %s", err)
+			t.Fatalf("commit should have succeeded (%s)", err)
+		}
+
+		// Cleanup and remove customers.
+		for i := 0; i < 4096; i++ {
+			cust.Name = fmt.Sprintf("custOvOps-%d", i)
+			_, err := stagecl.BookstoreV1().Customer().Delete(ctx, &cust.ObjectMeta)
+			if err != nil {
+				t.Fatalf("Delete of customer [%d] failed (%s)", i, err)
+			}
+		}
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+		if err != nil {
+			t.Fatalf("commit should have succeeded (%s)", err)
 		}
 	}
 	{ // test restore path
@@ -3568,4 +3593,317 @@ func TestSnapShot(t *testing.T) {
 	err = apicache.Rollback(nctx, firstrev, ov)
 	AssertOk(t, err, "Rollback should succeed")
 	ov.Commit(ctx, nil)
+}
+
+func TestOverlayReferences(t *testing.T) {
+	// Test for performant overlay Referers() check.
+	//  1. Create a SGP policy with multiple APPS,
+	//  2. In a staging buffer
+	//    a. Delete all APPs
+	//    b. create new apps
+	//    c. update SG Policy to use new apps
+
+	// Create APPs and SG policy to start with
+	ctx := context.Background()
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	var (
+		bufName      = "TestBufferRefs"
+		tenantName   = "default"
+		polName      = "OvRefsNwSGP"
+		appPrefix    = "ovRefApp-"
+		appPrefixNew = "ovRefAppNew-"
+	)
+
+	// Staging Client
+	stagecl, err := apiclient.NewStagedRestAPIClient("https://localhost:"+tinfo.apigwport, bufName)
+	if err != nil {
+		t.Fatalf("cannot create Staged REST client")
+	}
+	defer stagecl.Close()
+
+	buf := staging.Buffer{
+		ObjectMeta: api.ObjectMeta{
+			Name:   bufName,
+			Tenant: tenantName,
+		},
+	}
+	_, err = restcl.StagingV1().Buffer().Create(ctx, &buf)
+	if err == nil {
+		claction := staging.ClearAction{
+			ObjectMeta: api.ObjectMeta{
+				Name:   bufName,
+				Tenant: tenantName,
+			},
+			Spec: staging.ClearActionSpec{},
+		}
+		restcl.StagingV1().Buffer().Clear(ctx, &claction)
+	}
+
+	numApps := 900
+	numRules := 900
+	applist, err := restcl.SecurityV1().App().List(ctx, &api.ListWatchOptions{})
+	for _, app := range applist {
+		if strings.Contains(app.Name, appPrefix) {
+			_, err := restcl.SecurityV1().App().Delete(ctx, &app.ObjectMeta)
+			AssertOk(t, err, "delete of existing app should have succeeded [%v]", app.Name)
+		}
+	}
+	sgp, err := restcl.SecurityV1().NetworkSecurityPolicy().Get(ctx, &api.ObjectMeta{Name: polName})
+	if err == nil {
+		_, err := restcl.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &sgp.ObjectMeta)
+		AssertOk(t, err, "deleting existing network security policy should have succeeded(%v)", err)
+	}
+
+	sgp = &security.NetworkSecurityPolicy{
+		ObjectMeta: api.ObjectMeta{
+			Name:   polName,
+			Tenant: tenantName,
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+		},
+	}
+
+	for i := 0; i < numRules; i++ {
+		sgrule := security.SGRule{
+			Apps:            []string{fmt.Sprintf("%s%d", appPrefix, i%numApps)},
+			FromIPAddresses: []string{fmt.Sprintf("10.1.1.%d", i%255)},
+			ToIPAddresses:   []string{fmt.Sprintf("10.1.1.%d", i%255)},
+			Action:          security.SGRule_PERMIT.String(),
+		}
+		sgp.Spec.Rules = append(sgp.Spec.Rules, sgrule)
+	}
+
+	start := time.Now()
+	stagecl.SecurityV1().NetworkSecurityPolicy().Create(ctx, sgp)
+
+	t.Logf("created nework security policy with %d rules took [%v]", len(sgp.Spec.Rules), time.Since(start))
+
+	start = time.Now()
+	app := security.App{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tenantName,
+		},
+		Spec: security.AppSpec{},
+	}
+	for i := 0; i < numApps; i++ {
+		app.Name = fmt.Sprintf("%s%d", appPrefix, i)
+		app.Spec.ProtoPorts = []security.ProtoPort{
+			{Protocol: "tcp", Ports: fmt.Sprintf("10%d", i)},
+		}
+
+		stagecl.SecurityV1().App().Create(ctx, &app)
+	}
+	t.Logf("creating apps in staging buffer took [%v]", time.Since(start))
+
+	start = time.Now()
+
+	cmaction := staging.CommitAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:   bufName,
+			Tenant: tenantName,
+		},
+	}
+	_, err = restcl.StagingV1().Buffer().Commit(ctx, &cmaction)
+	AssertOk(t, err, "commit should have succeeded (%v)", err)
+
+	t.Logf("commit of staging buffer took %v", time.Since(start))
+	// Check the security policy is actually there
+	_, err = restcl.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
+	AssertOk(t, err, "Security policy should be found (%v)", err)
+
+	start = time.Now()
+	// Delete all Apps
+	appCount := 0
+	applist, err = restcl.SecurityV1().App().List(ctx, &api.ListWatchOptions{})
+	for _, app := range applist {
+		if strings.Contains(app.Name, appPrefix) {
+			stagecl.SecurityV1().App().Delete(ctx, &app.ObjectMeta)
+			appCount++
+		}
+	}
+	t.Logf("deleting %d apps in staging buffer took [%v]", appCount, err)
+
+	// Create New Apps
+	for i := 0; i < numApps; i++ {
+		app.Name = fmt.Sprintf("%s%d", appPrefixNew, i)
+		app.Spec.ProtoPorts = []security.ProtoPort{
+			{Protocol: "tcp", Ports: fmt.Sprintf("10%d", i)},
+		}
+
+		stagecl.SecurityV1().App().Create(ctx, &app)
+	}
+	t.Logf("creating new %d apps in staging buffer took %v", numApps, time.Since(start))
+
+	sgp.Spec.Rules = nil
+	for i := 0; i < numRules; i++ {
+		sgrule := security.SGRule{
+			Apps:            []string{fmt.Sprintf("%s%d", appPrefixNew, i%numApps)},
+			FromIPAddresses: []string{fmt.Sprintf("10.1.1.%d", i%255)},
+			ToIPAddresses:   []string{fmt.Sprintf("10.1.1.%d", i%255)},
+			Action:          security.SGRule_PERMIT.String(),
+		}
+		sgp.Spec.Rules = append(sgp.Spec.Rules, sgrule)
+	}
+	start = time.Now()
+	_, err = stagecl.SecurityV1().NetworkSecurityPolicy().Update(ctx, sgp)
+	AssertOk(t, err, "creating Network security policy should have succeed(%v)", err)
+	t.Logf("created nework security policy with %d rules took [%v]", len(sgp.Spec.Rules), time.Since(start))
+
+	start = time.Now()
+	_, err = restcl.StagingV1().Buffer().Commit(ctx, &cmaction)
+	AssertOk(t, err, "commit should have succeeded (%v)", err)
+
+	t.Logf("commit of staging buffer with new Network Security policy took %v", time.Since(start))
+
+	retsgp, err := restcl.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
+	AssertOk(t, err, "Security policy should be found (%v)", err)
+	Assert(t, len(retsgp.Spec.Rules) == numRules, " unexpected number of rules [%v]", len(retsgp.Spec.Rules))
+	Assert(t, strings.Contains(retsgp.Spec.Rules[0].Apps[0], appPrefixNew), " expecting to find new App in the update SG policy found [%v]", retsgp.Spec.Rules[0].Apps[0])
+
+}
+
+func TestSaveRestoreOperation(t *testing.T) {
+	objClient := memclient.NewMemObjstore()
+	impl.ClusterHooksObjStoreClient = objClient
+
+	ctx := context.Background()
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	snapCfg := cluster.ConfigurationSnapshot{
+		ObjectMeta: api.ObjectMeta{Name: "GlobalSnapshot"},
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{Type: cluster.SnapshotDestinationType_ObjectStore.String()},
+		},
+	}
+	_, err = restcl.ClusterV1().ConfigurationSnapshot().Create(ctx, &snapCfg)
+	AssertOk(t, err, "creating snapshot configuration should succeed")
+
+	// Save a snapshot
+
+	ss, err := restcl.ClusterV1().ConfigurationSnapshot().Save(ctx, &cluster.ConfigurationSnapshotRequest{})
+	AssertOk(t, err, "snapshot save should have succeeded")
+
+	ret, err := objClient.ListObjects("")
+	AssertOk(t, err, "ListObject expected to succeed")
+	Assert(t, len(ret) == 1, "expecting to see 1 object got [%d]", len(ret))
+	snapPath1 := ss.Status.LastSnapshot.URI[strings.LastIndex(ss.Status.LastSnapshot.URI, "/")+1:]
+	Assert(t, ret[0] == snapPath1, "paths dont match [%v][%v]", ret, snapPath1)
+	// Restore to saved snapshot
+	resReq := cluster.SnapshotRestore{
+		ObjectMeta: api.ObjectMeta{Name: "GlobalRestore"},
+		Spec: cluster.SnapshotRestoreSpec{
+			SnapshotPath: snapPath1,
+		},
+	}
+
+	rs, err := restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	// Failure modes
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	var (
+		bufName    = "TestBuffer"
+		tenantName = "default"
+	)
+
+	{ // Create a buffer
+		buf := staging.Buffer{}
+		buf.Name = bufName
+		buf.Tenant = tenantName
+		restcl.StagingV1().Buffer().Create(ctx, &buf)
+		_, err = restcl.StagingV1().Buffer().Get(ctx, &buf.ObjectMeta)
+		if err != nil {
+			t.Fatalf("failed to get commit buffer (%s)", err)
+		}
+	}
+
+	// Staging Client
+	stagecl, err := apiclient.NewStagedRestAPIClient("https://localhost:"+tinfo.apigwport, bufName)
+	if err != nil {
+		t.Fatalf("cannot create Staged REST client")
+	}
+
+	// Create 4k+ objects to exceed one txn
+	in := staging.ClearAction{}
+	in.Tenant = tenantName
+	in.Name = bufName
+	_, err = restcl.StagingV1().Buffer().Clear(ctx, &in)
+	if err != nil {
+		t.Fatalf("failed to Clear staging buffer %s", err)
+	}
+	cust := bookstore.Customer{
+		ObjectMeta: api.ObjectMeta{
+			Name:     "customer1",
+			SelfLink: "/junk",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Customer",
+		},
+		Spec: bookstore.CustomerSpec{
+			Address:  "1111 Wherewhich lane",
+			Password: []byte("Test123"),
+		},
+	}
+	for i := 0; i < 4096; i++ {
+		cust.Name = fmt.Sprintf("custOvOps-%d", i)
+		_, err := stagecl.BookstoreV1().Customer().Create(ctx, &cust)
+		if err != nil {
+			t.Fatalf("Create of customer [%d] failed (%s)", i, err)
+		}
+	}
+
+	// We should be able to commit the buffer
+	caction := staging.CommitAction{}
+	caction.Name = bufName
+	caction.Tenant = tenantName
+	_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+	if err != nil {
+		t.Fatalf("commit should have succeeded (%s)", err)
+	}
+
+	ss, err = restcl.ClusterV1().ConfigurationSnapshot().Save(ctx, &cluster.ConfigurationSnapshotRequest{})
+	AssertOk(t, err, "snapshot save should have succeeded")
+
+	ret, err = objClient.ListObjects("")
+	AssertOk(t, err, "ListObject expected to succeed")
+	Assert(t, len(ret) == 2, "expecting to see 1 object got [%d]", len(ret))
+	snapPath2 := ss.Status.LastSnapshot.URI[strings.LastIndex(ss.Status.LastSnapshot.URI, "/")+1:]
+	found := false
+	for x := range ret {
+		if ret[x] == snapPath2 {
+			found = true
+		}
+	}
+	Assert(t, found, "paths dont match [%v][%v]", ret, snapPath2)
+
+	// Restore to old config
+	resReq.Spec.SnapshotPath = snapPath1
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
 }

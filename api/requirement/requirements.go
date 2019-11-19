@@ -16,7 +16,10 @@ import (
 // APIRequirements captures all the custom requirements for a API call.
 type apiRequirements struct {
 	sync.Mutex
-	reqs    []apiintf.Requirement
+	reqs []apiintf.Requirement
+	// tracks the reference requirement for a key
+	reqIdx  map[string]int
+	reqKey  []string
 	overlay apiintf.OverlayInterface
 	graphdb graph.Interface
 	apisrv  apiserver.Server
@@ -24,7 +27,7 @@ type apiRequirements struct {
 
 // NewRequirementSet returns a new initialized API Requirements object.
 func NewRequirementSet(g graph.Interface, kvs apiintf.OverlayInterface, apisrv apiserver.Server) apiintf.RequirementSet {
-	ret := &apiRequirements{overlay: kvs, graphdb: g, apisrv: apisrv}
+	ret := &apiRequirements{reqIdx: make(map[string]int), overlay: kvs, graphdb: g, apisrv: apisrv}
 	return ret
 }
 
@@ -33,7 +36,7 @@ func (r *apiRequirements) NewRefRequirement(oper apiintf.APIOperType, key string
 	ret := NewReferenceReq(oper, key, reqs, r.graphdb, r.overlay)
 	defer r.Unlock()
 	r.Lock()
-	r.reqs = append(r.reqs, ret)
+	r.addRequirement(apiintf.Reference, key, ret)
 	return ret
 }
 
@@ -46,9 +49,37 @@ func (r *apiRequirements) NewConsUpdateRequirement(reqs []apiintf.ConstUpdateIte
 	return ret
 }
 
-// AddRequirement adds a new requirement to the set
-func (r *apiRequirements) AddRequirement(in apiintf.Requirement) {
+func (r *apiRequirements) addRequirement(tpe apiintf.ReqType, key string, in apiintf.Requirement) {
+	if id, ok := r.reqIdx[key]; ok {
+		r.reqs[id] = in
+		return
+	}
+	r.reqIdx[key] = len(r.reqs)
 	r.reqs = append(r.reqs, in)
+	r.reqKey = append(r.reqKey, key)
+
+}
+
+func (r *apiRequirements) delRequirement(tpe apiintf.ReqType, key string) {
+	if id, ok := r.reqIdx[key]; ok {
+		r.reqs = append(r.reqs[:id], r.reqs[id+1:]...)
+		r.reqKey = append(r.reqKey[:id], r.reqKey[id+1:]...)
+		delete(r.reqIdx, key)
+		for i := id; i < len(r.reqKey); i++ {
+			r.reqIdx[r.reqKey[i]] = i
+		}
+	}
+}
+
+// AddRequirement adds a new requirement to the set
+func (r *apiRequirements) AddRequirement(tpe apiintf.ReqType, key string, in apiintf.Requirement) {
+	// done under lock always do not need a lock
+	if in == nil {
+		// delete the existing requirement
+		r.delRequirement(tpe, key)
+		return
+	}
+	r.addRequirement(tpe, key, in)
 }
 
 // Check performs a requirements Check() on the list of requirements accumulated.
@@ -63,6 +94,17 @@ func (r *apiRequirements) Check(ctx context.Context) []error {
 		}
 	}
 	return ret
+}
+
+// CheckOne checks if requirements have been met for one requiement in the collection
+func (r *apiRequirements) CheckOne(ctx context.Context, key string) (errors []error, found bool) {
+	defer r.Unlock()
+	r.Lock()
+	idx, ok := r.reqIdx[key]
+	if ok {
+		return r.reqs[idx].Check(ctx), true
+	}
+	return nil, false
 }
 
 // Apply performs a requirements Apply() on the list of requirements accumulated.
@@ -96,13 +138,18 @@ func (r *apiRequirements) Finalize(ctx context.Context) []error {
 // Clear clears all accumulated requirements in the set
 func (r *apiRequirements) Clear(ctx context.Context) {
 	r.reqs = nil
+	r.reqIdx = make(map[string]int)
 }
 
 // String gives out a string representation of the requirements for debug/display purposes
 func (r *apiRequirements) String() string {
 	ret := fmt.Sprintf("Requirement Set with %d requirements", len(r.reqs))
 	for i := range r.reqs {
-		ret = ret + r.reqs[i].String()
+		if r.reqs[i] != nil {
+			ret = ret + r.reqs[i].String()
+		} else {
+			ret = ret + fmt.Sprintf(" req [%d] is nil", i)
+		}
 	}
 	return ret
 }

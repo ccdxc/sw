@@ -211,7 +211,10 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 				r.curType++
 				continue
 			}
-			log.Infof("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
+			if len(robjs) > 0 {
+				log.Infof("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
+			}
+
 			r.curObjs = robjs
 			curBytes, err := json.MarshalIndent(kindSnapshot{Header: kindHeader{Group: grp, Kind: kind}, Objects: robjs}, "", "  ")
 			if err != nil {
@@ -246,7 +249,7 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 			end = len(r.curBytes)
 		} else {
 			start = r.index
-			end = buflen
+			end = start + buflen - 1
 			if end <= start {
 				return written, nil
 			}

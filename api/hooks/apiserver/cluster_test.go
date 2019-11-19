@@ -1275,6 +1275,11 @@ func (m *fakeOclient) RemoveObjects(prefix string) error {
 	return nil
 }
 
+// RemoveObject is a mock client implementation
+func (m *fakeOclient) RemoveObject(path string) error {
+	return nil
+}
+
 // Read is a mock implementation
 func (m *fakeOclient) Read(p []byte) (n int, err error) {
 	return int(m.read), nil
@@ -1303,7 +1308,7 @@ func TestPerformSnapShot(t *testing.T) {
 		logger: l,
 	}
 	oclnt := &fakeOclient{}
-	clusterHooks.oclnt = oclnt
+	ClusterHooksObjStoreClient = oclnt
 	scfg := cluster.ConfigurationSnapshot{
 		Spec: cluster.ConfigurationSnapshotSpec{
 			Destination: cluster.SnapshotDestination{
@@ -1356,7 +1361,7 @@ func TestPerformRestore(t *testing.T) {
 		logger: l,
 	}
 	oclnt := &fakeOclient{}
-	clusterHooks.oclnt = oclnt
+	ClusterHooksObjStoreClient = oclnt
 
 	scfg := cluster.ConfigurationSnapshot{
 		Spec: cluster.ConfigurationSnapshotSpec{

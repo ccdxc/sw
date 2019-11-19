@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api/generated/auth"
@@ -28,6 +29,41 @@ import (
 type respOrder struct {
 	V   bookstore.Order
 	Err error
+}
+
+func delApps(instance string) {
+	restcl, err := apiclient.NewRestAPIClient(instance)
+	if err != nil {
+		log.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	userCred := &auth.PasswordCredential{
+		Username: "test",
+		Password: "Pensando0$",
+		Tenant:   globals.DefaultTenant,
+	}
+	ctx, err := testutils.NewLoggedInContext(context.Background(), instance, userCred)
+	if err != nil {
+		fmt.Printf("could not login (%s)", err)
+		return
+	}
+
+	applist, err := restcl.SecurityV1().App().List(ctx, &api.ListWatchOptions{})
+	if err != nil {
+		fmt.Printf("list returned error (%s)", err)
+		return
+	}
+	count := 0
+	for _, a := range applist {
+		if strings.Contains(a.Name, "scaleSnapshotApp") {
+			_, err = restcl.SecurityV1().App().Delete(ctx, &a.ObjectMeta)
+			if err != nil {
+				fmt.Printf("could not delete app [%v](%s)", a.Name, err)
+			}
+			count++
+		}
+	}
+	fmt.Printf("deleted %d apps", count)
 }
 
 func testAppSGPolLoop(instance string, count int) {
@@ -345,9 +381,13 @@ func main() {
 		testWebSock = flag.Bool("ws", false, "test websocket watch")
 		testCD      = flag.Bool("tl", false, "test Create delete loop")
 		tcount      = flag.Int("count", 100, "iteration count")
+		daps        = flag.Bool("dapps", true, "delapps")
 	)
 	flag.Parse()
 
+	if *daps {
+		delApps(*instance)
+	}
 	if *testStaging {
 		testStagingFn(*instance)
 		return

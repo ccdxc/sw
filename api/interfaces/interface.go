@@ -128,10 +128,33 @@ type OverlayInterface interface {
 	NewWrappedTxn(ctx context.Context) kvstore.Txn
 }
 
+// ReqType specifies the type of requirement
+type ReqType int
+
+// Requirement types
+const (
+	Reference        ReqType = 1
+	ConsistentUpdate ReqType = 2
+)
+
+// String returns a human friendly string
+func (r ReqType) String() string {
+	switch r {
+	case Reference:
+		return "Reference"
+	case ConsistentUpdate:
+		return "ConsistentUpdate"
+	default:
+		return "unknown"
+	}
+}
+
 // RequirementSet is a collection Requirement objects
 type RequirementSet interface {
 	// Check checks if the requirement has been met by all requirements in the collection
 	Check(ctx context.Context) []error
+	// CheckOne checks if requirements have been met for one requiement in the collection
+	CheckOne(ctx context.Context, key string) (errors []error, found bool)
 	// Apply applies the requirements to the transaction provided.
 	//  All the requirements in the collection are called to Apply
 	Apply(ctx context.Context, txn kvstore.Txn, cache CacheInterface) []error
@@ -148,7 +171,7 @@ type RequirementSet interface {
 	NewConsUpdateRequirement(reqs []ConstUpdateItem) Requirement
 
 	// AddRequirement adds a new requirement to the set
-	AddRequirement(Requirement)
+	AddRequirement(tpe ReqType, key string, req Requirement)
 
 	// String gives out a string representation of the requirements for debug/display purposes
 	String() string

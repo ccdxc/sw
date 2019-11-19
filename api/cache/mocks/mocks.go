@@ -612,16 +612,22 @@ func (f *FakeRequirement) String() string {
 
 // FakeRequirementSet is a mock implementation
 type FakeRequirementSet struct {
-	CheckCalled, ApplyCalled, FinalizeCalled, ClearCalled, RefsCalled int
-	RefReq                                                            map[string]map[string]apiintf.ReferenceObj
-	ApplyFn                                                           func(txn kvstore.Txn) []error
-	ConsUpdates                                                       []FakeRequirement
+	CheckCalled, ApplyCalled, FinalizeCalled, ClearCalled, RefsCalled, CheckOnceCalled int
+	RefReq                                                                             map[string]map[string]apiintf.ReferenceObj
+	ApplyFn                                                                            func(txn kvstore.Txn) []error
+	ConsUpdates                                                                        []FakeRequirement
 }
 
 // Check checks if the requirement has been met by all requirements in the collection
 func (f *FakeRequirementSet) Check(ctx context.Context) []error {
 	f.CheckCalled++
 	return nil
+}
+
+// CheckOne checks if requirements have been met for one requiement in the collection
+func (f *FakeRequirementSet) CheckOne(ctx context.Context, key string) (errors []error, found bool) {
+	f.CheckOnceCalled++
+	return nil, false
 }
 
 // Apply applies the requirements to the transaction provided.
@@ -666,7 +672,8 @@ func (f *FakeRequirementSet) NewConsUpdateRequirement(reqs []apiintf.ConstUpdate
 }
 
 // AddRequirement adds a new requirement to the set
-func (f *FakeRequirementSet) AddRequirement(requirement apiintf.Requirement) {}
+func (f *FakeRequirementSet) AddRequirement(tpe apiintf.ReqType, key string, req apiintf.Requirement) {
+}
 
 // FakeGraphInterface is a mock implementations
 type FakeGraphInterface struct {

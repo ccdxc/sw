@@ -32,7 +32,8 @@ import (
 )
 
 const maxConsistentUpdateRetries = 10
-const maxOverlayOps = 1024
+const maxOverlayOps = 4096
+const maxErrorReport = 10
 
 type dryRunMarker struct {
 	verVer int64
@@ -537,6 +538,13 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 						log.Errorf("failed to persist for key %v(%s)", key, err)
 					}
 				}
+				refs := requirement.GetRefRequirements(ctx, key, apiintf.CreateOper, obj, c.server, c)
+				if refs != nil {
+					c.reqs.AddRequirement(apiintf.Reference, key, refs)
+				} else {
+					// force removing any requirement that may have been added for the delete.
+					c.reqs.AddRequirement(apiintf.Reference, key, nil)
+				}
 				return nil
 			}
 		}
@@ -551,7 +559,7 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 
 	if primary && dryRun > 0 {
 		// This is a dry run, the primary object should exist in the overlay,
-		//  dont create a new object if it does not exist.
+		//  dont create a new object if it does not ex
 		if ovObj == nil {
 			log.ErrorLog("msg", "did not find overlay object in dryRun", "dryRun", dryRun, "key", key, "overlay", c.id)
 			return errors.New("object not found")
@@ -586,7 +594,7 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 	log.DebugLog("msg", "successful creating object", "key", key, "overlay", c.id)
 	refs := requirement.GetRefRequirements(ctx, key, apiintf.CreateOper, obj, c.server, c)
 	if refs != nil {
-		c.reqs.AddRequirement(refs)
+		c.reqs.AddRequirement(apiintf.Reference, key, refs)
 	}
 	// Overwrite any existing overlay object with a create Oper.
 	c.overlay[key] = ovObj
@@ -743,7 +751,7 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 	if oper == operCreate || (oper == operUpdate && updateFn == nil) {
 		refs := requirement.GetRefRequirements(ctx, key, apiintf.APIOperType(ovObj.oper), obj, c.server, c)
 		if refs != nil {
-			c.reqs.AddRequirement(refs)
+			c.reqs.AddRequirement(apiintf.Reference, key, refs)
 		}
 	}
 	c.overlay[key] = ovObj
@@ -867,7 +875,7 @@ func (c *overlay) delete(ctx context.Context, service, method, uri, key string, 
 	}
 	refs := requirement.GetRefRequirements(ctx, key, apiintf.DeleteOper, nil, c.server, c)
 	if refs != nil {
-		c.reqs.AddRequirement(refs)
+		c.reqs.AddRequirement(apiintf.Reference, key, refs)
 	}
 	c.overlay[key] = ovObj
 	log.Infof("processed delete operation for key [%v]", key)
@@ -1087,13 +1095,18 @@ func (c *overlay) CreatePrimary(ctx context.Context, service, method, uri, key s
 	if dm == nil {
 		defer c.Unlock()
 		c.Lock()
+		c.primaryCount++
 	} else {
 		verVer = dm.verVer
 	}
+
 	if c.primaryCount > c.maxOvEntries {
-		return fmt.Errorf("too many operations in the buffer")
+		if dm == nil {
+			c.primaryCount--
+		}
+		return fmt.Errorf("too many operations in the buffer[%v]", c.primaryCount)
 	}
-	c.primaryCount++
+
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1105,13 +1118,18 @@ func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key, 
 	if dm == nil {
 		defer c.Unlock()
 		c.Lock()
+		c.primaryCount++
 	} else {
 		verVer = dm.verVer
 	}
+
 	if c.primaryCount > c.maxOvEntries {
-		return fmt.Errorf("too many operations in the buffer")
+		if dm == nil {
+			c.primaryCount--
+		}
+		return fmt.Errorf("too many operations in the buffer [%v]", c.primaryCount)
 	}
-	c.primaryCount++
+
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1125,13 +1143,18 @@ func (c *overlay) DeletePrimary(ctx context.Context, service, method, uri, key s
 	if dm == nil {
 		defer c.Unlock()
 		c.Lock()
+		c.primaryCount++
 	} else {
 		verVer = dm.verVer
 	}
+
 	if c.primaryCount > c.maxOvEntries {
-		return fmt.Errorf("too many operations in the buffer")
+		if dm == nil {
+			c.primaryCount--
+		}
+		return fmt.Errorf("too many operations in the buffer [%v]", c.primaryCount)
 	}
-	c.primaryCount++
+
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1139,7 +1162,7 @@ func (c *overlay) DeletePrimary(ctx context.Context, service, method, uri, key s
 }
 
 // verify verifies the current Overlay contents. Expects the caller holds the lock on the overlay.
-func (c *overlay) verify(ctx context.Context, server apiserver.Server) (apiintf.OverlayStatus, int64) {
+func (c *overlay) verify(ctx context.Context, server apiserver.Server, maxErrors int) (apiintf.OverlayStatus, int64) {
 	var ret apiintf.OverlayStatus
 	c.revision++
 	c.verVer = c.revision
@@ -1188,6 +1211,9 @@ func (c *overlay) verify(ctx context.Context, server apiserver.Server) (apiintf.
 			if err != nil {
 				apiStatus := apierrors.FromError(err)
 				ret.Failed = append(ret.Failed, apiintf.FailedVerification{Key: apiintf.OverlayKey{Oper: string(v.oper), URI: v.URI}, Errors: []error{&apiStatus}})
+				if maxErrors > 0 && len(ret.Failed) > maxErrors {
+					break
+				}
 			}
 		}
 	}
@@ -1197,7 +1223,7 @@ func (c *overlay) verify(ctx context.Context, server apiserver.Server) (apiintf.
 func (c *overlay) Verify(ctx context.Context) (apiintf.OverlayStatus, error) {
 	defer c.Unlock()
 	c.Lock()
-	ret, _ := c.verify(ctx, c.server)
+	ret, _ := c.verify(ctx, c.server, -1)
 	return ret, nil
 }
 
@@ -1461,7 +1487,7 @@ func (c *overlay) Commit(ctx context.Context, action []apiintf.OverlayKey) error
 	defer c.Unlock()
 	c.Lock()
 	c.reqs = requirement.NewRequirementSet(c.server.GetGraphDB(), c, c.server)
-	ret, verVer := c.verify(ctx, c.server)
+	ret, verVer := c.verify(ctx, c.server, maxErrorReport)
 	log.Infof("Calling Commit on overlay [%v/%v][%p][%p]", c.tenant, c.id, c, c.reqs)
 	if len(ret.Failed) != 0 {
 		retErr := &api.Status{}

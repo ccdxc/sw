@@ -193,3 +193,8 @@ func (c *Client) RemoveObjects(prefix string) error {
 
 	return nil
 }
+
+// RemoveObject deletes one object
+func (c *Client) RemoveObject(name string) error {
+	return c.client.RemoveObject(c.bucketName, name)
+}

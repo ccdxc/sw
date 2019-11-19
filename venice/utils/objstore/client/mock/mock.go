@@ -113,3 +113,15 @@ func (m *MockobjStoreBackend) RemoveObjects(prefix string) error {
 func (mr *MockobjStoreBackendMockRecorder) RemoveObjects(prefix interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveObjects", reflect.TypeOf((*MockobjStoreBackend)(nil).RemoveObjects), prefix)
 }
+
+// RemoveObject mocks base method
+func (m *MockobjStoreBackend) RemoveObject(path string) error {
+	ret := m.ctrl.Call(m, "RemoveObject", path)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveObject indicates an expected call of RemoveObject
+func (mr *MockobjStoreBackendMockRecorder) RemoveObject(path interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveObject", reflect.TypeOf((*MockobjStoreBackend)(nil).RemoveObject), path)
+}

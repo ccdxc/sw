@@ -47,8 +47,10 @@ type clusterHooks struct {
 	// only one restore operation is allowed at any point
 	restoreInProgressMu sync.Mutex
 	restoreInProgress   bool
-	oclnt               objclient.Client
 }
+
+// ClusterHooksObjStoreClient is used for testing and overrides the objectstore client used by the hooks.
+var ClusterHooksObjStoreClient objclient.Client
 
 // errInvalidTenantConfig returns error associated with invalid tenant
 func (cl *clusterHooks) errInvalidTenantConfig() error {
@@ -577,8 +579,8 @@ func (cl *clusterHooks) setTLSConfig(ctx context.Context, kv kvstore.Interface, 
 }
 
 func (cl *clusterHooks) getObjstoreClient() (objclient.Client, error) {
-	if cl.oclnt != nil {
-		return cl.oclnt, nil
+	if ClusterHooksObjStoreClient != nil {
+		return ClusterHooksObjStoreClient, nil
 	}
 	apisrv := apisrvpkg.MustGetAPIServer()
 	resolvers := apisrv.GetResolvers()
@@ -698,6 +700,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	log.Infof("[config-restore] starting restore operation to snapshot [%v]", obj.Spec.SnapshotPath)
 
 	pctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvLargeBuffer, true)
+	pctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvInitRestore, true)
 	dctx := apiutils.SetVar(context.Background(), apiutils.CtxKeyPersistDirectKV, true)
 	var backupRev uint64
 	found := false
@@ -727,29 +730,6 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 			backupName = rstat.Status.BackupSnapshotPath
 		}
 		rstat.Spec = obj.Spec
-	}
-
-	if backupName == "" {
-		backupName = "backup" + time.Now().Format(time.RFC3339)
-		backupName = strings.Replace(backupName, " ", "_", -1)
-		backupName = strings.Replace(backupName, ":", "-", -1)
-		backupName = strings.Replace(backupName, "+", "", -1)
-		log.Infof("[config-restore] creating backup snapshot at %s", backupName)
-		meta := map[string]string{
-			"RequestName": rstat.Name,
-		}
-		backupRev, err = cl.writeSnapshot(ctx, backupName, oclnt, meta)
-		if err != nil || failSetObj {
-			log.Errorf("[config-restore] failed to create backup snapshot (%s)", err)
-			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to create backup snapshot, Configuration unchanged", &obj)
-			return rstat, false, &api.Status{
-				Result:      api.StatusResult{Str: "failed to create backup snapshot, Configuration unchanged"},
-				Message:     []string{fmt.Sprintf("%v", err)},
-				Code:        int32(codes.FailedPrecondition),
-				IsTemporary: false,
-			}
-		}
-		obj.Clone(&rstat)
 	}
 
 	log.Infof("[config-restore] starting restore config restore operation to snapshot [%v]", obj.Spec.SnapshotPath)
@@ -782,7 +762,9 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 				}
 				log.Infof("[config-restore] deleting [%v/%v]", g, k)
 				for i := range stat {
-					kvi.Delete(dctx, stat[i].Key, nil)
+					if stat[i].Valid {
+						kvi.Delete(ictx, stat[i].Key, nil)
+					}
 				}
 			}
 		}
@@ -799,9 +781,8 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 			delFromCache(pctx, kvs)
 		}
 		log.Infof("[config-restore] attempting config rollback")
-		nctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvInitRestore, true)
 		if e1 == nil {
-			e1 = apisrvcache.Rollback(nctx, backupRev, kvs)
+			e1 = apisrvcache.Rollback(pctx, backupRev, kvs)
 			if e1 == nil {
 				_, e1 = txn.Commit(pctx)
 			}
@@ -820,6 +801,60 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		return nil
 
 	}
+
+	err = delFromCache(pctx, kvs)
+	if err != nil || failPrep {
+		log.Errorf("[config-restore] failed Prep for restore (%v)", err)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed preparation for restore operation. Configuration unchanged", &obj)
+		return rstat, false, &api.Status{
+			Result:      api.StatusResult{Str: "failed preparation for restore operation. Configuration unchanged"},
+			Message:     []string{fmt.Sprintf("%v", err)},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+	}
+
+	log.Infof("[config-restore] starting write to overlay for snapshot [%v]", obj.Spec.SnapshotPath)
+	writer := apisrvcache.SnapshotWriter(rdr)
+	err = writer.Write(pctx, kvs)
+	if err != nil || failWrite {
+		log.Errorf("[config-restpore] applying snapshot failed (%s)", err)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
+		retErr := api.Status{
+			Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
+			Message:     []string{err.Error()},
+			Code:        int32(codes.FailedPrecondition),
+			IsTemporary: false,
+		}
+		return rstat, false, &retErr
+	}
+
+	log.Infof("[config-restore] Committing Snapshot for restore [%v]", obj.Spec.SnapshotPath)
+
+	// Prepare to commit the restore buffer
+	if backupName == "" {
+		backupName = "backup" + time.Now().Format(time.RFC3339)
+		backupName = strings.Replace(backupName, " ", "_", -1)
+		backupName = strings.Replace(backupName, ":", "-", -1)
+		backupName = strings.Replace(backupName, "+", "", -1)
+		log.Infof("[config-restore] creating backup snapshot at %s", backupName)
+		meta := map[string]string{
+			"RequestName": rstat.Name,
+		}
+		backupRev, err = cl.writeSnapshot(ctx, backupName, oclnt, meta)
+		if err != nil || failSetObj {
+			log.Errorf("[config-restore] failed to create backup snapshot (%s)", err)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to create backup snapshot, Configuration unchanged", &obj)
+			return rstat, false, &api.Status{
+				Result:      api.StatusResult{Str: "failed to create backup snapshot, Configuration unchanged"},
+				Message:     []string{fmt.Sprintf("%v", err)},
+				Code:        int32(codes.FailedPrecondition),
+				IsTemporary: false,
+			}
+		}
+		obj.Clone(&rstat)
+	}
+
 	rstat.Status = cluster.SnapshotRestoreStatus{}
 	rstat.Status.Status = cluster.SnapshotRestoreStatus_Active.String()
 	rstat.Status.BackupSnapshotPath = backupName
@@ -857,43 +892,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	}
 
 	// Point of no return. Will need rollback.
-	err = delFromCache(pctx, kvs)
-	if err != nil || failPrep {
-		log.Errorf("[config-restore] failed Prep for restore (%v)", err)
-		status := rollback()
-		if status != nil {
-			return rstat, false, status
-		}
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed preparation for restore operation. Configuration unchanged", &obj)
-		return rstat, false, &api.Status{
-			Result:      api.StatusResult{Str: "failed preparation for restore operation. Configuration unchanged"},
-			Message:     []string{fmt.Sprintf("%v", err)},
-			Code:        int32(codes.FailedPrecondition),
-			IsTemporary: false,
-		}
-	}
 
-	log.Infof("[config-restore] starting write to overlay for snapshot [%v]", obj.Spec.SnapshotPath)
-	writer := apisrvcache.SnapshotWriter(rdr)
-	err = writer.Write(pctx, kvs)
-	if err != nil || failWrite {
-		log.Errorf("[config-restpore] applying snapshot failed (%s)", err)
-		status := rollback()
-		if status != nil {
-			return rstat, false, status
-		}
-		// This is not recoverable. Abort the restore.
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
-		retErr := api.Status{
-			Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
-			Message:     []string{err.Error()},
-			Code:        int32(codes.FailedPrecondition),
-			IsTemporary: false,
-		}
-		return rstat, false, &retErr
-	}
-
-	log.Infof("[config-restore] Committing Snapshot for restore [%v]", obj.Spec.SnapshotPath)
 	// Commit the buffer so any errors can be captured here.
 	//  The txn is a surrogate for the Ov, commit
 	_, err = txn.Commit(pctx)
@@ -919,6 +918,19 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	if err != nil {
 		return rstat, false, fmt.Errorf("could not update the Restore Object")
 	}
+
+	log.Infof("[config-resore] deleting object [%s]", backupName)
+	err = oclnt.RemoveObject(backupName)
+	if err != nil {
+		log.Errorf("[config-restore] failed to delete backup from objectore [%s]", err)
+		return rstat, true, &api.Status{
+			Result:      api.StatusResult{Str: "configuration restore operation succeeded, but failed to cleanup temporary backup snapshot"},
+			Message:     []string{err.Error()},
+			Code:        int32(codes.Internal),
+			IsTemporary: false,
+		}
+	}
+	log.Infof("[config-restore] completed operation, snapshot [%v]", obj.Spec.SnapshotPath)
 
 	if ov, ok := kvs.(apiintf.OverlayInterface); ok {
 		log.Infof("Clearing buffer before returning")

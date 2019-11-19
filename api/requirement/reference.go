@@ -136,7 +136,7 @@ func (r *referenceReq) Check(ctx context.Context) []error {
 		if !r.store.IsIsolated(r.key) {
 			count, objs := r.getReferersFromOverlay(ctx, r.key)
 			if count > 0 {
-				ret = append(ret, fmt.Errorf("Object has references from other objects[%s]", objs))
+				ret = append(ret, fmt.Errorf("Object [%s] has references from other objects[%s]", r.key, objs))
 			}
 		}
 	}
@@ -157,7 +157,7 @@ func (r *referenceReq) Apply(ctx context.Context, txn kvstore.Txn, cache apiintf
 			//  isolated once the overlay is committed
 			count, objs := r.getReferersFromOverlay(ctx, r.key)
 			if count > 0 {
-				return fmt.Errorf("Object has references from other objects[ %s]", objs)
+				return fmt.Errorf("Object [%v] has references from other objects[ %s]", r.key, objs)
 			}
 		}
 		// XXX-TBD(sanjayt): there is potentially a timing issue: between checking the graph DB and cache stat a reference might have been added.

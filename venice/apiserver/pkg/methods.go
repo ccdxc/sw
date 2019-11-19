@@ -716,14 +716,30 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// Check for references before moving to committing to KV store
 	if reqs != nil {
-		errs := reqs.Check(ctx)
-		if errs != nil {
-			l.Errorf("msg: references validation failed. Error: %v", errs)
-			str := []string{}
-			for _, err = range errs {
-				str = append(str, err.Error())
+		if bufid != "" {
+			// This is a staging operation, no need to check the whole buffer, that will be done when the buffer is commited
+			//  run check for this key to let the user know about this key
+			errs, found := reqs.CheckOne(ctx, key)
+			if !found {
+				l.Debugf("key [%v] has no requirements", key)
 			}
-			return nil, errRequestValidation.makeError(i, str, URI)
+			if errs != nil {
+				str := []string{}
+				for _, err = range errs {
+					str = append(str, err.Error())
+				}
+				return nil, errRequestValidation.makeError(i, str, URI)
+			}
+		} else {
+			errs := reqs.Check(ctx)
+			if errs != nil {
+				l.Errorf("msg: references validation failed. Error: %v", errs)
+				str := []string{}
+				for _, err = range errs {
+					str = append(str, err.Error())
+				}
+				return nil, errRequestValidation.makeError(i, str, URI)
+			}
 		}
 	}
 

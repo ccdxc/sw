@@ -27,7 +27,26 @@ func TestRequirements(t *testing.T) {
 		t.Fatalf("unexpected number of requirements [%d]", len(req.reqs))
 	}
 
+	// Add another request and check there is still one
+	if r := req.NewRefRequirement(apiintf.CreateOper, "/test/obj1", nil); r == nil {
+		t.Fatalf("could not create ref requirement")
+	}
+
+	if len(req.reqs) != 1 {
+		t.Fatalf("unexpected number of requirements [%d]", len(req.reqs))
+	}
+
+	// Add second object and make sure we have 2
+	if r := req.NewRefRequirement(apiintf.CreateOper, "/test/obj2", nil); r == nil {
+		t.Fatalf("could not create ref requirement")
+	}
+
+	if len(req.reqs) != 2 {
+		t.Fatalf("unexpected number of requirements [%d]", len(req.reqs))
+	}
+
 	req.reqs = []apiintf.Requirement{&mocks.FakeRequirement{}, &mocks.FakeRequirement{}}
+	req.reqIdx = map[string]int{"/test/obj1": 0, "/test/obj2": 1}
 	t.Logf("created requiremtn [%v]", req.String())
 	if errs := req.Check(ctx); errs != nil {
 		t.Fatalf("Check failed [%v]", errs)
@@ -85,8 +104,27 @@ func TestRequirements(t *testing.T) {
 		}
 		r.CheckCalled, r.ApplyCalled, r.FinalizeCalled = 0, 0, 0
 	}
+
+	// Test CheckOne
+	_, found := req.CheckOne(ctx, "/test/dummy")
+	if found {
+		t.Fatalf("not expecting to find requirement")
+	}
+	_, found = req.CheckOne(ctx, "/test/obj1")
+	if !found {
+		t.Fatalf("not expecting to find requirement")
+	}
+	r := req.reqs[0].(*mocks.FakeRequirement)
+	if r.CheckCalled != 1 || r.ApplyCalled != 0 || r.FinalizeCalled != 0 {
+		t.Fatalf("invalid counts on mock requirement [%d/%d/%d]", r.CheckCalled, r.ApplyCalled, r.FinalizeCalled)
+	}
+	r = req.reqs[1].(*mocks.FakeRequirement)
+	if r.CheckCalled != 0 || r.ApplyCalled != 0 || r.FinalizeCalled != 0 {
+		t.Fatalf("invalid counts on mock requirement [%d/%d/%d]", r.CheckCalled, r.ApplyCalled, r.FinalizeCalled)
+	}
 	req.Clear(ctx)
 	if len(req.reqs) != 0 {
 		t.Fatalf("did not clear requirements [%v]", len(req.reqs))
 	}
+
 }

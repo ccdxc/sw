@@ -48,6 +48,9 @@ type objStoreBackend interface {
 
 	// RemoveObjects removes objects with the prefix
 	RemoveObjects(prefix string) error
+
+	// RemoveObject removes one object
+	RemoveObject(path string) error
 }
 
 // object store back-end details
@@ -426,4 +429,23 @@ func (c *client) RemoveObjects(prefix string) error {
 	}
 
 	return fmt.Errorf("maximum retries exceeded to remove %s", prefix)
+}
+
+// RemoveObject removes one object
+func (c *client) RemoveObject(path string) error {
+	for retry := 0; retry < maxRetry; retry++ {
+		err := c.client.RemoveObject(path)
+		if err == nil {
+			return nil
+		}
+
+		if !strings.Contains(err.Error(), connectErr) {
+			return err
+		}
+
+		if err := c.connect(); err != nil {
+			return err
+		}
+	}
+	return fmt.Errorf("maximum retries exceeded to remove %s", path)
 }
