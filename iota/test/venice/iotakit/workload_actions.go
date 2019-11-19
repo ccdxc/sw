@@ -878,3 +878,8 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 
 	return nil
 }
+
+func (act *ActionCtx) NetcatWrapper(wpc *WorkloadPairCollection, serverOpt, clientOpt string, port int, expFail bool, expClientExitCode int32, expOutput string) error {
+	return act.netcatTrigger(wpc, serverOpt, clientOpt, port, expFail, expClientExitCode, expOutput)
+}
+
