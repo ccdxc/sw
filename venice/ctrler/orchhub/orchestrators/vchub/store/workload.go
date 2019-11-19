@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ref"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 const workloadKind = "Workload"
@@ -151,8 +152,13 @@ func (v *VCHStore) extractInterfaces(vmConfig types.VirtualMachineConfigInfo) []
 				v.Log.Errorf("Expected types.VirtualEthernetCardDistributedVirtualPortBackingInfo, got %s", reflect.TypeOf(vec.Backing).Name())
 				continue
 			}
+			macStr, err := conv.ParseMacAddr(vec.MacAddress)
+			if err != nil {
+				v.Log.Errorf("Failed to parse mac addres. Err : %v", err)
+				continue
+			}
 			vnic := workload.WorkloadIntfSpec{
-				MACAddress:   vec.MacAddress,
+				MACAddress:   macStr,
 				MicroSegVlan: portKeyToVLAN(back.Port.PortKey),
 			}
 			res = append(res, vnic)

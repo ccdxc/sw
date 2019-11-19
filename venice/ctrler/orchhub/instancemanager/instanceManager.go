@@ -107,6 +107,7 @@ func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 }
 
 func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, config *orchestration.Orchestrator) {
+	log.Infof("Handle config event. %v", config)
 	switch evtType {
 	case kvstore.Created:
 		w.createOrch(config)

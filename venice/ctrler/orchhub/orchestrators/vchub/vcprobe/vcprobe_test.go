@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vmware/govmomi/vim25/soap"
-
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/utils/log"
@@ -14,7 +12,11 @@ import (
 )
 
 func TestMessages(t *testing.T) {
-	vcID := "user:pass@127.0.0.1:8990/sdk"
+	vcID := "127.0.0.1:8990"
+	user := "user"
+	password := "pass"
+
+	url := fmt.Sprintf("%s:%s@%s/sdk", user, password, vcID)
 	expectedMsgs := map[defs.VCObject][]defs.Probe2StoreMsg{
 		// The changes property is not checked currently
 		defs.VirtualMachine: []defs.Probe2StoreMsg{
@@ -41,7 +43,7 @@ func TestMessages(t *testing.T) {
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
+	s, err := sim.NewVcSim(sim.Config{Addr: url})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 
@@ -54,12 +56,11 @@ func TestMessages(t *testing.T) {
 	_, err = dc.AddVM("vm2", "host1")
 	AssertOk(t, err, "failed to create vm")
 
-	u := s.GetURL()
-
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
+	orchConfig := getOrchestratorConfig(vcID, user, password)
 
-	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()
 
@@ -120,7 +121,6 @@ func TestReconnect(t *testing.T) {
 
 	fmt.Printf("starting on %s\n", s.GetURL())
 
-	u := s.GetURL()
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 
@@ -128,7 +128,8 @@ func TestReconnect(t *testing.T) {
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
-	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
+	orchConfig := getOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()
@@ -197,22 +198,21 @@ func TestLoginRetry(t *testing.T) {
 
 	vcID := "user:pass@127.0.0.1:8990"
 
-	u, err := soap.ParseURL(vcID)
-	AssertOk(t, err, "Failed to parse url")
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 	config := log.GetDefaultConfig("vcprobe_test")
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
-	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
-	err = vcp.Start()
+	orchConfig := getOrchestratorConfig("127.0.0.1:8990/sdk", "user", "pass")
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
+	err := vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()
 
 	time.Sleep(time.Second)
 
-	fmt.Printf("starting sim %s\n", u)
+	fmt.Printf("starting sim %s\n", vcID)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
 	AssertOk(t, err, "Failed to create vcsim")

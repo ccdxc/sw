@@ -93,8 +93,8 @@ func TestStoreRun(t *testing.T) {
 							Val: types.VirtualMachineConfigInfo{
 								Hardware: types.VirtualHardware{
 									Device: []types.BaseVirtualDevice{
-										generateVNIC("aa:bb:cc:dd:ee:ff", "10", "E1000e"),
-										generateVNIC("aa:bb:cc:dd:dd:ff", "11", "E1000"),
+										generateVNIC("aaaa.bbbb.cccc", "10", "E1000e"),
+										generateVNIC("aaaa.bbbb.dddd", "11", "E1000"),
 									},
 								},
 							},
@@ -133,19 +133,19 @@ func TestStoreRun(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aa:bb:cc:dd:ee:ff",
+								MACAddress:   "aabb.ccdd.eeff",
 								MicroSegVlan: 10,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aa:bb:cc:dd:dd:ff",
+								MACAddress:   "aabb.ccdd.ddff",
 								MicroSegVlan: 11,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aa:bb:cc:dd:dd:ee",
+								MACAddress:   "aabb.ccdd.ddee",
 								MicroSegVlan: 0,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aa:bb:cc:dd:dd:ee",
+								MACAddress:   "aabb.ccdd.ddee",
 								MicroSegVlan: 0,
 							},
 						},
@@ -530,7 +530,7 @@ func TestStoreRun(t *testing.T) {
 			events: []defs.Probe2StoreMsg{
 				{
 					VcObject:   defs.HostSystem,
-					Key:        "hostsystem-41",
+					Key:        "hostsystem-44",
 					Originator: "127.0.0.1:8990",
 					Changes: []types.PropertyChange{
 						types.PropertyChange{
@@ -551,7 +551,7 @@ func TestStoreRun(t *testing.T) {
 			},
 			verify: func(v *VCHStore) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-41",
+					Name: "127.0.0.1:8990-hostsystem-44",
 				}
 				expHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{

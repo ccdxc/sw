@@ -67,6 +67,7 @@ func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logge
 
 // Controller gets the controller associated with the statemanager
 func (s *Statemgr) Controller() ctkit.Controller {
+	fmt.Printf("Controller called - %v", s)
 	return s.ctrler
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
@@ -13,27 +14,29 @@ import (
 // VCHStore maintains information about a store instance
 type VCHStore struct {
 	sync.Mutex
-	ctx      context.Context
-	cancel   context.CancelFunc
-	wg       sync.WaitGroup
-	Log      log.Logger
-	stateMgr *statemgr.Statemgr
-	inbox    <-chan defs.Probe2StoreMsg
-	outbox   chan<- defs.Store2ProbeMsg
-	pCache   *pcache.PCache
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
+	Log        log.Logger
+	stateMgr   *statemgr.Statemgr
+	inbox      <-chan defs.Probe2StoreMsg
+	outbox     chan<- defs.Store2ProbeMsg
+	pCache     *pcache.PCache
+	orchConfig *orchestration.Orchestrator
 }
 
 // NewVCHStore returns an instance of VCHStore
-func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger) *VCHStore {
+func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger, orchConfig *orchestration.Orchestrator) *VCHStore {
 	logger := l.WithContext("submodule", "VCStore")
 	pCache := pcache.NewPCache(stateMgr, logger)
 
 	vstore := &VCHStore{
-		Log:      logger,
-		stateMgr: stateMgr,
-		inbox:    inbox,
-		outbox:   outbox,
-		pCache:   pCache,
+		Log:        logger,
+		stateMgr:   stateMgr,
+		inbox:      inbox,
+		outbox:     outbox,
+		pCache:     pCache,
+		orchConfig: orchConfig,
 	}
 
 	pCache.SetValidator("Workload", vstore.validateWorkload)

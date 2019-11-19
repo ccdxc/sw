@@ -13,6 +13,7 @@ import (
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -42,26 +43,36 @@ type vcInst struct {
 // This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
 	vcInst
-	client   *govmomi.Client
-	outbox   chan<- defs.Probe2StoreMsg
-	inbox    <-chan defs.Store2ProbeMsg
-	viewMgr  *view.Manager
-	tp       *tagsProbe
-	stateMgr *statemgr.Statemgr
+	client     *govmomi.Client
+	outbox     chan<- defs.Probe2StoreMsg
+	inbox      <-chan defs.Store2ProbeMsg
+	viewMgr    *view.Manager
+	tp         *tagsProbe
+	stateMgr   *statemgr.Statemgr
+	orchConfig *orchestration.Orchestrator
 }
 
 // NewVCProbe returns a new instance of VCProbe
-func NewVCProbe(vcID string, vcURL *url.URL, hOutbox chan<- defs.Probe2StoreMsg, inbox <-chan defs.Store2ProbeMsg, stateMgr *statemgr.Statemgr, l log.Logger) *VCProbe {
+func NewVCProbe(orchConfig *orchestration.Orchestrator, hOutbox chan<- defs.Probe2StoreMsg, inbox <-chan defs.Store2ProbeMsg, stateMgr *statemgr.Statemgr, l log.Logger, scheme string) *VCProbe {
+	vcURL := &url.URL{
+		Scheme: scheme,
+		Host:   orchConfig.Spec.URI,
+		Path:   "/sdk",
+	}
+
+	vcURL.User = url.UserPassword(orchConfig.Spec.Credentials.UserName, orchConfig.Spec.Credentials.Password)
+
 	return &VCProbe{
 		vcInst: vcInst{
-			VcID:  vcID,
+			VcID:  orchConfig.GetName(),
 			vcURL: vcURL,
-			Log:   l.WithContext("submodule", fmt.Sprintf("VCProbe-%s", vcID)),
+			Log:   l.WithContext("submodule", fmt.Sprintf("VCProbe-%s", orchConfig.GetName())),
 			wg:    &sync.WaitGroup{},
 		},
-		outbox:   hOutbox,
-		inbox:    inbox,
-		stateMgr: stateMgr,
+		orchConfig: orchConfig,
+		outbox:     hOutbox,
+		inbox:      inbox,
+		stateMgr:   stateMgr,
 	}
 	// Check we have correct permissions when we connect.
 }
@@ -71,8 +82,8 @@ func (v *VCProbe) Start() error {
 	if v.cancel != nil {
 		return errors.New("Already started")
 	}
-
 	v.ctx, v.cancel = context.WithCancel(context.Background())
+	// Connect and log in to vCenter
 	go v.run()
 	return nil
 }
@@ -92,10 +103,13 @@ func (v *VCProbe) run() {
 	var c *govmomi.Client
 	var err error
 
+	v.Log.Infof("Starting VCProbe : %v", v.vcURL)
 	// Forever try to login until it succeeds
 	for {
+		v.Log.Infof("Starting VCProbe : %v", v.vcURL)
 		c, err = govmomi.NewClient(v.ctx, v.vcURL, true)
 		if err != nil {
+			v.orchConfig.Status.Status = orchestration.OrchestratorStatus_Failure.String()
 			v.Log.Errorf("Login failed: %v", err)
 			select {
 			case <-v.ctx.Done():
@@ -103,6 +117,7 @@ func (v *VCProbe) run() {
 			case <-time.After(5 * retryDelay):
 			}
 		} else {
+			v.orchConfig.Status.Status = orchestration.OrchestratorStatus_Success.String()
 			break
 		}
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/utils/ref"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
@@ -59,10 +60,17 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 			var DSCs []cluster.DistributedServiceCardID
 			for _, pnic := range nwInfo.Pnic {
 				// TODO check for vendor field to identify Pensando NICs
+				macStr, err := conv.ParseMacAddr(pnic.Mac)
+				if err != nil {
+					continue
+				}
 				DSCs = append(DSCs, cluster.DistributedServiceCardID{
-					MACAddress: pnic.Mac,
+					MACAddress: macStr,
 				})
+				// TODO : Currently we do not allow more than one Pnics per host to be added to Venice.
+				break
 			}
+
 			// Sort before storing, so that if we receive the Pnics
 			// in a different order later we don't generate
 			// an unnecessary update
@@ -86,6 +94,13 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 		// Nothing to do
 		return
 	}
+
+	labels := make(map[string]string)
+	if v.orchConfig != nil {
+		labels[orchNameKey] = v.orchConfig.Name
+	}
+	hostObj.Labels = labels
+
 	if existingHost == nil {
 		v.stateMgr.Controller().Host().Create(hostObj)
 	} else {

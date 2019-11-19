@@ -1,9 +1,6 @@
 package vchub
 
 import (
-	"net/url"
-
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/store"
@@ -21,7 +18,7 @@ const (
 type VCHub struct {
 	// Needed so that VCHub can update its Orchestrator
 	// object status (connection status, etc..)
-	configMeta   *api.ObjectMeta
+	config       *orchestration.Orchestrator
 	store        *store.VCHStore
 	probe        *vcprobe.VCProbe
 	vcOpsChannel chan *kvstore.WatchEvent
@@ -36,11 +33,11 @@ func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator
 	logger.Infof("VCHub instance for %s is starting...", config.GetName())
 
 	vchub := &VCHub{
-		configMeta: &config.ObjectMeta,
-		stateMgr:   stateMgr,
-		logger:     logger,
-		vcReadCh:   make(chan defs.Probe2StoreMsg, storeQSize),
-		vcWriteCh:  make(chan defs.Store2ProbeMsg, storeQSize),
+		config:    config,
+		stateMgr:  stateMgr,
+		logger:    logger,
+		vcReadCh:  make(chan defs.Probe2StoreMsg, storeQSize),
+		vcWriteCh: make(chan defs.Store2ProbeMsg, storeQSize),
 	}
 	vchub.createStore()
 	vchub.createProbe(config)
@@ -50,20 +47,12 @@ func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator
 }
 
 func (v *VCHub) createStore() {
-	v.store = store.NewVCHStore(v.stateMgr, v.vcReadCh, v.vcWriteCh, v.logger)
+	v.store = store.NewVCHStore(v.stateMgr, v.vcReadCh, v.vcWriteCh, v.logger, v.config)
 	v.store.Start()
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
-	vcURL := &url.URL{
-		Scheme: "https",
-		Host:   config.Spec.URI,
-		Path:   "/sdk",
-	}
-
-	vcURL.User = url.UserPassword(config.Spec.Credentials.UserName, config.Spec.Credentials.Password)
-
-	v.probe = vcprobe.NewVCProbe(config.GetName(), vcURL, v.vcReadCh, v.vcWriteCh, v.stateMgr, v.logger)
+	v.probe = vcprobe.NewVCProbe(config, v.vcReadCh, v.vcWriteCh, v.stateMgr, v.logger, "https")
 	v.probe.Start()
 }
 

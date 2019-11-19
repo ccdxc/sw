@@ -1,6 +1,7 @@
 package vcprobe
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -10,15 +11,61 @@ import (
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/tags"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
+	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
+var (
+	logConfig = log.GetDefaultConfig("tags-test")
+	logger    = log.SetConfig(logConfig)
+)
+
+func newStateManager() (*statemgr.Statemgr, error) {
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+
+	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return stateMgr, nil
+}
+
+func getOrchestratorConfig(name, user, pass string) *orchestration.Orchestrator {
+	return &orchestration.Orchestrator{
+		ObjectMeta: api.ObjectMeta{
+			Name:   name,
+			Tenant: "default",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Orchestrator",
+		},
+		Spec: orchestration.OrchestratorSpec{
+			Type: "vcenter",
+			URI:  name,
+			Credentials: &monitoring.ExternalCred{
+				AuthType: "username-password",
+				UserName: user,
+				Password: pass,
+			},
+		},
+	}
+}
+
 func TestTags(t *testing.T) {
-	vcID := "user:pass@127.0.0.1:8990"
-	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
+	vcID := "127.0.0.1:8990"
+	user := "user"
+	password := "pass"
+	url := fmt.Sprintf("%s:%s@%s", user, password, vcID)
+	s, err := sim.NewVcSim(sim.Config{Addr: url})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 	dc, err := s.AddDC("dc1")
@@ -32,21 +79,19 @@ func TestTags(t *testing.T) {
 	vm3, err := dc.AddVM("vm3", "host1")
 	AssertOk(t, err, "Failed to create vm3")
 
-	u := s.GetURL()
-
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 
-	logConfig := log.GetDefaultConfig("tags_test")
-	logConfig.LogToStdout = true
-	logger := log.SetConfig(logConfig)
+	sm, err := newStateManager()
+	AssertOk(t, err, "Failed to create state manager. ERR : %v", err)
 
-	vcp := NewVCProbe(vcID, u, storeCh, probeCh, nil, logger)
+	orchConfig := getOrchestratorConfig(vcID, user, password)
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()
 
-	// Give time for the probe to connect
 	time.Sleep(time.Second)
+
 	th := &testHelper{
 		t:       t,
 		tp:      vcp.tp,
@@ -209,6 +254,9 @@ func (h *testHelper) verifyTags(expMap map[string][]string) {
 }
 
 func (h *testHelper) fetchTags() {
+	fmt.Printf("FETCH TAGS")
+	log.Infof("TP : %v", h.tp)
+	log.Infof("H : %v", h)
 	err := h.tp.fetchTags()
 	AssertOk(h.t, err, "Fetch tags failed")
 }
