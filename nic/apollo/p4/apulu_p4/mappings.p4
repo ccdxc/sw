@@ -84,9 +84,11 @@ action local_mapping_info(entry_valid, vnic_id,
                          scratch_metadata.local_mapping_hint);
             modify_field(control_metadata.local_mapping_ohash_lkp, TRUE);
         } else {
+            modify_field(control_metadata.local_mapping_miss, TRUE);
             modify_field(ingress_recirc.local_mapping_done, TRUE);
         }
     } else {
+        modify_field(control_metadata.local_mapping_miss, TRUE);
         modify_field(ingress_recirc.local_mapping_done, TRUE);
     }
 
@@ -141,8 +143,9 @@ action service_mapping_info(xlate_id) {
 @pragma stage 5
 table service_mapping {
     reads {
-        key_metadata.dst    : exact;
-        key_metadata.dport  : exact;
+        vnic_metadata.vpc_id    : exact;
+        key_metadata.dst        : exact;
+        key_metadata.dport      : exact;
     }
     actions {
         service_mapping_info;
@@ -154,8 +157,9 @@ table service_mapping {
 @pragma overflow_table service_mapping
 table service_mapping_otcam {
     reads {
-        key_metadata.dst    : ternary;
-        key_metadata.dport  : ternary;
+        vnic_metadata.vpc_id    : ternary;
+        key_metadata.dst        : ternary;
+        key_metadata.dport      : ternary;
     }
     actions {
         service_mapping_info;

@@ -399,9 +399,9 @@ nacl_init ()
     index = 0;
     key.control_metadata_flow_miss = 1;
     mask.control_metadata_flow_miss_mask = 1;
-    data.action_id = NACL_NACL_FLOW_MISS_ID;
-    data.action_u.nacl_nacl_flow_miss.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    data.action_u.nacl_nacl_flow_miss.nexthop_id = g_nexthop_id_arm;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.action_u.nacl_nacl_redirect_to_arm.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.action_u.nacl_nacl_redirect_to_arm.nexthop_id = g_nexthop_id_arm;
     entry_write(tbl_id, index, &key, &mask, &data, false, 0);
 }
 

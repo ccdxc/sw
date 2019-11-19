@@ -114,7 +114,7 @@ action p4i_inter_pipe() {
         // return
     }
 
-    if (control_metadata.flow_miss_redirect == TRUE) {
+    if (control_metadata.redirect_to_arm == TRUE) {
         ingress_to_rxdma();
     } else {
         if (control_metadata.tunneled_packet == TRUE) {

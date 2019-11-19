@@ -24,13 +24,14 @@ nacl_redirect:
     phvwr.f         p.control_metadata_p4i_drop_reason, 0
 
 .align
-nacl_flow_miss:
+nacl_redirect_to_arm:
     phvwr           p.p4i_i2e_session_id, -1
-    phvwr           p.p4i_i2e_nexthop_type, d.u.nacl_flow_miss_d.nexthop_type
+    phvwr           p.p4i_i2e_nexthop_type, \
+                        d.u.nacl_redirect_to_arm_d.nexthop_type
     phvwr           p.p4i_i2e_copp_policer_id, \
-                        d.u.nacl_redirect_d.copp_policer_id
-    phvwr.e         p.p4i_i2e_nexthop_id, d.u.nacl_flow_miss_d.nexthop_id
-    phvwr.f         p.control_metadata_flow_miss_redirect, TRUE
+                        d.u.nacl_redirect_to_arm_d.copp_policer_id
+    phvwr.e         p.p4i_i2e_nexthop_id, d.u.nacl_redirect_to_arm_d.nexthop_id
+    phvwr.f         p.control_metadata_redirect_to_arm, TRUE
 
 .align
 nacl_drop:

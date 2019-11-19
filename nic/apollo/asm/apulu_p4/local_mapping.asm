@@ -75,7 +75,7 @@ local_mapping_info:
     add         r2, r2, d.local_mapping_info_d.more_hints
 local_mapping_miss:
     phvwr.e     p.ingress_recirc_local_mapping_done, TRUE
-    nop
+    phvwr.f     p.control_metadata_local_mapping_miss, TRUE
 
 local_mapping_hit:
     sne         c1, d.local_mapping_info_d.vnic_id, r0

@@ -3,9 +3,9 @@
 /*****************************************************************************/
 @pragma capi appdatafields epoch session_id flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
-                 hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
-                 more_hashes, more_hints, nexthop_id, entry_valid) {
+action flow_hash(epoch, session_id, flow_role, hash1, hint1, hash2, hint2,
+                 hash3, hint3, hash4, hint4, more_hashes, more_hints,
+                 nexthop_valid, nexthop_type, nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -116,9 +116,9 @@ table flow_ohash {
 /*****************************************************************************/
 @pragma capi appdatafields epoch session_id flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(epoch, session_id, flow_role, nexthop_valid, nexthop_type,
+action ipv4_flow_hash(epoch, session_id, flow_role,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
-                      nexthop_id, entry_valid) {
+                      nexthop_valid, nexthop_type, nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results

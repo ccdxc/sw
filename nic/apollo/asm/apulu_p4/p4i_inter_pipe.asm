@@ -12,7 +12,7 @@ p4i_inter_pipe:
     seq             c1, k.ingress_recirc_flow_done, FALSE
     seq.!c1         c1, k.ingress_recirc_local_mapping_done, FALSE
     bcf             [c1], ingress_recirc
-    seq             c1, k.control_metadata_flow_miss_redirect, TRUE
+    seq             c1, k.control_metadata_redirect_to_arm, TRUE
     bcf             [c1], ingress_to_rxdma
     seq             c1, k.control_metadata_tunneled_packet, TRUE
 

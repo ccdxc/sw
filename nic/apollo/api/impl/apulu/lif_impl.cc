@@ -391,7 +391,7 @@ error:
     return ret;
 }
 
-#define nacl_flow_miss_action    action_u.nacl_nacl_flow_miss
+#define nacl_redirect_to_arm_action     action_u.nacl_nacl_redirect_to_arm
 sdk_ret_t
 lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
@@ -438,10 +438,10 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     // lif (i.e., dpdk/vpp lif)
     key.control_metadata_flow_miss = 1;
     mask.control_metadata_flow_miss_mask = ~0;
-    data.action_id = NACL_NACL_FLOW_MISS_ID;
-    data.nacl_flow_miss_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    data.nacl_flow_miss_action.nexthop_id = nh_idx_;
-    data.nacl_flow_miss_action.copp_policer_id = idx;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());

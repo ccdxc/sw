@@ -44,7 +44,8 @@ header_type control_metadata_t {
         rx_packet               : 1;
         tunneled_packet         : 1;
         flow_miss               : 1;
-        flow_miss_redirect      : 1;
+        local_mapping_miss      : 1;
+        redirect_to_arm         : 1;
         pinned_lif              : 11;
         pinned_qtype            : 3;
         pinned_qid              : 24;

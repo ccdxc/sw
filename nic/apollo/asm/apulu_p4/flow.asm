@@ -46,7 +46,9 @@ label_flow_miss:
     phvwr.f     p.ingress_recirc_flow_done, TRUE
 
 label_flow_hit:
-    slt         c1, d.flow_hash_d.epoch, k.control_metadata_epoch
+    add         r7, k.control_metadata_epoch_s5_e7, \
+                    k.control_metadata_epoch_s0_e4, 3
+    slt         c1, d.flow_hash_d.epoch, r7
     bcf         [c1], label_flow_miss
     phvwr       p.ingress_recirc_flow_done, TRUE
     seq         c1, d.flow_hash_d.nexthop_valid, TRUE
