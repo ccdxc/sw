@@ -32,6 +32,7 @@ else
   echo "Copy artifacts..."
   mkdir -p /sw/output/bundle
   cp /sw/build_iris_sim.tar.gz /sw/output
+  cp /sw/bin/venice.tgz /sw/output
   mv /go/src/github.com/pensando/sw/bin/bundle/bundle.tar /sw/output/bundle/
   mv /go/src/github.com/pensando/sw/bin/pen-install.iso /sw/output/
   mkdir -p /sw/output/pxe/tftpboot/pxelinux.cfg
