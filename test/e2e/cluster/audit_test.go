@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -82,6 +83,14 @@ var _ = Describe("audit tests", func() {
 				Expect(eventDetails.ResponseObject == "").Should(BeTrue())
 			}
 
+		})
+		It("check audit log file", func() {
+			var buf bytes.Buffer
+			for _, ip := range ts.tu.VeniceNodeIPs {
+				logs := ts.tu.CommandOutput(ip, "cat /var/log/pensando/audit.log")
+				buf.WriteString(logs)
+			}
+			Expect(buf.String()).ShouldNot(BeEmpty())
 		})
 	})
 })

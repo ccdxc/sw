@@ -38,7 +38,7 @@ func (s *logger) ProcessEvents(events ...*auditapi.Event) error {
 			"client-ips", fmt.Sprintf("%v", event.ClientIPs),
 			"gateway-node", event.GatewayNode,
 			"gateway-ip", event.GatewayIP,
-			"service", event.ServiceName,
+			"service-name", event.ServiceName,
 			"creation-time", types.TimestampString(&event.CreationTime.Timestamp))
 	}
 	return nil
