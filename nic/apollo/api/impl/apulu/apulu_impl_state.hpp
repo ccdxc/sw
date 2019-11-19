@@ -44,6 +44,7 @@ public:
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     sltcam *nacl_tbl(void) { return nacl_tbl_; }
     rte_indexer *copp_idxr(void) { return copp_idxr_; }
+    rte_indexer *nat_idxr(void) { return nat_idxr_; }
 
     friend class apulu_impl;            ///< friend of apulu_impl_state
 
@@ -52,6 +53,7 @@ private:
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
     sltcam *nacl_tbl_;                  ///< NACL tcam table
     rte_indexer *copp_idxr_;            ///< indexer for CoPP table
+    rte_indexer *nat_idxr_;             ///< indexer for NAT table
     handle_t ing_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];
     handle_t egr_drop_stats_tbl_hdls_[P4E_DROP_REASON_MAX + 1];
 };

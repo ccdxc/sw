@@ -178,7 +178,7 @@ mapping_impl::reserve_local_mapping_resources_(api_base *api_obj,
                     local_mapping_public_ip_hdl_, mapping_public_ip_hdl_);
 
     // reserve an entry for overlay IP to public IP xlation in NAT table
-    ret = mapping_impl_db()->nat_tbl_idxr()->alloc(&to_public_ip_nat_idx_);
+    ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for public IP %s in NAT table "
                       "for mapping (vpc %u, ip %s), vnic %u, err %u",
@@ -189,7 +189,7 @@ mapping_impl::reserve_local_mapping_resources_(api_base *api_obj,
     }
 
     // reserve an entry for public IP to overlay IP xlation in NAT table
-    ret = mapping_impl_db()->nat_tbl_idxr()->alloc(&to_overlay_ip_nat_idx_);
+    ret = apulu_impl_db()->nat_idxr()->alloc(&to_overlay_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for overlay IP in NAT table for "
                       "mapping (vpc %u, ip %s), vnic %u, err %u",
@@ -287,10 +287,10 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         mapping_impl_db()->mapping_tbl()->release(&tparams);
     }
     if (to_public_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
-        mapping_impl_db()->nat_tbl_idxr()->free(to_public_ip_nat_idx_);
+        apulu_impl_db()->nat_idxr()->free(to_public_ip_nat_idx_);
     }
     if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
-        mapping_impl_db()->nat_tbl_idxr()->free(to_overlay_ip_nat_idx_);
+        apulu_impl_db()->nat_idxr()->free(to_overlay_ip_nat_idx_);
     }
     return SDK_RET_OK;
 }

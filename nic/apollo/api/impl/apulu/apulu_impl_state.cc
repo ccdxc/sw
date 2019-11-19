@@ -49,6 +49,12 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     p4pd_global_table_properties_get(P4TBL_ID_COPP, &tinfo);
     copp_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(copp_idxr_ != NULL);
+
+    // NAT table bookkeeping (reserve 0th entry for no xlation)
+    p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
+    nat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
+    SDK_ASSERT(nat_idxr_ != NULL);
+
 }
 
 apulu_impl_state::~apulu_impl_state() {
@@ -56,6 +62,7 @@ apulu_impl_state::~apulu_impl_state() {
     sltcam::destroy(egress_drop_stats_tbl_);
     sltcam::destroy(nacl_tbl_);
     rte_indexer::destroy(copp_idxr_);
+    rte_indexer::destroy(nat_idxr_);
 }
 
 /// \@}

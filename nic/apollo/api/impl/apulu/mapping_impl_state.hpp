@@ -11,7 +11,6 @@
 #ifndef __MAPPING_IMPL_STATE_HPP__
 #define __MAPPING_IMPL_STATEHPP__
 
-#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
@@ -79,7 +78,6 @@ public:
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
-    rte_indexer *nat_tbl_idxr(void) { return nat_tbl_idxr_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
     friend class vnic_impl;
@@ -88,7 +86,6 @@ private:
 private:
     mem_hash    *local_mapping_tbl_;
     mem_hash    *mapping_tbl_;
-    rte_indexer *nat_tbl_idxr_;
     slab        *mapping_impl_slab_;
 };
 

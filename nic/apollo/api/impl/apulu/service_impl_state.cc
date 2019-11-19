@@ -35,7 +35,6 @@ svc_mapping_impl_state::svc_mapping_impl_state(pds_state *state) {
                                            true, true);
     SDK_ASSERT(svc_mapping_impl_slab_!= NULL);
 
-#if 0
     // instantiate P4 svc mappping table instance for bookkeeping
     bzero(&tparams, sizeof(tparams));
     tparams.max_recircs = 8;
@@ -45,11 +44,10 @@ svc_mapping_impl_state::svc_mapping_impl_state(pds_state *state) {
     tparams.appdata2str = NULL;
     svc_mapping_tbl_ = slhash::factory(&tparams);
     SDK_ASSERT(svc_mapping_tbl_ != NULL);
-#endif
 }
 
 svc_mapping_impl_state::~svc_mapping_impl_state() {
-    //slhash::destroy(svc_mapping_tbl_);
+    slhash::destroy(svc_mapping_tbl_);
     slab::destroy(svc_mapping_impl_slab_);
 }
 
@@ -78,7 +76,6 @@ svc_mapping_impl_state::table_transaction_end(void) {
 sdk_ret_t
 svc_mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb,
                                     void *ctxt) {
-#if 0
     pds_table_stats_t stats;
     p4pd_table_properties_t tinfo;
 
@@ -87,7 +84,6 @@ svc_mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb,
     stats.table_name = tinfo.tablename;
     svc_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
-#endif
     return SDK_RET_OK;
 }
 

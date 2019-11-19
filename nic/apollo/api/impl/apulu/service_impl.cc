@@ -10,6 +10,7 @@
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -30,36 +31,24 @@ namespace impl {
 /// \ingroup PDS_SERVICE
 /// @{
 
-#define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, ip1, ip2, svc_port)    \
+#define PDS_IMPL_FILL_SVC_MAPPING_SWKEY(key, vpc_hw_id, dip, dip_port)         \
 {                                                                              \
     memset((key), 0, sizeof(*(key)));                                          \
-    (key)->key_metadata_mapping_port = svc_port;                               \
-    if ((ip1)->af == IP_AF_IPV6) {                                             \
-        sdk::lib::memrev((key)->key_metadata_mapping_ip,                       \
-                         (ip1)->addr.v6_addr.addr8, IP6_ADDR8_LEN);            \
+    (key)->key_metadata_dport = (dip_port);                                    \
+    if ((dip)->af == IP_AF_IPV6) {                                             \
+        sdk::lib::memrev((key)->key_metadata_dst,                              \
+                         (dip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);            \
     } else {                                                                   \
-        memcpy((key)->key_metadata_mapping_ip,                                 \
-               &(ip1)->addr.v4_addr, IP4_ADDR8_LEN);                           \
+        memcpy((key)->key_metadata_dst, &(dip)->addr.v4_addr, IP4_ADDR8_LEN);  \
     }                                                                          \
-    if ((ip2)) {                                                               \
-        if ((ip2)->af == IP_AF_IPV6) {                                         \
-            sdk::lib::memrev((key)->key_metadata_mapping_ip2,                  \
-                             (ip2)->addr.v6_addr.addr8, IP6_ADDR8_LEN);        \
-        } else {                                                               \
-            memcpy((key)->key_metadata_mapping_ip2,                            \
-                   &(ip2)->addr.v4_addr, IP4_ADDR8_LEN);                       \
-        }                                                                      \
-    }                                                                          \
-    (key)->vnic_metadata_vpc_id2 = vpc_hw_id;                                  \
 }
 
 #define svc_mapping_action action_u.service_mapping_service_mapping_info
-#define PDS_IMPL_FILL_SVC_MAPPING_DATA(data, xlate_idx, xlate_port)            \
+#define PDS_IMPL_FILL_SVC_MAPPING_DATA(data, xlate_idx)                        \
 {                                                                              \
     memset((data), 0, sizeof(*(data)));                                        \
     (data)->action_id = SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID;               \
-    (data)->svc_mapping_action.service_xlate_idx = xlate_idx;                  \
-    (data)->svc_mapping_action.service_xlate_port = xlate_port;                \
+    (data)->svc_mapping_action.xlate_id = (xlate_idx);                         \
 }
 
 svc_mapping_impl *
@@ -92,7 +81,6 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key) {
 
 sdk_ret_t
 svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-#if 0
     sdk_ret_t ret;
     vpc_entry *vpc;
     pds_svc_mapping_spec_t *spec;
@@ -104,38 +92,37 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     // reserve an entry in SERVICE_MAPPING table for
     // (vpc, overlay_ip, port) -> (vpc, VIP, port)
-    vpc = vpc_db()->find(&spec->vpc);
+    vpc = vpc_db()->find(&spec->key.vpc);
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &spec->backend_ip,
-                                    spec->svc_port);
+                                    vpc->hw_id(), &spec->key.backend_ip,
+                                    spec->key.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve an entry for (PIP %s, PIP port %u) in "
                       "SERVICE_MAPPING table, err %u",
-                      ipaddr2str(&spec->backend_ip), spec->svc_port, ret);
+                      ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port, ret);
         goto error;
     }
     dip_to_vip_handle_ = api_params.handle;
 
     // reserve an entry in the NAT table for (PIP, PIP port) -> (VIP, VIP port)
-    // xlation
-    ret = apulu_impl_db()->nat_tbl()->reserve(&to_vip_nat_hdl_);
+    // xlation for the source IP and port in the Tx/egress direction
+    ret = apulu_impl_db()->nat_idxr()->alloc(&to_vip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve (PIP %s, PIP port %u) -> VIP xlation "
                       "entry in NAT table, err %u",
-                      ipaddr2str(&spec->backend_ip), spec->svc_port, ret);
+                      ipaddr2str(&spec->key.backend_ip),
+                      spec->key.backend_port, ret);
         goto error;
     }
     return SDK_RET_OK;
 
 error:
-    // TODO: cleanup
     return ret;
-#endif
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
