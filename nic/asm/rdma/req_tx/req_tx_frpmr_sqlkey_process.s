@@ -143,6 +143,7 @@ lkey_state_update:
     //overloading base_va to pass dma_address in 2nd pass
     seq         c4, K_NUM_PT_ENTRIES, 1
     tblwr.c4    d.is_phy_addr, 1
+    tblwr.!c4    d.is_phy_addr, 0
     tblwr.e     d.state, KEY_STATE_VALID
     tblwr.c4    d.phy_base_addr, K_VA  //BD Slot 
 

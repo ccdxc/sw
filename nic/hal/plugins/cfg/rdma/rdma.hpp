@@ -166,7 +166,8 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
 } p4_to_p4plus_rdma_hdr_t;
 
 typedef struct key_entry_s {
-    uint8_t          rsvd2[16];
+    uint8_t          rsvd2[8];
+    uint64_t         phy_base_addr;
     uint32_t         num_pt_entries_rsvd;
     uint32_t         mr_cookie;
     uint32_t         mr_l_key;
@@ -178,15 +179,9 @@ typedef struct key_entry_s {
     uint32_t         override_lif_vld: 1;
     uint32_t         host_addr: 1;
     uint32_t         pd;
-    union {
-        struct {
-            uint32_t         pt_base_32;
-            uint32_t         pt_base;
-        };
-        uint64_t     phy_base_addr;
-    };
+    uint32_t         pt_base;
     uint64_t         base_va;
-    uint32_t         len;
+    uint64_t         len;
     uint8_t          log_page_size;
     uint8_t          acc_ctrl;
     uint8_t          type  : 4; //mr_type_t

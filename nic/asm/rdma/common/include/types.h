@@ -1086,13 +1086,7 @@ struct key_entry_t {
     log_page_size: 8;
     len: 64;
     base_va: 64;
-    union {
-        struct {
-            pt_base: 32;
-            pt_base_32: 32;
-        };
-        phy_base_addr : 64;
-    };
+    pt_base: 32;
     pd: 32;
     host_addr: 1;
     override_lif_vld: 1;
@@ -1104,7 +1098,8 @@ struct key_entry_t {
     mr_l_key: 32;
     mr_cookie: 32;
     num_pt_entries_rsvd: 32;
-    rsvd2: 96;
+    phy_base_addr : 64;
+    rsvd2: 64;
 };
 
 struct key_entry_aligned_t {
@@ -1115,14 +1110,7 @@ struct key_entry_aligned_t {
     log_page_size: 8;
     len: 64;
     base_va: 64;
-    union {
-        struct {
-            pt_base: 32;
-            pt_base_32: 32;
-        };
-        phy_base_addr : 64;
-    };
-
+    pt_base: 32;
     pd: 32;
     host_addr: 1;
     override_lif_vld: 1;
@@ -1134,8 +1122,9 @@ struct key_entry_aligned_t {
     mr_l_key: 32;
     mr_cookie: 32;
     num_pt_entries_rsvd: 32;
+    phy_base_addr : 64;
     // pad added for easy access of d[] in mpu program
-    rsvd2: 96;
+    rsvd2: 64;
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \

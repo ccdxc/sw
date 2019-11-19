@@ -255,8 +255,9 @@ mr_skip_dma_pt:
     add         r2, r0, d.{mr.dma_addr}.dx
     or          r2, r2, 1, 63
     or          r2, r2, K_GLOBAL_LIF, 52
-    b           mr_no_skip_dma_pt
-    phvwrpair   p.key.phy_base_addr, r2, p.key.is_phy_addr, 1
+    phvwr       p.key.phy_base_addr, r2
+    b           mr_no_skip_dma_pt 
+    phvwr       p.key.is_phy_addr, 1 //BD-slot
 
 alloc_lkey:
     # num_pt_entries_rsvd (max) = kt_base_page_id - pt_base

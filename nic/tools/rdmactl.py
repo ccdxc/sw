@@ -925,7 +925,7 @@ class RdmaKeyTableEntry(Packet):
         ByteField("log_page_size", 0),
         LongField("len", 0),
         XLongField("base_va", 0),
-        XLongField("pt_base", 0),
+        XIntField("pt_base", 0),
         IntField("pd", 0),
         BitField("host_addr", 0, 1),
         BitField("override_lif_vld", 0, 1),
@@ -937,7 +937,8 @@ class RdmaKeyTableEntry(Packet):
         XIntField("mr_l_key", 0),
         XIntField("mr_cookie", 0),
         IntField("num_pt_entries_rsvd", 0),
-        BitField("rsvd2", 0, 96)
+        LongField("phy_base_addr", 0),
+        BitField("rsvd2", 0, 64)
     ]
 
 class RdmaPageTableEntry(Packet):
