@@ -333,6 +333,32 @@ apulu_impl::nacl_init_(void) {
                       "encapped traffic, err %u", ret);
         goto error;
     }
+
+    // drop all ARP responses seen coming on host lifs
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_tunneled_packet = 0;
+    key.key_metadata_dport = ETH_TYPE_ARP;
+    key.key_metadata_sport = 2;    // ARP response
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    mask.key_metadata_sport_mask = ~0;
+    data.action_id = NACL_NACL_DROP_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_DROP_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program drop entry for ARP responses on "
+                      "host lifs, err %u", ret);
+        goto error;
+    }
+
     return SDK_RET_OK;
 
 error:

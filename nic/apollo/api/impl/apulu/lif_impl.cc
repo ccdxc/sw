@@ -151,10 +151,12 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     key.capri_intrinsic_lif = key_;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     mask.capri_intrinsic_lif_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -315,10 +317,12 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     key.capri_intrinsic_lif = key_;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     mask.capri_intrinsic_lif_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -478,11 +482,13 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&data, 0, sizeof(data));
     key.control_metadata_flow_miss = 1;
     key.control_metadata_rx_packet = 0;
+    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 1;    // ARP request
     mask.control_metadata_flow_miss_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
@@ -794,12 +800,14 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_learn_enabled = 1;
     key.control_metadata_local_mapping_miss = 1;
+    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 1;    // ARP request
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;
     mask.control_metadata_local_mapping_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
