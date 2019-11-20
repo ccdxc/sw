@@ -19,7 +19,6 @@ PCIE_REQ_GEN            0           0|1|2|3|4
 PCIE_REQ_WIDTH          0           0|1|2|4|8|16
 PCIEPORT%d_CAP          gen4x16     gen<Gen>x<Width>
 PCIEPORT_CAP            gen4x16     gen<Gen>x<Width>
-PCIEDEV_CAP             gen4x16     gen<Gen>x<Width>
 PCIE_CAP                gen4x16     gen<Gen>x<Width>
 PCIE_REDUCE_RX_CRED     0           0|1
 PCIE_CPUMASK            0           <mask>
@@ -109,10 +108,9 @@ PCIE_REQ_WIDTH
 
 PCIEPORT%d_CAP
 PCIEPORT_CAP
-PCIEDEV_CAP
 PCIE_CAP
     These are all ways to specify how the software will configure the pcie
-    link params for the physical port and and virtual devices.  All have the
+    link params for the physical port and virtual devices.  All have the
     format "genGxW" to specify gen speed G (1,2,3,4) and width W (1,2,4,8,16).
 
     PCIEPORT%d_CAP sets the link params for a specific port (0-7),
@@ -121,12 +119,6 @@ PCIE_CAP
 
     Priority order for physical port config (highest to lowest):
         PCIEPORT%d_CAP, PCIEPORT_CAP, PCIE_CAP
-
-    PCIEDEV_CAP    sets the link params for virtual devices,
-    PCIE_CAP       sets the link params for virtual devices.
-
-    Priority order for virtual device config (highest to lowest):
-    	PCIEDEV_CAP, PCIE_CAP
 
 PCIE_REDUCE_RX_CRED
     If set to 1, selects reduced rx credits
@@ -147,7 +139,7 @@ PCIE_FIFOPRI
 
 PCIE_MLOCKALL
     pciemgrd locks all memory regions to respond to pcie transactions quickly.
-    Set to 0 to disalble mlockall().
+    Set to 0 to disable mlockall().
 ----------------
 pcie-poweron
 pcie-poweron-%d

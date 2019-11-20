@@ -210,63 +210,13 @@ pciehcfg_setconf_vfdeviceid(pciehcfg_t *pcfg, const u_int16_t vfdeviceid)
     pcfg->vfdeviceid = vfdeviceid;
 }
 
-static int
-parse_cap(char *cap, int *gen, int *width)
-{
-    if (cap && sscanf(cap, "gen%dx%d", gen, width) == 2) {
-        if (*gen >= 1 && *gen <= 4 &&
-            *width >= 1 && *width <= 16) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int
-getenv_cap(int *gen, int *width)
-{
-    char envar[40];
-    char *env;
-
-    snprintf(envar, sizeof(envar), "PCIEDEV_CAP");
-    env = getenv(envar);
-    if (env && parse_cap(env, gen, width)) {
-        pciesys_loginfo("pciemgr: $%s selects gen%dx%d\n",
-                        envar, *gen, *width);
-        return 1;
-    }
-
-    snprintf(envar, sizeof(envar), "PCIE_CAP");
-    env = getenv(envar);
-    if (env && parse_cap(env, gen, width)) {
-        pciesys_loginfo("pciemgr: $%s selects gen%dx%d\n",
-                        envar, *gen, *width);
-        return 1;
-    }
-
-    return 0;
-}
-
-static void
-default_cap(int *gen, int *width)
-{
-    /* check envar for override */
-    if (!getenv_cap(gen, width)) {
-        /* no envar, provide defaults */
-        *gen = 4;
-        *width = 16;
-    }
-}
-
 static void
 pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
 {
-    int default_gen, default_width;
+    pciemgr_params_t *params = pciehcfg_get_params();
 
-    default_cap(&default_gen, &default_width);
-
-    pcfg->cap_gen = default_gen;
-    pcfg->cap_width = default_width;
+    pcfg->cap_gen = params->cap_gen ? params->cap_gen : 4;
+    pcfg->cap_width = params->cap_width ? params->cap_width : 16;
     pcfg->flr = 1;
     pcfg->exttag = 1;
     pcfg->exttag_en = 1;
