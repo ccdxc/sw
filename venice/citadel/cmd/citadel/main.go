@@ -165,8 +165,10 @@ func main() {
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
 	cfg.EnableKstore = false
+	cfg.EnableKstoreMeta = false
 	cfg.MetastoreType = store.KVStoreTypeEtcd
 	cfg.ResolverClient = resolver.New(&resolver.Config{Name: globals.Citadel, Servers: strings.Split(*resolverURLs, ",")})
+	log.Infof("starting with %+v", cfg)
 
 	// create the data node
 	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath, *queryDbPath, logger)

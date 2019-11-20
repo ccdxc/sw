@@ -573,6 +573,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
 	cfg.EnableKstore = false
+	cfg.EnableKstoreMeta = false
 	nodeUUID := "citadel-node0"
 
 	httpURL := "localhost:" + globals.CitadelHTTPPort
