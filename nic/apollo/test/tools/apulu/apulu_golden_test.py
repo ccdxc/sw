@@ -79,7 +79,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0x8736b9e0, l2_1_offset=0x11, l3_1_offset=0x23, \
+               flow_hash=0x1891f5c3, l2_1_offset=0x11, l3_1_offset=0x23, \
                l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
                nexthop_id=0x1ef, nexthop_type='Tunnel') / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \

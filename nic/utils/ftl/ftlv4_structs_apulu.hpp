@@ -7,24 +7,24 @@ struct __attribute__((__packed__)) ftlv4_entry_t {
     uint32_t __pad_to_512b : 10;
     uint32_t entry_valid : 1;
     uint32_t nexthop_id : 16;
-    uint32_t nexthop_type : 2;
-    uint32_t nexthop_valid : 1;
     uint32_t more_hints : 18;
     uint32_t more_hashes : 1;
     uint32_t hint2 : 18;
     uint32_t hash2 : 11;
     uint32_t hint1 : 18;
+    uint32_t hash1 : 11;
 
     // key
-    uint32_t bd_id : 16;
     uint32_t dst;
     uint32_t src;
+    uint32_t bd_id : 16;
     uint32_t proto : 8;
     uint32_t sport : 16;
     uint32_t dport : 16;
 
     // data before key
-    uint32_t hash1 : 11;
+    uint32_t nexthop_type : 2;
+    uint32_t nexthop_valid : 1;
     uint32_t flow_role : 1;
     uint32_t session_id : 20;
     uint32_t epoch : 8;

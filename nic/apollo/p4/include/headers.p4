@@ -15,6 +15,16 @@ header_type vlan_tag_t {
     }
 }
 
+header_type arp_rarp_t {
+    fields {
+        hwType : 16;
+        protoType : 16;
+        hwAddrLen : 8;
+        protoAddrLen : 8;
+        opcode : 16;
+    }
+}
+
 header_type ipv4_t {
     fields {
         version : 4;

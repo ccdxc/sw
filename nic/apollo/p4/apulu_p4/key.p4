@@ -37,6 +37,9 @@ action native_nonip_packet() {
     } else {
         modify_field(key_metadata.dport, ethernet_1.etherType);
     }
+    if (arp.valid == TRUE) {
+        modify_field(key_metadata.sport, arp.opcode);
+    }
     modify_field(key_metadata.ktype, KEY_TYPE_MAC);
     modify_field(key_metadata.src, ethernet_1.srcAddr);
     modify_field(key_metadata.dst, ethernet_1.dstAddr);
