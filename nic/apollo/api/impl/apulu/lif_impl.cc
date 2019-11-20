@@ -20,52 +20,15 @@
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
+#define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    4096    // 256
+#define COPP_ARP_FROM_ARM_PPS                   4096    // 256
+
 namespace api {
 namespace impl {
 
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
 /// \ingroup PDS_LIF
 /// \@{
-
-#define copp_info    action_u.copp_copp
-static inline sdk_ret_t
-program_copp_entry_ (sdk::policer_t *policer, uint16_t idx)
-{
-    sdk_ret_t ret;
-    p4pd_error_t p4pd_ret;
-    uint64_t rate_tokens = 0;
-    uint64_t burst_tokens = 0;
-    copp_actiondata_t copp_data = { 0 };
-
-    copp_data.action_id = COPP_COPP_ID;
-    if (policer->rate) {
-        copp_data.copp_info.entry_valid = 1;
-        if (policer->type == sdk::POLICER_TYPE_PPS) {
-            copp_data.copp_info.pkt_rate = 1;
-        }
-        ret = policer_to_token_rate(policer,
-                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
-                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,
-                                    &rate_tokens, &burst_tokens);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-        memcpy(copp_data.copp_info.burst, &burst_tokens,
-               std::min(sizeof(copp_data.copp_info.burst),
-                        sizeof(burst_tokens)));
-        memcpy(copp_data.copp_info.rate, &rate_tokens,
-               std::min(sizeof(copp_data.copp_info.rate), sizeof(rate_tokens)));
-        memcpy(copp_data.copp_info.tbkt, &burst_tokens,
-               std::min(sizeof(copp_data.copp_info.tbkt),
-               sizeof(burst_tokens)));
-    }
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_COPP, idx,
-                                       NULL, NULL, &copp_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to write to copp table at idx %u", idx);
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-    return SDK_RET_OK;
-}
-#undef copp_info
 
 lif_impl *
 lif_impl::factory(pds_lif_spec_t *spec) {
@@ -139,6 +102,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     if_impl *intf;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
+    sdk::policer_t policer;
     pds_ifindex_t if_index;
     nacl_swkey_t key = { 0 };
     static uint32_t oob_lif = 0;
@@ -172,7 +136,43 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // cap ARP packets from oob lif(s) to 256 pps
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry for ARM to uplink ARP traffic (all vlans)
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.capri_intrinsic_lif = key_;
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.key_metadata_dport = ETH_TYPE_ARP;
+    mask.capri_intrinsic_lif_mask = ~0;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (oob, ARP) -> "
+                      "oob if index 0x%x, err %u", pinned_if_idx_, ret);
+        goto error;
+    }
+
     // install NACL for ARM to uplink traffic (all vlans)
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
     key.capri_intrinsic_lif = key_;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
@@ -425,6 +425,41 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for datapath lif %u "
                       "at idx %u", key_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // ARP requests from host lifs are throttled to 256 pps
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.key_metadata_dport = ETH_TYPE_ARP;
+    key.key_metadata_sport = 1;    // ARP request
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    mask.key_metadata_sport_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (flow miss, ARP "
+                      "requests from host) -> lif %s, err %u", name_, ret);
         goto error;
     }
 

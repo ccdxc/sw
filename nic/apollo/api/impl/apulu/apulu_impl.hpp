@@ -14,8 +14,11 @@
 #include <vector>
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
+#include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/apulu/include/p4pd.h"
 
 // system wide blackhole nexthop
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
@@ -307,6 +310,46 @@ private:
 /// \return SDK_RET_OK on success, failure status code on error
 sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint16_t vpc_hw_id,
                             uint16_t bd_hw_id, uint16_t vnic_hw_id);
+
+#define copp_info    action_u.copp_copp
+static inline sdk_ret_t
+program_copp_entry_ (sdk::policer_t *policer, uint16_t idx)
+{
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    uint64_t rate_tokens = 0;
+    uint64_t burst_tokens = 0;
+    copp_actiondata_t copp_data = { 0 };
+
+    copp_data.action_id = COPP_COPP_ID;
+    if (policer->rate) {
+        copp_data.copp_info.entry_valid = 1;
+        if (policer->type == sdk::POLICER_TYPE_PPS) {
+            copp_data.copp_info.pkt_rate = 1;
+        }
+        ret = policer_to_token_rate(policer,
+                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,
+                                    &rate_tokens, &burst_tokens);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        memcpy(copp_data.copp_info.burst, &burst_tokens,
+               std::min(sizeof(copp_data.copp_info.burst),
+                        sizeof(burst_tokens)));
+        memcpy(copp_data.copp_info.rate, &rate_tokens,
+               std::min(sizeof(copp_data.copp_info.rate), sizeof(rate_tokens)));
+        memcpy(copp_data.copp_info.tbkt, &burst_tokens,
+               std::min(sizeof(copp_data.copp_info.tbkt),
+               sizeof(burst_tokens)));
+    }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_COPP, idx,
+                                       NULL, NULL, &copp_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to write to copp table at idx %u", idx);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+#undef copp_info
 
 /// \@}
 

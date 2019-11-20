@@ -75,6 +75,7 @@ apulu_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     stats.table_name = tinfo.tablename;
     nacl_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
+    return SDK_RET_OK;
 }
 
 /// \@}
