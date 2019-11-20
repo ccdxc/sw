@@ -33,6 +33,7 @@
 
 #define PCI_VENDOR_ID_PENSANDO					0x1dd8
 
+#define PCI_DEVICE_ID_PENSANDO_BRIDGE_UPSTREAM		0x1000
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF		0x1002
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF		0x1003
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
@@ -227,6 +228,56 @@ ionic_pci_deinit(struct pci_dev *pdev)
 	pci_release_regions(pdev);
 }
 
+/*
+ * Enable ExtTag on a device.
+ * Probably similar to ONTAP function.
+ */
+static void pcie_enable_extended_tag_capability(device_t dev)
+{
+	uint32_t cap_off, cap, ctrl;
+
+	pci_find_cap(dev, PCIY_EXPRESS, &cap_off);
+	if (cap_off == 0) {
+		device_printf(dev, "Couldn't find PCI express capability\n");
+		return;
+	}
+	cap = pci_read_config(dev, cap_off + PCIER_DEVICE_CAP, 2);
+	ctrl = pci_read_config(dev, cap_off + PCIER_DEVICE_CTL, 2);
+
+	if ((cap & PCIEM_CAP_EXT_TAG_FIELD) && ((ctrl & PCIEM_CTL_EXT_TAG_FIELD) == 0))	{
+		device_printf(dev, "ExtTag  is disabled, enabling it.\n");
+		ctrl |= PCIEM_CTL_EXT_TAG_FIELD;
+		pci_write_config(dev, cap_off + PCIER_DEVICE_CTL, PCIEM_CTL_EXT_TAG_FIELD, 2);
+	}
+}
+/*
+ * This is the workaround till BIOS fixes enabling Extended Tag.
+ */
+static void ionic_pci_exttag_workaround(struct device *dev)
+{
+	device_t upstream;
+
+	/*
+	 * First enable extend tag on the device itself.
+	 */
+	pcie_enable_extended_tag_capability(dev->bsddev);
+
+	/*
+	 * XXX: This assumes system has only one Naples card.
+	 */
+	upstream = pci_find_device(PCI_VENDOR_ID_PENSANDO,
+			PCI_DEVICE_ID_PENSANDO_BRIDGE_UPSTREAM);
+
+	/* In case you are running in VM. */
+	if (upstream == NULL) {
+		device_printf(dev->bsddev,
+			"Couldn't find Pensando upstream bridge, skipping ExtTag\n");
+		return;
+	}
+
+	pcie_enable_extended_tag_capability(upstream);
+}
+
 static int
 ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
@@ -241,6 +292,8 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	ionic->pdev = pdev;
 	ionic->dev = dev;
 	pci_set_drvdata(pdev, ionic);
+
+	ionic_pci_exttag_workaround(dev);
 
 	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 

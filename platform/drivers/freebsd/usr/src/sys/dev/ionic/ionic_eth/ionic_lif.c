@@ -147,8 +147,6 @@ ionic_txq_enable(struct ionic_txque *txq)
 	err = ionic_q_enable_disable(txq->lif, txq->index, txq->type, true /* enable */);
 	if (err)
 		IONIC_QUE_WARN(txq, "failed to enable, err: %d\n", err);
-
-	txq->wdog_start = ticks;
 }
 
 static void
@@ -259,6 +257,7 @@ ionic_txq_wdog_work(struct work_struct *work)
 					first_wdog_start = txq->wdog_start;
 				}
 				err = ETIMEDOUT;
+				txq->wdog_start = 0;
 			}
 		}
 	}
@@ -3218,7 +3217,6 @@ ionic_lif_txq_init(struct ionic_lif *lif, struct ionic_txque *txq)
 	txq->hw_type = ctx.comp.q_init.hw_type;
 	txq->hw_index = ctx.comp.q_init.hw_index;
 	txq->dbval = IONIC_DBELL_QID(txq->hw_index);
-	txq->wdog_start = ticks;
 	txq->full = false;
 
 	return (0);

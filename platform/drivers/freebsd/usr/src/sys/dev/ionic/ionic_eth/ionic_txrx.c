@@ -1405,6 +1405,16 @@ ionic_xmit(struct ifnet *ifp, struct ionic_txque *txq, struct mbuf **m)
 		err = ionic_tx_setup(txq, m);
 
 	txq->full = (err == ENOSPC);
+	if (txq->full && !txq->wdog_start)
+		txq->wdog_start = ticks;
+
+	/*
+	 * Reset the timer if queue is not full,
+	 * we might be recovering from TxQ full condition.
+	 */	
+	if (!txq->full)
+		txq->wdog_start = 0;
+
 	return (err);
 }
 

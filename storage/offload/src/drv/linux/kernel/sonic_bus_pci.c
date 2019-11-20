@@ -16,7 +16,8 @@
 // TODO move PCI_VENDOR_ID_PENSANDO to include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
 
-#define PCI_DEVICE_ID_PENSANDO_SONIC_PF	0x1007
+#define PCI_DEVICE_ID_PENSANDO_BRIDGE_UPSTREAM	0x1000
+#define PCI_DEVICE_ID_PENSANDO_SONIC_PF		0x1007
 
 /* Supported devices */
 static const struct pci_device_id sonic_id_table[] = {
@@ -158,6 +159,58 @@ static void sonic_unmap_bars(struct sonic *sonic)
 			iounmap(bars[i].vaddr);
 }
 
+#ifdef __FreeBSD__
+/*
+ * Enable ExtTag on a device.
+ * Probably similar to ONTAP function.
+ */
+static void pcie_enable_extended_tag_capability(device_t dev)
+{
+	uint32_t cap_off, cap, ctrl;
+
+	pci_find_cap(dev, PCIY_EXPRESS, &cap_off);
+	if (cap_off == 0) {
+		device_printf(dev, "Couldn't find PCI express capability\n");
+		return;
+	}
+	cap = pci_read_config(dev, cap_off + PCIER_DEVICE_CAP, 2);
+	ctrl = pci_read_config(dev, cap_off + PCIER_DEVICE_CTL, 2);
+
+	if ((cap & PCIEM_CAP_EXT_TAG_FIELD) && ((ctrl & PCIEM_CTL_EXT_TAG_FIELD) == 0)) {
+		device_printf(dev, "ExtTag  is disabled, enabling it.\n");
+		ctrl |= PCIEM_CTL_EXT_TAG_FIELD;
+		pci_write_config(dev, cap_off + PCIER_DEVICE_CTL, PCIEM_CTL_EXT_TAG_FIELD, 2);
+	}
+}
+/*
+ * This is the workaround till BIOS fixes enabling Extended Tag.
+ */
+static void sonic_pci_exttag_workaround(struct device *dev)
+{
+	device_t upstream;
+
+	/*
+	 * First enable extend tag on the device itself.
+	 */
+	pcie_enable_extended_tag_capability(dev->bsddev);
+
+	/*
+	 * XXX: This assumes system has only one Naples card.
+	 */
+	upstream = pci_find_device(PCI_VENDOR_ID_PENSANDO,
+		PCI_DEVICE_ID_PENSANDO_BRIDGE_UPSTREAM);
+
+	/* In case you are running in VM. */
+	if (upstream == NULL) {
+		device_printf(dev->bsddev,
+			"Couldn't find Pensando upstream bridge, skipping ExtTag\n");
+		return;
+	}
+
+	pcie_enable_extended_tag_capability(upstream);
+}
+#endif
+
 static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
@@ -171,6 +224,10 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	sonic->pdev = pdev;
 	pci_set_drvdata(pdev, sonic);
 	sonic->dev = dev;
+
+#ifdef __FreeBSD__
+	sonic_pci_exttag_workaround(dev);
+#endif
 
 	err = sonic_set_dma_mask(sonic);
 	if (err) {
