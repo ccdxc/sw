@@ -506,7 +506,7 @@ struct q_identify_comp {
 /**
  * union q_identity - queue identity information
  *     @version:        queue identify structure version
- *     @supported:      supported queue versions
+ *     @supported:      bitfield of queue versions, first bit = ver 0
  *     @features:       queue features
  *     @desc_sz:        descriptor size
  *     @comp_sz:        completion descriptor size

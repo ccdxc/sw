@@ -133,6 +133,17 @@ enum ionic_lif_state_flags {
 	IONIC_LIF_STATE_SIZE
 };
 
+struct ionic_qtype_info {
+	u8  version;
+	u8  supported;
+	u64 features;
+	u16 desc_sz;
+	u16 comp_sz;
+	u16 sg_desc_sz;
+	u16 max_sg_elems;
+	u16 sg_desc_stride;
+};
+
 #define IONIC_LIF_NAME_MAX_SZ		32
 struct ionic_lif {
 	struct net_device *netdev;
@@ -162,6 +173,7 @@ struct ionic_lif {
 	bool registered;
 	bool mc_overflow;
 	bool uc_overflow;
+	u16 lif_type;
 	unsigned int nmcast;
 	unsigned int nucast;
 	char name[IONIC_LIF_NAME_MAX_SZ];
@@ -170,6 +182,8 @@ struct ionic_lif {
 	struct lif_info *info;
 	dma_addr_t info_pa;
 	u32 info_sz;
+	struct ionic_qtype_info qtype_info[IONIC_QTYPE_MAX];
+	u8 qtype_ver[IONIC_QTYPE_MAX];
 
 	u16 rss_types;
 	u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];

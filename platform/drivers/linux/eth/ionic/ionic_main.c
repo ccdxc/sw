@@ -69,6 +69,8 @@ static const char *ionic_error_to_str(enum status_code code)
 		return "IONIC_RC_BAD_ADDR";
 	case IONIC_RC_DEV_CMD:
 		return "IONIC_RC_DEV_CMD";
+	case IONIC_RC_ENOSUPP:
+		return "IONIC_RC_ENOSUPP";
 	case IONIC_RC_ERROR:
 		return "IONIC_RC_ERROR";
 	case IONIC_RC_ERDMA:
@@ -87,6 +89,7 @@ static int ionic_error_to_errno(enum status_code code)
 	case IONIC_RC_EQTYPE:
 	case IONIC_RC_EQID:
 	case IONIC_RC_EINVAL:
+	case IONIC_RC_ENOSUPP:
 		return -EINVAL;
 	case IONIC_RC_EPERM:
 		return -EPERM;
@@ -160,6 +163,8 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_RX_FILTER_ADD";
 	case CMD_OPCODE_RX_FILTER_DEL:
 		return "CMD_OPCODE_RX_FILTER_DEL";
+	case CMD_OPCODE_Q_IDENTIFY:
+		return "CMD_OPCODE_Q_IDENTIFY";
 	case CMD_OPCODE_Q_INIT:
 		return "CMD_OPCODE_Q_INIT";
 	case CMD_OPCODE_Q_CONTROL:

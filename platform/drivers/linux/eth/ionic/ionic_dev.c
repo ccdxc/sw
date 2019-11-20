@@ -407,6 +407,18 @@ int ionic_set_vf_config(struct ionic *ionic, int vf, u8 attr, u8 *data)
 }
 
 /* LIF commands */
+void ionic_dev_cmd_queue_identify(struct ionic_dev *idev,
+				  u16 lif_type, u8 qtype)
+{
+	union dev_cmd cmd = {
+		.q_identify.opcode = CMD_OPCODE_Q_IDENTIFY,
+		.q_identify.lif_type = lif_type,
+		.q_identify.type = qtype,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver)
 {
 	union dev_cmd cmd = {
@@ -450,6 +462,7 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct ionic_qcq *qcq,
 		.q_init.opcode = CMD_OPCODE_Q_INIT,
 		.q_init.lif_index = cpu_to_le16(lif_index),
 		.q_init.type = q->type,
+		.q_init.ver = qcq->q.lif->qtype_ver[q->type],
 		.q_init.index = cpu_to_le32(q->index),
 		.q_init.flags = cpu_to_le16(IONIC_QINIT_F_IRQ |
 					    IONIC_QINIT_F_ENA),
@@ -733,10 +746,12 @@ void ionic_eqs_deinit(struct ionic *ionic)
 int ionic_eq_init(struct ionic_eq *eq)
 {
 	struct ionic *ionic = eq->ionic;
+	union q_identity *q_ident;
 	union dev_cmd cmd = {
 		.q_init = {
 			.opcode = CMD_OPCODE_Q_INIT,
 			.type = IONIC_QTYPE_EQ,
+			.ver = 0,
 			.index = cpu_to_le32(eq->index),
 			.intr_index = cpu_to_le16(eq->intr.index),
 			.flags = cpu_to_le16(IONIC_QINIT_F_IRQ |
@@ -746,7 +761,31 @@ int ionic_eq_init(struct ionic_eq *eq)
 			.cq_ring_base = cpu_to_le64(eq->ring[1].base_pa),
 		},
 	};
+	u8 bits;
 	int err;
+
+	q_ident = (union q_identity *)&ionic->idev.dev_cmd_regs->data;
+
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_queue_identify(&ionic->idev, IONIC_LIF_TYPE_CLASSIC,
+				     IONIC_QTYPE_NOTIFYQ);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	bits = q_ident->supported;
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	if (err == IONIC_RC_ENOSUPP) {
+		dev_err(ionic->dev, "eq init failed, not supported\n");
+		return err;
+	} else if (err) {
+		dev_warn(ionic->dev, "eq version type request failed %d, defaulting to %d\n",
+			 err, cmd.q_init.ver);
+	} else {
+		int top = fls(bits);
+
+		if (top)
+			top--;
+		cmd.q_init.ver = top;
+	}
 
 	ionic_intr_mask(ionic->idev.intr_ctrl, eq->intr.index,
 			IONIC_INTR_MASK_SET);

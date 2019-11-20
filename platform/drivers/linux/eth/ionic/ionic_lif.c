@@ -15,6 +15,15 @@
 #include "ionic_ethtool.h"
 #include "ionic_debugfs.h"
 
+/* bitmaps of supported queuetype versions */
+static u8 ionic_qtype_versions[IONIC_QTYPE_MAX] = {
+	[IONIC_QTYPE_ADMINQ]  = 0x1,
+	[IONIC_QTYPE_NOTIFYQ] = 0x1,
+	[IONIC_QTYPE_RXQ]     = 0x1,
+	[IONIC_QTYPE_TXQ]     = 0x1,
+	[IONIC_QTYPE_EQ]      = 0x0,
+};
+
 static int ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode);
 static int ionic_lif_addr_add(struct ionic_lif *lif, const u8 *addr);
 static int ionic_lif_addr_del(struct ionic_lif *lif, const u8 *addr);
@@ -28,6 +37,7 @@ static int ionic_lif_init_queues(struct ionic_lif *lif);
 static int ionic_lif_set_netdev_info(struct ionic_lif *lif);
 static void ionic_lif_deinit(struct ionic_lif *lif);
 static void ionic_lif_free(struct ionic_lif *lif);
+static int ionic_lif_queue_identify(struct ionic_lif *lif);
 
 static void ionic_lif_deferred_work(struct work_struct *work)
 {
@@ -659,7 +669,7 @@ static int ionic_lif_txq_init(struct ionic_lif *lif, struct ionic_qcq *qcq)
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
-			.ver = 2,
+			.ver = lif->qtype_ver[q->type],
 			.index = cpu_to_le32(q->index),
 			.pid = cpu_to_le16(q->pid),
 			.ring_size = ilog2(q->num_descs),
@@ -718,7 +728,7 @@ static int ionic_lif_rxq_init(struct ionic_lif *lif, struct ionic_qcq *qcq)
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
-			.ver = 1,
+			.ver = lif->qtype_ver[q->type],
 			.index = cpu_to_le32(q->index),
 			.pid = cpu_to_le16(q->pid),
 			.ring_size = ilog2(q->num_descs),
@@ -1986,6 +1996,8 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		goto err_out_free_identify;
 	}
 	lif->identity = lid;
+	lif->lif_type = IONIC_LIF_TYPE_MACVLAN;
+	ionic_lif_queue_identify(lif);
 
 	lif->upper_dev = upper_dev;
 	err = ionic_lif_init(lif);
@@ -2513,6 +2525,8 @@ int ionic_lifs_alloc(struct ionic *ionic)
 	if (lif) {
 		ionic_lif_identify(ionic, IONIC_LIF_TYPE_CLASSIC, lid);
 		lif->identity = lid;
+		lif->lif_type = IONIC_LIF_TYPE_CLASSIC;
+		ionic_lif_queue_identify(lif);
 	} else {
 		kfree(lid);
 	}
@@ -2692,6 +2706,7 @@ static int ionic_lif_notifyq_init(struct ionic_lif *lif)
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
+			.ver = lif->qtype_ver[q->type],
 			.index = cpu_to_le32(q->index),
 			.flags = cpu_to_le16(IONIC_QINIT_F_IRQ |
 					     IONIC_QINIT_F_ENA),
@@ -2993,6 +3008,111 @@ void ionic_lifs_unregister(struct ionic *ionic)
 	 */
 	if (ionic->master_lif->netdev->reg_state == NETREG_REGISTERED)
 		unregister_netdev(ionic->master_lif->netdev);
+}
+
+static u8 ionic_qtype_supported_ver(struct ionic_lif *lif, int qtype)
+{
+	u8 supported_bits;
+	u8 top;
+
+	supported_bits = lif->qtype_info[qtype].supported &
+			 ionic_qtype_versions[qtype];
+	top = fls(supported_bits);
+	if (top)
+		top--; /* versions are 0-based */
+
+	return top;
+}
+
+static int ionic_lif_queue_identify(struct ionic_lif *lif)
+{
+	struct ionic *ionic = lif->ionic;
+	union q_identity *q_ident;
+	struct ionic_dev *idev;
+	int qtype;
+	int err;
+
+	idev = &lif->ionic->idev;
+	q_ident = (union q_identity *)&idev->dev_cmd_regs->data;
+
+	for (qtype = 0; qtype < IONIC_QTYPE_MAX; qtype++) {
+		struct ionic_qtype_info *qti = &lif->qtype_info[qtype];
+
+		if (!ionic_qtype_versions[qtype])
+			continue;
+
+		memset(qti, 0, sizeof(*qti));
+
+		mutex_lock(&ionic->dev_cmd_lock);
+		ionic_dev_cmd_queue_identify(idev, lif->lif_type, qtype);
+		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+		if (!err) {
+
+			qti->version   = q_ident->version;
+			qti->supported = q_ident->supported;
+			qti->features  = le64_to_cpu(q_ident->features);
+			qti->desc_sz   = le16_to_cpu(q_ident->desc_sz);
+			qti->comp_sz   = le16_to_cpu(q_ident->comp_sz);
+			qti->sg_desc_sz   = le16_to_cpu(q_ident->sg_desc_sz);
+			qti->max_sg_elems = le16_to_cpu(q_ident->max_sg_elems);
+			qti->sg_desc_stride = le16_to_cpu(q_ident->sg_desc_stride);
+		}
+		mutex_unlock(&ionic->dev_cmd_lock);
+
+		if (err == -EINVAL) {
+			dev_err(ionic->dev, "qtype %d not supported\n", qtype);
+			continue;
+		} else if (err) {
+			dev_err(ionic->dev, "q_ident failed, qtype %d: %d\n",
+				qtype, err);
+			return err;
+		}
+
+		lif->qtype_ver[qtype] = ionic_qtype_supported_ver(lif, qtype);
+
+		dev_dbg(ionic->dev, " qtype[%d].version = %d\n",
+			qtype, qti->version);
+		dev_dbg(ionic->dev, " qtype[%d].supported = 0x%02x\n",
+			qtype, qti->supported);
+		dev_dbg(ionic->dev, "           local = 0x%02x, ver = %d\n",
+			ionic_qtype_versions[qtype], lif->qtype_ver[qtype]);
+		dev_dbg(ionic->dev, " qtype[%d].features = 0x%04llx\n",
+			qtype, qti->features);
+		dev_dbg(ionic->dev, " qtype[%d].desc_sz = %d\n",
+			qtype, qti->desc_sz);
+		dev_dbg(ionic->dev, " qtype[%d].comp_sz = %d\n",
+			qtype, qti->comp_sz);
+		dev_dbg(ionic->dev, " qtype[%d].sg_desc_sz = %d\n",
+			qtype, qti->sg_desc_sz);
+		dev_dbg(ionic->dev, " qtype[%d].max_sg_elems = %d\n",
+			qtype, qti->max_sg_elems);
+		dev_dbg(ionic->dev, " qtype[%d].sg_desc_stride = %d\n",
+			qtype, qti->sg_desc_stride);
+	}
+
+	/* bugfix for fw from before queue versioning was used
+	 * and which has a very specific pattern of values
+	 */
+	if (lif->qtype_info[IONIC_QTYPE_ADMINQ].version == 0 &&
+	    lif->qtype_info[IONIC_QTYPE_ADMINQ].supported == 1 &&
+	    lif->qtype_info[IONIC_QTYPE_NOTIFYQ].version == 0 &&
+	    lif->qtype_info[IONIC_QTYPE_NOTIFYQ].supported == 1 &&
+	    lif->qtype_info[IONIC_QTYPE_RXQ].version == 0 &&
+	    lif->qtype_info[IONIC_QTYPE_RXQ].supported == 1 &&
+	    lif->qtype_info[IONIC_QTYPE_TXQ].version == 0 &&
+	    lif->qtype_info[IONIC_QTYPE_TXQ].supported == 3) {
+		dev_dbg(ionic->dev, "queue version bugfix\n");
+
+		qtype = IONIC_QTYPE_ADMINQ;
+		lif->qtype_info[qtype].supported = 0;
+		lif->qtype_ver[qtype] = ionic_qtype_supported_ver(lif, qtype);
+
+		qtype = IONIC_QTYPE_TXQ;
+		lif->qtype_info[qtype].supported = 0;
+		lif->qtype_ver[qtype] = ionic_qtype_supported_ver(lif, qtype);
+	}
+
+	return 0;
 }
 
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,

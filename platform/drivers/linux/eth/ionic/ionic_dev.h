@@ -311,6 +311,8 @@ void ionic_dev_cmd_port_pause(struct ionic_dev *idev, u8 pause_type);
 void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, u8 loopback_mode);
 
 int ionic_set_vf_config(struct ionic *ionic, int vf, u8 attr, u8 *data);
+void ionic_dev_cmd_queue_identify(struct ionic_dev *idev,
+				  u16 lif_type, u8 qtype);
 void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u16 lif_index,
 			    dma_addr_t addr);
