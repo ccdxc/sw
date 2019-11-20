@@ -54,6 +54,7 @@ eth_dev_type_to_str(EthDevType type)
         CASE(ETH_MNIC_INTERNAL_MGMT);
         CASE(ETH_MNIC_INBAND_MGMT);
         CASE(ETH_MNIC_CPU);
+        CASE(ETH_MNIC_LEARN);
         default: return "Unknown";
     }
 }

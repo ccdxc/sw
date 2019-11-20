@@ -72,6 +72,8 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
         return ETH_MNIC_INBAND_MGMT;
     } else if (s == "cpu") {
         return ETH_MNIC_CPU;
+    } else if (s == "learn") {
+        return ETH_MNIC_LEARN;
     } else {
         NIC_LOG_ERR("Unknown ETH dev type: {}", s);
         return ETH_UNKNOWN;
@@ -1926,7 +1928,8 @@ Eth::HalEventHandler(bool status)
         if (spec->eth_type == ETH_MNIC_OOB_MGMT ||
             spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
             spec->eth_type == ETH_MNIC_INBAND_MGMT ||
-            spec->eth_type == ETH_MNIC_CPU) {
+            spec->eth_type == ETH_MNIC_CPU ||
+            spec->eth_type == ETH_MNIC_LEARN) {
             if (!CreateLocalDevice()) {
                 NIC_LOG_ERR("{}: Failed to create device", spec->name);
             }
@@ -2138,6 +2141,7 @@ Eth::ConvertDevTypeToLifType(EthDevType dev_type)
         case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
         case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT;
         case ETH_MNIC_CPU: return sdk::platform::LIF_TYPE_MNIC_CPU;
+        case ETH_MNIC_LEARN: return sdk::platform::LIF_TYPE_LEARN;
         default: return sdk::platform::LIF_TYPE_NONE;
     }
 }
