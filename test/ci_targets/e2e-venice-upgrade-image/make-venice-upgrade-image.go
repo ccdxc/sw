@@ -24,6 +24,7 @@ func main() {
 		if err != nil {
 			logrus.Errorf("Failed to sftp logs: %v", err)
 		}
+		os.Exit(-1)
 	}
 	logrus.Errorf("GIT_VERSION=%s GIT_COMMIT=%s GIT_UPGRADE_VERSION=%s IMAGE_UPGRADE_VERSION=%s", gitVersion, gitCommit, gitVersion, gitVersion)
 	err = infra.CopyLogs([]string{"/import/src/github.com/pensando/sw/bin/venice.upg.tgz"}, "/sw/bin")

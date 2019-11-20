@@ -283,7 +283,19 @@ install:
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 ifndef PARALLEL
-	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+	@for c in $(TO_DOCKERIZE); \
+	 do echo "+++ Dockerizing $${c}"; \
+	 cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c};\
+	 number=1 ; \
+	 EXIT_CODE=1 ; \
+	 while [[ $$number -le 5 && $$EXIT_CODE -ne 0 ]] ; \
+		do echo $$number ; \
+			docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; \
+			EXIT_CODE=$$?;\
+			((number = number + 1)) ; \
+			echo "+++ Dockerizing $${c} exited with $${EXIT_CODE}" ; \
+		done ; \
+	 done
 else
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c} ; done
 	@for c in $(TO_DOCKERIZE); do (echo docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c}) ; done | parallel --will-cite --jobs 4
@@ -312,7 +324,19 @@ upgrade-install:
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 ifndef PARALLEL
-	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+	@for c in $(TO_DOCKERIZE); \
+	 do echo "+++ Dockerizing $${c}"; \
+	 cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c};\
+	 number=1 ; \
+	 EXIT_CODE=1 ; \
+	 while [[ $$number -le 5 && $$EXIT_CODE -ne 0 ]] ; \
+		do echo $$number ; \
+			docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; \
+			EXIT_CODE=$$?;\
+			((number = number + 1)) ; \
+			echo "+++ Dockerizing $${c} exited with $${EXIT_CODE}" ; \
+		done ; \
+	 done
 else
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c} ; done
 	@for c in $(TO_DOCKERIZE); do (echo docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_UPGRADE_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c}) ; done | parallel --will-cite --jobs 4

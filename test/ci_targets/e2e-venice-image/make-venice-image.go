@@ -24,6 +24,7 @@ func main() {
 		if err != nil {
 			logrus.Errorf("Failed to sftp logs: %v", err)
 		}
+		os.Exit(-1)
 	}
 	err = infra.CopyLogs([]string{"/import/src/github.com/pensando/sw/bin/venice.tgz"}, "/sw/bin")
 	if err != nil {
