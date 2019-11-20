@@ -113,6 +113,9 @@ checkpanicdump(void)
                 ioctl(fd, MEMUNLOCK, &mtd_erase);
                 ioctl(fd, MEMERASE, &mtd_erase);
         }
+        if (g_sysmon_cfg.panic_event_cb) {
+            g_sysmon_cfg.panic_event_cb();
+        }
         SDK_TRACE_INFO("%s flash erased and %s created",
                    PANIC_BUF, PANIC_KDUMP_FILE);
     }

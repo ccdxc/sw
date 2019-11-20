@@ -71,6 +71,12 @@ memory_event_cb (uint64_t total_mem, uint64_t available_mem,
 }
 
 void
+panic_event_cb ()
+{
+    eventrecorder_panic_event_cb();
+}
+
+void
 intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 {
     bool iscattrip = false;

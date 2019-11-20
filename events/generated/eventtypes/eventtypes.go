@@ -370,6 +370,13 @@ func init() {
 		Desc:       "System temperature is below threshold.",
 		SuppressMM: false}
 
+	eventTypes[NAPLES_PANIC_EVENT] = &EventTypeAttributes{
+		EType:      NAPLES_PANIC_EVENT.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "System panic on the previous boot",
+		SuppressMM: false}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:      ROLLOUT_STARTED.String(),
 		Severity:   "info",

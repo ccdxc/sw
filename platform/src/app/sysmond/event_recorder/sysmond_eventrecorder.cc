@@ -38,3 +38,8 @@ void EventLogger::LogOverTempExitAlarmEvent(std::string description, int tempera
 void EventLogger::LogFatalInterruptEvent(const char *desc) {
     this->recorder->event(eventtypes::NAPLES_FATAL_INTERRUPT, desc);
 }
+
+void EventLogger::LogPanicEvent(std::string description)
+{
+    this->recorder->event(eventtypes::NAPLES_PANIC_EVENT, description.c_str());
+}

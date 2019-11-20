@@ -37,6 +37,7 @@ typedef void (*temp_event_cb_t)(
         sysmond_hbm_threshold_event_t hbm_event);
 typedef void (*memory_event_cb_t)(
         uint64_t total_mem, uint64_t available_mem, uint64_t free_mem);
+typedef void (*panic_event_cb_t)(void);
 
 typedef struct sysmon_cfg_s {
     frequency_change_event_cb_t frequency_change_event_cb;
@@ -44,6 +45,7 @@ typedef struct sysmon_cfg_s {
     power_event_cb_t            power_event_cb;
     temp_event_cb_t             temp_event_cb;
     memory_event_cb_t           memory_event_cb;
+    panic_event_cb_t            panic_event_cb;
     sdk::lib::catalog           *catalog;
 } sysmon_cfg_t;
 

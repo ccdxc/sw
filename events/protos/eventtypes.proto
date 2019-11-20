@@ -264,6 +264,10 @@ enum EventTypes {
     NAPLES_OVER_TEMP_EXIT           = 511 [(category)    = System,
                                            (severity)    = WARN,
                                            (desc)        = "System temperature is below threshold."];
+
+    NAPLES_PANIC_EVENT              = 512 [(category)    = System,
+                                           (severity)    = WARN,
+                                           (desc)        = "System panic on the previous boot"];
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

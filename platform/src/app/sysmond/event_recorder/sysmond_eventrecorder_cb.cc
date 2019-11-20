@@ -32,3 +32,9 @@ eventrecorder_fatal_interrupt_event_cb (const char *desc)
 {
     EventLogger::getInstance()->LogFatalInterruptEvent(desc);
 }
+
+void
+eventrecorder_panic_event_cb (void)
+{
+    EventLogger::getInstance()->LogPanicEvent("Panic occurred on the previous boot");
+}

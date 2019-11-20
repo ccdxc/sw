@@ -61,6 +61,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NAPLES_FATAL_INTERRUPT',
     'NAPLES_OVER_TEMP',
     'NAPLES_OVER_TEMP_EXIT',
+    'NAPLES_PANIC_EVENT',
     'NAPLES_SERVICE_STOPPED',
     'SERVICE_PENDING',
     'SERVICE_RUNNING',
@@ -297,6 +298,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NAPLES_OVER_TEMP_EXIT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "System temperature is below threshold.",
+  },
+  'NAPLES_PANIC_EVENT' : {
+      "Name": "NAPLES_PANIC_EVENT",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System panic on the previous boot",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",
