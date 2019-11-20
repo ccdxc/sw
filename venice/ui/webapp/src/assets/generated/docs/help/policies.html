@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 <td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .<em>- characters. minimum length is 2 and maximum length is 64 charactersName of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .</em>- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
 </tr>
 <tr>
 <td>Rule Number</td>
@@ -22,31 +22,31 @@
 </tr>
 <tr>
 <td>apps</td>
-<td>list of apps objects to which the rule applies tolist of apps objects to which the rule applies to</td>
+<td>list of apps objects to which the rule applies to</td>
 </tr>
 <tr>
 <td>proto-ports</td>
-<td>list of (protocol, ports) pairs to which the rule applies to, in addition to appslist of (protocol, ports) pairs to which the rule applies to, in addition to apps</td>
+<td>list of (protocol, ports) pairs to which the rule applies to, in addition to apps</td>
 </tr>
 <tr>
 <td>action</td>
-<td>SGRule action, either PERMIT, DENY or REJECTSGRule action, either PERMIT, DENY or REJECT <br> Valid options include:<br> - Deny <br> - Permit <br> - Reject</td>
+<td>SGRule action, either PERMIT, DENY or REJECT <br> Valid options include:<br> - Deny <br> - Permit <br> - Reject</td>
 </tr>
 <tr>
 <td>from-ip-addresses</td>
-<td>inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;from-ipinbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;from-ip</td>
+<td>inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;from-ip</td>
 </tr>
 <tr>
 <td>to-ip-addresses</td>
-<td>outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;to-ipoutbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;to-ip</td>
+<td>outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses. cli-tags: id&#x3D;to-ip</td>
 </tr>
 <tr>
 <td>from-security-groups</td>
-<td>inbound rule from a given security groupinbound rule from a given security group</td>
+<td>inbound rule from a given security group</td>
 </tr>
 <tr>
 <td>to-security-groups</td>
-<td>outbound rule from a given security groupoutbound rule from a given security group</td>
+<td>outbound rule from a given security group</td>
 </tr>
 </tbody>
 </table>

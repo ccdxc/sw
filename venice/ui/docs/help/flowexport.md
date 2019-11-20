@@ -29,23 +29,3 @@ Servers to send the data to. Additional Targets are allowed by clicking on "+Add
 
 <load-table group:monitoring obj:MonitoringExportConfig 
             omit:credentials>
-
-- Name: Unique name for Flow Export policy
-- Interval: This is the value in seconds that the flows will be sent
-- Template Refresh Rate: <Need clarification>
-- Export Packet If:  This is the filters for the flow export
-	- Source:  Can be based upon
-		- IP Address
-		- Mac Address
-	- Destination:  Can be based upon
-		- IP Address
-		- Mac Address
-	- App/Ports:  Can be based upon App or Protocol/Ports
-		- App
-		- Protocol/Port
-	- Format:  IPFIX only
-	- Target:  This will be the destination flow export collector
-		- Destination: IP Address
-		- Transport: UDP/port
-
-		Additional Targets is allowed by clicking on "+Add"   

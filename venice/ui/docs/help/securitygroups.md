@@ -11,17 +11,6 @@ Creating a security group allows the grouping of workloads based upon an ip pref
             omitHeader: true >
 
 
-- Name: Unique name for the security group
-- Match Prefixes: The prefix is anything that matches within a particular subnet
-- Workload labels: Further filtering based upon workload labels is allowed. 
-	- The first box is the label or category that you want filter by
-	- The equation allows for "equal" or "not equals"
-	- The second box is the attribute for the label/category
-- Service labels: ? (is this containers?)
-	- The first box is the label or category that you want filter by
-	- The equation allows for "equal" or "not equals"
-	- The second box is the attribute for the label/category
-
 Click on "Create Security Group" to complete the task
 
 ## Example:

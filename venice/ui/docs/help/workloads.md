@@ -15,14 +15,6 @@ List of the interfaces for the workload. Click on "+Interface" to create a new i
 <load-table group:workload obj:WorkloadWorkloadIntfSpec
             >
 
-- Name: Unique name for the workload
-- Host Name: This will be a drop-down box listing the available hosts to associate the workload
-- Interfaces:
-	- Mac-Address: mac-address of the workload (vm)
-	- Micro-seg vlan: This will be an internal vlan id that will be unique to provide secure segmentation from other workloads (vms) within the same physical server.
-	- External vlan: This vlan id is the vlan number correlating with the upstream switch or top of rack switch
-	- IP Addresses:  IP Address of the workload
-
 Click on "Create Workload" to complete the task.
 
 ## Examples:
