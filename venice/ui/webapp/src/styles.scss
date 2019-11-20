@@ -179,7 +179,7 @@
   .global-column-action-icon-container {
     position: absolute;
     top: 0px;
-    right: 0px;
+    right: 20px;
   }
 
   .global-table-action-icon {
@@ -409,5 +409,29 @@
   .ui-paginator .ui-paginator-page.ui-state-active {
     background: #86a8d7;
     border-color: #86a8d7;
+  }
+
+  .ellipsisText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // this is remove the blue box aroud the edit button
+  // after it is clicked.
+  .tableviewedit-actiontd button:focus {
+    outline-style: none;
+  }
+
+  // create required label class
+  div.requiredLabel {
+    color: red;
+
+    &:before {
+      content: '*';
+      position: relative;
+      top: 2px;
+      margin-right: 2px;
+    }
   }
 }

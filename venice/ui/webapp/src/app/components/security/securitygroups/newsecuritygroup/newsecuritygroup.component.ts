@@ -130,8 +130,8 @@ export class NewsecuritygroupComponent  extends CreationForm<ISecuritySecurityGr
    */
   buildSecurityGroupObject(): ISecuritySecurityGroup {
     const sggroup: ISecuritySecurityGroup = this.newObject.getFormGroupValues();
-    const repeaterSearchExpression: SearchExpression[] = SearchUtil.convertFormArrayToSearchExpression(this.labelOutput);
-    sggroup.spec['workload-selector'].requirements = JSON.parse(JSON.stringify(repeaterSearchExpression)) as ILabelsRequirement[];
+    const repeaterSearchExpression = SearchUtil.convertFormArrayToSearchExpression(this.labelOutput);
+    sggroup.spec['workload-selector'].requirements = repeaterSearchExpression as ILabelsRequirement[];
     return sggroup;
   }
 

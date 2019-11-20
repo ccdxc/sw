@@ -18,6 +18,7 @@
     </span>
     <span *ngFor="let button of buttons" class="toolbar-button"
           [matTooltip]="button.genTooltip != null ? button.genTooltip() : ''"
+          [matTooltipClass]="button.matTooltipClass ? button.matTooltipClass : ''"
           [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]"
           (click)="buttonCallback($event, button)">
       {{button.text}}

@@ -155,7 +155,8 @@
             <div fxLayout="column" fxLayoutAlign="center end" (click)="versionOp.toggle($event)"
                  style="cursor: pointer;">{{version?.status["build-version"]}}</div>
             <div fxFlex="20px" fxLayout="column"></div>
-            <div fxLayout="column" fxLayoutAlign="center end">{{clock | PrettyDate}}</div>
+            <div fxFlex="200px" fxLayout="column" fxLayoutAlign="center end">{{clock | PrettyDate}}
+            </div>
           </div>
         </div>
       </mat-toolbar>

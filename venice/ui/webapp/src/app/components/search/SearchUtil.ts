@@ -1177,10 +1177,14 @@ export class SearchUtil {
     retData = retData.map((item) => {
       const tag = !!(item.keytextFormName) ? item.keytextFormName : item.keyFormControl;
       const keyValue = ((addMetatag) ? 'meta.labels.' : '')  + tag;
+      // modify here to trim each string of the array
+      const valValues = Array.isArray(item.valueFormControl) ?
+        item.valueFormControl : item.valueFormControl.trim().split(',');
+      const trimmedValues = valValues.map(each => (each) ? each.trim() : each);
       const searchExpression: SearchExpression = {
         key:  keyValue,
         operator: item.operatorFormControl,
-        values: Array.isArray(item.valueFormControl) ? item.valueFormControl : item.valueFormControl.trim().split(',')
+        values: trimmedValues
       };
       return searchExpression;
     });

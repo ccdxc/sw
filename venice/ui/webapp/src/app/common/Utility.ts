@@ -29,6 +29,10 @@ export class Utility {
 
   static instance: Utility;
 
+  // Define Valid Mac address format
+  public static MACADDRESS_REGEX =
+    /^([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})$/;
+
   // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
   public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';

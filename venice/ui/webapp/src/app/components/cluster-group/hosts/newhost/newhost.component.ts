@@ -114,7 +114,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isNewHostNameValid(this.existingObjects)]);
     newObject.$formGroup.get(['spec', 'dscs', 0, 'mac-address']).setValidators([
-      patternValidator(NewhostComponent.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE)]);
+      patternValidator(Utility.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE)]);
   }
 
   processNaples() {

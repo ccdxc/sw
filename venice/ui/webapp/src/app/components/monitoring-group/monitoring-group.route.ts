@@ -60,6 +60,15 @@ const routes: Routes = [
         loadChildren: '@app/components/monitoring-group/troubleshooting/troubleshooting.module#TroubleshootingModule'
       }
     ]
+  },
+  {
+    path: 'mirrorsessions',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/mirrorsessions/mirrorsessions.module#MirrorsessionsModule'
+      }
+    ]
   }
 ];
 

@@ -1,0 +1,65 @@
+<app-pagebody class="mirrorsessions" header="Mirror Sessions" [icon]="bodyicon">
+  <app-tableviewedit fxLayout="column" style="height: 100%;" class="mirrorsessions-widget"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
+                     [virtualRowHeight]="60"
+                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [expandTemplate]="expandTemplate" [actionTemplate]="actionTemplate"
+                     [createTemplate]="createTemplate"
+                     [enableCheckbox]="false"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+
+</app-pagebody>
+
+<ng-template #createTemplate>
+  <app-newmirrorsession (formClose)="creationFormClose()" fxFlex="none"
+                        [existingObjects]='dataObjects'>
+  </app-newmirrorsession>
+</ng-template>
+
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Mirror Sessions" [total]="count" fxFlex="auto" fxLayout="row"
+                   [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      <div [innerHTML]="displayColumn(rowData, col)">
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div
+       class="global-column-action-icon-container  global-column-action-icon-container-mirrorsession_{{rowData.meta.name}}"
+       fxLayout="row" fxLayoutGap="5px">
+    <button mat-icon-button>
+      <mat-icon *roleGuard="'monitoringmirrorsession_update'" matTooltip="Edit Mirror Session"
+                class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
+                (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    </button>
+    <button mat-icon-button>
+      <mat-icon *roleGuard="'monitoringmirrorsession_delete'" matTooltip="Delete Mirror Session"
+                class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete
+      </mat-icon>
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-col="col">
+  <app-newmirrorsession [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+                        fxFlex="none">
+  </app-newmirrorsession>
+</ng-template>

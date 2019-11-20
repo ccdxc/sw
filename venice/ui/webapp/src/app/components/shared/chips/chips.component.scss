@@ -139,6 +139,19 @@ $errorColor : #e57553;
   .ui-chips-token-item-text {
     font-size: 14px;
   }
+}
 
+.ng-invalid {
+  >.ui-chips {
 
+    >.ui-state-default,
+    >.ui-state-default:hover,
+    >.ui-state-focus {
+      border: 1px solid $errorColor !important;
+    }
+
+    >.ui-state-focus {
+      box-shadow: inset 5px 0 0 0 $errorColor !important;
+    }
+  }
 }

@@ -1,0 +1,233 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
+
+.newMirrorSession-container {
+  margin: 10px;
+
+  .newmirrorsession-inline-buttoncontainer {
+    margin: 5px 0px;
+
+    .newmirrorsession-inline-save,
+    .newmirrorsession-inline-cancel {
+      font-size: 16px;
+      display: inline-block;
+      padding: 4px 10px;
+      line-height: 25px;
+      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+    }
+  }
+
+  .newmirrorsession-general-inputbox,
+  .newmirrorsession-collector-inputbox {
+    height: 30px;
+
+    input {
+      height: 30px;
+      font-size: 14px;
+    }
+
+    .ui-calendar-button {
+      position: relative;
+    }
+  }
+
+  .newmirrorsession-general-inputbox {
+    width: 200px;
+  }
+
+  .newmirrorsession-collector-inputbox {
+    width: 170px;
+  }
+
+  .newmirrorsession-general-label,
+  .newmirrorsession-collector-label,
+  .newmirrorsession-collector-indexLabel {
+    height: 30px;
+    line-height: 30px;
+    font-size: 14px;
+  }
+
+  .newmirrorsession-general-label {
+    width: 100px;
+  }
+
+  .newmirrorsession-collector-label {
+    width: 80px;
+  }
+
+  .newmirrorsession-collector-indexLabel {
+    width: 30px;
+    color: $dary-grey;
+    margin-left: 10px;
+    ;
+  }
+
+  .newmirrorsession-add-collector,
+  .newmirrorsession-add-rule {
+    cursor: pointer;
+    width: 100px;
+  }
+
+  .newmirrorsession-add-collector,
+  .newmirrorsession-add-rule {
+    @include primary-font(16px, #6ba0e5, 400);
+    margin-top: 5px;
+  }
+
+  .newmirrorsession-multiselect {
+    @include primary-font();
+    text-align: left !important;
+  }
+
+  .newmirrorsession-collectors {
+    width: 640px;
+
+    legend {
+      width: 170px;
+    }
+  }
+
+  .newmirrorsession-selectors {
+    width: 640px;
+
+    legend {
+      width: 112px;
+    }
+  }
+
+  app-orderedlist {
+    width: 95%;
+    min-width: 650px;
+    max-width: 750px;
+  }
+}
+
+fieldset {
+  border: 1px solid $dary-grey;
+  padding: 5px;
+
+  legend {
+    padding: 0 2px;
+    font-size: 14px;
+    color: #676763
+  }
+}
+
+.newmirrorsession-rule-app,
+.newmirrorsession-rule-source,
+.newmirrorsession-rule-target {
+  padding: 0px 10px 10px;
+
+  legend {
+    padding-left: 5px;
+    width: 50px;
+    height: 16px;
+  }
+}
+
+.newmirrorsession-rule-app legend {
+  width: 100px;
+}
+
+.newmirrorsession-rule-template {
+  margin-left: 5px;
+  cursor: pointer;
+
+  .newmirrorsession-edit-hoverbuttons {
+    display: none;
+  }
+
+  &:hover {
+    .newmirrorsession-edit-hoverbuttons {
+      display: inherit;
+    }
+  }
+}
+
+.newmirrorsession-rule-content {
+  color: #767676;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.newmirrorsession-bold {
+  @include primary-font(16px, #383838, 500);
+}
+
+.newmirrorsession-bold-subtext-ipmac {
+  @include primary-font(14px, #383838, 200);
+  width: 40px;
+}
+
+.newmirrorsession-bold-subtext-proto {
+  @include primary-font(14px, #383838, 200);
+  width: 80px;
+}
+
+.newmirrorsession-proto-boxes,
+.newmirrorsession-rule-boxes {
+  ul {
+    width: 240px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    font-size: 14px !important;
+    height: 30px !important;
+  }
+}
+
+.newmirrorsession-attach-radio {
+  margin-left: 5px;
+  margin-top: 6px;
+  @include global-mat-radio(16px);
+
+  .mat-radio-label-content {
+    @include primary-font(14px);
+    padding-top: 2px;
+  }
+}
+
+.newmirrorsession-multiselect {
+  height: 30px !important;
+}
+
+.newmirrorsession-rule-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: #676763;
+}
+
+.newmirrorsession-subtext {
+  margin-top: 2px;
+  @include primary-font(12px, #b2b3b4, 300);
+}
+
+.newmirrorsession-toolbar-button {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.newmirrorsession-packet-error-tooltip {
+  background: white;
+  outline: #e57553 solid 1px;
+  font-size: 12px;
+  color: #676767;
+  margin-top: 10px;
+  min-width: 240px;
+
+  .ui-tooltip-arrow {
+    border-bottom-color: white;
+  }
+
+  .ui-tooltip-text {
+    background-color: white;
+    white-space: pre-line;
+    color: #676767;
+  }
+
+  .ui-shadow {
+    box-shadow: none;
+  }
+}

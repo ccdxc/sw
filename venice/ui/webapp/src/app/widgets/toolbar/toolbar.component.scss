@@ -62,3 +62,9 @@
     background: #86a8d7;
   }
 }
+
+// add this class for the validation error message
+// when user hover create button
+mat-tooltip-component .mat-tooltip.validation_error_tooltip {
+  color: orange !important;
+}

@@ -3,8 +3,8 @@
   <div fxFlex="auto" fxLayout="row">
     <ng-container *ngTemplateOutlet="meta"></ng-container>
     <div fxFlex></div>
-    <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow"
-         fxLayout="row wrap" fxLayoutAlign="start start">
+    <div *ngIf="isInline" class="newworkload-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
+         fxLayoutAlign="start start">
       <div fxFlex="nogrow">
         <span (click)="saveObject()"
               class="global-button-primary global-button-padding newworkload-save"
@@ -29,18 +29,19 @@
          class="newworkload-row">
       <div>NAME:</div>
       <input fxFlex="300px" formControlName="name" class="newworkload-name" appErrorTooltip
-             spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+             spellcheck="false"
+             type="text" pInputText placeholder="Unique Workload Name...">
     </div>
   </div>
 </ng-template>
 
 <ng-template #hostname>
   <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center"
-       [formGroup]="newObject.$formGroup.get('spec')" fxLayoutGap="20px">
+       [formGroup]="newObject.$formGroup.get('spec')"
+       fxLayoutGap="20px">
     <div fxFlex="nogrow">HOST NAME:</div>
-    <p-dropdown class="newworkload-host" fxFlex="200px"
-                formControlName="host-name" styleClass="neweventalertpolicy-font"
-                placeholder="select host name..."
+    <p-dropdown class="newworkload-host" fxFlex="200px" formControlName="host-name"
+                styleClass="neweventalertpolicy-font" placeholder="select host name..."
                 [options]="hostOptions"></p-dropdown>
   </div>
 </ng-template>
@@ -70,29 +71,26 @@
 
         <div fxFlex="nogrow" class="newworkload-interfaces" fxLayout="column" fxLayoutGap="10px">
           <div fxFlex fxLayout="row wrap" fxlayoutAlign="start start" fxLayoutGap="100px">
-            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
+            <div fxFlex="none" fxLayout="row" fxLayoutAnewlign="start center" fxLayoutGap="50px"
                  class="newworkload-input">
               <div fxFlex="none">Mac-Address:</div>
               <input fxFlex="nogrow" appErrorTooltip formControlName="mac-address"
                      spellcheck="false" type="text"
-                     class="newworkload-input newworkload-mac-address"
-                     pInputText placeholder="">
+                     class="newworkload-input newworkload-mac-address" pInputText placeholder="">
             </div>
             <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
                  class="newworkload-input">
               <div fxFlex="none">Micro-seg vlan:</div>
               <input fxFlex="nogrow" appErrorTooltip formControlName="micro-seg-vlan"
                      spellcheck="false" type="number"
-                     class="newworkload-input newworkload-micro-seg-vlan"
-                     pInputText placeholder="">
+                     class="newworkload-input newworkload-micro-seg-vlan" pInputText placeholder="">
             </div>
             <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
                  class="newworkload-input">
               <div fxFlex="none">External vlan:</div>
               <input fxFlex="nogrow" appErrorTooltip formControlName="external-vlan"
                      spellcheck="false" type="number"
-                     class="newworkload-input newworkload-external-vlan"
-                     pInputText placeholder="">
+                     class="newworkload-input newworkload-external-vlan" pInputText placeholder="">
             </div>
           </div>
 
@@ -102,9 +100,7 @@
               <div fxFlex="5px"></div>
               <div fxFlex="none" class="newworkload-subtext">(specify one or more)</div>
             </div>
-            <app-chips class="newworkload-chip"
-                       [maxChipLength]="15"
-                       [addOnBlur]="true"
+            <app-chips class="newworkload-chip" [maxChipLength]="15" [addOnBlur]="true"
                        [addOnTab]="true"
                        formControlName="ip-addresses">
               <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
@@ -112,7 +108,8 @@
                      [ngClass]="{'error': !isValidIP(item)}">
                   <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
                   <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close</mat-icon>
+                            (click)="cancelFunc($event)">close
+                  </mat-icon>
                 </div>
               </ng-template>
             </app-chips>
@@ -125,8 +122,6 @@
 
       </div>
     </div>
-    <div fxFlex="none"
-         (click)="addInterface()"
-         class="newworkload-add-interface">+ INTERFACE</div>
+    <div fxFlex="none" (click)="addInterface()" class="newworkload-add-interface">+ INTERFACE</div>
   </div>
 </ng-template>

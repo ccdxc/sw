@@ -35,6 +35,15 @@ import * as _ from 'lodash';
                 delete obj[key];
               }
             } else {
+              /* this is for object.key is an array
+               * delete key for array object will won't for array object
+               * if there are multiple items in an array and one of them is not empty
+               * after delete key, the array will be [object, null, null, ...]
+               * and array length is not 1. you need removed those empty object
+               */
+              if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                obj[key] = obj[key].filter(item => (item) ? true : false);
+              }
               retValue = false;
             }
           } else if (obj[key] != null && (model == null || model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {

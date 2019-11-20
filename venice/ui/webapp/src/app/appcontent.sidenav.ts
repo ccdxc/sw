@@ -182,6 +182,14 @@ export const sideNavMenu: SideNavItem[] = [
         featureGuard: Features.troubleshooting,
         roleGuard: UIRolePermissions.monitoringtroubleshootingsession_read,
         link: ['/monitoring', 'troubleshooting']
+      },
+      {
+        label: 'Mirror Sessions',
+        icon: {
+          cssClass: 'app-l-side-nav-monitoring-mirrorsession'
+        },
+        roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
+        link: ['/monitoring', 'mirrorsessions']
       }
     ]
   },

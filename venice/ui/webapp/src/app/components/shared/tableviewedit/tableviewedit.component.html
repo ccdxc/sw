@@ -47,7 +47,8 @@
               <th
                   [ngStyle]="{ 'padding-left': (first?'0.5em':'0'), 'padding-right' : (last?'0.5em':'0'), 'pointer-events': (pressed?'none':'inherit') }"
                   pReorderableColumn [pReorderableColumnDisabled]="col.notReorderable? true: false"
-                  [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
+                  [pSortableColumn]="col.sortable? col.field : ''"
+                  [class]="col.class ? col.class : ''"
                   [fxFlex]="col.width"
                   [colSpan]="last && actionTemplate != null ? 2 : 1">
                 <div fxFlex="grow" fxLayout="row">
@@ -79,7 +80,7 @@
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
           <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"
-              [class]="col.class"
+              [class]="col.class ? col.class : ''" [style.min-width]="col.width + '%'"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container
                           *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData}">

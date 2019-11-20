@@ -10,6 +10,7 @@ export interface BreadcrumbItem {
 export interface ToolbarButton {
   text: string;
   cssClass?: string;
+  matTooltipClass?: string;
   callback: (...args: any[]) => void;
   computeClass?: any;
   genTooltip?: () => string;
