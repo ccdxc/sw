@@ -21,6 +21,7 @@
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 #define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    4096    // 256
+#define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   4096    // 256
 #define COPP_ARP_FROM_ARM_PPS                   4096    // 256
 
 namespace api {
@@ -747,7 +748,83 @@ error:
 
 sdk_ret_t
 lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
+    uint32_t idx;
+    sdk_ret_t ret;
+    nacl_swkey_t key;
+    p4pd_error_t p4pd_ret;
+    sdk::policer_t policer;
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
+    static uint32_t lif_num = 0;
+    nexthop_actiondata_t nh_data = { 0 };
+    sdk_table_api_params_t tparams = { 0 };
+
+    snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
+    PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);
+    // allocate required nexthop to point to ARM datapath lif
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entry for learn lif %s, "
+                      "id %u, err %u", name_, key_, ret);
+        return ret;
+    }
+
+    // program the nexthop
+    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nh_data.nexthop_info.lif = key_;
+    nh_data.nexthop_info.port = TM_PORT_DMA;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                       NULL, NULL, &nh_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for learn lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // cap ARP requests from host lifs to 256/sec towards learn lif
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_learn_enabled = 1;
+    key.control_metadata_local_mapping_miss = 1;
+    key.key_metadata_dport = ETH_TYPE_ARP;
+    key.key_metadata_sport = 1;    // ARP request
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_learn_enabled_mask = ~0;
+    mask.control_metadata_local_mapping_miss_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    mask.key_metadata_sport_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (learn miss, ARP "
+                      "requests from host) -> lif %s, err %u", name_, ret);
+        goto error;
+    }
     return SDK_RET_OK;
+
+error:
+
+    nexthop_impl_db()->nh_idxr()->free(nh_idx_);
+    nh_idx_ = 0xFFFFFFFF;
+    return ret;
 }
 
 sdk_ret_t
