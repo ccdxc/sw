@@ -78,8 +78,9 @@ ingress_to_rxdma:
                         p4i_to_arm_mapping_xlate_id}, r1
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
-    or              r1, k.vnic_metadata_vnic_id, \
-                        k.control_metadata_rx_packet, 10
+    seq             c1, k.control_metadata_rx_packet, r0
+    or.c1           r1, k.vnic_metadata_vnic_id, 1, 10
+    or.!c1          r1, k.vnic_metadata_vnic_id, 0, 10
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
     or.c1           r1, 1, r1, 1
     or.!c1          r1, 0, r1, 1

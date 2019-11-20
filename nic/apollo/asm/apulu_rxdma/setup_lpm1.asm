@@ -38,7 +38,7 @@ setup_lpm_dport_sport:
     phvwr            p.lpm_metadata_lpm1_base_addr, r2
 
     // Setup key for SPORT lookup on LPM1
-    phvwr            p.lpm_metadata_lpm1_key[15:0], k.p4_to_rxdma_flow_sport
+    phvwr            p.lpm_metadata_lpm1_key, k.p4_to_rxdma_flow_sport
 
     // Setup root for DPORT lookup on LPM2
     addi             r2, r1, SACL_PROTO_DPORT_TABLE_OFFSET
@@ -46,7 +46,7 @@ setup_lpm_dport_sport:
 
     // Setup key for DPORT lookup on LPM2
     phvwr            p.lpm_metadata_lpm2_key[15:0], k.p4_to_rxdma_flow_dport
-    phvwr            p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto
+    phvwr            p.lpm_metadata_lpm2_key[31:16], k.p4_to_rxdma_flow_proto
 
     // Enable both LPMs and recirc again
     phvwr            p.p4_to_rxdma_lpm1_enable, TRUE
