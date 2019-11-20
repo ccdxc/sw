@@ -176,7 +176,7 @@ testcases:
 
     -   name    : Load_Defaults
         testcase: testcases.drivers.load_defaults
-        enable  : True
+        enable  : False
 
     -   name    : DriverReloadStress
         testcase: testcases.drivers.driverreload
