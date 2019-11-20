@@ -109,8 +109,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t oob_lif = 0;
+    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "oob%u", oob_lif++);
     PDS_TRACE_DEBUG("Creating oob lif %s, key %u", name_, key_);
@@ -218,7 +218,6 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
     if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
     intf = (if_impl *)if_db()->find(&if_index)->impl();
     key.capri_intrinsic_lif = intf->hw_id();
@@ -274,9 +273,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nacl_actiondata_t data;
     pds_ifindex_t if_index;
     static uint32_t inb_lif = 0;
+    sdk_table_api_params_t tparams;
     lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "dsc%u", inb_lif++);
     PDS_TRACE_DEBUG("Creating inband lif %s, key %u", name_, key_);
@@ -384,7 +383,6 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
     if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
     intf = (if_impl *)if_db()->find(&if_index)->impl();
     key.capri_intrinsic_lif = intf->hw_id();
@@ -441,8 +439,8 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t dplif = 0;
+    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "swdp%u", dplif++);
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);
@@ -575,10 +573,10 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
+    sdk_table_api_params_t  tparams;
     static uint32_t hmlif = 0, imlif = 0;
     nexthop_actiondata_t nh_data = { 0 };
     lif_internal_mgmt_ctx_t cb_ctx = { 0 };
-    sdk_table_api_params_t  tparams = { 0 };
     lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
@@ -670,7 +668,6 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    memset(&tparams, 0, sizeof(tparams));
     key.capri_intrinsic_lif = int_mgmt_lif->key();
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
@@ -756,8 +753,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
+    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);

@@ -191,13 +191,12 @@ apulu_impl::inter_pipe_init_(void) {
 sdk_ret_t
 apulu_impl::egress_drop_stats_init_(void) {
     sdk_ret_t                    ret;
+    sdk_table_api_params_t       tparams;
     p4e_drop_stats_swkey_t       key = { 0 };
-    p4e_drop_stats_swkey_mask_t  key_mask = { 0 };
     p4e_drop_stats_actiondata_t  data = { 0 };
-    sdk_table_api_params_t       tparams = { 0 };
+    p4e_drop_stats_swkey_mask_t  key_mask = { 0 };
 
     for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
-        memset(&tparams, 0, sizeof(tparams));
         key.control_metadata_p4e_drop_reason = ((uint32_t)1 << i);
         key_mask.control_metadata_p4e_drop_reason_mask =
             key.control_metadata_p4e_drop_reason;
@@ -215,13 +214,12 @@ apulu_impl::egress_drop_stats_init_(void) {
 sdk_ret_t
 apulu_impl::ingress_drop_stats_init_(void) {
     sdk_ret_t                    ret;
+    sdk_table_api_params_t       tparams;
     p4i_drop_stats_swkey_t       key = { 0 };
-    p4i_drop_stats_swkey_mask_t  key_mask = { 0 };
     p4i_drop_stats_actiondata_t  data = { 0 };
-    sdk_table_api_params_t       tparams = { 0 };
+    p4i_drop_stats_swkey_mask_t  key_mask = { 0 };
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
-        memset(&tparams, 0, sizeof(tparams));
         key.control_metadata_p4i_drop_reason = ((uint32_t)1 << i);
         key_mask.control_metadata_p4i_drop_reason_mask =
             key.control_metadata_p4i_drop_reason;
@@ -248,11 +246,15 @@ sdk_ret_t
 apulu_impl::nacl_init_(void) {
     uint32_t idx;
     sdk_ret_t ret;
-    nacl_swkey_t key = { 0 };
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
-    sdk_table_api_params_t tparams = { 0 };
+    nacl_swkey_t key;
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
+    sdk_table_api_params_t tparams;
 
+    // drop all IPv6 traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
     key.key_metadata_ktype = KEY_TYPE_IPV6;
     mask.key_metadata_ktype_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
@@ -265,7 +267,77 @@ apulu_impl::nacl_init_(void) {
                       ret);
         return ret;
     }
+
+    // allow encapped TCP traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 1;
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_tunneled_packet = 1;
+    key.key_metadata_proto = IP_PROTO_TCP;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_proto_mask = ~0;
+    data.action_id = NACL_NACL_PERMIT_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_PERMIT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped TCP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // allow encapped UDP traffic
+    key.key_metadata_proto = IP_PROTO_UDP;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_PERMIT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped UDP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // allow encapped ICMP traffic
+    key.key_metadata_proto = IP_PROTO_ICMP;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_PERMIT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped ICMP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // drop all non-TCP/UDP/ICMP encapped traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 1;
+    key.control_metadata_tunneled_packet = 1;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    data.action_id = NACL_NACL_DROP_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_DROP_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program drop entry for nonTCP/UDP/ICMP "
+                      "encapped traffic, err %u", ret);
+        goto error;
+    }
     return SDK_RET_OK;
+
+error:
+
+    return ret;
 }
 
 sdk_ret_t
