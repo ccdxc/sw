@@ -476,7 +476,7 @@ sldirectmap::entry_to_str(void *data, uint32_t index, char *buff,
     p4pd_error_t    p4_err;
 
     p4_err = p4pd_global_table_ds_decoded_string_get(props_->ptable_id, index, NULL, NULL,
-                                                     data, buff, sizeof(buff));
+                                                     data, buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
     return SDK_RET_OK;
 }
