@@ -25,7 +25,7 @@ message EndpointStatus {
     // VM or container name
     string WorkloadName   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
     // network this endpoint belogs to
-    string Network        = 2  [(gogoproto.jsontag) = "network,omitempty"];
+    string Network        = 2  [(venice.objRelation) = {Type: "NamedRef", To: "network/Network"}, (gogoproto.jsontag) = "network,omitempty"];
     // host address of the host where this endpoint exists
     string HomingHostAddr = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
     // host name of the host where this endpoint exists

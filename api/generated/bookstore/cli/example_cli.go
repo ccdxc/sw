@@ -95,6 +95,28 @@ func removeBookOper(obj interface{}) error {
 	return nil
 }
 
+// CreateCouponFlags specifies flags for Coupon create operation
+var CreateCouponFlags = []gen.CliFlag{
+	{
+		ID:     "DiscountCode",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
+
+func removeCouponOper(obj interface{}) error {
+	if v, ok := obj.(*bookstore.Coupon); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = bookstore.CouponStatus{}
+	}
+	return nil
+}
+
 // CreateCustomerFlags specifies flags for Customer create operation
 var CreateCustomerFlags = []gen.CliFlag{
 	{
@@ -251,6 +273,9 @@ func init() {
 
 	cl.AddCliInfo("bookstore.Book", "create", CreateBookFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Book", removeBookOper)
+
+	cl.AddCliInfo("bookstore.Coupon", "create", CreateCouponFlags)
+	cl.AddRemoveObjOperFunc("bookstore.Coupon", removeCouponOper)
 
 	cl.AddCliInfo("bookstore.Customer", "create", CreateCustomerFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Customer", removeCustomerOper)

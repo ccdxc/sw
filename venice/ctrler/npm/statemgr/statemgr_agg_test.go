@@ -4,15 +4,16 @@ package statemgr
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -22,32 +23,63 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func createPolicies(stateMgr *Statemgr, start, end int) error {
+func createPolicies(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := start; i < end; i++ {
 		err := createPolicy(stateMgr, "testSp"+strconv.Itoa(i), "1")
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
-		if err != nil {
-			return err
-		}
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Sg not found", "1ms", "1s")
+
 	}
 	return nil
 }
 
-func createPoliciesWithApps(stateMgr *Statemgr, start, end int, apps []string) error {
+func createPoliciesWithApps(t *testing.T, stateMgr *Statemgr, start, end int, apps []string) error {
 
 	for i := start; i < end; i++ {
 		err := createPolicyWithApps(stateMgr, "testSp"+strconv.Itoa(i), apps, "1")
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
-		if err != nil {
-			return err
+
+		allAppsPresent := true
+		for _, app := range apps {
+			_, err := stateMgr.FindApp("default", app)
+			if err != nil {
+				allAppsPresent = false
+				break
+			}
 		}
+
+		if allAppsPresent {
+			AssertEventually(t, func() (bool, interface{}) {
+
+				_, err := stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
+				if err == nil {
+					return true, nil
+				}
+				return false, nil
+			}, "Policy not found", "1ms", "1s")
+		} else {
+			AssertEventually(t, func() (bool, interface{}) {
+
+				_, err := stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
+				if err == nil {
+					return false, nil
+				}
+				return true, nil
+			}, "Policy found when not expected", "1ms", "1s")
+		}
+
 	}
 	return nil
 }
@@ -62,38 +94,78 @@ func generateApps(start, end int) []string {
 	return apps
 }
 
-func createApps(stateMgr *Statemgr, apps []string) error {
+func createApps(t *testing.T, stateMgr *Statemgr, apps []string) error {
 
 	for i, app := range apps {
 		err := createApp(stateMgr, app, strconv.Itoa(i+100))
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindApp("default", app)
-		if err != nil {
-			return err
-		}
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindApp("default", app)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "App not found", "1ms", "1s")
 	}
 	return nil
 }
 
-func updatePolicies(stateMgr *Statemgr, start, end int) error {
+func updateApps(t *testing.T, stateMgr *Statemgr, apps []string) error {
+
+	for i, app := range apps {
+		err := updateApp(stateMgr, app, strconv.Itoa(i+100))
+		if err != nil {
+			return err
+		}
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindApp("default", app)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "App not found", "1ms", "1s")
+	}
+	return nil
+}
+
+func updatePolicies(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := start; i < end; i++ {
 		policy, err := stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
 		if err != nil {
 			return err
 		}
+
 		version, _ := strconv.Atoi(policy.NetworkSecurityPolicy.GenerationID)
-		err = updatePolicy(stateMgr, "testSp"+strconv.Itoa(i), strconv.Itoa(version+1))
+		newGENID := strconv.Itoa(version + 1)
+		err = updatePolicy(stateMgr, "testSp"+strconv.Itoa(i), newGENID)
 		if err != nil {
 			return err
 		}
+
+		AssertEventually(t, func() (bool, interface{}) {
+
+			policy, err = stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
+			if err != nil {
+				fmt.Printf("Did not find policy....\n")
+				return false, nil
+			}
+			if policy.NetworkSecurityPolicy.GenerationID != newGENID {
+				fmt.Printf("Gen ID mismatch...\n")
+				return false, nil
+			}
+			return true, nil
+		}, "Sg updated", "1ms", "1s")
+
 	}
 	return nil
 }
 
-func deletePolicies(stateMgr *Statemgr, start, end int) error {
+func deletePolicies(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := start; i < end; i++ {
 
@@ -101,15 +173,19 @@ func deletePolicies(stateMgr *Statemgr, start, end int) error {
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
-		if err == nil {
-			return errors.New("Error delting policy")
-		}
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindSgpolicy("default", "testSp"+strconv.Itoa(i))
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Sg still found", "1ms", "1s")
 	}
 	return nil
 }
 
-func deleteApps(stateMgr *Statemgr, start, end int) error {
+func deleteApps(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := 100 + start; i < 100+end; i++ {
 		name := "testApp" + strconv.Itoa(i)
@@ -117,10 +193,37 @@ func deleteApps(stateMgr *Statemgr, start, end int) error {
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindApp("default", name)
-		if err == nil {
-			return fmt.Errorf("Policy not delted")
-		}
+
+		AssertEventually(t, func() (bool, interface{}) {
+			app, err := stateMgr.FindApp("default", "testApp"+strconv.Itoa(i))
+			if err != nil {
+				fmt.Printf("Did not find the appp afer delete %v...\n", name)
+				return true, nil
+			}
+			fmt.Printf("Trying to find policis...\n")
+			policies, _ := stateMgr.ctrler.NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{})
+			fmt.Printf("Found  policis...%v\n", policies)
+			for _, policy := range policies {
+				//policy.Spec.References
+				resp := make(map[string]apiintf.ReferenceObj)
+				policy.References(app.App.GetObjectMeta().Name, app.App.GetObjectMeta().Namespace, resp)
+				fmt.Printf("Found  references for pol %v \n", resp)
+				for _, ref := range resp {
+					if ref.RefKind == "App" {
+						for _, key := range ref.Refs {
+							splits := strings.Split(key, "/")
+							if splits[len(splits)-1] == "testApp"+strconv.Itoa(i) {
+								//Not deleted as there is reference
+								return true, nil
+							}
+						}
+
+					}
+				}
+			}
+			fmt.Printf("Deleted App %v \n", name)
+			return false, nil
+		}, "App still found", "1ms", "1s")
 	}
 	return nil
 }
@@ -143,32 +246,42 @@ func propogationCompleteForPolicies(stateMgr *Statemgr, start, end int) error {
 	return nil
 }
 
-func createSGs(stateMgr *Statemgr, start, end int) error {
+func createSGs(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := start; i < end; i++ {
-		_, err := createSg(stateMgr, "default", "testSp"+strconv.Itoa(i), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+		_, err := createSg(stateMgr, "default", "testSg"+strconv.Itoa(i), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindSecurityGroup("default", "testSp"+strconv.Itoa(i))
-		if err != nil {
-			return fmt.Errorf("Not created security group : %v", err.Error())
-		}
+
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindSecurityGroup("default", "testSg"+strconv.Itoa(i))
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Sg still found", "1ms", "1s")
+
 	}
 	return nil
 }
 
-func deleteSGs(stateMgr *Statemgr, start, end int) error {
+func deleteSGs(t *testing.T, stateMgr *Statemgr, start, end int) error {
 
 	for i := start; i < end; i++ {
-		_, err := deleteSg(stateMgr, "default", "testSp"+strconv.Itoa(i), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+		_, err := deleteSg(stateMgr, "default", "testSg"+strconv.Itoa(i), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 		if err != nil {
 			return err
 		}
-		_, err = stateMgr.FindSecurityGroup("default", "testSp"+strconv.Itoa(i))
-		if err == nil {
-			return fmt.Errorf("Not delete security group")
-		}
+		AssertEventually(t, func() (bool, interface{}) {
+
+			_, err := stateMgr.FindSecurityGroup("default", "testSg"+strconv.Itoa(i))
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Sg still found", "1ms", "1s")
 	}
 	return nil
 }
@@ -426,7 +539,7 @@ func newTestAgent(uuid, url string) *testAgent {
 	return ag
 }
 
-func newStateMgrWithServer(grpcServer *rpckit.RPCServer) (*Statemgr, error) {
+func newStateMgrWithServer(t *testing.T, grpcServer *rpckit.RPCServer) (*Statemgr, error) {
 
 	// create nimbus server
 	msrv := nimbus.NewMbusServer("npm-test", grpcServer)
@@ -438,7 +551,7 @@ func newStateMgrWithServer(grpcServer *rpckit.RPCServer) (*Statemgr, error) {
 		return nil, err
 	}
 
-	err = createTenant(stateMgr, "default")
+	err = createTenant(t, stateMgr, "default")
 	if err != nil {
 		return nil, err
 	}
@@ -480,7 +593,7 @@ func TestSgCreateDeleteWithAgent(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -498,20 +611,31 @@ func TestSgCreateDeleteWithAgent(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// verify we can find the sg
-	sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
-	AssertOk(t, err, "Could not find the security group")
-	AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+	AssertEventually(t, func() (bool, interface{}) {
+
+		sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
+		if err != nil {
+			return false, nil
+		}
+		AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+		return true, nil
+	}, "Sg not found", "1ms", "1s")
 
 	time.Sleep(100 * time.Millisecond)
 	Assert(t, len(ag.securityGroups) == 1, "received sg group by agent")
 
 	// delete the security group
-	err = stateMgr.ctrler.SecurityGroup().Delete(&sgs.SecurityGroup.SecurityGroup)
+	err = stateMgr.ctrler.SecurityGroup().Delete(sg)
 	AssertOk(t, err, "Error deleting security group")
 
-	// verify the sg is gone
-	_, err = stateMgr.FindSecurityGroup("default", "testSg")
-	Assert(t, (err != nil), "Security group still found after deleting")
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := stateMgr.FindSecurityGroup("default", "testSg")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg still found", "1ms", "1s")
 
 	time.Sleep(100 * time.Millisecond)
 	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
@@ -525,7 +649,7 @@ func TestAggWatchWithSg(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -542,20 +666,31 @@ func TestAggWatchWithSg(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// verify we can find the sg
-	sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
-	AssertOk(t, err, "Could not find the security group")
-	AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+	AssertEventually(t, func() (bool, interface{}) {
+
+		sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
+		if err != nil {
+			return false, nil
+		}
+		AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+		return true, nil
+	}, "Sg not found", "1ms", "1s")
 
 	time.Sleep(100 * time.Millisecond)
 	Assert(t, len(ag.securityGroups) == 1, "received sg group by agent")
 
 	// delete the security group
-	err = stateMgr.ctrler.SecurityGroup().Delete(&sgs.SecurityGroup.SecurityGroup)
+	err = stateMgr.ctrler.SecurityGroup().Delete(sg)
 	AssertOk(t, err, "Error deleting security group")
 
-	// verify the sg is gone
-	_, err = stateMgr.FindSecurityGroup("default", "testSg")
-	Assert(t, (err != nil), "Security group still found after deleting")
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := stateMgr.FindSecurityGroup("default", "testSg")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg still found", "1ms", "1s")
 
 	time.Sleep(100 * time.Millisecond)
 	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
@@ -569,7 +704,7 @@ func TestAggWatchWithSgList(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -580,7 +715,7 @@ func TestAggWatchWithSgList(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
 	//Make sure agent has not received any objects.
@@ -592,7 +727,7 @@ func TestAggWatchWithSgList(t *testing.T) {
 
 	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -607,7 +742,7 @@ func TestAggWatchWithSgAndPoliciesList(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -618,10 +753,10 @@ func TestAggWatchWithSgAndPoliciesList(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
-	err = createPolicies(stateMgr, 0, 3)
+	err = createPolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
 	//Make sure agent has not received any objects.
@@ -635,12 +770,12 @@ func TestAggWatchWithSgAndPoliciesList(t *testing.T) {
 	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
 	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 }
@@ -653,7 +788,7 @@ func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -664,10 +799,10 @@ func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
-	err = createPolicies(stateMgr, 0, 3)
+	err = createPolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
 	//Make sure agent has not received any objects.
@@ -686,9 +821,9 @@ func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
 
 	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -704,7 +839,7 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -715,10 +850,10 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
-	err = createPolicies(stateMgr, 0, 3)
+	err = createPolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
 	//Make sure agent has not received any objects.
@@ -739,7 +874,7 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 	//Now just update the policies
 
 	ag.evtMap["NetworkSecurityPolicy"].update = 0
-	err = updatePolicies(stateMgr, 0, 3)
+	err = updatePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error updating security policies")
 
 	time.Sleep(20 * time.Millisecond)
@@ -750,9 +885,9 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 	err = propogationCompleteForPolicies(stateMgr, 0, 3)
 	AssertOk(t, err, "Error in policy propogation.")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -772,7 +907,7 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -783,10 +918,10 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
-	err = createPolicies(stateMgr, 0, 3)
+	err = createPolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
 	//Make sure agent has not received any objects.
@@ -809,7 +944,7 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 	cancel()
 	time.Sleep(100 * time.Millisecond)
 	//Now just update the policies
-	err = updatePolicies(stateMgr, 0, 3)
+	err = updatePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error updating security policies")
 
 	//Forget everything
@@ -831,9 +966,9 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 	err = propogationCompleteForPolicies(stateMgr, 0, 3)
 	AssertOk(t, err, "Error in policy propogation.")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -854,7 +989,7 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -865,14 +1000,17 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
-	apps := generateApps(0, 3)
-	err = createApps(stateMgr, apps)
+	apps := generateApps(0, 10)
+	err = createApps(t, stateMgr, apps)
 	AssertOk(t, err, "Error creating Apps")
 
-	err = createPoliciesWithApps(stateMgr, 0, 3, apps)
+	err = updateApps(t, stateMgr, apps)
+	AssertOk(t, err, "Error creating Apps")
+
+	err = createPoliciesWithApps(t, stateMgr, 0, 3, apps)
 	AssertOk(t, err, "Error creating security policies")
 
 	go ag.client.WatchAggregate(context.Background(), []string{"App", "SecurityGroup", "NetworkSecurityPolicy"}, ag)
@@ -880,15 +1018,15 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
-	Assert(t, len(ag.apps) == 3, "received apps group by agent")
+	Assert(t, len(ag.apps) == 10, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	err = deleteApps(stateMgr, 0, 3)
+	err = deleteApps(t, stateMgr, 0, 10)
 	AssertOk(t, err, "Error deleting security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -913,7 +1051,7 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))
 	AssertOk(t, err, "Error Starting rpc server")
 
-	stateMgr, err := newStateMgrWithServer(grpcServer)
+	stateMgr, err := newStateMgrWithServer(t, grpcServer)
 	AssertOk(t, err, "Error Starting state manager")
 	grpcServer.Start()
 	defer grpcServer.Stop()
@@ -932,11 +1070,11 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	Assert(t, len(ag.apps) == 0, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 
-	err = createSGs(stateMgr, 0, 3)
+	err = createSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security groups")
 
 	apps := generateApps(0, 3)
-	err = createPoliciesWithApps(stateMgr, 0, 3, apps)
+	err = createPoliciesWithApps(t, stateMgr, 0, 3, apps)
 	AssertOk(t, err, "Error creating security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -945,7 +1083,7 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	Assert(t, len(ag.apps) == 0, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 
-	err = createApps(stateMgr, apps)
+	err = createApps(t, stateMgr, apps)
 	AssertOk(t, err, "Error creating Apps")
 
 	time.Sleep(100 * time.Millisecond)
@@ -954,10 +1092,10 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	Assert(t, len(ag.apps) == 3, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
 
-	err = deleteSGs(stateMgr, 0, 3)
+	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
-	err = deleteApps(stateMgr, 0, 3)
+	err = deleteApps(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
 	time.Sleep(100 * time.Millisecond)
@@ -966,12 +1104,12 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	Assert(t, len(ag.apps) == 3, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
 
-	err = deletePolicies(stateMgr, 0, 3)
+	err = deletePolicies(t, stateMgr, 0, 3)
 
 	AssertOk(t, err, "Error deleting security policies")
 	time.Sleep(100 * time.Millisecond)
 
 	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
-	Assert(t, len(ag.apps) == 0, "sg not deleted")
+	Assert(t, len(ag.apps) == 0, "App not deleted")
 }

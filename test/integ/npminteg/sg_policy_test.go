@@ -654,4 +654,15 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 	AssertOk(c, err, "error deleting app")
 	_, err = it.apisrvClient.SecurityV1().App().Delete(context.Background(), &ftpApp.ObjectMeta)
 	AssertOk(c, err, "error deleting app")
+
+	// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			if gerr != nil {
+				return true, nil
+			}
+			return false, nil
+		}, fmt.Sprintf("Sg policy still present agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+	}
 }

@@ -485,6 +485,28 @@ func (it *veniceIntegSuite) TestNetworkSecurityPolicyRuleWithMultipleApps(c *C) 
 	AssertOk(c, err, "Error creating ssh app")
 	_, err = it.restClient.SecurityV1().App().Delete(ctx, &httpApp.ObjectMeta)
 	AssertOk(c, err, "Error creating http app")
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		_, err := it.restClient.SecurityV1().NetworkSecurityPolicy().Get(ctx, &sgp.ObjectMeta)
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "SgPolicy still found", "100ms", it.pollTimeout())
+
+	// verify policy gets created in agent
+	AssertEventually(c, func() (bool, interface{}) {
+		found := false
+		for _, sn := range it.snics {
+			_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			if cerr == nil {
+				found = true
+			}
+		}
+		return (found == false), nil
+	}, "SgPolicy found in agent", "100ms", it.pollTimeout())
+
 }
 
 func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
@@ -714,5 +736,18 @@ func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 		_, err = it.restClient.StagingV1().Buffer().Delete(ctx, &stgbuf.ObjectMeta)
 		AssertOk(c, err, "error committing buffer")
 
+		//Sleep for 2 minites are delete of policy takes times to update attached apps
+		time.Sleep(2 * time.Minute)
+		// verify policy gets deleted in agent
+		AssertEventually(c, func() (bool, interface{}) {
+			found := false
+			for _, sn := range it.snics {
+				_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+				if cerr == nil {
+					found = true
+				}
+			}
+			return (found == false), nil
+		}, "SgPolicy still found in agent", "100ms", it.pollTimeout())
 	}
 }

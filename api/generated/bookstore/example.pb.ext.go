@@ -769,7 +769,13 @@ func (m *Coupon) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Coupon) Defaults(ver string) bool {
-	return false
+	var ret bool
+	m.Kind = "Coupon"
+	ret = m.Tenant != "" || m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -811,6 +817,27 @@ func (m *CouponSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *CouponSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *CouponStatus) Clone(into interface{}) (interface{}, error) {
+	var out *CouponStatus
+	var ok bool
+	if into == nil {
+		out = &CouponStatus{}
+	} else {
+		out, ok = into.(*CouponStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*CouponStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CouponStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -2042,6 +2069,23 @@ func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.
 func (m *Coupon) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Coupon"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Coupon"))
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -2091,6 +2135,19 @@ func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 }
 
 func (m *CouponSpec) Normalize() {
+
+}
+
+func (m *CouponStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *CouponStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *CouponStatus) Normalize() {
 
 }
 

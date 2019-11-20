@@ -302,7 +302,7 @@ func (md *Memdb) AddObjectWithReferences(key string, obj Object, refs map[string
 			existingObj.addToPending(CreateEvent, key, obj, refs)
 			return nil
 		}
-		return md.UpdateObject(obj)
+		return md.UpdateObjectWithReferences(key, obj, refs)
 	}
 
 	md.updateReferences(key, obj, refs)
@@ -445,6 +445,7 @@ func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[str
 	//If create is not resolved, wait for delete
 	existingObj.Lock()
 	if !(existingObj.isResolved()) {
+		log.Infof("Exisiting object unresolved, pending add for %v", key)
 		existingObj.addToPending(DeleteEvent, key, obj, refs)
 		existingObj.Unlock()
 		return nil

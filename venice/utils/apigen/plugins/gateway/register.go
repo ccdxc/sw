@@ -1011,6 +1011,29 @@ func getNimbusManifest(path string) (map[string]nimbusManifestFile, error) {
 	return manifest, nil
 }
 
+func getServiceKey(filename, pkg, service, message string) (string, error) {
+	manifest, err := getServiceManifest(filename)
+	if err != nil {
+		return "", errors.New("Error opening service manifest")
+	}
+	pkgDef, ok := manifest[pkg]
+	if !ok {
+		return "", errors.New("Package not found")
+	}
+	svcs, ok := pkgDef.Svcs[service]
+	if !ok {
+		return "", errors.New("service not found")
+	}
+
+	for msg, msgDef := range svcs.Properties {
+		if message == msg {
+			ss := strings.Split(msgDef.URI, "/")
+			return ss[len(ss)-1], nil
+		}
+	}
+	return "", errors.New("Service key not found")
+}
+
 type pkgManifest struct {
 	Files     []string
 	APIServer bool
@@ -3375,6 +3398,7 @@ func init() {
 	reg.RegisterFunc("getDbKey", getDbKey)
 	reg.RegisterFunc("getURIKey", getURIKey)
 	reg.RegisterFunc("getMsgURIKey", getMsgURIKey)
+	reg.RegisterFunc("getServiceKey", getServiceKey)
 	reg.RegisterFunc("getSvcParams", getSvcParams)
 	reg.RegisterFunc("getPenctlCmdOptions", getPenctlCmdOptions)
 	reg.RegisterFunc("getPenctlParentCmdOptions", getPenctlParentCmdOptions)

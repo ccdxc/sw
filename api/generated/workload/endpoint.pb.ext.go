@@ -153,6 +153,16 @@ func (m *Endpoint) References(tenant string, path string, resp map[string]apiint
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "status"
+
+		m.Status.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "meta.tenant"
 		uref, ok := resp[tag]
 		if !ok {
@@ -272,6 +282,28 @@ func (m *EndpointSpec) Normalize() {
 
 func (m *EndpointStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "network"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Network",
+			}
+		}
+
+		if m.Network != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"networks/"+tenant+"/"+m.Network)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

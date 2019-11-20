@@ -29,6 +29,7 @@ The following Messages are defined.
   Coupon
   CouponList
   CouponSpec
+  CouponStatus
   Customer
   CustomerList
   CustomerPersonalInfo

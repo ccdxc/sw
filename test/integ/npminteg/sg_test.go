@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
@@ -99,9 +100,9 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 	it.CreateTenant("default")
 	// create sg in watcher
 	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
-	c.Assert(err, IsNil)
-	numApps := 200
-	addApps := 100
+	//c.Assert(err, IsNil)
+	numApps := 2
+	addApps := 1
 	ports := []string{}
 	apps := []string{}
 	for i := 100; i < 100+numApps; i++ {
@@ -450,4 +451,135 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
 	}, "endpoint still found on agent", "10ms", it.pollTimeout())
+}
+
+// TestNpmSgCreateDelete
+func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
+	// create sg in watcher
+	fwp := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout:        "3m",
+			TCPConnectionSetupTimeout: "3m",
+			TCPCloseTimeout:           "3m",
+			TCPHalfClosedTimeout:      "3m",
+			TCPDropTimeout:            "3m",
+			UDPDropTimeout:            "3m",
+			ICMPDropTimeout:           "3m",
+			DropTimeout:               "3m",
+			TcpTimeout:                "3m",
+			UdpTimeout:                "3m",
+			IcmpTimeout:               "3m",
+		},
+	}
+
+	_, err := it.apisrvClient.SecurityV1().FirewallProfile().Delete(context.Background(), &fwp.ObjectMeta)
+
+	c.Assert(err, IsNil)
+
+	// verify all agents have the security group
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListSecurityProfile()) == 0, nil
+		}, "Sg not found on agent", "10ms", it.pollTimeout())
+	}
+
+	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Create(context.Background(), &fwp)
+
+	c.Assert(err, IsNil)
+
+	// verify all agents have the security group
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListSecurityProfile()) == 1, nil
+		}, "Sg not found on agent", "10ms", it.pollTimeout())
+	}
+
+	// change conn track and session timeout
+	fwp.Spec.SessionIdleTimeout = "5m"
+	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Update(context.Background(), &fwp)
+	AssertOk(c, err, "Error updating firewall profile")
+
+	// verify params got updated in agent
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+
+			secp, cerr := ag.nagent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
+			if (cerr != nil) || (secp.Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
+				return false, secp
+			}
+			return true, nil
+		}, "Sg not found on agent", "10ms", it.pollTimeout())
+	}
+
+	/*
+		// incoming rule
+		rules := []security.SGRule{
+			{
+				Action:          "PERMIT",
+				FromIPAddresses: []string{"10.1.1.1/24"},
+				ToIPAddresses:   []string{"10.1.1.1/24"},
+				ProtoPorts: []security.ProtoPort{
+					{
+						Protocol: "tcp",
+						Ports:    "80",
+					},
+				},
+			},
+		}
+
+		// create sg policy
+		err = it.CreateSgpolicy("default", "default", "testpolicy", true, []string{}, rules)
+		c.Assert(err, IsNil)
+
+		// construct object meta
+		policyMeta := api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		}
+
+		// verify agent state has the policy has the rules
+		for _, ag := range it.agents {
+			AssertEventually(c, func() (bool, interface{}) {
+				_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+				if err != nil {
+					return false, nil
+				}
+				return true, nil
+			}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}
+
+		// delete the sg policy
+		err = it.DeleteSgpolicy("default", "default", "testpolicy")
+		c.Assert(err, IsNil)
+
+		// verify rules are gone from agent
+		for _, ag := range it.agents {
+			AssertEventually(c, func() (bool, interface{}) {
+				_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+				if err == nil {
+					return false, nil
+				}
+				return true, nil
+			}, "Sg rules still found on agent", "10ms", it.pollTimeout())
+		}
+		// delete the security group
+		err = it.DeleteSecurityGroup("default", "testsg")
+		c.Assert(err, IsNil)
+
+		// verify sg is removed from datapath
+		for _, ag := range it.agents {
+			AssertEventually(c, func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
+			}, "Sg still found on agent", "10ms", it.pollTimeout())
+		}
+	*/
 }

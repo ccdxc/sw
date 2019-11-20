@@ -225,12 +225,11 @@ func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
 // OnAppDelete handles app deletion
 func (sm *Statemgr) OnAppDelete(app *ctkit.App) error {
 	// see if we have the app
-	fapp, err := sm.FindApp(app.Tenant, app.Name)
+	fapp, err := AppStateFromObj(app)
 	if err != nil {
 		log.Errorf("Could not find the app %v. Err: %v", app, err)
 		return err
 	}
-
 	log.Infof("Deleting app: %+v", fapp)
 
 	// delete the object

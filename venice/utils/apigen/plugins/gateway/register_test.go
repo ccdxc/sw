@@ -1428,6 +1428,107 @@ func TestGenPkgManifest(t *testing.T) {
 	}
 }
 
+func TestGetSvcKeyFromManifest(t *testing.T) {
+	manifiest := `
+	{
+		"test-service": {
+			"Svcs": {
+	
+				"OrchestratorV1": {
+					"Version": "v1",
+					"Messages": [
+						"Orchestrator"
+					],
+					"Properties": {
+						"Orchestrator": {
+							"Scopes": [
+								"cluster"
+							],
+							"RestMethods": [
+								"put",
+								"get",
+								"delete",
+								"post",
+								"list",
+								"watch"
+							],
+							"URI": "/configs/orchestrator/v1/orchestrator"
+						},
+						"Role": {
+							"Scopes": [
+								"tenant"
+							],
+							"RestMethods": [
+								"get",
+								"put",
+								"delete",
+								"post",
+								"list",
+								"watch"
+							],
+							"URI": "/configs/auth/v1/roles"
+						},
+						"RoleBinding": {
+							"Scopes": [
+								"tenant"
+							],
+							"RestMethods": [
+								"get",
+								"put",
+								"delete",
+								"post",
+								"list",
+								"watch"
+							],
+							"URI": "/configs/auth/v1/role-bindings"
+						}
+					}
+				}
+			},
+			"Files": [
+				"svc_testn.proto"
+			]
+		}
+	}
+	`
+	f, err := os.Create("/tmp/genmanifest")
+	if err != nil {
+		t.Fatal("Error creating file")
+	}
+	defer f.Close()
+	f.WriteString(manifiest)
+	if err != nil {
+		t.Fatal("Error writing file")
+	}
+
+	key, err := getServiceKey("/tmp/genmanifest", "test-service", "OrchestratorV1", "Orchestrator")
+	if err != nil {
+		t.Fatal("Error getting service key")
+	}
+
+	if key != "orchestrator" {
+		t.Fatal("Service key don't match")
+	}
+
+	key, err = getServiceKey("/tmp/genmanifest", "test-service", "OrchestratorV1", "RoleBinding")
+	if err != nil {
+		t.Fatal("Error getting service key")
+	}
+
+	if key != "role-bindings" {
+		t.Fatal("Service key don't match")
+	}
+
+	key, err = getServiceKey("/tmp/genmanifest", "test-service", "OrchestratorV1", "Role")
+	if err != nil {
+		t.Fatal("Error getting service key")
+	}
+
+	if key != "roles" {
+		t.Fatal("Service key don't match")
+	}
+}
+
 func TestGetSvcManifest(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{

@@ -70,6 +70,8 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 // AddEndpoint adds an endpoint to sg
 func (sg *SecurityGroupState) AddEndpoint(ep *EndpointState) error {
 	// add the ep to local list
+	sg.SecurityGroup.Lock()
+	defer sg.SecurityGroup.Unlock()
 	sg.endpoints[ep.Endpoint.Name] = ep
 	sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads, ep.Endpoint.Name)
 	sg.SecurityGroup.Write()
@@ -80,7 +82,9 @@ func (sg *SecurityGroupState) AddEndpoint(ep *EndpointState) error {
 // DelEndpoint removes an endpoint from sg
 func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 	// delete the endpoint
+	sg.SecurityGroup.Lock()
 	delete(sg.endpoints, ep.Endpoint.Name)
+	sg.SecurityGroup.Unlock()
 	for i, epname := range sg.SecurityGroup.Status.Workloads {
 		if epname == ep.Endpoint.Name {
 			sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads[:i], sg.SecurityGroup.Status.Workloads[i+1:]...)

@@ -640,22 +640,31 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
 				}
 			} else {
-				var cur bookstore.Coupon
-				err = kvs.Get(ctx, key, &cur)
-				if err != nil {
-					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
-					return nil, err
-				}
-				r.UUID = cur.UUID
-				r.CreationTime = cur.CreationTime
-				if r.ResourceVersion != "" {
-					l.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if updateFn != nil {
+					into := &bookstore.Coupon{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
+					}
+					r = *into
 				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
+					var cur bookstore.Coupon
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if r.ResourceVersion != "" {
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
+					}
 				}
 
 			}
@@ -786,6 +795,85 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			tenant := ""
 			r.References(tenant, "", ret)
 			return ret, nil
+		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
+			var n *bookstore.Coupon
+			if v, ok := i.(bookstore.Coupon); ok {
+				n = &v
+			} else if v, ok := i.(*bookstore.Coupon); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if create {
+					n.UUID = uuid.NewV4().String()
+					ts, err := types.TimestampProto(time.Now())
+					if err != nil {
+						return nil, err
+					}
+					n.CreationTime.Timestamp = *ts
+					n.ModTime.Timestamp = *ts
+					n.GenerationID = "1"
+					return n, nil
+				}
+				if oldObj == nil {
+					return nil, errors.New("nil object")
+				}
+				o := oldObj.(*bookstore.Coupon)
+				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
+				ts, err := types.TimestampProto(time.Now())
+				if err != nil {
+					return nil, err
+				}
+				n.ModTime.Timestamp = *ts
+				return n, nil
+			}
+		}).WithReplaceSpecFunction(func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
+			var n *bookstore.Coupon
+			if v, ok := i.(bookstore.Coupon); ok {
+				n = &v
+			} else if v, ok := i.(*bookstore.Coupon); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if oldObj == nil {
+					rete := &bookstore.Coupon{}
+					rete.TypeMeta, rete.ObjectMeta, rete.Spec = n.TypeMeta, n.ObjectMeta, n.Spec
+					rete.GenerationID = "1"
+					return rete, nil
+				}
+				if ret, ok := oldObj.(*bookstore.Coupon); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *bookstore.Coupon
+			if v, ok := i.(bookstore.Coupon); ok {
+				n = &v
+			} else if v, ok := i.(*bookstore.Coupon); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*bookstore.Coupon); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"bookstore.CouponList": apisrvpkg.NewMessage("bookstore.CouponList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -814,7 +902,8 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := i.(bookstore.CouponList)
 			return &r
 		}),
-		"bookstore.CouponSpec": apisrvpkg.NewMessage("bookstore.CouponSpec"),
+		"bookstore.CouponSpec":   apisrvpkg.NewMessage("bookstore.CouponSpec"),
+		"bookstore.CouponStatus": apisrvpkg.NewMessage("bookstore.CouponStatus"),
 		"bookstore.Customer": apisrvpkg.NewMessage("bookstore.Customer").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Customer{}

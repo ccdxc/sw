@@ -2904,6 +2904,9 @@
         },
         "Spec": {
           "$ref": "#/definitions/bookstoreCouponSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreCouponStatus"
         }
       }
     },
@@ -2934,6 +2937,15 @@
       "properties": {
         "DiscountCode": {
           "type": "string"
+        }
+      }
+    },
+    "bookstoreCouponStatus": {
+      "type": "object",
+      "properties": {
+        "Inventory": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

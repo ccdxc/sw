@@ -144,7 +144,12 @@ message Coupon {
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
   option (venice.objectPrefix) = {Collection: "Coupon"};
   CouponSpec Spec = 3 [(gogoproto.nullable) = false];
+  CouponStatus Status = 4 [(gogoproto.nullable) = false];
 }
+
+message CouponStatus {
+     int32 Inventory = 1;
+ }
 
 message CustomerPersonalInfo {
   string SSN = 1 [(venice.storageTransformer) = "Secret()", (venice.storageTransformer) = "Secret()", // super secret encrypted twice!

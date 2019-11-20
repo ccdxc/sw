@@ -103,14 +103,14 @@ func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
 	if rescanEps {
 		var snic *DistributedServiceCardState
 		// find the smart nic by name or mac addr
-		for jj := range host.Host.Spec.DSCs {
-			if host.Host.Spec.DSCs[jj].ID != "" {
-				snic, err = sm.FindDistributedServiceCardByHname(host.Host.Spec.DSCs[jj].ID)
+		for jj := range hs.Host.Spec.DSCs {
+			if hs.Host.Spec.DSCs[jj].ID != "" {
+				snic, err = sm.FindDistributedServiceCardByHname(hs.Host.Spec.DSCs[jj].ID)
 				if err != nil {
-					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.DSCs[jj].ID)
+					log.Errorf("Error finding smart nic for name %v", hs.Host.Spec.DSCs[jj].ID)
 				}
-			} else if host.Host.Spec.DSCs[jj].MACAddress != "" {
-				snicMac := host.Host.Spec.DSCs[jj].MACAddress
+			} else if hs.Host.Spec.DSCs[jj].MACAddress != "" {
+				snicMac := hs.Host.Spec.DSCs[jj].MACAddress
 				snic, err = sm.FindDistributedServiceCardByMacAddr(snicMac)
 				if err != nil {
 					log.Errorf("Error finding smart nic for mac add %v", snicMac)

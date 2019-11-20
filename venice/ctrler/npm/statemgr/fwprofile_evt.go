@@ -203,6 +203,18 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 		return err
 	}
 
+	dscs, _ := sm.ListDistributedServiceCards()
+	for _, dsc := range dscs {
+		dsc.DistributedServiceCard.Lock()
+		if sm.isDscAdmitted(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			if _, ok := fps.NodeVersions[dsc.DistributedServiceCard.Name]; ok == false {
+				fps.NodeVersions[dsc.DistributedServiceCard.Name] = ""
+			}
+		}
+		dsc.DistributedServiceCard.Unlock()
+	}
+	sm.PeriodicUpdaterPush(fps)
+
 	// store it in local DB
 	sm.mbus.AddObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
 
@@ -212,13 +224,13 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 // OnFirewallProfileUpdate handles update event
 func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nfwp *security.FirewallProfile) error {
 	// see if anything changed
+	log.Infof("Received update %v\n", nfwp)
 	_, ok := ref.ObjDiff(fwProfile.Spec, nfwp.Spec)
 	if (nfwp.GenerationID == fwProfile.GenerationID) && !ok {
+		log.Infof("No update received")
 		fwProfile.ObjectMeta = nfwp.ObjectMeta
 		return nil
 	}
-	fwProfile.ObjectMeta = nfwp.ObjectMeta
-	fwProfile.Spec = nfwp.Spec
 
 	fps, err := sm.FindFirewallProfile(fwProfile.Tenant, fwProfile.Name)
 	if err != nil {
@@ -227,7 +239,11 @@ func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nf
 	}
 
 	// update the object in mbus
-	fps.FirewallProfile = fwProfile
+	fps.FirewallProfile.Spec = nfwp.Spec
+	fps.FirewallProfile.ObjectMeta = nfwp.ObjectMeta
+	fps.FirewallProfile.Status = security.FirewallProfileStatus{}
+
+	log.Infof("Sending udpate received")
 	sm.mbus.UpdateObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
 	log.Infof("Updated fwProfile: %+v", fwProfile)
 

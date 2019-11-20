@@ -226,6 +226,12 @@ func (sm *Statemgr) FindEndpoint(tenant, name string) (*EndpointState, error) {
 	return EndpointStateFromObj(obj)
 }
 
+// EndpointIsPending finds endpointy by name
+func (sm *Statemgr) EndpointIsPending(tenant, name string) (bool, error) {
+	// find the object
+	return sm.IsPending("Endpoint", tenant, "default", name)
+}
+
 // ListEndpoints lists all endpoints
 func (sm *Statemgr) ListEndpoints() ([]*EndpointState, error) {
 	objs := sm.ListObjects("Endpoint")
@@ -251,7 +257,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 	ns, err := sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
 	if err != nil {
 		//Retry again, Create network may be lagging.
-		time.Sleep(time.Second)
+		time.Sleep(20 * time.Millisecond)
 		ns, err = sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
 		if err != nil {
 			log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
@@ -321,12 +327,11 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	log.Infof("Deleting Endpoint: %#v", epinfo)
 
 	// see if we have the endpoint
-	eps, err := sm.FindEndpoint(epinfo.Tenant, epinfo.Name)
+	eps, err := EndpointStateFromObj(epinfo)
 	if err != nil {
 		log.Errorf("could not find the endpoint %+v", epinfo.ObjectMeta)
 		return ErrEndpointNotFound
 	}
-
 	// find network
 	ns, err := sm.FindNetwork(epinfo.Tenant, eps.Endpoint.Status.Network)
 	if err != nil {

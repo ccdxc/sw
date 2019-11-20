@@ -4,14 +4,15 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-
 	"github.com/pensando/sw/api/generated/diagnostics"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -19,6 +20,7 @@ import (
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/objResolver"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -29,9 +31,90 @@ import (
 const maxApisrvWriteRetry = 5
 const numberOfShardWorkers = 64
 
+type apiServerObject interface {
+	References(tenant string, path string, resp map[string]apiintf.ReferenceObj)
+	GetObjectMeta() *api.ObjectMeta // returns the object meta
+}
+
+//wrapper to get references
+func references(obj apiServerObject) map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	obj.References(obj.GetObjectMeta().Name, obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+type ctkitBaseCtx struct {
+	//resolveState resolveState //resolve state
+	objResolver.ResolveCtx
+}
+
 // db of objects for a kind
 type kindStore struct {
-	objects map[string]runtime.Object
+	sync.Mutex
+	objects map[string]apiintf.CtkitObject
+}
+
+func (ks *kindStore) GetObject(key string) (apiintf.CtkitObject, error) {
+
+	ks.Lock()
+	defer ks.Unlock()
+
+	obj, ok := ks.objects[key]
+	if !ok {
+		fmt.Printf("Object not found object %v\n", key)
+		return nil, fmt.Errorf("Object %s not found", key)
+	}
+
+	return obj, nil
+}
+
+func (ct *ctrlerCtx) addObject(obj apiintf.CtkitObject) error {
+
+	ks := ct.GetObjectStore(obj.GetKind())
+
+	ct.stats.Counter(obj.GetKind() + "_Objects").Inc()
+
+	ks.AddObject(obj)
+
+	return nil
+}
+
+func (ct *ctrlerCtx) getObject(kind, key string) (apiintf.CtkitObject, error) {
+
+	ks := ct.GetObjectStore(kind)
+
+	existingObj, err := ks.GetObject(key)
+	if err != nil {
+		log.Errorf("Object {%+v} not found", key)
+		return nil, errors.New("Object not found")
+	}
+
+	return existingObj, nil
+}
+
+func (ks *kindStore) AddObject(obj apiintf.CtkitObject) error {
+
+	ks.Lock()
+	defer ks.Unlock()
+
+	ks.objects[obj.GetKey()] = obj
+
+	return nil
+}
+
+func (ks *kindStore) DeleteObject(key string) error {
+
+	ks.Lock()
+	defer ks.Unlock()
+
+	obj, ok := ks.objects[key]
+	if !ok {
+		fmt.Printf("Object not found object %v\n", key)
+		return fmt.Errorf("Object %s not found", key)
+	}
+
+	delete(ks.objects, obj.GetKey())
+	return nil
 }
 
 type ctrlerCtx struct {
@@ -51,11 +134,13 @@ type ctrlerCtx struct {
 	apicl       apiclient.Services                  // api client to write
 	stats       tsdb.Obj                            // ctkit stats
 	diagSvc     diag.Service
+	objResolver *objResolver.ObjectResolver // obj resolver for ctkit
 }
 
 // Controller is the main interface provided by controller instance
 type Controller interface {
 	FindObject(kind string, ometa *api.ObjectMeta) (runtime.Object, error)
+	IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 	ListObjects(kind string) []runtime.Object
 	List(kind string, ctx context.Context, opts *api.ListWatchOptions) ([]runtime.Object, error)
 	Stop() error                                                              // stop the controller
@@ -114,7 +199,7 @@ type Controller interface {
 }
 
 // NewController creates a new instance of controler
-func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, resolver resolver.Interface, logger log.Logger) (Controller, error) {
+func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, resolver resolver.Interface, logger log.Logger, resolveObjects bool) (Controller, error) {
 	keyTags := map[string]string{"node": "venice", "module": name, "kind": "CtkitStats"}
 	tsdbObj, err := tsdb.NewObj("CtkitStats", keyTags, nil, nil)
 	if err != nil {
@@ -139,10 +224,41 @@ func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, r
 		diagSvc:     diagsvc.GetDiagnosticsService(name, utils.GetHostname(), diagnostics.ModuleStatus_Venice, logger),
 	}
 
+	if resolveObjects {
+		ctrl.objResolver = objResolver.NewObjectResolver(&ctrl)
+	}
+
 	if rpcServer != nil {
 		diag.RegisterService(rpcServer.GrpcServer, ctrl.diagSvc)
 	}
 	return &ctrl, nil
+}
+
+func (ct *ctrlerCtx) GetObjectStore(kind string) apiintf.ObjectStore {
+	return ct.getKindStore(kind)
+}
+
+func (ct *ctrlerCtx) ResolvedRun(obj apiintf.CtkitObject) {
+	ct.runJob(obj.GetKind(), obj)
+}
+
+func (ct *ctrlerCtx) runFunction(pool string, workObj shardworkers.WorkObj, work shardworkers.WorkFunc) error {
+	return ct.workPools[pool].RunFunction(workObj, work)
+}
+
+func (ct *ctrlerCtx) getKindStore(kind string) *kindStore {
+
+	ct.Lock()
+	defer ct.Unlock()
+
+	ks, ok := ct.kinds[kind]
+	if !ok {
+		ks = &kindStore{
+			objects: make(map[string]apiintf.CtkitObject),
+		}
+		ct.kinds[kind] = ks
+	}
+	return ct.kinds[kind]
 }
 
 // Stop stops the controller
@@ -210,67 +326,413 @@ func (ct *ctrlerCtx) apiClient() (apiclient.Services, error) {
 	return nil, fmt.Errorf("Error connecting to api client")
 }
 
-func (ct *ctrlerCtx) addObject(kind, key string, obj runtime.Object) error {
-	ct.Lock()
-	defer ct.Unlock()
+func (ct *ctrlerCtx) processAdd(obj apiintf.CtkitObject) error {
 
-	ks, ok := ct.kinds[kind]
-	if !ok {
-		ks = &kindStore{
-			objects: make(map[string]runtime.Object),
-		}
-		ct.kinds[kind] = ks
-	}
-
-	ct.stats.Counter(kind + "_Objects").Inc()
-
-	// insert the object into kind store
-	ks.objects[key] = obj
-
-	return nil
+	return ct.objResolver.ProcessAdd(obj)
 }
 
-func (ct *ctrlerCtx) runJob(pool string, workObj shardworkers.WorkObj, work shardworkers.WorkFunc) error {
-	ct.Lock()
-	defer ct.Unlock()
-	return ct.workPools[pool].RunJob(workObj, work)
+func (ct *ctrlerCtx) processDelete(obj apiintf.CtkitObject) error {
+	return ct.objResolver.ProcessDelete(obj)
+}
+
+func (ct *ctrlerCtx) processUpdate(obj apiintf.CtkitObject) error {
+	return ct.objResolver.ProcessUpdate(obj)
+}
+
+func (ct *ctrlerCtx) resolveObject(event kvstore.WatchEventType, workObj apiintf.CtkitObject) error {
+	return ct.objResolver.Resolve(event, workObj)
+}
+
+func (ct *ctrlerCtx) runJob(pool string, workObj shardworkers.WorkObj) error {
+	return ct.workPools[pool].RunJob(workObj)
 }
 
 func (ct *ctrlerCtx) findObject(kind, key string) (runtime.Object, error) {
 	ct.Lock()
-	defer ct.Unlock()
 
 	ks, ok := ct.kinds[kind]
 	if !ok {
+		ct.Unlock()
 		return nil, fmt.Errorf("Object %s/%s not found", kind, key)
 	}
 
+	ct.Unlock()
+	ks.Lock()
 	obj, ok := ks.objects[key]
+	ks.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("Object %s/%s not found", kind, key)
 	}
 
-	return obj, nil
+	//dont try to find the object if unresolved.
+	if ct.objResolver != nil && obj.IsAddUnResolved() {
+		return nil, fmt.Errorf("Object %s/%s in unresolved", kind, key)
+	}
+
+	fmt.Printf("Found object %v\n", key)
+	return obj.RuntimeObject(), nil
 }
 
-// FindObject finds an objetc by meta
+func (ct *ctrlerCtx) isPending(kind, key string) (bool, error) {
+	ct.Lock()
+
+	ks, ok := ct.kinds[kind]
+	if !ok {
+		ct.Unlock()
+		return false, fmt.Errorf("Object %s/%s not found", kind, key)
+	}
+
+	ct.Unlock()
+	ks.Lock()
+	obj, ok := ks.objects[key]
+	ks.Unlock()
+	if !ok {
+		return false, fmt.Errorf("Object %s/%s not found", kind, key)
+	}
+
+	return !obj.IsResolved(), nil
+}
+
+// FindObject finds an object by key
 func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Object, error) {
-	return ct.findObject(kind, ometa.GetKey())
+
+	key := ""
+	switch kind {
+
+	case "User":
+		obj := userAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AuthenticationPolicy":
+		obj := authenticationpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Role":
+		obj := roleAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RoleBinding":
+		obj := rolebindingAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "UserPreference":
+		obj := userpreferenceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Order":
+		obj := orderAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Book":
+		obj := bookAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Publisher":
+		obj := publisherAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Store":
+		obj := storeAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Coupon":
+		obj := couponAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Customer":
+		obj := customerAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Cluster":
+		obj := clusterAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Node":
+		obj := nodeAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Host":
+		obj := hostAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "DistributedServiceCard":
+		obj := distributedservicecardAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Tenant":
+		obj := tenantAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Version":
+		obj := versionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "ConfigurationSnapshot":
+		obj := configurationsnapshotAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "SnapshotRestore":
+		obj := snapshotrestoreAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Module":
+		obj := moduleAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "EventPolicy":
+		obj := eventpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "StatsPolicy":
+		obj := statspolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FwlogPolicy":
+		obj := fwlogpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FlowExportPolicy":
+		obj := flowexportpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Alert":
+		obj := alertAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AlertPolicy":
+		obj := alertpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AlertDestination":
+		obj := alertdestinationAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "MirrorSession":
+		obj := mirrorsessionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TroubleshootingSession":
+		obj := troubleshootingsessionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TechSupportRequest":
+		obj := techsupportrequestAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Network":
+		obj := networkAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Service":
+		obj := serviceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "LbPolicy":
+		obj := lbpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "VirtualRouter":
+		obj := virtualrouterAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "NetworkInterface":
+		obj := networkinterfaceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "IPAMPolicy":
+		obj := ipampolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Bucket":
+		obj := bucketAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Object":
+		obj := objectAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Orchestrator":
+		obj := orchestratorAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Rollout":
+		obj := rolloutAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RolloutAction":
+		obj := rolloutactionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "SecurityGroup":
+		obj := securitygroupAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "NetworkSecurityPolicy":
+		obj := networksecuritypolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "App":
+		obj := appAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FirewallProfile":
+		obj := firewallprofileAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Certificate":
+		obj := certificateAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TrafficEncryptionPolicy":
+		obj := trafficencryptionpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Buffer":
+		obj := bufferAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Endpoint":
+		obj := endpointAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Workload":
+		obj := workloadAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	default:
+		return nil, errors.New("Kind not found")
+
+	}
+	return ct.findObject(kind, key)
+}
+
+// IsPending finds object by key
+func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error) {
+
+	key := ""
+	switch kind {
+
+	case "User":
+		obj := userAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AuthenticationPolicy":
+		obj := authenticationpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Role":
+		obj := roleAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RoleBinding":
+		obj := rolebindingAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "UserPreference":
+		obj := userpreferenceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Order":
+		obj := orderAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Book":
+		obj := bookAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Publisher":
+		obj := publisherAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Store":
+		obj := storeAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Coupon":
+		obj := couponAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Customer":
+		obj := customerAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Cluster":
+		obj := clusterAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Node":
+		obj := nodeAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Host":
+		obj := hostAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "DistributedServiceCard":
+		obj := distributedservicecardAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Tenant":
+		obj := tenantAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Version":
+		obj := versionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "ConfigurationSnapshot":
+		obj := configurationsnapshotAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "SnapshotRestore":
+		obj := snapshotrestoreAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Module":
+		obj := moduleAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "EventPolicy":
+		obj := eventpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "StatsPolicy":
+		obj := statspolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FwlogPolicy":
+		obj := fwlogpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FlowExportPolicy":
+		obj := flowexportpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Alert":
+		obj := alertAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AlertPolicy":
+		obj := alertpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AlertDestination":
+		obj := alertdestinationAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "MirrorSession":
+		obj := mirrorsessionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TroubleshootingSession":
+		obj := troubleshootingsessionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TechSupportRequest":
+		obj := techsupportrequestAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Network":
+		obj := networkAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Service":
+		obj := serviceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "LbPolicy":
+		obj := lbpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "VirtualRouter":
+		obj := virtualrouterAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "NetworkInterface":
+		obj := networkinterfaceAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "IPAMPolicy":
+		obj := ipampolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Bucket":
+		obj := bucketAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Object":
+		obj := objectAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Orchestrator":
+		obj := orchestratorAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Rollout":
+		obj := rolloutAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RolloutAction":
+		obj := rolloutactionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "SecurityGroup":
+		obj := securitygroupAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "NetworkSecurityPolicy":
+		obj := networksecuritypolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "App":
+		obj := appAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "FirewallProfile":
+		obj := firewallprofileAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Certificate":
+		obj := certificateAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "TrafficEncryptionPolicy":
+		obj := trafficencryptionpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Buffer":
+		obj := bufferAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Endpoint":
+		obj := endpointAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Workload":
+		obj := workloadAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	default:
+		return false, errors.New("Kind not found")
+
+	}
+	return ct.isPending(kind, key)
 }
 
 // ListObjects returns a list of object of a kind
 func (ct *ctrlerCtx) ListObjects(kind string) []runtime.Object {
 	ct.Lock()
-	defer ct.Unlock()
 
 	ks, ok := ct.kinds[kind]
+	ct.Unlock()
 	if !ok {
 		return []runtime.Object{}
 	}
-
+	ks.Lock()
+	defer ks.Unlock()
 	var objlist []runtime.Object
 	for _, obj := range ks.objects {
-		objlist = append(objlist, obj)
+		objlist = append(objlist, obj.RuntimeObject())
 	}
 
 	return objlist
@@ -279,18 +741,21 @@ func (ct *ctrlerCtx) ListObjects(kind string) []runtime.Object {
 // List returns a list of object of a kind
 func (ct *ctrlerCtx) List(kind string, ctx context.Context, opts *api.ListWatchOptions) ([]runtime.Object, error) {
 	ct.Lock()
-	defer ct.Unlock()
 
 	ks, ok := ct.kinds[kind]
 	if !ok {
+		ct.Unlock()
 		return []runtime.Object{}, fmt.Errorf("Kind %v not found in local cache.", kind)
 	}
 
+	ct.Unlock()
 	labelMap, err := labels.ConvertSelectorToLabelsMap(opts.LabelSelector)
 	if err != nil {
 		return nil, err
 	}
 
+	ks.Lock()
+	defer ks.Unlock()
 	var objlist []runtime.Object
 	for _, obj := range ks.objects {
 		meta, err := runtime.GetObjectMeta(obj)
@@ -299,13 +764,12 @@ func (ct *ctrlerCtx) List(kind string, ctx context.Context, opts *api.ListWatchO
 		}
 
 		if labels.Equals(labels.Set(labelMap), meta.Labels) {
-			objlist = append(objlist, obj)
+			objlist = append(objlist, obj.RuntimeObject())
 		}
 	}
 
 	return objlist, nil
 }
-
 func (ct *ctrlerCtx) delObject(kind, key string) error {
 	ct.Lock()
 	defer ct.Unlock()

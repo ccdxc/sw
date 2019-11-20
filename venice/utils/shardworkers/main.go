@@ -27,6 +27,7 @@ type WorkFunc func(ctx context.Context, workObj WorkObj) error
 //WorkObj interface
 type WorkObj interface {
 	GetKey() string
+	WorkFunc(context context.Context) error
 }
 
 type worker struct {
@@ -56,16 +57,22 @@ func (w *worker) Run(ctx context.Context) {
 	for true {
 		select {
 		case workContext := <-w.queue:
+			var err error
 			for i := 0; i < maxRetryCount; i++ {
-				err := workContext.workFunc(ctx, workContext.workObj)
+				if workContext.workFunc != nil {
+					err = workContext.workFunc(ctx, workContext.workObj)
+				} else {
+					err = workContext.workObj.WorkFunc(ctx)
+				}
 				if kvstore.IsKeyNotFoundError(err) {
 					// retry after a some time
-					time.Sleep(time.Second * time.Duration(i+1))
+					time.Sleep(20 * time.Millisecond * time.Duration(i+1))
 					continue
 				} else {
 					// we are done
 					break
 				}
+
 			}
 			atomic.AddUint32(&w.doneCnt, 1)
 		case <-ctx.Done():
@@ -161,7 +168,21 @@ func (wp *WorkerPool) GetPendingJobsCount(workerID uint32) (uint32, error) {
 }
 
 //RunJob runs with user context
-func (wp *WorkerPool) RunJob(workObj WorkObj, workerFunc WorkFunc) error {
+func (wp *WorkerPool) RunJob(workObj WorkObj) error {
+
+	if !wp.Running() {
+		return errors.New("workers are not started")
+	}
+
+	workerID := wp.getWorkerID(workObj)
+
+	wp.workers[workerID].queue <- workCtx{workFunc: nil, workObj: workObj}
+
+	return nil
+}
+
+//RunFunction runs jobs with specified function
+func (wp *WorkerPool) RunFunction(workObj WorkObj, workerFunc WorkFunc) error {
 
 	if !wp.Running() {
 		return errors.New("workers are not started")

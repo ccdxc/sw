@@ -76,7 +76,7 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	if err != nil {
 		// retry again if we cant find the host. In cases where host and workloads are created back to back,
 		// there might be slight delay before host is available
-		time.Sleep(time.Second)
+		time.Sleep(20 * time.Millisecond)
 		host, err = ws.stateMgr.ctrler.Host().Find(&api.ObjectMeta{Name: w.Spec.HostName})
 		if err != nil {
 			log.Errorf("Error finding the host %s for workload %v. Err: %v", w.Spec.HostName, w.Name, err)
@@ -158,6 +158,7 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 
 	// update the spec
 	w.Spec = nwrk.Spec
+	ws.Workload.Spec = nwrk.Spec
 
 	// trigger creation of new endpoints
 	return ws.createEndpoints()
@@ -183,7 +184,8 @@ func (sm *Statemgr) reconcileWorkload(w *ctkit.Workload, hst *HostState, snic *D
 			name, _ := strconv.ParseMacAddr(w.Spec.Interfaces[ii].MACAddress)
 			epName := w.Name + "-" + name
 			_, err := sm.FindEndpoint(w.Tenant, epName)
-			if err != nil {
+			pending, _ := sm.EndpointIsPending(w.Tenant, epName)
+			if err != nil && !pending {
 				err = ws.createEndpoints()
 				if err != nil {
 					log.Errorf("Error creating endpoints for workload. Err: %v", err)
@@ -206,8 +208,10 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	} else {
 		host.removeWorkload(w)
 	}
-	ws, err := sm.FindWorkload(w.Tenant, w.Name)
+
+	ws, err := WorkloadStateFromObj(w)
 	if err != nil {
+		log.Errorf("Error finding workload state %s for workload %v. Err: %v", w.Spec.HostName, w.Name, err)
 		return err
 	}
 
@@ -261,14 +265,12 @@ func (ws *WorkloadState) createEndpoints() error {
 		// check if we have a network for this workload
 		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
-		if (err != nil) && (ErrIsObjectNotFound(err)) {
+		if err != nil {
 			err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 			if err != nil {
 				log.Errorf("Error creating network. Err: %v", err)
 				return err
 			}
-		} else if err != nil {
-			return err
 		}
 
 		// check if we already have the endpoint for this workload

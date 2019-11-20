@@ -275,7 +275,8 @@ func TestHostCreateList(t *testing.T) {
 	meta := api.ObjectMeta{
 		Name:      "prod-bebe",
 		Namespace: "default",
-		Tenant:    "default",
+		//Host  is cluster object no need for tenant
+		//Tenant:    "default",
 	}
 
 	nobj, err := sm.Controller().Host().Find(&meta)
@@ -429,7 +430,8 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 	meta := api.ObjectMeta{
 		Name:      "prod-bebe",
 		Namespace: "default",
-		Tenant:    "default",
+		//DSC is cluster object, tenant not required
+		//Tenant:    "default",
 	}
 
 	nobj, err := sm.Controller().DistributedServiceCard().Find(&meta)
@@ -508,7 +510,8 @@ func TestOrchestratorCreateList(t *testing.T) {
 	meta := api.ObjectMeta{
 		Name:      "prod-bebe",
 		Namespace: "default",
-		Tenant:    "default",
+		//Orch is cluster object, tenant not required
+		//Tenant: "default",
 	}
 
 	nobj, err := sm.Controller().Orchestrator().Find(&meta)

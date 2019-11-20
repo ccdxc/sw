@@ -17,10 +17,13 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
@@ -73,6 +76,41 @@ type UserHandler interface {
 
 // handleUserEvent handles User events from watcher
 func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleUserEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.User:
+		eobj := evt.Object.(*auth.User)
+		kind := "User"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &userCtx{event: evt.Type,
+			obj: &User{User: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleUserEventNoResolver handles User events from watcher
+func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.User:
 		eobj := evt.Object.(*auth.User)
@@ -89,64 +127,62 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 		}
 		userHandler := handler.(UserHandler)
 		// handle based on event type
+		ctrlCtx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &User{
-					User:       *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("User_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = userHandler.OnUserCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = userHandler.OnUserCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*User)
-
+				ctrlCtx := fobj.(*userCtx)
 				ct.stats.Counter("User_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := auth.User{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = userHandler.OnUserUpdate(obj, eobj)
-				obj.User = *eobj
-				obj.Unlock()
+				err = userHandler.OnUserUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.User = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*User)
-
 			ct.stats.Counter("User_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = userHandler.OnUserDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
@@ -155,8 +191,145 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type userCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *User //
+	//   newObj     *auth.User //update
+	newObj *userCtx //update
+}
+
+func (ctx *userCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *userCtx) GetKey() string {
+	return ctx.obj.MakeKey("auth")
+}
+
+func (ctx *userCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *userCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *userCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*userCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *userCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *userCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *userCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *userCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *userCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *userCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "User"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	userHandler := handler.(UserHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = userHandler.OnUserCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("User_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := auth.User{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = userHandler.OnUserUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = userHandler.OnUserDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleUserEventParallel handles User events from watcher
 func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleUserEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.User:
+		eobj := evt.Object.(*auth.User)
+		kind := "User"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleUserEventParallel handles User events from watcher
+func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.User:
 		eobj := evt.Object.(*auth.User)
@@ -177,31 +350,33 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*auth.User)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*userCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &User{
-						User:       *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("User_Created_Events").Inc()
-					obj.Lock()
-					err = userHandler.OnUserCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = userHandler.OnUserCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.User.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*User)
+					workCtx := fobj.(*userCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("User_Updated_Events").Inc()
 					obj.Lock()
-					err = userHandler.OnUserUpdate(obj, eobj)
-					obj.User = *eobj
+					p := auth.User{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = userHandler.OnUserUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -209,11 +384,14 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 				}
 				return err
 			}
-			ct.runJob("User", eobj, workFunc)
+			ctrlCtx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
+			ct.runFunction("User", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*auth.User)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*userCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -226,10 +404,11 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.User.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("User", eobj, workFunc)
+			ctrlCtx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
+			ct.runFunction("User", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
@@ -464,7 +643,8 @@ func (api *userAPI) Create(obj *auth.User) error {
 		return err
 	}
 
-	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates User object and synchronously triggers local event
@@ -484,9 +664,11 @@ func (api *userAPI) CreateEvent(obj *auth.User) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on User object
@@ -502,7 +684,8 @@ func (api *userAPI) Update(obj *auth.User) error {
 		return err
 	}
 
-	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes User object
@@ -518,7 +701,16 @@ func (api *userAPI) Delete(obj *auth.User) error {
 		return err
 	}
 
-	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *userAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "users", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "users", "/", name)
 }
 
 // Find returns an object by meta
@@ -629,6 +821,41 @@ type AuthenticationPolicyHandler interface {
 
 // handleAuthenticationPolicyEvent handles AuthenticationPolicy events from watcher
 func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleAuthenticationPolicyEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.AuthenticationPolicy:
+		eobj := evt.Object.(*auth.AuthenticationPolicy)
+		kind := "AuthenticationPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &authenticationpolicyCtx{event: evt.Type,
+			obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleAuthenticationPolicyEventNoResolver handles AuthenticationPolicy events from watcher
+func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.AuthenticationPolicy:
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
@@ -645,64 +872,62 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 		}
 		authenticationpolicyHandler := handler.(AuthenticationPolicyHandler)
 		// handle based on event type
+		ctrlCtx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &AuthenticationPolicy{
-					AuthenticationPolicy: *eobj,
-					HandlerCtx:           nil,
-					ctrler:               ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("AuthenticationPolicy_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*AuthenticationPolicy)
-
+				ctrlCtx := fobj.(*authenticationpolicyCtx)
 				ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := auth.AuthenticationPolicy{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, eobj)
-				obj.AuthenticationPolicy = *eobj
-				obj.Unlock()
+				err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.AuthenticationPolicy = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*AuthenticationPolicy)
-
 			ct.stats.Counter("AuthenticationPolicy_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
@@ -711,8 +936,145 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 	return nil
 }
 
+type authenticationpolicyCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *AuthenticationPolicy //
+	//   newObj     *auth.AuthenticationPolicy //update
+	newObj *authenticationpolicyCtx //update
+}
+
+func (ctx *authenticationpolicyCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *authenticationpolicyCtx) GetKey() string {
+	return ctx.obj.MakeKey("auth")
+}
+
+func (ctx *authenticationpolicyCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *authenticationpolicyCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *authenticationpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*authenticationpolicyCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *authenticationpolicyCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *authenticationpolicyCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *authenticationpolicyCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *authenticationpolicyCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *authenticationpolicyCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *authenticationpolicyCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "AuthenticationPolicy"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	authenticationpolicyHandler := handler.(AuthenticationPolicyHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := auth.AuthenticationPolicy{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleAuthenticationPolicyEventParallel handles AuthenticationPolicy events from watcher
 func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleAuthenticationPolicyEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.AuthenticationPolicy:
+		eobj := evt.Object.(*auth.AuthenticationPolicy)
+		kind := "AuthenticationPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleAuthenticationPolicyEventParallel handles AuthenticationPolicy events from watcher
+func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.AuthenticationPolicy:
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
@@ -733,31 +1095,33 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*auth.AuthenticationPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*authenticationpolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &AuthenticationPolicy{
-						AuthenticationPolicy: *eobj,
-						HandlerCtx:           nil,
-						ctrler:               ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("AuthenticationPolicy_Created_Events").Inc()
-					obj.Lock()
-					err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.AuthenticationPolicy.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*AuthenticationPolicy)
+					workCtx := fobj.(*authenticationpolicyCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
 					obj.Lock()
-					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, eobj)
-					obj.AuthenticationPolicy = *eobj
+					p := auth.AuthenticationPolicy{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -765,11 +1129,14 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 				}
 				return err
 			}
-			ct.runJob("AuthenticationPolicy", eobj, workFunc)
+			ctrlCtx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("AuthenticationPolicy", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*auth.AuthenticationPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*authenticationpolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -782,10 +1149,11 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.AuthenticationPolicy.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("AuthenticationPolicy", eobj, workFunc)
+			ctrlCtx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("AuthenticationPolicy", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
@@ -1020,7 +1388,8 @@ func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error
 		return err
 	}
 
-	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates AuthenticationPolicy object and synchronously triggers local event
@@ -1040,9 +1409,11 @@ func (api *authenticationpolicyAPI) CreateEvent(obj *auth.AuthenticationPolicy) 
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on AuthenticationPolicy object
@@ -1058,7 +1429,8 @@ func (api *authenticationpolicyAPI) Update(obj *auth.AuthenticationPolicy) error
 		return err
 	}
 
-	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes AuthenticationPolicy object
@@ -1074,7 +1446,16 @@ func (api *authenticationpolicyAPI) Delete(obj *auth.AuthenticationPolicy) error
 		return err
 	}
 
-	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *authenticationpolicyAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "authn-policy", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "authn-policy", "/", name)
 }
 
 // Find returns an object by meta
@@ -1185,6 +1566,41 @@ type RoleHandler interface {
 
 // handleRoleEvent handles Role events from watcher
 func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoleEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.Role:
+		eobj := evt.Object.(*auth.Role)
+		kind := "Role"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &roleCtx{event: evt.Type,
+			obj: &Role{Role: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoleEventNoResolver handles Role events from watcher
+func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.Role:
 		eobj := evt.Object.(*auth.Role)
@@ -1201,64 +1617,62 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 		}
 		roleHandler := handler.(RoleHandler)
 		// handle based on event type
+		ctrlCtx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &Role{
-					Role:       *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("Role_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = roleHandler.OnRoleCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = roleHandler.OnRoleCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*Role)
-
+				ctrlCtx := fobj.(*roleCtx)
 				ct.stats.Counter("Role_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := auth.Role{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = roleHandler.OnRoleUpdate(obj, eobj)
-				obj.Role = *eobj
-				obj.Unlock()
+				err = roleHandler.OnRoleUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.Role = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*Role)
-
 			ct.stats.Counter("Role_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = roleHandler.OnRoleDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
@@ -1267,8 +1681,145 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type roleCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *Role //
+	//   newObj     *auth.Role //update
+	newObj *roleCtx //update
+}
+
+func (ctx *roleCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *roleCtx) GetKey() string {
+	return ctx.obj.MakeKey("auth")
+}
+
+func (ctx *roleCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *roleCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *roleCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*roleCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *roleCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *roleCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *roleCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *roleCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *roleCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *roleCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "Role"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	roleHandler := handler.(RoleHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = roleHandler.OnRoleCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("Role_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := auth.Role{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = roleHandler.OnRoleUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = roleHandler.OnRoleDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleRoleEventParallel handles Role events from watcher
 func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoleEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.Role:
+		eobj := evt.Object.(*auth.Role)
+		kind := "Role"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoleEventParallel handles Role events from watcher
+func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.Role:
 		eobj := evt.Object.(*auth.Role)
@@ -1289,31 +1840,33 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*auth.Role)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*roleCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &Role{
-						Role:       *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("Role_Created_Events").Inc()
-					obj.Lock()
-					err = roleHandler.OnRoleCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = roleHandler.OnRoleCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.Role.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*Role)
+					workCtx := fobj.(*roleCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("Role_Updated_Events").Inc()
 					obj.Lock()
-					err = roleHandler.OnRoleUpdate(obj, eobj)
-					obj.Role = *eobj
+					p := auth.Role{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = roleHandler.OnRoleUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1321,11 +1874,14 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 				}
 				return err
 			}
-			ct.runJob("Role", eobj, workFunc)
+			ctrlCtx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
+			ct.runFunction("Role", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*auth.Role)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*roleCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -1338,10 +1894,11 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.Role.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("Role", eobj, workFunc)
+			ctrlCtx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
+			ct.runFunction("Role", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
@@ -1576,7 +2133,8 @@ func (api *roleAPI) Create(obj *auth.Role) error {
 		return err
 	}
 
-	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates Role object and synchronously triggers local event
@@ -1596,9 +2154,11 @@ func (api *roleAPI) CreateEvent(obj *auth.Role) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on Role object
@@ -1614,7 +2174,8 @@ func (api *roleAPI) Update(obj *auth.Role) error {
 		return err
 	}
 
-	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes Role object
@@ -1630,7 +2191,16 @@ func (api *roleAPI) Delete(obj *auth.Role) error {
 		return err
 	}
 
-	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *roleAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "roles", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "roles", "/", name)
 }
 
 // Find returns an object by meta
@@ -1741,6 +2311,41 @@ type RoleBindingHandler interface {
 
 // handleRoleBindingEvent handles RoleBinding events from watcher
 func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoleBindingEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.RoleBinding:
+		eobj := evt.Object.(*auth.RoleBinding)
+		kind := "RoleBinding"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &rolebindingCtx{event: evt.Type,
+			obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoleBindingEventNoResolver handles RoleBinding events from watcher
+func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.RoleBinding:
 		eobj := evt.Object.(*auth.RoleBinding)
@@ -1757,64 +2362,62 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 		}
 		rolebindingHandler := handler.(RoleBindingHandler)
 		// handle based on event type
+		ctrlCtx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &RoleBinding{
-					RoleBinding: *eobj,
-					HandlerCtx:  nil,
-					ctrler:      ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("RoleBinding_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = rolebindingHandler.OnRoleBindingCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = rolebindingHandler.OnRoleBindingCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*RoleBinding)
-
+				ctrlCtx := fobj.(*rolebindingCtx)
 				ct.stats.Counter("RoleBinding_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := auth.RoleBinding{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = rolebindingHandler.OnRoleBindingUpdate(obj, eobj)
-				obj.RoleBinding = *eobj
-				obj.Unlock()
+				err = rolebindingHandler.OnRoleBindingUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.RoleBinding = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*RoleBinding)
-
 			ct.stats.Counter("RoleBinding_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = rolebindingHandler.OnRoleBindingDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
@@ -1823,8 +2426,145 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type rolebindingCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *RoleBinding //
+	//   newObj     *auth.RoleBinding //update
+	newObj *rolebindingCtx //update
+}
+
+func (ctx *rolebindingCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *rolebindingCtx) GetKey() string {
+	return ctx.obj.MakeKey("auth")
+}
+
+func (ctx *rolebindingCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *rolebindingCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *rolebindingCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*rolebindingCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *rolebindingCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *rolebindingCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *rolebindingCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *rolebindingCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *rolebindingCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *rolebindingCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "RoleBinding"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	rolebindingHandler := handler.(RoleBindingHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = rolebindingHandler.OnRoleBindingCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("RoleBinding_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := auth.RoleBinding{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = rolebindingHandler.OnRoleBindingUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = rolebindingHandler.OnRoleBindingDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleRoleBindingEventParallel handles RoleBinding events from watcher
 func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoleBindingEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.RoleBinding:
+		eobj := evt.Object.(*auth.RoleBinding)
+		kind := "RoleBinding"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoleBindingEventParallel handles RoleBinding events from watcher
+func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.RoleBinding:
 		eobj := evt.Object.(*auth.RoleBinding)
@@ -1845,31 +2585,33 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*auth.RoleBinding)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*rolebindingCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &RoleBinding{
-						RoleBinding: *eobj,
-						HandlerCtx:  nil,
-						ctrler:      ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("RoleBinding_Created_Events").Inc()
-					obj.Lock()
-					err = rolebindingHandler.OnRoleBindingCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = rolebindingHandler.OnRoleBindingCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.RoleBinding.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*RoleBinding)
+					workCtx := fobj.(*rolebindingCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("RoleBinding_Updated_Events").Inc()
 					obj.Lock()
-					err = rolebindingHandler.OnRoleBindingUpdate(obj, eobj)
-					obj.RoleBinding = *eobj
+					p := auth.RoleBinding{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = rolebindingHandler.OnRoleBindingUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1877,11 +2619,14 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 				}
 				return err
 			}
-			ct.runJob("RoleBinding", eobj, workFunc)
+			ctrlCtx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
+			ct.runFunction("RoleBinding", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*auth.RoleBinding)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*rolebindingCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -1894,10 +2639,11 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.RoleBinding.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("RoleBinding", eobj, workFunc)
+			ctrlCtx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
+			ct.runFunction("RoleBinding", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
@@ -2132,7 +2878,8 @@ func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
 		return err
 	}
 
-	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates RoleBinding object and synchronously triggers local event
@@ -2152,9 +2899,11 @@ func (api *rolebindingAPI) CreateEvent(obj *auth.RoleBinding) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on RoleBinding object
@@ -2170,7 +2919,8 @@ func (api *rolebindingAPI) Update(obj *auth.RoleBinding) error {
 		return err
 	}
 
-	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes RoleBinding object
@@ -2186,7 +2936,16 @@ func (api *rolebindingAPI) Delete(obj *auth.RoleBinding) error {
 		return err
 	}
 
-	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *rolebindingAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "role-bindings", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "role-bindings", "/", name)
 }
 
 // Find returns an object by meta
@@ -2297,6 +3056,41 @@ type UserPreferenceHandler interface {
 
 // handleUserPreferenceEvent handles UserPreference events from watcher
 func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleUserPreferenceEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.UserPreference:
+		eobj := evt.Object.(*auth.UserPreference)
+		kind := "UserPreference"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &userpreferenceCtx{event: evt.Type,
+			obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on UserPreference watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleUserPreferenceEventNoResolver handles UserPreference events from watcher
+func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.UserPreference:
 		eobj := evt.Object.(*auth.UserPreference)
@@ -2313,64 +3107,62 @@ func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
 		}
 		userpreferenceHandler := handler.(UserPreferenceHandler)
 		// handle based on event type
+		ctrlCtx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &UserPreference{
-					UserPreference: *eobj,
-					HandlerCtx:     nil,
-					ctrler:         ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("UserPreference_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = userpreferenceHandler.OnUserPreferenceCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = userpreferenceHandler.OnUserPreferenceCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*UserPreference)
-
+				ctrlCtx := fobj.(*userpreferenceCtx)
 				ct.stats.Counter("UserPreference_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := auth.UserPreference{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = userpreferenceHandler.OnUserPreferenceUpdate(obj, eobj)
-				obj.UserPreference = *eobj
-				obj.Unlock()
+				err = userpreferenceHandler.OnUserPreferenceUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.UserPreference = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*UserPreference)
-
 			ct.stats.Counter("UserPreference_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = userpreferenceHandler.OnUserPreferenceDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on UserPreference watch channel", tp)
@@ -2379,8 +3171,145 @@ func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type userpreferenceCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *UserPreference //
+	//   newObj     *auth.UserPreference //update
+	newObj *userpreferenceCtx //update
+}
+
+func (ctx *userpreferenceCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *userpreferenceCtx) GetKey() string {
+	return ctx.obj.MakeKey("auth")
+}
+
+func (ctx *userpreferenceCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *userpreferenceCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *userpreferenceCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*userpreferenceCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *userpreferenceCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *userpreferenceCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *userpreferenceCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *userpreferenceCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *userpreferenceCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *userpreferenceCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "UserPreference"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	userpreferenceHandler := handler.(UserPreferenceHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = userpreferenceHandler.OnUserPreferenceCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("UserPreference_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := auth.UserPreference{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = userpreferenceHandler.OnUserPreferenceUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = userpreferenceHandler.OnUserPreferenceDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleUserPreferenceEventParallel handles UserPreference events from watcher
 func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleUserPreferenceEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *auth.UserPreference:
+		eobj := evt.Object.(*auth.UserPreference)
+		kind := "UserPreference"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on UserPreference watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleUserPreferenceEventParallel handles UserPreference events from watcher
+func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.UserPreference:
 		eobj := evt.Object.(*auth.UserPreference)
@@ -2401,31 +3330,33 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*auth.UserPreference)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*userpreferenceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &UserPreference{
-						UserPreference: *eobj,
-						HandlerCtx:     nil,
-						ctrler:         ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("UserPreference_Created_Events").Inc()
-					obj.Lock()
-					err = userpreferenceHandler.OnUserPreferenceCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = userpreferenceHandler.OnUserPreferenceCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.UserPreference.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*UserPreference)
+					workCtx := fobj.(*userpreferenceCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("UserPreference_Updated_Events").Inc()
 					obj.Lock()
-					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, eobj)
-					obj.UserPreference = *eobj
+					p := auth.UserPreference{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2433,11 +3364,14 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 				}
 				return err
 			}
-			ct.runJob("UserPreference", eobj, workFunc)
+			ctrlCtx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
+			ct.runFunction("UserPreference", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*auth.UserPreference)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*userpreferenceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -2450,10 +3384,11 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.UserPreference.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("UserPreference", eobj, workFunc)
+			ctrlCtx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
+			ct.runFunction("UserPreference", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on UserPreference watch channel", tp)
@@ -2688,7 +3623,8 @@ func (api *userpreferenceAPI) Create(obj *auth.UserPreference) error {
 		return err
 	}
 
-	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates UserPreference object and synchronously triggers local event
@@ -2708,9 +3644,11 @@ func (api *userpreferenceAPI) CreateEvent(obj *auth.UserPreference) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on UserPreference object
@@ -2726,7 +3664,8 @@ func (api *userpreferenceAPI) Update(obj *auth.UserPreference) error {
 		return err
 	}
 
-	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes UserPreference object
@@ -2742,7 +3681,16 @@ func (api *userpreferenceAPI) Delete(obj *auth.UserPreference) error {
 		return err
 	}
 
-	return api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *userpreferenceAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "user-preferences", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "auth", "/", "user-preferences", "/", name)
 }
 
 // Find returns an object by meta

@@ -186,6 +186,19 @@ func (m *WorkloadList) Defaults(ver string) bool {
 
 func (m *AutoMsgEndpointWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -216,6 +229,18 @@ func (m *AutoMsgEndpointWatchHelper) Normalize() {
 
 func (m *AutoMsgEndpointWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -331,6 +356,19 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Normalize() {
 
 func (m *EndpointList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *EndpointList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

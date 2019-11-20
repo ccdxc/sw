@@ -17,10 +17,13 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
@@ -73,6 +76,41 @@ type NetworkHandler interface {
 
 // handleNetworkEvent handles Network events from watcher
 func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleNetworkEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.Network:
+		eobj := evt.Object.(*network.Network)
+		kind := "Network"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &networkCtx{event: evt.Type,
+			obj: &Network{Network: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Network watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleNetworkEventNoResolver handles Network events from watcher
+func (ct *ctrlerCtx) handleNetworkEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.Network:
 		eobj := evt.Object.(*network.Network)
@@ -89,64 +127,62 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 		}
 		networkHandler := handler.(NetworkHandler)
 		// handle based on event type
+		ctrlCtx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &Network{
-					Network:    *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("Network_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = networkHandler.OnNetworkCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = networkHandler.OnNetworkCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*Network)
-
+				ctrlCtx := fobj.(*networkCtx)
 				ct.stats.Counter("Network_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.Network{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = networkHandler.OnNetworkUpdate(obj, eobj)
-				obj.Network = *eobj
-				obj.Unlock()
+				err = networkHandler.OnNetworkUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.Network = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*Network)
-
 			ct.stats.Counter("Network_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = networkHandler.OnNetworkDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Network watch channel", tp)
@@ -155,8 +191,145 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type networkCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *Network //
+	//   newObj     *network.Network //update
+	newObj *networkCtx //update
+}
+
+func (ctx *networkCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *networkCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *networkCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *networkCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *networkCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*networkCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *networkCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *networkCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *networkCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *networkCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *networkCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *networkCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "Network"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	networkHandler := handler.(NetworkHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = networkHandler.OnNetworkCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("Network_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.Network{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = networkHandler.OnNetworkUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = networkHandler.OnNetworkDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleNetworkEventParallel handles Network events from watcher
 func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleNetworkEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.Network:
+		eobj := evt.Object.(*network.Network)
+		kind := "Network"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Network watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleNetworkEventParallel handles Network events from watcher
+func (ct *ctrlerCtx) handleNetworkEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.Network:
 		eobj := evt.Object.(*network.Network)
@@ -177,31 +350,33 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.Network)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*networkCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &Network{
-						Network:    *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("Network_Created_Events").Inc()
-					obj.Lock()
-					err = networkHandler.OnNetworkCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = networkHandler.OnNetworkCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.Network.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*Network)
+					workCtx := fobj.(*networkCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("Network_Updated_Events").Inc()
 					obj.Lock()
-					err = networkHandler.OnNetworkUpdate(obj, eobj)
-					obj.Network = *eobj
+					p := network.Network{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = networkHandler.OnNetworkUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -209,11 +384,14 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 				}
 				return err
 			}
-			ct.runJob("Network", eobj, workFunc)
+			ctrlCtx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
+			ct.runFunction("Network", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.Network)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*networkCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -226,10 +404,11 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.Network.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("Network", eobj, workFunc)
+			ctrlCtx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
+			ct.runFunction("Network", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Network watch channel", tp)
@@ -464,7 +643,8 @@ func (api *networkAPI) Create(obj *network.Network) error {
 		return err
 	}
 
-	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates Network object and synchronously triggers local event
@@ -484,9 +664,11 @@ func (api *networkAPI) CreateEvent(obj *network.Network) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on Network object
@@ -502,7 +684,8 @@ func (api *networkAPI) Update(obj *network.Network) error {
 		return err
 	}
 
-	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes Network object
@@ -518,7 +701,16 @@ func (api *networkAPI) Delete(obj *network.Network) error {
 		return err
 	}
 
-	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *networkAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "networks", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "networks", "/", name)
 }
 
 // Find returns an object by meta
@@ -629,6 +821,41 @@ type ServiceHandler interface {
 
 // handleServiceEvent handles Service events from watcher
 func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleServiceEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.Service:
+		eobj := evt.Object.(*network.Service)
+		kind := "Service"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &serviceCtx{event: evt.Type,
+			obj: &Service{Service: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Service watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleServiceEventNoResolver handles Service events from watcher
+func (ct *ctrlerCtx) handleServiceEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.Service:
 		eobj := evt.Object.(*network.Service)
@@ -645,64 +872,62 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 		}
 		serviceHandler := handler.(ServiceHandler)
 		// handle based on event type
+		ctrlCtx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &Service{
-					Service:    *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("Service_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = serviceHandler.OnServiceCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = serviceHandler.OnServiceCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*Service)
-
+				ctrlCtx := fobj.(*serviceCtx)
 				ct.stats.Counter("Service_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.Service{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = serviceHandler.OnServiceUpdate(obj, eobj)
-				obj.Service = *eobj
-				obj.Unlock()
+				err = serviceHandler.OnServiceUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.Service = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*Service)
-
 			ct.stats.Counter("Service_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = serviceHandler.OnServiceDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Service watch channel", tp)
@@ -711,8 +936,145 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type serviceCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *Service //
+	//   newObj     *network.Service //update
+	newObj *serviceCtx //update
+}
+
+func (ctx *serviceCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *serviceCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *serviceCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *serviceCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *serviceCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*serviceCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *serviceCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *serviceCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *serviceCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *serviceCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *serviceCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *serviceCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "Service"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	serviceHandler := handler.(ServiceHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = serviceHandler.OnServiceCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("Service_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.Service{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = serviceHandler.OnServiceUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = serviceHandler.OnServiceDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleServiceEventParallel handles Service events from watcher
 func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleServiceEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.Service:
+		eobj := evt.Object.(*network.Service)
+		kind := "Service"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Service watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleServiceEventParallel handles Service events from watcher
+func (ct *ctrlerCtx) handleServiceEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.Service:
 		eobj := evt.Object.(*network.Service)
@@ -733,31 +1095,33 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.Service)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*serviceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &Service{
-						Service:    *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("Service_Created_Events").Inc()
-					obj.Lock()
-					err = serviceHandler.OnServiceCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = serviceHandler.OnServiceCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.Service.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*Service)
+					workCtx := fobj.(*serviceCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("Service_Updated_Events").Inc()
 					obj.Lock()
-					err = serviceHandler.OnServiceUpdate(obj, eobj)
-					obj.Service = *eobj
+					p := network.Service{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = serviceHandler.OnServiceUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -765,11 +1129,14 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 				}
 				return err
 			}
-			ct.runJob("Service", eobj, workFunc)
+			ctrlCtx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
+			ct.runFunction("Service", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.Service)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*serviceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -782,10 +1149,11 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.Service.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("Service", eobj, workFunc)
+			ctrlCtx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
+			ct.runFunction("Service", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Service watch channel", tp)
@@ -1020,7 +1388,8 @@ func (api *serviceAPI) Create(obj *network.Service) error {
 		return err
 	}
 
-	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates Service object and synchronously triggers local event
@@ -1040,9 +1409,11 @@ func (api *serviceAPI) CreateEvent(obj *network.Service) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on Service object
@@ -1058,7 +1429,8 @@ func (api *serviceAPI) Update(obj *network.Service) error {
 		return err
 	}
 
-	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes Service object
@@ -1074,7 +1446,16 @@ func (api *serviceAPI) Delete(obj *network.Service) error {
 		return err
 	}
 
-	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *serviceAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "services", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "services", "/", name)
 }
 
 // Find returns an object by meta
@@ -1185,6 +1566,41 @@ type LbPolicyHandler interface {
 
 // handleLbPolicyEvent handles LbPolicy events from watcher
 func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleLbPolicyEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.LbPolicy:
+		eobj := evt.Object.(*network.LbPolicy)
+		kind := "LbPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &lbpolicyCtx{event: evt.Type,
+			obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on LbPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleLbPolicyEventNoResolver handles LbPolicy events from watcher
+func (ct *ctrlerCtx) handleLbPolicyEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.LbPolicy:
 		eobj := evt.Object.(*network.LbPolicy)
@@ -1201,64 +1617,62 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 		}
 		lbpolicyHandler := handler.(LbPolicyHandler)
 		// handle based on event type
+		ctrlCtx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &LbPolicy{
-					LbPolicy:   *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("LbPolicy_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = lbpolicyHandler.OnLbPolicyCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = lbpolicyHandler.OnLbPolicyCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*LbPolicy)
-
+				ctrlCtx := fobj.(*lbpolicyCtx)
 				ct.stats.Counter("LbPolicy_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.LbPolicy{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = lbpolicyHandler.OnLbPolicyUpdate(obj, eobj)
-				obj.LbPolicy = *eobj
-				obj.Unlock()
+				err = lbpolicyHandler.OnLbPolicyUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.LbPolicy = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*LbPolicy)
-
 			ct.stats.Counter("LbPolicy_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = lbpolicyHandler.OnLbPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on LbPolicy watch channel", tp)
@@ -1267,8 +1681,145 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type lbpolicyCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *LbPolicy //
+	//   newObj     *network.LbPolicy //update
+	newObj *lbpolicyCtx //update
+}
+
+func (ctx *lbpolicyCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *lbpolicyCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *lbpolicyCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *lbpolicyCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *lbpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*lbpolicyCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *lbpolicyCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *lbpolicyCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *lbpolicyCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *lbpolicyCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *lbpolicyCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *lbpolicyCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "LbPolicy"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	lbpolicyHandler := handler.(LbPolicyHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = lbpolicyHandler.OnLbPolicyCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("LbPolicy_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.LbPolicy{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = lbpolicyHandler.OnLbPolicyUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = lbpolicyHandler.OnLbPolicyDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleLbPolicyEventParallel handles LbPolicy events from watcher
 func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleLbPolicyEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.LbPolicy:
+		eobj := evt.Object.(*network.LbPolicy)
+		kind := "LbPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on LbPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleLbPolicyEventParallel handles LbPolicy events from watcher
+func (ct *ctrlerCtx) handleLbPolicyEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.LbPolicy:
 		eobj := evt.Object.(*network.LbPolicy)
@@ -1289,31 +1840,33 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.LbPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*lbpolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &LbPolicy{
-						LbPolicy:   *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("LbPolicy_Created_Events").Inc()
-					obj.Lock()
-					err = lbpolicyHandler.OnLbPolicyCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = lbpolicyHandler.OnLbPolicyCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.LbPolicy.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*LbPolicy)
+					workCtx := fobj.(*lbpolicyCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("LbPolicy_Updated_Events").Inc()
 					obj.Lock()
-					err = lbpolicyHandler.OnLbPolicyUpdate(obj, eobj)
-					obj.LbPolicy = *eobj
+					p := network.LbPolicy{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = lbpolicyHandler.OnLbPolicyUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1321,11 +1874,14 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 				}
 				return err
 			}
-			ct.runJob("LbPolicy", eobj, workFunc)
+			ctrlCtx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("LbPolicy", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.LbPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*lbpolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -1338,10 +1894,11 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.LbPolicy.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("LbPolicy", eobj, workFunc)
+			ctrlCtx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("LbPolicy", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on LbPolicy watch channel", tp)
@@ -1576,7 +2133,8 @@ func (api *lbpolicyAPI) Create(obj *network.LbPolicy) error {
 		return err
 	}
 
-	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates LbPolicy object and synchronously triggers local event
@@ -1596,9 +2154,11 @@ func (api *lbpolicyAPI) CreateEvent(obj *network.LbPolicy) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on LbPolicy object
@@ -1614,7 +2174,8 @@ func (api *lbpolicyAPI) Update(obj *network.LbPolicy) error {
 		return err
 	}
 
-	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes LbPolicy object
@@ -1630,7 +2191,16 @@ func (api *lbpolicyAPI) Delete(obj *network.LbPolicy) error {
 		return err
 	}
 
-	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *lbpolicyAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "lb-policy", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "lb-policy", "/", name)
 }
 
 // Find returns an object by meta
@@ -1741,6 +2311,41 @@ type VirtualRouterHandler interface {
 
 // handleVirtualRouterEvent handles VirtualRouter events from watcher
 func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleVirtualRouterEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.VirtualRouter:
+		eobj := evt.Object.(*network.VirtualRouter)
+		kind := "VirtualRouter"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &virtualrouterCtx{event: evt.Type,
+			obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on VirtualRouter watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleVirtualRouterEventNoResolver handles VirtualRouter events from watcher
+func (ct *ctrlerCtx) handleVirtualRouterEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.VirtualRouter:
 		eobj := evt.Object.(*network.VirtualRouter)
@@ -1757,64 +2362,62 @@ func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
 		}
 		virtualrouterHandler := handler.(VirtualRouterHandler)
 		// handle based on event type
+		ctrlCtx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &VirtualRouter{
-					VirtualRouter: *eobj,
-					HandlerCtx:    nil,
-					ctrler:        ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("VirtualRouter_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = virtualrouterHandler.OnVirtualRouterCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = virtualrouterHandler.OnVirtualRouterCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*VirtualRouter)
-
+				ctrlCtx := fobj.(*virtualrouterCtx)
 				ct.stats.Counter("VirtualRouter_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.VirtualRouter{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = virtualrouterHandler.OnVirtualRouterUpdate(obj, eobj)
-				obj.VirtualRouter = *eobj
-				obj.Unlock()
+				err = virtualrouterHandler.OnVirtualRouterUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.VirtualRouter = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*VirtualRouter)
-
 			ct.stats.Counter("VirtualRouter_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = virtualrouterHandler.OnVirtualRouterDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on VirtualRouter watch channel", tp)
@@ -1823,8 +2426,145 @@ func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type virtualrouterCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *VirtualRouter //
+	//   newObj     *network.VirtualRouter //update
+	newObj *virtualrouterCtx //update
+}
+
+func (ctx *virtualrouterCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *virtualrouterCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *virtualrouterCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *virtualrouterCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *virtualrouterCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*virtualrouterCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *virtualrouterCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *virtualrouterCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *virtualrouterCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *virtualrouterCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *virtualrouterCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *virtualrouterCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "VirtualRouter"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	virtualrouterHandler := handler.(VirtualRouterHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = virtualrouterHandler.OnVirtualRouterCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("VirtualRouter_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.VirtualRouter{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = virtualrouterHandler.OnVirtualRouterUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = virtualrouterHandler.OnVirtualRouterDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleVirtualRouterEventParallel handles VirtualRouter events from watcher
 func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleVirtualRouterEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.VirtualRouter:
+		eobj := evt.Object.(*network.VirtualRouter)
+		kind := "VirtualRouter"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on VirtualRouter watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleVirtualRouterEventParallel handles VirtualRouter events from watcher
+func (ct *ctrlerCtx) handleVirtualRouterEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.VirtualRouter:
 		eobj := evt.Object.(*network.VirtualRouter)
@@ -1845,31 +2585,33 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.VirtualRouter)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*virtualrouterCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &VirtualRouter{
-						VirtualRouter: *eobj,
-						HandlerCtx:    nil,
-						ctrler:        ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("VirtualRouter_Created_Events").Inc()
-					obj.Lock()
-					err = virtualrouterHandler.OnVirtualRouterCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = virtualrouterHandler.OnVirtualRouterCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.VirtualRouter.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*VirtualRouter)
+					workCtx := fobj.(*virtualrouterCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("VirtualRouter_Updated_Events").Inc()
 					obj.Lock()
-					err = virtualrouterHandler.OnVirtualRouterUpdate(obj, eobj)
-					obj.VirtualRouter = *eobj
+					p := network.VirtualRouter{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = virtualrouterHandler.OnVirtualRouterUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1877,11 +2619,14 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 				}
 				return err
 			}
-			ct.runJob("VirtualRouter", eobj, workFunc)
+			ctrlCtx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
+			ct.runFunction("VirtualRouter", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.VirtualRouter)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*virtualrouterCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -1894,10 +2639,11 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.VirtualRouter.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("VirtualRouter", eobj, workFunc)
+			ctrlCtx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
+			ct.runFunction("VirtualRouter", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on VirtualRouter watch channel", tp)
@@ -2132,7 +2878,8 @@ func (api *virtualrouterAPI) Create(obj *network.VirtualRouter) error {
 		return err
 	}
 
-	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates VirtualRouter object and synchronously triggers local event
@@ -2152,9 +2899,11 @@ func (api *virtualrouterAPI) CreateEvent(obj *network.VirtualRouter) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on VirtualRouter object
@@ -2170,7 +2919,8 @@ func (api *virtualrouterAPI) Update(obj *network.VirtualRouter) error {
 		return err
 	}
 
-	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes VirtualRouter object
@@ -2186,7 +2936,16 @@ func (api *virtualrouterAPI) Delete(obj *network.VirtualRouter) error {
 		return err
 	}
 
-	return api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *virtualrouterAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "virtualrouters", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "virtualrouters", "/", name)
 }
 
 // Find returns an object by meta
@@ -2297,6 +3056,41 @@ type NetworkInterfaceHandler interface {
 
 // handleNetworkInterfaceEvent handles NetworkInterface events from watcher
 func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleNetworkInterfaceEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.NetworkInterface:
+		eobj := evt.Object.(*network.NetworkInterface)
+		kind := "NetworkInterface"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &networkinterfaceCtx{event: evt.Type,
+			obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkInterface watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleNetworkInterfaceEventNoResolver handles NetworkInterface events from watcher
+func (ct *ctrlerCtx) handleNetworkInterfaceEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.NetworkInterface:
 		eobj := evt.Object.(*network.NetworkInterface)
@@ -2313,64 +3107,62 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error 
 		}
 		networkinterfaceHandler := handler.(NetworkInterfaceHandler)
 		// handle based on event type
+		ctrlCtx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &NetworkInterface{
-					NetworkInterface: *eobj,
-					HandlerCtx:       nil,
-					ctrler:           ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("NetworkInterface_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = networkinterfaceHandler.OnNetworkInterfaceCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = networkinterfaceHandler.OnNetworkInterfaceCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*NetworkInterface)
-
+				ctrlCtx := fobj.(*networkinterfaceCtx)
 				ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.NetworkInterface{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, eobj)
-				obj.NetworkInterface = *eobj
-				obj.Unlock()
+				err = networkinterfaceHandler.OnNetworkInterfaceUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.NetworkInterface = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*NetworkInterface)
-
 			ct.stats.Counter("NetworkInterface_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = networkinterfaceHandler.OnNetworkInterfaceDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkInterface watch channel", tp)
@@ -2379,8 +3171,145 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error 
 	return nil
 }
 
+type networkinterfaceCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *NetworkInterface //
+	//   newObj     *network.NetworkInterface //update
+	newObj *networkinterfaceCtx //update
+}
+
+func (ctx *networkinterfaceCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *networkinterfaceCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *networkinterfaceCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *networkinterfaceCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *networkinterfaceCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*networkinterfaceCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *networkinterfaceCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *networkinterfaceCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *networkinterfaceCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *networkinterfaceCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *networkinterfaceCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *networkinterfaceCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "NetworkInterface"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	networkinterfaceHandler := handler.(NetworkInterfaceHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = networkinterfaceHandler.OnNetworkInterfaceCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.NetworkInterface{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = networkinterfaceHandler.OnNetworkInterfaceUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = networkinterfaceHandler.OnNetworkInterfaceDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleNetworkInterfaceEventParallel handles NetworkInterface events from watcher
 func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleNetworkInterfaceEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.NetworkInterface:
+		eobj := evt.Object.(*network.NetworkInterface)
+		kind := "NetworkInterface"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkInterface watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleNetworkInterfaceEventParallel handles NetworkInterface events from watcher
+func (ct *ctrlerCtx) handleNetworkInterfaceEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.NetworkInterface:
 		eobj := evt.Object.(*network.NetworkInterface)
@@ -2401,31 +3330,33 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.NetworkInterface)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*networkinterfaceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &NetworkInterface{
-						NetworkInterface: *eobj,
-						HandlerCtx:       nil,
-						ctrler:           ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("NetworkInterface_Created_Events").Inc()
-					obj.Lock()
-					err = networkinterfaceHandler.OnNetworkInterfaceCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = networkinterfaceHandler.OnNetworkInterfaceCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.NetworkInterface.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*NetworkInterface)
+					workCtx := fobj.(*networkinterfaceCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
 					obj.Lock()
-					err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, eobj)
-					obj.NetworkInterface = *eobj
+					p := network.NetworkInterface{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2433,11 +3364,14 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 				}
 				return err
 			}
-			ct.runJob("NetworkInterface", eobj, workFunc)
+			ctrlCtx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
+			ct.runFunction("NetworkInterface", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.NetworkInterface)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*networkinterfaceCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -2450,10 +3384,11 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.NetworkInterface.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("NetworkInterface", eobj, workFunc)
+			ctrlCtx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
+			ct.runFunction("NetworkInterface", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on NetworkInterface watch channel", tp)
@@ -2688,7 +3623,8 @@ func (api *networkinterfaceAPI) Create(obj *network.NetworkInterface) error {
 		return err
 	}
 
-	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates NetworkInterface object and synchronously triggers local event
@@ -2708,9 +3644,11 @@ func (api *networkinterfaceAPI) CreateEvent(obj *network.NetworkInterface) error
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on NetworkInterface object
@@ -2726,7 +3664,8 @@ func (api *networkinterfaceAPI) Update(obj *network.NetworkInterface) error {
 		return err
 	}
 
-	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes NetworkInterface object
@@ -2742,7 +3681,16 @@ func (api *networkinterfaceAPI) Delete(obj *network.NetworkInterface) error {
 		return err
 	}
 
-	return api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *networkinterfaceAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "networkinterfaces", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "networkinterfaces", "/", name)
 }
 
 // Find returns an object by meta
@@ -2853,6 +3801,41 @@ type IPAMPolicyHandler interface {
 
 // handleIPAMPolicyEvent handles IPAMPolicy events from watcher
 func (ct *ctrlerCtx) handleIPAMPolicyEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleIPAMPolicyEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.IPAMPolicy:
+		eobj := evt.Object.(*network.IPAMPolicy)
+		kind := "IPAMPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &ipampolicyCtx{event: evt.Type,
+			obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on IPAMPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleIPAMPolicyEventNoResolver handles IPAMPolicy events from watcher
+func (ct *ctrlerCtx) handleIPAMPolicyEventNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.IPAMPolicy:
 		eobj := evt.Object.(*network.IPAMPolicy)
@@ -2869,64 +3852,62 @@ func (ct *ctrlerCtx) handleIPAMPolicyEvent(evt *kvstore.WatchEvent) error {
 		}
 		ipampolicyHandler := handler.(IPAMPolicyHandler)
 		// handle based on event type
+		ctrlCtx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
 		switch evt.Type {
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
 			if err != nil {
-				obj := &IPAMPolicy{
-					IPAMPolicy: *eobj,
-					HandlerCtx: nil,
-					ctrler:     ct,
-				}
-				ct.addObject(kind, obj.GetKey(), obj)
+				ct.addObject(ctrlCtx)
 				ct.stats.Counter("IPAMPolicy_Created_Events").Inc()
 
 				// call the event handler
-				obj.Lock()
-				err = ipampolicyHandler.OnIPAMPolicyCreate(obj)
-				obj.Unlock()
+				ctrlCtx.Lock()
+				err = ipampolicyHandler.OnIPAMPolicyCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-					ct.delObject(kind, eobj.GetKey())
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
 			} else {
-				obj := fobj.(*IPAMPolicy)
-
+				ctrlCtx := fobj.(*ipampolicyCtx)
 				ct.stats.Counter("IPAMPolicy_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.IPAMPolicy{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
 
-				// call the event handler
-				obj.Lock()
-				err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, eobj)
-				obj.IPAMPolicy = *eobj
-				obj.Unlock()
+				err = ipampolicyHandler.OnIPAMPolicyUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.IPAMPolicy = *eobj
+				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
 					return err
 				}
+
 			}
 		case kvstore.Deleted:
-			fobj, err := ct.findObject(kind, eobj.GetKey())
+			ctrlCtx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
 			if err != nil {
 				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
 			obj := fobj.(*IPAMPolicy)
-
 			ct.stats.Counter("IPAMPolicy_Deleted_Events").Inc()
-
-			// Call the event reactor
 			obj.Lock()
 			err = ipampolicyHandler.OnIPAMPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
 
-			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on IPAMPolicy watch channel", tp)
@@ -2935,8 +3916,145 @@ func (ct *ctrlerCtx) handleIPAMPolicyEvent(evt *kvstore.WatchEvent) error {
 	return nil
 }
 
+type ipampolicyCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *IPAMPolicy //
+	//   newObj     *network.IPAMPolicy //update
+	newObj *ipampolicyCtx //update
+}
+
+func (ctx *ipampolicyCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *ipampolicyCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *ipampolicyCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *ipampolicyCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *ipampolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*ipampolicyCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *ipampolicyCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *ipampolicyCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *ipampolicyCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *ipampolicyCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *ipampolicyCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *ipampolicyCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "IPAMPolicy"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	ipampolicyHandler := handler.(IPAMPolicyHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = ipampolicyHandler.OnIPAMPolicyCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("IPAMPolicy_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.IPAMPolicy{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = ipampolicyHandler.OnIPAMPolicyUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = ipampolicyHandler.OnIPAMPolicyDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
 // handleIPAMPolicyEventParallel handles IPAMPolicy events from watcher
 func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleIPAMPolicyEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.IPAMPolicy:
+		eobj := evt.Object.(*network.IPAMPolicy)
+		kind := "IPAMPolicy"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on IPAMPolicy watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleIPAMPolicyEventParallel handles IPAMPolicy events from watcher
+func (ct *ctrlerCtx) handleIPAMPolicyEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *network.IPAMPolicy:
 		eobj := evt.Object.(*network.IPAMPolicy)
@@ -2957,31 +4075,33 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) erro
 		case kvstore.Created:
 			fallthrough
 		case kvstore.Updated:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
 				var err error
-				eobj := userCtx.(*network.IPAMPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+				workCtx := ctrlCtx.(*ipampolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
 				if err != nil {
-					obj := &IPAMPolicy{
-						IPAMPolicy: *eobj,
-						HandlerCtx: nil,
-						ctrler:     ct,
-					}
-					ct.addObject(kind, obj.GetKey(), obj)
+					ct.addObject(workCtx)
 					ct.stats.Counter("IPAMPolicy_Created_Events").Inc()
-					obj.Lock()
-					err = ipampolicyHandler.OnIPAMPolicyCreate(obj)
-					obj.Unlock()
+					eobj.Lock()
+					err = ipampolicyHandler.OnIPAMPolicyCreate(eobj)
+					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						ct.delObject(kind, obj.IPAMPolicy.GetKey())
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
-					obj := fobj.(*IPAMPolicy)
+					workCtx := fobj.(*ipampolicyCtx)
+					obj := workCtx.obj
 					ct.stats.Counter("IPAMPolicy_Updated_Events").Inc()
 					obj.Lock()
-					err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, eobj)
-					obj.IPAMPolicy = *eobj
+					p := network.IPAMPolicy{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, &p)
+					workCtx.obj = eobj
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2989,11 +4109,14 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) erro
 				}
 				return err
 			}
-			ct.runJob("IPAMPolicy", eobj, workFunc)
+			ctrlCtx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("IPAMPolicy", ctrlCtx, workFunc)
 		case kvstore.Deleted:
-			workFunc := func(ctx context.Context, userCtx shardworkers.WorkObj) error {
-				eobj := userCtx.(*network.IPAMPolicy)
-				fobj, err := ct.findObject(kind, eobj.GetKey())
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*ipampolicyCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
 				if err != nil {
 					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 					return err
@@ -3006,10 +4129,11 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) erro
 				if err != nil {
 					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				}
-				ct.delObject(kind, obj.IPAMPolicy.GetKey())
+				ct.delObject(kind, workCtx.GetKey())
 				return nil
 			}
-			ct.runJob("IPAMPolicy", eobj, workFunc)
+			ctrlCtx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
+			ct.runFunction("IPAMPolicy", ctrlCtx, workFunc)
 		}
 	default:
 		ct.logger.Fatalf("API watcher Found object of invalid type: %v on IPAMPolicy watch channel", tp)
@@ -3244,7 +4368,8 @@ func (api *ipampolicyAPI) Create(obj *network.IPAMPolicy) error {
 		return err
 	}
 
-	return api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // CreateEvent creates IPAMPolicy object and synchronously triggers local event
@@ -3264,9 +4389,11 @@ func (api *ipampolicyAPI) CreateEvent(obj *network.IPAMPolicy) error {
 			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
 			return err
 		}
+		return err
 	}
 
-	return api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
 }
 
 // Update triggers update on IPAMPolicy object
@@ -3282,7 +4409,8 @@ func (api *ipampolicyAPI) Update(obj *network.IPAMPolicy) error {
 		return err
 	}
 
-	return api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
 }
 
 // Delete deletes IPAMPolicy object
@@ -3298,7 +4426,16 @@ func (api *ipampolicyAPI) Delete(obj *network.IPAMPolicy) error {
 		return err
 	}
 
-	return api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *ipampolicyAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "ipam-policies", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "ipam-policies", "/", name)
 }
 
 // Find returns an object by meta

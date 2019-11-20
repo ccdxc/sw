@@ -16,6 +16,7 @@ var _ api.ObjectMeta
 var _ kvstore.Interface
 
 const KindBook ObjKind = "Book"
+const KindCoupon ObjKind = "Coupon"
 const KindCustomer ObjKind = "Customer"
 const KindOrder ObjKind = "Order"
 const KindPublisher ObjKind = "Publisher"

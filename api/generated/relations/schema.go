@@ -47,6 +47,10 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 		{Type: "NamedRef", To: "security/SecurityGroup", Field: "FromSecurityGroups"},
 		{Type: "NamedRef", To: "security/SecurityGroup", Field: "ToSecurityGroups"},
 	},
+	"workload.EndpointStatus": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/Network", Field: "Network"},
+		{Type: "NamedRef", To: "network/Network", Field: "Network"},
+	},
 	"workload.WorkloadSpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "cluster/Host", Field: "HostName"},
 		{Type: "NamedRef", To: "cluster/Host", Field: "HostName"},

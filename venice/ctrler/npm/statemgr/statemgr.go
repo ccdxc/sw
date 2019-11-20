@@ -87,6 +87,19 @@ func (sm *Statemgr) FindObject(kind, tenant, ns, name string) (runtime.Object, e
 	return sm.ctrler.FindObject(kind, &ometa)
 }
 
+// IsPending looks up an object in local db
+func (sm *Statemgr) IsPending(kind, tenant, ns, name string) (bool, error) {
+	// form network key
+	ometa := api.ObjectMeta{
+		Tenant:    tenant,
+		Namespace: ns,
+		Name:      name,
+	}
+
+	// find it in db
+	return sm.ctrler.IsPending(kind, &ometa)
+}
+
 // ListObjects list all objects of a kind
 func (sm *Statemgr) ListObjects(kind string) []runtime.Object {
 	return sm.ctrler.ListObjects(kind)
@@ -107,7 +120,7 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	}
 
 	// create controller instance
-	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger)
+	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger, true)
 	if err != nil {
 		logger.Fatalf("Error creating controller. Err: %v", err)
 	}

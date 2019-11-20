@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/shardworkers"
 )
 
 // Operations allowed by the API server on objects
@@ -222,3 +223,59 @@ type Store interface {
 
 // EventHandlerFn is for handling watch events
 type EventHandlerFn func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object)
+
+//CtkitEvent represent object and associated event
+type CtkitEvent struct {
+	Event kvstore.WatchEventType
+	Obj   CtkitObject
+}
+
+// CtkitObject is the inteface for ctkit operation by ctrler
+type CtkitObject interface {
+	shardworkers.WorkObj //ctkit work interface
+	ObjectResolution     //define object resolutions
+	Lock()
+	Unlock()
+	GetKind() string
+	SetEvent(kvstore.WatchEventType)
+	SetNewObj(newObj CtkitObject)
+	GetNewObj() CtkitObject
+	RuntimeObject() runtime.Object
+	References() map[string]ReferenceObj
+}
+
+// ObjectResolution is the interface definition for object resoluion
+type ObjectResolution interface {
+	IsResolved() bool
+	IsDelUnResolved() bool
+	IsAddUnResolved() bool
+	IsUpdateUnResolved() bool
+	IsOperationPending() bool
+	IsInProgress() bool
+	IsDeleted() bool
+	SetResolved()
+	SetInProgress()
+	SetAddUnResolved()
+	SetUpdateUnResolved()
+	SetDeleteUnResolved()
+	SetMarkedForDelete()
+	SetDeleted()
+	PendingEvents() []CtkitEvent
+	AddToPending(CtkitEvent)
+	ClearPendingEvents()
+}
+
+//ObjectStore Interface for an object DB
+type ObjectStore interface {
+	Lock()
+	Unlock()
+	GetObject(key string) (CtkitObject, error)
+	DeleteObject(key string) error
+	AddObject(CtkitObject) error
+}
+
+//ObjectDB interface for object DB
+type ObjectDB interface {
+	GetObjectStore(kind string) ObjectStore
+	ResolvedRun(CtkitObject) // Interface to run
+}

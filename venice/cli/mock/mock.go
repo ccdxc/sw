@@ -44,7 +44,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/workload"
+	//"github.com/pensando/sw/api/generated/workload"
 )
 
 const (
@@ -234,32 +234,34 @@ func (tinfo *Info) createMiscObjects() {
 		}
 	}
 
-	// Endpoints
-	for i := 0; i < 10; i++ {
-		ep := workload.Endpoint{
-			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-			ObjectMeta: api.ObjectMeta{
-				Name:      fmt.Sprintf("ep-%d", i),
-				Tenant:    "default",
-				Namespace: "default",
-			},
-			Spec: workload.EndpointSpec{},
-			Status: workload.EndpointStatus{
-				WorkloadName:       fmt.Sprintf("workload-%d", i),
-				Network:            "subnet-31-31",
-				HomingHostName:     fmt.Sprintf("esx-lab2-1%d", i),
-				IPv4Address:        fmt.Sprintf("31.31.0.%d", i),
-				IPv4Gateway:        "31.31.0.254",
-				MacAddress:         fmt.Sprintf("00ae.cd%x%x.%x%x%x%x", i, i, i, i, i, i),
-				EndpointState:      "up",
-				SecurityGroups:     []string{"core-svcs", "lab-22"},
-				MicroSegmentVlan:   111,
-				WorkloadAttributes: map[string]string{"os": "linux", "version": "rhel7.5"},
-			},
+	/*
+		// Endpoints
+		for i := 0; i < 10; i++ {
+			ep := workload.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      fmt.Sprintf("ep-%d", i),
+					Tenant:    "default",
+					Namespace: "default",
+				},
+				Spec: workload.EndpointSpec{},
+				Status: workload.EndpointStatus{
+					//WorkloadName:       fmt.Sprintf("workload-%d", i),
+					Network:            "subnet-31-31",
+					HomingHostName:     fmt.Sprintf("esx-lab2-1%d", i),
+					IPv4Address:        fmt.Sprintf("31.31.0.%d", i),
+					IPv4Gateway:        "31.31.0.254",
+					MacAddress:         fmt.Sprintf("00ae.cd%x%x.%x%x%x%x", i, i, i, i, i, i),
+					EndpointState:      "up",
+					SecurityGroups:     []string{"core-svcs", "lab-22"},
+					MicroSegmentVlan:   111,
+					WorkloadAttributes: map[string]string{"os": "linux", "version": "rhel7.5"},
+				},
+			}
+			_, err := tinfo.apicl.WorkloadV1().Endpoint().Create(context.Background(), &ep)
+			if err != nil {
+				tinfo.l.Fatalf("unable to create endpoint object: err %s,\n%+v", err, ep)
+			}
 		}
-		_, err := tinfo.apicl.WorkloadV1().Endpoint().Create(context.Background(), &ep)
-		if err != nil {
-			tinfo.l.Fatalf("unable to create endpoint object: err %s,\n%+v", err, ep)
-		}
-	}
+	*/
 }

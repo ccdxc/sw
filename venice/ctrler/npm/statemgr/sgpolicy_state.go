@@ -204,6 +204,42 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 	return nil
 }
 
+func (sgp *SgpolicyState) detachFromApps() error {
+	for _, rule := range sgp.NetworkSecurityPolicy.Spec.Rules {
+		if len(rule.Apps) != 0 {
+			for _, appName := range rule.Apps {
+				app, err := sgp.stateMgr.FindApp(sgp.NetworkSecurityPolicy.Tenant, appName)
+				if err != nil {
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.NetworkSecurityPolicy.Name, rule)
+				} else {
+					app.detachPolicy(sgp.NetworkSecurityPolicy.Name)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// updateAttachedApps walks all referred apps and links them
+func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) error {
+	for _, rule := range sgp.Spec.Rules {
+		if len(rule.Apps) != 0 {
+			for _, appName := range rule.Apps {
+				app, err := sm.FindApp(sgp.Tenant, appName)
+				if err != nil {
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.Name, rule)
+					return kvstore.NewKeyNotFoundError(appName, 0)
+				}
+
+				app.attachPolicy(sgp.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
 // initNodeVersions initializes node versions for the policy
 func (sgp *SgpolicyState) initNodeVersions() error {
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
@@ -322,6 +358,13 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 		}
 	}()
 
+	// find and update all attached apps
+	err = sm.updateAttachedApps(&sgps.NetworkSecurityPolicy.NetworkSecurityPolicy)
+	if err != nil {
+		log.Errorf("Error updating attached apps. Err: %v", err)
+		return err
+	}
+
 	// store it in local DB
 	err = sm.mbus.AddObjectWithReferences(sgp.MakeKey("security"), convertNetworkSecurityPolicy(sgps), references(sgp))
 	if err != nil {
@@ -344,7 +387,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 
 // OnNetworkSecurityPolicyUpdate updates a sg policy
 func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPolicy, nsgp *security.NetworkSecurityPolicy) error {
-	log.Infof("Got sgpolicy update for %#v, %d rules. have %d rules", nsgp.ObjectMeta, len(nsgp.Spec.Rules), len(sgp.Spec.Rules))
+	log.Infof("Got sgpolicy update for %#v, %d rules. have %d rules",
+		nsgp.ObjectMeta, len(nsgp.Spec.Rules), len(sgp.Spec.Rules))
 
 	// see if anything changed
 	_, ok := ref.ObjDiff(sgp.Spec, nsgp.Spec)
@@ -372,8 +416,9 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	}()
 
 	// update old state
-	sgp.ObjectMeta = nsgp.ObjectMeta
-	sgp.Spec = nsgp.Spec
+	sgps.NetworkSecurityPolicy.Spec = nsgp.Spec
+	sgps.NetworkSecurityPolicy.ObjectMeta = nsgp.ObjectMeta
+	sgps.NetworkSecurityPolicy.Status = security.NetworkSecurityPolicyStatus{}
 
 	// store it in local DB
 	err = sm.mbus.UpdateObjectWithReferences(sgps.NetworkSecurityPolicy.MakeKey("security"),
@@ -390,6 +435,13 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 		return err
 	}
 
+	// find and update all attached apps
+	err = sm.updateAttachedApps(&sgps.NetworkSecurityPolicy.NetworkSecurityPolicy)
+	if err != nil {
+		log.Errorf("Error updating attached apps. Err: %v", err)
+		return err
+	}
+
 	log.Infof("Updated sgpolicy %#v", sgp.ObjectMeta)
 
 	sgps.initNodeVersions()
@@ -400,6 +452,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 
 // OnNetworkSecurityPolicyDelete deletes a sg policy
 func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPolicy) error {
+	log.Infof("Got sgpolicy delete for %#v", sgpo.NetworkSecurityPolicy.ObjectMeta)
+
 	// see if we already have it
 	sgp, err := sm.FindSgpolicy(sgpo.Tenant, sgpo.Name)
 	if err != nil {
@@ -414,7 +468,13 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 		return err
 	}
 
+	err = sgp.detachFromApps()
+	if err != nil {
+		log.Errorf("Can not find the sg policy %s|%s", sgpo.Tenant, sgpo.Name)
+		return err
+	}
 	// delete it from the DB
+	log.Infof("Sending delete to mbus for %#v", sgpo.NetworkSecurityPolicy.ObjectMeta)
 	return sm.mbus.DeleteObjectWithReferences(sgpo.MakeKey("security"),
 		convertNetworkSecurityPolicy(sgp), references(sgpo))
 }

@@ -4,6 +4,8 @@ package statemgr
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -70,6 +72,11 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
 	// create sg
 	_, err = createSg(stateMgr, "default", "procurement", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
@@ -104,10 +111,17 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
+	AssertEventually(t, func() (bool, interface{}) {
+		sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
+		if err == nil && (len(sgps.groups) == 1) {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
+
 	// verify we can find the sg policy
 	sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
 	AssertOk(t, err, "Could not find the sg policy")
-	AssertEquals(t, sgps.NetworkSecurityPolicy.Spec.AttachGroups, sgp.Spec.AttachGroups, "Security policy params did not match")
 	Assert(t, (len(sgps.groups) == 1), "Sg was not added to sgpolicy", sgps)
 	Assert(t, sgps.groups["procurement"].SecurityGroup.Name == "procurement", "Sgpolicy is not linked to sg", sgps)
 	Assert(t, len(sgps.NetworkSecurityPolicy.Status.RuleStatus) == len(sgps.NetworkSecurityPolicy.Spec.Rules), "Rule status was not updated")
@@ -159,11 +173,26 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		},
 	}
 	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp2)
-	Assert(t, (err != nil), "Policy creation with unknown attachment succeeded")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindSgpolicy("default", "sgpolicy2")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
 
 	// delete the sg policy
 	err = stateMgr.ctrler.NetworkSecurityPolicy().Delete(&sgp)
 	AssertOk(t, err, "Error deleting security policy")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
 
 	// verify the sg policy is gone
 	_, err = stateMgr.FindSgpolicy("default", "test-sgpolicy")
@@ -232,6 +261,38 @@ func createPolicyWithApps(s *Statemgr, name string, apps []string, version strin
 }
 
 func createApp(s *Statemgr, name, port string) error {
+	numApps := 7
+	appSpecs := []*security.ALG{
+		&security.ALG{
+			Type: security.ALG_DNS.String(),
+			Dns:  &security.Dns{DropLargeDomainNamePackets: true},
+		},
+		&security.ALG{
+			Type: security.ALG_ICMP.String(),
+			Icmp: &security.Icmp{},
+		},
+
+		&security.ALG{
+			Type: security.ALG_FTP.String(),
+			Ftp:  &security.Ftp{},
+		},
+		&security.ALG{
+			Type:   security.ALG_SunRPC.String(),
+			Sunrpc: []*security.Sunrpc{&security.Sunrpc{}},
+		},
+		&security.ALG{
+			Type:  security.ALG_MSRPC.String(),
+			Msrpc: []*security.Msrpc{&security.Msrpc{}},
+		},
+		&security.ALG{
+			Type: security.ALG_TFTP.String(),
+			//: []*security.ALG_TFTP{},
+		},
+
+		&security.ALG{
+			Type: security.ALG_RTSP.String(),
+		},
+	}
 	app := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -246,10 +307,38 @@ func createApp(s *Statemgr, name, port string) error {
 					Protocol: "tcp",
 				},
 			},
+			ALG: &security.ALG{
+				Type: security.ALG_DNS.String(),
+				Dns:  &security.Dns{DropLargeDomainNamePackets: true},
+			},
 		},
 	}
 
+	portInt, _ := strconv.Atoi(port)
+	app.Spec.ALG = appSpecs[(portInt-100)%numApps]
 	return s.ctrler.App().Create(&app)
+}
+
+func updateApp(s *Statemgr, name, port string) error {
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:       "default",
+			Namespace:    "default",
+			Name:         name,
+			GenerationID: "2",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				security.ProtoPort{
+					Ports:    port,
+					Protocol: "tcp",
+				},
+			},
+		},
+	}
+
+	return s.ctrler.App().Update(&app)
 }
 
 func updatePolicy(s *Statemgr, name, version string) error {
@@ -369,8 +458,21 @@ func TestSmartPolicyNodeVersions(t *testing.T) {
 		return
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
 	createPolicy(stateMgr, "testPolicy1", "1")
 	createSmartNic(stateMgr, "testSmartnic1")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
+
 	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
 	AssertOk(t, err, "Couldn't get policy version for node")
 	AssertEquals(t, version, "", "Policy version not correct for node")
@@ -408,8 +510,21 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 		return
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
 	snic1, err := createSmartNic(stateMgr, "testSmartnic1")
 	createPolicy(stateMgr, "testPolicy1", "1")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
+
 	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
 	AssertOk(t, err, "Couldn't get policy version for node")
 	AssertEquals(t, version, "", "Policy version not correct for node")
@@ -458,6 +573,7 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 
 	// mark the smartnic as unhealthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_UNKNOWN.String()
+	snic2.TypeMeta = api.TypeMeta{Kind: "DistributedServiceCard"}
 	stateMgr.ctrler.DistributedServiceCard().Update(snic2)
 
 	// verify propagation status
@@ -477,6 +593,7 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 
 	// mark the smartnic as healthy
 	snic2.Status.Conditions[0].Status = cluster.ConditionStatus_TRUE.String()
+	snic2.TypeMeta = api.TypeMeta{Kind: "DistributedServiceCard"}
 	stateMgr.ctrler.DistributedServiceCard().Update(snic2)
 
 	// verify propagation status
@@ -643,8 +760,29 @@ func TestFirewallProfileNodeVersions(t *testing.T) {
 		return
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
 	createFwProfile(stateMgr, "testFwProfile1", "1")
 	createSmartNic(stateMgr, "testSmartnic1")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindFirewallProfile("default", "testFwProfile1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.FirewallProfile.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			fmt.Printf("Prop failed..%v\n", prop)
+			return false, sgp
+		}
+
+		return true, nil
+	}, "Firewall propagation state incorrect", "300ms", "10s")
+
 	version, err := getFwProfileVersionForNode(stateMgr, "testFwProfile1", "testSmartnic1")
 	AssertOk(t, err, "Couldn't get fwprofile version for node")
 	AssertEquals(t, version, "", "FwProfile version not correct for node")
@@ -682,6 +820,9 @@ func TestFirewallProfile(t *testing.T) {
 
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
 	// firewall profile
 	fwp := security.FirewallProfile{
 		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
@@ -699,6 +840,16 @@ func TestFirewallProfile(t *testing.T) {
 	err = stateMgr.ctrler.FirewallProfile().Create(&fwp)
 	AssertOk(t, err, "Error creating firewall profile")
 
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindFirewallProfile("default", "testProfile")
+		if err != nil {
+			return false, err
+		}
+
+		return true, nil
+	}, "Firewall propagation state incorrect", "300ms", "1s")
+
 	// verify we can find the firewall profile
 	tmpFwp, err := stateMgr.FindFirewallProfile("default", "testProfile")
 	AssertOk(t, err, "Error finding firewall profile")
@@ -709,6 +860,14 @@ func TestFirewallProfile(t *testing.T) {
 	err = stateMgr.ctrler.FirewallProfile().Update(&fwp)
 	AssertOk(t, err, "Error updating fw profile")
 
+	AssertEventually(t, func() (bool, interface{}) {
+		p, err := stateMgr.FindFirewallProfile("default", "testProfile")
+		if err == nil && p.FirewallProfile.Spec.SessionIdleTimeout == "5m" {
+			return true, err
+		}
+		return false, nil
+	}, "Firewall propagation state incorrect", "300ms", "1s")
+
 	// verify fw profile got updated
 	fwlist, err := stateMgr.ListFirewallProfiles()
 	AssertOk(t, err, "Error getting list of firewall profiles")
@@ -718,6 +877,14 @@ func TestFirewallProfile(t *testing.T) {
 	// delete firewall profile
 	err = stateMgr.ctrler.FirewallProfile().Delete(&fwp)
 	AssertOk(t, err, "Error creating firewall profile")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindFirewallProfile("default", "testProfile")
+		if err != nil {
+			return true, err
+		}
+		return false, nil
+	}, "Firewall propagation state incorrect", "300ms", "1s")
 
 	// verify firewll profile is gone
 	_, err = stateMgr.FindFirewallProfile("default", "testProfile")
@@ -732,13 +899,16 @@ func TestAlgPolicy(t *testing.T) {
 		return
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
 	// app
 	app := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "ftpApp",
 			Namespace: "default",
-			Tenant:    "testTenant",
+			Tenant:    "default",
 		},
 		Spec: security.AppSpec{
 			ProtoPorts: []security.ProtoPort{
@@ -765,7 +935,7 @@ func TestAlgPolicy(t *testing.T) {
 	sgp := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testTenant",
+			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},
@@ -793,10 +963,13 @@ func TestAlgPolicy(t *testing.T) {
 	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
-	// verify we can find the app
-	tmapp, err := stateMgr.FindApp("testTenant", "ftpApp")
-	AssertOk(t, err, "Error finding the app")
-	AssertEquals(t, app.Spec.Timeout, tmapp.App.Spec.Timeout, "app params did not match")
+	AssertEventually(t, func() (bool, interface{}) {
+		tmapp, err := stateMgr.FindApp("default", "ftpApp")
+		if err == nil && tmapp.App.Spec.Timeout == app.Spec.Timeout {
+			return true, err
+		}
+		return false, nil
+	}, "Firewall propagation state incorrect", "300ms", "1s")
 
 	// verify app has this policy in its attached policy list
 	//Assert(t, (len(tmapp.App.Status.AttachedPolicies) == 1), "Invalid number of attached policies")
@@ -807,19 +980,15 @@ func TestAlgPolicy(t *testing.T) {
 	AssertOk(t, err, "Error deleting sgpolicy")
 
 	// verify app has no attached policy
-	//Assert(t, (len(tmapp.App.Status.AttachedPolicies) == 0), "Invalid number of attached policies")
 
 	// list all apps
-	applist, err := stateMgr.ListApps()
-	AssertOk(t, err, "error listing apps")
-	Assert(t, (len(applist) == 1), "Invalid number of apps in the list")
-
-	// finally delete the app
-	err = stateMgr.ctrler.App().Delete(&app)
-	AssertOk(t, err, "Error deleting app")
-
-	_, err = stateMgr.FindApp("testTenant", "ftpApp")
-	Assert(t, (err != nil), "App still found after deleting")
+	AssertEventually(t, func() (bool, interface{}) {
+		tmapp, err := stateMgr.FindApp("default", "ftpApp")
+		if err == nil && len(tmapp.App.Status.AttachedPolicies) == 0 {
+			return true, err
+		}
+		return false, nil
+	}, "Firewall propagation state incorrect", "300ms", "1s")
 }
 
 func TestNetworkSecurityPolicyMultiApp(t *testing.T) {
@@ -830,13 +999,16 @@ func TestNetworkSecurityPolicyMultiApp(t *testing.T) {
 		return
 	}
 
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
 	// app
 	ftpApp := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "ftpApp",
 			Namespace: "default",
-			Tenant:    "testTenant",
+			Tenant:    "default",
 		},
 		Spec: security.AppSpec{
 			ProtoPorts: []security.ProtoPort{
@@ -865,7 +1037,7 @@ func TestNetworkSecurityPolicyMultiApp(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name:      "icmpApp",
 			Namespace: "default",
-			Tenant:    "testTenant",
+			Tenant:    "default",
 		},
 		Spec: security.AppSpec{
 			Timeout: "5m",
@@ -885,7 +1057,7 @@ func TestNetworkSecurityPolicyMultiApp(t *testing.T) {
 	sgp := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "testTenant",
+			Tenant:    "default",
 			Namespace: "default",
 			Name:      "test-sgpolicy",
 		},

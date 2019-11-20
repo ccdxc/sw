@@ -1289,6 +1289,40 @@ func DecodeGrpcRespCouponSpec(ctx context.Context, response interface{}) (interf
 	return response, nil
 }
 
+func encodeHTTPCouponStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCouponStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CouponStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCouponStatus encodes GRPC request
+func EncodeGrpcReqCouponStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CouponStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqCouponStatus decodes GRPC request
+func DecodeGrpcReqCouponStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CouponStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespCouponStatus encodes GRC response
+func EncodeGrpcRespCouponStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCouponStatus decodes GRPC response
+func DecodeGrpcRespCouponStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPCustomer(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
