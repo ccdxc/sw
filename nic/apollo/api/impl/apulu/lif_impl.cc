@@ -101,13 +101,13 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
     if_impl *intf;
     sdk_ret_t ret;
+    nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
     sdk::policer_t policer;
     pds_ifindex_t if_index;
-    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
     static uint32_t oob_lif = 0;
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
@@ -164,8 +164,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                                    sdk::table::handle_t::null());
     ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for (oob, ARP) -> "
-                      "oob if index 0x%x, err %u", pinned_if_idx_, ret);
+        PDS_TRACE_ERR("Failed to program NACL entry for (%s, ARP) -> "
+                      "uplink if index 0x%x, err %u", name_,
+                      pinned_if_idx_, ret);
         goto error;
     }
 
@@ -265,12 +266,13 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
     if_impl *intf;
     sdk_ret_t ret;
-    pds_ifindex_t if_index;
+    nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
-    nacl_swkey_t key = { 0 };
+    sdk::policer_t policer;
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
+    pds_ifindex_t if_index;
     static uint32_t inb_lif = 0;
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
     lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
@@ -299,7 +301,43 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // cap ARP packets from inband lif(s) to 256 pps
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry for ARM to uplink ARP traffic (all vlans)
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.capri_intrinsic_lif = key_;
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.key_metadata_dport = ETH_TYPE_ARP;
+    mask.capri_intrinsic_lif_mask = ~0;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (%s, ARP) -> "
+                      "uplink if index 0x%x, err %u", name_, pinned_if_idx_, ret);
+        goto error;
+    }
+
     // install NACL for ARM to uplink traffic (all vlans)
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
     key.capri_intrinsic_lif = key_;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
@@ -396,12 +434,12 @@ sdk_ret_t
 lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
     sdk_ret_t ret;
+    nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
     sdk::policer_t policer;
-    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
     static uint32_t dplif = 0;
-    nacl_swkey_mask_t mask = { 0 };
-    nacl_actiondata_t data =  { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
@@ -428,7 +466,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
-    // ARP requests from host lifs are throttled to 256 pps
+    // cap ARP requests from host lifs to 256/sec
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
@@ -471,6 +509,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
 
     // flow miss packet coming back from txdma to s/w datapath
     // lif (i.e., dpdk/vpp lif)
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
     key.control_metadata_flow_miss = 1;
     mask.control_metadata_flow_miss_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
