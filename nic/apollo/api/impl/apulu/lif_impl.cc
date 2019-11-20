@@ -22,6 +22,8 @@
 
 #define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    4096    // 256
 #define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   4096    // 256
+#define COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS   4096    // 256
+#define COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS  4096    // 256
 #define COPP_ARP_FROM_ARM_PPS                   4096    // 256
 
 namespace api {
@@ -506,6 +508,45 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // cap DHCP requests from host lifs to 256/sec
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry for DHCP requests going to vpp
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_tunneled_packet = 0;
+    key.key_metadata_dport = 67;
+    key.key_metadata_sport = 68;
+    key.key_metadata_proto = 17;    // UDP
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    mask.key_metadata_sport_mask = ~0;
+    mask.key_metadata_proto_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP req) "
+                      "-> lif %s, err %u", name_, ret);
+        goto error;
+    }
+
     // allocate and program copp table entry for flow miss
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -821,6 +862,47 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for (learn miss, ARP "
                       "requests from host) -> lif %s, err %u", name_, ret);
+        goto error;
+    }
+
+    // cap DHCP requests from host lifs to 256/sec
+    ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    policer = {
+        sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS, 0
+    };
+    program_copp_entry_(&policer, idx);
+    // install NACL entry for DHCP requests going to vpp
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_learn_enabled = 1;
+    key.control_metadata_local_mapping_miss = 1;
+    key.control_metadata_tunneled_packet = 0;
+    key.key_metadata_dport = 67;
+    key.key_metadata_sport = 68;
+    key.key_metadata_proto = 17;    // UDP
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_learn_enabled_mask = ~0;
+    mask.control_metadata_local_mapping_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    mask.key_metadata_sport_mask = ~0;
+    mask.key_metadata_proto_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP req) "
+                      "-> lif %s, err %u", name_, ret);
         goto error;
     }
     return SDK_RET_OK;
