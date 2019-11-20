@@ -14,9 +14,11 @@ export interface ISecurityAppStatus {
 
 
 export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
+    /** List of security group policies attached to the app */
     'attached-policies': Array<string> = null;
     public static propInfo: { [prop in keyof ISecurityAppStatus]: PropInfoItem } = {
         'attached-policies': {
+            description:  'List of security group policies attached to the app',
             required: false,
             type: 'Array<string>'
         },

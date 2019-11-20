@@ -22,6 +22,7 @@ export class ClusterNodeList extends BaseModel implements IClusterNodeList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Node objects */
     'items': Array<ClusterNode> = null;
     public static propInfo: { [prop in keyof IClusterNodeList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ClusterNodeList extends BaseModel implements IClusterNodeList {
             type: 'object'
         },
         'items': {
+            description:  'List of Node objects',
             required: false,
             type: 'object'
         },

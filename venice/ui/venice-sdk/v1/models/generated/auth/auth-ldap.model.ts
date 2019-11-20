@@ -16,10 +16,12 @@ export interface IAuthLdap {
 
 
 export class AuthLdap extends BaseModel implements IAuthLdap {
+    /** Whether LDAP is enabled or not */
     'enabled': boolean = null;
     'domains': Array<AuthLdapDomain> = null;
     public static propInfo: { [prop in keyof IAuthLdap]: PropInfoItem } = {
         'enabled': {
+            description:  'Whether LDAP is enabled or not',
             required: false,
             type: 'boolean'
         },

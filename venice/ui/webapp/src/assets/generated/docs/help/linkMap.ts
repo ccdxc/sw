@@ -1,5 +1,17 @@
 export const HelpLinkMap: { [id: string]: string } = {
+  "alertsevents" : "/assets/generated/docs/help/alertsevents.html",
+  "apps" : "/assets/generated/docs/help/apps.html",
   "authpolicy" : "/assets/generated/docs/help/authpolicy.html",
+  "fwlogs" : "/assets/generated/docs/help/firewalllogs.html",
+  "flowexport" : "/assets/generated/docs/help/flowexport.html",
+  "hosts" : "/assets/generated/docs/help/hosts.html",
   "ldap" : "/assets/generated/docs/help/ldap.html",
+  "metrics" : "/assets/generated/docs/help/metrics.html",
+  "policies" : "/assets/generated/docs/help/policies.html",
   "radius" : "/assets/generated/docs/help/radius.html",
+  "securitygroups" : "/assets/generated/docs/help/securitygroups.html",
+  "systemupgrade" : "/assets/generated/docs/help/systemupgrade.html",
+  "techsupport" : "/assets/generated/docs/help/techsupport.html",
+  "localuser" : "/assets/generated/docs/help/usermanagement.html",
+  "workload" : "/assets/generated/docs/help/workloads.html",
 }

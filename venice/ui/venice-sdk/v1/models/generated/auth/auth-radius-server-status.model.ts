@@ -19,26 +19,34 @@ export interface IAuthRadiusServerStatus {
 
 
 export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServerStatus {
+    /** Result indicates if radius check was successful */
     'result': AuthRadiusServerStatus_result = null;
+    /** Message contains error message in case of failed check or a success message */
     'message': string = null;
+    /** RadiusServer contains the radius server configuration that was checked */
     'server': AuthRadiusServer = null;
+    /** NasID is a string identifying the NAS(API Gw) originating the Access-Request */
     'nas-id': string = null;
     public static propInfo: { [prop in keyof IAuthRadiusServerStatus]: PropInfoItem } = {
         'result': {
             enum: AuthRadiusServerStatus_result,
             default: 'connect-success',
+            description:  'Result indicates if radius check was successful',
             required: true,
             type: 'string'
         },
         'message': {
+            description:  'Message contains error message in case of failed check or a success message',
             required: false,
             type: 'string'
         },
         'server': {
+            description:  'RadiusServer contains the radius server configuration that was checked',
             required: false,
             type: 'object'
         },
         'nas-id': {
+            description:  'NasID is a string identifying the NAS(API Gw) originating the Access-Request',
             required: false,
             type: 'string'
         },

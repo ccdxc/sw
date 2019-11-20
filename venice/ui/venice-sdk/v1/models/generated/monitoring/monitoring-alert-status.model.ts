@@ -26,36 +26,48 @@ export interface IMonitoringAlertStatus {
 
 
 export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlertStatus {
+    /** Severity of an alert */
     'severity': MonitoringAlertStatus_severity = null;
+    /** Alert source or origin */
     'source': MonitoringAlertSource = null;
+    /** Event that triggered the alert */
     'event-uri': string = null;
+    /** Affected object */
     'object-ref': ApiObjectRef = null;
+    /** Message from the alert rule that triggered the alert */
     'message': string = null;
     /** Captures all the requirements from the alert policy rule with matched value.
-    All these requirements must be cleared to auto-resolve an alert. */
+All these requirements must be cleared to auto-resolve an alert. */
     'reason': MonitoringAlertReason = null;
+    /** Username and time at which the alert was acknowledged */
     'acknowledged': MonitoringAuditInfo = null;
+    /** Username and time at which the alert was resolved */
     'resolved': MonitoringAuditInfo = null;
     public static propInfo: { [prop in keyof IMonitoringAlertStatus]: PropInfoItem } = {
         'severity': {
             enum: MonitoringAlertStatus_severity,
             default: 'info',
+            description:  'Severity of an alert',
             required: true,
             type: 'string'
         },
         'source': {
+            description:  'Alert source or origin',
             required: false,
             type: 'object'
         },
         'event-uri': {
+            description:  'Event that triggered the alert',
             required: false,
             type: 'string'
         },
         'object-ref': {
+            description:  'Affected object',
             required: false,
             type: 'object'
         },
         'message': {
+            description:  'Message from the alert rule that triggered the alert',
             required: false,
             type: 'string'
         },
@@ -65,10 +77,12 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
             type: 'object'
         },
         'acknowledged': {
+            description:  'Username and time at which the alert was acknowledged',
             required: false,
             type: 'object'
         },
         'resolved': {
+            description:  'Username and time at which the alert was resolved',
             required: false,
             type: 'object'
         },

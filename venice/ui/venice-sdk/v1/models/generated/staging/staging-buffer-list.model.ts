@@ -22,6 +22,7 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Buffer objects */
     'items': Array<StagingBuffer> = null;
     public static propInfo: { [prop in keyof IStagingBufferList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
             type: 'object'
         },
         'items': {
+            description:  'List of Buffer objects',
             required: false,
             type: 'object'
         },

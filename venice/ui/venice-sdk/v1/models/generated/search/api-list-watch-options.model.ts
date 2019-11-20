@@ -45,9 +45,12 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'self-link': string = null;
     /** LabelSelector to select on labels in list or watch results. */
     'label-selector': string = null;
+    /** FieldSelector to select on field values in list or watch results */
     'field-selector': string = null;
     /** FieldChangeSelector specifies to generate a watch notification on change in field(s) specified. */
     'field-change-selector': Array<string> = null;
+    /** from represents the start offset (zero based), used for pagination.
+results returned would be in the range [from ... from+max-results-1] */
     'from': number = null;
     /** max. number of events to be fetched for the request. */
     'max-results': number = null;
@@ -55,17 +58,17 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'sort-order': ApiListWatchOptions_sort_order = null;
     public static propInfo: { [prop in keyof IApiListWatchOptions]: PropInfoItem } = {
         'name': {
-            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  'Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },
         'tenant': {
-            description:  'must be alpha-numericslength of string should be between 1 and 48',
+            description:  'Must be alpha-numericslength of string should be between 1 and 48',
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  'Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },
@@ -103,6 +106,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             type: 'string'
         },
         'field-selector': {
+            description:  'FieldSelector to select on field values in list or watch results',
             required: false,
             type: 'string'
         },
@@ -112,18 +116,19 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             type: 'Array<string>'
         },
         'from': {
+            description:  'From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]',
             required: false,
             type: 'number'
         },
         'max-results': {
-            description:  'max. number of events to be fetched for the request.',
+            description:  'Max. number of events to be fetched for the request.',
             required: false,
             type: 'number'
         },
         'sort-order': {
             enum: ApiListWatchOptions_sort_order_uihint,
             default: 'none',
-            description:  'order to sort List results in.',
+            description:  'Order to sort List results in.',
             required: true,
             type: 'string'
         },

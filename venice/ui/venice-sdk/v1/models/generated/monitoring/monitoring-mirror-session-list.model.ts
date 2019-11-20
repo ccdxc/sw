@@ -22,6 +22,7 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of MirrorSession objects */
     'items': Array<MonitoringMirrorSession> = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
             type: 'object'
         },
         'items': {
+            description:  'List of MirrorSession objects',
             required: false,
             type: 'object'
         },

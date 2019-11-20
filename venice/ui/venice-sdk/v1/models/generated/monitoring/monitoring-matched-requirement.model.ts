@@ -21,6 +21,9 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     'key': string = null;
     'operator': MonitoringMatchedRequirement_operator = null;
     'values': Array<string> = null;
+    /** The value at which the requirement was met.
+same as Requirement.value for operator `Equals` but could vary for other operators
+e.g. requirement - CPU;Gt;90 could have a matching value 96 */
     'observed-value': string = null;
     public static propInfo: { [prop in keyof IMonitoringMatchedRequirement]: PropInfoItem } = {
         'key': {
@@ -38,6 +41,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
             type: 'Array<string>'
         },
         'observed-value': {
+            description:  'The value at which the requirement was met. same as Requirement.value for operator &#x60;Equals&#x60; but could vary for other operators e.g. requirement - CPU;Gt;90 could have a matching value 96',
             required: false,
             type: 'string'
         },

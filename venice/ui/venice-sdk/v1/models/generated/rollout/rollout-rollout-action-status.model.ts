@@ -20,9 +20,13 @@ export interface IRolloutRolloutActionStatus {
 
 export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRolloutActionStatus {
     'state': RolloutRolloutActionStatus_state = null;
+    /** Heuristic value of percentage completion of the rollout */
     'completion-percent': number = null;
+    /** Start time of Rollout */
     'start-time': Date = null;
+    /** End time of Rollout */
     'end-time': Date = null;
+    /** Version of the cluster before the start of rollout */
     'prev-version': string = null;
     public static propInfo: { [prop in keyof IRolloutRolloutActionStatus]: PropInfoItem } = {
         'state': {
@@ -32,18 +36,22 @@ export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRol
             type: 'string'
         },
         'completion-percent': {
+            description:  'Heuristic value of percentage completion of the rollout',
             required: false,
             type: 'number'
         },
         'start-time': {
+            description:  'Start time of Rollout',
             required: false,
             type: 'Date'
         },
         'end-time': {
+            description:  'End time of Rollout',
             required: false,
             type: 'Date'
         },
         'prev-version': {
+            description:  'Version of the cluster before the start of rollout',
             required: false,
             type: 'string'
         },

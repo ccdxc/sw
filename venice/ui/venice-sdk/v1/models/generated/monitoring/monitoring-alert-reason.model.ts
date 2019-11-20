@@ -16,14 +16,18 @@ export interface IMonitoringAlertReason {
 
 
 export class MonitoringAlertReason extends BaseModel implements IMonitoringAlertReason {
+    /** List of requirements from the alert policy with it's matched value */
     'matched-requirements': Array<MonitoringMatchedRequirement> = null;
+    /** Alert Policy ID that matched */
     'alert-policy-id': string = null;
     public static propInfo: { [prop in keyof IMonitoringAlertReason]: PropInfoItem } = {
         'matched-requirements': {
+            description:  'List of requirements from the alert policy with it&#x27;s matched value',
             required: false,
             type: 'object'
         },
         'alert-policy-id': {
+            description:  'Alert Policy ID that matched',
             required: false,
             type: 'string'
         },

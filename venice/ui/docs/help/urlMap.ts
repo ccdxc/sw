@@ -1,4 +1,20 @@
 // Mapping from UI url to doc ID to show on URL load
 export const UrlMap: { [url: string]: string } = {
+  '/monitoring/alertsevents': 'alertsevents',
+  '/monitoring/alertsevents/alertpolicies': 'alertsevents',
+  '/monitoring/alertsevents/alertdestinations': 'alertsevents',
+  '/monitoring/alertsevents/eventpolicy': 'alertsevents',
+  '/security/securityapps': 'apps',
+  '/security/sgpolicies': 'policies',
+  '/security/securitygroups': 'securitygroups',
   '/admin/authpolicy' : 'authpolicy',
+  '/monitoring/fwlogs': 'fwlogs',
+  '/monitoring/fwlogs/fwlogpolicies': 'fwlogs',
+  '/monitoring/flowexport': 'flowexport',
+  '/cluster/host': 'hosts',
+  '/monitoring/metrics': 'metrics',
+  '/workload': 'workload',
+  '/admin/upgrade/rollouts': 'systemupgrade',
+  '/admin/users': 'localuser',
+  '/admin/techsupport': 'techsupport',
 }

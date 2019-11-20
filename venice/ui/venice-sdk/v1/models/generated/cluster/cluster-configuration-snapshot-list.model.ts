@@ -22,6 +22,7 @@ export class ClusterConfigurationSnapshotList extends BaseModel implements IClus
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of ConfigurationSnapshot objects */
     'items': Array<ClusterConfigurationSnapshot> = null;
     public static propInfo: { [prop in keyof IClusterConfigurationSnapshotList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ClusterConfigurationSnapshotList extends BaseModel implements IClus
             type: 'object'
         },
         'items': {
+            description:  'List of ConfigurationSnapshot objects',
             required: false,
             type: 'object'
         },

@@ -16,10 +16,12 @@ export interface IMonitoringTsResult {
 
 
 export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult {
+    /** time window for which the information was collected */
     'time-window': MonitoringTimeWindow = null;
     'report-url': string = null;
     public static propInfo: { [prop in keyof IMonitoringTsResult]: PropInfoItem } = {
         'time-window': {
+            description:  'Time window for which the information was collected',
             required: false,
             type: 'object'
         },

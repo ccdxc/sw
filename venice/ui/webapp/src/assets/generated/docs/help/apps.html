@@ -1,0 +1,70 @@
+<h1 id="apps">Apps</h1>
+<p>Creating Apps allows to define specific protocol and ports that makes up the particular application.  Support for application-level gateway (ALG) is provided with the following predefined ALGs</p>
+<ul>
+<li>icmp (ping)</li>
+<li>dns (domain name system)</li>
+<li>ftp (file transfer protocol)</li>
+<li>sunrpc (Sun Remote Procedure Call)</li>
+<li>msrpc (Microsoft Remote Procedure Call)</li>
+</ul>
+<p>Building "apps" can be based upon these two (2) options and security rules can be applied towards this app.  The "App" is based upon the following attributes.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .<em>- characters. minimum length is 2 and maximum length is 64 charactersName of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .</em>- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+</tr>
+<tr>
+<td>Name: Unique name for the App</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>There are three (3) options to choose from to base the App on through the radio button</p>
+<pre><code>- ALG Only
+- Protocols and Port Only
+- Both 
+</code></pre>
+<h3 id="algonly">ALG Only</h3>
+<pre><code>| ALG Type | Fields |
+| ------ | ------ |
+| icmp | Type: &lt;br&gt; Code: |
+| dns | Drop multi-question packets: (off/on) &lt;br&gt; Drop large domain name packets: (off/on) &lt;br&gt; Drop long label packets: (off/on) &lt;br&gt;  Max Message Length: Integer value &lt;br&gt; Max question response timeout: |
+| ftp | Allow Mismatched IP Address: (off/on) |
+| sunrpc |  Additional Program ID and Timeout values can be added by clicking on "+Add &lt;br&gt; Program ID: &lt;br&gt; Timeout: Integer value |
+| msrpc |  Additional Program UUID and Timeout values can be added by clicking on "+Add &lt;br&gt; Program UUID: &lt;br&gt; Timeout:  Integer value |
+</code></pre>
+<h3 id="protocolsandportsonly">Protocols and Ports Only</h3>
+<p>Additional Protocols and Ports can be added by clicking on "+Add"</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>protocol</td>
+<td>protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.</td>
+</tr>
+<tr>
+<td>ports</td>
+<td>TCP or UDP port number(s): comma separate port numbers, or dash separate port rangeTCP or UDP port number(s): comma separate port numbers, or dash separate port range</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Protocols and Ports Only<ul>
+<li>Protocols: valid entries is tcp, upd, icmp</li>
+<li>Ports: valid port numbers are 0-65535</li></ul></li>
+</ul>
+<h3 id="both">Both</h3>
+<pre><code>Combination of ALG and Protocols/Ports is allowed
+</code></pre>

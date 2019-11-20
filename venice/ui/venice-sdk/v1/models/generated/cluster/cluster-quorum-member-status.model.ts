@@ -19,29 +19,39 @@ export interface IClusterQuorumMemberStatus {
 
 
 export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuorumMemberStatus {
+    /** A unique identifier for this quorum member */
     'id': string = null;
+    /** The name of the quorum member, matching the node name */
     'name': string = null;
+    /** "Started" if the member succesfully joined the quorum, "Unstarted" otherwise */
     'status': string = null;
+    /** The last election term this member has participated in */
     'term': string = null;
+    /** Conditions reported by the quorum member */
     'conditions': Array<ClusterQuorumMemberCondition> = null;
     public static propInfo: { [prop in keyof IClusterQuorumMemberStatus]: PropInfoItem } = {
         'id': {
+            description:  'A unique identifier for this quorum member',
             required: false,
             type: 'string'
         },
         'name': {
+            description:  'The name of the quorum member, matching the node name',
             required: false,
             type: 'string'
         },
         'status': {
+            description:  '&quot;Started&quot; if the member succesfully joined the quorum, &quot;Unstarted&quot; otherwise',
             required: false,
             type: 'string'
         },
         'term': {
+            description:  'The last election term this member has participated in',
             required: false,
             type: 'string'
         },
         'conditions': {
+            description:  'Conditions reported by the quorum member',
             required: false,
             type: 'object'
         },

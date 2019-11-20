@@ -22,6 +22,7 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Bucket objects */
     'items': Array<ObjstoreBucket> = null;
     public static propInfo: { [prop in keyof IObjstoreBucketList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
             type: 'object'
         },
         'items': {
+            description:  'List of Bucket objects',
             required: false,
             type: 'object'
         },

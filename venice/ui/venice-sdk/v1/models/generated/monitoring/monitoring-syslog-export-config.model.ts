@@ -16,16 +16,20 @@ export interface IMonitoringSyslogExportConfig {
 
 
 export class MonitoringSyslogExportConfig extends BaseModel implements IMonitoringSyslogExportConfig {
+    /** override default facility with this in exported logs */
     'facility-override': MonitoringSyslogExportConfig_facility_override = null;
+    /** add prefix in exported logs */
     'prefix': string = null;
     public static propInfo: { [prop in keyof IMonitoringSyslogExportConfig]: PropInfoItem } = {
         'facility-override': {
             enum: MonitoringSyslogExportConfig_facility_override_uihint,
             default: 'user',
+            description:  'Override default facility with this in exported logs',
             required: true,
             type: 'string'
         },
         'prefix': {
+            description:  'Add prefix in exported logs',
             required: false,
             type: 'string'
         },

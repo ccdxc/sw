@@ -20,9 +20,13 @@ export interface IClusterNodeCondition {
 
 
 export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondition {
+    /** Type indicates a certain node condition */
     'type': ClusterNodeCondition_type = null;
+    /** Condition Status */
     'status': ClusterNodeCondition_status = null;
+    /** The last time the condition transitioned */
     'last-transition-time': string = null;
+    /** The reason for the condition's last transition */
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
@@ -30,20 +34,24 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
         'type': {
             enum: ClusterNodeCondition_type_uihint,
             default: 'leader',
+            description:  'Type indicates a certain node condition',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterNodeCondition_status_uihint,
             default: 'unknown',
+            description:  'Condition Status',
             required: true,
             type: 'string'
         },
         'last-transition-time': {
+            description:  'The last time the condition transitioned',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'The reason for the condition&#x27;s last transition',
             required: false,
             type: 'string'
         },

@@ -22,6 +22,7 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Role objects */
     'items': Array<AuthRole> = null;
     public static propInfo: { [prop in keyof IAuthRoleList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
             type: 'object'
         },
         'items': {
+            description:  'List of Role objects',
             required: false,
             type: 'object'
         },

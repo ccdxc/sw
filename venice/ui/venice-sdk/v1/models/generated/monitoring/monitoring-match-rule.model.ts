@@ -18,19 +18,28 @@ export interface IMonitoringMatchRule {
 
 
 export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRule {
+    /** Either Src or Dst or both must be specified, both cannot be *
+Src = * when not specified
+When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored */
     'source': MonitoringMatchSelector = null;
+    /** Dst = * when not specified
+When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored */
     'destination': MonitoringMatchSelector = null;
+    /** App = * when not specified */
     'app-protocol-selectors': MonitoringAppProtoSelector = null;
     public static propInfo: { [prop in keyof IMonitoringMatchRule]: PropInfoItem } = {
         'source': {
+            description:  'Either Src or Dst or both must be specified, both cannot be * Src &#x3D; * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored',
             required: false,
             type: 'object'
         },
         'destination': {
+            description:  'Dst &#x3D; * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored',
             required: false,
             type: 'object'
         },
         'app-protocol-selectors': {
+            description:  'App &#x3D; * when not specified',
             required: false,
             type: 'object'
         },

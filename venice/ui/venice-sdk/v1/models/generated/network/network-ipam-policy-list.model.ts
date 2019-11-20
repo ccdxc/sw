@@ -22,6 +22,7 @@ export class NetworkIPAMPolicyList extends BaseModel implements INetworkIPAMPoli
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of IPAMPolicy objects */
     'items': Array<NetworkIPAMPolicy> = null;
     public static propInfo: { [prop in keyof INetworkIPAMPolicyList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class NetworkIPAMPolicyList extends BaseModel implements INetworkIPAMPoli
             type: 'object'
         },
         'items': {
+            description:  'List of IPAMPolicy objects',
             required: false,
             type: 'object'
         },

@@ -22,6 +22,7 @@ export class ClusterDistributedServiceCardList extends BaseModel implements IClu
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of DistributedServiceCard objects */
     'items': Array<ClusterDistributedServiceCard> = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ClusterDistributedServiceCardList extends BaseModel implements IClu
             type: 'object'
         },
         'items': {
+            description:  'List of DistributedServiceCard objects',
             required: false,
             type: 'object'
         },

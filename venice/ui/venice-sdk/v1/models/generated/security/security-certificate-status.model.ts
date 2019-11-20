@@ -17,9 +17,10 @@ export interface ISecurityCertificateStatus {
 
 export class SecurityCertificateStatus extends BaseModel implements ISecurityCertificateStatus {
     /** Status of the certificate: "valid", "invalid", "expired"
-    "invalid" means that the signature of the certificate does not match or
-    there are inconsistencies in the trust chain. */
+"invalid" means that the signature of the certificate does not match or
+there are inconsistencies in the trust chain. */
     'validity': SecurityCertificateStatus_validity = null;
+    /** The workloads where this certificate has been deployed */
     'workloads': Array<string> = null;
     public static propInfo: { [prop in keyof ISecurityCertificateStatus]: PropInfoItem } = {
         'validity': {
@@ -30,6 +31,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
             type: 'string'
         },
         'workloads': {
+            description:  'The workloads where this certificate has been deployed',
             required: false,
             type: 'Array<string>'
         },

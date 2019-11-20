@@ -23,29 +23,39 @@ export interface IClusterDSCInfo {
 
 
 export class ClusterDSCInfo extends BaseModel implements IClusterDSCInfo {
+    /** BIOS details */
     'bios-info': ClusterBiosInfo = null;
+    /** OS details */
     'os-info': ClusterOsInfo = null;
+    /** CPU details */
     'cpu-info': ClusterCPUInfo = null;
+    /** RAM/Memory details */
     'memory-info': ClusterMemInfo = null;
+    /** Storage details */
     'storage-info': ClusterStorageInfo = null;
     public static propInfo: { [prop in keyof IClusterDSCInfo]: PropInfoItem } = {
         'bios-info': {
+            description:  'BIOS details',
             required: false,
             type: 'object'
         },
         'os-info': {
+            description:  'OS details',
             required: false,
             type: 'object'
         },
         'cpu-info': {
+            description:  'CPU details',
             required: false,
             type: 'object'
         },
         'memory-info': {
+            description:  'RAM/Memory details',
             required: false,
             type: 'object'
         },
         'storage-info': {
+            description:  'Storage details',
             required: false,
             type: 'object'
         },

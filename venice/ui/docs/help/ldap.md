@@ -9,15 +9,20 @@ LDAP stands for Lightweight Directory Access Protocol. As the name suggests, it 
 
 The toggle allows for enabling/disabling LDAP authentication.
 
-##### LDAP Configuration
-<load-table group:auth obj:LDAP 
-            omit:enable, attribute-mapping, servers>
-<load-table group:auth obj:LdapAttributeMapping
-            omitHeader:true>
+### LDAP Configuration
+##### Credentials
+<load-table group:auth obj:AuthLdapDomain 
+            include:bind-dn, bind-password>
+
+##### Scope
+<load-table group:auth obj:AuthLdapDomain 
+            omit:bind-dn, bind-password, attribute-mapping, servers, tag>
+<load-table group:auth obj:LdapAttributeMapping include:user-object-class,group-object-class omitHeader:true>
+
+##### Attribute Mapping
+<load-table group:auth obj:LdapAttributeMapping omit:user-object-class, group-object-class>
 
 ##### LDAP Server Configuration
 <load-table group:auth obj:LdapServer
             omit:tls-options>
 <load-table group:auth obj:TLSOptions omitHeader:true>
-
-Footer info about LDAP

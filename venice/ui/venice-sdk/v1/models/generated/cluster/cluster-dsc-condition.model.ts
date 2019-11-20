@@ -20,9 +20,13 @@ export interface IClusterDSCCondition {
 
 
 export class ClusterDSCCondition extends BaseModel implements IClusterDSCCondition {
+    /** Type indicates a certain NIC condition */
     'type': ClusterDSCCondition_type = null;
+    /** Condition Status */
     'status': ClusterDSCCondition_status = null;
+    /** The last time the condition transitioned */
     'last-transition-time': string = null;
+    /** The reason for the condition's last transition */
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
@@ -30,20 +34,24 @@ export class ClusterDSCCondition extends BaseModel implements IClusterDSCConditi
         'type': {
             enum: ClusterDSCCondition_type_uihint,
             default: 'healthy',
+            description:  'Type indicates a certain NIC condition',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterDSCCondition_status_uihint,
             default: 'unknown',
+            description:  'Condition Status',
             required: true,
             type: 'string'
         },
         'last-transition-time': {
+            description:  'The last time the condition transitioned',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'The reason for the condition&#x27;s last transition',
             required: false,
             type: 'string'
         },

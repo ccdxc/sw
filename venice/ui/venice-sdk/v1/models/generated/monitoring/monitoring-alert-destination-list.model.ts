@@ -22,6 +22,7 @@ export class MonitoringAlertDestinationList extends BaseModel implements IMonito
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of AlertDestination objects */
     'items': Array<MonitoringAlertDestination> = null;
     public static propInfo: { [prop in keyof IMonitoringAlertDestinationList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class MonitoringAlertDestinationList extends BaseModel implements IMonito
             type: 'object'
         },
         'items': {
+            description:  'List of AlertDestination objects',
             required: false,
             type: 'object'
         },

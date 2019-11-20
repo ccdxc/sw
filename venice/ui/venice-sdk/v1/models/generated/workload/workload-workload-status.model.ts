@@ -19,19 +19,25 @@ export interface IWorkloadWorkloadStatus {
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
+    /** The status of the configuration propagation to the Naples */
     'propagation-status': SecurityPropagationStatus = null;
+    /** Status of all interfaces in the Workload identified by Primary MAC */
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
+    /** Status of Migration of the workload */
     'migration': WorkloadWorkloadMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadStatus]: PropInfoItem } = {
         'propagation-status': {
+            description:  'The status of the configuration propagation to the Naples',
             required: false,
             type: 'object'
         },
         'interfaces': {
+            description:  'Status of all interfaces in the Workload identified by Primary MAC',
             required: false,
             type: 'object'
         },
         'migration': {
+            description:  'Status of Migration of the workload',
             required: false,
             type: 'object'
         },

@@ -19,30 +19,41 @@ export interface IClusterStorageDeviceInfo {
 
 
 export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStorageDeviceInfo {
+    /** Serial Number */
     'serial-num': string = null;
+    /** Storage Type (TBD for Naples)
+Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe */
     'type': string = null;
+    /** Vendor info */
     'vendor': string = null;
+    /** Capacity in bytes */
     'capacity': string = null;
+    /** Used life in percentage */
     'percent-life-used-A': number = null;
     'percent-life-used-B': number = null;
     public static propInfo: { [prop in keyof IClusterStorageDeviceInfo]: PropInfoItem } = {
         'serial-num': {
+            description:  'Serial Number',
             required: false,
             type: 'string'
         },
         'type': {
+            description:  'Storage Type (TBD for Naples) Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe',
             required: false,
             type: 'string'
         },
         'vendor': {
+            description:  'Vendor info',
             required: false,
             type: 'string'
         },
         'capacity': {
+            description:  'Capacity in bytes',
             required: false,
             type: 'string'
         },
         'percent-life-used-A': {
+            description:  'Used life in percentage',
             required: false,
             type: 'number'
         },

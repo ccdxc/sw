@@ -23,6 +23,7 @@ export interface IClusterDistributedServiceCard {
 export class ClusterDistributedServiceCard extends BaseModel implements IClusterDistributedServiceCard {
     'kind': string = null;
     'api-version': string = null;
+    /** Object name is Serial-Number of the DistributedServiceCard */
     'meta': ApiObjectMeta = null;
     /** DistributedServiceCardSpec contains the configuration of the network adapter. */
     'spec': ClusterDistributedServiceCardSpec = null;
@@ -38,6 +39,7 @@ export class ClusterDistributedServiceCard extends BaseModel implements ICluster
             type: 'string'
         },
         'meta': {
+            description:  'Object name is Serial-Number of the DistributedServiceCard',
             required: false,
             type: 'object'
         },

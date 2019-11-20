@@ -22,6 +22,7 @@ export class ClusterSnapshotRestoreList extends BaseModel implements IClusterSna
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of SnapshotRestore objects */
     'items': Array<ClusterSnapshotRestore> = null;
     public static propInfo: { [prop in keyof IClusterSnapshotRestoreList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ClusterSnapshotRestoreList extends BaseModel implements IClusterSna
             type: 'object'
         },
         'items': {
+            description:  'List of SnapshotRestore objects',
             required: false,
             type: 'object'
         },

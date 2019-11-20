@@ -21,6 +21,7 @@ export interface IAuthAuthenticators {
 
 
 export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators {
+    /** Order in which authenticators are applied. If an authenticator returns success, others are skipped */
     'authenticator-order': Array<AuthAuthenticators_authenticator_order> = null;
     'ldap': AuthLdap = null;
     'local': AuthLocal = null;
@@ -29,6 +30,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'local',
+            description:  'Order in which authenticators are applied. If an authenticator returns success, others are skipped',
             required: true,
             type: 'Array<string>'
         },

@@ -16,10 +16,12 @@ export interface INetworkNetworkInterfaceUplinkStatus {
 
 
 export class NetworkNetworkInterfaceUplinkStatus extends BaseModel implements INetworkNetworkInterfaceUplinkStatus {
+    /** LinkSpeed auto-negotiated */
     'link-speed': string = null;
     'transceiver-status': NetworkTransceiverStatus = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceUplinkStatus]: PropInfoItem } = {
         'link-speed': {
+            description:  'LinkSpeed auto-negotiated',
             required: false,
             type: 'string'
         },

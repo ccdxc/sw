@@ -15,17 +15,19 @@ export interface ISecuritySunrpc {
 
 
 export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
+    /** RPC Program identifier */
     'program-id': string = null;
-    /** should be a valid time duration
-     */
+    /** Timeout for this program idshould be a valid time duration
+ */
     'timeout': string = null;
     public static propInfo: { [prop in keyof ISecuritySunrpc]: PropInfoItem } = {
         'program-id': {
+            description:  'RPC Program identifier',
             required: false,
             type: 'string'
         },
         'timeout': {
-            description:  'should be a valid time duration ',
+            description:  'Timeout for this program idshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'

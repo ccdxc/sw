@@ -22,6 +22,7 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of TroubleshootingSession objects */
     'items': Array<MonitoringTroubleshootingSession> = null;
     public static propInfo: { [prop in keyof IMonitoringTroubleshootingSessionList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
             type: 'object'
         },
         'items': {
+            description:  'List of TroubleshootingSession objects',
             required: false,
             type: 'object'
         },

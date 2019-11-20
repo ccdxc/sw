@@ -103,7 +103,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
             type: 'string'
         },
         'request-uri': {
-            description:  'should be a valid URI',
+            description:  'Should be a valid URI',
             hint:  'https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x',
             required: false,
             type: 'string'

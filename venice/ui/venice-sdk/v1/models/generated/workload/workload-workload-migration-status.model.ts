@@ -20,36 +20,48 @@ export interface IWorkloadWorkloadMigrationStatus {
 
 
 export class WorkloadWorkloadMigrationStatus extends BaseModel implements IWorkloadWorkloadMigrationStatus {
+    /** Status of migration */
     'status': WorkloadWorkloadMigrationStatus_status = null;
+    /** Start time of the migration operation */
     'start-time': Date = null;
+    /** End time of the migration operation */
     'end-time': Date = null;
+    /** Source Hostname derived from the workload to host to DSC association */
     'source-host': string = null;
+    /** Destination Hostname where the new workload will be migrated to */
     'destination-host': string = null;
+    /** Reason field is populated if some failures are encountered while migrating a workload */
     'reason': string = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadMigrationStatus]: PropInfoItem } = {
         'status': {
             enum: WorkloadWorkloadMigrationStatus_status_uihint,
             default: 'none',
+            description:  'Status of migration',
             required: true,
             type: 'string'
         },
         'start-time': {
+            description:  'Start time of the migration operation',
             required: false,
             type: 'Date'
         },
         'end-time': {
+            description:  'End time of the migration operation',
             required: false,
             type: 'Date'
         },
         'source-host': {
+            description:  'Source Hostname derived from the workload to host to DSC association',
             required: false,
             type: 'string'
         },
         'destination-host': {
+            description:  'Destination Hostname where the new workload will be migrated to',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'Reason field is populated if some failures are encountered while migrating a workload',
             required: false,
             type: 'string'
         },

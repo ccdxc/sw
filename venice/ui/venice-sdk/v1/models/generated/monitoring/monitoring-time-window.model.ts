@@ -17,6 +17,7 @@ export interface IMonitoringTimeWindow {
 export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWindow {
     /** Start/Stop Time - when start time is not specified, it implies start NOW. */
     'start-time': Date = null;
+    /** Stop time - when not specified, default will be used */
     'stop-time': Date = null;
     public static propInfo: { [prop in keyof IMonitoringTimeWindow]: PropInfoItem } = {
         'start-time': {
@@ -25,6 +26,7 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
             type: 'Date'
         },
         'stop-time': {
+            description:  'Stop time - when not specified, default will be used',
             required: false,
             type: 'Date'
         },

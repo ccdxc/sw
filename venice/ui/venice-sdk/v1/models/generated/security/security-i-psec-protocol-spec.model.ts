@@ -15,14 +15,19 @@ export interface ISecurityIPsecProtocolSpec {
 
 
 export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPsecProtocolSpec {
+    /** ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106) */
     'encryption-transform': string = null;
+    /** ESP integrity algorithm.
+Default is "NULL" (must be "NULL" if AES-GCM is used for encryption) */
     'integrity-transform': string = null;
     public static propInfo: { [prop in keyof ISecurityIPsecProtocolSpec]: PropInfoItem } = {
         'encryption-transform': {
+            description:  'ESP encryption algorithm. Default is &quot;aes-256-gcm-128&quot; (See RFC4106)',
             required: false,
             type: 'string'
         },
         'integrity-transform': {
+            description:  'ESP integrity algorithm. Default is &quot;NULL&quot; (must be &quot;NULL&quot; if AES-GCM is used for encryption)',
             required: false,
             type: 'string'
         },

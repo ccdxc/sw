@@ -17,24 +17,32 @@ export interface IClusterCPUInfo {
 
 
 export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
+    /** CPU speed per core, eg: 2099998101 */
     'speed': string = null;
+    /** Number of CPU sockets, eg: 2, 4 */
     'num-sockets': number = null;
+    /** Number of physical CPU cores per socket, eg: 36 */
     'num-cores': number = null;
+    /** Number of threads per core, eg: 2 */
     'num-threads': number = null;
     public static propInfo: { [prop in keyof IClusterCPUInfo]: PropInfoItem } = {
         'speed': {
+            description:  'CPU speed per core, eg: 2099998101',
             required: false,
             type: 'string'
         },
         'num-sockets': {
+            description:  'Number of CPU sockets, eg: 2, 4',
             required: false,
             type: 'number'
         },
         'num-cores': {
+            description:  'Number of physical CPU cores per socket, eg: 36',
             required: false,
             type: 'number'
         },
         'num-threads': {
+            description:  'Number of threads per core, eg: 2',
             required: false,
             type: 'number'
         },

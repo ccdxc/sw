@@ -18,23 +18,29 @@ export interface IClusterQuorumMemberCondition {
 
 
 export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQuorumMemberCondition {
+    /** Type indicates a certain node condition */
     'type': ClusterQuorumMemberCondition_type = null;
+    /** Condition Status */
     'status': ClusterQuorumMemberCondition_status = null;
+    /** The last time the condition transitioned */
     'last-transition-time': Date = null;
     public static propInfo: { [prop in keyof IClusterQuorumMemberCondition]: PropInfoItem } = {
         'type': {
             enum: ClusterQuorumMemberCondition_type_uihint,
             default: 'healthy',
+            description:  'Type indicates a certain node condition',
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterQuorumMemberCondition_status_uihint,
             default: 'unknown',
+            description:  'Condition Status',
             required: true,
             type: 'string'
         },
         'last-transition-time': {
+            description:  'The last time the condition transitioned',
             required: false,
             type: 'Date'
         },

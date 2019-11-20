@@ -253,6 +253,7 @@
 
   table {
     padding: 0;
+    width: 100%; // Added
   }
 
   table tr {
@@ -277,6 +278,7 @@
   table tr td {
     border: 1px solid #cccccc;
     text-align: left;
+    vertical-align: top; // Added
     margin: 0;
     padding: 6px 13px;
   }

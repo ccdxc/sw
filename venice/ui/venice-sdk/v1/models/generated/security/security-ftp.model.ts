@@ -14,9 +14,11 @@ export interface ISecurityFtp {
 
 
 export class SecurityFtp extends BaseModel implements ISecurityFtp {
+    /** Allow Mismatch IP Address in the payload compared to what is present in the IP header */
     'allow-mismatch-ip-address': boolean = null;
     public static propInfo: { [prop in keyof ISecurityFtp]: PropInfoItem } = {
         'allow-mismatch-ip-address': {
+            description:  'Allow Mismatch IP Address in the payload compared to what is present in the IP header',
             required: false,
             type: 'boolean'
         },

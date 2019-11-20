@@ -1,5 +1,6 @@
 {
   "enabled-features" : [
+    "help"
   ],
   "condition-thresholds": {
     "critical": 95,

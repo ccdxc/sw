@@ -15,11 +15,13 @@ export interface IObjstoreObjectStatus {
 
 
 export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectStatus {
+    /** Size is the total size of the object */
     'size': string = null;
     /** Digest is a hash digest of the object content. */
     'digest': string = null;
     public static propInfo: { [prop in keyof IObjstoreObjectStatus]: PropInfoItem } = {
         'size': {
+            description:  'Size is the total size of the object',
             required: false,
             type: 'string'
         },

@@ -16,16 +16,20 @@ export interface IClusterMemInfo {
 
 
 export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
+    /** Type */
     'type': ClusterMemInfo_type = null;
+    /** Memory size in bytes, eg: 274760318976 */
     'size': string = null;
     public static propInfo: { [prop in keyof IClusterMemInfo]: PropInfoItem } = {
         'type': {
             enum: ClusterMemInfo_type,
             default: 'unknown',
+            description:  'Type',
             required: true,
             type: 'string'
         },
         'size': {
+            description:  'Memory size in bytes, eg: 274760318976',
             required: false,
             type: 'string'
         },

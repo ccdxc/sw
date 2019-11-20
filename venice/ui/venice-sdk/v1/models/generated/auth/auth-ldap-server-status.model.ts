@@ -21,8 +21,11 @@ export interface IAuthLdapServerStatus {
 
 
 export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerStatus {
+    /** Result indicates if ldap check was successful */
     'result': AuthLdapServerStatus_result = null;
+    /** Message contains error message in case of failed check or a success message */
     'message': string = null;
+    /** LdapServer contains the ldap server configuration that was checked */
     'server': AuthLdapServer = null;
     /** The LDAP base DN to be used in a user search. */
     'base-dn': string = null;
@@ -34,14 +37,17 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
         'result': {
             enum: AuthLdapServerStatus_result,
             default: 'connect-success',
+            description:  'Result indicates if ldap check was successful',
             required: true,
             type: 'string'
         },
         'message': {
+            description:  'Message contains error message in case of failed check or a success message',
             required: false,
             type: 'string'
         },
         'server': {
+            description:  'LdapServer contains the ldap server configuration that was checked',
             required: false,
             type: 'object'
         },

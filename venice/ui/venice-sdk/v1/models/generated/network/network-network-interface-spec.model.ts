@@ -19,26 +19,34 @@ export interface INetworkNetworkInterfaceSpec {
 
 
 export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNetworkInterfaceSpec {
+    /** desired Admin state of the port */
     'admin-status': NetworkNetworkInterfaceSpec_admin_status = null;
+    /** Intefaae speed */
     'speed': string = null;
+    /** Mtu of the interface */
     'mtu': number = null;
+    /** Pause Spec */
     'pause': NetworkPauseSpec = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceSpec]: PropInfoItem } = {
         'admin-status': {
             enum: NetworkNetworkInterfaceSpec_admin_status,
             default: 'up',
+            description:  'Desired Admin state of the port',
             required: true,
             type: 'string'
         },
         'speed': {
+            description:  'Intefaae speed',
             required: false,
             type: 'string'
         },
         'mtu': {
+            description:  'Mtu of the interface',
             required: false,
             type: 'number'
         },
         'pause': {
+            description:  'Pause Spec',
             required: false,
             type: 'object'
         },

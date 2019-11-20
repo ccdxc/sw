@@ -22,6 +22,7 @@ export class OrchestrationOrchestratorList extends BaseModel implements IOrchest
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Orchestrator objects */
     'items': Array<OrchestrationOrchestrator> = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class OrchestrationOrchestratorList extends BaseModel implements IOrchest
             type: 'object'
         },
         'items': {
+            description:  'List of Orchestrator objects',
             required: false,
             type: 'object'
         },

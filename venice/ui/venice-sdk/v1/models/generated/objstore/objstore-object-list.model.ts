@@ -22,6 +22,7 @@ export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of Object objects */
     'items': Array<ObjstoreObject> = null;
     public static propInfo: { [prop in keyof IObjstoreObjectList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList
             type: 'object'
         },
         'items': {
+            description:  'List of Object objects',
             required: false,
             type: 'object'
         },

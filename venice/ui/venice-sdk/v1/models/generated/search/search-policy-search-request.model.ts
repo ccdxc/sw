@@ -24,22 +24,31 @@ export interface ISearchPolicySearchRequest {
 
 export class SearchPolicySearchRequest extends BaseModel implements ISearchPolicySearchRequest {
     /** Tenant Name, to perform query within a Tenant's scope.
-    The default tenant is "default". In the backend
-    this field gets auto-filled & validated by apigw-hook
-    based on user login context. */
+The default tenant is "default". In the backend
+this field gets auto-filled & validated by apigw-hook
+based on user login context. */
     'tenant': string = null;
     /** Namespace is optional. If provided policy-search will
-    be limited to the specified namespace. */
+be limited to the specified namespace. */
     'namespace': string = null;
     /** NetworkSecurityPolicy name is optional. If provided policy-search will
-    be limited to the specified SGpolicy object name. */
+be limited to the specified SGpolicy object name. */
     'sg-policy': string = null;
+    /** App specification,  predefined apps and alg config */
     'app': string = null;
+    /** Protocol eg: tcp, udp, icmp */
     'protocol': string = null;
+    /** TCP or UDP Port number */
     'port': string = null;
+    /** Inbound ip-address, use any to refer to all ipaddresses
+eg: 10.1.1.1, any */
     'from-ip-address': string = null;
+    /** Outbound ip-address, use any to refer to all ipaddresses
+eg: 20.1.1.1, any */
     'to-ip-address': string = null;
+    /** Inbound security group */
     'from-security-group': string = null;
+    /** Outbound security group */
     'to-security-group': string = null;
     public static propInfo: { [prop in keyof ISearchPolicySearchRequest]: PropInfoItem } = {
         'tenant': {
@@ -60,30 +69,37 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             type: 'string'
         },
         'app': {
+            description:  'App specification,  predefined apps and alg config',
             required: false,
             type: 'string'
         },
         'protocol': {
+            description:  'Protocol eg: tcp, udp, icmp',
             required: false,
             type: 'string'
         },
         'port': {
+            description:  'TCP or UDP Port number',
             required: false,
             type: 'string'
         },
         'from-ip-address': {
+            description:  'Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any',
             required: false,
             type: 'string'
         },
         'to-ip-address': {
+            description:  'Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any',
             required: false,
             type: 'string'
         },
         'from-security-group': {
+            description:  'Inbound security group',
             required: false,
             type: 'string'
         },
         'to-security-group': {
+            description:  'Outbound security group',
             required: false,
             type: 'string'
         },

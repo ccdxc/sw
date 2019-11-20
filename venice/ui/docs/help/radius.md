@@ -7,9 +7,9 @@ Remote Authentication Dial-In User Service is a networking protocol, operating o
 
 The toggle allows for enabling/disabling Radius authentication.
 
-<load-table group:auth obj:radius
-            omit:servers, enable>
-<load-table group:auth obj:RadiusServer
+<load-table group:auth obj:AuthRadiusDomain
+            omit:servers, tag>
+| Server:Port   | &lt;IP address&gt;:&lt;Port&gt; of the RADIUS server  |
+| Server secret   | Secret is the shared secret between Venice and RADIUS server  |
+<load-table group:auth obj:RadiusServer include:auth-method
             omitHeader:true>
-
-Footer info about Radius 

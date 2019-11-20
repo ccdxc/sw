@@ -16,12 +16,12 @@ export interface ISearchEntry {
 
 export class SearchEntry extends BaseModel implements ISearchEntry {
     /** TODO: Right now our api codegen does not support
-    nested inline and hence this attribute cannot be 
-    be made embedded/inline. api.Any is already had
-    embededed attribute Any. Once infra supports nested
-    inline or an alternative, this attribute should be 
-    embedded and made inline to make json response user
-    friendly for search. */
+nested inline and hence this attribute cannot be 
+be made embedded/inline. api.Any is already had
+embededed attribute Any. Once infra supports nested
+inline or an alternative, this attribute should be 
+embedded and made inline to make json response user
+friendly for search. */
     'object': ApiAny = null;
     public static propInfo: { [prop in keyof ISearchEntry]: PropInfoItem } = {
         'object': {

@@ -20,36 +20,48 @@ export interface IWorkloadEndpointMigrationStatus {
 
 
 export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkloadEndpointMigrationStatus {
+    /** Status of migration */
     'status': WorkloadEndpointMigrationStatus_status = null;
+    /** Start time of the migration operation */
     'start-time': Date = null;
+    /** End time of the migration operation */
     'end-time': Date = null;
+    /** IP of source DSC */
     'source-ip': string = null;
+    /** IP of destination DSC where the endpoint will be migrated to */
     'destination-ip': string = null;
+    /** Reason field is populated if some failures are encountered while migrating a workload */
     'reason': string = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointMigrationStatus]: PropInfoItem } = {
         'status': {
             enum: WorkloadEndpointMigrationStatus_status_uihint,
             default: 'none',
+            description:  'Status of migration',
             required: true,
             type: 'string'
         },
         'start-time': {
+            description:  'Start time of the migration operation',
             required: false,
             type: 'Date'
         },
         'end-time': {
+            description:  'End time of the migration operation',
             required: false,
             type: 'Date'
         },
         'source-ip': {
+            description:  'IP of source DSC',
             required: false,
             type: 'string'
         },
         'destination-ip': {
+            description:  'IP of destination DSC where the endpoint will be migrated to',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'Reason field is populated if some failures are encountered while migrating a workload',
             required: false,
             type: 'string'
         },

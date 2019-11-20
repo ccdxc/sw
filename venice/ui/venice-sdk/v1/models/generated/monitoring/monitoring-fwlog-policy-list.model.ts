@@ -22,6 +22,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of FwlogPolicy objects */
     'items': Array<MonitoringFwlogPolicy> = null;
     public static propInfo: { [prop in keyof IMonitoringFwlogPolicyList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
             type: 'object'
         },
         'items': {
+            description:  'List of FwlogPolicy objects',
             required: false,
             type: 'object'
         },

@@ -15,14 +15,18 @@ export interface ISearchError {
 
 
 export class SearchError extends BaseModel implements ISearchError {
+    /** Type of error */
     'type': string = null;
+    /** Reason or description of the failure */
     'reason': string = null;
     public static propInfo: { [prop in keyof ISearchError]: PropInfoItem } = {
         'type': {
+            description:  'Type of error',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'Reason or description of the failure',
             required: false,
             type: 'string'
         },

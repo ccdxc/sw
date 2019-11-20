@@ -1,0 +1,196 @@
+<h1 id="alertsandevents">Alerts and Events</h1>
+<p>The alert and event logs discovers events of interest, that provide general information or information that are triggered by some critical event.  Venice allows the creation of customized alert and event policies to facilitate these specific events in the environment, that can be sent to an external syslog server.</p>
+<h2 id="alertpolicies">Alert Policies</h2>
+<p>Within the alert section, a customizable alert policy can be created to meet one or more specific criteria.   This will allow monitoring of your environment within this view.  To build this alert policy, you will need to provide the following from the "Add Alert Policy".  It is required to have at least one destination for the "Alert Policy".  </p>
+<h3 id="adddestination">Add Destination</h3>
+<p>The "Add Destination" is referring to the external syslog server that the alerts will be sent to.  One destination is required before any alert policy can be created.  The destination needs the following information:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .<em>- characters. minimum length is 2 and maximum length is 64 charactersName of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .</em>- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+</tr>
+</tbody>
+</table>
+<h6 id="syslogexportconfiguration">Syslog Export Configuration</h6>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format</td>
+<td>event export format, SYSLOG<em>BSD defaultevent export format, SYSLOG</em>BSD default <br> Valid options include:<br> - BSD <br> - RFC5424</td>
+</tr>
+<tr>
+<td>facility-override</td>
+<td>override default facility with this in exported logsoverride default facility with this in exported logs <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
+</tr>
+<tr>
+<td>prefix</td>
+<td>add prefix in exported logsadd prefix in exported logs</td>
+</tr>
+</tbody>
+</table>
+<h6 id="target">Target</h6>
+<p>Servers to send the data to. Additional Targets are allowed by clicking on "+Add". </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>destination</td>
+<td>IP address or URL of the collector/entity to which the data is to be exportedIP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048</td>
+</tr>
+<tr>
+<td>transport</td>
+<td>protocol and Port number where an external collector is gathering the data. example &quot;TCP/2055&quot;protocol and Port number where an external collector is gathering the data. example &quot;TCP/2055&quot;should be a valid layer3 or layer 4 protocol and port/type</td>
+</tr>
+</tbody>
+</table>
+<h3 id="alertpolicy">Alert Policy</h3>
+<p>The alert policy allows for specific customized alerts to be sent to the syslog server.  </p>
+<h4 id="addalertpolicy">Add Alert Policy</h4>
+<p>To build this alert policy, the following information is needed:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .<em>- characters. minimum length is 2 and maximum length is 64 charactersName of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .</em>- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+</tr>
+</tbody>
+</table>
+<h6 id="criteriaselector">Criteria selector</h6>
+<p>If the event matches the given criteria, then an alert will be generated. 
+All requirements are ANDed together.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>key</td>
+<td>The event field that the condition applies to.</td>
+</tr>
+<tr>
+<td>operator</td>
+<td>Condition checked for the key.</td>
+</tr>
+<tr>
+<td>values</td>
+<td>Values contains one or more comma separated values corresponding to the key.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="alertlevel">Alert level</h6>
+<p>Then Alert defines the severity of the generated alert</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>severity</td>
+<td>Severity to be set for an alert that gets triggered from this ruleSeverity to be set for an alert that gets triggered from this rule <br> Valid options include:<br> - info <br> - warn <br> - critical</td>
+</tr>
+</tbody>
+</table>
+<h6 id="destination">Destination</h6>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>destinations</td>
+<td>name of the alert destinations to be used to send out notification when an alert. gets generated.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="eventspolicy">Events Policy</h2>
+<p>Within the events section, an event policy can be created to send events to an external syslog server. To build this event policy, you will need to provide the following from the "Add Event Policy". </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .<em>- characters. minimum length is 2 and maximum length is 64 charactersName of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or .</em>- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+</tr>
+</tbody>
+</table>
+<h6 id="syslogexportconfiguration-1">Syslog Export Configuration</h6>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format</td>
+<td>event export format, SYSLOG<em>BSD defaultevent export format, SYSLOG</em>BSD default <br> Valid options include:<br> - BSD <br> - RFC5424</td>
+</tr>
+<tr>
+<td>facility-override</td>
+<td>override default facility with this in exported logsoverride default facility with this in exported logs <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
+</tr>
+<tr>
+<td>prefix</td>
+<td>add prefix in exported logsadd prefix in exported logs</td>
+</tr>
+</tbody>
+</table>
+<h6 id="target-1">Target</h6>
+<p>Servers to send the data to. Additional Targets are allowed by clicking on "+Add". </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>destination</td>
+<td>IP address or URL of the collector/entity to which the data is to be exportedIP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048</td>
+</tr>
+<tr>
+<td>transport</td>
+<td>protocol and Port number where an external collector is gathering the data. example &quot;TCP/2055&quot;protocol and Port number where an external collector is gathering the data. example &quot;TCP/2055&quot;should be a valid layer3 or layer 4 protocol and port/type</td>
+</tr>
+</tbody>
+</table>

@@ -18,26 +18,35 @@ export interface IAuthRadiusServer {
 
 
 export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
+    /** <IP address>:<Port> of the RADIUS server */
     'url': string = null;
+    /** Secret is the shared secret between API Gw and RADIUS server */
     'secret': string = null;
+    /** AuthMethod is authentication method to use with the RADIUS server */
     'auth-method': AuthRadiusServer_auth_method = null;
+    /** TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is
+used in PEAP and EAP_TTLS auth methods */
     'trusted-certs': string = null;
     public static propInfo: { [prop in keyof IAuthRadiusServer]: PropInfoItem } = {
         'url': {
+            description:  '&lt;IP address&gt;:&lt;Port&gt; of the RADIUS server',
             required: false,
             type: 'string'
         },
         'secret': {
+            description:  'Secret is the shared secret between API Gw and RADIUS server',
             required: false,
             type: 'string'
         },
         'auth-method': {
             enum: AuthRadiusServer_auth_method,
             default: 'pap',
+            description:  'AuthMethod is authentication method to use with the RADIUS server',
             required: true,
             type: 'string'
         },
         'trusted-certs': {
+            description:  'TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is used in PEAP and EAP_TTLS auth methods',
             required: false,
             type: 'string'
         },

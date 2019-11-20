@@ -20,39 +20,53 @@ export interface INetworkNetworkSpec {
 
 
 export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec {
+    /** type of network. (vlan/vxlan/routed etc) */
     'type': string = null;
+    /** IPv4 subnet CIDR */
     'ipv4-subnet': string = null;
+    /** IPv4 gateway for this subnet */
     'ipv4-gateway': string = null;
+    /** IPv6 subnet CIDR */
     'ipv6-subnet': string = null;
+    /** IPv6 gateway */
     'ipv6-gateway': string = null;
+    /** Vlan ID for the network */
     'vlan-id': number = null;
+    /** Vxlan VNI for the network */
     'vxlan-vni': number = null;
     public static propInfo: { [prop in keyof INetworkNetworkSpec]: PropInfoItem } = {
         'type': {
+            description:  'Type of network. (vlan/vxlan/routed etc)',
             required: false,
             type: 'string'
         },
         'ipv4-subnet': {
+            description:  'IPv4 subnet CIDR',
             required: false,
             type: 'string'
         },
         'ipv4-gateway': {
+            description:  'IPv4 gateway for this subnet',
             required: false,
             type: 'string'
         },
         'ipv6-subnet': {
+            description:  'IPv6 subnet CIDR',
             required: false,
             type: 'string'
         },
         'ipv6-gateway': {
+            description:  'IPv6 gateway',
             required: false,
             type: 'string'
         },
         'vlan-id': {
+            description:  'Vlan ID for the network',
             required: false,
             type: 'number'
         },
         'vxlan-vni': {
+            description:  'Vxlan VNI for the network',
             required: false,
             type: 'number'
         },

@@ -21,6 +21,7 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'fullname': string = null;
     /** must be a valid email */
     'email': string = null;
+    /** Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./" */
     'password': string = null;
     'type': AuthUserSpec_type = null;
     public static propInfo: { [prop in keyof IAuthUserSpec]: PropInfoItem } = {
@@ -29,11 +30,12 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
             type: 'string'
         },
         'email': {
-            description:  'must be a valid email',
+            description:  'Must be a valid email',
             required: false,
             type: 'string'
         },
         'password': {
+            description:  'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from &quot;~!@#$%^&amp;*()_+&#x60;-&#x3D;{}|[]\\:\&quot;&lt;&gt;?,./&quot;',
             required: false,
             type: 'string'
         },

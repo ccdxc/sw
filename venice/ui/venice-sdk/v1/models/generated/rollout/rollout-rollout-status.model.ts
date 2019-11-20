@@ -24,23 +24,32 @@ export interface IRolloutRolloutStatus {
 
 
 export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutStatus {
+    /** Rollout status of Controller Node */
     'controller-nodes-status': Array<RolloutRolloutPhase> = null;
+    /** Rollout status of Various Controller Services */
     'controller-services-status': Array<RolloutRolloutPhase> = null;
     /** Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes
-    The entries are group by parallelism based on the order-constraints and max-parallel specified by the user. */
+The entries are group by parallelism based on the order-constraints and max-parallel specified by the user. */
     'dscs-status': Array<RolloutRolloutPhase> = null;
     'state': RolloutRolloutStatus_state = null;
+    /** Heuristic value of percentage completion of the rollout */
     'completion-percent': number = null;
+    /** Start time of Rollout */
     'start-time': Date = null;
+    /** End time of Rollout */
     'end-time': Date = null;
+    /** Version of the cluster before the start of rollout */
     'prev-version': string = null;
+    /** details the reason for overall Failure or Suspend */
     'reason': string = null;
     public static propInfo: { [prop in keyof IRolloutRolloutStatus]: PropInfoItem } = {
         'controller-nodes-status': {
+            description:  'Rollout status of Controller Node',
             required: false,
             type: 'object'
         },
         'controller-services-status': {
+            description:  'Rollout status of Various Controller Services',
             required: false,
             type: 'object'
         },
@@ -56,22 +65,27 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             type: 'string'
         },
         'completion-percent': {
+            description:  'Heuristic value of percentage completion of the rollout',
             required: false,
             type: 'number'
         },
         'start-time': {
+            description:  'Start time of Rollout',
             required: false,
             type: 'Date'
         },
         'end-time': {
+            description:  'End time of Rollout',
             required: false,
             type: 'Date'
         },
         'prev-version': {
+            description:  'Version of the cluster before the start of rollout',
             required: false,
             type: 'string'
         },
         'reason': {
+            description:  'Details the reason for overall Failure or Suspend',
             required: false,
             type: 'string'
         },

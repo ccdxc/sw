@@ -22,6 +22,7 @@ export class NetworkVirtualRouterList extends BaseModel implements INetworkVirtu
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of VirtualRouter objects */
     'items': Array<NetworkVirtualRouter> = null;
     public static propInfo: { [prop in keyof INetworkVirtualRouterList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class NetworkVirtualRouterList extends BaseModel implements INetworkVirtu
             type: 'object'
         },
         'items': {
+            description:  'List of VirtualRouter objects',
             required: false,
             type: 'object'
         },

@@ -17,6 +17,7 @@ export interface IApiTypeMeta {
 export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     /** Kind represents the type of the API object. */
     'kind': string = null;
+    /** APIVersion defines the version of the API object. This can only be set by the server */
     'api-version': string = null;
     public static propInfo: { [prop in keyof IApiTypeMeta]: PropInfoItem } = {
         'kind': {
@@ -25,6 +26,7 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
             type: 'string'
         },
         'api-version': {
+            description:  'APIVersion defines the version of the API object. This can only be set by the server',
             required: false,
             type: 'string'
         },

@@ -24,8 +24,11 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
+    /** Query is type of diagnostic information requested like Profile, Log. This string is service specific and meaning is assigned by the service */
     'query': string = null;
+    /** ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports */
     'service-port': DiagnosticsServicePort = null;
+    /** Parameters to be passed for a diagnostic query */
     'parameters': object = null;
     public static propInfo: { [prop in keyof IDiagnosticsDiagnosticsRequest]: PropInfoItem } = {
         'kind': {
@@ -41,14 +44,17 @@ export class DiagnosticsDiagnosticsRequest extends BaseModel implements IDiagnos
             type: 'object'
         },
         'query': {
+            description:  'Query is type of diagnostic information requested like Profile, Log. This string is service specific and meaning is assigned by the service',
             required: false,
             type: 'string'
         },
         'service-port': {
+            description:  'ServicePort is to qualify diagnostics request for a specific port in case service is listening on multiple ports',
             required: false,
             type: 'object'
         },
         'parameters': {
+            description:  'Parameters to be passed for a diagnostic query',
             required: false,
             type: 'object'
         },

@@ -24,113 +24,113 @@ export interface ISecurityFirewallProfileSpec {
 
 
 export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityFirewallProfileSpec {
-    /** should be a valid time duration
-     */
+    /** Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App objectshould be a valid time duration
+ */
     'session-idle-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYNshould be a valid time duration
+ */
     'tcp-connection-setup-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** TCP Close Timeout is the time for which TCP session is kept after a FIN is seenshould be a valid time duration
+ */
     'tcp-close-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not receivedshould be a valid time duration
+ */
     'tcp-half-closed-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flowshould be a valid time duration
+ */
     'tcp-drop-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flowshould be a valid time duration
+ */
     'udp-drop-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flowshould be a valid time duration
+ */
     'icmp-drop-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flowshould be a valid time duration
+ */
     'drop-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** Tcp Timeout is the period for which a TCP session is kept alive during inactivityshould be a valid time duration
+ */
     'tcp-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** Udp Timeout is the period for which a UDP session is kept alive during inactivityshould be a valid time duration
+ */
     'udp-timeout': string = null;
-    /** should be a valid time duration
-     */
+    /** Icmp Timeout is the period for which a ICMP session is kept alive during inactivityshould be a valid time duration
+ */
     'icmp-timeout': string = null;
     public static propInfo: { [prop in keyof ISecurityFirewallProfileSpec]: PropInfoItem } = {
         'session-idle-timeout': {
             default: '90s',
-            description:  'should be a valid time duration ',
+            description:  'Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App objectshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'tcp-connection-setup-timeout': {
             default: '30s',
-            description:  'should be a valid time duration ',
+            description:  'TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYNshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'tcp-close-timeout': {
             default: '15s',
-            description:  'should be a valid time duration ',
+            description:  'TCP Close Timeout is the time for which TCP session is kept after a FIN is seenshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'tcp-half-closed-timeout': {
             default: '120s',
-            description:  'should be a valid time duration ',
+            description:  'TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not receivedshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'tcp-drop-timeout': {
             default: '90s',
-            description:  'should be a valid time duration ',
+            description:  'TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flowshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'udp-drop-timeout': {
             default: '60s',
-            description:  'should be a valid time duration ',
+            description:  'UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flowshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'icmp-drop-timeout': {
             default: '60s',
-            description:  'should be a valid time duration ',
+            description:  'ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flowshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'drop-timeout': {
             default: '60s',
-            description:  'should be a valid time duration ',
+            description:  'Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flowshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'tcp-timeout': {
             default: '3600s',
-            description:  'should be a valid time duration ',
+            description:  'Tcp Timeout is the period for which a TCP session is kept alive during inactivityshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'udp-timeout': {
             default: '30s',
-            description:  'should be a valid time duration ',
+            description:  'Udp Timeout is the period for which a UDP session is kept alive during inactivityshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'icmp-timeout': {
             default: '6s',
-            description:  'should be a valid time duration ',
+            description:  'Icmp Timeout is the period for which a ICMP session is kept alive during inactivityshould be a valid time duration ',
             hint:  '2h',
             required: true,
             type: 'string'

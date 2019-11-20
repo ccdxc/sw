@@ -17,19 +17,25 @@ export interface ISecurityNetworkSecurityPolicySpec {
 
 
 export class SecurityNetworkSecurityPolicySpec extends BaseModel implements ISecurityNetworkSecurityPolicySpec {
+    /** list of security groups this policy is attached to */
     'attach-groups': Array<string> = null;
+    /** specifies if the set of rules need to be attached globally to a tenant */
     'attach-tenant': boolean = null;
+    /** list of rules */
     'rules': Array<SecuritySGRule> = null;
     public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicySpec]: PropInfoItem } = {
         'attach-groups': {
+            description:  'List of security groups this policy is attached to',
             required: false,
             type: 'Array<string>'
         },
         'attach-tenant': {
+            description:  'Specifies if the set of rules need to be attached globally to a tenant',
             required: false,
             type: 'boolean'
         },
         'rules': {
+            description:  'List of rules',
             required: false,
             type: 'object'
         },

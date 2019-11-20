@@ -11,7 +11,7 @@
       <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="forwardClick()"
                 [ngClass]="isForwardButtonDisabled() ? 'global-button-disabled' : ''">chevron_right
       </mat-icon>
-      <div fxFlex="nogrow">Help</div>
+      <div fxFlex="nogrow">Venice Help</div>
       <div fxFlex></div>
       <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
     </div>
@@ -22,9 +22,12 @@
 </ng-template>
 
 <ng-template cdkPortal #DefaultHelp="cdkPortal">
-  <h1>
-    No help content is available for this page.
-  </h1>
+  <div fxFlex fxLayout="column" fxLayoutAlign="center center">
+    <mat-icon class="helpoverlay-missing-icon">help</mat-icon>
+    <div class="helpoverlay-missing-text">
+      No help content is available for this page.
+    </div>
+  </div>
 </ng-template>
 
 <ng-template cdkPortal #DefaultURLHelp="cdkPortal">

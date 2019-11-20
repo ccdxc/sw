@@ -20,19 +20,21 @@ export interface IClusterClusterSpec {
 
 export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec {
     /** QuorumNodes contains the list of hostnames for nodes configured to be quorum
-    nodes in the cluster. */
+nodes in the cluster. */
     'quorum-nodes': Array<string> = null;
     /** VirtualIP is the IP address for managing the cluster. It will be hosted by
-    the winner of election between quorum nodes. */
+the winner of election between quorum nodes. */
     'virtual-ip': string = null;
     /** NTPServers contains the list of NTP servers for the cluster. */
     'ntp-servers': Array<string> = null;
     /** AutoAdmitDSCs when enabled auto-admits DSCs that are validated
-    into Venice Cluster. When it is disabled, DSCs validated by CMD are
-    set to Pending state and it requires Manual approval to be admitted
-    into the cluster. */
+into Venice Cluster. When it is disabled, DSCs validated by CMD are
+set to Pending state and it requires Manual approval to be admitted
+into the cluster. */
     'auto-admit-dscs': boolean = null;
+    /** Certs is the pem encoded certificate bundle used for API Gateway TLS */
     'certs': string = null;
+    /** Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA */
     'key': string = null;
     public static propInfo: { [prop in keyof IClusterClusterSpec]: PropInfoItem } = {
         'quorum-nodes': {
@@ -56,10 +58,12 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             type: 'boolean'
         },
         'certs': {
+            description:  'Certs is the pem encoded certificate bundle used for API Gateway TLS',
             required: false,
             type: 'string'
         },
         'key': {
+            description:  'Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA',
             required: false,
             type: 'string'
         },

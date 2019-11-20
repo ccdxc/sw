@@ -1,0 +1,21 @@
+<h1 id="hosts">Hosts</h1>
+<p>The "Host" refers to the physical VMware ESXi server that is hosting the DSC.  The host is created with the following attributes:</p>
+<ul>
+<li><p>Name: Unique name for the host</p></li>
+<li><p>Add DSC by: </p>
+<p>Association of the DSC to the host can be defined by two (2) methods by choosing the radio button:</p>
+<ul>
+<li>id: This will be the name (ID) of the DSC</li>
+<li>mac-address: This will be the MAC Address of the DSC</li></ul></li>
+</ul>
+<p>Click on "Create Hosts" to complete the creation.</p>
+<h2 id="examples">Examples:</h2>
+<p><strong>Name:</strong> Prod-Server1</p>
+<p><strong>Add DSC by:</strong></p>
+<pre><code>id: ---&gt; DSC Name: prod-server1-dsc
+</code></pre>
+<p>or</p>
+<p><strong>Name: Prod-Server1</strong></p>
+<p><strong>Add DSC by:</strong></p>
+<pre><code>mac-address:  ---&gt; MAC-ADDRESS: 00ae.cd00.4848
+</code></pre>

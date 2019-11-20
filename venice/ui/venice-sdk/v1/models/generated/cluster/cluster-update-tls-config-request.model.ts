@@ -22,7 +22,9 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
+    /** Certs is the pem encoded certificate bundle used for API Gateway TLS */
     'certs': string = null;
+    /** Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA */
     'key': string = null;
     public static propInfo: { [prop in keyof IClusterUpdateTLSConfigRequest]: PropInfoItem } = {
         'kind': {
@@ -38,10 +40,12 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
             type: 'object'
         },
         'certs': {
+            description:  'Certs is the pem encoded certificate bundle used for API Gateway TLS',
             required: false,
             type: 'string'
         },
         'key': {
+            description:  'Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA',
             required: false,
             type: 'string'
         },

@@ -23,48 +23,55 @@ export interface IApiObjectMeta {
 
 
 export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
-    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
+    /** Name of the object, unique within a Namespace for scoped objects.
+Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
+minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'name': string = null;
-    /** must be alpha-numericslength of string should be between 1 and 48 */
+    /** Tenant to which the object belongs to. This can be automatically filled in many cases based on
+the tenant the user, who created the object, belongs to.
+Should start and end in an alphanumeric character and can contain only alphanumerics.
+Minimum length is 1 and maximum length is 48 charactersmust be alpha-numericslength of string should be between 1 and 48 */
     'tenant': string = null;
-    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
+    /** Namespace of the object, for scoped objects.
+Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
+maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'namespace': string = null;
     /** GenerationID is the generation Id for the object. This is incremented anytime there
-     is an update to the user intent, including Spec update and any update to ObjectMeta.
-     System generated and updated, not updatable by user. */
+ is an update to the user intent, including Spec update and any update to ObjectMeta.
+ System generated and updated, not updatable by user. */
     'generation-id': string = null;
     /** Resource version in the object store. This is updated anytime there is any change to the object.
-     System generated and updated, not updatable by user. */
+ System generated and updated, not updatable by user. */
     'resource-version': string = null;
     /** UUID is the unique identifier for the object. This is generated on creation of the object.
-    System generated, not updatable by user. */
+System generated, not updatable by user. */
     'uuid': string = null;
     /** Labels are arbitrary (key,value) pairs associated with any object. */
     'labels': object = null;
     /** CreationTime is the creation time of the object
-     System generated and updated, not updatable by user. */
+ System generated and updated, not updatable by user. */
     'creation-time': Date = null;
     /** ModTime is the Last Modification time of the object
-     System generated and updated, not updatable by user. */
+ System generated and updated, not updatable by user. */
     'mod-time': Date = null;
     /** SelfLink is a link for accessing this object. When the object is served from the API-GW it is the
-     URI path. Example:
-       - "/v1/tenants/tenants/tenant2" 
-     System generated and updated, not updatable by user. */
+ URI path. Example:
+   - "/v1/tenants/tenants/tenant2" 
+ System generated and updated, not updatable by user. */
     'self-link': string = null;
     public static propInfo: { [prop in keyof IApiObjectMeta]: PropInfoItem } = {
         'name': {
-            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  'Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: true,
             type: 'string'
         },
         'tenant': {
-            description:  'must be alpha-numericslength of string should be between 1 and 48',
+            description:  'Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Should start and end in an alphanumeric character and can contain only alphanumerics. Minimum length is 1 and maximum length is 48 charactersmust be alpha-numericslength of string should be between 1 and 48',
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  'Namespace of the object, for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },

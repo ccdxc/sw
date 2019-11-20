@@ -22,6 +22,7 @@ export class RolloutRolloutActionList extends BaseModel implements IRolloutRollo
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of RolloutAction objects */
     'items': Array<RolloutRolloutAction> = null;
     public static propInfo: { [prop in keyof IRolloutRolloutActionList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class RolloutRolloutActionList extends BaseModel implements IRolloutRollo
             type: 'object'
         },
         'items': {
+            description:  'List of RolloutAction objects',
             required: false,
             type: 'object'
         },

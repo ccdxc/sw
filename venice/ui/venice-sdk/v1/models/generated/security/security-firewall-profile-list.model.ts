@@ -22,6 +22,7 @@ export class SecurityFirewallProfileList extends BaseModel implements ISecurityF
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of FirewallProfile objects */
     'items': Array<SecurityFirewallProfile> = null;
     public static propInfo: { [prop in keyof ISecurityFirewallProfileList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class SecurityFirewallProfileList extends BaseModel implements ISecurityF
             type: 'object'
         },
         'items': {
+            description:  'List of FirewallProfile objects',
             required: false,
             type: 'object'
         },

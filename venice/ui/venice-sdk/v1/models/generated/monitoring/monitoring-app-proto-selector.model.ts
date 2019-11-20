@@ -15,17 +15,19 @@ export interface IMonitoringAppProtoSelector {
 
 
 export class MonitoringAppProtoSelector extends BaseModel implements IMonitoringAppProtoSelector {
-    /** should be a valid layer3 or layer 4 protocol and port/type */
+    /** ports - Includes protocol name and port Eg ["tcp/1234", "udp"]should be a valid layer3 or layer 4 protocol and port/type */
     'proto-ports': Array<string> = null;
+    /** Apps - E.g. ["Redis"] */
     'applications': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringAppProtoSelector]: PropInfoItem } = {
         'proto-ports': {
-            description:  'should be a valid layer3 or layer 4 protocol and port/type',
+            description:  'Ports - Includes protocol name and port Eg [&quot;tcp/1234&quot;, &quot;udp&quot;]should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',
             required: false,
             type: 'Array<string>'
         },
         'applications': {
+            description:  'Apps - E.g. [&quot;Redis&quot;]',
             required: false,
             type: 'Array<string>'
         },

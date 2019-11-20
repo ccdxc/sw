@@ -21,36 +21,48 @@ export interface IAuthUserStatus {
 
 
 export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
+    /** Roles assigned to user */
     'roles': Array<string> = null;
+    /** Groups that external user belongs to */
     'user-groups': Array<string> = null;
+    /** Last login time */
     'last-login': Date = null;
+    /** Authenticators used for last successful login */
     'authenticators': Array<AuthUserStatus_authenticators> = null;
+    /** Last password change time for local user */
     'last-password-change': Date = null;
+    /** Authorization information about requested operations */
     'access-review': Array<AuthOperationStatus> = null;
     public static propInfo: { [prop in keyof IAuthUserStatus]: PropInfoItem } = {
         'roles': {
+            description:  'Roles assigned to user',
             required: false,
             type: 'Array<string>'
         },
         'user-groups': {
+            description:  'Groups that external user belongs to',
             required: false,
             type: 'Array<string>'
         },
         'last-login': {
+            description:  'Last login time',
             required: false,
             type: 'Date'
         },
         'authenticators': {
             enum: AuthUserStatus_authenticators_uihint,
             default: 'local',
+            description:  'Authenticators used for last successful login',
             required: true,
             type: 'Array<string>'
         },
         'last-password-change': {
+            description:  'Last password change time for local user',
             required: false,
             type: 'Date'
         },
         'access-review': {
+            description:  'Authorization information about requested operations',
             required: false,
             type: 'object'
         },

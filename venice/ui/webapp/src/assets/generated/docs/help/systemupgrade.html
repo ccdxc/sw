@@ -1,0 +1,59 @@
+<h1 id="systemupgrade">System Upgrade</h1>
+<p><img src="/assets/generated/docs/help/images/system-upgrade.jpg" alt="System-Upgrade image" /></p>
+<p>Within the System Upgrade view, this allows the platform to be upgraded to a new software release.  The process is broken into 2 separate tasks.</p>
+<ul>
+<li>Rollout Images: This uploads the new firmware revision onto the Venice controllers</li>
+<li>Create Rollout: Create the upgrade "rollout" process to update the Venice controllers and NAPLES adapters</li>
+</ul>
+<h2 id="rolloutimages">Rollout Images</h2>
+<h3 id="uploadimagefile">Upload Image File</h3>
+<ul>
+<li>Choose Venice image file (*.tar) </li>
+<li>Select "Upload" to start the process</li>
+</ul>
+<p>Note: This will take a few minutes for the upload to complete</p>
+<p>Once uploaded, this section will list the new available software version for upgrading under the "Images Repository"</p>
+<h2 id="createrollout">Create Rollout</h2>
+<p>This section defines how the software upgrade rollout will proceed. </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What to upgrade</td>
+<td>NAPLES Only, Venice Only or Both NAPLES and Venice</td>
+</tr>
+<tr>
+<td>Name of the rollout</td>
+<td>Unique name for the rollout</td>
+</tr>
+<tr>
+<td>Version</td>
+<td>Which software version to upgrade to</td>
+</tr>
+<tr>
+<td>Scheduling</td>
+<td>specific time or now</td>
+</tr>
+<tr>
+<td>Strategy</td>
+<td>Linear or Exponential</td>
+</tr>
+<tr>
+<td>Upgrade Type</td>
+<td>Disuptive or On Next Host Reboot</td>
+</tr>
+<tr>
+<td>Max DSC in Parallel</td>
+<td>The number of Distributed Service Cards (NAPLES) to be upgraded in parallel</td>
+</tr>
+<tr>
+<td>Max Allowed DSCs failures</td>
+<td>The total number of failed Distributed Service Card upgrade failures to occur before upgrade process is stopped</td>
+</tr>
+</tbody>
+</table>

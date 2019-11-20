@@ -22,6 +22,7 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of AuthenticationPolicy objects */
     'items': Array<AuthAuthenticationPolicy> = null;
     public static propInfo: { [prop in keyof IAuthAuthenticationPolicyList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
             type: 'object'
         },
         'items': {
+            description:  'List of AuthenticationPolicy objects',
             required: false,
             type: 'object'
         },

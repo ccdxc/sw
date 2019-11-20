@@ -25,11 +25,14 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
+    /** URI is the Browser URI for this object */
     'uri': string = null;
+    /** Reverse is the view from the object looking back in the reverse direction of the dependency tree */
     'reverse': string = null;
+    /** QueryType specifies the direction of the relations in Links */
     'query-type': BrowserObject_query_type = null;
     /** Links points to the relations of the object. The key for the map is the path to the filed which
-      is causing the relation. */
+  is causing the relation. */
     'links': object = null;
     public static propInfo: { [prop in keyof IBrowserObject]: PropInfoItem } = {
         'kind': {
@@ -45,16 +48,19 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
             type: 'object'
         },
         'uri': {
+            description:  'URI is the Browser URI for this object',
             required: false,
             type: 'string'
         },
         'reverse': {
+            description:  'Reverse is the view from the object looking back in the reverse direction of the dependency tree',
             required: false,
             type: 'string'
         },
         'query-type': {
             enum: BrowserObject_query_type,
             default: 'dependencies',
+            description:  'QueryType specifies the direction of the relations in Links',
             required: true,
             type: 'string'
         },

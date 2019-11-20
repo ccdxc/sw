@@ -40,12 +40,12 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
             type: 'object'
         },
         'old-password': {
-            description:  'length of string should be at least 1',
+            description:  'Length of string should be at least 1',
             required: true,
             type: 'string'
         },
         'new-password': {
-            description:  'length of string should be at least 1',
+            description:  'Length of string should be at least 1',
             required: true,
             type: 'string'
         },

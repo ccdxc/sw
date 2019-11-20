@@ -15,9 +15,11 @@ export interface ISecurityFirewallProfileStatus {
 
 
 export class SecurityFirewallProfileStatus extends BaseModel implements ISecurityFirewallProfileStatus {
+    /** The status of the configuration propagation to the Naples */
     'propagation-status': SecurityPropagationStatus = null;
     public static propInfo: { [prop in keyof ISecurityFirewallProfileStatus]: PropInfoItem } = {
         'propagation-status': {
+            description:  'The status of the configuration propagation to the Naples',
             required: false,
             type: 'object'
         },

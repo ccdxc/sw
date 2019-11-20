@@ -10,29 +10,20 @@
 </thead>
 <tbody>
 <tr>
-<td>enabled</td>
-<td></td>
+<td>nas-id</td>
+<td>NasID is a string identifying the NAS(API Gw) originating the Access-RequestNasID is a string identifying the NAS(API Gw) originating the Access-Request</td>
 </tr>
 <tr>
-<td>domains</td>
-<td></td>
-</tr>
-<tr>
-<td>url</td>
+<td>Server:Port</td>
 <td>&lt;IP address&gt;:&lt;Port&gt; of the RADIUS server</td>
 </tr>
 <tr>
-<td>secret</td>
-<td>Secret is the shared secret between API Gw and RADIUS server</td>
+<td>Server secret</td>
+<td>Secret is the shared secret between Venice and RADIUS server</td>
 </tr>
 <tr>
 <td>auth-method</td>
-<td>AuthMethod is authentication method to use with the RADIUS server</td>
-</tr>
-<tr>
-<td>trusted-certs</td>
-<td>TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is. used in PEAP and EAP_TTLS auth methods</td>
+<td>AuthMethod is authentication method to use with the RADIUS serverAuthMethod is authentication method to use with the RADIUS server <br> Valid options include:<br> - pap <br> - peap-mschapv2 <br> - eap-ttls-pap</td>
 </tr>
 </tbody>
 </table>
-<p>Footer info about Radius </p>

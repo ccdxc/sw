@@ -14,9 +14,11 @@ export interface INetworkServiceStatus {
 
 
 export class NetworkServiceStatus extends BaseModel implements INetworkServiceStatus {
+    /** list of workloads that are backends of this service */
     'workloads': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkServiceStatus]: PropInfoItem } = {
         'workloads': {
+            description:  'List of workloads that are backends of this service',
             required: false,
             type: 'Array<string>'
         },

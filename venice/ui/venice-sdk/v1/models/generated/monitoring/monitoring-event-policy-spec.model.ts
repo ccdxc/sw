@@ -21,26 +21,35 @@ export interface IMonitoringEventPolicySpec {
 
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
+    /** event export format, SYSLOG_BSD default */
     'format': MonitoringEventPolicySpec_format = null;
+    /** export events matched by the selector */
     'selector': FieldsSelector = null;
+    /** export target ip/port/protocol */
     'targets': Array<MonitoringExportConfig> = null;
+    /** once we support other formats, it should be one of the supported configs
+syslog specific configuration */
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop in keyof IMonitoringEventPolicySpec]: PropInfoItem } = {
         'format': {
             enum: MonitoringEventPolicySpec_format_uihint,
             default: 'syslog-bsd',
+            description:  'Event export format, SYSLOG_BSD default',
             required: true,
             type: 'string'
         },
         'selector': {
+            description:  'Export events matched by the selector',
             required: false,
             type: 'object'
         },
         'targets': {
+            description:  'Export target ip/port/protocol',
             required: false,
             type: 'object'
         },
         'config': {
+            description:  'Once we support other formats, it should be one of the supported configs syslog specific configuration',
             required: false,
             type: 'object'
         },

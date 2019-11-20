@@ -22,41 +22,57 @@ export interface ISecuritySGRule {
 
 
 export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
+    /** list of apps objects to which the rule applies to */
     'apps': Array<string> = null;
+    /** list of (protocol, ports) pairs to which the rule applies to, in addition to apps */
     'proto-ports': Array<SecurityProtoPort> = null;
+    /** SGRule action, either PERMIT, DENY or REJECT */
     'action': SecuritySGRule_action = null;
+    /** inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+cli-tags: id=from-ip */
     'from-ip-addresses': Array<string> = null;
+    /** outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+cli-tags: id=to-ip */
     'to-ip-addresses': Array<string> = null;
+    /** inbound rule from a given security group */
     'from-security-groups': Array<string> = null;
+    /** outbound rule from a given security group */
     'to-security-groups': Array<string> = null;
     public static propInfo: { [prop in keyof ISecuritySGRule]: PropInfoItem } = {
         'apps': {
+            description:  'List of apps objects to which the rule applies to',
             required: false,
             type: 'Array<string>'
         },
         'proto-ports': {
+            description:  'List of (protocol, ports) pairs to which the rule applies to, in addition to apps',
             required: false,
             type: 'object'
         },
         'action': {
             enum: SecuritySGRule_action_uihint,
             default: 'permit',
+            description:  'SGRule action, either PERMIT, DENY or REJECT',
             required: true,
             type: 'string'
         },
         'from-ip-addresses': {
+            description:  'Inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id&#x3D;from-ip',
             required: false,
             type: 'Array<string>'
         },
         'to-ip-addresses': {
+            description:  'Outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id&#x3D;to-ip',
             required: false,
             type: 'Array<string>'
         },
         'from-security-groups': {
+            description:  'Inbound rule from a given security group',
             required: false,
             type: 'Array<string>'
         },
         'to-security-groups': {
+            description:  'Outbound rule from a given security group',
             required: false,
             type: 'Array<string>'
         },

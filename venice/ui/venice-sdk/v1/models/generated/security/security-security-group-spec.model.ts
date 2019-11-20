@@ -17,19 +17,25 @@ export interface ISecuritySecurityGroupSpec {
 
 
 export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySecurityGroupSpec {
+    /** Workload selector (list of labels) */
     'workload-selector': LabelsSelector = null;
+    /** Service object selector */
     'service-labels': Array<string> = null;
+    /** list of CIDRs that are part of this security group */
     'match-prefixes': Array<string> = null;
     public static propInfo: { [prop in keyof ISecuritySecurityGroupSpec]: PropInfoItem } = {
         'workload-selector': {
+            description:  'Workload selector (list of labels)',
             required: false,
             type: 'object'
         },
         'service-labels': {
+            description:  'Service object selector',
             required: false,
             type: 'Array<string>'
         },
         'match-prefixes': {
+            description:  'List of CIDRs that are part of this security group',
             required: false,
             type: 'Array<string>'
         },

@@ -14,9 +14,11 @@ export interface INetworkNetworkInterfaceHostStatus {
 
 
 export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INetworkNetworkInterfaceHostStatus {
+    /** interface name seen by the host driver */
     'host-ifname': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceHostStatus]: PropInfoItem } = {
         'host-ifname': {
+            description:  'Interface name seen by the host driver',
             required: false,
             type: 'string'
         },

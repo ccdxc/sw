@@ -30,6 +30,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     'spec': WorkloadEndpointSpec = null;
     /** Status contains the current state of the Endpoint. */
     'status': WorkloadEndpointStatus = null;
+    /** Status of migration of endpoint */
     'migration': WorkloadEndpointMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadEndpoint]: PropInfoItem } = {
         'kind': {
@@ -55,6 +56,7 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
             type: 'object'
         },
         'migration': {
+            description:  'Status of migration of endpoint',
             required: false,
             type: 'object'
         },

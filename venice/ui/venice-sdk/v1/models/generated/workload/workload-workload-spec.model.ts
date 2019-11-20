@@ -16,17 +16,20 @@ export interface IWorkloadWorkloadSpec {
 
 
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
-    /** should be a valid host address, IP address or hostname */
+    /** Hostname of the server where the workload is running.
+cli-help: Host name where the workload runsshould be a valid host address, IP address or hostname */
     'host-name': string = null;
+    /** Spec of all interfaces in the Workload identified by Primary MAC */
     'interfaces': Array<WorkloadWorkloadIntfSpec> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadSpec]: PropInfoItem } = {
         'host-name': {
-            description:  'should be a valid host address, IP address or hostname',
+            description:  'Hostname of the server where the workload is running. cli-help: Host name where the workload runsshould be a valid host address, IP address or hostname',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
             required: true,
             type: 'string'
         },
         'interfaces': {
+            description:  'Spec of all interfaces in the Workload identified by Primary MAC',
             required: false,
             type: 'object'
         },

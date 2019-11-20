@@ -22,6 +22,7 @@ export class AuthUserPreferenceList extends BaseModel implements IAuthUserPrefer
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
+    /** List of UserPreference objects */
     'items': Array<AuthUserPreference> = null;
     public static propInfo: { [prop in keyof IAuthUserPreferenceList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +38,7 @@ export class AuthUserPreferenceList extends BaseModel implements IAuthUserPrefer
             type: 'object'
         },
         'items': {
+            description:  'List of UserPreference objects',
             required: false,
             type: 'object'
         },

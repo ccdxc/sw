@@ -18,12 +18,15 @@ export interface ISecurityAppSpec {
 
 
 export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
+    /** list of (protocol, ports) pairs */
     'proto-ports': Array<SecurityProtoPort> = null;
     /** Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc. */
     'timeout': string = null;
+    /** ALG configuration if specified */
     'alg': SecurityALG = null;
     public static propInfo: { [prop in keyof ISecurityAppSpec]: PropInfoItem } = {
         'proto-ports': {
+            description:  'List of (protocol, ports) pairs',
             required: false,
             type: 'object'
         },
@@ -34,6 +37,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
             type: 'string'
         },
         'alg': {
+            description:  'ALG configuration if specified',
             required: false,
             type: 'object'
         },

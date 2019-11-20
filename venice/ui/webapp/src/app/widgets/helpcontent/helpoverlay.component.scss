@@ -8,7 +8,7 @@
 }
 
 .helpoverlay-header {
-  background-color: #595959;
+  background-color: #19191a;
   @include primary-font(24px, #ffffff);
   padding: 0px 10px;
 }
@@ -29,4 +29,18 @@
 
 .helpoverlay-close {
   cursor: pointer;
+}
+
+.helpoverlay-missing-icon {
+  font-size: 75px;
+  color: white;
+  height: 75px;
+  width: 75px;
+  background: #6ba0e5;
+  border-radius: 50%;
+}
+
+.helpoverlay-missing-text {
+  @include primary-font(30px, #676763, 600);
+  text-align: center
 }

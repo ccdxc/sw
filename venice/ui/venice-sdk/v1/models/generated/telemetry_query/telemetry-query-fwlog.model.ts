@@ -29,78 +29,106 @@ export interface ITelemetry_queryFwlog {
 
 
 export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryFwlog {
+    /** Tenant */
     'tenant': string = null;
+    /** Source IP, */
     'source': string = null;
+    /** Destination IP */
     'destination': string = null;
+    /** Source Port */
     'source-port': number = null;
+    /** Destination Port */
     'destination-port': number = null;
+    /** Protocol, */
     'protocol': string = null;
+    /** Action */
     'action': Telemetry_queryFwlog_action = null;
+    /** Flow Direction */
     'direction': Telemetry_queryFwlog_direction = null;
+    /** Rule ID */
     'rule-id': string = null;
+    /** Session ID */
     'session-id': string = null;
+    /** Session state */
     'session-state': string = null;
+    /** policy name */
     'policy-name': string = null;
+    /** Reporter ID */
     'reporter-id': string = null;
+    /** Time the log was created */
     'time': Date = null;
     public static propInfo: { [prop in keyof ITelemetry_queryFwlog]: PropInfoItem } = {
         'tenant': {
+            description:  'Tenant',
             required: false,
             type: 'string'
         },
         'source': {
+            description:  'Source IP,',
             required: false,
             type: 'string'
         },
         'destination': {
+            description:  'Destination IP',
             required: false,
             type: 'string'
         },
         'source-port': {
+            description:  'Source Port',
             required: false,
             type: 'number'
         },
         'destination-port': {
+            description:  'Destination Port',
             required: false,
             type: 'number'
         },
         'protocol': {
+            description:  'Protocol,',
             required: false,
             type: 'string'
         },
         'action': {
             enum: Telemetry_queryFwlog_action_uihint,
             default: 'allow',
+            description:  'Action',
             required: true,
             type: 'string'
         },
         'direction': {
             enum: Telemetry_queryFwlog_direction_uihint,
             default: 'from-host',
+            description:  'Flow Direction',
             required: true,
             type: 'string'
         },
         'rule-id': {
+            description:  'Rule ID',
             required: false,
             type: 'string'
         },
         'session-id': {
+            description:  'Session ID',
             required: false,
             type: 'string'
         },
         'session-state': {
+            description:  'Session state',
             required: false,
             type: 'string'
         },
         'policy-name': {
+            description:  'Policy name',
             required: false,
             type: 'string'
         },
         'reporter-id': {
+            description:  'Reporter ID',
             required: false,
             type: 'string'
         },
         'time': {
+            description:  'Time the log was created',
             required: false,
             type: 'Date'
         },

@@ -17,24 +17,27 @@ export interface IMonitoringExportConfig {
 
 
 export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
-    /** length of string should be between 1 and 2048 */
+    /** IP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048 */
     'destination': string = null;
-    /** should be a valid layer3 or layer 4 protocol and port/type */
+    /** protocol and Port number where an external collector is gathering the data
+example "TCP/2055"should be a valid layer3 or layer 4 protocol and port/type */
     'transport': string = null;
+    /** Credentials provide secure access to the collector */
     'credentials': MonitoringExternalCred = null;
     public static propInfo: { [prop in keyof IMonitoringExportConfig]: PropInfoItem } = {
         'destination': {
-            description:  'length of string should be between 1 and 2048',
+            description:  'IP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048',
             required: true,
             type: 'string'
         },
         'transport': {
-            description:  'should be a valid layer3 or layer 4 protocol and port/type',
+            description:  'Protocol and Port number where an external collector is gathering the data example &quot;TCP/2055&quot;should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',
             required: false,
             type: 'string'
         },
         'credentials': {
+            description:  'Credentials provide secure access to the collector',
             required: false,
             type: 'object'
         },

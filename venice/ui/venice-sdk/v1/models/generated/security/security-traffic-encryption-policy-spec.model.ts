@@ -19,24 +19,32 @@ export interface ISecurityTrafficEncryptionPolicySpec {
 
 
 export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements ISecurityTrafficEncryptionPolicySpec {
+    /** Possible values: TLS, IPsec */
     'mode': string = null;
+    /** TLS Parameters for workload-to-workload connections */
     'tls': SecurityTLSProtocolSpec = null;
+    /** IPsec Parameters for node-to-node connections */
     'ipsec': SecurityIPsecProtocolSpec = null;
+    /** How often the keys should be rotated, in seconds */
     'key-rotation-interval-secs': number = null;
     public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicySpec]: PropInfoItem } = {
         'mode': {
+            description:  'Possible values: TLS, IPsec',
             required: false,
             type: 'string'
         },
         'tls': {
+            description:  'TLS Parameters for workload-to-workload connections',
             required: false,
             type: 'object'
         },
         'ipsec': {
+            description:  'IPsec Parameters for node-to-node connections',
             required: false,
             type: 'object'
         },
         'key-rotation-interval-secs': {
+            description:  'How often the keys should be rotated, in seconds',
             required: false,
             type: 'number'
         },

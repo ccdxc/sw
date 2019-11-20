@@ -23,45 +23,58 @@ export interface IClusterDistributedServiceCardSpec {
 
 
 export class ClusterDistributedServiceCardSpec extends BaseModel implements IClusterDistributedServiceCardSpec {
+    /** Admit allows a DistributedServiceCard to join the cluster */
     'admit': boolean = null;
+    /** ID is used as a user friendly identifier in logs/events */
     'id': string = null;
+    /** IPConfig defines the static IP configuration. If not specified, DHCP will be attempted */
     'ip-config': ClusterIPConfig = null;
+    /** MgmtMode defines the management mode of the DistributedServiceCard */
     'mgmt-mode': ClusterDistributedServiceCardSpec_mgmt_mode = null;
+    /** MgmtMode defines the management mode of the DistributedServiceCard */
     'network-mode': ClusterDistributedServiceCardSpec_network_mode = null;
-    /** value should be between 0 and 4095 */
+    /** MgmtVlan defines the vlan to be used in network managed mode. The default of 0
+means we use untagged-vlan for doing inband managementvalue should be between 0 and 4095 */
     'mgmt-vlan': number = null;
+    /** Controllers contains the list of remote controllers IP addresses or hostnames */
     'controllers': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardSpec]: PropInfoItem } = {
         'admit': {
+            description:  'Admit allows a DistributedServiceCard to join the cluster',
             required: false,
             type: 'boolean'
         },
         'id': {
+            description:  'ID is used as a user friendly identifier in logs/events',
             required: false,
             type: 'string'
         },
         'ip-config': {
+            description:  'IPConfig defines the static IP configuration. If not specified, DHCP will be attempted',
             required: false,
             type: 'object'
         },
         'mgmt-mode': {
             enum: ClusterDistributedServiceCardSpec_mgmt_mode_uihint,
             default: 'host',
+            description:  'MgmtMode defines the management mode of the DistributedServiceCard',
             required: true,
             type: 'string'
         },
         'network-mode': {
             enum: ClusterDistributedServiceCardSpec_network_mode_uihint,
             default: 'oob',
+            description:  'MgmtMode defines the management mode of the DistributedServiceCard',
             required: true,
             type: 'string'
         },
         'mgmt-vlan': {
-            description:  'value should be between 0 and 4095',
+            description:  'MgmtVlan defines the vlan to be used in network managed mode. The default of 0 means we use untagged-vlan for doing inband managementvalue should be between 0 and 4095',
             required: true,
             type: 'number'
         },
         'controllers': {
+            description:  'Controllers contains the list of remote controllers IP addresses or hostnames',
             required: false,
             type: 'Array<string>'
         },
