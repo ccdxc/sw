@@ -226,10 +226,6 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 				// parse port ranges
 				portRanges := strings.Split(pp.Ports, ",")
 				for _, prange := range portRanges {
-					// Test for a single port 0
-					if port0, err := strconv.Atoi(prange); err == nil && port0 == 0 {
-						return errors.New("port 0 must always be specified with a range")
-					}
 					ports := strings.Split(prange, "-")
 					for _, port := range ports {
 						i, err := strconv.Atoi(port)
@@ -376,6 +372,10 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 					}
 				}
 
+				if s.isProtocolTCPorUDP(pp.Protocol) && len(pp.Ports) == 0 {
+					ret = append(ret, errors.New("ports are mandatory for tcp or udp"))
+				}
+
 				if p == strings.ToLower(pp.Protocol) {
 					found = true
 					break
@@ -396,9 +396,6 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 
 			portRanges := strings.Split(pp.Ports, ",")
 			for _, prange := range portRanges {
-				if port0, err := strconv.Atoi(prange); err == nil && port0 == 0 {
-					ret = append(ret, errors.New("port 0 must always be specified with a range"))
-				}
 				ports := strings.Split(prange, "-")
 				for _, port := range ports {
 					i, err := strconv.Atoi(port)
