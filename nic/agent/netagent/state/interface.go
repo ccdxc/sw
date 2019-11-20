@@ -410,17 +410,38 @@ func (na *Nagent) LifUpdateHandler(lifResp *halproto.LifGetResponse) error {
 	lif, err := na.findInterfaceByID(lifResp.Spec.KeyOrHandle.GetLifId())
 
 	if err != nil {
-		log.Errorf("Failed to find the interface %v", lifResp)
-		return fmt.Errorf("failed to find the interface %v", lifResp)
+		log.Infof("Interface %d not found. Updating the state...", lifResp.Spec.KeyOrHandle.GetLifId())
+
+		l := &netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("lif%d", lifResp.Spec.KeyOrHandle.GetLifId()),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "LIF",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: lifResp.Spec.KeyOrHandle.GetLifId(),
+				IFHostStatus: netproto.InterfaceHostStatus{
+					HostIfName: lifResp.Spec.GetName(),
+				},
+				OperStatus: na.ConvertIfStatus(lifResp.Status.GetLifStatus()),
+			},
+		}
+		na.Lock()
+		key := na.Solver.ObjectKey(l.ObjectMeta, l.TypeMeta)
+		na.HwIfDB[key] = l
+		na.Unlock()
+		na.saveInterface(l)
+		return nil
 	}
+
 	lif.Status.IFHostStatus.HostIfName = lifResp.Spec.GetName()
-	status := lifResp.Status.GetLifStatus()
-	switch status {
-	case halproto.IfStatus_IF_STATUS_UP:
-		lif.Status.OperStatus = "UP"
-	case halproto.IfStatus_IF_STATUS_DOWN:
-		lif.Status.OperStatus = "DOWN"
-	}
+	lif.Status.OperStatus = na.ConvertIfStatus(lifResp.Status.GetLifStatus())
 
 	na.Lock()
 	key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
