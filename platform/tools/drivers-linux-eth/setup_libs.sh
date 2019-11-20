@@ -18,7 +18,6 @@
     make \
     pkgconfig \
     valgrind-devel \
-    iperf \
     iperf3 \
     vim \
     sshpass \

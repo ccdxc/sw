@@ -94,35 +94,35 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
- 
-# e2e-linux-bm-regression-eth-RHEL80:
-#   commands: ["sh", "-c", "make regression-eth"]
-#   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-#   owners: ["email:sw-team@pensando.io"]
-#   area:
-#   sub-area:
-#   feature:
-#   max-duration: 24h
-#   build-dependencies:
-#     - build-iris-arm
-#     - build-iota
-#   clusters:
-#     - image: build-13
-#       count: 2
-#       resources:
-#         # Freebsd works with only server-d
-#         server-type: server-a
-#         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-#         nic-type: naples
-#   provision:
-#       username: vm
-#       password: vm
-#       vars:
-#          BmOs: linux
-#          VmOs: linux
-#          EsxUsername: root
-#          EsxPassword: Pen0trl!
 
+
+ e2e-linux-bm-regression-eth-RHEL80:
+   commands: ["sh", "-c", "make regression-eth"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:sw-team@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-13
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
 
  e2e-linux-bm-regression-eth-Ubuntu1804:
    commands: ["sh", "-c", "make regression-eth"]
