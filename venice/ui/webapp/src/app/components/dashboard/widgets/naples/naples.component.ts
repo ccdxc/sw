@@ -452,15 +452,10 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     this.fourthStat.value = pending.toString();
     if (admittedNics && admittedNics.length !== 0) {
       const unhealthyCount = admittedNics.length - this.healthyNaplesCount - this.unknownNaplesCount;
-
       this.unhealthyPercent = (unhealthyCount / admittedNics.length) * 100;
-      this.unhealthyPercent = Math.round(this.unhealthyPercent * 100) / 100;
-
       this.unknownPercent = (this.unknownNaplesCount / admittedNics.length) * 100;
-      this.unknownPercent = Math.round(this.unknownPercent * 100) / 100;
-
       // Calculate healthy last so any rounding error will lower the health percent
-      this.healthyPercent = Math.round(100 - this.unhealthyPercent - this.unknownPercent);
+      this.healthyPercent = 100 - this.unhealthyPercent - this.unknownPercent;
     } else {
       this.healthyPercent = null;
       this.unhealthyPercent = null;
@@ -474,8 +469,21 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     if (this.healthyPercent == null) {
       return '';
     }
-    this.pieChartPercent = Math.round(this.healthyPercent) + '%';
+    this.pieChartPercent = this.roundHealthNumber() + '%';
     this.pieChartText = 'Healthy';
+  }
+
+  roundHealthNumber(): number {
+    const num: number = this.healthyPercent;
+    if (num >= 100) {
+      return 100;
+    }
+    const roundNum = Math.round(num * 100);
+    // never all 100% if there is a single unhelth card
+    if (num >= 10000) {
+      return 99.99;
+    }
+    return roundNum / 100;
   }
 
   ngOnDestroy() {
