@@ -27,8 +27,11 @@ fi
 
 rm -rf core.*
 export PATH=${PATH}:${BUILD_DIR}/bin
+rm -f $NICDIR/conf/pipeline.json
+ln -s $NICDIR/conf/apollo/pipeline.json $NICDIR/conf/pipeline.json
 #$GDB flow_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" $*
-flow_test -c hal.json -f apollo $* > run.log; grep "flow_gtest" run.log
+flow_test -c hal.json $* > run.log; grep "flow_gtest" run.log
+rm -f $NICDIR/conf/pipeline.json
 #$GDB flow_test -c hal.json -f apollo $*
 #perf record --call-graph fp flow_test -c hal.json $* > run.log; grep flow_gtest run.log
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale_test/scale_cfg.json

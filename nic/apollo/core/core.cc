@@ -66,7 +66,7 @@ parse_pipeline_config (string pipeline, pds_state *state)
     ptree     pt;
     string    cfg_file;
 
-    cfg_file = state->cfg_path() + pipeline + "/" + "pipeline.json";
+    cfg_file = state->cfg_path() + "/" + "pipeline.json";
 
     // make sure cfg file exists
     if (access(cfg_file.c_str(), R_OK) < 0) {

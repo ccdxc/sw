@@ -11,4 +11,7 @@ export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 export GRPC_TRACE=api
 
 echo "STARTING APOLLO: `date +%x_%H:%M:%S:%N`"
+rm -f $NIC_DIR/conf/pipeline.json
+ln -s $NIC_DIR/conf/apollo/pipeline.json $NIC_DIR/conf/pipeline.json
 $GDB $NIC_DIR/build/x86_64/apollo/bin/apollo_test
+rm -f $NIC_DIR/conf/pipeline.json

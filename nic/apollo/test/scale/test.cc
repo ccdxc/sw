@@ -25,7 +25,6 @@
 using std::string;
 
 extern char *g_input_cfg_file;
-extern std::string g_pipeline;
 pds_device_spec_t g_device = { 0 };
 test_params_t g_test_params;
 uint32_t tep_id = 0;

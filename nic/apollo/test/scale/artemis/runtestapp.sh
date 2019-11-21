@@ -4,11 +4,23 @@ NICDIR="$TOPDIR/nic"
 DOLDIR=`readlink -f $NICDIR/../dol/`
 
 echo $NICDIR
+
+cleanup() {
+    pkill agent
+    # remove pdsctl gen files
+    rm -f $NICDIR/out.sh
+    # remove pipeline.json
+    rm -f $NICDIR/conf/pipeline.json
+}
+trap cleanup EXIT
+
 $NICDIR/apollo/tools/artemis/start-agent-mock.sh > agent.log 2>&1 &
 sleep 10
-$NICDIR/build/x86_64/artemis/bin/testapp -i $NICDIR/apollo/test/scale/artemis/scale_cfg.json -f artemis 2>&1 | tee testapp.log
+$NICDIR/build/x86_64/artemis/bin/testapp -i $NICDIR/apollo/test/scale/artemis/scale_cfg.json 2>&1 | tee testapp.log
 linecount=`$NICDIR/build/x86_64/artemis/bin/pdsctl show vpc | grep "TENANT" | wc -l`
-echo $linecount
-[[ $linecount -eq 0 ]] && pkill agent && exit 1
-pkill agent
+if [[ $linecount -eq 0 ]]; then
+    echo "testapp failure"
+    exit 1
+fi
+echo "success"
 exit 0

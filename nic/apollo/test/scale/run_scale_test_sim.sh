@@ -15,7 +15,10 @@ export HAL_CONFIG_PATH=${NICDIR}/conf
 #export TCID="1"
 
 export PATH=${PATH}:${BUILD_DIR}/bin
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_sim.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json
+ln -s $NICDIR/conf/apollo/pipeline.json $NICDIR/conf/pipeline.json
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_sim.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json
 
 # Valgrind with XML output
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json

@@ -18,7 +18,10 @@ if [[ "$1" ==  --cfg ]]; then
 fi
 
 export PATH=${PATH}:${BUILD_DIR}/bin
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f apulu --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json
+ln -s $NICDIR/conf/apulu/pipeline.json $NICDIR/conf/pipeline.json
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json
 if [ $? -eq 0 ]
 then
     rm -f apulu_scale_test.log

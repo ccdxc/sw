@@ -21,5 +21,5 @@ sleep 90
 echo 'Continuing'
 $GDB apollo_vpc_test -c hal.json \
 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml"
-
+rm -f $NICDIR/conf/pipeline.json
 [[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1

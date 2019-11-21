@@ -618,6 +618,11 @@ def run_gft_test(args):
 def run_apollo_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ['build/x86_64/apollo/bin/apollo_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -626,10 +631,14 @@ def run_apollo_test(args):
 def run_artemis_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/artemis/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ["build/x86_64/artemis/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/artemis/scale_cfg_sim.json",
-           '-f', "artemis",
            "--gtest_output=", "xml:build/x86_64/artemis/gtest_results/artemis_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -639,10 +648,14 @@ def run_apollo_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.environ["SKIP_VERIFY"] = "1"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
-           '-f', "apollo",
            "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -653,10 +666,14 @@ def run_apollo_vxlan_scale_test(args):
     os.environ["SKIP_VERIFY"] = "1"
     os.environ["APOLLO_TEST_TEP_ENCAP"] = "vxlan"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
-           '-f', "apollo",
            "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -665,6 +682,11 @@ def run_apollo_vxlan_scale_test(args):
 def run_artemis_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/artemis/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ['build/x86_64/artemis/bin/artemis_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -673,6 +695,11 @@ def run_artemis_test(args):
 def run_apulu_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/apulu/pipeline.json", nic_dir + "/conf/pipeline.json")
     cmd = ['build/x86_64/apulu/bin/apulu_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -1511,6 +1538,11 @@ def main():
         os.chdir(halctl_dir)
         os.system(bin_dir+'/halctl show techsupport')
         os.chdir(nic_dir)
+
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
 
     if args.nocleanup:
         print "Skipping cleanup"

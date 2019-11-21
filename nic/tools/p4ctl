@@ -6,7 +6,7 @@ if ! [ -x "$(command -v locale)" ]; then
 fi
 repl=1
 pipeline=
-while getopts ":c:p:h" opt; do
+while getopts ":c:h" opt; do
   case ${opt} in
     c )
       cmd=$OPTARG
@@ -14,32 +14,21 @@ while getopts ":c:p:h" opt; do
       #echo $cmd
       #echo $repl
       ;;
-    p )
-      pipeline=$OPTARG
-      if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ]; then
-        echo -e "-p <pipeline can be iris or apollo or artemis> \n Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
-        exit
-      fi
-      ;;
     h )
-      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
+      echo "Usage: p4ctl -c \"debug ...\""
       exit
       ;;
     \? )
-      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
+      echo "Usage: p4ctl -c \"debug ...\""
       exit
       ;;
     : )
-      echo "Usage: p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
+      echo "Usage: p4ctl -c \"debug ...\""
       exit
       ;;
   esac
 done
 shift $((OPTIND -1))
-if [ -z "$pipeline" ]; then
-   echo -e " -p <pipeline is mandatory> \n Usage:  p4ctl -p <iris|apollo|artemis|apulu> -c \"debug ...\""
-   exit
-fi
 
 localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
@@ -47,6 +36,30 @@ export LANG="en_US.UTF-8"
 export LD_LIBRARY_PATH=/nic/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
 export ASIC_SLAVE_INIT=1
+
+if [ -e /nic/conf/pipeline.json ]; then
+    pipeline=$(python3 -c '
+import json,sys;
+fp=open("/nic/conf/pipeline.json");
+obj=json.load(fp);
+if "pipeline" in obj:
+    print(obj["pipeline"])
+else: 
+    print("NA")
+        ')
+    if [ $pipeline == "NA" ]; then
+        echo -e "Error: Pipeline not specified in /nic/conf/pipeline.json"
+        exit
+    fi
+else
+    pipeline="iris"
+fi
+
+if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ]; then
+    echo -e "Error: Invalid pipeline specified in /nic/conf/pipeline.json"
+    exit
+fi
+
 if [[ "$repl" -eq 0 ]]; then
         echo "python3 /nic/cli/debug_cli_$pipeline.py cmd"
         python3 /nic/cli/debug_cli_$pipeline.py $cmd

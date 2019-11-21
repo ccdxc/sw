@@ -17,4 +17,7 @@ if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
 
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json
+ln -s $NICDIR/conf/artemis/pipeline.json $NICDIR/conf/pipeline.json
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+rm -f $NICDIR/conf/pipeline.json

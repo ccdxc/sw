@@ -20,5 +20,5 @@ rm -f $LOG_DIR/pds-agent.log*
 ulimit -c unlimited
 
 export LD_LIBRARY_PATH=$LIBRARY_PATH
-exec $NIC_DIR/bin/pdsagent -c hal_hw.json -f apulu $*
+exec $NIC_DIR/bin/pdsagent -c hal_hw.json $*
 

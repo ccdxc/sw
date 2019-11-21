@@ -10,5 +10,8 @@ export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 export GRPC_TRACE=api
 
-echo "STARTING APOLLO: `date +%x_%H:%M:%S:%N`"
+echo "STARTING APULU: `date +%x_%H:%M:%S:%N`"
+rm -f $NIC_DIR/conf/pipeline.json
+ln -s $NIC_DIR/conf/apulu/pipeline.json $NIC_DIR/conf/pipeline.json
 $GDB $NIC_DIR/build/x86_64/apulu/bin/apulu_test
+rm -f $NIC_DIR/conf/pipeline.json

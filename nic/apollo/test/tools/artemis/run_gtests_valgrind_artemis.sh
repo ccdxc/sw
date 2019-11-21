@@ -21,11 +21,14 @@ then
     mkdir -p ${GEN_TEST_RESULTS_DIR}
 fi
 
-${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${LOG_FILE} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/artemis/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/artemis/scale_cfg_1vpc.json -f artemis --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+rm -f ${NICDIR}/conf/pipeline.json
+ln -s ${NICDIR}/conf/artemis/pipeline.json ${NICDIR}/conf/pipeline.json
+${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${LOG_FILE} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/artemis/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/artemis/scale_cfg_1vpc.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #$GDB ${NICDIR}/build/x86_64/artemis/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/artemis/scale_cfg_1vpc.json -f artemis
 
 python ${NICDIR}/apollo/test/tools/parse_valgrind_log.py ${LOG_FILE}
 function finish {
    ${NICDIR}/apollo/test/tools/savelogs.sh
+   rm -f ${NICDIR}/conf/pipeline.json
 }
 trap finish EXIT

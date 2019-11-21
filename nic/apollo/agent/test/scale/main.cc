@@ -44,7 +44,6 @@ namespace pt = boost::property_tree;
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
-std::string g_pipeline("");
 
 // print help message showing usage of this gtest
 static void inline print_usage(char **argv)
@@ -73,13 +72,12 @@ main (int argc, char **argv)
         {"config", required_argument, NULL, 'c'},
         {"daemon", required_argument, NULL, 'd'},
         {"server", required_argument, NULL, 's'},
-        {"feature", required_argument, NULL, 'f'},
         {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:f:s:W;",
+    while ((oc = getopt_long(argc, argv, ":hdc:i:s:W;",
                              longopts, NULL)) != -1) {
         switch (oc) {
         case 'd':
@@ -103,16 +101,6 @@ main (int argc, char **argv)
                 exit(1);
             }
             g_svc_endpoint_ = g_svc_endpoint_ + ":9999";
-            break;
-
-        case 'f':
-            g_pipeline = std::string(optarg);
-            if ((g_pipeline != "apollo") && (g_pipeline != "artemis") &&
-                (g_pipeline != "apulu")) {
-                fprintf(stderr, "Pipeline specified is invalid\n");
-                print_usage(argv);
-                exit(1);
-            }
             break;
 
         default:

@@ -11,4 +11,7 @@ export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 export GRPC_TRACE=api
 
 echo "STARTING APOLLO: `date +%x_%H:%M:%S:%N`"
+rm -f ${NICDIR}/conf/pipeline.json
+ln -s ${NICDIR}/conf/artemis/pipeline.json
 $GDB $NIC_DIR/build/x86_64/artemis/bin/artemis_test
+rm -f ${NICDIR}/conf/pipeline.json

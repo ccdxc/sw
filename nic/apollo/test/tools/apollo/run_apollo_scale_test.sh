@@ -20,13 +20,16 @@ fi
 function finish {
    echo "===== Collecting logs ====="
    ${NICDIR}/apollo/test/tools/savelogs.sh
+   rm -f ${NICDIR}/conf/pipeline.json
 }
 trap finish EXIT
 
 export PATH=${PATH}:${BUILD_DIR}/bin
 
+rm -f ${NICDIR}/conf/pipeline.json
+ln -s ${NICDIR}/conf/apollo/pipeline.json ${NICDIR}/conf/pipeline.json
 # gtests
 #$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/lite_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_lite_test.xml"
 
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json -f apollo --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json

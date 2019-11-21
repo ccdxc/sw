@@ -17,6 +17,7 @@ export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 function finish {
    echo "===== Collecting logs ====="
    ${NICDIR}/apollo/test/tools/savelogs.sh
+   rm -f ${NICDIR}/conf/pipeline.json
 }
 trap finish EXIT
 
@@ -28,6 +29,9 @@ if [[ "$1" ==  --coveragerun ]]; then
     ${SDKDIR}/tools/run_sdk_gtests.sh
     [[ $? -ne 0 ]] && echo "sdk gtest failed" && exit 1
 fi
+
+rm -f ${NICDIR}/conf/pipeline.json
+ln -s ${NICDIR}/conf/apollo/pipeline.json ${NICDIR}/conf/pipeline.json
 
 # gtests
 echo "Running scale test"

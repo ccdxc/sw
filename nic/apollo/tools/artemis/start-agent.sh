@@ -7,4 +7,4 @@ ulimit -c unlimited
 
 export PERSISTENT_LOG_DIR=/obfl/
 export LD_LIBRARY_PATH=$LIBRARY_PATH
-exec $NIC_DIR/bin/pdsagent -c hal_hw.json -f artemis $*
+exec $NIC_DIR/bin/pdsagent -c hal_hw.json $*

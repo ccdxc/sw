@@ -29,6 +29,9 @@
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 using std::string;
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -112,6 +115,7 @@ main (int argc, char **argv)
 {
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
+    boost::property_tree::ptree pt;
     sdk_ret_t    ret;
 
     struct option longopts[] = {
@@ -145,21 +149,6 @@ main (int argc, char **argv)
             }
             break;
 
-        case 'f':
-            if (optarg) {
-                pipeline = std::string(optarg);
-                if ((pipeline.compare("apollo") != 0) &&
-                    (pipeline.compare("artemis") != 0) &&
-                    (pipeline.compare("apulu") != 0)) {
-                    fprintf(stderr, "Unknown feature %s\n", pipeline.c_str());
-                    exit(1);
-                }
-            } else {
-                fprintf(stderr, "feature is not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
 
         case 'h':
             print_usage(argv);
@@ -189,6 +178,29 @@ main (int argc, char **argv)
         cfg_path = std::string("./");
     } else {
         cfg_path += "/";
+    }
+
+    // read pipeline.json file to figure out pipeline
+    file = cfg_path + "/pipeline.json";
+    if (access(file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "pipeline.json doesn't exist or not accessible\n");
+        exit(1);
+    }
+
+    // parse pipeline.json to determine pipeline
+    try {
+        std::ifstream json_cfg(file.c_str());
+        read_json(json_cfg, pt);
+        pipeline = pt.get<std::string>("pipeline");
+    } catch (...) {
+        fprintf(stderr, "pipeline.json doesn't have pipeline field\n");
+        exit(1);
+    }
+    if ((pipeline.compare("apollo") != 0) &&
+        (pipeline.compare("artemis") != 0) &&
+        (pipeline.compare("apulu") != 0)) {
+        fprintf(stderr, "Unknown pipeline %s\n", pipeline.c_str());
+        exit(1);
     }
 
     // make sure the cfg file exists

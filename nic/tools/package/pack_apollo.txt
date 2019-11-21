@@ -1,5 +1,5 @@
 nic/conf/init_bins                                                /nic/conf/init_bins/
-nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
 nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
 nic/conf/$PIPELINE/8g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/8g/

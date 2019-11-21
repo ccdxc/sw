@@ -14,5 +14,7 @@ export ZMQ_SOC_DIR=${NIC_DIR}
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 BUILD_DIR=$NIC_DIR/build/x86_64/artemis
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
-$GDB $BUILD_DIR/bin/pdsagent -c hal.json -f artemis $* 2>&1
+rm -f $NIC_DIR/conf/pipeline.json
+ln -s $NIC_DIR/conf/artemis/pipeline.json $NIC_DIR/conf/pipeline.json
+$GDB $BUILD_DIR/bin/pdsagent -c hal.json $* 2>&1
 #valgrind --leak-check=full --show-leak-kinds=all --gen-suppressions=all --error-limit=no --verbose --log-file=valgrind-out.txt --track-origins=yes $BUILD_DIR/bin/pdsagent -c hal.json -f artemis $* 2>&1
