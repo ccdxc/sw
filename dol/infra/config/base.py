@@ -27,7 +27,12 @@ def ToJsonCovereter(obj):
         else:
             dict[key] = ToJsonCovereter(value)
     return dict
-    
+
+class StatusObjectBase(objects.FrameworkObject):
+    def __init__(self):
+        super().__init__()
+        return
+
 class ConfigObjectBase(objects.FrameworkObject):
     def __init__(self):
         super().__init__()
@@ -36,7 +41,7 @@ class ConfigObjectBase(objects.FrameworkObject):
     def __str__(self):
         return str(self.ID())
 
-    
+
     def ToJson(self):
         return ToJsonCovereter(self)
         #Ignoring private attributes and complex objects for now.

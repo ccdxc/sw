@@ -7,6 +7,16 @@ import apollo.config.utils as utils
 
 import types_pb2 as types_pb2
 
+class StatusObjectBase(base.StatusObjectBase):
+    def __init__(self, objtype):
+        super().__init__()
+        self.ObjType = objtype
+        self.HwId = None
+        return
+
+    def GetHwId(self):
+        return self.HwId
+
 class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()

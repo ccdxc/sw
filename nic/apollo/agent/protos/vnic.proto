@@ -81,6 +81,7 @@ message VnicSpec {
 
 // operational status of Vnic, if any
 message VnicStatus {
+    uint32 HwId = 1; // vnic hw id
 }
 
 // stats of Vnic, if any

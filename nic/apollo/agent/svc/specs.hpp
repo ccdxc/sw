@@ -1053,6 +1053,7 @@ static inline void
 pds_vnic_api_status_to_proto (pds::VnicStatus *proto_status,
                               const pds_vnic_status_t *api_status)
 {
+    proto_status->set_hwid(api_status->hw_id);
 }
 
 // populate proto buf stats from vnic API stats

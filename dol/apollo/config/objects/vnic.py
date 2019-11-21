@@ -18,6 +18,15 @@ import apollo.config.utils as utils
 import vnic_pb2 as vnic_pb2
 import types_pb2 as types_pb2
 
+class VnicStatusObject(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.VNIC)
+        return
+
+    def Update(self, status):
+        self.HwId = status.HwId
+        return
+
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__()
@@ -43,6 +52,7 @@ class VnicObject(base.ConfigObjectBase):
         self.IngV6SecurityPolicyIds = []
         self.EgV4SecurityPolicyIds = []
         self.EgV6SecurityPolicyIds = []
+        self.Status = VnicStatusObject()
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
         # get num of policies [0-5] in rrob order if needed
@@ -147,6 +157,9 @@ class VnicObject(base.ConfigObjectBase):
             return False
         # TODO: validate policyid, policer
         return True
+
+    def GetStatus(self):
+        return self.Status
 
     def Generate_vnic_security_policies(self):
         if self.__numpolicy == 0:
@@ -267,6 +280,8 @@ class VnicObjectClient:
                     logger.error("VNIC validation failed for ", obj)
                     vnic.Show()
                     return False
+                # update hw id for this vnic object
+                vnic.Status.Update(resp.Status)
         return True
 
 client = VnicObjectClient()
