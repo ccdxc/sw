@@ -973,6 +973,10 @@ void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			   "sq_flush", "SQ Flush");
 		ionic_bool(ctx, parent, &qp->sq_flush_rcvd,
 			   "sq_flush_rcvd", "SQ Flush CQE Received");
+		ionic_int(ctx, parent, &qp->sq_spec,
+			  "sq_spec", "SQ Spec Configuration");
+		ionic_u32(ctx, parent, &qp->sq_cqid,
+			  "sq_cqid", "SQ CQ ID");
 	}
 
 	if (qp->has_rq) {
@@ -992,6 +996,10 @@ void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		ionic_bool(ctx, parent, &qp->rq_flush,
 			   "rq_flush", "RQ Flush");
+		ionic_int(ctx, parent, &qp->rq_spec,
+			  "rq_spec", "RQ Spec Configuration");
+		ionic_u32(ctx, parent, &qp->rq_cqid,
+			  "rq_cqid", "RQ CQ ID");
 	}
 
 	ionic_int(ctx, parent, &qp->dcqcn_profile,

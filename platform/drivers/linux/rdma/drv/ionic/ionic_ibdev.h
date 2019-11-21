@@ -293,6 +293,8 @@ struct ionic_qp {
 
 	u32			qpid;
 	u32			ahid;
+	u32			sq_cqid;
+	u32			rq_cqid;
 
 	bool			has_ah;
 	bool			has_sq;

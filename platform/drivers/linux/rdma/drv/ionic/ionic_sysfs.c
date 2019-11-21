@@ -1024,6 +1024,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 
 		seq_printf(s, "sq_flush:\t%d\n", qp->sq_flush);
 		seq_printf(s, "sq_flush_rcvd:\t%d\n", qp->sq_flush_rcvd);
+		seq_printf(s, "sq_spec:\t%d\n", qp->sq_spec);
+		seq_printf(s, "sq_cqid:\t%u\n", qp->sq_cqid);
 	}
 
 	if (qp->has_rq) {
@@ -1044,6 +1046,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		}
 
 		seq_printf(s, "rq_flush:\t%d\n", qp->rq_flush);
+		seq_printf(s, "rq_spec:\t%d\n", qp->rq_spec);
+		seq_printf(s, "rq_cqid:\t%u\n", qp->rq_cqid);
 	}
 
 	seq_printf(s, "dcqcn_profile:\t%d\n", qp->dcqcn_profile);

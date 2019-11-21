@@ -4567,6 +4567,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 						  qp->sq_spec);
 		attr->cap.max_inline_data =
 			ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
+		qp->sq_cqid = cq->cqid;
 	}
 
 	if (qp->has_rq) {
@@ -4578,6 +4579,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 		attr->cap.max_recv_sge =
 			ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
 						  qp->rq_spec);
+		qp->rq_cqid = cq->cqid;
 	}
 
 	spin_lock_irqsave(&dev->dev_lock, irqflags);
