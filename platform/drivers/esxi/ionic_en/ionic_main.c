@@ -37,14 +37,13 @@ VMK_MODPARAM(log_level,
              uint,
              "Log level, 0 - No Log, 1 - Error, 2 - Warning,"\
              " 3 - Info, 4 - Debug. Default level: 3(Info)");
-/*
+
 VMK_MODPARAM(vlan_tx_insert,
              uint,
              "0 - Disable, 1 - Enable. Default(Disabled)");
 VMK_MODPARAM(vlan_rx_strip,
              uint,
              "0 - Disable, 1 - Enable. Default(Disabled)");
-*/
 
 
 static VMK_ReturnStatus
