@@ -58,9 +58,9 @@ echo "Running tep test"
 $GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml" > apollo_tep_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_tep_test failed!" && exit 1
 
-echo "Running mapping test"
-$GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml" > /dev/null
-[[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
+#echo "Running mapping test"
+#$GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml" > /dev/null
+#[[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
 
 echo "Running mirror session test"
 $GDB apollo_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mirror_session_test.xml" > apollo_mirror_session_test.log.txt

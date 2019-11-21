@@ -33,7 +33,7 @@ subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
     spec.ing_v6_policy.id = 6;
     spec.egr_v4_policy.id = 11;
     spec.egr_v6_policy.id = 16;
-    spec.fabric_encap.val.vnid = key.id + 512; 
+    spec.fabric_encap.val.vnid = key.id + 512;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
 
     num_obj = num_subnet;
@@ -50,8 +50,8 @@ subnet_feeder::iter_next(int width) {
     spec.v4_prefix.v4_addr += (1 << spec.v4_prefix.len);
     spec.v4_route_table.id += width;
     spec.v6_route_table.id += width;
-    spec.fabric_encap.val.vnid += width; 
-    
+    spec.fabric_encap.val.vnid += width;
+
     cur_iter_pos++;
 }
 
@@ -63,7 +63,7 @@ subnet_feeder::key_build(pds_subnet_key_t *key) const {
 
 void
 subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
-    memcpy(spec, &this->spec, sizeof(pds_subnet_spec_t)); 
+    memcpy(spec, &this->spec, sizeof(pds_subnet_spec_t));
 }
 
 bool
@@ -133,4 +133,16 @@ void sample_subnet_teardown(pds_batch_ctxt_t bctxt) {
     del(bctxt, k_subnet_feeder);
 }
 
+void sample1_subnet_setup(pds_batch_ctxt_t bctxt) {
+    // setup and teardown parameters should be in sync
+    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.0.0.0/8",
+                         "00:02:01:00:00:01");
+    create(bctxt, k_subnet_feeder);
+}
+
+void sample1_subnet_teardown(pds_batch_ctxt_t bctxt) {
+    k_subnet_feeder.init(k_subnet_key, k_vpc_key, "10.0.0.0/8",
+                         "00:02:01:00:00:01");
+    del(bctxt, k_subnet_feeder);
+}
 }    // namespace api_test

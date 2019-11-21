@@ -60,6 +60,8 @@ extern pds_subnet_key_t k_subnet_key;
 // Misc function prototypes
 void sample_subnet_setup(pds_batch_ctxt_t bctxt);
 void sample_subnet_teardown(pds_batch_ctxt_t bctxt);
+void sample1_subnet_setup(pds_batch_ctxt_t bctxt);
+void sample1_subnet_teardown(pds_batch_ctxt_t bctxt);
 
 }    // namespace api_test
 

@@ -75,7 +75,7 @@ void
 vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
                   pds_encap_type_t vnic_encap_type,
                   pds_encap_type_t fabric_encap_type,
-                  bool src_dst_check) {
+                  bool src_dst_check, bool configure_policy) {
     this->id = id;
     this->vpc_id = 1;
     this->subnet_id = 1;
@@ -85,6 +85,7 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
     this->src_dst_check = src_dst_check;
     this->tx_mirror_session_bmap = 0;
     this->rx_mirror_session_bmap = 0;
+    this->configure_policy = configure_policy;
     num_obj = num_vnic;
 }
 
@@ -146,18 +147,20 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
         lif_id = HOST_LIF_ID_MIN;
     }
 
-    increment_num(&num_policy);
-    spec->num_ing_v4_policy = num_policy;
-    fill_policy_ids(spec->ing_v4_policy, 1, num_policy);
-    increment_num(&num_policy);
-    spec->num_ing_v6_policy = num_policy;
-    fill_policy_ids(spec->ing_v6_policy, 6, num_policy);
-    increment_num(&num_policy);
-    spec->num_egr_v4_policy = num_policy;
-    fill_policy_ids(spec->egr_v4_policy, 11, num_policy);
-    increment_num(&num_policy);
-    spec->num_egr_v6_policy = num_policy;
-    fill_policy_ids(spec->egr_v6_policy, 16, num_policy);
+    if (this->configure_policy) {
+        increment_num(&num_policy);
+        spec->num_ing_v4_policy = num_policy;
+        fill_policy_ids(spec->ing_v4_policy, 1, num_policy);
+        increment_num(&num_policy);
+        spec->num_ing_v6_policy = num_policy;
+        fill_policy_ids(spec->ing_v6_policy, 6, num_policy);
+        increment_num(&num_policy);
+        spec->num_egr_v4_policy = num_policy;
+        fill_policy_ids(spec->egr_v4_policy, 11, num_policy);
+        increment_num(&num_policy);
+        spec->num_egr_v6_policy = num_policy;
+        fill_policy_ids(spec->egr_v6_policy, 16, num_policy);
+    }
 }
 
 bool

@@ -2,133 +2,111 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-
 #ifndef __TEST_UTILS_REMOTE_MAPPING_HPP__
 #define __TEST_UTILS_REMOTE_MAPPING_HPP__
 
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
+#include "nic/apollo/test/utils/vnic.hpp"
 
-#define PDS_MAX_VNIC_IP 33
-
+#define PDS_MAX_TEP 1023
+#define PDS_MAX_TEP_VNIC 1024
 namespace api_test {
 
-#define REMOTE_MAPPING_CREATE(obj)                                              \
-    ASSERT_TRUE(obj.create() == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_DELETE(obj)                                              \
-    ASSERT_TRUE(obj.del() == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_MANY_CREATE(seed)                                        \
-    ASSERT_TRUE(remote_mapping_util::many_create(seed) == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_MANY_READ(seed, expected_res)                            \
-    ASSERT_TRUE(remote_mapping_util::many_read(                                 \
-        seed, expected_res) == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_MANY_UPDATE(seed)                                        \
-    ASSERT_TRUE(remote_mapping_util::many_update(seed) == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_MANY_DELETE(seed)                                        \
-    ASSERT_TRUE(remote_mapping_util::many_delete(seed) == sdk::SDK_RET_OK)
-
-#define REMOTE_MAPPING_SEED_INIT remote_mapping_util::remote_mapping_stepper_seed_init
-
-typedef struct remote_mapping_stepper_seed_s {
-    uint32_t vpc_id;
-    uint32_t subnet_id;
-    std::string vnic_ip_stepper;
-    uint64_t vnic_mac_stepper;
-    uint32_t tep_id_stepper;
-    std::string tep_ip_stepper;
-    pds_encap_type_t encap_type;
-    uint32_t encap_val_stepper;
-
-    // Used to create total remote mappings
-    // part of workflows creation
-    uint32_t num_vnics;
-    uint32_t num_teps;
-
-} remote_mapping_stepper_seed_t;
-
-class remote_mapping_util {
+// Local mapping feeder class
+class remote_mapping_feeder : public feeder {
 public:
-    uint32_t vpc_id;
-    uint32_t sub_id;
-    std::string vnic_ip;
-    uint32_t tep_id;
-    std::string tep_ip;
-    std::string vnic_mac;
-    pds_encap_type_t encap_type;
-    union {
-        pds_mpls_tag_t mpls_tag;
-        pds_vnid_id_t vxlan_id;
-    };
+    // spec fields
+    pds_mapping_type_t map_type;
+    pds_vpc_key_t vpc;
+    pds_subnet_key_t subnet;
+    pds_encap_t fabric_encap;
+    uint64_t vnic_mac_u64;
+    ip_prefix_t vnic_ip_pfx;
+    pds_nh_type_t nh_type;
+    uint32_t nh_id;         //tep id or nexthop grpup id
 
-    remote_mapping_util();
+    // feeder cfg and state
+    uint32_t num_teps;
+    uint32_t num_vnic_per_tep;
+    uint32_t curr_tep_vnic_cnt;
 
-    remote_mapping_util(uint32_t vpc_id, uint32_t sub_id,
-                        std::string vnic_ip, uint32_t tep_id, std::string tep_ip,
-                        uint64_t vnic_mac,
-                        pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
-                        uint32_t encap_val = 1);
+    // constructor
+    remote_mapping_feeder() { };
 
-    ~remote_mapping_util();
+    remote_mapping_feeder(const remote_mapping_feeder& feeder) {
+        this->map_type = feeder.map_type;
+        this->vpc = feeder.vpc;
+        this->subnet = feeder.subnet;
+        this->fabric_encap = feeder.fabric_encap;
+        this->nh_type = feeder.nh_type;
+        this->nh_id = nh_id;
+        this->vnic_mac_u64 = feeder.vnic_mac_u64;
+        this->vnic_ip_pfx = feeder.vnic_ip_pfx;
+        this->nh_type = feeder.nh_type;
+        this->nh_id = feeder.nh_id;
 
-    /// \brief Create remote IP mapping
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+        this->num_teps = feeder.num_teps;
+        this->num_vnic_per_tep = feeder.num_vnic_per_tep;
+        this->curr_tep_vnic_cnt = feeder.curr_tep_vnic_cnt;
 
-    /// \brief Read remote IP mapping
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_remote_mapping_info_t *info) const;
+        this->num_obj = feeder.num_obj;
+    }
 
-    /// \brief Update remote IP mapping
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
+    // initialize feeder with base set of values
+    void init(pds_vpc_id_t vpc_id = 1,
+              pds_subnet_id_t subnet_id = 1,
+              std::string vnic_ip_str= "0.0.0.0/0",
+              uint64_t vnic_mac = 0x00030b020a02,
+              pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
+              uint32_t encap_val = 1,
+              pds_nh_type_t nh_type = PDS_NH_TYPE_OVERLAY,
+              uint32_t nh_id = 1,
+              uint32_t num_teps = PDS_MAX_TEP,
+              uint32_t num_vnic_per_tep = PDS_MAX_TEP_VNIC,
+              pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3);
 
-    /// \brief Delete remote ip mapping
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
+    // iterate helper
+    void iter_next(int width = 1);
 
-    /// \brief Create many remote IP mapping for the given <vpc, subnet>
-    /// max num_mappings = num_vnics * num_teps
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(remote_mapping_stepper_seed_t *seed);
+    // build routines
+    void key_build(pds_mapping_key_t *key) const;
+    void spec_build(pds_remote_mapping_spec_t *spec) const;
 
-    /// \brief Update many remote IP mapping for the given <vpc, subnet>
-    /// max num_mappings = num_vnics * num_teps
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(remote_mapping_stepper_seed_t *seed);
+    // compare routines
+    bool key_compare(const pds_mapping_key_t *key) const;
+    bool spec_compare(const pds_remote_mapping_spec_t *spec) const;
 
-    /// \brief Delete many remote IP mapping for the given VNIC
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(remote_mapping_stepper_seed_t *seed);
-
-    /// \brief Read many remote IP mapping for the given <vpc, subnet>
-    /// max num_mappings = num_vnics * num_teps
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t
-    many_read(remote_mapping_stepper_seed_t *seed,
-              sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK);
-
-    /// \brief Initialize the seed for remote mappings
-    /// \param[out] seed remote mapping seed
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t remote_mapping_stepper_seed_init(remote_mapping_stepper_seed_t *seed,
-                                       uint32_t vpc_id, uint32_t subnet_id,
-                                       std::string base_vnic_ip, pds_encap_type_t encap_type,
-                                       uint32_t base_encap_val, uint64_t base_mac_64,
-                                       uint32_t base_tep_id, std::string tep_ip_cidr);
-
-    /// \brief Indicates whether mapping is stateful
-    /// \returns TRUE for mapping which is stateful
-    static bool is_stateful(void) { return false; }
-
-private:
-    void __init();
+    // create update feeder by changing a spec field
+    void update_spec(uint32_t width);
 };
 
-}    // namespace api_test
+// dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const remote_mapping_feeder& obj) {
+    os << "remote mapping feeder =>"
+        << " vpc_id: " << obj.vpc.id
+        << " subnet_id: " << obj.subnet.id
+        << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
+        << " vnic_mac: " << mac2str(obj.vnic_mac_u64)
+        << " fabric encap: " << pds_encap2str(&obj.fabric_encap)
+        << " next hop type" << obj.nh_type
+        << " next hop/tep id" << obj.nh_id;
+    return os;
+}
 
-#endif    // __TEST_UTILS_REMOTE_MAPPING_HPP__
+// CRUD prototypes
+// mapping exposes two internal APIs for local/remote but both
+// take the same key.
+using pds_remote_mapping_key_t = pds_mapping_key_t;
+
+API_CREATE(remote_mapping);
+API_READ(remote_mapping);
+API_UPDATE(remote_mapping);
+API_DELETE(remote_mapping);
+
+} // namespace api_test
+
+#endif // __TEST_UTILS_REMOTE_MAPPING_HPP__
+

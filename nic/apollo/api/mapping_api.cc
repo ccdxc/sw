@@ -66,9 +66,8 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
                                 pds_local_mapping_spec_t *local_spec)
 {
     memset(spec, 0, sizeof(pds_mapping_spec_t));
-    spec->key.vpc.id = local_spec->key.vpc.id;
-    spec->key.ip_addr = local_spec->key.ip_addr;
-    spec->subnet.id = local_spec->subnet.id;
+    spec->key = local_spec->key;
+    spec->subnet = local_spec->subnet;
     spec->fabric_encap = local_spec->fabric_encap;
     memcpy(&spec->overlay_mac, &local_spec->vnic_mac, sizeof(mac_addr_t));
     // local mapping always point to local VTEP (i.e., MyTEP) IP
@@ -107,9 +106,8 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
                                 pds_mapping_spec_t *spec)
 {
     memset(local_spec, 0, sizeof(pds_local_mapping_spec_t));
-    local_spec->key.vpc.id = spec->key.vpc.id;
-    local_spec->key.ip_addr = spec->key.ip_addr;
-    local_spec->subnet.id = spec->subnet.id;
+    local_spec->key = spec->key;
+    local_spec->subnet = spec->subnet;
     local_spec->fabric_encap = spec->fabric_encap;
     memcpy(&local_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
     local_spec->vnic.id = spec->vnic.id;

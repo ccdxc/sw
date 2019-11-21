@@ -169,6 +169,24 @@ pdsencap_isequal (const pds_encap_t *encap1, const pds_encap_t *encap2)
     return TRUE;
 }
 
+static inline void
+increment_encap (pds_encap_t *encap, int width)
+{
+    switch(encap->type) {
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        encap->val.mpls_tag += width;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        encap->val.vnid += width;
+        break;
+    case PDS_ENCAP_TYPE_DOT1Q:
+        encap->val.vlan_tag += width;
+        break;
+    default:
+        encap->val.value += width;
+    }
+}
+
 /// \brief Packet send function
 ///
 /// \param tx_pkt          Packet to be trasnmited

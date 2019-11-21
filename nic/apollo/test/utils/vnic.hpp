@@ -29,12 +29,14 @@ public:
     bool src_dst_check;
     uint8_t tx_mirror_session_bmap;
     uint8_t rx_mirror_session_bmap;
+    bool configure_policy;
 
     // Constructor
     vnic_feeder() { };
     vnic_feeder(const vnic_feeder& feeder) {
         init(feeder.id, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
-             feeder.fabric_encap.type, feeder.src_dst_check);
+             feeder.fabric_encap.type, feeder.src_dst_check,
+             feeder.configure_policy);
     }
 
     // Initialize feeder with the base set of values
@@ -42,7 +44,7 @@ public:
               uint64_t mac = k_feeder_mac,
               pds_encap_type_t vnic_encap_type = PDS_ENCAP_TYPE_DOT1Q,
               pds_encap_type_t fabric_encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
-              bool src_dst_check = true);
+              bool src_dst_check = true, bool configure_policy = true);
 
     // Iterate helper routines
     void iter_next(int width = 1);
