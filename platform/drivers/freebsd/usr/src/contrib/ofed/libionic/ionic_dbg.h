@@ -72,4 +72,4 @@ static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
 			   ptr8[i + 4], ptr8[i + 5], ptr8[i + 6], ptr8[i + 7]);
 }
 
-#endif
+#endif /* IONIC_DBG_H */

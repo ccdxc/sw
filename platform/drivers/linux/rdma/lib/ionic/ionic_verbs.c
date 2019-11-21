@@ -373,6 +373,10 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->pkey_index = 0;
 
 out:
+	ionic_dbg(ctx, "poll cq %u qp %u cons %u st %u wrid %#lx op %u len %u",
+		  cq->cqid, qp->qpid, qp->rq.cons,
+		  wc->status, meta->wrid, wc->opcode, st_len);
+
 	ionic_queue_consume(&qp->rq);
 
 	return 1;
@@ -425,6 +429,11 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 		/* waiting for remote completion? */
 		if (meta->remote && meta->seq == qp->sq_msn_cons)
 			goto out_empty;
+
+		ionic_dbg(ctx,
+			  "poll cq %u qp %u cons %u st %u wr %#lx op %u l %u",
+			  cq->cqid, qp->qpid, qp->sq.cons,
+			  meta->ibsts, meta->wrid, meta->ibop, meta->len);
 
 		ionic_queue_consume(&qp->sq);
 
@@ -593,7 +602,6 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 
 	udma_from_device_barrier();
 
-	ionic_dbg(ctx, "poll cq %u prod %u", cq->cqid, cq->q.prod);
 	ionic_dbg_xdump(ctx, "cqe", qcqe, 1u << cq->q.stride_log2);
 
 	*cqe = qcqe;
@@ -630,8 +638,9 @@ static void ionic_reserve_sync_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
 		cq->reserve += ionic_queue_length(&cq->q);
 		cq->q.cons = cq->q.prod;
 
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->cq_qtype, ionic_queue_dbell_val(&cq->q));
+		ionic_dbg(ctx, "dbell cq %u val %#lx rsv %d",
+			  cq->cqid, ionic_queue_dbell_val(&cq->q),
+			  cq->reserve);
 		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
 
@@ -639,13 +648,37 @@ static void ionic_reserve_sync_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
 	}
 }
 
+static void ionic_arm_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
+{
+	uint64_t dbell_val = cq->q.dbell;
+
+	if (cq->deferred_arm_sol_only) {
+		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
+		dbell_val |= cq->arm_sol_prod | IONIC_DBELL_RING_SONLY;
+		ionic_stat_incr(ctx->stats, arm_cq_sol);
+	} else {
+		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
+		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
+		ionic_stat_incr(ctx->stats, arm_cq_any);
+	}
+
+	ionic_dbg(ctx, "dbell cq %u val %#lx (%s)", cq->cqid, dbell_val,
+		  cq->deferred_arm_sol_only ? "sonly" : "arm");
+	ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype], dbell_val);
+}
+
 static void ionic_reserve_cq(struct ionic_ctx *ctx, struct ionic_cq *cq,
 			     int spend)
 {
 	cq->reserve -= spend;
 
-	if (cq->reserve <= 0)
+	if (cq->reserve <= 0 || cq->deferred_arm)
 		ionic_reserve_sync_cq(ctx, cq);
+
+	if (cq->deferred_arm) {
+		ionic_arm_cq(ctx, cq);
+		cq->deferred_arm = false;
+	}
 }
 
 static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
@@ -829,9 +862,7 @@ cq_next:
 	}
 
 out:
-	/* in case reserve was depleted (more work posted than cq depth) */
-	if (cq->reserve <= 0)
-		ionic_reserve_sync_cq(ctx, cq);
+	ionic_reserve_cq(ctx, cq, 0);
 
 	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
 	ionic_stat_add(ctx->stats, poll_cq_cqe, old_prod);
@@ -854,24 +885,15 @@ out:
 
 static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
-	uint64_t dbell_val = cq->q.dbell;
+	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 
-	if (solicited_only) {
-		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
-		dbell_val |= cq->arm_sol_prod | IONIC_DBELL_RING_SONLY;
-		ionic_stat_incr(ctx->stats, arm_cq_sol);
-	} else {
-		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
-		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
-		ionic_stat_incr(ctx->stats, arm_cq_any);
-	}
+	ionic_spin_lock(ctx, &cq->lock);
 
-	ionic_reserve_sync_cq(ctx, cq);
+	cq->deferred_arm = true;
+	cq->deferred_arm_sol_only = (bool)solicited_only;
 
-	ionic_dbg(ctx, "dbell qtype %d val %#lx", ctx->cq_qtype, dbell_val);
-	ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype], dbell_val);
+	ionic_spin_unlock(ctx, &cq->lock);
 
 	return 0;
 }
@@ -1802,8 +1824,8 @@ static void ionic_post_send_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = ionic_queue_next(&qp->sq, pos);
 
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->sq_qtype, qp->sq.dbell | pos);
+		ionic_dbg(ctx, "dbell qp %u sq val %#lx",
+			  qp->qpid, qp->sq.dbell | pos);
 		ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
 				 qp->sq.dbell | pos);
 	}
@@ -1838,8 +1860,8 @@ static void ionic_post_recv_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = 0;
 
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->rq_qtype, qp->rq.dbell | pos);
+		ionic_dbg(ctx, "dbell qp %u rq val %#lx",
+			  qp->qpid, qp->rq.dbell | pos);
 		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 				 qp->rq.dbell | pos);
 	}
@@ -1855,8 +1877,8 @@ static void ionic_post_recv_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = end;
 
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->rq_qtype, qp->rq.dbell | pos);
+		ionic_dbg(ctx, "dbell qp %u rq val %#lx",
+			  qp->qpid, qp->rq.dbell | pos);
 		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 				 qp->rq.dbell | pos);
 	}
@@ -1903,7 +1925,9 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
-				ionic_dbg(ctx, "queue full");
+				ionic_dbg(ctx,
+					  "send queue full cons %u prod %u",
+					  qp->sq.cons, qp->sq.prod);
 				rc = ENOMEM;
 				goto out;
 			}
@@ -1917,7 +1941,9 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	} else {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
-				ionic_dbg(ctx, "queue full");
+				ionic_dbg(ctx,
+					  "send queue full cons %u prod %u",
+					  qp->sq.cons, qp->sq.prod);
 				rc = ENOMEM;
 				goto out;
 			}
@@ -1952,9 +1978,8 @@ out:
 			ionic_post_send_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
-			ionic_dbg(ctx, "dbell qtype %d val %#lx",
-				  ctx->sq_qtype,
-				  ionic_queue_dbell_val(&qp->sq));
+			ionic_dbg(ctx, "dbell qp %u sq val %#lx",
+				  qp->qpid, ionic_queue_dbell_val(&qp->sq));
 			ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
 					 ionic_queue_dbell_val(&qp->sq));
 		}
@@ -2062,7 +2087,8 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 
 	while (wr) {
 		if (ionic_queue_full(&qp->rq)) {
-			ionic_dbg(ctx, "queue full");
+			ionic_dbg(ctx, "recv queue full cons %u prod %u",
+				  qp->rq.cons, qp->rq.prod);
 			rc = ENOMEM;
 			goto out;
 		}
@@ -2101,9 +2127,8 @@ out:
 			ionic_post_recv_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
-			ionic_dbg(ctx, "dbell qtype %d val %#lx",
-				  ctx->rq_qtype,
-				  ionic_queue_dbell_val(&qp->rq));
+			ionic_dbg(ctx, "dbell qp %u rq val %#lx",
+				  qp->qpid, ionic_queue_dbell_val(&qp->rq));
 			ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 					 ionic_queue_dbell_val(&qp->rq));
 		}

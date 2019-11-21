@@ -98,6 +98,8 @@ struct ionic_cq {
 	struct list_head	flush_rq;
 	struct ionic_queue	q;
 	bool			color;
+	bool			deferred_arm;
+	bool			deferred_arm_sol_only;
 	int			reserve;
 	uint16_t		arm_any_prod;
 	uint16_t		arm_sol_prod;
