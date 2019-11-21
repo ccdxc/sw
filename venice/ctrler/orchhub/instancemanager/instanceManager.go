@@ -3,6 +3,7 @@ package instanceManager
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub"
@@ -80,9 +81,13 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 // Start starts instance manager
 func (w *InstanceManager) Start() {
 	go w.watchOrchestratorConfig()
+	go w.periodicSync()
 }
 
 func (w *InstanceManager) watchOrchestratorConfig() {
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
 	for {
 		select {
 		case <-w.watchCtx.Done():
@@ -126,5 +131,29 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		}
 		orchInst.Destroy()
 		delete(w.orchestratorMap, config.GetKey())
+	}
+}
+
+func (w *InstanceManager) periodicSync() {
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
+	ticker := time.NewTicker(5 * time.Minute)
+	inProgress := false
+
+	for {
+		select {
+		case <-w.watchCtx.Done():
+			log.Info("Exiting periodic sync")
+			return
+		case <-ticker.C:
+			if !inProgress {
+				inProgress = true
+				for _, v := range w.orchestratorMap {
+					v.Sync()
+				}
+				inProgress = false
+			}
+		}
 	}
 }
