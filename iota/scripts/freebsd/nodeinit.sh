@@ -31,6 +31,20 @@ else
         fi
         echo "Unloaded ionic driver."
     else
+
+        # For debugging driver load failure vs normal cases:
+        # which kernel is running, how many reboots since installation?
+        echo '---'
+        echo 'Installed kernel images:'
+        ls -ld /boot/kernel*/kernel
+        echo 'Currently running kernel:'
+        uname -a
+        echo 'Recent kernel bootup messages:'
+        grep -A6 'The FreeBSD Project' /var/log/messages
+        echo 'Log from PXE setup script:'
+        cat /tmp/log.txt
+        echo '---'
+
         cd /naples
         tar xf drivers-freebsd-eth.tar.xz
         cd drivers-freebsd-eth
