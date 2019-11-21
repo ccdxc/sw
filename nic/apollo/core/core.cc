@@ -20,7 +20,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
-//#include "nic/apollo/fte/fte.hpp"
+#include "nic/apollo/learn/learn.hpp"
 
 using boost::property_tree::ptree;
 
@@ -320,6 +320,28 @@ spawn_fte_thread (pds_state *state)
     return SDK_RET_OK;
 }
 #endif
+
+sdk_ret_t
+spawn_learn_thread (pds_state *state)
+{
+    const char          *thread_name = "learn";
+    sdk::lib::thread    *new_thread;
+
+    // spawn FTE learn thread
+    PDS_TRACE_DEBUG("Spawning FTE learn thread %s", thread_name);
+    new_thread = thread_create(thread_name, THREAD_ID_LEARN,
+                sdk::lib::THREAD_ROLE_CONTROL, 0, //Control core
+                learn::learn_thread_start,
+                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                NULL);
+    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                            "%s thread create failure",
+                            thread_name);
+    g_thread_store[THREAD_ID_LEARN] = new_thread;
+    new_thread->start(new_thread);
+    return SDK_RET_OK;
+}
 
 // stop the threads
 void

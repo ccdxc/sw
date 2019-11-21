@@ -284,8 +284,6 @@ pds_init (pds_init_params_t *params)
     }
     SDK_ASSERT(api::create_uplinks() == SDK_RET_OK);
 
-    // spin fte threads
-    //core::spawn_thread_fte(&api::g_pds_state);
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
 
@@ -296,6 +294,9 @@ pds_init (pds_init_params_t *params)
     while (!core::is_nicmgr_ready()) {
          pthread_yield();
     }
+
+    // spin learn thread
+    //core::spawn_learn_thread(&api::g_pds_state);
 
     // raise HAL_UP event
     sdk::event_thread::publish(EVENT_ID_PDS_HAL_UP, NULL, 0);

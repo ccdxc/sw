@@ -25,11 +25,7 @@ enum {
     THREAD_ID_PERIODIC   = 3,
     THREAD_ID_NICMGR     = 4,
     THREAD_ID_PCIEMGR    = 5,
-    THREAD_ID_FTE_START  = 16,
-    THREAD_ID_FTE_1      = THREAD_ID_FTE_START,
-    THREAD_ID_FTE_2      = THREAD_ID_FTE_1 + 1,
-    THREAD_ID_FTE_3      = THREAD_ID_FTE_2 + 1,
-    THREAD_ID_FTE_END    = 47,
+    THREAD_ID_LEARN      = 6,
     THREAD_ID_MAX        = 48
 };
 
@@ -43,7 +39,7 @@ sdk_ret_t spawn_periodic_thread(pds_state *state);
 sdk_ret_t spawn_nicmgr_thread(pds_state *state);
 sdk_ret_t spawn_pciemgr_thread(pds_state *state);
 sdk_ret_t spawn_api_thread(pds_state *state);
-//sdk_ret_t spawn_fte_thread(pds_state *state);
+sdk_ret_t spawn_learn_thread(pds_state *state);
 bool is_nicmgr_ready(void);
 void threads_stop(void);
 sdk::lib::thread *thread_get(uint32_t thread_id);
