@@ -16,6 +16,15 @@ fi
 # main idea is to mount various partitions and restore user specified config
 mkdir -p /config
 mkdir -p /data
+# Scan for the LVs and wait until we have both LVs available befoe we proceed to mounting them
+vgscan --cache
+for i in {1..30}; do
+    num_lvs=$(lvdisplay | egrep "LV Status.*available" | wc -l)
+    if [ "$num_lvs" -eq "2" ]; then
+        break
+    fi
+    sleep 1
+done
 mount -L PENDATA /data
 mount -L PENCFG /config
 mkdir -p /data/docker

@@ -2,7 +2,7 @@
 Description=Pensando Early system Initialization service
 Documentation=https://pensando.io
 Before=docker.service sysinit.target
-After=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service lvm2-lvmetad.service lvm2-monitor.service systemd-remount-fs.service
 DefaultDependencies=no
 
 [Service]

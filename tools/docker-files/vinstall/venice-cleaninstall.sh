@@ -88,21 +88,33 @@ p1_end=$(($p1_start + $p1_size - 1))
 p2_start=$(($p1_end + 1))
 p2_end=$(($p2_start + $p2_size - 1))
 p3_start=$(($p2_end + 1))
-p3_end=$(($p3_start + $p3_size - 1))
-p4_start=$(($p3_end + 1))
-p4_end=${dev_size}
+p3_end=${dev_size}
 
 /sbin/parted -s $device u MB mkpart '"Grub"'   fat32 $p1_start $p1_end set 1 bios_grub on
 /sbin/parted -s $device u MB mkpart '"Boot"'   ext4 $p2_start $p2_end
 /sbin/parted -s $device u MB mkpart '"Config"' ext4 $p3_start $p3_end
-/sbin/parted -s $device u MB mkpart '"Data"'   ext4 $p4_start $p4_end
+# Create LVM for the last two persistent partitions
+vg_name=venice_vg
+vg_dev=/dev/${vg_name}
+lv_name_prefix=${vg_dev}/lv
+pvcreate ${device}3
+vgcreate ${vg_name} ${device}3
+# Config volume is same as the original parition size 3
+lvcreate -L ${p3_size}m -n lv3 ${vg_name}
+# Data volume fills the rest of the VG
+lvcreate -l 100%FREE -n lv4 ${vg_name}
+
 /sbin/udevadm settle
 sleep 5
 
 # for each partition
 for i in {2..4}
 do
-	TGTDEV=${device}${i}
+	if [ "$i" -le 2 ]; then
+	    TGTDEV=${device}${i}
+	else
+	    TGTDEV=${lv_name_prefix}${i}
+	fi
 	umount $TGTDEV &> /dev/null || :
 	$mkfs -L $(eval "echo \$label$i") $TGTDEV
 	eval TGTLABEL${i}="UUID=$(/sbin/blkid -s UUID -o value $TGTDEV)"
