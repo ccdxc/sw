@@ -16,7 +16,7 @@ delphi_lib 1.0.9
 pensando_firmware 1.0.14
 buildroot 801dfdbfe7bff0e53a1325ba73d339fdc2bf8def
 platform_drivers 1.0.2
-venice_base_iso  0.0.9
+venice_base_iso  0.0.10
 venice_web_app_framework 0.0.6
 ws_tools 0.0.1
 systemd_docker 0.3.0
