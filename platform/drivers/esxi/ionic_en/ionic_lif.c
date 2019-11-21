@@ -45,7 +45,8 @@ ionic_qcq_enable(struct qcq *qcq)
 
 	ionic_completion_init(&ctx.work);
 
-        if (!qcq->is_netpoll_enabled) {
+        if (qcq->is_netpoll_created &&
+            !qcq->is_netpoll_enabled) {
                 vmk_NetPollInterruptSet(qcq->netpoll,
                                         qcq->intr.cookie);
                 vmk_NetPollEnable(qcq->netpoll);
@@ -101,7 +102,8 @@ ionic_qcq_disable(struct qcq *qcq)
                           vmk_StatusToString(status));
         }
         
-        if (qcq->is_netpoll_enabled) {
+        if (qcq->is_netpoll_created &&
+            qcq->is_netpoll_enabled) {
                 ionic_intr_mask(&qcq->intr, VMK_TRUE);
                 vmk_IntrDisable(qcq->intr.cookie);
                 vmk_IntrSync(qcq->intr.cookie);
@@ -1859,6 +1861,7 @@ static void ionic_lif_qcq_deinit(struct qcq *qcq)
 		return;
 	ionic_intr_mask(&qcq->intr, VMK_TRUE);
         vmk_NetPollDestroy(qcq->netpoll); 
+        qcq->is_netpoll_enabled = VMK_FALSE;
         qcq->is_netpoll_created = VMK_FALSE;
         qcq->flags &= ~QCQ_F_INITED;
 }
